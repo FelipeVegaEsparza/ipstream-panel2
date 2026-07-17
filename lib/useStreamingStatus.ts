@@ -14,6 +14,7 @@ export interface NowPlayingTrack {
   artist?: string | null
   album?: string | null
   duration?: number | null
+  coverUrl?: string | null
 }
 
 export interface NowPlayingData {

@@ -55,6 +55,7 @@ export async function GET(
       listenerPeak: icecast?.listener_peak ?? 0,
       currentTitle: icecast?.title ?? radioStream.currentTitle,
       currentArtist: null,
+      currentCoverUrl: null,
       // URLs públicas para el reproductor
       streamUrls: {
         http: `${process.env.ICE_PUBLIC_URL || 'http://localhost:8000'}/${radioStream.icecastMount}`,

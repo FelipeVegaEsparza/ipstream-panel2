@@ -151,6 +151,14 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
 
           <div className="flex items-start gap-4">
             <div className="w-1.5 h-full min-h-[3rem] bg-cyan-500 rounded-full flex-shrink-0 mt-1"></div>
+            {status.nowPlaying.currentTrack?.coverUrl && (
+              <img
+                src={status.nowPlaying.currentTrack.coverUrl}
+                alt="Carátula"
+                className="w-14 h-14 rounded object-cover flex-shrink-0 mt-0.5 shadow-md"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+            )}
             <div className="flex-1 min-w-0">
               {status.nowPlaying.currentTrack ? (
                 <>

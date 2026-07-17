@@ -15,6 +15,7 @@ interface Track {
   duration: number | null
   fileName: string
   fileSize: number
+  coverUrl: string | null
   uploadedAt: string
 }
 
@@ -120,6 +121,7 @@ export default function LibraryPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
               <tr>
+                <th className="text-left p-3 w-12">Carátula</th>
                 <th className="text-left p-3">Título</th>
                 <th className="text-left p-3">Artista</th>
                 <th className="text-left p-3">Duración</th>
@@ -131,6 +133,20 @@ export default function LibraryPage() {
             <tbody>
               {tracks.map((t) => (
                 <tr key={t.id} className="border-t border-gray-700/50 hover:bg-gray-700/20">
+                  <td className="p-3">
+                    {t.coverUrl ? (
+                      <img
+                        src={t.coverUrl}
+                        alt=""
+                        className="w-10 h-10 rounded object-cover shadow-sm"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
+                        🎵
+                      </div>
+                    )}
+                  </td>
                   <td className="p-3 text-white">
                     {editingId === t.id ? (
                       <input

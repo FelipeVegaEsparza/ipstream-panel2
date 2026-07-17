@@ -19,6 +19,7 @@ interface PublicStatus {
   listenerPeak: number
   currentTitle?: string | null
   currentArtist?: string | null
+  currentCoverUrl?: string | null
   streamUrls: { http: string }
   lastUpdate?: string
 }
@@ -142,6 +143,14 @@ export function StreamingPlayer({
       )}
 
       <div className="flex items-center gap-3">
+        {status?.currentCoverUrl && (
+          <img
+            src={status.currentCoverUrl}
+            alt="Carátula"
+            className="w-14 h-14 rounded object-cover flex-shrink-0 shadow-md"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+        )}
         <button
           onClick={togglePlay}
           disabled={loading || !!error}

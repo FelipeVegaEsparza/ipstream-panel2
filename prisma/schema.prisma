@@ -661,6 +661,7 @@ model Track {
   fileName       String   // nombre del archivo en el filesystem (sin path)
   filePath       String   // ruta absoluta dentro del container liquidsoap
   fileSize       Int      // bytes
+  coverUrl       String?
   mimeType       String   @default("audio/mpeg")
   uploadedAt     DateTime @default(now())
   updatedAt      DateTime @updatedAt

@@ -202,7 +202,7 @@ export default async function streamRoutes(app) {
     let entries = []
     if (playlist) {
       const [eRows] = await pool.query(
-        `SELECT t.id AS trackId, t.title, t.artist, t.album, t.duration, t.fileName, pe.\`order\`
+        `SELECT t.id AS trackId, t.title, t.artist, t.album, t.duration, t.fileName, t.coverUrl, pe.\`order\`
          FROM playlist_entries pe
          JOIN tracks t ON t.id = pe.trackId
          WHERE pe.playlistId = ?
@@ -225,48 +225,34 @@ export default async function streamRoutes(app) {
 
       const currentTitle = icecastTitle || rs.currentTitle
 
+      const toTrackObj = (e) => ({
+        title: e.title,
+        artist: e.artist,
+        album: e.album,
+        duration: e.duration,
+        coverUrl: e.coverUrl || null,
+      })
+
       if (currentTitle) {
         const currentIndex = entries.findIndex(
           (e) => e.title && currentTitle.toLowerCase().includes(e.title.toLowerCase())
         )
         if (currentIndex !== -1) {
-          currentTrack = {
-            title: entries[currentIndex].title,
-            artist: entries[currentIndex].artist,
-            album: entries[currentIndex].album,
-            duration: entries[currentIndex].duration,
-          }
+          currentTrack = toTrackObj(entries[currentIndex])
           position = { index: currentIndex + 1, total: entries.length }
 
           if (playlist.shuffle) {
             const remaining = entries.filter((_, i) => i !== currentIndex)
             if (remaining.length > 0) {
               const next = remaining[Math.floor(Math.random() * remaining.length)]
-              nextTrack = {
-                title: next.title,
-                artist: next.artist,
-                album: next.album,
-                duration: next.duration,
-              }
+              nextTrack = toTrackObj(next)
             }
           } else {
             const nextIndex = currentIndex + 1
             if (nextIndex < entries.length) {
-              const next = entries[nextIndex]
-              nextTrack = {
-                title: next.title,
-                artist: next.artist,
-                album: next.album,
-                duration: next.duration,
-              }
+              nextTrack = toTrackObj(entries[nextIndex])
             } else if (playlist.repeat) {
-              const next = entries[0]
-              nextTrack = {
-                title: next.title,
-                artist: next.artist,
-                album: next.album,
-                duration: next.duration,
-              }
+              nextTrack = toTrackObj(entries[0])
             }
           }
         } else {
@@ -275,39 +261,18 @@ export default async function streamRoutes(app) {
             artist: rs.currentArtist || null,
             album: null,
             duration: null,
+            coverUrl: null,
           }
-          const first = entries[0]
-          nextTrack = {
-            title: first.title,
-            artist: first.artist,
-            album: first.album,
-            duration: first.duration,
-          }
+          nextTrack = toTrackObj(entries[0])
           position = { index: 0, total: entries.length }
         }
       } else {
         const first = entries[0]
-        currentTrack = {
-          title: first.title,
-          artist: first.artist,
-          album: first.album,
-          duration: first.duration,
-        }
+        currentTrack = toTrackObj(first)
         if (entries.length > 1) {
-          const second = entries[1]
-          nextTrack = {
-            title: second.title,
-            artist: second.artist,
-            album: second.album,
-            duration: second.duration,
-          }
+          nextTrack = toTrackObj(entries[1])
         } else if (playlist.repeat) {
-          nextTrack = {
-            title: first.title,
-            artist: first.artist,
-            album: first.album,
-            duration: first.duration,
-          }
+          nextTrack = toTrackObj(first)
         }
         position = { index: 1, total: entries.length }
       }

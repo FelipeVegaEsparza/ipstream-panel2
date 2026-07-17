@@ -1,44 +1,32 @@
-// =====================================================
-// Routes — Library (MP3 CRUD por cliente)
-// =====================================================
-
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
-import { readMetadata, sanitizeFileName, isMp3 } from '../lib/id3.js'
-import { saveMp3, deleteMp3, clientMp3Dir, isSafeFileName, ensureClientDir } from '../lib/files.js'
+import { readMetadata, fetchCoverFromMusicBrainz, sanitizeFileName, isMp3 } from '../lib/id3.js'
+import { saveMp3, deleteMp3, saveCover, deleteCover, getCoverPath, isSafeFileName, ensureClientDir } from '../lib/files.js'
 import { regenerateM3u } from '../lib/liquidsoap.js'
+import { existsSync } from 'fs'
+import { readFile } from 'fs/promises'
 import crypto from 'crypto'
 
 function uuid() {
   return crypto.randomUUID()
 }
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024  // 50 MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024
 
 export default async function libraryRoutes(app) {
-  /**
-   * GET /api/streams/:clientId/library
-   * Lista los tracks del cliente.
-   */
   app.get('/api/streams/:clientId/library', async (request, reply) => {
     const { clientId } = request.params
     const [rows] = await pool.query(
-      `SELECT id, title, artist, album, duration, fileName, fileSize, mimeType, uploadedAt, updatedAt
+      `SELECT id, title, artist, album, duration, fileName, fileSize, coverUrl, mimeType, uploadedAt, updatedAt
        FROM tracks WHERE clientId = ? ORDER BY uploadedAt DESC`,
       [clientId]
     )
     return { count: rows.length, tracks: rows }
   })
 
-  /**
-   * POST /api/streams/:clientId/library/upload
-   * Sube un MP3. Multipart con campo "file".
-   * Lee ID3, guarda en filesystem, inserta en DB.
-   */
   app.post('/api/streams/:clientId/library/upload', async (request, reply) => {
     const { clientId } = request.params
 
-    // Verificar que el cliente y su RadioStream existen
     const [rsRows] = await pool.query(
       `SELECT id FROM radio_streams WHERE clientId = ?`,
       [clientId]
@@ -50,8 +38,6 @@ export default async function libraryRoutes(app) {
 
     let savedFileName = null
     try {
-      // Parsear multipart manualmente (en este agente no usamos @fastify/multipart todavía
-      // — usamos el parser nativo de Fastify o lo recibimos como raw body)
       const data = await request.file()
       if (!data) {
         return reply.code(400).send({ error: 'no_file', message: 'Falta el campo "file"' })
@@ -61,36 +47,50 @@ export default async function libraryRoutes(app) {
         return reply.code(415).send({ error: 'unsupported_media_type', message: 'Solo se aceptan MP3' })
       }
 
-      // Leer a buffer (con límite de tamaño)
       const buffer = await data.toBuffer()
       if (buffer.length > MAX_FILE_SIZE) {
         return reply.code(413).send({ error: 'file_too_large', message: `Máximo ${MAX_FILE_SIZE / 1024 / 1024} MB` })
       }
 
-      // Guardar con nombre único
       const safeOriginal = sanitizeFileName(data.filename)
       const fileName = `${Date.now()}_${safeOriginal}`
 
       const { path: filePath, size } = await saveMp3(clientId, fileName, buffer)
       savedFileName = fileName
 
-      // Leer ID3
       const meta = await readMetadata(filePath)
 
-      // Insertar en DB
       const trackId = 'trk_' + uuid().slice(0, 8)
+      let coverUrl = null
+
+      // Save embedded cover if present
+      if (meta.coverBuffer) {
+        await saveCover(clientId, trackId, meta.coverBuffer)
+        coverUrl = `/api/dashboard/streaming/library/${trackId}/cover`
+      }
+
+      // Fallback: try MusicBrainz if we have artist+album but no embedded cover
+      if (!meta.coverBuffer && meta.artist && meta.album) {
+        try {
+          const mbCover = await fetchCoverFromMusicBrainz(meta.artist, meta.album)
+          if (mbCover) {
+            await saveCover(clientId, trackId, mbCover.buffer)
+            coverUrl = `/api/dashboard/streaming/library/${trackId}/cover`
+          }
+        } catch {}
+      }
+
       await pool.query(
         `INSERT INTO tracks (id, clientId, radioStreamId, title, artist, album, duration,
-          fileName, filePath, fileSize, mimeType, uploadedAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+          fileName, filePath, fileSize, coverUrl, mimeType, uploadedAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [
           trackId, clientId, radioStreamId,
           meta.title, meta.artist, meta.album, meta.duration,
-          fileName, filePath, size, data.mimetype || 'audio/mpeg',
+          fileName, filePath, size, coverUrl, data.mimetype || 'audio/mpeg',
         ]
       )
 
-      // Audit log
       await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
          VALUES (?, ?, 'track_upload', ?, NOW())`,
@@ -109,12 +109,12 @@ export default async function libraryRoutes(app) {
           duration: meta.duration,
           fileName,
           fileSize: size,
+          coverUrl,
           mimeType: data.mimetype || 'audio/mpeg',
         },
       }
     } catch (err) {
       logger.error({ err, clientId, savedFileName }, 'Error uploading track')
-      // Si guardamos el archivo pero falló algo después, intentar limpiar
       if (savedFileName) {
         try { await deleteMp3(clientId, savedFileName) } catch {}
       }
@@ -122,10 +122,6 @@ export default async function libraryRoutes(app) {
     }
   })
 
-  /**
-   * PATCH /api/streams/:clientId/library/:trackId
-   * Actualiza metadata del track (title, artist, album).
-   */
   app.patch('/api/streams/:clientId/library/:trackId', async (request, reply) => {
     const { clientId, trackId } = request.params
     const { title, artist, album } = request.body || {}
@@ -148,18 +144,37 @@ export default async function libraryRoutes(app) {
     if (result.affectedRows === 0) {
       return reply.code(404).send({ error: 'not_found' })
     }
+
+    // If artist or album changed, try to fetch cover from MusicBrainz
+    if ((typeof artist === 'string' || typeof album === 'string')) {
+      const [row] = await pool.query(
+        `SELECT artist, album, coverUrl FROM tracks WHERE id = ? AND clientId = ?`,
+        [trackId, clientId]
+      )
+      if (row.length > 0) {
+        const t = row[0]
+        if (t.artist || t.album) {
+          try {
+            const mbCover = await fetchCoverFromMusicBrainz(t.artist, t.album)
+            if (mbCover) {
+              await saveCover(clientId, trackId, mbCover.buffer)
+              const newCoverUrl = `/api/dashboard/streaming/library/${trackId}/cover`
+              await pool.query(
+                `UPDATE tracks SET coverUrl = ? WHERE id = ?`,
+                [newCoverUrl, trackId]
+              )
+            }
+          } catch {}
+        }
+      }
+    }
+
     return { ok: true }
   })
 
-  /**
-   * DELETE /api/streams/:clientId/library/:trackId
-   * Elimina el track del filesystem y de la DB.
-   * También lo quita de todas las playlists.
-   */
   app.delete('/api/streams/:clientId/library/:trackId', async (request, reply) => {
     const { clientId, trackId } = request.params
 
-    // Buscar el track
     const [rows] = await pool.query(
       `SELECT id, fileName FROM tracks WHERE id = ? AND clientId = ?`,
       [trackId, clientId]
@@ -169,7 +184,6 @@ export default async function libraryRoutes(app) {
     }
     const track = rows[0]
 
-    // Eliminar archivo del filesystem
     if (isSafeFileName(track.fileName)) {
       try {
         await deleteMp3(clientId, track.fileName)
@@ -178,10 +192,15 @@ export default async function libraryRoutes(app) {
       }
     }
 
-    // Eliminar de DB (cascade borra playlist_entries)
+    // Delete cover art
+    try {
+      await deleteCover(clientId, trackId)
+    } catch (err) {
+      logger.warn({ err, trackId }, 'No se pudo borrar la carátula')
+    }
+
     await pool.query(`DELETE FROM tracks WHERE id = ?`, [trackId])
 
-    // Regenerar m3u (porque puede haber cambiado el contenido de la playlist activa)
     try { await regenerateM3u(clientId) } catch {}
 
     await pool.query(
@@ -192,5 +211,22 @@ export default async function libraryRoutes(app) {
 
     logger.info({ clientId, trackId, fileName: track.fileName }, 'Track deleted')
     return { ok: true }
+  })
+
+  /**
+   * GET /api/streams/:clientId/library/:trackId/cover
+   * Sirve la imagen de carátula del track.
+   */
+  app.get('/api/streams/:clientId/library/:trackId/cover', async (request, reply) => {
+    const { clientId, trackId } = request.params
+    const coverPath = getCoverPath(clientId, trackId)
+
+    if (!existsSync(coverPath)) {
+      return reply.code(404).send({ error: 'cover_not_found' })
+    }
+
+    const ext = coverPath.endsWith('.png') ? 'image/png' : 'image/jpeg'
+    const image = await readFile(coverPath)
+    return reply.type(ext).send(image)
   })
 }

@@ -92,6 +92,47 @@ export async function listMp3Files(clientId) {
 }
 
 /**
+ * Devuelve el path del directorio covers de un cliente.
+ */
+export function clientCoversDir(clientId) {
+  return join(LIBRARY_PATH, clientId, 'covers')
+}
+
+/**
+ * Devuelve el path completo de un archivo de cover.
+ */
+export function getCoverPath(clientId, trackId) {
+  return join(clientCoversDir(clientId), `${trackId}.jpg`)
+}
+
+/**
+ * Guarda una imagen de cover en el filesystem.
+ * @param {string} clientId
+ * @param {string} trackId
+ * @param {Buffer} buffer
+ * @returns {Promise<string>} path absoluto del cover guardado
+ */
+export async function saveCover(clientId, trackId, buffer) {
+  const dir = clientCoversDir(clientId)
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true })
+  }
+  const dest = join(dir, `${trackId}.jpg`)
+  await writeFile(dest, buffer)
+  return dest
+}
+
+/**
+ * Elimina una imagen de cover del filesystem.
+ */
+export async function deleteCover(clientId, trackId) {
+  const dest = getCoverPath(clientId, trackId)
+  if (!existsSync(dest)) return false
+  await unlink(dest)
+  return true
+}
+
+/**
  * Verifica que un fileName no contenga path traversal.
  */
 export function isSafeFileName(fileName) {

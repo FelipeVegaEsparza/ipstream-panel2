@@ -75,6 +75,17 @@ async function request<T = any>(path: string, options: RequestOptions = {}): Pro
   }
 }
 
+async function requestRaw(path: string): Promise<Response> {
+  if (!AGENT_TOKEN) {
+    throw new Error('STREAMING_AGENT_TOKEN no está configurado en el panel')
+  }
+
+  return fetch(`${AGENT_URL}${path}`, {
+    headers: { 'Authorization': `Bearer ${AGENT_TOKEN}` },
+    signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+  })
+}
+
 // =====================================================
 // Streams
 // =====================================================
@@ -118,6 +129,8 @@ export const streamingClient = {
     request(`/api/streams/${encodeURIComponent(clientId)}/library/${encodeURIComponent(trackId)}`, {
       method: 'DELETE',
     }),
+  getCover: (clientId: string, trackId: string) =>
+    requestRaw(`/api/streams/${encodeURIComponent(clientId)}/library/${encodeURIComponent(trackId)}/cover`),
 
   // Playlists
   listPlaylists: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/playlists`),
