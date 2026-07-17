@@ -4,4 +4,4 @@ Las credenciales del admin están definidas en .env.docker:
 
 prod:
 - Email: admin@panelipstream.cl
-- Password: 3517707aaAA@@##
+- Password: 3517707aaAA@@##fix: correct agent container name in health check

@@ -76,6 +76,7 @@ app.get('/', async () => ({
     listStreams: 'GET /api/streams',
     getStream: 'GET /api/streams/:clientId',
     streamStatus: 'GET /api/streams/:clientId/status',
+    nowPlaying: 'GET /api/streams/:clientId/now-playing',
     startStream: 'POST /api/streams/:clientId/start',
     stopStream: 'POST /api/streams/:clientId/stop',
     restartStream: 'POST /api/streams/:clientId/restart',

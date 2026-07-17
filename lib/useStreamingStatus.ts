@@ -9,12 +9,33 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 
+export interface NowPlayingTrack {
+  title: string
+  artist?: string | null
+  album?: string | null
+  duration?: number | null
+}
+
+export interface NowPlayingData {
+  playlist: {
+    id: string
+    name: string
+    shuffle: boolean
+    repeat: boolean
+    trackCount: number
+  } | null
+  currentTrack: NowPlayingTrack | null
+  nextTrack: NowPlayingTrack | null
+  position: { index: number; total: number } | null
+}
+
 export interface StreamStatus {
   hasRadioStream: boolean
   clientId: string
   mount?: string
   streamUrl?: string
   clientName?: string
+  nowPlaying?: NowPlayingData
   process?: { running: boolean; pid: number | null }
   icecast?: {
     listenurl?: string

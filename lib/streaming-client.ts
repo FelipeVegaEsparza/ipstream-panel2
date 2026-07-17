@@ -88,6 +88,7 @@ export const streamingClient = {
   listStreams: () => request('/api/streams'),
   getStream: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}`),
   getStatus: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/status`),
+  getNowPlaying: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/now-playing`),
   start: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/start`, { method: 'POST' }),
   stop: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/stop`, { method: 'POST' }),
   restart: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/restart`, { method: 'POST' }),

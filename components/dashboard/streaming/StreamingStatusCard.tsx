@@ -140,6 +140,61 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
         </div>
       )}
 
+      {isRunning && status.nowPlaying && status.nowPlaying.playlist && (
+        <div className="bg-gray-900/60 rounded p-4 space-y-3">
+          <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
+            <span>🎵</span>
+            <span>Ahora suena</span>
+            <span className="flex-1"></span>
+            <span className="text-cyan-400">{status.nowPlaying.playlist.name}</span>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="w-1.5 h-full min-h-[3rem] bg-cyan-500 rounded-full flex-shrink-0 mt-1"></div>
+            <div className="flex-1 min-w-0">
+              {status.nowPlaying.currentTrack ? (
+                <>
+                  <p className="text-white font-semibold truncate">
+                    {status.nowPlaying.currentTrack.title || 'Sin título'}
+                  </p>
+                  {status.nowPlaying.currentTrack.artist && (
+                    <p className="text-gray-400 text-sm truncate">
+                      {status.nowPlaying.currentTrack.artist}
+                      {status.nowPlaying.currentTrack.album && ` — ${status.nowPlaying.currentTrack.album}`}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-400">Esperando metadata...</p>
+              )}
+            </div>
+          </div>
+
+          {status.nowPlaying.nextTrack && (
+            <div className="flex items-start gap-4 opacity-70">
+              <div className="w-1.5 h-full min-h-[2.5rem] bg-gray-600 rounded-full flex-shrink-0 mt-1"></div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500 uppercase mb-0.5">⏭ Siguiente</p>
+                <p className="text-gray-300 font-medium truncate">
+                  {status.nowPlaying.nextTrack.title || 'Sin título'}
+                </p>
+                {status.nowPlaying.nextTrack.artist && (
+                  <p className="text-gray-500 text-sm truncate">
+                    {status.nowPlaying.nextTrack.artist}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {status.nowPlaying.position && (
+            <p className="text-xs text-gray-500">
+              Track {status.nowPlaying.position.index} de {status.nowPlaying.position.total}
+            </p>
+          )}
+        </div>
+      )}
+
       {status.db?.lastError && (
         <div className="bg-red-900/30 border border-red-700 rounded p-3 text-sm text-red-200">
           <strong>Error:</strong> {status.db.lastError}

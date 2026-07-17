@@ -17,16 +17,31 @@ export async function GET(_request: NextRequest) {
       }, { status: 404 })
     }
 
-    const status = await streamingClient.getStatus(ctx.clientId)
+    const [status, nowPlaying] = await Promise.allSettled([
+      streamingClient.getStatus(ctx.clientId),
+      streamingClient.getNowPlaying(ctx.clientId),
+    ])
+
     const icePublicUrl = process.env.ICE_PUBLIC_URL || 'http://localhost:8000'
 
-    return NextResponse.json({
+    const body: Record<string, unknown> = {
       hasRadioStream: true,
       clientId: ctx.clientId,
       mount: ctx.icecastMount,
       streamUrl: `${icePublicUrl}/${ctx.icecastMount}`,
-      ...status,
-    })
+    }
+
+    if (status.status === 'fulfilled') {
+      Object.assign(body, status.value)
+    } else {
+      console.error('[streaming/status] status failed:', status.reason)
+    }
+
+    if (nowPlaying.status === 'fulfilled') {
+      body.nowPlaying = nowPlaying.value
+    }
+
+    return NextResponse.json(body)
   } catch (err) {
     if (err instanceof StreamingAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.statusCode })

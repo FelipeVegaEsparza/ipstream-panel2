@@ -175,6 +175,153 @@ export default async function streamRoutes(app) {
   })
 
   /**
+   * GET /api/streams/:clientId/now-playing
+   * Track actual + próximo + playlist activa.
+   */
+  app.get('/api/streams/:clientId/now-playing', async (request, reply) => {
+    const { clientId } = request.params
+
+    const [rsRows] = await pool.query(
+      `SELECT rs.*, c.name AS clientName
+       FROM radio_streams rs JOIN clients c ON c.id = rs.clientId
+       WHERE rs.clientId = ?`,
+      [clientId]
+    )
+    if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+    const rs = rsRows[0]
+
+    const [plRows] = await pool.query(
+      `SELECT p.id, p.name, p.shuffle, p.\`repeat\`, p.trackCount
+       FROM playlists p
+       WHERE p.clientId = ? AND p.isActive = 1
+       LIMIT 1`,
+      [clientId]
+    )
+    const playlist = plRows[0] || null
+
+    let entries = []
+    if (playlist) {
+      const [eRows] = await pool.query(
+        `SELECT t.id AS trackId, t.title, t.artist, t.album, t.duration, t.fileName, pe.\`order\`
+         FROM playlist_entries pe
+         JOIN tracks t ON t.id = pe.trackId
+         WHERE pe.playlistId = ?
+         ORDER BY pe.\`order\` ASC`,
+        [playlist.id]
+      )
+      entries = eRows
+    }
+
+    let currentTrack = null
+    let nextTrack = null
+    let position = null
+
+    if (entries.length > 0) {
+      let icecastTitle = null
+      try {
+        const mount = await getMountStatus(rs.icecastMount)
+        icecastTitle = mount?.title || null
+      } catch {}
+
+      const currentTitle = icecastTitle || rs.currentTitle
+
+      if (currentTitle) {
+        const currentIndex = entries.findIndex(
+          (e) => e.title && currentTitle.toLowerCase().includes(e.title.toLowerCase())
+        )
+        if (currentIndex !== -1) {
+          currentTrack = {
+            title: entries[currentIndex].title,
+            artist: entries[currentIndex].artist,
+            album: entries[currentIndex].album,
+            duration: entries[currentIndex].duration,
+          }
+          position = { index: currentIndex + 1, total: entries.length }
+
+          if (playlist.shuffle) {
+            const remaining = entries.filter((_, i) => i !== currentIndex)
+            if (remaining.length > 0) {
+              const next = remaining[Math.floor(Math.random() * remaining.length)]
+              nextTrack = {
+                title: next.title,
+                artist: next.artist,
+                album: next.album,
+                duration: next.duration,
+              }
+            }
+          } else {
+            const nextIndex = currentIndex + 1
+            if (nextIndex < entries.length) {
+              const next = entries[nextIndex]
+              nextTrack = {
+                title: next.title,
+                artist: next.artist,
+                album: next.album,
+                duration: next.duration,
+              }
+            } else if (playlist.repeat) {
+              const next = entries[0]
+              nextTrack = {
+                title: next.title,
+                artist: next.artist,
+                album: next.album,
+                duration: next.duration,
+              }
+            }
+          }
+        } else {
+          currentTrack = {
+            title: currentTitle,
+            artist: rs.currentArtist || null,
+            album: null,
+            duration: null,
+          }
+          const first = entries[0]
+          nextTrack = {
+            title: first.title,
+            artist: first.artist,
+            album: first.album,
+            duration: first.duration,
+          }
+          position = { index: 0, total: entries.length }
+        }
+      } else {
+        const first = entries[0]
+        currentTrack = {
+          title: first.title,
+          artist: first.artist,
+          album: first.album,
+          duration: first.duration,
+        }
+        if (entries.length > 1) {
+          const second = entries[1]
+          nextTrack = {
+            title: second.title,
+            artist: second.artist,
+            album: second.album,
+            duration: second.duration,
+          }
+        } else if (playlist.repeat) {
+          nextTrack = {
+            title: first.title,
+            artist: first.artist,
+            album: first.album,
+            duration: first.duration,
+          }
+        }
+        position = { index: 1, total: entries.length }
+      }
+    }
+
+    return {
+      playlist: playlist ? { id: playlist.id, name: playlist.name, shuffle: !!playlist.shuffle, repeat: !!playlist.repeat, trackCount: playlist.trackCount } : null,
+      currentTrack,
+      nextTrack,
+      position,
+    }
+  })
+
+  /**
    * GET /api/icecast/status
    * Status global de Icecast (todos los mountpoints).
    */
