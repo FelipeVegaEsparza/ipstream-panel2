@@ -27,7 +27,7 @@ ERRORS=0
 
 # === 1. Containers corriendo ===
 log "=== Containers ==="
-for svc in ipstream-db ipstream-app ipstream-icecast ipstream-liquidsoap ipstream-agent ipstream-caddy; do
+for svc in ipstream-db ipstream-app ipstream-icecast ipstream-liquidsoap ipstream-streaming-agent ipstream-caddy; do
   STATUS=$(docker inspect --format='{{.State.Status}}' "$svc" 2>/dev/null || echo "not_found")
   HEALTH=$(docker inspect --format='{{.State.Health.Status}}' "$svc" 2>/dev/null || echo "n/a")
   if [[ "$STATUS" == "running" ]]; then
