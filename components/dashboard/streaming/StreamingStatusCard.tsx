@@ -43,14 +43,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
   const listenerPeak = status.icecast?.listener_peak ?? 0
   const bitrate = status.icecast?.bitrate ?? status.db?.bitrate ?? 128
 
-  // URL de transmisión. Si Icecast no devolvió listenurl, construimos una.
-  const streamUrl =
-    status.icecast?.listenurl ||
-    (status.mount
-      ? `${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${
-          typeof window !== 'undefined' ? window.location.hostname : 'localhost'
-        }:8000/${status.mount}`
-      : null)
+  const streamUrl = status.streamUrl || status.icecast?.listenurl || null
 
   const copyUrl = () => {
     if (!streamUrl) return

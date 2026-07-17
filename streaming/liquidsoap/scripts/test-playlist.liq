@@ -35,7 +35,7 @@ output.icecast(
     %mp3(bitrate=128),
     host="icecast",
     port=8000,
-    password="hackme",
+    password="b94afe2e977494acf1448e4747b58268d578663d",
     mount="/test-mp3",
     name="IPStream Test (MP3)",
     genre="Test",

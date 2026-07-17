@@ -13,6 +13,7 @@ export interface StreamStatus {
   hasRadioStream: boolean
   clientId: string
   mount?: string
+  streamUrl?: string
   clientName?: string
   process?: { running: boolean; pid: number | null }
   icecast?: {

@@ -18,10 +18,13 @@ export async function GET(_request: NextRequest) {
     }
 
     const status = await streamingClient.getStatus(ctx.clientId)
+    const icePublicUrl = process.env.ICE_PUBLIC_URL || 'http://localhost:8000'
+
     return NextResponse.json({
       hasRadioStream: true,
       clientId: ctx.clientId,
       mount: ctx.icecastMount,
+      streamUrl: `${icePublicUrl}/${ctx.icecastMount}`,
       ...status,
     })
   } catch (err) {
