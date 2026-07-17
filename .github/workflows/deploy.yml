@@ -42,13 +42,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # === 3b. Lowercase owner (Docker requiere minúsculas) ===
+      - name: Lowercase registry owner
+        id: owner
+        run: echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       # === 4. Extraer metadata (tags, labels) ===
       - name: Extract Docker metadata
         if: github.event_name == 'push'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/ipstream-panel
+          images: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-panel
           tags: |
             type=sha,prefix=
             type=ref,event=branch
@@ -97,10 +102,10 @@ jobs:
       - name: Run deploy script on VPS
         env:
           IMAGE_TAG: ${{ steps.tag.outputs.value }}
-          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY_OWNER: ${{ steps.owner.outputs.owner }}
         run: |
           ssh -o StrictHostKeyChecking=accept-new ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "cd /opt/ipstream-panel && IMAGE_TAG='${{ steps.tag.outputs.value }}' GITHUB_REPOSITORY_OWNER='${{ github.repository_owner }}' ./deploy/scripts/deploy.sh"
+            "cd /opt/ipstream-panel && IMAGE_TAG='${{ steps.tag.outputs.value }}' GITHUB_REPOSITORY_OWNER='${{ steps.owner.outputs.owner }}' ./deploy/scripts/deploy.sh"
 
       # === 10. Health check post-deploy ===
       - name: Post-deploy health check
