@@ -94,15 +94,24 @@ echo "🗄️  5/6 — Aplicando migraciones Prisma..."
 docker exec ipstream-app npx prisma db push --accept-data-loss --skip-generate 2>&1 | tail -5
 
 # === 7. Health check ===
-echo "🏥 6/6 — Verificando health..."
-sleep 5
-HEALTH=$(curl -sf http://localhost:3000/api/health || echo "FAIL")
-if [[ "$HEALTH" == "FAIL" ]]; then
-  echo "❌ Health check falló. Revisar logs:"
-  echo "   docker logs --tail 50 ipstream-app"
-  exit 1
-fi
-echo "  ✓ Health OK: $HEALTH"
+echo "🏥 6/6 — Verificando health (esperando hasta 30s)..."
+TIMEOUT=30
+ELAPSED=0
+while true; do
+  HEALTH=$(curl -sf http://localhost:3000/api/health 2>/dev/null || echo "FAIL")
+  if [[ "$HEALTH" != "FAIL" ]]; then
+    echo "  ✓ Health OK: $HEALTH"
+    break
+  fi
+  if [[ $ELAPSED -ge $TIMEOUT ]]; then
+    echo "❌ Health check falló después de ${TIMEOUT}s"
+    echo "   docker logs --tail 50 ipstream-app"
+    docker logs --tail 50 ipstream-app 2>/dev/null || true
+    exit 1
+  fi
+  sleep 3
+  ELAPSED=$((ELAPSED + 3))
+done
 
 # === Resumen ===
 echo
