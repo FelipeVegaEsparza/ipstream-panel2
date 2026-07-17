@@ -94,11 +94,10 @@ echo "  ✓ MySQL healthy en ${ELAPSED}s"
 echo "🗄️  5/9 — Aplicando migraciones Prisma..."
 docker run --rm \
   --network container:ipstream-db \
-  -v "${PROJECT_DIR}/prisma:/app/prisma" \
-  -w /app \
+  --entrypoint npx \
   -e DATABASE_URL="mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@localhost:3306/${MYSQL_DATABASE}" \
-  node:20-bookworm-slim \
-  bash -c "npm init -y >/dev/null 2>&1 && npx prisma db push --accept-data-loss --skip-generate" 2>&1 | tail -5
+  "ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG}" \
+  prisma db push --accept-data-loss --skip-generate
 
 # === 7. Up de los containers ===
 echo "🚀 6/9 — Levantando containers..."
