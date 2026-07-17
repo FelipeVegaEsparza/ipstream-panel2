@@ -13,14 +13,66 @@ function uuid() {
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024
 
-export default async function libraryRoutes(app) {
-  app.get('/api/streams/:clientId/library', async (request, reply) => {
-    const { clientId } = request.params
+// Detecta si la columna coverUrl existe (migración ya aplicada)
+let hasCoverColumn = false
+let coverCheckDone = false
+
+async function ensureCoverColumn() {
+  if (coverCheckDone) return hasCoverColumn
+  try {
+    const [rows] = await pool.query(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tracks' AND COLUMN_NAME = 'coverUrl'`
+    )
+    hasCoverColumn = rows.length > 0
+  } catch {
+    hasCoverColumn = false
+  }
+  coverCheckDone = true
+  if (!hasCoverColumn) {
+    logger.warn('Columna coverUrl no existe aún (migración pendiente)')
+  }
+  return hasCoverColumn
+}
+
+// Wrapper que retorna rows sin coverUrl si la columna no existe
+async function queryTracks(clientId) {
+  if (await ensureCoverColumn()) {
     const [rows] = await pool.query(
       `SELECT id, title, artist, album, duration, fileName, fileSize, coverUrl, mimeType, uploadedAt, updatedAt
        FROM tracks WHERE clientId = ? ORDER BY uploadedAt DESC`,
       [clientId]
     )
+    return rows
+  }
+  const [rows] = await pool.query(
+    `SELECT id, title, artist, album, duration, fileName, fileSize, mimeType, uploadedAt, updatedAt
+     FROM tracks WHERE clientId = ? ORDER BY uploadedAt DESC`,
+    [clientId]
+  )
+  return rows.map((r) => ({ ...r, coverUrl: null }))
+}
+
+// Wrapper que retorna track sin coverUrl si la columna no existe
+async function queryTrackById(trackId, clientId) {
+  if (await ensureCoverColumn()) {
+    const [rows] = await pool.query(
+      `SELECT id, fileName, artist, album, coverUrl FROM tracks WHERE id = ? AND clientId = ?`,
+      [trackId, clientId]
+    )
+    return rows
+  }
+  const [rows] = await pool.query(
+    `SELECT id, fileName, artist, album FROM tracks WHERE id = ? AND clientId = ?`,
+    [trackId, clientId]
+  )
+  return rows.map((r) => ({ ...r, coverUrl: null }))
+}
+
+export default async function libraryRoutes(app) {
+  app.get('/api/streams/:clientId/library', async (request, reply) => {
+    const { clientId } = request.params
+    const rows = await queryTracks(clientId)
     return { count: rows.length, tracks: rows }
   })
 
@@ -80,16 +132,30 @@ export default async function libraryRoutes(app) {
         } catch {}
       }
 
-      await pool.query(
-        `INSERT INTO tracks (id, clientId, radioStreamId, title, artist, album, duration,
-          fileName, filePath, fileSize, coverUrl, mimeType, uploadedAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-        [
-          trackId, clientId, radioStreamId,
-          meta.title, meta.artist, meta.album, meta.duration,
-          fileName, filePath, size, coverUrl, data.mimetype || 'audio/mpeg',
-        ]
-      )
+      // Insertar track — sin coverUrl si la columna no existe aún
+      if (await ensureCoverColumn()) {
+        await pool.query(
+          `INSERT INTO tracks (id, clientId, radioStreamId, title, artist, album, duration,
+            fileName, filePath, fileSize, coverUrl, mimeType, uploadedAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+          [
+            trackId, clientId, radioStreamId,
+            meta.title, meta.artist, meta.album, meta.duration,
+            fileName, filePath, size, coverUrl, data.mimetype || 'audio/mpeg',
+          ]
+        )
+      } else {
+        await pool.query(
+          `INSERT INTO tracks (id, clientId, radioStreamId, title, artist, album, duration,
+            fileName, filePath, fileSize, mimeType, uploadedAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+          [
+            trackId, clientId, radioStreamId,
+            meta.title, meta.artist, meta.album, meta.duration,
+            fileName, filePath, size, data.mimetype || 'audio/mpeg',
+          ]
+        )
+      }
 
       await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
@@ -146,11 +212,8 @@ export default async function libraryRoutes(app) {
     }
 
     // If artist or album changed, try to fetch cover from MusicBrainz
-    if ((typeof artist === 'string' || typeof album === 'string')) {
-      const [row] = await pool.query(
-        `SELECT artist, album, coverUrl FROM tracks WHERE id = ? AND clientId = ?`,
-        [trackId, clientId]
-      )
+    if ((typeof artist === 'string' || typeof album === 'string') && await ensureCoverColumn()) {
+      const row = await queryTrackById(trackId, clientId)
       if (row.length > 0) {
         const t = row[0]
         if (t.artist || t.album) {
@@ -158,10 +221,9 @@ export default async function libraryRoutes(app) {
             const mbCover = await fetchCoverFromMusicBrainz(t.artist, t.album)
             if (mbCover) {
               await saveCover(clientId, trackId, mbCover.buffer)
-              const newCoverUrl = `/api/dashboard/streaming/library/${trackId}/cover`
               await pool.query(
                 `UPDATE tracks SET coverUrl = ? WHERE id = ?`,
-                [newCoverUrl, trackId]
+                [`/api/dashboard/streaming/library/${trackId}/cover`, trackId]
               )
             }
           } catch {}

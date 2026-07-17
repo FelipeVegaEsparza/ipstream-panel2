@@ -54,7 +54,7 @@ echo "=================================================="
 echo
 
 # === 1. Pull del código ===
-echo "📥 1/8 — Pull del código..."
+echo "📥 1/9 — Pull del código..."
 git fetch origin main
 git reset --hard origin/main
 
@@ -63,7 +63,7 @@ export IMAGE_TAG
 export GITHUB_REPOSITORY_OWNER
 
 # === 3. Pull de la imagen nueva ===
-echo "🐳 2/8 — Pull de la imagen ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG}..."
+echo "🐳 2/9 — Pull de la imagen ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG}..."
 $COMPOSE_CMD pull app || {
   echo "⚠️  No se pudo pull la imagen. Verificá que el build haya terminado en GitHub Actions."
   echo "    Si es el primer deploy, es posible que la imagen no exista todavía."
@@ -72,15 +72,11 @@ $COMPOSE_CMD pull app || {
 }
 
 # === 4. Construir servicios locales (agente, icecast, liquidsoap) ===
-echo "🔨 3/8 — Construyendo servicios locales (agente, icecast, liquidsoap)..."
+echo "🔨 3/9 — Construyendo servicios locales (agente, icecast, liquidsoap)..."
 $COMPOSE_CMD build agent icecast liquidsoap
 
-# === 5. Up de los containers ===
-echo "🚀 4/8 — Levantando containers..."
-$COMPOSE_CMD up -d --remove-orphans
-
-# === 6. Esperar a que la DB esté healthy ===
-echo "⏳ 5/8 — Esperando a que MySQL esté healthy..."
+# === 5. Esperar a que la DB esté healthy (DB container sigue corriendo) ===
+echo "⏳ 4/9 — Esperando a que MySQL esté healthy..."
 TIMEOUT=60
 ELAPSED=0
 until docker inspect --format='{{.State.Health.Status}}' ipstream-db 2>/dev/null | grep -q healthy; do
@@ -93,9 +89,20 @@ until docker inspect --format='{{.State.Health.Status}}' ipstream-db 2>/dev/null
 done
 echo "  ✓ MySQL healthy en ${ELAPSED}s"
 
-# === 7. Prisma db push ===
-echo "🗄️  6/8 — Aplicando migraciones Prisma..."
-docker exec ipstream-app npx prisma db push --accept-data-loss --skip-generate 2>&1 | tail -5
+# === 6. Migraciones PRIMERO — antes de iniciar nuevos containers ===
+#    Necesitamos que la columna coverUrl exista antes de que el agente empiece.
+echo "🗄️  5/9 — Aplicando migraciones Prisma..."
+docker run --rm \
+  --network container:ipstream-db \
+  -v "${PROJECT_DIR}/prisma:/app/prisma" \
+  -w /app \
+  -e DATABASE_URL="mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@localhost:3306/${MYSQL_DATABASE}" \
+  node:20-bookworm-slim \
+  bash -c "npm init -y >/dev/null 2>&1 && npx prisma db push --accept-data-loss --skip-generate" 2>&1 | tail -5
+
+# === 7. Up de los containers ===
+echo "🚀 6/9 — Levantando containers..."
+$COMPOSE_CMD up -d --remove-orphans
 
 # === 8. Health check ===
 echo "🏥 7/8 — Verificando health (esperando hasta 30s)..."
