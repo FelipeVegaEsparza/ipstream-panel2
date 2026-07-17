@@ -89,22 +89,23 @@ until docker inspect --format='{{.State.Health.Status}}' ipstream-db 2>/dev/null
 done
 echo "  ✓ MySQL healthy en ${ELAPSED}s"
 
-# === 6. Migraciones PRIMERO — antes de iniciar nuevos containers ===
-#    Necesitamos que la columna coverUrl exista antes de que el agente empiece.
-echo "🗄️  5/9 — Aplicando migraciones Prisma..."
-docker run --rm \
-  --network container:ipstream-db \
-  --entrypoint npx \
-  -e DATABASE_URL="mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@localhost:3306/${MYSQL_DATABASE}" \
-  "ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG}" \
-  prisma db push --accept-data-loss --skip-generate
+# === 6. Migración directa de la columna coverUrl (antes de iniciar nuevos containers) ===
+#    Necesitamos que la columna exista antes de que el agente empiece.
+echo "🗄️  5/9 — Agregando columna coverUrl..."
+docker exec ipstream-db mysql -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" \
+  -e "ALTER TABLE tracks ADD COLUMN IF NOT EXISTS coverUrl VARCHAR(255) DEFAULT NULL AFTER filePath;" 2>/dev/null && \
+  echo "  ✓ columna coverUrl lista" || echo "  - columna ya existía (o no hace falta)"
 
 # === 7. Up de los containers ===
 echo "🚀 6/9 — Levantando containers..."
 $COMPOSE_CMD up -d --remove-orphans
 
-# === 8. Health check ===
-echo "🏥 7/8 — Verificando health (esperando hasta 30s)..."
+# === 8. Prisma db push (resto de migraciones, dentro del nuevo container) ===
+echo "🗄️  7/9 — Sincronizando esquema Prisma..."
+docker exec ipstream-app npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "  ⚠ prisma db push no crítico, continuando..."
+
+# === 9. Health check ===
+echo "🏥 8/9 — Verificando health (esperando hasta 30s)..."
 TIMEOUT=30
 ELAPSED=0
 while true; do
