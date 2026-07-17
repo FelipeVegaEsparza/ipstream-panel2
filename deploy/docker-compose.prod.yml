@@ -1,0 +1,93 @@
+# =====================================================
+# IPStream Panel — docker-compose.prod.yml
+# =====================================================
+# Override del docker-compose.yml para PRODUCCIÓN.
+# Se usa con: docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml
+#
+# Diferencias vs dev:
+#   - Imágenes pre-built (taggeadas, no :latest)
+#   - Restart policy: always
+#   - Caddy agregado para HTTPS automático
+#   - Sin bind mounts de código fuente
+#   - Sin puerto 3000 expuesto (Caddy hace de proxy)
+# =====================================================
+
+services:
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-ipstream}/ipstream-panel:${IMAGE_TAG:-latest}
+    container_name: ipstream-app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}?schema=public&charset=utf8mb4
+      DB_HOST: db
+      DB_PORT: 3306
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      CRON_SECRET: ${CRON_SECRET:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrador Principal}
+      STREAMING_AGENT_URL: http://agent:4000
+      STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN}
+      ICE_PUBLIC_URL: ${ICE_PUBLIC_URL}
+    volumes:
+      - app_uploads:/app/public/uploads
+    networks:
+      - ipstream-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ipstream-caddy
+    restart: always
+    depends_on:
+      - app
+      - icecast
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - ipstream-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  ipstream-net:
+    driver: bridge
+
+volumes:
+  app_uploads:
+    name: ipstream_app_uploads
+  caddy_data:
+    name: ipstream_caddy_data
+  caddy_config:
+    name: ipstream_caddy_config
+  # Los siguientes los definimos desde el compose principal,
+  # pero los referenciamos explícitamente para que docker no cree
+  # volumes nuevos al hacer override.
+  db_data:
+    name: ipstream_db_data
+  icecast_logs:
+    name: ipstream_icecast_logs
+  liquidsoap_logs:
+    name: ipstream_liquidsoap_logs
+  radio_library:
+    name: ipstream_radio_library

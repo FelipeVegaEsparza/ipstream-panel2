@@ -1,0 +1,27 @@
+data/
+streaming/agent/node_modules/
+
+# =====================================================
+# Deploy
+# =====================================================
+# .env NUNCA debe ir al repo
+.env
+.env.*
+!.env.prod.example
+!.env.docker
+!.env.example
+
+# Backups
+backups/
+*.sql.gz
+*.tar.gz
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+logs/

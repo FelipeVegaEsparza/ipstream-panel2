@@ -1,0 +1,102 @@
+# =====================================================
+# IPStream Panel — .dockerignore
+# =====================================================
+
+# Dependencias
+node_modules
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+coverage
+.nyc_output
+
+# Next.js
+.next/
+out/
+build
+dist
+
+# Misc
+.DS_Store
+*.pem
+.vscode
+.idea
+.history
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# Prisma
+prisma/migrations
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts.bak
+
+# Uploads (los maneja el volumen)
+public/uploads/*
+!public/uploads/.gitkeep
+public/uploads/.[!.]*
+
+# Archivos de backup / estado local
+public/text-sanitizer.js.bak
+*.bak
+*.tmp
+*.log
+
+# Deploy scripts
+deploy.sh
+deploy.ps1
+
+# Documentación opcional (no se necesita dentro de la imagen)
+README.md
+resumen.md
+chat.md
+onesignalpwa.md
+configuseronesignal.md
+
+# Deploy (solo lo lee el script de deploy, no la imagen de la app)
+deploy/
+.github/
+
+# Streaming agent (tiene su propio Dockerfile)
+streaming/agent/node_modules/
+streaming/agent/server.js
+streaming/agent/lib/
+streaming/agent/routes/
+streaming/agent/package.json
+streaming/agent/Dockerfile
+streaming/agent/.env*
+
+# Liquidsoap / Icecast (tienen sus propios Dockerfiles)
+streaming/icecast/
+streaming/liquidsoap/
+
+# Archivos de phase results (documentación)
+streaming/PHASE-*.md
+streaming/README.md
+
+# Audio de prueba (no va en producción)
+data/
+
+# Local env
+.env
+.env.*
+!.env.prod.example
+!.env.docker
+!.env.example

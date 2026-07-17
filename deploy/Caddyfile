@@ -1,0 +1,93 @@
+# =====================================================
+# IPStream Panel — Caddyfile
+# =====================================================
+# Reverse proxy + HTTPS automático con Let's Encrypt.
+#
+# Configuración:
+#   - panelipstream.cl      → Panel Next.js (HTTPS, :443)
+#   - stream.panelipstream.cl → Icecast (HTTPS, :443, proxy a :8000)
+#
+# IMPORTANTE: configurá tu DNS ANTES de levantar Caddy.
+# Registros A requeridos:
+#   - panelipstream.cl        → TU_IP
+#   - stream.panelipstream.cl → TU_IP
+# =====================================================
+
+# ============================================================
+# Panel principal: panelipstream.cl
+# ============================================================
+{$STREAM_DOMAIN:panelipstream.cl} {
+    # === Panel Next.js (puerto interno 3000) ===
+    reverse_proxy app:3000
+
+    # === Headers de seguridad ===
+    header {
+        # HSTS (incluye subdominios)
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Anti-clickjacking
+        X-Frame-Options "SAMEORIGIN"
+        # Anti-MIME-sniffing
+        X-Content-Type-Options "nosniff"
+        # Referrer
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Quitar header del server (no leak de versión)
+        -Server
+    }
+
+    # === Logging ===
+    log {
+        output file /data/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# HTTP -> HTTPS redirect (panel)
+http://{$STREAM_DOMAIN:panelipstream.cl} {
+    redir https://{$STREAM_DOMAIN:panelipstream.cl}{uri} permanent
+}
+
+# ============================================================
+# Stream (Icecast): stream.panelipstream.cl
+# ============================================================
+# Proxy HTTPS al Icecast interno (puerto 8000).
+# Esto da HTTPS al audio stream — algunos navegadores y players
+# requieren HTTPS para mixed content o por seguridad.
+stream.{$STREAM_DOMAIN:panelipstream.cl} {
+    # Proxy al Icecast
+    reverse_proxy icecast:8000
+
+    # === Headers específicos para audio streaming ===
+    header {
+        # CORS para que el player embebido funcione desde cualquier dominio
+        Access-Control-Allow-Origin "*"
+        Access-Control-Allow-Methods "GET, OPTIONS"
+        Access-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
+        Access-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
+
+        # Caching
+        Cache-Control "no-cache, no-store, must-revalidate"
+
+        # Icecast-specific (para que se vea en players)
+        # Icecast 2.x ya envía estos headers, pero por las dudas
+        -Server
+    }
+
+    # Streaming pasa por HTTPS y se desfasa en chunks.
+    # Importante: NO comprimir (rompe el streaming)
+    encode zstd gzip
+
+    # === Logging ===
+    log {
+        output file /data/stream-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# HTTP -> HTTPS redirect (stream)
+http://stream.{$STREAM_DOMAIN:panelipstream.cl} {
+    redir https://stream.{$STREAM_DOMAIN:panelipstream.cl}{uri} permanent
+}

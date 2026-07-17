@@ -1,0 +1,122 @@
+name: Deploy to production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (default: latest)'
+        required: false
+        default: 'latest'
+
+# Cancelar runs anteriores si hay un push nuevo
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # === 1. Checkout ===
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # === 2. Setup Docker Buildx (para caché) ===
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # === 3. Login a GitHub Container Registry ===
+      - name: Login to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # === 4. Extraer metadata (tags, labels) ===
+      - name: Extract Docker metadata
+        if: github.event_name == 'push'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/ipstream-panel
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # === 5. Build + Push de la imagen ===
+      - name: Build and push Docker image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Cache de layers de Docker para builds rápidos
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      # === 6. Configurar SSH ===
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      # === 7. Add known hosts (evita el prompt de host key) ===
+      - name: Add VPS to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          # También aceptamos el caso de host alias
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" 2>/dev/null | head -1 >> ~/.ssh/known_hosts || true
+
+      # === 8. Determinar IMAGE_TAG ===
+      - name: Determine image tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "value=${{ github.event.inputs.image_tag || 'latest' }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+
+      # === 9. Deploy al VPS via SSH ===
+      - name: Run deploy script on VPS
+        env:
+          IMAGE_TAG: ${{ steps.tag.outputs.value }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /opt/ipstream-panel && IMAGE_TAG='${{ steps.tag.outputs.value }}' GITHUB_REPOSITORY_OWNER='${{ github.repository_owner }}' ./deploy/scripts/deploy.sh"
+
+      # === 10. Health check post-deploy ===
+      - name: Post-deploy health check
+        run: |
+          sleep 15
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /opt/ipstream-panel && ./deploy/scripts/health-check.sh" || {
+            echo "⚠ Health check remoto falló. Verificar manualmente."
+            exit 1
+          }
+
+      # === 11. Notificar resultado (opcional: Slack/Discord) ===
+      - name: Notify success
+        if: success()
+        run: |
+          echo "✅ Deploy a producción exitoso"
+          echo "URL: https://${{ secrets.VPS_HOST }}"
+          echo "Tag: ${{ steps.tag.outputs.value }}"
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "❌ Deploy a producción FALLÓ"
+          echo "Ver GitHub Actions para más detalles"

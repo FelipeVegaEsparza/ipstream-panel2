@@ -1,0 +1,215 @@
+# =====================================================
+# IPStream Panel — docker-compose para desarrollo local
+# =====================================================
+# Servicios:
+#   - db          MySQL 8.0
+#   - app         Next.js (IPStream Panel)
+#   - icecast     Servidor de streaming HTTP (audio)
+#   - liquidsoap  Motor AutoDJ (Phase 0: 1 proceso de prueba)
+#   - agent       Sidecar Node.js que controla icecast + liquidsoap
+#
+# Uso:
+#   docker compose up -d --build
+#   docker compose down              # detener
+#   docker compose down -v           # detener y borrar volúmenes (reset)
+# =====================================================
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: ipstream-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_change_me}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ipstream_panel}
+      MYSQL_USER: ${MYSQL_USER:-ipstream}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ipstream_secret}
+      TZ: ${TZ:-UTC}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root_secret_change_me}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - ipstream-net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ipstream-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: mysql://${MYSQL_USER:-ipstream}:${MYSQL_PASSWORD:-ipstream_secret}@db:3306/${MYSQL_DATABASE:-ipstream_panel}?schema=public&charset=utf8mb4
+      DB_HOST: db
+      DB_PORT: 3306
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-me-in-prod-32chars-minimum}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      CRON_SECRET: ${CRON_SECRET:-}
+      # Streaming agent
+      STREAMING_AGENT_URL: ${STREAMING_AGENT_URL:-http://agent:4000}
+      STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:-dev-agent-token-change-me-in-prod}
+      ICE_PUBLIC_URL: ${ICE_PUBLIC_URL:-http://localhost:8000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ipstream.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123456}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrador Principal}
+    ports:
+      - "3000:3000"
+    volumes:
+      - app_uploads:/app/public/uploads
+      # DEV: bind-mount del schema para reflejar cambios sin rebuild.
+      # En prod esto se quita y se reconstruye la imagen.
+      - ./prisma/schema.prisma:/app/prisma/schema.prisma:ro
+    networks:
+      - ipstream-net
+
+  # =====================================================
+  # Icecast 2 — servidor de streaming HTTP
+  # Sirve streams en :8000 y expone admin API en /admin/
+  # =====================================================
+  icecast:
+    build:
+      context: ./streaming/icecast
+      dockerfile: Dockerfile
+    container_name: ipstream-icecast
+    restart: unless-stopped
+    environment:
+      ICE_ADMIN_USER: ${ICE_ADMIN_USER:-admin}
+      ICE_ADMIN_PASSWORD: ${ICE_ADMIN_PASSWORD:-hackme}
+      ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
+      ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD:-hackme}
+      ICE_HOSTNAME: ${ICE_HOSTNAME:-localhost}
+    ports:
+      - "8000:8000"     # listeners + admin (HTTP)
+    volumes:
+      - icecast_logs:/var/log/icecast2
+    networks:
+      - ipstream-net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/status-json.xsl"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # =====================================================
+  # Liquidsoap — motor AutoDJ
+  # Phase 0: 1 proceso de prueba (sine wave o MP3 playlist)
+  # En fases siguientes será supervisado por el streaming-agent
+  # =====================================================
+  liquidsoap:
+    build:
+      context: ./streaming/liquidsoap
+      dockerfile: Dockerfile
+    container_name: ipstream-liquidsoap
+    restart: unless-stopped
+    depends_on:
+      icecast:
+        condition: service_healthy
+    environment:
+      # Para debugging con `docker exec`
+      - TERM=xterm
+    command: ["test-playlist.liq"]
+    volumes:
+      - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts:ro
+      # Fase 0: bind-mount desde un path dentro del proyecto. En prod, named volume.
+      - ./data/radio:/var/lib/radio
+      - liquidsoap_logs:/var/log/liquidsoap
+    networks:
+      - ipstream-net
+    healthcheck:
+      test: ["CMD", "liquidsoap", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # =====================================================
+  # Streaming Agent — sidecar Node.js + Fastify
+  # Controla icecast + liquidsoap por cliente.
+  # El IPStream Panel lo consume vía HTTP.
+  # =====================================================
+  agent:
+    build:
+      context: ./streaming/agent
+      dockerfile: Dockerfile
+    container_name: ipstream-streaming-agent
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      icecast:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      LOG_LEVEL: info
+      # Auth
+      STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:-dev-agent-token-change-me-in-prod}
+      # Encryption (misma key que el panel)
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      # DB
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-ipstream}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-ipstream_secret}
+      DB_DATABASE: ${MYSQL_DATABASE:-ipstream_panel}
+      # Icecast
+      ICE_HOST: icecast
+      ICE_PORT: 8000
+      ICE_ADMIN_USER: ${ICE_ADMIN_USER:-admin}
+      ICE_ADMIN_PASSWORD: ${ICE_ADMIN_PASSWORD:-hackme}
+      ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
+      # Liquidsoap
+      LIQUIDSOAP_BIN: /usr/bin/liquidsoap
+      LIQUIDSOAP_SCRIPTS_PATH: /etc/liquidsoap/scripts
+      LIQUIDSOAP_LOG_PATH: /var/log/liquidsoap
+      LIQUIDSOAP_TELNET_BASE_PORT: 12340
+      LIQUIDSOAP_HOST: ipstream-liquidsoap
+      # Radio library
+      RADIO_LIBRARY_PATH: /var/lib/radio
+    ports:
+      - "127.0.0.1:4000:4000"   # accesible solo desde el host (para debug)
+    volumes:
+      - ./data/radio:/var/lib/radio
+      - liquidsoap_logs:/var/log/liquidsoap
+      # Fase 1: montamos los scripts generados dinámicamente.
+      # En prod, agent ejecutará liquidsoap vía docker exec en lugar de generar scripts.
+      - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts
+      # Docker socket: necesario para que el agent pueda hacer `docker exec`
+      # en el container de liquidsoap. En prod, restringir el acceso.
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - ipstream-net
+
+networks:
+  ipstream-net:
+    driver: bridge
+
+volumes:
+  db_data:
+    name: ipstream_db_data
+  app_uploads:
+    name: ipstream_uploads
+  icecast_logs:
+    name: ipstream_icecast_logs
+  radio_library:
+    name: ipstream_radio_library
+  liquidsoap_logs:
+    name: ipstream_liquidsoap_logs

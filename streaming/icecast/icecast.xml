@@ -1,0 +1,78 @@
+<icecast>
+    <!-- ============================================================
+         IPStream Panel — Icecast 2 config
+         Variables de entorno (reemplazadas por envsubst en entrypoint.sh):
+           ${ICE_ADMIN_USER}, ${ICE_ADMIN_PASSWORD},
+           ${ICE_SOURCE_PASSWORD}, ${ICE_RELAY_PASSWORD},
+           ${ICE_HOSTNAME}
+         Mountpoints dinámicos: <mount type="default"> se aplica a
+         todos los mountpoints que no estén definidos explícitamente.
+         Cada cliente (radio) usa su propio mountpoint.
+         ============================================================ -->
+
+    <location>IPStream Panel Streaming</location>
+    <admin>admin@ipstream.local</admin>
+
+    <limits>
+        <clients>500</clients>
+        <sources>200</sources>
+        <queue-size>1048576</queue-size>
+        <client-timeout>30</client-timeout>
+        <header-timeout>15</header-timeout>
+        <source-timeout>10</source-timeout>
+        <!-- Si el source se cae, Icecast intenta reconectar -->
+        <burst-on-connect>1</burst-on-connect>
+    </limits>
+
+    <authentication>
+        <!-- Credenciales. El entrypoint.sh las reemplaza con envsubst. -->
+        <admin-user>${ICE_ADMIN_USER}</admin-user>
+        <admin-password>${ICE_ADMIN_PASSWORD}</admin-password>
+        <source-password>${ICE_SOURCE_PASSWORD}</source-password>
+        <relay-password>${ICE_RELAY_PASSWORD}</relay-password>
+    </authentication>
+
+    <hostname>${ICE_HOSTNAME}</hostname>
+    <listen-socket>
+        <port>8000</port>
+    </listen-socket>
+
+    <!-- Mount por defecto: se aplica a cualquier /<clientId> que conecte.
+         - public=1: aparece en /status-json.xsl
+         - El DJ puede tomar el control conectando con una password distinta
+           y mayor prioridad (lo gestiona el streaming-agent). -->
+    <mount type="default">
+        <public>1</public>
+        <bitrate>128</bitrate>
+        <type>audio/mpeg</type>
+    </mount>
+
+    <fileserve>1</fileserve>
+
+    <paths>
+        <basedir>/usr/share/icecast2</basedir>
+        <logdir>/var/log/icecast2</logdir>
+        <webroot>/usr/share/icecast2/web</webroot>
+        <adminroot>/usr/share/icecast2/admin</adminroot>
+        <alias source="/" destination="/status-json.xsl"/>
+    </paths>
+
+    <logging>
+        <accesslog>access.log</accesslog>
+        <errorlog>error.log</errorlog>
+        <loglevel>3</loglevel>
+        <logsize>10000</logsize>
+    </logging>
+
+    <security>
+        <chroot>0</chroot>
+    </security>
+
+    <!-- changeowner va como top-level en Icecast 2.4.
+         Como ya corremos como icecast en el container, queda en root
+         para que icecast se "cambie" a root tras abrir el puerto
+         (es el comportamiento requerido por Icecast 2.4). -->
+    <changeowner>
+        <user>root</user>
+    </changeowner>
+</icecast>
