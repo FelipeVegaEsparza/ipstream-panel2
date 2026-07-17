@@ -54,7 +54,7 @@ echo "=================================================="
 echo
 
 # === 1. Pull del código ===
-echo "📥 1/6 — Pull del código..."
+echo "📥 1/8 — Pull del código..."
 git fetch origin main
 git reset --hard origin/main
 
@@ -63,7 +63,7 @@ export IMAGE_TAG
 export GITHUB_REPOSITORY_OWNER
 
 # === 3. Pull de la imagen nueva ===
-echo "🐳 2/6 — Pull de la imagen ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG}..."
+echo "🐳 2/8 — Pull de la imagen ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG}..."
 $COMPOSE_CMD pull app || {
   echo "⚠️  No se pudo pull la imagen. Verificá que el build haya terminado en GitHub Actions."
   echo "    Si es el primer deploy, es posible que la imagen no exista todavía."
@@ -71,12 +71,16 @@ $COMPOSE_CMD pull app || {
   $COMPOSE_CMD build app
 }
 
-# === 4. Up de los containers ===
-echo "🚀 3/6 — Levantando containers..."
+# === 4. Construir servicios locales (agente, icecast, liquidsoap) ===
+echo "🔨 3/8 — Construyendo servicios locales (agente, icecast, liquidsoap)..."
+$COMPOSE_CMD build agent icecast liquidsoap
+
+# === 5. Up de los containers ===
+echo "🚀 4/8 — Levantando containers..."
 $COMPOSE_CMD up -d --remove-orphans
 
-# === 5. Esperar a que la DB esté healthy ===
-echo "⏳ 4/6 — Esperando a que MySQL esté healthy..."
+# === 6. Esperar a que la DB esté healthy ===
+echo "⏳ 5/8 — Esperando a que MySQL esté healthy..."
 TIMEOUT=60
 ELAPSED=0
 until docker inspect --format='{{.State.Health.Status}}' ipstream-db 2>/dev/null | grep -q healthy; do
@@ -89,12 +93,12 @@ until docker inspect --format='{{.State.Health.Status}}' ipstream-db 2>/dev/null
 done
 echo "  ✓ MySQL healthy en ${ELAPSED}s"
 
-# === 6. Prisma db push ===
-echo "🗄️  5/6 — Aplicando migraciones Prisma..."
+# === 7. Prisma db push ===
+echo "🗄️  6/8 — Aplicando migraciones Prisma..."
 docker exec ipstream-app npx prisma db push --accept-data-loss --skip-generate 2>&1 | tail -5
 
-# === 7. Health check ===
-echo "🏥 6/6 — Verificando health (esperando hasta 30s)..."
+# === 8. Health check ===
+echo "🏥 7/8 — Verificando health (esperando hasta 30s)..."
 TIMEOUT=30
 ELAPSED=0
 while true; do
@@ -113,7 +117,6 @@ while true; do
   ELAPSED=$((ELAPSED + 3))
 done
 
-# === Resumen ===
 echo
 echo "=================================================="
 echo "  ✅ Deploy exitoso"
