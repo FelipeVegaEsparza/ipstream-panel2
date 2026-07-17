@@ -104,7 +104,7 @@ export default function LibraryPage() {
 
       <LibraryUploader onUploaded={load} />
 
-      <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-gray-800 rounded-lg shadow-lg overflow-x-auto">
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">
             {loading ? 'Cargando...' : `${tracks.length} track${tracks.length !== 1 ? 's' : ''}`}
@@ -123,10 +123,10 @@ export default function LibraryPage() {
               <tr>
                 <th className="text-left p-3 w-12">Carátula</th>
                 <th className="text-left p-3">Título</th>
-                <th className="text-left p-3">Artista</th>
+                <th className="text-left p-3 hidden sm:table-cell">Artista</th>
                 <th className="text-left p-3">Duración</th>
-                <th className="text-left p-3">Tamaño</th>
-                <th className="text-left p-3">Archivo</th>
+                <th className="text-left p-3 hidden md:table-cell">Tamaño</th>
+                <th className="text-left p-3 hidden lg:table-cell">Archivo</th>
                 <th className="text-right p-3">Acciones</th>
               </tr>
             </thead>
@@ -158,7 +158,7 @@ export default function LibraryPage() {
                       t.title
                     )}
                   </td>
-                  <td className="p-3 text-gray-300">
+                  <td className="p-3 text-gray-300 hidden sm:table-cell">
                     {editingId === t.id ? (
                       <input
                         value={editArtist}
@@ -170,9 +170,9 @@ export default function LibraryPage() {
                       t.artist || <span className="text-gray-500">—</span>
                     )}
                   </td>
-                  <td className="p-3 text-gray-300">{fmtDuration(t.duration)}</td>
-                  <td className="p-3 text-gray-400">{fmtSize(t.fileSize)}</td>
-                  <td className="p-3 text-gray-500 font-mono text-xs">{t.fileName}</td>
+                  <td className="p-3 text-gray-300 whitespace-nowrap">{fmtDuration(t.duration)}</td>
+                  <td className="p-3 text-gray-400 hidden md:table-cell">{fmtSize(t.fileSize)}</td>
+                  <td className="p-3 text-gray-500 font-mono text-xs hidden lg:table-cell">{t.fileName}</td>
                   <td className="p-3 text-right">
                     {editingId === t.id ? (
                       <>
