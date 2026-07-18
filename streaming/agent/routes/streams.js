@@ -6,6 +6,7 @@ import { startStream, stopStream, restartStream, isProcessRunning, regenerateScr
 import { getMountStatus, getGlobalStatus, ping as icecastPing } from '../lib/icecast.js'
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
+import { config } from '../lib/config.js'
 import { decrypt, isEncrypted } from '../lib/encryption.js'
 import crypto from 'crypto'
 
@@ -365,9 +366,24 @@ export default async function streamRoutes(app) {
         return reply.code(403).send({ error: 'no_password_configured' })
       }
 
-      const expectedPass = decrypt(livePasswordEnc)
+      // Aceptar tanto la contraseña per-cliente (livePassword) como la compartida
+      // Esto permite que AutoDJs viejos (con shared password) sigan funcionando
+      // mientras los nuevos y los DJs usan la contraseña per-cliente.
+      let livePassword
+      try {
+        livePassword = decrypt(livePasswordEnc)
+      } catch (err) {
+        logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error descifrando livePasswordEnc')
+        livePassword = null
+      }
 
-      if (pass !== expectedPass) {
+      const sharedPassword = config.ice.sourcePassword
+      const validPasswords = [sharedPassword]
+      if (livePassword && livePassword !== sharedPassword) {
+        validPasswords.push(livePassword)
+      }
+
+      if (!validPasswords.includes(pass)) {
         logger.warn({ mount: cleanMount, user }, 'auth-source: password incorrecto')
         return reply.code(403).send({ error: 'invalid_password' })
       }
