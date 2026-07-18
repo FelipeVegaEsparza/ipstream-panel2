@@ -115,7 +115,32 @@ app.get('/', async () => ({
   },
 }))
 
-// Auto-migración: asegurar que la tabla playlist_schedules exista
+// Auto-migración: asegurar tablas que el agente necesita
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS jingles (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      radioStreamId VARCHAR(191) NOT NULL,
+      title VARCHAR(191) NOT NULL,
+      artist VARCHAR(191),
+      duration DOUBLE NOT NULL,
+      fileName VARCHAR(191) NOT NULL,
+      filePath VARCHAR(191) NOT NULL,
+      fileSize INT NOT NULL,
+      coverUrl VARCHAR(191),
+      mimeType VARCHAR(191) NOT NULL DEFAULT 'audio/mpeg',
+      uploadedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      updatedAt DATETIME(3) NOT NULL,
+      INDEX idx_jingles_client (clientId),
+      INDEX idx_jingles_radio (radioStreamId)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla jingles asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla jingles')
+}
+
 try {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS playlist_schedules (
