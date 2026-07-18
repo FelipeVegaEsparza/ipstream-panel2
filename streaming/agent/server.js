@@ -163,6 +163,25 @@ try {
   logger.error({ err: err.message }, 'Error creando tabla playlist_schedules')
 }
 
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS streaming_audit_logs (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      action VARCHAR(191) NOT NULL,
+      payload JSON,
+      ipAddress VARCHAR(45),
+      userAgent VARCHAR(500),
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_audit_client_date (clientId, createdAt),
+      INDEX idx_audit_action (action)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla streaming_audit_logs asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla streaming_audit_logs')
+}
+
 // Rutas
 await app.register(streamRoutes)
 await app.register(websocketRoutes)

@@ -87,6 +87,20 @@ const prisma = new PrismaClient();
       ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `);
     console.log('[entrypoint] Tabla playlist_schedules OK');
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS streaming_audit_logs (
+        id VARCHAR(191) NOT NULL PRIMARY KEY,
+        clientId VARCHAR(191) NOT NULL,
+        action VARCHAR(191) NOT NULL,
+        payload JSON,
+        ipAddress VARCHAR(45),
+        userAgent VARCHAR(500),
+        createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        INDEX idx_audit_client_date (clientId, createdAt),
+        INDEX idx_audit_action (action)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    `);
+    console.log('[entrypoint] Tabla streaming_audit_logs OK');
   } catch (e) {
     console.error('[entrypoint] Error en migraciones manuales:', e.message);
   } finally {
