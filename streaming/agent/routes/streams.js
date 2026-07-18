@@ -327,6 +327,66 @@ export default async function streamRoutes(app) {
    * Retorna 200 (ok) o 403 (denegado).
    * Sin auth — Icecast no tiene el token del agente.
    */
+  /**
+   * GET /api/streams/auth-source/diag?mount=xxxx&pass=yyyy
+   * Diagnóstico: simula una autenticación y devuelve el resultado sin efectos.
+   */
+  app.get('/api/streams/auth-source/diag', async (request, reply) => {
+    const { mount: qMount, pass: qPass } = request.query
+
+    if (!qMount) {
+      return reply.code(400).send({ error: 'Falta ?mount=xxx' })
+    }
+
+    const cleanMount = qMount.replace(/^\//, '')
+    const result = {
+      mount: cleanMount,
+      queryPassProvided: !!qPass,
+      sharedPassword: config.ice.sourcePassword ? `***${config.ice.sourcePassword.slice(-3)}` : null,
+      livePasswordEnc: null,
+      livePasswordDecrypted: null,
+      validPasswords: [config.ice.sourcePassword ? `***${config.ice.sourcePassword.slice(-3)}` : '(empty)'],
+      wouldAuthenticate: false,
+      error: null,
+    }
+
+    try {
+      const [rows] = await pool.query(
+        `SELECT livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
+        [cleanMount]
+      )
+
+      if (rows.length === 0) {
+        result.error = 'mount_not_found'
+      } else {
+        result.livePasswordEnc = rows[0].livePasswordEnc ? 'exists' : 'null'
+        if (rows[0].livePasswordEnc && isEncrypted(rows[0].livePasswordEnc)) {
+          try {
+            const livePwd = decrypt(rows[0].livePasswordEnc)
+            result.livePasswordDecrypted = `***${livePwd.slice(-3)}`
+            if (livePwd !== config.ice.sourcePassword) {
+              result.validPasswords.push(`***${livePwd.slice(-3)}`)
+            }
+          } catch (err) {
+            result.error = `decrypt_error: ${err.message}`
+          }
+        }
+      }
+
+      if (qPass) {
+        const expectedPasses = [config.ice.sourcePassword]
+        if (result.livePasswordDecrypted) {
+          const actualLive = expectedPasses.length > 1 ? expectedPasses[1] : null
+        }
+        result.wouldAuthenticate = (config.ice.sourcePassword === qPass)
+      }
+    } catch (err) {
+      result.error = err.message
+    }
+
+    return result
+  })
+
   app.post('/api/streams/auth-source', async (request, reply) => {
     try {
       const parseFormBody = (raw) => {

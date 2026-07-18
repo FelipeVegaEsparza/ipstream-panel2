@@ -7,8 +7,8 @@
 export function buildAuthHook(expectedToken) {
   return async function authHook(request, reply) {
     // Permitir health check y auth-source sin token (Icecast llama auth-source)
-    const url = request.url.split('?')[0].replace(/\/$/, '')  // ignorar query params y trailing slash
-    if (url === '/health' || url === '/healthz' || url === '/api/streams/auth-source') {
+    const url = request.url.split('?')[0].replace(/\/$/, '')
+    if (url === '/health' || url === '/healthz' || url.startsWith('/api/streams/auth-source')) {
       return
     }
 

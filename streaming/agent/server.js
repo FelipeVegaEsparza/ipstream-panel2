@@ -93,6 +93,7 @@ app.get('/', async () => ({
     regenerateM3u: 'POST /api/streams/:clientId/regenerate-m3u',
     icecastStatus: 'GET /api/icecast/status',
     authSource: 'POST /api/streams/auth-source',
+    authSourceDiag: 'GET /api/streams/auth-source/diag',
     liveStatus: 'WS /ws/streams/:clientId',
     listLibrary: 'GET /api/streams/:clientId/library',
     uploadTrack: 'POST /api/streams/:clientId/library/upload',
