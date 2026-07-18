@@ -6,4 +6,4 @@ prod:
 - Email: admin@panelipstream.cl
 - Password: 3517707aaAA@@##fix: correct agent container name in health check
 
-docker compose build agent && docker compose up -d
+docker compose build agent && docker compose up -ddocker compose build app --no-cache && docker compose up -ddocker compose build app --no-cache && docker compose up -d

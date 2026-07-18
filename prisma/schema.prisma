@@ -68,6 +68,8 @@ model Client {
   tracks            Track[]
   playlists         Playlist[]
   streamingAuditLogs StreamingAuditLog[]
+  jingles           Jingle[]
+  playlistSchedules PlaylistSchedule[]
 
   @@map("clients")
 }
@@ -620,6 +622,9 @@ model RadioStream {
   maxListeners          Int?                                       // cap de oyentes simultáneos (null = ilimitado)
   maxTracksPerPlaylist  Int?                                       // ej: 200 (null = ilimitado)
   adminNotes            String?   @db.Text                         // notas internas del admin
+  // Jingles (cuñas publicitarias)
+  jinglePlayEvery       Int       @default(5)                     // cada X canciones
+  jinglePlayCount       Int       @default(1)                     // reproducir Y jingles
   // Estado actual
   status                String    @default("off")  // "off" | "autodj" | "live"
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)
@@ -639,6 +644,8 @@ model RadioStream {
   client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
   tracks      Track[]
   playlists   Playlist[]
+  jingles     Jingle[]
+  playlistSchedules PlaylistSchedule[]
 
   @@index([status])
   @@index([enabled])
@@ -698,6 +705,7 @@ model Playlist {
   client      Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
   radioStream RadioStream     @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
   entries     PlaylistEntry[]
+  schedules   PlaylistSchedule[]
 
   @@index([clientId])
   @@index([radioStreamId])
@@ -738,6 +746,53 @@ model StreamingAuditLog {
   @@index([clientId, createdAt])
   @@index([action])
   @@map("streaming_audit_logs")
+}
+
+// Jingles (cuñas publicitarias por cliente)
+model Jingle {
+  id           String   @id @default(cuid())
+  clientId     String
+  radioStreamId String
+  title        String   @db.VarChar(191)
+  artist       String?  @db.VarChar(191)
+  duration     Float
+  fileName     String   @db.VarChar(191)
+  filePath     String   @db.VarChar(191)
+  fileSize     Int
+  coverUrl     String?  @db.VarChar(191)
+  mimeType     String   @default("audio/mpeg") @db.VarChar(191)
+  uploadedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  radioStream  RadioStream  @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([radioStreamId])
+  @@map("jingles")
+}
+
+// Programación horaria de playlists
+model PlaylistSchedule {
+  id            String   @id @default(cuid())
+  clientId      String
+  radioStreamId String
+  playlistId    String
+  dayOfWeek     Int                              // 0=domingo, 1=lun, ..., 6=sáb
+  startTime     String   @db.VarChar(191)         // HH:mm
+  endTime       String   @db.VarChar(191)         // HH:mm
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  radioStream  RadioStream  @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+  playlist     Playlist     @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, dayOfWeek, isActive])
+  @@index([radioStreamId, dayOfWeek, isActive])
+  @@map("playlist_schedules")
 }
 
 // RadioStream status: "off" | "autodj" | "live"

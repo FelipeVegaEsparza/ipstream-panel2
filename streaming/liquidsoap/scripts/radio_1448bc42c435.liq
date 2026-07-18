@@ -16,14 +16,13 @@ settings.log.level.set(3)
 settings.server.telnet.set(true)
 settings.server.telnet.port.set(12342)
 
-# Source: playlist (default) o silencio
-music =
-  mksafe(playlist(
-    id="radio_1448bc42c435-playlist",
-    "/var/lib/radio/cmroc3vtu000b8q6l0lzvvj4d/playlist.m3u",
-    mode="normal",
-    reload=5000,
-    loop=true
+# Source: playlist con jingles o solo playlist
+source = mksafe(rotate(
+    weights=[5, 1],
+    [
+      playlist(id="radio_1448bc42c435-music", "/var/lib/radio/cmroc3vtu000b8q6l0lzvvj4d/playlist.m3u", mode="normal", reload=5000, loop=true),
+      playlist(id="radio_1448bc42c435-jingles", "/var/lib/radio/cmroc3vtu000b8q6l0lzvvj4d/jingles.m3u", mode="random", reload=5000, loop=true)
+    ]
   ))
 
 # Output a Icecast como AutoDJ (prioridad baja — DJ puede tomar el control)
@@ -37,5 +36,5 @@ output.icecast(
   genre="Various",
   description="AutoDJ stream for Radio Fusion Austral",
   public=true,
-  music
+  source
 )

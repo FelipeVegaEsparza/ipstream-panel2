@@ -182,6 +182,15 @@ try {
   logger.error({ err: err.message }, 'Error creando tabla streaming_audit_logs')
 }
 
+// Asegurar columnas de jingles en radio_streams
+try {
+  await pool.query(`ALTER TABLE radio_streams ADD COLUMN IF NOT EXISTS jinglePlayEvery INT NOT NULL DEFAULT 5`)
+  await pool.query(`ALTER TABLE radio_streams ADD COLUMN IF NOT EXISTS jinglePlayCount INT NOT NULL DEFAULT 1`)
+  logger.info('Columnas jingle en radio_streams aseguradas')
+} catch (err) {
+  logger.info({ err: err.message }, 'Columnas jingle en radio_streams (ya existían o ignorado)')
+}
+
 // Rutas
 await app.register(streamRoutes)
 await app.register(websocketRoutes)

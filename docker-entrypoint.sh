@@ -101,6 +101,15 @@ const prisma = new PrismaClient();
       ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `);
     console.log('[entrypoint] Tabla streaming_audit_logs OK');
+
+    // Asegurar columnas de jingles en radio_streams (si prisma db push no lo hizo)
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE radio_streams ADD COLUMN IF NOT EXISTS jinglePlayEvery INT NOT NULL DEFAULT 5`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE radio_streams ADD COLUMN IF NOT EXISTS jinglePlayCount INT NOT NULL DEFAULT 1`);
+      console.log('[entrypoint] Columnas jingle en radio_streams OK');
+    } catch (e2) {
+      console.log('[entrypoint] Columnas jingle en radio_streams ya existían:', e2.message);
+    }
   } catch (e) {
     console.error('[entrypoint] Error en migraciones manuales:', e.message);
   } finally {
