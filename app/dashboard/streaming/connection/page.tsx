@@ -11,6 +11,7 @@ export default function ConnectionPage() {
   const [livePassword, setLivePassword] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [loadingPassword, setLoadingPassword] = useState(false)
+  const [takeoverState, setTakeoverState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   useEffect(() => {
     fetch('/api/dashboard/streaming/connection')
@@ -50,6 +51,23 @@ export default function ConnectionPage() {
     }
   }, [livePassword])
 
+  const doTakeover = useCallback(async () => {
+    setTakeoverState('loading')
+    try {
+      const res = await fetch('/api/dashboard/streaming/dj-takeover', { method: 'POST' })
+      if (res.ok) {
+        setTakeoverState('success')
+        setTimeout(() => setTakeoverState('idle'), 5000)
+      } else {
+        setTakeoverState('error')
+        setTimeout(() => setTakeoverState('idle'), 4000)
+      }
+    } catch {
+      setTakeoverState('error')
+      setTimeout(() => setTakeoverState('idle'), 4000)
+    }
+  }, [])
+
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
     setCopyText(label)
@@ -67,10 +85,23 @@ export default function ConnectionPage() {
         </p>
       </div>
 
-      <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 text-sm text-yellow-100">
-        💡 <strong>Tip:</strong> Tu AutoDJ se está ejecutando con prioridad baja.
-        Cuando conectes un DJ, este tomará el control automáticamente.
-        Al desconectarse, vuelve a sonar el AutoDJ.
+      <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 text-sm text-yellow-100 flex items-center justify-between gap-4 flex-wrap">
+        <span>
+          💡 <strong>DJ Takeover:</strong> Antes de conectar tu DJ, hacé clic en <strong>"Tomar control"</strong> para detener el AutoDJ. Cuando te desconectes, el AutoDJ volverá solo en ~30 segundos.
+        </span>
+        <button
+          onClick={doTakeover}
+          disabled={takeoverState === 'loading'}
+          className={`shrink-0 px-4 py-2 rounded font-semibold text-sm whitespace-nowrap ${
+            takeoverState === 'success'
+              ? 'bg-green-600 text-white'
+              : takeoverState === 'error'
+              ? 'bg-red-600 text-white'
+              : 'bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50'
+          }`}
+        >
+          {takeoverState === 'loading' ? 'Deteniendo...' : takeoverState === 'success' ? '✓ AutoDJ detenido' : takeoverState === 'error' ? 'Error, intentá de nuevo' : '🎤 Tomar control'}
+        </button>
       </div>
 
       <div className="bg-gray-800 rounded-lg p-6 space-y-4">
