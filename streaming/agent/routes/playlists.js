@@ -280,6 +280,73 @@ export default async function playlistRoutes(app) {
   })
 
   /**
+   * POST /api/streams/:clientId/playlists/:id/tracks/bulk
+   * Agrega multiples tracks a la playlist.
+   * Body: { trackIds }
+   */
+  app.post('/api/streams/:clientId/playlists/:id/tracks/bulk', async (request, reply) => {
+    const { clientId, id } = request.params
+    const { trackIds } = request.body || {}
+    if (!Array.isArray(trackIds) || trackIds.length === 0) {
+      return reply.code(400).send({ error: 'trackIds_required' })
+    }
+
+    const [plRows] = await pool.query(
+      `SELECT id FROM playlists WHERE id = ? AND clientId = ?`, [id, clientId]
+    )
+    if (plRows.length === 0) return reply.code(404).send({ error: 'playlist_not_found' })
+
+    const results = { added: 0, skipped: 0, errors: [] }
+
+    for (const trackId of trackIds) {
+      try {
+        const [trRows] = await pool.query(
+          `SELECT id FROM tracks WHERE id = ? AND clientId = ?`, [trackId, clientId]
+        )
+        if (trRows.length === 0) {
+          results.errors.push({ trackId, reason: 'not_found' })
+          continue
+        }
+
+        const [existing] = await pool.query(
+          `SELECT id FROM playlist_entries WHERE playlistId = ? AND trackId = ?`, [id, trackId]
+        )
+        if (existing.length > 0) {
+          results.skipped++
+          continue
+        }
+
+        const [maxRows] = await pool.query(
+          `SELECT COALESCE(MAX(\`order\`), 0) AS maxOrder FROM playlist_entries WHERE playlistId = ?`,
+          [id]
+        )
+        const nextOrder = maxRows[0].maxOrder + 1
+        const entryId = 'pe_' + uuid().slice(0, 8)
+
+        await pool.query(
+          `INSERT INTO playlist_entries (id, playlistId, trackId, \`order\`, createdAt)
+           VALUES (?, ?, ?, ?, NOW())`,
+          [entryId, id, trackId, nextOrder]
+        )
+        results.added++
+      } catch (err) {
+        results.errors.push({ trackId, reason: err.message })
+      }
+    }
+
+    await updatePlaylistStats(id)
+
+    const [activeRows] = await pool.query(
+      `SELECT isActive FROM playlists WHERE id = ?`, [id]
+    )
+    if (activeRows[0]?.isActive) {
+      await regenerateM3u(clientId)
+    }
+
+    return { ok: true, ...results }
+  })
+
+  /**
    * DELETE /api/streams/:clientId/playlists/:id/tracks/:trackId
    * Quita un track de la playlist.
    */

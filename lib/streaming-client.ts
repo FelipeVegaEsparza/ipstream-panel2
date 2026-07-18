@@ -163,6 +163,11 @@ export const streamingClient = {
       method: 'POST',
       body: { trackId },
     }),
+  addTracksToPlaylist: (clientId: string, playlistId: string, trackIds: string[]) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}/tracks/bulk`, {
+      method: 'POST',
+      body: { trackIds },
+    }),
   removeTrackFromPlaylist: (clientId: string, playlistId: string, trackId: string) =>
     request(`/api/streams/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}/tracks/${encodeURIComponent(trackId)}`, {
       method: 'DELETE',

@@ -70,6 +70,8 @@ export default function PlaylistEditorPage() {
   const dragStateRef = useRef<{ from: number; to: number } | null>(null)
   const [playingId, setPlayingId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set())
+  const [addingBulk, setAddingBulk] = useState(false)
 
   const togglePlay = (id: string, title: string) => {
     if (playingId === id) {
@@ -181,6 +183,54 @@ export default function PlaylistEditorPage() {
       await load()
     } catch (err: any) {
       alert(err.message)
+    }
+  }
+
+  const toggleSelectTrack = (trackId: string) => {
+    setSelectedTrackIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(trackId)) next.delete(trackId)
+      else next.add(trackId)
+      return next
+    })
+  }
+
+  const selectableTracks = library.filter(
+    (t) => !inPlaylistIds.has(t.id)
+  )
+
+  const allSelected = selectableTracks.length > 0 && selectableTracks.every((t) => selectedTrackIds.has(t.id))
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedTrackIds(new Set())
+    } else {
+      setSelectedTrackIds(new Set(selectableTracks.map((t) => t.id)))
+    }
+  }
+
+  const bulkAddTracks = async () => {
+    const ids = Array.from(selectedTrackIds)
+    if (ids.length === 0) return
+    setAddingBulk(true)
+    try {
+      const res = await fetch(`/api/dashboard/streaming/playlists/${id}/tracks/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackIds: ids }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.message || 'Error agregando tracks')
+      }
+      setShowAdd(false)
+      setSearch('')
+      setSelectedTrackIds(new Set())
+      await load()
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setAddingBulk(false)
     }
   }
 
@@ -362,7 +412,10 @@ export default function PlaylistEditorPage() {
               </button>
             )}
             <button
-              onClick={() => setShowAdd(!showAdd)}
+              onClick={() => {
+                setShowAdd(!showAdd)
+                setSelectedTrackIds(new Set())
+              }}
               className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded"
             >
               {showAdd ? 'Cerrar' : '+ Agregar tracks'}
@@ -370,67 +423,116 @@ export default function PlaylistEditorPage() {
           </div>
         </div>
 
+        {/* Modal de selección múltiple */}
         {showAdd && (
-          <div className="p-4 border-b border-gray-700 bg-gray-900/50 space-y-3">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="🔍 Buscar en biblioteca..."
-              className="w-full bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
-            />
-            <div className="max-h-60 overflow-y-auto space-y-1">
-              {filteredLibrary.length === 0 ? (
-                <div className="text-gray-500 text-sm py-2">
-                  {library.length === 0 ? 'Biblioteca vacía. Subí MP3s primero.' : 'Sin resultados.'}
-                </div>
-              ) : (
-                filteredLibrary.map((t) => {
-                  const inPlaylist = inPlaylistIds.has(t.id)
-                  return (
-                    <div
-                      key={t.id}
-                      className={`flex items-center justify-between p-2 rounded ${
-                        inPlaylist ? 'bg-gray-800/50 opacity-50' : 'bg-gray-800 hover:bg-gray-700'
-                      }`}
-                    >
-                      <div className="flex-shrink-0 w-8 h-8 mr-2">
-                        {t.coverUrl ? (
-                          <img
-                            src={t.coverUrl}
-                            alt=""
-                            className="w-8 h-8 rounded object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} />
+            <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-lg max-h-[80vh] flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-700">
+                <h3 className="text-lg font-semibold text-white">Agregar tracks</h3>
+                <button
+                  onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="p-4 border-b border-gray-700">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="🔍 Buscar en biblioteca..."
+                  className="w-full bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+                />
+              </div>
+
+              {/* Select all toggle */}
+              <div className="px-4 py-2 border-b border-gray-700 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={allSelected && selectableTracks.length > 0}
+                  onChange={toggleSelectAll}
+                  disabled={selectableTracks.length === 0}
+                  className="rounded"
+                />
+                <span className="text-sm text-gray-300">
+                  {allSelected ? 'Deseleccionar todos' : `Seleccionar todos (${selectableTracks.length} disponibles)`}
+                </span>
+              </div>
+
+              {/* Track list */}
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {filteredLibrary.length === 0 ? (
+                  <div className="text-gray-500 text-sm py-8 text-center">
+                    {library.length === 0 ? 'Biblioteca vacía. Subí MP3s primero.' : 'Sin resultados.'}
+                  </div>
+                ) : (
+                  filteredLibrary.map((t) => {
+                    const inPlaylist = inPlaylistIds.has(t.id)
+                    const isSelected = selectedTrackIds.has(t.id)
+                    return (
+                      <div
+                        key={t.id}
+                        className={`flex items-center gap-2 p-2 rounded ${
+                          inPlaylist ? 'bg-gray-800/50 opacity-40' : isSelected ? 'bg-indigo-900/40 border border-indigo-700' : 'bg-gray-800/50 hover:bg-gray-700'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          disabled={inPlaylist}
+                          onChange={() => toggleSelectTrack(t.id)}
+                          className="rounded flex-shrink-0"
+                        />
+                        <div className="flex-shrink-0 w-8 h-8">
+                          {t.coverUrl ? (
+                            <img src={t.coverUrl} alt="" className="w-8 h-8 rounded object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                          ) : (
+                            <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-xs">🎵</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white text-sm truncate">{t.title}</div>
+                          <div className="text-xs text-gray-500 truncate">{t.artist || 'Sin artista'} · {fmtDuration(t.duration)}</div>
+                        </div>
+                        {inPlaylist ? (
+                          <span className="text-xs text-gray-500 flex-shrink-0">En playlist</span>
                         ) : (
-                          <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-xs">🎵</div>
+                          <button
+                            onClick={() => togglePlay(t.id, t.title)}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                              playingId === t.id ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            }`}
+                            title={playingId === t.id ? 'Detener' : 'Previsualizar'}
+                          >
+                            {playingId === t.id ? '⏹' : '▶'}
+                          </button>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-white text-sm truncate">{t.title}</div>
-                        <div className="text-xs text-gray-500 truncate">{t.artist || 'Sin artista'} · {fmtDuration(t.duration)}</div>
-                      </div>
-                      <button
-                        onClick={() => togglePlay(t.id, t.title)}
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs mr-2 ${
-                          playingId === t.id
-                            ? 'bg-green-600 text-white'
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                        }`}
-                        title={playingId === t.id ? 'Detener' : 'Previsualizar'}
-                      >
-                        {playingId === t.id ? '⏹' : '▶'}
-                      </button>
-                      <button
-                        onClick={() => addTrack(t.id)}
-                        disabled={inPlaylist}
-                        className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white text-xs rounded"
-                      >
-                        {inPlaylist ? 'En playlist' : 'Agregar'}
-                      </button>
-                    </div>
-                  )
-                })
-              )}
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-gray-700 flex gap-2">
+                <button
+                  onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }}
+                  className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={bulkAddTracks}
+                  disabled={selectedTrackIds.size === 0 || addingBulk}
+                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 text-white rounded-lg font-medium"
+                >
+                  {addingBulk ? 'Agregando...' : `Agregar seleccionados (${selectedTrackIds.size})`}
+                </button>
+              </div>
             </div>
           </div>
         )}
