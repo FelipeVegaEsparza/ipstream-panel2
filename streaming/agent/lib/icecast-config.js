@@ -155,15 +155,24 @@ async function writeConfigToContainer(xml) {
 
 /**
  * Envía SIGHUP a icecast para que recargue la config.
+ * Usa root (-u 0) porque el usuario icecast no tiene permisos
+ * para enviar señales a procesos que no son suyos.
  */
 async function reloadIcecast() {
-  try {
-    await execp(`docker exec ${ICECAST_CONTAINER} killall -HUP ${ICECAST_BIN} 2>/dev/null || docker exec ${ICECAST_CONTAINER} kill -HUP 1`)
-    logger.info('icecast-config: SIGHUP enviado a icecast')
-  } catch (err) {
-    logger.warn({ err: err.message }, 'icecast-config: SIGHUP falló')
-    throw err
+  const signals = [
+    `docker exec -u 0 ${ICECAST_CONTAINER} killall -HUP ${ICECAST_BIN}`,
+    `docker exec -u 0 ${ICECAST_CONTAINER} kill -HUP 1`,
+    `docker exec -u 0 ${ICECAST_CONTAINER} pkill -HUP ${ICECAST_BIN}`,
+  ]
+  for (const cmd of signals) {
+    try {
+      await execp(cmd + ' 2>/dev/null')
+      logger.info('icecast-config: SIGHUP enviado a icecast')
+      return
+    } catch {}
   }
+  logger.warn('icecast-config: SIGHUP falló con todos los métodos')
+  throw new Error('SIGHUP failed')
 }
 
 /**
