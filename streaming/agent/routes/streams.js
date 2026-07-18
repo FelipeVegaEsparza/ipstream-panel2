@@ -169,6 +169,43 @@ export default async function streamRoutes(app) {
   })
 
   /**
+   * POST /api/streams/:clientId/dj-takeover
+   * Kickea el AutoDJ actual para que un DJ en vivo pueda conectar.
+   * El DJ watcher reiniciará el AutoDJ cuando el DJ se desconecte.
+   */
+  app.post('/api/streams/:clientId/dj-takeover', async (request, reply) => {
+    const { clientId } = request.params
+    try {
+      const [rsRows] = await pool.query(
+        `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        [clientId]
+      )
+      if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+      const mount = rsRows[0].icecastMount
+
+      // Kick source de Icecast
+      try {
+        await killSource(mount)
+        logger.info({ clientId, mount }, 'dj-takeover: source kickeado de Icecast')
+      } catch (err) {
+        logger.warn({ clientId, mount, err: err.message }, 'dj-takeover: killSource falló (no source?)')
+      }
+
+      // Detener AutoDJ
+      await stopStream(clientId)
+
+      // Marcar para que DJ watcher reinicie cuando DJ se vaya
+      _djActive.add(mount)
+
+      logger.info({ clientId, mount }, 'dj-takeover: listo para DJ')
+      return { ok: true, message: 'AutoDJ detenido. Conectá tu DJ ahora.' }
+    } catch (err) {
+      logger.error({ err, clientId }, 'dj-takeover: error')
+      return reply.code(500).send({ error: 'dj_takeover_failed', message: err.message })
+    }
+  })
+
+  /**
    * POST /api/streams/:clientId/regenerate-m3u
    * Regenera el playlist.m3u del cliente desde la DB.
    * Llamar después de modificar tracks/playlists.
@@ -458,32 +495,8 @@ export default async function streamRoutes(app) {
         return reply.code(403).type('text/plain').send('403 invalid_password')
       }
 
-      // Si ya hay un source conectado en Icecast, es un DJ tomando control
-      // Kickear el source actual y detener el AutoDJ
-      const isAutoDj = user === 'autodj'
-
-      if (!isAutoDj) {
-        // DJ conectando — darle prioridad alta
-        try {
-          const currentMount = await getMountStatus(cleanMount)
-          if (currentMount) {
-            logger.info({ mount: cleanMount, user }, 'auth-source: DJ takeover — kickeando source actual')
-            await killSource(cleanMount).catch(() => {})
-            stopStream(clientId).catch(() => {})
-          }
-        } catch (err) {
-          logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error al kickear source')
-        }
-
-        _djActive.add(cleanMount)
-      }
-
-      logger.info({ mount: cleanMount, user, isAutoDj }, 'auth-source: autenticado')
-      if (isAutoDj) {
-        return reply.code(200).type('text/plain').send('200')
-      }
-      // DJ con prioridad alta para que kickee al AutoDJ
-      return reply.code(200).type('text/plain').send('200 priority=10')
+      logger.info({ mount: cleanMount, user }, 'auth-source: autenticado')
+      return reply.code(200).type('text/plain').send('200')
     } catch (err) {
       logger.error({ err: err.message, body: request.body }, 'auth-source: error')
       return reply.code(403).type('text/plain').send('403 auth_error')
