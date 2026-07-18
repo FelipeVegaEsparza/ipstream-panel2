@@ -1,10 +1,8 @@
-// =====================================================
-// /api/dashboard/streaming/dj-takeover — toma de control DJ
-// Llama al agente para kickear AutoDJ y liberar el mount.
-// =====================================================
-
 import { NextResponse } from 'next/server'
-import { requireStreamingClient, StreamingAuthError, getAgentClient } from '@/lib/streaming-auth'
+import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
+
+const AGENT_URL = process.env.STREAMING_AGENT_URL || 'http://agent:4000'
+const AGENT_TOKEN = process.env.STREAMING_AGENT_TOKEN || ''
 
 export async function POST() {
   try {
@@ -13,8 +11,14 @@ export async function POST() {
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
 
-    const agent = getAgentClient()
-    const res = await agent.post(`/api/streams/${ctx.clientId}/dj-takeover`)
+    const res = await fetch(
+      `${AGENT_URL}/api/streams/${encodeURIComponent(ctx.clientId)}/dj-takeover`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${AGENT_TOKEN}` },
+        signal: AbortSignal.timeout(15000),
+      }
+    )
     const data = await res.json()
 
     if (!res.ok) {
