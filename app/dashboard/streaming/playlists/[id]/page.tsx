@@ -195,17 +195,11 @@ export default function PlaylistEditorPage() {
     })
   }
 
-  const selectableTracks = library.filter(
-    (t) => !inPlaylistIds.has(t.id)
-  )
-
-  const allSelected = selectableTracks.length > 0 && selectableTracks.every((t) => selectedTrackIds.has(t.id))
-
-  const toggleSelectAll = () => {
+  const toggleSelectAll = (allSelected: boolean, ids: string[]) => {
     if (allSelected) {
       setSelectedTrackIds(new Set())
     } else {
-      setSelectedTrackIds(new Set(selectableTracks.map((t) => t.id)))
+      setSelectedTrackIds(new Set(ids))
     }
   }
 
@@ -297,6 +291,8 @@ export default function PlaylistEditorPage() {
   )
 
   const inPlaylistIds = new Set(playlist.entries.map((e) => e.trackId))
+  const selectableTracks = library.filter((t) => !inPlaylistIds.has(t.id))
+  const allSelected = selectableTracks.length > 0 && selectableTracks.every((t) => selectedTrackIds.has(t.id))
   const orderChanged = loadedTrackIds && loadedTrackIds !== playlist.entries.map((e) => e.trackId).join(',')
 
   return (
@@ -454,7 +450,7 @@ export default function PlaylistEditorPage() {
                 <input
                   type="checkbox"
                   checked={allSelected && selectableTracks.length > 0}
-                  onChange={toggleSelectAll}
+                  onChange={() => toggleSelectAll(allSelected, selectableTracks.map((t) => t.id))}
                   disabled={selectableTracks.length === 0}
                   className="rounded"
                 />
