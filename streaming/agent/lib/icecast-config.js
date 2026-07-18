@@ -70,7 +70,6 @@ function generateIcecastXml(streams) {
     <mount>
         <mount-name>${p(mountName)}</mount-name>
         <public>1</public>
-        <password>${p(s.livePasswordDecrypted)}</password>
         <authentication>
             <auth-http-source>
                 <option name="auth_url" value="http://agent:4000/api/streams/auth-source"/>

@@ -460,25 +460,30 @@ export default async function streamRoutes(app) {
 
       // Si ya hay un source conectado en Icecast, es un DJ tomando control
       // Kickear el source actual y detener el AutoDJ
-      try {
-        const currentMount = await getMountStatus(cleanMount)
-        if (currentMount) {
-          logger.info({ mount: cleanMount, user }, 'auth-source: DJ takeover — kickeando source actual')
-          // Kick de Icecast (desconecta el source actual)
-          await killSource(cleanMount).catch(() => {})
-          // Detener proceso liquidsoap en background
-          stopStream(clientId).catch(() => {})
+      const isAutoDj = user === 'autodj'
+
+      if (!isAutoDj) {
+        // DJ conectando — darle prioridad alta
+        try {
+          const currentMount = await getMountStatus(cleanMount)
+          if (currentMount) {
+            logger.info({ mount: cleanMount, user }, 'auth-source: DJ takeover — kickeando source actual')
+            await killSource(cleanMount).catch(() => {})
+            stopStream(clientId).catch(() => {})
+          }
+        } catch (err) {
+          logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error al kickear source')
         }
-      } catch (err) {
-        logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error al kickear source')
+
+        _djActive.add(cleanMount)
       }
 
-      // Marcar que el DJ está activo en este mount
-      _djActive.add(cleanMount)
-
-      logger.info({ mount: cleanMount, user }, 'auth-source: DJ autenticado')
-      // Icecast espera que el body comience con "200"
-      return reply.code(200).type('text/plain').send('200')
+      logger.info({ mount: cleanMount, user, isAutoDj }, 'auth-source: autenticado')
+      if (isAutoDj) {
+        return reply.code(200).type('text/plain').send('200')
+      }
+      // DJ con prioridad alta para que kickee al AutoDJ
+      return reply.code(200).type('text/plain').send('200 priority=10')
     } catch (err) {
       logger.error({ err: err.message, body: request.body }, 'auth-source: error')
       return reply.code(403).type('text/plain').send('403 auth_error')
