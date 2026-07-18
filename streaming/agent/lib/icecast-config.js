@@ -70,7 +70,7 @@ function generateIcecastXml(streams) {
     <mount>
         <mount-name>${p(mountName)}</mount-name>
         <public>1</public>
-        <source-password>${p(s.livePasswordDecrypted)}</source-password>
+        <password>${p(s.livePasswordDecrypted)}</password>
         <bitrate>${p(s.bitrate || 128)}</bitrate>
         <type>audio/mpeg</type>
     </mount>`
