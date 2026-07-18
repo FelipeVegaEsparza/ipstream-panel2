@@ -328,7 +328,17 @@ export default async function streamRoutes(app) {
    */
   app.post('/api/streams/auth-source', async (request, reply) => {
     try {
-      const { mount, user, pass } = request.body || {}
+      // El body puede ser string (form-urlencoded) u objeto (JSON)
+      let fields = {}
+      if (typeof request.body === 'string') {
+        const params = new URLSearchParams(request.body)
+        for (const [k, v] of params.entries()) {
+          fields[k] = v
+        }
+      } else if (request.body && typeof request.body === 'object') {
+        fields = request.body
+      }
+      const { mount, user, pass } = fields
 
       if (!mount || !pass) {
         return reply.code(403).send({ error: 'missing_fields' })

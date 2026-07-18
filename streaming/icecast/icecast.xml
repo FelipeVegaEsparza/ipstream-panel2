@@ -49,7 +49,6 @@
             <auth-http-source>
                 <option name="auth_url" value="http://agent:4000/api/streams/auth-source"/>
                 <option name="method" value="POST"/>
-                <option name="header" value="Content-Type: application/x-www-form-urlencoded"/>
             </auth-http-source>
         </authentication>
         <bitrate>128</bitrate>

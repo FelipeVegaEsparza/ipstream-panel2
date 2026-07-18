@@ -5,7 +5,6 @@
 
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
-import formbody from '@fastify/formbody'
 import multipart from '@fastify/multipart'
 import websocket from '@fastify/websocket'
 import { config } from './lib/config.js'
@@ -30,8 +29,10 @@ const app = Fastify({
 // CORS: solo el panel debería llamar. Por ahora permito todo en dev.
 await app.register(cors, { origin: true, credentials: true })
 
-// Form body (para Icecast auth-http-source que envía form-urlencoded)
-await app.register(formbody)
+// Parser manual para form-urlencoded (Icecast auth-http-source envía este formato)
+app.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_req, body, done) => {
+  done(null, body)
+})
 
 // Multipart (para upload de MP3s)
 await app.register(multipart, {
