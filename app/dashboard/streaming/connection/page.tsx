@@ -1,24 +1,54 @@
 'use client'
 
-// =====================================================
-// Page — /dashboard/streaming/connection
-// =====================================================
-// Datos para que un DJ se conecte a la radio con BUTT / MIXXX / etc.
-
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
-
-interface IcecastInfo {
-  listenurl?: string
-  server_name?: string
-  server_description?: string
-  bitrate?: number
-  stream_start?: string
-}
 
 export default function ConnectionPage() {
   const { status } = useStreamingStatus({ pollingMs: 10000 })
   const [copyText, setCopyText] = useState<string | null>(null)
+
+  const [connectionInfo, setConnectionInfo] = useState<{ host: string; port: number; mount: string } | null>(null)
+  const [livePassword, setLivePassword] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [loadingPassword, setLoadingPassword] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/dashboard/streaming/connection')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.host) {
+          setConnectionInfo(data)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const icecastHost = connectionInfo?.host || (typeof window !== 'undefined' ? window.location.hostname : 'localhost')
+  const icecastPort = connectionInfo?.port || 8000
+  const mount = connectionInfo?.mount || status?.mount || 'mi-mount'
+
+  const revealPassword = useCallback(async () => {
+    if (livePassword) {
+      setShowPassword(prev => !prev)
+      return
+    }
+    setLoadingPassword(true)
+    try {
+      const res = await fetch('/api/dashboard/streaming/connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revealPassword: 'live' }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setLivePassword(data.password)
+      setShowPassword(true)
+    } catch {
+      // silent fail
+    } finally {
+      setLoadingPassword(false)
+    }
+  }, [livePassword])
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
@@ -26,12 +56,7 @@ export default function ConnectionPage() {
     setTimeout(() => setCopyText(null), 2000)
   }
 
-  // Datos de conexión (en prod vendrían de config del cliente)
-  const icecastHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
-  const icecastPort = 8000
-  const mount = status?.mount || 'mi-mount'
-  const sourcePassword = '****'  // Nunca se muestra el password real
-  const livePassword = '****'     // Se obtiene al activar la radio
+  const displayPassword = showPassword && livePassword ? livePassword : '********'
 
   return (
     <div className="space-y-6">
@@ -87,12 +112,28 @@ export default function ConnectionPage() {
           <div>
             <label className="text-xs text-gray-400 uppercase">Password DJ</label>
             <div className="flex items-center gap-2 mt-1">
-              <code className="bg-gray-900 text-gray-500 px-3 py-2 rounded flex-1 font-mono text-sm">
-                {livePassword}
+              <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
+                {displayPassword}
               </code>
-              <span className="text-xs text-gray-500">(ver config del servidor)</span>
+              <button
+                onClick={revealPassword}
+                disabled={loadingPassword}
+                className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded"
+                title={showPassword ? 'Ocultar password' : 'Mostrar password'}
+              >
+                {loadingPassword ? '...' : showPassword ? '🙈' : '👁'}
+              </button>
+              {livePassword && showPassword && (
+                <button onClick={() => copy(livePassword, 'Password')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
+                  Copiar
+                </button>
+              )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Pedile tu password DJ al administrador.</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {livePassword
+                ? 'Esta es tu clave para conectar como DJ. No la compartas.'
+                : 'Hacé clic en 👁 para ver tu password DJ.'}
+            </p>
           </div>
         </div>
       </div>
