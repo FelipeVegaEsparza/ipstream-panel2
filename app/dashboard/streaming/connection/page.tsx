@@ -85,23 +85,8 @@ export default function ConnectionPage() {
         </p>
       </div>
 
-      <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 text-sm text-yellow-100 flex items-center justify-between gap-4 flex-wrap">
-        <span>
-          💡 <strong>DJ Takeover:</strong> Antes de conectar tu DJ, hacé clic en <strong>"Tomar control"</strong> para detener el AutoDJ. Cuando te desconectes, el AutoDJ volverá solo en ~30 segundos.
-        </span>
-        <button
-          onClick={doTakeover}
-          disabled={takeoverState === 'loading'}
-          className={`shrink-0 px-4 py-2 rounded font-semibold text-sm whitespace-nowrap ${
-            takeoverState === 'success'
-              ? 'bg-green-600 text-white'
-              : takeoverState === 'error'
-              ? 'bg-red-600 text-white'
-              : 'bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50'
-          }`}
-        >
-          {takeoverState === 'loading' ? 'Deteniendo...' : takeoverState === 'success' ? '✓ AutoDJ detenido' : takeoverState === 'error' ? 'Error, intentá de nuevo' : '🎤 Tomar control'}
-        </button>
+      <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 text-sm text-green-100">
+        💡 <strong>DJ Automático:</strong> Conectá tu DJ con las credenciales de abajo. El sistema detectará automáticamente tu conexión, detendrá el AutoDJ y te dará el control. Cuando te desconectes, el AutoDJ volverá solo en ~30 segundos.
       </div>
 
       <div className="bg-gray-800 rounded-lg p-6 space-y-4">

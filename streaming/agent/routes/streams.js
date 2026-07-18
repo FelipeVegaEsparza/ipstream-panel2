@@ -495,7 +495,27 @@ export default async function streamRoutes(app) {
         return reply.code(403).type('text/plain').send('403 invalid_password')
       }
 
-      logger.info({ mount: cleanMount, user }, 'auth-source: autenticado')
+      const isAutoDj = user === 'autodj'
+
+      if (!isAutoDj) {
+        // DJ conectando — kickear AutoDJ y dar prioridad alta
+        try {
+          const currentMount = await getMountStatus(cleanMount)
+          if (currentMount) {
+            logger.info({ mount: cleanMount, user }, 'auth-source: DJ takeover — kickeando source actual')
+            await killSource(cleanMount).catch(() => {})
+            stopStream(clientId).catch(() => {})
+          }
+        } catch (err) {
+          logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error al kickear source')
+        }
+
+        _djActive.add(cleanMount)
+        logger.info({ mount: cleanMount, user }, 'auth-source: DJ autenticado con prioridad alta')
+        return reply.code(200).type('text/plain').send('200 priority=10')
+      }
+
+      logger.info({ mount: cleanMount, user }, 'auth-source: AutoDJ autenticado')
       return reply.code(200).type('text/plain').send('200')
     } catch (err) {
       logger.error({ err: err.message, body: request.body }, 'auth-source: error')
