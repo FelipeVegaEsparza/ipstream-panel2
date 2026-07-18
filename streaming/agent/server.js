@@ -19,6 +19,7 @@ import jingleRoutes from './routes/jingles.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
+import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
 
 const app = Fastify({
   logger,
@@ -234,12 +235,14 @@ await app.register(statsRoutes)
 // Iniciar crons
 startScheduleCron()
 startStatsCron()
+startDjWatcher()
 
 // Graceful shutdown
 const shutdown = async (signal) => {
   logger.info({ signal }, 'Shutdown signal recibido')
   try {
     stopStatsCron()
+    stopDjWatcher()
     await app.close()
     await pool.end()
     logger.info('Cleanup completo. Saliendo.')

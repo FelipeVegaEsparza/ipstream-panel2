@@ -4,7 +4,7 @@
 
 import { startStream, stopStream, restartStream, isProcessRunning, regenerateScript, regenerateM3u } from '../lib/liquidsoap.js'
 import { deployIcecastConfig } from '../lib/icecast-config.js'
-import { getMountStatus, getGlobalStatus, ping as icecastPing } from '../lib/icecast.js'
+import { getMountStatus, getGlobalStatus, ping as icecastPing, killSource } from '../lib/icecast.js'
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { config } from '../lib/config.js'
@@ -14,6 +14,9 @@ import crypto from 'crypto'
 function uuid() {
   return crypto.randomUUID()
 }
+
+// DJ takeover tracking: mounts donde un DJ está conectado (para reiniciar AutoDJ al irse)
+export const _djActive = new Set()
 
 export default async function streamRoutes(app) {
   /**
@@ -415,7 +418,7 @@ export default async function streamRoutes(app) {
       const { mount, user, pass } = fields
 
       if (!mount || !pass) {
-        return reply.code(403).send({ error: 'missing_fields' })
+        return reply.code(403).type('text/plain').send('403 missing_fields')
       }
 
       // mount viene con "/" ej: "/clientId" — lo limpiamos
@@ -423,20 +426,18 @@ export default async function streamRoutes(app) {
 
       // Buscar el RadioStream por icecastMount
       const [rows] = await pool.query(
-        `SELECT livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
+        `SELECT clientId, livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
         [cleanMount]
       )
 
       if (rows.length === 0) {
         logger.warn({ mount: cleanMount }, 'auth-source: mount no encontrado')
-        return reply.code(403).send({ error: 'mount_not_found' })
+        return reply.code(403).type('text/plain').send('403 mount_not_found')
       }
 
-      const { livePasswordEnc } = rows[0]
+      const { clientId, livePasswordEnc } = rows[0]
 
-      // Aceptar tanto la contraseña per-cliente (livePassword) como la compartida
-      // Si livePasswordEnc no existe o no se puede descifrar, solo se valida contra
-      // la shared password (compatible con AutoDJs viejos y clientes sin livePassword).
+      // Validar password
       let livePassword = null
       if (livePasswordEnc && isEncrypted(livePasswordEnc)) {
         try {
@@ -444,8 +445,6 @@ export default async function streamRoutes(app) {
         } catch (err) {
           logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error descifrando livePasswordEnc')
         }
-      } else {
-        logger.warn({ mount: cleanMount, hasEnc: !!livePasswordEnc }, 'auth-source: sin livePasswordEnc encriptado en DB')
       }
 
       const sharedPassword = config.ice.sourcePassword
@@ -456,14 +455,33 @@ export default async function streamRoutes(app) {
 
       if (!validPasswords.includes(pass)) {
         logger.warn({ mount: cleanMount, user }, 'auth-source: password incorrecto')
-        return reply.code(403).send({ error: 'invalid_password' })
+        return reply.code(403).type('text/plain').send('403 invalid_password')
       }
 
+      // Si ya hay un source conectado en Icecast, es un DJ tomando control
+      // Kickear el source actual y detener el AutoDJ
+      try {
+        const currentMount = await getMountStatus(cleanMount)
+        if (currentMount) {
+          logger.info({ mount: cleanMount, user }, 'auth-source: DJ takeover — kickeando source actual')
+          // Kick de Icecast (desconecta el source actual)
+          await killSource(cleanMount).catch(() => {})
+          // Detener proceso liquidsoap en background
+          stopStream(clientId).catch(() => {})
+        }
+      } catch (err) {
+        logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error al kickear source')
+      }
+
+      // Marcar que el DJ está activo en este mount
+      _djActive.add(cleanMount)
+
       logger.info({ mount: cleanMount, user }, 'auth-source: DJ autenticado')
-      return reply.code(200).send({ auth: 'ok' })
+      // Icecast espera que el body comience con "200"
+      return reply.code(200).type('text/plain').send('200')
     } catch (err) {
       logger.error({ err: err.message, body: request.body }, 'auth-source: error')
-      return reply.code(403).send({ error: 'auth_error' })
+      return reply.code(403).type('text/plain').send('403 auth_error')
     }
   })
 }
