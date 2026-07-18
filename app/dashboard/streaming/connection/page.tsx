@@ -110,6 +110,17 @@ export default function ConnectionPage() {
             </div>
           </div>
           <div>
+            <label className="text-xs text-gray-400 uppercase">Usuario</label>
+            <div className="flex items-center gap-2 mt-1">
+              <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
+                source
+              </code>
+              <button onClick={() => copy('source', 'Usuario')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
+                Copiar
+              </button>
+            </div>
+          </div>
+          <div>
             <label className="text-xs text-gray-400 uppercase">Password DJ</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
@@ -163,9 +174,10 @@ export default function ConnectionPage() {
         <ol className="text-sm text-gray-300 space-y-2 list-decimal pl-5">
           <li>Abrí BUTT → Settings → Stream</li>
           <li>Server type: <code className="text-cyan-400">Icecast 2</code></li>
-          <li>Server address: <code className="text-cyan-400">{icecastHost}</code></li>
+          <li>Address: <code className="text-cyan-400">{icecastHost}</code></li>
           <li>Port: <code className="text-cyan-400">{icecastPort}</code></li>
-          <li>Mountpoint: <code className="text-cyan-400">/{mount}</code></li>
+          <li>Mount: <code className="text-cyan-400">/{mount}</code></li>
+          <li>Username: <code className="text-cyan-400">source</code></li>
           <li>Password: tu password DJ</li>
           <li>Stream name: tu nombre artístico</li>
           <li>Click <strong>Add</strong> y luego <strong>Play</strong></li>
