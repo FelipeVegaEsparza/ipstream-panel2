@@ -40,9 +40,18 @@
     <!-- Mount por defecto: se aplica a cualquier /<clientId> que conecte.
          - public=1: aparece en /status-json.xsl
          - El DJ puede tomar el control conectando con una password distinta
-           y mayor prioridad (lo gestiona el streaming-agent). -->
+           y mayor prioridad (lo gestiona el streaming-agent).
+         - auth-http-source: delega validación de contraseña al streaming-agent,
+           permitiendo usar la contraseña per-cliente (livePassword). -->
     <mount type="default">
         <public>1</public>
+        <authentication>
+            <auth-http-source>
+                <option name="auth_url" value="http://agent:4000/api/streams/auth-source"/>
+                <option name="method" value="POST"/>
+                <option name="header" value="Content-Type: application/x-www-form-urlencoded"/>
+            </auth-http-source>
+        </authentication>
         <bitrate>128</bitrate>
         <type>audio/mpeg</type>
     </mount>

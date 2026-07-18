@@ -19,7 +19,7 @@ import { config } from './config.js'
 import { logger } from './logger.js'
 import { generateLiquidsoapScript } from './script-generator.js'
 import { pool } from './db.js'
-import { decrypt } from './encryption.js'
+import { decrypt, isEncrypted } from './encryption.js'
 
 const execp = promisify(exec)
 
@@ -109,10 +109,10 @@ async function ensureCheckScript() {
  * Genera el .liq desde la DB y lo escribe al volumen compartido.
  * NO inicia el proceso.
  *
- * IMPORTANTE: usa el source-password COMPARTIDO de Icecast (no el per-cliente).
- * En una config con <mount type="default">, todos los mounts usan el mismo
- * source-password. Los passwords per-cliente se usan en una fase futura
- * si pasamos a Icecast 2.5+ con mount configs dinámicas.
+ * Usa la contraseña per-cliente (livePassword) descifrada desde la DB.
+ * Icecast también valida via auth-http-source contra el agente usando
+ * la misma contraseña, por lo que tanto AutoDJ como DJ en vivo usan
+ * credenciales consistentes por cliente.
  */
 export async function regenerateScript(clientId) {
   const rs = await loadRadioStream(clientId)
@@ -131,11 +131,23 @@ export async function regenerateScript(clientId) {
   )
   const hasJingles = jingleRows[0]?.cnt > 0 && rs.jinglePlayEvery > 0
 
+  // Usar la contraseña per-cliente (livePassword) en vez de la compartida
+  let sourcePassword = config.ice.sourcePassword
+  if (rs.livePasswordEnc && isEncrypted(rs.livePasswordEnc)) {
+    try {
+      sourcePassword = decrypt(rs.livePasswordEnc)
+    } catch (err) {
+      logger.warn({ clientId, err: err.message }, 'Error al descifrar livePasswordEnc, usando password compartido')
+    }
+  } else {
+    logger.warn({ clientId }, 'Sin livePasswordEnc en DB, usando password compartido')
+  }
+
   const content = generateLiquidsoapScript({
     clientId,
     clientName: rs.clientName,
     icecastMount: rs.icecastMount,
-    sourcePassword: config.ice.sourcePassword,  // compartido por todos los clients
+    sourcePassword,
     telnetPort: rs.liquidsoapTelnetPort,
     bitrate: rs.bitrate,
     playlistM3uPath: m3uPath,

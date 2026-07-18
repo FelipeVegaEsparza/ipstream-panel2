@@ -6,8 +6,8 @@
 
 export function buildAuthHook(expectedToken) {
   return async function authHook(request, reply) {
-    // Permitir el health check sin auth (lo usa el healthcheck de Docker)
-    if (request.url === '/health' || request.url === '/healthz') {
+    // Permitir health check y auth-source sin token (Icecast llama auth-source)
+    if (request.url === '/health' || request.url === '/healthz' || request.url === '/api/streams/auth-source') {
       return
     }
 

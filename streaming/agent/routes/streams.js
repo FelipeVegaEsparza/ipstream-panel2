@@ -6,6 +6,7 @@ import { startStream, stopStream, restartStream, isProcessRunning, regenerateScr
 import { getMountStatus, getGlobalStatus, ping as icecastPing } from '../lib/icecast.js'
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
+import { decrypt, isEncrypted } from '../lib/encryption.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -315,6 +316,57 @@ export default async function streamRoutes(app) {
       return { ok: true, status }
     } catch (err) {
       return reply.code(502).send({ error: 'icecast_unavailable', message: err.message })
+    }
+  })
+
+  /**
+   * POST /api/streams/auth-source
+   * Validación de credenciales de fuente (DJ) para Icecast.
+   * Icecast envía form-urlencoded con: mount, user, pass
+   * Retorna 200 (ok) o 403 (denegado).
+   * Sin auth — Icecast no tiene el token del agente.
+   */
+  app.post('/api/streams/auth-source', async (request, reply) => {
+    try {
+      const { mount, user, pass } = request.body || {}
+
+      if (!mount || !pass) {
+        return reply.code(403).send({ error: 'missing_fields' })
+      }
+
+      // mount viene con "/" ej: "/clientId" — lo limpiamos
+      const cleanMount = mount.replace(/^\//, '')
+
+      // Buscar el RadioStream por icecastMount
+      const [rows] = await pool.query(
+        `SELECT livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
+        [cleanMount]
+      )
+
+      if (rows.length === 0) {
+        logger.warn({ mount: cleanMount }, 'auth-source: mount no encontrado')
+        return reply.code(403).send({ error: 'mount_not_found' })
+      }
+
+      const { livePasswordEnc } = rows[0]
+
+      if (!livePasswordEnc || !isEncrypted(livePasswordEnc)) {
+        logger.warn({ mount: cleanMount }, 'auth-source: sin livePassword en DB')
+        return reply.code(403).send({ error: 'no_password_configured' })
+      }
+
+      const expectedPass = decrypt(livePasswordEnc)
+
+      if (pass !== expectedPass) {
+        logger.warn({ mount: cleanMount, user }, 'auth-source: password incorrecto')
+        return reply.code(403).send({ error: 'invalid_password' })
+      }
+
+      logger.info({ mount: cleanMount, user }, 'auth-source: DJ autenticado')
+      return reply.code(200).send({ auth: 'ok' })
+    } catch (err) {
+      logger.error({ err: err.message, body: request.body }, 'auth-source: error')
+      return reply.code(403).send({ error: 'auth_error' })
     }
   })
 }
