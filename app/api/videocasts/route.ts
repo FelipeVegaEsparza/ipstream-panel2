@@ -22,6 +22,39 @@ export async function POST(request: NextRequest) {
       }
     }
   }
+  try {
+    console.log('🎥 Creating videocast - Start')
+    
+    const effectiveClient = await getEffectiveClientFromRequest(request)
+    
+    if (!effectiveClient) {
+      console.log('🎥 No effective client found')
+      return NextResponse.json(
+        { error: 'No autorizado - Sin cliente asociado' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const data = videocastSchema.parse(body)
+
+    const videocast = await prisma.podcast.create({
+      data: {
+        ...data,
+        clientId: effectiveClient.clientId,
+        fileType: 'video',
+      }
+    })
+
+    console.log('🎥 Videocast created successfully:', videocast.id)
+    return NextResponse.json(videocast)
+  } catch (error) {
+    console.error('🎥 Error creating videocast:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function GET(request: NextRequest) {

@@ -15,6 +15,8 @@ import streamRoutes from './routes/streams.js'
 import websocketRoutes from './routes/ws.js'
 import libraryRoutes from './routes/library.js'
 import playlistRoutes from './routes/playlists.js'
+import jingleRoutes from './routes/jingles.js'
+import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 
 const app = Fastify({
   logger,
@@ -96,14 +98,56 @@ app.get('/', async () => ({
     addTrackToPlaylist: 'POST /api/streams/:clientId/playlists/:id/tracks',
     removeTrackFromPlaylist: 'DELETE /api/streams/:clientId/playlists/:id/tracks/:trackId',
     reorderPlaylist: 'POST /api/streams/:clientId/playlists/:id/reorder',
+    listJingles: 'GET /api/streams/:clientId/jingles',
+    uploadJingle: 'POST /api/streams/:clientId/jingles/upload',
+    updateJingle: 'PATCH /api/streams/:clientId/jingles/:jingleId',
+    deleteJingle: 'DELETE /api/streams/:clientId/jingles/:jingleId',
+    getJingleCover: 'GET /api/streams/:clientId/jingles/:jingleId/cover',
+    uploadJingleCover: 'POST /api/streams/:clientId/jingles/:jingleId/cover',
+    deleteJingleCover: 'DELETE /api/streams/:clientId/jingles/:jingleId/cover',
+    getJingleConfig: 'GET /api/streams/:clientId/jingles/config',
+    updateJingleConfig: 'PATCH /api/streams/:clientId/jingles/config',
+    listSchedule: 'GET /api/streams/:clientId/schedule',
+    createSchedule: 'POST /api/streams/:clientId/schedule',
+    updateSchedule: 'PATCH /api/streams/:clientId/schedule/:id',
+    deleteSchedule: 'DELETE /api/streams/:clientId/schedule/:id',
+    currentSchedule: 'GET /api/streams/:clientId/schedule/current',
   },
 }))
+
+// Auto-migración: asegurar que la tabla playlist_schedules exista
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS playlist_schedules (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      radioStreamId VARCHAR(191) NOT NULL,
+      playlistId VARCHAR(191) NOT NULL,
+      dayOfWeek INT NOT NULL,
+      startTime VARCHAR(191) NOT NULL,
+      endTime VARCHAR(191) NOT NULL,
+      isActive BOOLEAN NOT NULL DEFAULT true,
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      updatedAt DATETIME(3) NOT NULL,
+      INDEX idx_client_day (clientId, dayOfWeek, isActive),
+      INDEX idx_radio_day (radioStreamId, dayOfWeek, isActive)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla playlist_schedules asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla playlist_schedules')
+}
 
 // Rutas
 await app.register(streamRoutes)
 await app.register(websocketRoutes)
 await app.register(libraryRoutes)
 await app.register(playlistRoutes)
+await app.register(jingleRoutes)
+await app.register(scheduleRoutes)
+
+// Iniciar cron de parrilla horaria
+startScheduleCron()
 
 // Graceful shutdown
 const shutdown = async (signal) => {

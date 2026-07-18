@@ -15,6 +15,7 @@ interface Track {
   artist: string | null
   duration: number | null
   fileName: string
+  coverUrl: string | null
 }
 
 interface Entry {
@@ -25,6 +26,7 @@ interface Entry {
   artist: string | null
   duration: number | null
   fileName: string
+  coverUrl: string | null
 }
 
 interface Playlist {
@@ -60,10 +62,39 @@ export default function PlaylistEditorPage() {
   const [shuffle, setShuffle] = useState(false)
   const [repeat, setRepeat] = useState(true)
   const [activating, setActivating] = useState(false)
-  const [reordering, setReordering] = useState(false)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [savingOrder, setSavingOrder] = useState(false)
+  const [loadedTrackIds, setLoadedTrackIds] = useState('')
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
   const dragStateRef = useRef<{ from: number; to: number } | null>(null)
+  const [playingId, setPlayingId] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const togglePlay = (id: string, title: string) => {
+    if (playingId === id) {
+      audioRef.current?.pause()
+      audioRef.current = null
+      setPlayingId(null)
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+      const audio = new Audio(`/api/dashboard/streaming/library/${id}/audio`)
+      audio.onended = () => setPlayingId(null)
+      audio.onerror = () => {
+        setPlayingId(null)
+        alert(`Error al reproducir "${title}"`)
+      }
+      audio.play().catch(() => {
+        setPlayingId(null)
+        alert(`Error al reproducir "${title}"`)
+      })
+      audioRef.current = audio
+      setPlayingId(id)
+    }
+  }
 
   const load = async () => {
     try {
@@ -75,6 +106,7 @@ export default function PlaylistEditorPage() {
       if (plRes.ok) {
         const data = await plRes.json()
         setPlaylist(data)
+        setLoadedTrackIds(data.entries.map((e: Entry) => e.trackId).join(','))
         setName(data.name)
         setDesc(data.description || '')
         setShuffle(data.shuffle)
@@ -98,6 +130,7 @@ export default function PlaylistEditorPage() {
   }
 
   const saveEdit = async () => {
+    setSavingEdit(true)
     try {
       const res = await fetch(`/api/dashboard/streaming/playlists/${id}`, {
         method: 'PATCH',
@@ -114,6 +147,8 @@ export default function PlaylistEditorPage() {
       await load()
     } catch (err: any) {
       alert(err.message)
+    } finally {
+      setSavingEdit(false)
     }
   }
 
@@ -169,33 +204,36 @@ export default function PlaylistEditorPage() {
     e.preventDefault()
     setDragOverIdx(idx)
   }
-  const onDrop = async (toIdx: number) => {
+  const onDrop = (toIdx: number) => {
     if (draggingIdx === null || draggingIdx === toIdx || !playlist) {
       setDraggingIdx(null)
       setDragOverIdx(null)
       return
     }
-    // Reordenar localmente
     const entries = [...playlist.entries]
     const [moved] = entries.splice(draggingIdx, 1)
     entries.splice(toIdx, 0, moved)
     setPlaylist({ ...playlist, entries })
     setDraggingIdx(null)
     setDragOverIdx(null)
-    // Persistir
-    setReordering(true)
+  }
+
+  const saveOrder = async () => {
+    if (!playlist) return
+    setSavingOrder(true)
     try {
       const res = await fetch(`/api/dashboard/streaming/playlists/${id}/reorder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackIds: entries.map((e) => e.trackId) }),
+        body: JSON.stringify({ trackIds: playlist.entries.map((e) => e.trackId) }),
       })
       if (!res.ok) throw new Error('Error guardando orden')
+      setLoadedTrackIds(playlist.entries.map((e) => e.trackId).join(','))
     } catch (err: any) {
       alert(err.message)
       await load()
     } finally {
-      setReordering(false)
+      setSavingOrder(false)
     }
   }
 
@@ -209,6 +247,7 @@ export default function PlaylistEditorPage() {
   )
 
   const inPlaylistIds = new Set(playlist.entries.map((e) => e.trackId))
+  const orderChanged = loadedTrackIds && loadedTrackIds !== playlist.entries.map((e) => e.trackId).join(',')
 
   return (
     <div className="space-y-6">
@@ -239,10 +278,10 @@ export default function PlaylistEditorPage() {
             </button>
           ) : (
             <>
-              <button onClick={saveEdit} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
-                Guardar
+              <button onClick={saveEdit} disabled={savingEdit} className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white rounded">
+                {savingEdit ? 'Guardando...' : 'Guardar'}
               </button>
-              <button onClick={() => { setEditing(false); load() }} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded">
+              <button onClick={() => { if (!savingEdit) { setEditing(false); load() } }} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded disabled:opacity-50" disabled={savingEdit}>
                 Cancelar
               </button>
             </>
@@ -271,7 +310,6 @@ export default function PlaylistEditorPage() {
               <span>⏱️ {fmtDuration(playlist.totalDuration)}</span>
               <span>{playlist.shuffle ? '🔀 Shuffle ON' : '— Shuffle off'}</span>
               <span>{playlist.repeat ? '🔁 Repeat ON' : '— Repeat off'}</span>
-              {reordering && <span className="text-cyan-400">⏳ Guardando orden...</span>}
             </div>
           </>
         ) : (
@@ -313,12 +351,23 @@ export default function PlaylistEditorPage() {
           <h2 className="text-lg font-semibold text-white">
             Tracks ({playlist.entries.length})
           </h2>
-          <button
-            onClick={() => setShowAdd(!showAdd)}
-            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded"
-          >
-            {showAdd ? 'Cerrar' : '+ Agregar tracks'}
-          </button>
+          <div className="flex gap-2">
+            {orderChanged && (
+              <button
+                onClick={saveOrder}
+                disabled={savingOrder}
+                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white text-sm rounded"
+              >
+                {savingOrder ? 'Guardando...' : 'Guardar orden'}
+              </button>
+            )}
+            <button
+              onClick={() => setShowAdd(!showAdd)}
+              className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded"
+            >
+              {showAdd ? 'Cerrar' : '+ Agregar tracks'}
+            </button>
+          </div>
         </div>
 
         {showAdd && (
@@ -344,10 +393,33 @@ export default function PlaylistEditorPage() {
                         inPlaylist ? 'bg-gray-800/50 opacity-50' : 'bg-gray-800 hover:bg-gray-700'
                       }`}
                     >
-                      <div>
-                        <div className="text-white text-sm">{t.title}</div>
-                        <div className="text-xs text-gray-500">{t.artist || 'Sin artista'} · {fmtDuration(t.duration)}</div>
+                      <div className="flex-shrink-0 w-8 h-8 mr-2">
+                        {t.coverUrl ? (
+                          <img
+                            src={t.coverUrl}
+                            alt=""
+                            className="w-8 h-8 rounded object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-xs">🎵</div>
+                        )}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-sm truncate">{t.title}</div>
+                        <div className="text-xs text-gray-500 truncate">{t.artist || 'Sin artista'} · {fmtDuration(t.duration)}</div>
+                      </div>
+                      <button
+                        onClick={() => togglePlay(t.id, t.title)}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs mr-2 ${
+                          playingId === t.id
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                        title={playingId === t.id ? 'Detener' : 'Previsualizar'}
+                      >
+                        {playingId === t.id ? '⏹' : '▶'}
+                      </button>
                       <button
                         onClick={() => addTrack(t.id)}
                         disabled={inPlaylist}
@@ -386,6 +458,29 @@ export default function PlaylistEditorPage() {
                 <span className="text-gray-500 text-sm w-8 text-center select-none">
                   ⋮⋮ {idx + 1}
                 </span>
+                <div className="flex-shrink-0 w-8 h-8 mr-1">
+                  {entry.coverUrl ? (
+                    <img
+                      src={entry.coverUrl}
+                      alt=""
+                      className="w-8 h-8 rounded object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-xs">🎵</div>
+                  )}
+                </div>
+                <button
+                  onClick={() => togglePlay(entry.trackId, entry.title)}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                    playingId === entry.trackId
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                  title={playingId === entry.trackId ? 'Detener' : 'Previsualizar'}
+                >
+                  {playingId === entry.trackId ? '⏹' : '▶'}
+                </button>
                 <div className="flex-1 min-w-0">
                   <div className="text-white truncate">{entry.title}</div>
                   <div className="text-xs text-gray-500 truncate">

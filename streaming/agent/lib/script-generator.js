@@ -28,6 +28,9 @@ export function generateLiquidsoapScript({
   bitrate = 128,
   playlistM3uPath,
   mode = 'playlist',
+  jinglePlayEvery = 0,
+  jinglePlayCount = 1,
+  jinglesM3uPath = null,
 }) {
   // Sanitizar valores que van al .liq
   const safeMount = sanitizeForLiquidsoap(icecastMount)
@@ -35,6 +38,30 @@ export function generateLiquidsoapScript({
   const safePwd = sanitizeForLiquidsoap(sourcePassword)
   const safeClient = sanitizeForLiquidsoap(clientId)
   const m3u = playlistM3uPath || `/var/lib/radio/${safeClient}/playlist.m3u`
+
+  // Generar source: con jingles o solo playlist
+  const hasJingles = jinglePlayEvery > 0 && jinglesM3uPath
+
+  let sourceBlock
+  if (mode !== 'playlist') {
+    sourceBlock = 'blank()'
+  } else if (hasJingles) {
+    sourceBlock = `mksafe(rotate(
+    weights=[${jinglePlayEvery}, ${jinglePlayCount}],
+    [
+      playlist(id="${safeMount}-music", "${m3u}", mode="normal", reload=5000, loop=true),
+      playlist(id="${safeMount}-jingles", "${jinglesM3uPath}", mode="random", reload=5000, loop=true)
+    ]
+  ))`
+  } else {
+    sourceBlock = `mksafe(playlist(
+    id="${safeMount}-playlist",
+    "${m3u}",
+    mode="normal",
+    reload=5000,
+    loop=true
+  ))`
+  }
 
   return `# =====================================================
 # Auto-generated for client ${safeClient} (mount: ${safeMount})
@@ -54,19 +81,8 @@ settings.log.level.set(3)
 settings.server.telnet.set(true)
 settings.server.telnet.port.set(${telnetPort})
 
-# Source: playlist (default) o silencio
-music =
-  ${
-    mode === 'playlist'
-      ? `mksafe(playlist(
-    id="${safeMount}-playlist",
-    "${m3u}",
-    mode="normal",
-    reload=5000,
-    loop=true
-  ))`
-      : `blank()`
-  }
+# Source: playlist con jingles o solo playlist
+source = ${sourceBlock}
 
 # Output a Icecast como AutoDJ (prioridad baja — DJ puede tomar el control)
 output.icecast(
@@ -79,7 +95,7 @@ output.icecast(
   genre="Various",
   description="AutoDJ stream for ${safeName}",
   public=true,
-  music
+  source
 )
 `
 }

@@ -8,7 +8,6 @@ import {
   Cog6ToothIcon,
   ShareIcon,
   CodeBracketIcon,
-  InformationCircleIcon,
   SpeakerWaveIcon,
   PlayIcon,
   CreditCardIcon,
@@ -21,6 +20,8 @@ import {
   ChatBubbleLeftRightIcon,
   RadioIcon,
   MusicalNoteIcon,
+  LinkIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/outline'
 
 export type MenuItemKey =
@@ -28,7 +29,6 @@ export type MenuItemKey =
   | 'basic-data'
   | 'social-networks'
   | 'template'
-  | 'about'
   | 'programs'
   | 'news'
   | 'podcasts'
@@ -47,15 +47,27 @@ export type MenuItemKey =
   | 'support'
   | 'chat'
   | 'streaming'
+  | 'streaming-library'
+  | 'streaming-playlists'
+  | 'streaming-jingles'
+  | 'streaming-schedule'
+  | 'streaming-connection'
 
 export interface MenuItemDef {
   key: MenuItemKey
   name: string
   href: string
-  section: 'General' | 'Contenido' | 'Interactivos' | 'Sistema'
+  section: 'Radio' | 'General' | 'Contenido' | 'Interactivos' | 'Sistema'
   icon: React.ComponentType<{ className?: string }>
-  /** Si true, no se puede ocultar (siempre visible). */
   alwaysEnabled?: boolean
+  children?: SubMenuItemDef[]
+}
+
+export interface SubMenuItemDef {
+  key: MenuItemKey
+  name: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
 }
 
 export const MENU_ITEMS: MenuItemDef[] = [
@@ -63,10 +75,52 @@ export const MENU_ITEMS: MenuItemDef[] = [
     key: 'dashboard',
     name: 'Dashboard',
     href: '/dashboard',
-    section: 'General',
-    icon: HomeIcon,
-    alwaysEnabled: true,
-  },
+  section: 'General',
+  icon: HomeIcon,
+  alwaysEnabled: true,
+},
+{
+  key: 'streaming',
+  name: 'Streaming',
+  href: '/dashboard/streaming',
+  section: 'Radio',
+  icon: RadioIcon,
+},
+{
+  key: 'streaming-library',
+  name: 'Biblioteca',
+  href: '/dashboard/streaming/library',
+  section: 'Radio',
+  icon: MusicalNoteIcon,
+},
+{
+  key: 'streaming-playlists',
+  name: 'Playlists',
+  href: '/dashboard/streaming/playlists',
+  section: 'Radio',
+  icon: QueueListIcon,
+},
+{
+  key: 'streaming-connection',
+  name: 'Conexión DJ',
+  href: '/dashboard/streaming/connection',
+  section: 'Radio',
+  icon: LinkIcon,
+},
+{
+  key: 'streaming-jingles',
+  name: 'Jingles',
+  href: '/dashboard/streaming/jingles',
+  section: 'Radio',
+  icon: MusicalNoteIcon,
+},
+{
+  key: 'streaming-schedule',
+  name: 'Programación',
+  href: '/dashboard/streaming/schedule',
+  section: 'Radio',
+  icon: CalendarDaysIcon,
+},
   {
     key: 'basic-data',
     name: 'Datos Básicos',
@@ -88,14 +142,6 @@ export const MENU_ITEMS: MenuItemDef[] = [
     section: 'General',
     icon: PaintBrushIcon,
   },
-  {
-    key: 'about',
-    name: 'Acerca de',
-    href: '/dashboard/about',
-    section: 'General',
-    icon: InformationCircleIcon,
-  },
-
   {
     key: 'programs',
     name: 'Programas',
@@ -169,13 +215,6 @@ export const MENU_ITEMS: MenuItemDef[] = [
   },
 
   {
-    key: 'streaming',
-    name: 'Streaming',
-    href: '/dashboard/streaming',
-    section: 'Sistema',
-    icon: RadioIcon,
-  },
-  {
     key: 'promotions',
     name: 'Promociones',
     href: '/dashboard/promotions',
@@ -213,29 +252,19 @@ export const MENU_ITEMS: MenuItemDef[] = [
   },
 ]
 
-export const MENU_SECTIONS = ['General', 'Contenido', 'Interactivos', 'Sistema'] as const
+export const MENU_SECTIONS = ['General', 'Radio', 'Contenido', 'Interactivos', 'Sistema'] as const
 
 export function getMenuItemsBySection(): Record<string, MenuItemDef[]> {
-  const map: Record<string, MenuItemDef[]> = {
-    General: [],
-    Contenido: [],
-    Interactivos: [],
-    Sistema: [],
-  }
+  const map: Record<string, MenuItemDef[]> = Object.fromEntries(MENU_SECTIONS.map((s) => [s, []]))
   for (const item of MENU_ITEMS) {
     map[item.section].push(item)
   }
   return map
 }
 
-/**
- * Dada la ruta actual del dashboard (ej. /dashboard/podcasts), devuelve
- * la key del item correspondiente o null si no matchea.
- */
 export function findMenuItemByPath(path: string): MenuItemKey | null {
   for (const item of MENU_ITEMS) {
     if (path === item.href) return item.key
-    if (path.startsWith(item.href + '/')) return item.key
   }
   return null
 }

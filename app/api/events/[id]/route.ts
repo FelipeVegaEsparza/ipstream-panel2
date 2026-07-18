@@ -20,6 +20,33 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
     }
   }
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user.clientId) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const existingEvent = await prisma.event.findFirst({
+      where: { id: params.id, clientId: session.user.clientId },
+    })
+
+    if (!existingEvent) {
+      return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const data = eventSchema.parse(body)
+
+    const event = await prisma.event.update({
+      where: { id: params.id },
+      data,
+    })
+
+    return NextResponse.json(event)
+  } catch (error) {
+    console.error('Error updating event:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {

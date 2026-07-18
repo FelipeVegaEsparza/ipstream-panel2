@@ -20,6 +20,37 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
     }
   }
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user.clientId) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const existingPoll = await prisma.poll.findFirst({
+      where: { id: params.id, clientId: session.user.clientId },
+    })
+
+    if (!existingPoll) {
+      return NextResponse.json({ error: 'Encuesta no encontrada' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const data = pollSchema.parse(body)
+
+    const poll = await prisma.poll.update({
+      where: { id: params.id },
+      data: {
+        ...data,
+        options: { create: [] },
+      },
+      include: { options: true },
+    })
+
+    return NextResponse.json(poll)
+  } catch (error) {
+    console.error('Error updating poll:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {

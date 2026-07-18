@@ -216,7 +216,22 @@ export default async function streamRoutes(app) {
     let nextTrack = null
     let position = null
 
-    if (entries.length > 0) {
+    // Load jingles for potential matching
+    const [jingleRows] = await pool.query(
+      `SELECT id, title, artist, duration, coverUrl FROM jingles WHERE clientId = ? ORDER BY uploadedAt ASC`,
+      [clientId]
+    )
+
+    const toTrackObj = (e, isJingle = false) => ({
+      title: e.title,
+      artist: e.artist || null,
+      album: isJingle ? null : (e.album || null),
+      duration: e.duration,
+      coverUrl: e.coverUrl || null,
+      isJingle,
+    })
+
+    if (entries.length > 0 || jingleRows.length > 0) {
       let icecastTitle = null
       try {
         const mount = await getMountStatus(rs.icecastMount)
@@ -225,15 +240,8 @@ export default async function streamRoutes(app) {
 
       const currentTitle = icecastTitle || rs.currentTitle
 
-      const toTrackObj = (e) => ({
-        title: e.title,
-        artist: e.artist,
-        album: e.album,
-        duration: e.duration,
-        coverUrl: e.coverUrl || null,
-      })
-
       if (currentTitle) {
+        // Try to find in playlist first, then jingles
         const currentIndex = entries.findIndex(
           (e) => e.title && currentTitle.toLowerCase().includes(e.title.toLowerCase())
         )
@@ -251,27 +259,37 @@ export default async function streamRoutes(app) {
             const nextIndex = currentIndex + 1
             if (nextIndex < entries.length) {
               nextTrack = toTrackObj(entries[nextIndex])
-            } else if (playlist.repeat) {
+            } else if (playlist?.repeat) {
               nextTrack = toTrackObj(entries[0])
             }
           }
         } else {
-          currentTrack = {
-            title: currentTitle,
-            artist: rs.currentArtist || null,
-            album: null,
-            duration: null,
-            coverUrl: null,
+          // Try jingles
+          const jingleIndex = jingleRows.findIndex(
+            (j) => j.title && currentTitle.toLowerCase().includes(j.title.toLowerCase())
+          )
+          if (jingleIndex !== -1) {
+            currentTrack = toTrackObj(jingleRows[jingleIndex], true)
+          } else {
+            currentTrack = {
+              title: currentTitle,
+              artist: rs.currentArtist || null,
+              album: null,
+              duration: null,
+              coverUrl: null,
+            }
           }
-          nextTrack = toTrackObj(entries[0])
-          position = { index: 0, total: entries.length }
+          if (entries.length > 0) {
+            nextTrack = toTrackObj(entries[0])
+            position = { index: 0, total: entries.length }
+          }
         }
-      } else {
+      } else if (entries.length > 0) {
         const first = entries[0]
         currentTrack = toTrackObj(first)
         if (entries.length > 1) {
           nextTrack = toTrackObj(entries[1])
-        } else if (playlist.repeat) {
+        } else if (playlist?.repeat) {
           nextTrack = toTrackObj(first)
         }
         position = { index: 1, total: entries.length }
@@ -283,6 +301,7 @@ export default async function streamRoutes(app) {
       currentTrack,
       nextTrack,
       position,
+      jingleCount: jingleRows.length,
     }
   })
 

@@ -7,24 +7,14 @@ import { sanitizeObject, validateText } from '@/lib/text-sanitizer'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
 
 export async function POST(request: NextRequest) {
-  // MENU_GUARD_INJECTED
-  {
-    const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
-    const { getEffectiveClient } = await import('@/lib/getEffectiveClient')
-    const effectiveClient = await getEffectiveClient()
-    if (effectiveClient) {
-      const allowed = await isMenuItemEnabled(effectiveClient.clientId, 'social-networks')
-      if (!allowed) {
-        return new Response(JSON.stringify({ error: 'No autorizado' }), {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-    }
-  }
+  return handleSocialNetworks(request)
 }
 
 export async function PUT(request: NextRequest) {
+  return handleSocialNetworks(request)
+}
+
+async function handleSocialNetworks(request: NextRequest) {
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')

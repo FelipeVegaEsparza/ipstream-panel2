@@ -34,6 +34,12 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
         if (item.section === section && !item.alwaysEnabled) {
           if (value) next.add(item.key)
           else next.delete(item.key)
+          if (item.children) {
+            for (const child of item.children) {
+              if (value) next.add(child.key)
+              else next.delete(child.key)
+            }
+          }
         }
       }
       return next
@@ -111,36 +117,53 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
                 const isLocked = !!item.alwaysEnabled
                 const isHidden = hidden.has(item.key)
                 return (
-                  <li
-                    key={item.key}
-                    className="flex items-center justify-between p-2.5 rounded hover:bg-gray-700/30"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-white text-sm">{item.name}</span>
-                      {isLocked && (
-                        <span
-                          className="text-xs text-gray-500 flex items-center gap-1"
-                          title="Este item no se puede ocultar (alwaysEnabled)"
-                        >
-                          <Lock className="h-3 w-3" /> siempre visible
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => !isLocked && toggle(item.key)}
-                      disabled={isLocked}
-                      aria-pressed={isHidden}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
-                        isHidden ? 'bg-red-600' : 'bg-gray-600'
-                      } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  <li key={item.key}>
+                    <div className="flex items-center justify-between p-2.5 rounded hover:bg-gray-700/30">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-white text-sm">{item.name}</span>
+                        {isLocked && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1" title="Siempre visible">
+                            <Lock className="h-3 w-3" /> siempre visible
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => !isLocked && toggle(item.key)}
+                        disabled={isLocked}
+                        aria-pressed={isHidden}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
+                          isHidden ? 'bg-red-600' : 'bg-gray-600'
+                        } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                           isHidden ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
+                        }`} />
+                      </button>
+                    </div>
+                    {item.children && item.children.length > 0 && (
+                      <div className="ml-6 space-y-0.5 border-l border-gray-700 pl-3">
+                        {item.children.map((child) => {
+                          const childHidden = hidden.has(child.key)
+                          return (
+                            <div key={child.key} className="flex items-center justify-between p-2 rounded hover:bg-gray-700/20">
+                              <span className="text-gray-300 text-sm">{child.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => toggle(child.key)}
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
+                                  childHidden ? 'bg-red-600' : 'bg-gray-600'
+                                } cursor-pointer hover:opacity-80`}
+                              >
+                                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                                  childHidden ? 'translate-x-5' : 'translate-x-1'
+                                }`} />
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </li>
                 )
               })}

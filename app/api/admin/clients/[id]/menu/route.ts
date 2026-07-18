@@ -4,7 +4,9 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { MENU_ITEMS, type MenuItemKey } from '@/lib/menu-items'
 
-const VALID_KEYS = new Set<string>(MENU_ITEMS.map((i) => i.key))
+const VALID_KEYS = new Set<string>(
+  MENU_ITEMS.flatMap((i) => [i.key, ...(i.children?.map((c) => c.key) ?? [])])
+)
 
 export async function PUT(
   request: NextRequest,

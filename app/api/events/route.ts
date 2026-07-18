@@ -20,6 +20,27 @@ export async function POST(request: NextRequest) {
       }
     }
   }
+  try {
+    const effectiveClient = await getEffectiveClientFromRequest(request)
+    if (!effectiveClient) {
+      return NextResponse.json({ error: 'No autorizado - Sin cliente asociado' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const data = eventSchema.parse(body)
+
+    const event = await prisma.event.create({
+      data: {
+        ...data,
+        clientId: effectiveClient.clientId,
+      }
+    })
+
+    return NextResponse.json(event)
+  } catch (error) {
+    console.error('Error creating event:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
 }
 
 export async function GET(request: NextRequest) {

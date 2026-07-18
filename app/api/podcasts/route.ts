@@ -22,6 +22,39 @@ export async function POST(request: NextRequest) {
       }
     }
   }
+  try {
+    console.log('🎙️ Creating podcast - Start')
+    
+    const effectiveClient = await getEffectiveClientFromRequest(request)
+    
+    if (!effectiveClient) {
+      console.log('🎙️ No effective client found')
+      return NextResponse.json(
+        { error: 'No autorizado - Sin cliente asociado' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const data = podcastSchema.parse(body)
+
+    const podcast = await prisma.podcast.create({
+      data: {
+        ...data,
+        clientId: effectiveClient.clientId,
+        fileType: 'audio',
+      }
+    })
+
+    console.log('🎙️ Podcast created successfully:', podcast.id)
+    return NextResponse.json(podcast)
+  } catch (error) {
+    console.error('🎙️ Error creating podcast:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function GET(request: NextRequest) {

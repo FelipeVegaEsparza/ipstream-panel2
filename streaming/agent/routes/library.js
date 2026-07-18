@@ -1,10 +1,11 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { readMetadata, fetchCoverFromMusicBrainz, sanitizeFileName, isMp3 } from '../lib/id3.js'
-import { saveMp3, deleteMp3, saveCover, deleteCover, getCoverPath, isSafeFileName, ensureClientDir } from '../lib/files.js'
+import { saveMp3, deleteMp3, saveCover, deleteCover, getCoverPath, isSafeFileName, ensureClientDir, mp3Path } from '../lib/files.js'
 import { regenerateM3u } from '../lib/liquidsoap.js'
 import { existsSync } from 'fs'
-import { readFile } from 'fs/promises'
+import { readFile, stat } from 'fs/promises'
+import { createReadStream } from 'fs'
 import crypto from 'crypto'
 
 function uuid() {
@@ -104,8 +105,7 @@ export default async function libraryRoutes(app) {
         return reply.code(413).send({ error: 'file_too_large', message: `Máximo ${MAX_FILE_SIZE / 1024 / 1024} MB` })
       }
 
-      const safeOriginal = sanitizeFileName(data.filename)
-      const fileName = `${Date.now()}_${safeOriginal}`
+      const fileName = sanitizeFileName(data.filename)
 
       const { path: filePath, size } = await saveMp3(clientId, fileName, buffer)
       savedFileName = fileName
@@ -290,5 +290,111 @@ export default async function libraryRoutes(app) {
     const ext = coverPath.endsWith('.png') ? 'image/png' : 'image/jpeg'
     const image = await readFile(coverPath)
     return reply.type(ext).send(image)
+  })
+
+  /**
+   * POST /api/streams/:clientId/library/:trackId/cover
+   * Sube o reemplaza la carátula de un track.
+   * Acepta multipart con campo "cover" (JPEG o PNG, max 2MB).
+   */
+  app.post('/api/streams/:clientId/library/:trackId/cover', async (request, reply) => {
+    const { clientId, trackId } = request.params
+
+    const [rows] = await pool.query(
+      `SELECT id FROM tracks WHERE id = ? AND clientId = ?`,
+      [trackId, clientId]
+    )
+    if (rows.length === 0) {
+      return reply.code(404).send({ error: 'not_found' })
+    }
+
+    try {
+      const data = await request.file()
+      if (!data) {
+        return reply.code(400).send({ error: 'no_file', message: 'Falta el campo "cover"' })
+      }
+
+      const mime = data.mimetype || ''
+      if (!mime.startsWith('image/')) {
+        return reply.code(415).send({ error: 'unsupported_media_type', message: 'Solo se aceptan imágenes' })
+      }
+
+      const buffer = await data.toBuffer()
+      if (buffer.length > 2 * 1024 * 1024) {
+        return reply.code(413).send({ error: 'file_too_large', message: 'Máximo 2 MB' })
+      }
+
+      await saveCover(clientId, trackId, buffer)
+      const coverUrl = `/api/dashboard/streaming/library/${trackId}/cover`
+
+      if (await ensureCoverColumn()) {
+        await pool.query(
+          `UPDATE tracks SET coverUrl = ?, updatedAt = NOW() WHERE id = ?`,
+          [coverUrl, trackId]
+        )
+      }
+
+      logger.info({ clientId, trackId }, 'Cover updated')
+      return { ok: true, coverUrl }
+    } catch (err) {
+      logger.error({ err, clientId, trackId }, 'Error uploading cover')
+      return reply.code(500).send({ error: 'cover_upload_failed', message: err.message })
+    }
+  })
+
+  /**
+   * DELETE /api/streams/:clientId/library/:trackId/cover
+   * Elimina la carátula de un track.
+   */
+  app.delete('/api/streams/:clientId/library/:trackId/cover', async (request, reply) => {
+    const { clientId, trackId } = request.params
+
+    const [rows] = await pool.query(
+      `SELECT id FROM tracks WHERE id = ? AND clientId = ?`,
+      [trackId, clientId]
+    )
+    if (rows.length === 0) {
+      return reply.code(404).send({ error: 'not_found' })
+    }
+
+    await deleteCover(clientId, trackId)
+
+    if (await ensureCoverColumn()) {
+      await pool.query(
+        `UPDATE tracks SET coverUrl = NULL, updatedAt = NOW() WHERE id = ?`,
+        [trackId]
+      )
+    }
+
+    logger.info({ clientId, trackId }, 'Cover deleted')
+    return { ok: true }
+  })
+
+  /**
+   * GET /api/streams/:clientId/library/:trackId/audio
+   * Sirve el archivo MP3 para previsualización.
+   */
+  app.get('/api/streams/:clientId/library/:trackId/audio', async (request, reply) => {
+    const { clientId, trackId } = request.params
+
+    const [rows] = await pool.query(
+      `SELECT filePath, mimeType FROM tracks WHERE id = ? AND clientId = ?`,
+      [trackId, clientId]
+    )
+    if (rows.length === 0) {
+      return reply.code(404).send({ error: 'not_found' })
+    }
+
+    const { filePath, mimeType } = rows[0]
+    if (!existsSync(filePath)) {
+      return reply.code(404).send({ error: 'file_not_found' })
+    }
+
+    const stats = await stat(filePath)
+    const mime = mimeType || 'audio/mpeg'
+    reply.header('Content-Type', mime)
+    reply.header('Content-Length', stats.size.toString())
+    reply.header('Accept-Ranges', 'bytes')
+    return reply.send(createReadStream(filePath))
   })
 }

@@ -20,6 +20,28 @@ export async function POST(request: NextRequest) {
       }
     }
   }
+  try {
+    const effectiveClient = await getEffectiveClientFromRequest(request)
+    if (!effectiveClient) {
+      return NextResponse.json({ error: 'No autorizado - Sin cliente asociado' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const data = pollSchema.parse(body)
+
+    const poll = await prisma.poll.create({
+      data: {
+        ...data,
+        clientId: effectiveClient.clientId,
+        options: { create: [] },
+      }
+    })
+
+    return NextResponse.json(poll)
+  } catch (error) {
+    console.error('Error creating poll:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
 }
 
 export async function GET(request: NextRequest) {

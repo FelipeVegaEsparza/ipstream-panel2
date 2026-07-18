@@ -20,6 +20,34 @@ export async function POST(request: NextRequest) {
       }
     }
   }
+  try {
+    const effectiveClient = await getEffectiveClientFromRequest(request)
+    if (!effectiveClient) {
+      return NextResponse.json(
+        { error: 'No autorizado - Sin cliente asociado' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const data = gallerySchema.parse(body)
+
+    const gallery = await prisma.gallery.create({
+      data: {
+        ...data,
+        clientId: effectiveClient.clientId,
+        images: undefined,
+      }
+    })
+
+    return NextResponse.json(gallery)
+  } catch (error) {
+    console.error('Error creating gallery:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function GET(request: NextRequest) {

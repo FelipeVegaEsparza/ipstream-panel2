@@ -34,12 +34,19 @@ export default async function ClientMenuPage({ params }: MenuPageProps) {
     select: { itemKey: true, enabled: true },
   })
 
-  const initialItems: MenuConfigItem[] = MENU_ITEMS.map((item) => {
-    const override = overrides.find((o) => o.itemKey === item.key)
-    return {
-      key: item.key,
-      enabled: override ? override.enabled : true,
+  const initialItems: MenuConfigItem[] = MENU_ITEMS.flatMap((item) => {
+    const override = (k: MenuItemKey) => overrides.find((o) => o.itemKey === k)
+    const parent = { key: item.key, enabled: override(item.key) ? override(item.key)!.enabled : true }
+    if (item.children) {
+      return [
+        parent,
+        ...item.children.map((c) => ({
+          key: c.key,
+          enabled: override(c.key) ? override(c.key)!.enabled : true,
+        })),
+      ]
     }
+    return [parent]
   })
 
   return (

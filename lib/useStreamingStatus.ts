@@ -15,6 +15,7 @@ export interface NowPlayingTrack {
   album?: string | null
   duration?: number | null
   coverUrl?: string | null
+  isJingle?: boolean
 }
 
 export interface NowPlayingData {

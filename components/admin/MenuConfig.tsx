@@ -38,6 +38,11 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
       for (const item of MENU_ITEMS) {
         if (item.section === section && !item.alwaysEnabled) {
           next[item.key] = enabled
+          if (item.children) {
+            for (const child of item.children) {
+              next[child.key] = enabled
+            }
+          }
         }
       }
       return next
@@ -60,14 +65,15 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
     setSaving(true)
     setFeedback(null)
     try {
+      const allItems = MENU_ITEMS.flatMap((item) => {
+        const parent = item.alwaysEnabled ? [] : [{ key: item.key, enabled: items[item.key] }]
+        const children = item.children?.map((c) => ({ key: c.key, enabled: items[c.key] })) ?? []
+        return [...parent, ...children]
+      })
       const res = await fetch(`/api/admin/clients/${clientId}/menu`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: MENU_ITEMS
-            .filter((item) => !item.alwaysEnabled)
-            .map((item) => ({ key: item.key, enabled: items[item.key] })),
-        }),
+        body: JSON.stringify({ items: allItems }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -169,44 +175,74 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
                 const enabled = items[item.key] ?? true
                 const locked = !!item.alwaysEnabled
                 return (
-                  <label
-                    key={item.key}
-                    className={`flex items-center justify-between p-4 ${
-                      locked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-700/30'
-                    } transition-colors`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <item.icon className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <p className="text-white font-medium">{item.name}</p>
-                        <p className="text-xs text-gray-500">{item.href}</p>
+                  <div key={item.key}>
+                    <label
+                      className={`flex items-center justify-between p-4 ${
+                        locked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-700/30'
+                      } transition-colors`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-white font-medium">{item.name}</p>
+                          <p className="text-xs text-gray-500">{item.href}</p>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      {locked && (
-                        <span className="text-xs text-gray-500 uppercase tracking-wide">
-                          Siempre
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={enabled}
-                        disabled={locked}
-                        onClick={() => !locked && toggle(item.key, !enabled)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          enabled ? 'bg-cyan-600' : 'bg-gray-600'
-                        } ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      <div className="flex items-center gap-3">
+                        {locked && (
+                          <span className="text-xs text-gray-500 uppercase tracking-wide">Siempre</span>
+                        )}
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={enabled}
+                          disabled={locked}
+                          onClick={() => !locked && toggle(item.key, !enabled)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            enabled ? 'bg-cyan-600' : 'bg-gray-600'
+                          } ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                             enabled ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </label>
+                          }`} />
+                        </button>
+                      </div>
+                    </label>
+                    {item.children && item.children.length > 0 && (
+                      <div className="border-t border-gray-700/50">
+                        {item.children.map((child) => {
+                          const childEnabled = items[child.key] ?? true
+                          return (
+                            <label
+                              key={child.key}
+                              className="flex items-center justify-between py-3 pl-14 pr-4 cursor-pointer hover:bg-gray-700/30 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <child.icon className="h-4 w-4 text-gray-500" />
+                                <div>
+                                  <p className="text-gray-200 text-sm">{child.name}</p>
+                                  <p className="text-xs text-gray-500">{child.href}</p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={childEnabled}
+                                onClick={() => toggle(child.key, !childEnabled)}
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                                  childEnabled ? 'bg-cyan-600' : 'bg-gray-600'
+                                } cursor-pointer`}
+                              >
+                                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                                  childEnabled ? 'translate-x-5' : 'translate-x-1'
+                                }`} />
+                              </button>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>

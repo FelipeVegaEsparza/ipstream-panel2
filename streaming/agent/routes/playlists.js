@@ -51,7 +51,7 @@ export default async function playlistRoutes(app) {
 
     const [entries] = await pool.query(
       `SELECT pe.id AS entryId, pe.\`order\`, pe.createdAt,
-              t.id AS trackId, t.title, t.artist, t.album, t.duration, t.fileName
+              t.id AS trackId, t.title, t.artist, t.album, t.duration, t.fileName, t.coverUrl
        FROM playlist_entries pe
        JOIN tracks t ON t.id = pe.trackId
        WHERE pe.playlistId = ?

@@ -23,6 +23,42 @@ export async function PUT(
       }
     }
   }
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user.clientId) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      )
+    }
+
+    const existingGallery = await prisma.gallery.findFirst({
+      where: { id: params.id, clientId: session.user.clientId },
+    })
+
+    if (!existingGallery) {
+      return NextResponse.json(
+        { error: 'Galería no encontrada' },
+        { status: 404 }
+      )
+    }
+
+    const body = await request.json()
+    const data = gallerySchema.parse(body)
+
+    const gallery = await prisma.gallery.update({
+      where: { id: params.id },
+      data,
+    })
+
+    return NextResponse.json(gallery)
+  } catch (error) {
+    console.error('Error updating gallery:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function DELETE(

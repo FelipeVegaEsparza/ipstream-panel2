@@ -131,6 +131,20 @@ export const streamingClient = {
     }),
   getCover: (clientId: string, trackId: string) =>
     requestRaw(`/api/streams/${encodeURIComponent(clientId)}/library/${encodeURIComponent(trackId)}/cover`),
+  uploadCover: async (clientId: string, trackId: string, file: File) => {
+    const form = new FormData()
+    form.append('cover', file)
+    return request(`/api/streams/${encodeURIComponent(clientId)}/library/${encodeURIComponent(trackId)}/cover`, {
+      method: 'POST',
+      body: form,
+      isMultipart: true,
+      timeoutMs: UPLOAD_TIMEOUT_MS,
+    })
+  },
+  deleteCover: (clientId: string, trackId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/library/${encodeURIComponent(trackId)}/cover`, {
+      method: 'DELETE',
+    }),
 
   // Playlists
   listPlaylists: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/playlists`),
@@ -158,4 +172,69 @@ export const streamingClient = {
       method: 'POST',
       body: { trackIds },
     }),
+
+  // Jingles
+  listJingles: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/jingles`),
+  uploadJingle: async (clientId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request(`/api/streams/${encodeURIComponent(clientId)}/jingles/upload`, {
+      method: 'POST',
+      body: form,
+      isMultipart: true,
+      timeoutMs: UPLOAD_TIMEOUT_MS,
+    })
+  },
+  updateJingle: (clientId: string, jingleId: string, data: { title?: string; artist?: string }) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/jingles/${encodeURIComponent(jingleId)}`, {
+      method: 'PATCH',
+      body: data,
+    }),
+  deleteJingle: (clientId: string, jingleId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/jingles/${encodeURIComponent(jingleId)}`, {
+      method: 'DELETE',
+    }),
+  getJingleCover: (clientId: string, jingleId: string) =>
+    requestRaw(`/api/streams/${encodeURIComponent(clientId)}/jingles/${encodeURIComponent(jingleId)}/cover`),
+  uploadJingleCover: async (clientId: string, jingleId: string, file: File) => {
+    const form = new FormData()
+    form.append('cover', file)
+    return request(`/api/streams/${encodeURIComponent(clientId)}/jingles/${encodeURIComponent(jingleId)}/cover`, {
+      method: 'POST',
+      body: form,
+      isMultipart: true,
+      timeoutMs: UPLOAD_TIMEOUT_MS,
+    })
+  },
+  deleteJingleCover: (clientId: string, jingleId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/jingles/${encodeURIComponent(jingleId)}/cover`, {
+      method: 'DELETE',
+    }),
+  getJingleConfig: (clientId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/jingles/config`),
+  updateJingleConfig: (clientId: string, jinglePlayEvery: number, jinglePlayCount: number) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/jingles/config`, {
+      method: 'PATCH',
+      body: { jinglePlayEvery, jinglePlayCount },
+    }),
+
+  // Schedule (parrilla horaria)
+  listSchedule: (clientId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/schedule`),
+  createSchedule: (clientId: string, data: { playlistId: string; dayOfWeek: number; startTime: string; endTime: string }) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/schedule`, {
+      method: 'POST',
+      body: data,
+    }),
+  updateSchedule: (clientId: string, scheduleId: string, data: { playlistId?: string; dayOfWeek?: number; startTime?: string; endTime?: string; isActive?: boolean }) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/schedule/${encodeURIComponent(scheduleId)}`, {
+      method: 'PATCH',
+      body: data,
+    }),
+  deleteSchedule: (clientId: string, scheduleId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/schedule/${encodeURIComponent(scheduleId)}`, {
+      method: 'DELETE',
+    }),
+  getCurrentSchedule: (clientId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/schedule/current`),
 }

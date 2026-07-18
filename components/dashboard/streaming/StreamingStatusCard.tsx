@@ -162,8 +162,11 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
             <div className="flex-1 min-w-0">
               {status.nowPlaying.currentTrack ? (
                 <>
-                  <p className="text-white font-semibold truncate">
+                  <p className="text-white font-semibold truncate flex items-center gap-2">
                     {status.nowPlaying.currentTrack.title || 'Sin título'}
+                    {status.nowPlaying.currentTrack.isJingle && (
+                      <span className="text-xs bg-amber-600 text-white px-1.5 py-0.5 rounded font-normal">JINGLE</span>
+                    )}
                   </p>
                   {status.nowPlaying.currentTrack.artist && (
                     <p className="text-gray-400 text-sm truncate">
@@ -181,10 +184,21 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
           {status.nowPlaying.nextTrack && (
             <div className="flex items-start gap-4 opacity-70">
               <div className="w-1.5 h-full min-h-[2.5rem] bg-gray-600 rounded-full flex-shrink-0 mt-1"></div>
+              {status.nowPlaying.nextTrack.coverUrl && (
+                <img
+                  src={status.nowPlaying.nextTrack.coverUrl}
+                  alt=""
+                  className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 shadow-md"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-500 uppercase mb-0.5">⏭ Siguiente</p>
-                <p className="text-gray-300 font-medium truncate">
+                <p className="text-gray-300 font-medium truncate flex items-center gap-2">
                   {status.nowPlaying.nextTrack.title || 'Sin título'}
+                  {status.nowPlaying.nextTrack.isJingle && (
+                    <span className="text-xs bg-amber-600/70 text-white px-1.5 py-0.5 rounded font-normal">JINGLE</span>
+                  )}
                 </p>
                 {status.nowPlaying.nextTrack.artist && (
                   <p className="text-gray-500 text-sm truncate">

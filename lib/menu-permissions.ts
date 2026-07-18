@@ -90,7 +90,7 @@ export function findGloballyHiddenItemForPath(
   path: string
 ): MenuItemKey | null {
   for (const item of MENU_ITEMS) {
-    if (path === item.href || path.startsWith(item.href + '/')) {
+    if (path === item.href) {
       return globallyHidden.has(item.key) ? item.key : null
     }
   }

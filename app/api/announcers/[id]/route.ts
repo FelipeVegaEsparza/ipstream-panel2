@@ -20,6 +20,25 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
     }
   }
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user.clientId) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const data = announcerSchema.parse(body)
+
+    const announcer = await prisma.announcer.update({
+      where: { id: params.id, clientId: session.user.clientId },
+      data,
+    })
+
+    return NextResponse.json(announcer)
+  } catch (error) {
+    console.error('Error updating announcer:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {

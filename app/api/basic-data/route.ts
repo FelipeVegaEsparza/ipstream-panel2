@@ -7,24 +7,14 @@ import { sanitizeObject, validateText } from '@/lib/text-sanitizer'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
 
 export async function POST(request: NextRequest) {
-  // MENU_GUARD_INJECTED
-  {
-    const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
-    const { getEffectiveClient } = await import('@/lib/getEffectiveClient')
-    const effectiveClient = await getEffectiveClient()
-    if (effectiveClient) {
-      const allowed = await isMenuItemEnabled(effectiveClient.clientId, 'basic-data')
-      if (!allowed) {
-        return new Response(JSON.stringify({ error: 'No autorizado' }), {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-    }
-  }
+  return handleBasicData(request)
 }
 
 export async function PUT(request: NextRequest) {
+  return handleBasicData(request)
+}
+
+async function handleBasicData(request: NextRequest) {
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')

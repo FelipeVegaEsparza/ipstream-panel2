@@ -4,7 +4,7 @@
 // Page — /dashboard/streaming/library
 // =====================================================
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { LibraryUploader } from '@/components/dashboard/streaming/LibraryUploader'
 
 interface Track {
@@ -39,6 +39,13 @@ export default function LibraryPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editArtist, setEditArtist] = useState('')
+  const [coverUploadingId, setCoverUploadingId] = useState<string | null>(null)
+  const [coverDeletingId, setCoverDeletingId] = useState<string | null>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
+  const [coverTrackId, setCoverTrackId] = useState<string | null>(null)
+  const [playingId, setPlayingId] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [savingEdit, setSavingEdit] = useState(false)
 
   const load = async () => {
     try {
@@ -79,6 +86,7 @@ export default function LibraryPage() {
 
   const saveEdit = async () => {
     if (!editingId) return
+    setSavingEdit(true)
     try {
       const res = await fetch(`/api/dashboard/streaming/library/${editingId}`, {
         method: 'PATCH',
@@ -90,6 +98,69 @@ export default function LibraryPage() {
       await load()
     } catch (err: any) {
       alert(err.message)
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  const handleCoverUpload = async (trackId: string, file: File) => {
+    setCoverUploadingId(trackId)
+    try {
+      const form = new FormData()
+      form.append('cover', file)
+      const res = await fetch(`/api/dashboard/streaming/library/${trackId}/cover`, {
+        method: 'POST',
+        body: form,
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.message || `HTTP ${res.status}`)
+      }
+      await load()
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setCoverUploadingId(null)
+      setCoverTrackId(null)
+    }
+  }
+
+  const handleCoverDelete = async (trackId: string) => {
+    if (!confirm('¿Eliminar carátula?')) return
+    setCoverDeletingId(trackId)
+    try {
+      const res = await fetch(`/api/dashboard/streaming/library/${trackId}/cover`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Error al eliminar carátula')
+      await load()
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setCoverDeletingId(null)
+    }
+  }
+
+  const togglePlay = (id: string, trackTitle: string) => {
+    if (playingId === id) {
+      audioRef.current?.pause()
+      audioRef.current = null
+      setPlayingId(null)
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+      const audio = new Audio(`/api/dashboard/streaming/library/${id}/audio`)
+      audio.onended = () => setPlayingId(null)
+      audio.onerror = () => {
+        setPlayingId(null)
+        alert(`Error al reproducir "${trackTitle}"`)
+      }
+      audio.play().catch(() => {
+        setPlayingId(null)
+        alert(`Error al reproducir "${trackTitle}"`)
+      })
+      audioRef.current = audio
+      setPlayingId(id)
     }
   }
 
@@ -121,12 +192,12 @@ export default function LibraryPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
               <tr>
+                <th className="text-left p-3 w-10">🎵</th>
                 <th className="text-left p-3 w-12">Carátula</th>
                 <th className="text-left p-3">Título</th>
                 <th className="text-left p-3 hidden sm:table-cell">Artista</th>
                 <th className="text-left p-3">Duración</th>
                 <th className="text-left p-3 hidden md:table-cell">Tamaño</th>
-                <th className="text-left p-3 hidden lg:table-cell">Archivo</th>
                 <th className="text-right p-3">Acciones</th>
               </tr>
             </thead>
@@ -134,17 +205,77 @@ export default function LibraryPage() {
               {tracks.map((t) => (
                 <tr key={t.id} className="border-t border-gray-700/50 hover:bg-gray-700/20">
                   <td className="p-3">
-                    {t.coverUrl ? (
-                      <img
-                        src={t.coverUrl}
-                        alt=""
-                        className="w-10 h-10 rounded object-cover shadow-sm"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
-                        🎵
+                    <button
+                      onClick={() => togglePlay(t.id, t.title)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
+                        playingId === t.id
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                      title={playingId === t.id ? 'Detener' : 'Previsualizar'}
+                    >
+                      {playingId === t.id ? '⏹' : '▶'}
+                    </button>
+                  </td>
+                  <td className="p-3">
+                    {editingId === t.id ? (
+                      <div className="relative">
+                        <img
+                          src={t.coverUrl || ''}
+                          alt=""
+                          className={`w-10 h-10 rounded object-cover shadow-sm ${!t.coverUrl ? 'hidden' : ''}`}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        />
+                        {!t.coverUrl && (
+                          <div className="w-10 h-10 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
+                            🎵
+                          </div>
+                        )}
+                        <input
+                          ref={coverInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) handleCoverUpload(t.id, file)
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            setCoverTrackId(t.id)
+                            coverInputRef.current?.click()
+                          }}
+                          disabled={coverUploadingId === t.id || coverDeletingId === t.id}
+                          className="absolute -bottom-1 -right-1 w-5 h-5 bg-cyan-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-cyan-500 disabled:opacity-50"
+                          title="Subir carátula"
+                        >
+                          {coverUploadingId === t.id ? '⏳' : '📷'}
+                        </button>
+                        {t.coverUrl && (
+                          <button
+                            onClick={() => handleCoverDelete(t.id)}
+                            disabled={coverDeletingId === t.id}
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white text-[8px] hover:bg-red-500 disabled:opacity-50"
+                            title="Eliminar carátula"
+                          >
+                            {coverDeletingId === t.id ? '⏳' : '✕'}
+                          </button>
+                        )}
                       </div>
+                    ) : (
+                      t.coverUrl ? (
+                        <img
+                          src={t.coverUrl}
+                          alt=""
+                          className="w-10 h-10 rounded object-cover shadow-sm"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
+                          🎵
+                        </div>
+                      )
                     )}
                   </td>
                   <td className="p-3 text-white">
@@ -172,25 +303,28 @@ export default function LibraryPage() {
                   </td>
                   <td className="p-3 text-gray-300 whitespace-nowrap">{fmtDuration(t.duration)}</td>
                   <td className="p-3 text-gray-400 hidden md:table-cell">{fmtSize(t.fileSize)}</td>
-                  <td className="p-3 text-gray-500 font-mono text-xs hidden lg:table-cell">{t.fileName}</td>
                   <td className="p-3 text-right">
-                    {editingId === t.id ? (
-                      <>
-                        <button onClick={saveEdit} className="text-green-400 hover:text-green-300 mr-3 text-xs">Guardar</button>
-                        <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-300 text-xs">Cancelar</button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={() => startEdit(t)} className="text-cyan-400 hover:text-cyan-300 mr-3 text-xs">Editar</button>
-                        <button
-                          onClick={() => handleDelete(t.id, t.title)}
-                          disabled={deletingId === t.id}
-                          className="text-red-400 hover:text-red-300 text-xs disabled:opacity-50"
-                        >
-                          {deletingId === t.id ? 'Borrando...' : 'Eliminar'}
-                        </button>
-                      </>
-                    )}
+                      {editingId === t.id ? (
+                        <>
+                          <button onClick={saveEdit} disabled={savingEdit} className="text-green-400 hover:text-green-300 disabled:text-green-700 mr-3 text-xs">
+                            {savingEdit ? 'Guardando...' : 'Guardar'}
+                          </button>
+                          <button onClick={() => { if (!savingEdit) { setEditingId(null); setCoverTrackId(null) } }} className="text-gray-400 hover:text-gray-300 text-xs disabled:opacity-50" disabled={savingEdit}>
+                            Cancelar
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => startEdit(t)} className="text-cyan-400 hover:text-cyan-300 mr-3 text-xs">Editar</button>
+                          <button
+                            onClick={() => handleDelete(t.id, t.title)}
+                            disabled={deletingId === t.id}
+                            className="text-red-400 hover:text-red-300 text-xs disabled:opacity-50"
+                          >
+                            {deletingId === t.id ? 'Borrando...' : 'Eliminar'}
+                          </button>
+                        </>
+                      )}
                   </td>
                 </tr>
               ))}

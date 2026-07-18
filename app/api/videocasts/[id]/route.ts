@@ -25,6 +25,53 @@ export async function PUT(
       }
     }
   }
+  try {
+    console.log('🎥 Updating videocast:', params.id)
+    
+    const effectiveClient = await getEffectiveClientFromRequest(request)
+    
+    if (!effectiveClient) {
+      return NextResponse.json(
+        { error: 'No autorizado - Sin cliente asociado' },
+        { status: 401 }
+      )
+    }
+
+    const existingVideocast = await prisma.podcast.findFirst({
+      where: {
+        id: params.id,
+        clientId: effectiveClient.clientId,
+        fileType: 'video'
+      }
+    })
+
+    if (!existingVideocast) {
+      return NextResponse.json(
+        { error: 'Episodio no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    const body = await request.json()
+    const data = videocastSchema.parse(body)
+
+    const videocast = await prisma.podcast.update({
+      where: { id: params.id },
+      data: {
+        ...data,
+        fileType: 'video',
+      }
+    })
+
+    console.log('🎥 Videocast updated successfully:', videocast.id)
+    return NextResponse.json(videocast)
+  } catch (error) {
+    console.error('🎥 Error updating videocast:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function DELETE(

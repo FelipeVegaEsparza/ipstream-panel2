@@ -41,9 +41,61 @@ npx prisma generate >/dev/null 2>&1 || true
 
 # --- 3. Sincronizar schema (db push) ---
 echo "[entrypoint] Sincronizando schema con la base de datos..."
-npx prisma db push --skip-generate --accept-data-loss
+npx prisma db push --skip-generate --accept-data-loss || echo "[entrypoint] WARNING: prisma db push falló, continuando con migraciones manuales..."
 
-# --- 4. Crear admin si no existe ---
+# --- 4. Migraciones manuales (tablas que el agente necesita, se crean si no existen) ---
+echo "[entrypoint] Ejecutando migraciones manuales..."
+node << 'SQL_EOF'
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+(async () => {
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS jingles (
+        id VARCHAR(191) NOT NULL PRIMARY KEY,
+        clientId VARCHAR(191) NOT NULL,
+        radioStreamId VARCHAR(191) NOT NULL,
+        title VARCHAR(191) NOT NULL,
+        artist VARCHAR(191),
+        duration DOUBLE NOT NULL,
+        fileName VARCHAR(191) NOT NULL,
+        filePath VARCHAR(191) NOT NULL,
+        fileSize INT NOT NULL,
+        coverUrl VARCHAR(191),
+        mimeType VARCHAR(191) NOT NULL DEFAULT 'audio/mpeg',
+        uploadedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        updatedAt DATETIME(3) NOT NULL,
+        INDEX idx_jingles_client (clientId),
+        INDEX idx_jingles_radio (radioStreamId)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    `);
+    console.log('[entrypoint] Tabla jingles OK');
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS playlist_schedules (
+        id VARCHAR(191) NOT NULL PRIMARY KEY,
+        clientId VARCHAR(191) NOT NULL,
+        radioStreamId VARCHAR(191) NOT NULL,
+        playlistId VARCHAR(191) NOT NULL,
+        dayOfWeek INT NOT NULL,
+        startTime VARCHAR(191) NOT NULL,
+        endTime VARCHAR(191) NOT NULL,
+        isActive BOOLEAN NOT NULL DEFAULT true,
+        createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        updatedAt DATETIME(3) NOT NULL,
+        INDEX idx_schedule_client_day (clientId, dayOfWeek, isActive),
+        INDEX idx_schedule_radio_day (radioStreamId, dayOfWeek, isActive)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    `);
+    console.log('[entrypoint] Tabla playlist_schedules OK');
+  } catch (e) {
+    console.error('[entrypoint] Error en migraciones manuales:', e.message);
+  } finally {
+    await prisma.$disconnect();
+  }
+})();
+SQL_EOF
+
+# --- 5. Crear admin si no existe ---
 if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD" ]; then
   echo "[entrypoint] Asegurando admin $ADMIN_EMAIL..."
   ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_NAME="${ADMIN_NAME:-Administrador}" \
@@ -69,7 +121,7 @@ else
   echo "[entrypoint] ADMIN_EMAIL/ADMIN_PASSWORD no definidos, no se crea admin."
 fi
 
-# --- 5. Asegurar directorio de uploads (lo gestiona el volumen) ---
+# --- 6. Asegurar directorio de uploads (lo gestiona el volumen) ---
 echo "[entrypoint] Asegurando /app/public/uploads..."
 mkdir -p /app/public/uploads
 

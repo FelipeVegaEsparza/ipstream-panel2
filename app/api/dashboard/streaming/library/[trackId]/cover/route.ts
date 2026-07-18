@@ -43,3 +43,65 @@ export async function GET(
     return new NextResponse(null, { status: 500 })
   }
 }
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { trackId: string } }
+) {
+  try {
+    const ctx = await requireStreamingClient()
+    if (!ctx.hasRadioStream) {
+      return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
+    }
+
+    const formData = await request.formData()
+    const file = formData.get('cover')
+    if (!file || !(file instanceof File)) {
+      return NextResponse.json({ error: 'no_file', message: 'Falta el campo "cover"' }, { status: 400 })
+    }
+
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'unsupported_media_type', message: 'Solo se aceptan imágenes' }, { status: 415 })
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return NextResponse.json({ error: 'file_too_large', message: 'Máximo 2 MB' }, { status: 413 })
+    }
+
+    const result = await streamingClient.uploadCover(ctx.clientId, params.trackId, file)
+    return NextResponse.json(result)
+  } catch (err) {
+    if (err instanceof StreamingAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.statusCode })
+    }
+    if (err instanceof StreamingAgentError) {
+      return NextResponse.json({ error: 'agent_error', message: err.message }, { status: 502 })
+    }
+    console.error('[cover POST]', err)
+    return NextResponse.json({ error: 'internal_error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { trackId: string } }
+) {
+  try {
+    const ctx = await requireStreamingClient()
+    if (!ctx.hasRadioStream) {
+      return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
+    }
+
+    const result = await streamingClient.deleteCover(ctx.clientId, params.trackId)
+    return NextResponse.json(result)
+  } catch (err) {
+    if (err instanceof StreamingAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.statusCode })
+    }
+    if (err instanceof StreamingAgentError) {
+      return NextResponse.json({ error: 'agent_error', message: err.message }, { status: 502 })
+    }
+    console.error('[cover DELETE]', err)
+    return NextResponse.json({ error: 'internal_error' }, { status: 500 })
+  }
+}

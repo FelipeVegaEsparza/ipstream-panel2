@@ -123,6 +123,14 @@ export async function regenerateScript(clientId) {
     ? `/var/lib/radio/${clientId}/playlist.m3u`
     : null
 
+  // Chequear si hay jingles configurados
+  const jinglesM3uPath = `/var/lib/radio/${clientId}/jingles.m3u`
+  const [jingleRows] = await pool.query(
+    `SELECT COUNT(*) AS cnt FROM jingles WHERE clientId = ?`,
+    [clientId]
+  )
+  const hasJingles = jingleRows[0]?.cnt > 0 && rs.jinglePlayEvery > 0
+
   const content = generateLiquidsoapScript({
     clientId,
     clientName: rs.clientName,
@@ -132,6 +140,9 @@ export async function regenerateScript(clientId) {
     bitrate: rs.bitrate,
     playlistM3uPath: m3uPath,
     mode: playlist ? 'playlist' : 'single',
+    jinglePlayEvery: hasJingles ? rs.jinglePlayEvery : 0,
+    jinglePlayCount: hasJingles ? rs.jinglePlayCount : 0,
+    jinglesM3uPath: hasJingles ? jinglesM3uPath : null,
   })
 
   const path = await writeScript(rs.icecastMount, content)
@@ -273,4 +284,23 @@ export async function regenerateM3u(clientId) {
   await writeFile(m3uPath, lines + (lines ? '\n' : ''), { mode: 0o644 })
   logger.info({ clientId, m3uPath, trackCount: entries.length }, 'm3u regenerado (paths absolutos)')
   return { active: true, trackCount: entries.length }
+}
+
+/**
+ * Genera/actualiza el archivo jingles.m3u en el volumen compartido
+ * basado en todos los jingles disponibles del cliente.
+ */
+export async function regenerateJinglesM3u(clientId) {
+  const [rows] = await pool.query(
+    `SELECT fileName FROM jingles WHERE clientId = ? ORDER BY uploadedAt ASC`,
+    [clientId]
+  )
+
+  const m3uPath = join(LIQUIDSOAP_MP3_DIR, clientId, 'jingles.m3u')
+  const jinglesDir = join(LIQUIDSOAP_MP3_DIR, clientId, 'jingles')
+
+  const lines = rows.map((r) => join(jinglesDir, r.fileName)).join('\n')
+  await writeFile(m3uPath, lines + (lines ? '\n' : ''), { mode: 0o644 })
+  logger.info({ clientId, m3uPath, jingleCount: rows.length }, 'jingles.m3u regenerado')
+  return { jingleCount: rows.length }
 }

@@ -132,6 +132,67 @@ export async function deleteCover(clientId, trackId) {
   return true
 }
 
+// =====================================================
+// Jingle file helpers
+// =====================================================
+
+/**
+ * Devuelve el path del directorio jingles de un cliente.
+ */
+export function clientJinglesDir(clientId) {
+  return join(LIBRARY_PATH, clientId, 'jingles')
+}
+
+/**
+ * Devuelve el path completo de un archivo jingle.
+ */
+export function jinglePath(clientId, fileName) {
+  return join(clientJinglesDir(clientId), fileName)
+}
+
+/**
+ * Asegura que el directorio de jingles existe.
+ */
+export async function ensureJinglesDir(clientId) {
+  const dir = clientJinglesDir(clientId)
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true })
+  }
+  return dir
+}
+
+/**
+ * Guarda un buffer/MP3 de jingle en el filesystem.
+ * @returns {Promise<{ path: string, size: number }>}
+ */
+export async function saveJingle(clientId, fileName, buffer) {
+  await ensureJinglesDir(clientId)
+  const dest = join(clientJinglesDir(clientId), fileName)
+  await writeFile(dest, buffer)
+  const stats = await stat(dest)
+  return { path: dest, size: stats.size }
+}
+
+/**
+ * Elimina un jingle del filesystem.
+ */
+export async function deleteJingleFile(clientId, fileName) {
+  const dest = join(clientJinglesDir(clientId), fileName)
+  if (!existsSync(dest)) return false
+  await unlink(dest)
+  return true
+}
+
+/**
+ * Lista archivos jingle de un cliente (filesystem, no DB).
+ */
+export async function listJingleFiles(clientId) {
+  const dir = clientJinglesDir(clientId)
+  if (!existsSync(dir)) return []
+  const files = await readdir(dir)
+  return files.filter((f) => extname(f).toLowerCase() === '.mp3')
+}
+
 /**
  * Verifica que un fileName no contenga path traversal.
  */

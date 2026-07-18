@@ -21,6 +21,16 @@ export async function GET(request: NextRequest) {
       }
     }
   }
+  try {
+    const templates = await prisma.template.findMany({
+      where: { isActive: true }
+    })
+
+    return NextResponse.json(templates)
+  } catch (error) {
+    console.error('Error fetching templates:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
 }
 
 // POST - Seleccionar plantilla para el cliente

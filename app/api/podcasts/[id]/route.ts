@@ -25,6 +25,43 @@ export async function GET(
       }
     }
   }
+  try {
+    console.log('🎙️ Getting podcast - Start')
+    
+    const effectiveClient = await getEffectiveClientFromRequest(request)
+    
+    if (!effectiveClient) {
+      console.log('🎙️ No effective client found')
+      return NextResponse.json(
+        { error: 'No autorizado - Sin cliente asociado' },
+        { status: 401 }
+      )
+    }
+
+    const podcast = await prisma.podcast.findFirst({
+      where: {
+        id: params.id,
+        clientId: effectiveClient.clientId,
+        fileType: 'audio'
+      }
+    })
+
+    if (!podcast) {
+      return NextResponse.json(
+        { error: 'Episodio no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    console.log('🎙️ Podcast found:', podcast.id)
+    return NextResponse.json(podcast)
+  } catch (error) {
+    console.error('🎙️ Error getting podcast:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function PUT(
