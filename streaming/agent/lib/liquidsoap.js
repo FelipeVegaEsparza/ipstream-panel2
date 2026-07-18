@@ -19,7 +19,7 @@ import { config } from './config.js'
 import { logger } from './logger.js'
 import { generateLiquidsoapScript } from './script-generator.js'
 import { pool } from './db.js'
-import { decrypt, isEncrypted } from './encryption.js'
+// import { decrypt, isEncrypted } from './encryption.js'
 
 const execp = promisify(exec)
 
@@ -109,10 +109,8 @@ async function ensureCheckScript() {
  * Genera el .liq desde la DB y lo escribe al volumen compartido.
  * NO inicia el proceso.
  *
- * Usa la contraseña per-cliente (livePassword) descifrada desde la DB.
- * Icecast también valida via auth-http-source contra el agente usando
- * la misma contraseña, por lo que tanto AutoDJ como DJ en vivo usan
- * credenciales consistentes por cliente.
+ * Usa el source-password COMPARTIDO global de Icecast.
+ * Todos los clientes usan la misma contraseña para su AutoDJ.
  */
 export async function regenerateScript(clientId) {
   const rs = await loadRadioStream(clientId)
@@ -131,17 +129,7 @@ export async function regenerateScript(clientId) {
   )
   const hasJingles = jingleRows[0]?.cnt > 0 && rs.jinglePlayEvery > 0
 
-  // Usar la contraseña per-cliente (livePassword) en vez de la compartida
-  let sourcePassword = config.ice.sourcePassword
-  if (rs.livePasswordEnc && isEncrypted(rs.livePasswordEnc)) {
-    try {
-      sourcePassword = decrypt(rs.livePasswordEnc)
-    } catch (err) {
-      logger.warn({ clientId, err: err.message }, 'Error al descifrar livePasswordEnc, usando password compartido')
-    }
-  } else {
-    logger.warn({ clientId }, 'Sin livePasswordEnc en DB, usando password compartido')
-  }
+  const sourcePassword = config.ice.sourcePassword
 
   const content = generateLiquidsoapScript({
     clientId,

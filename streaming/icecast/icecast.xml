@@ -41,16 +41,10 @@
          - public=1: aparece en /status-json.xsl
          - El DJ puede tomar el control conectando con una password distinta
            y mayor prioridad (lo gestiona el streaming-agent).
-         - auth-http-source: delega validación de contraseña al streaming-agent,
-           permitiendo usar la contraseña per-cliente (livePassword). -->
+         - La validación de source se hace contra el source-password global
+           (compartido entre todos los clientes). -->
     <mount type="default">
         <public>1</public>
-        <authentication>
-            <auth-http-source>
-                <option name="auth_url" value="http://agent:4000/api/streams/auth-source"/>
-                <option name="method" value="POST"/>
-            </auth-http-source>
-        </authentication>
         <bitrate>128</bitrate>
         <type>audio/mpeg</type>
     </mount>
