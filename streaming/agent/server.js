@@ -23,14 +23,16 @@ const app = Fastify({
   logger,
   trustProxy: true,
   disableRequestLogging: false,
+  ignoreTrailingSlash: true,   // auth-source pueda llegar con/sin trailing slash
   bodyLimit: 50 * 1024 * 1024, // 50 MB
 })
 
 // CORS: solo el panel debería llamar. Por ahora permito todo en dev.
 await app.register(cors, { origin: true, credentials: true })
 
-// Parser manual para form-urlencoded (Icecast auth-http-source envía este formato)
-app.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_req, body, done) => {
+// Parser para form-urlencoded (Icecast auth-http-source envía este formato)
+// Usamos regex para cubrir charset y otras variantes
+app.addContentTypeParser(/^application\/x-www-form-urlencoded/, { parseAs: 'string' }, (_req, body, done) => {
   done(null, body)
 })
 

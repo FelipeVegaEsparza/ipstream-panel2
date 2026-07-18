@@ -329,15 +329,23 @@ export default async function streamRoutes(app) {
    */
   app.post('/api/streams/auth-source', async (request, reply) => {
     try {
-      // El body puede ser string (form-urlencoded) u objeto (JSON)
+      const parseFormBody = (raw) => {
+        const out = {}
+        try {
+          const params = new URLSearchParams(typeof raw === 'string' ? raw : String(raw))
+          for (const [k, v] of params.entries()) out[k] = v
+        } catch {}
+        return out
+      }
+
+      const body = request.body
       let fields = {}
-      if (typeof request.body === 'string') {
-        const params = new URLSearchParams(request.body)
-        for (const [k, v] of params.entries()) {
-          fields[k] = v
-        }
-      } else if (request.body && typeof request.body === 'object') {
-        fields = request.body
+      if (typeof body === 'string') {
+        fields = parseFormBody(body)
+      } else if (body && typeof body === 'object') {
+        fields = body
+      } else if (Buffer.isBuffer(body)) {
+        fields = parseFormBody(body.toString('utf8'))
       }
       const { mount, user, pass } = fields
 
@@ -361,20 +369,18 @@ export default async function streamRoutes(app) {
 
       const { livePasswordEnc } = rows[0]
 
-      if (!livePasswordEnc || !isEncrypted(livePasswordEnc)) {
-        logger.warn({ mount: cleanMount }, 'auth-source: sin livePassword en DB')
-        return reply.code(403).send({ error: 'no_password_configured' })
-      }
-
       // Aceptar tanto la contraseña per-cliente (livePassword) como la compartida
-      // Esto permite que AutoDJs viejos (con shared password) sigan funcionando
-      // mientras los nuevos y los DJs usan la contraseña per-cliente.
-      let livePassword
-      try {
-        livePassword = decrypt(livePasswordEnc)
-      } catch (err) {
-        logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error descifrando livePasswordEnc')
-        livePassword = null
+      // Si livePasswordEnc no existe o no se puede descifrar, solo se valida contra
+      // la shared password (compatible con AutoDJs viejos y clientes sin livePassword).
+      let livePassword = null
+      if (livePasswordEnc && isEncrypted(livePasswordEnc)) {
+        try {
+          livePassword = decrypt(livePasswordEnc)
+        } catch (err) {
+          logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error descifrando livePasswordEnc')
+        }
+      } else {
+        logger.warn({ mount: cleanMount, hasEnc: !!livePasswordEnc }, 'auth-source: sin livePasswordEnc encriptado en DB')
       }
 
       const sharedPassword = config.ice.sourcePassword
