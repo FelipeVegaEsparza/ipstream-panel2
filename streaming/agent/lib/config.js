@@ -50,6 +50,8 @@ export const config = {
     // Password que los SOURCES (liquidsoap, DJ) usan para conectar.
     // Compartido por ahora (todos los mounts usan el mismo).
     sourcePassword: required('ICE_SOURCE_PASSWORD', 'hackme'),
+    relayPassword: required('ICE_RELAY_PASSWORD', 'hackme'),
+    hostname: required('ICE_HOSTNAME', 'localhost'),
   },
 
   // Liquidsoap

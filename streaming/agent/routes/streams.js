@@ -3,6 +3,7 @@
 // =====================================================
 
 import { startStream, stopStream, restartStream, isProcessRunning, regenerateScript, regenerateM3u } from '../lib/liquidsoap.js'
+import { deployIcecastConfig } from '../lib/icecast-config.js'
 import { getMountStatus, getGlobalStatus, ping as icecastPing } from '../lib/icecast.js'
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
@@ -102,6 +103,8 @@ export default async function streamRoutes(app) {
   app.post('/api/streams/:clientId/start', async (request, reply) => {
     const { clientId } = request.params
     try {
+      // Deploy icecast config con per-client passwords antes de arrancar
+      await deployIcecastConfig()
       const result = await startStream(clientId)
       await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'stream_start', ?, NOW())`,
@@ -130,6 +133,7 @@ export default async function streamRoutes(app) {
     const { clientId } = request.params
     try {
       const result = await stopStream(clientId)
+      await deployIcecastConfig()
       await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'stream_stop', ?, NOW())`,
         [uuid(), clientId, JSON.stringify(result)]
@@ -148,6 +152,7 @@ export default async function streamRoutes(app) {
   app.post('/api/streams/:clientId/restart', async (request, reply) => {
     const { clientId } = request.params
     try {
+      await deployIcecastConfig()
       const result = await restartStream(clientId)
       await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'stream_restart', ?, NOW())`,

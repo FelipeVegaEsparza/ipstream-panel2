@@ -18,6 +18,7 @@ import playlistRoutes from './routes/playlists.js'
 import jingleRoutes from './routes/jingles.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
+import { deployIcecastConfig } from './lib/icecast-config.js'
 
 const app = Fastify({
   logger,
@@ -256,6 +257,12 @@ process.on('SIGINT', () => shutdown('SIGINT'))
 try {
   await app.listen({ port: config.port, host: config.host })
   logger.info(`Streaming agent escuchando en http://${config.host}:${config.port}`)
+  // Deploy icecast config con per-client passwords
+  deployIcecastConfig().then((r) => {
+    logger.info({ ok: r.ok }, 'Deploy icecast config en startup')
+  }).catch((err) => {
+    logger.warn({ err: err.message }, 'Deploy icecast config en startup falló (no crítico)')
+  })
 } catch (err) {
   logger.fatal({ err }, 'No se pudo arrancar el agent')
   process.exit(1)
