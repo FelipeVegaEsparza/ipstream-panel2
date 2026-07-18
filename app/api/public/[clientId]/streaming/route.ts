@@ -1,0 +1,94 @@
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
+
+export async function OPTIONS() {
+  return handleCors()
+}
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: { clientId: string } }
+) {
+  try {
+    const radioStream = await prisma.radioStream.findUnique({
+      where: { clientId: params.clientId },
+      select: {
+        id: true, icecastMount: true, bitrate: true, status: true,
+        listenerCount: true, currentTitle: true, currentArtist: true,
+        jinglePlayEvery: true, jinglePlayCount: true,
+        lastStatusAt: true,
+        client: { select: { name: true } },
+      },
+    })
+    if (!radioStream) {
+      return createCorsErrorResponse('Streaming no encontrado', 404)
+    }
+
+    let status: any = null
+    let nowPlaying: any = null
+    try {
+      ;[status, nowPlaying] = await Promise.all([
+        streamingClient.getStatus(params.clientId),
+        streamingClient.getNowPlaying(params.clientId),
+      ])
+    } catch (err) {
+      if (!(err instanceof StreamingAgentError)) throw err
+    }
+
+    const icecast = status?.icecast
+    const currentTrack = nowPlaying?.currentTrack
+    const nextTrack = nowPlaying?.nextTrack
+
+    const track = currentTrack
+      ? {
+          title: currentTrack.title,
+          artist: currentTrack.artist,
+          album: currentTrack.album,
+          coverUrl: currentTrack.coverUrl,
+          duration: currentTrack.duration,
+          isJingle: currentTrack.isJingle,
+        }
+      : {
+          title: icecast?.title ?? radioStream.currentTitle,
+          artist: radioStream.currentArtist,
+          album: null,
+          coverUrl: null,
+          duration: null,
+          isJingle: false,
+        }
+
+    return createCorsResponse({
+      clientId: params.clientId,
+      clientName: radioStream.client.name,
+      mount: radioStream.icecastMount,
+      streamUrl: `${process.env.ICE_PUBLIC_URL || 'http://localhost:8000'}/${radioStream.icecastMount}`,
+      bitrate: radioStream.bitrate,
+      status: radioStream.status,
+      isLive: icecast ? true : false,
+      listeners: icecast?.listeners ?? 0,
+      listenerPeak: icecast?.listener_peak ?? 0,
+      jingleConfig: {
+        playEvery: radioStream.jinglePlayEvery,
+        playCount: radioStream.jinglePlayCount,
+      },
+      currentTrack: track,
+      nextTrack: nextTrack
+        ? {
+            title: nextTrack.title,
+            artist: nextTrack.artist,
+            album: nextTrack.album,
+            coverUrl: nextTrack.coverUrl,
+            duration: nextTrack.duration,
+            isJingle: nextTrack.isJingle,
+          }
+        : null,
+      position: nowPlaying?.position ?? null,
+      lastUpdate: icecast ? status?.timestamp : radioStream.lastStatusAt,
+    })
+  } catch (err) {
+    console.error('[public/streaming]', err)
+    return createCorsErrorResponse('Error interno del servidor', 500)
+  }
+}

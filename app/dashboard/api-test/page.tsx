@@ -30,6 +30,12 @@ export default function ApiTestPage() {
       description: 'Obtiene todos los datos del cliente (incluye plantilla seleccionada)'
     },
     {
+      name: 'Streaming',
+      method: 'GET',
+      url: `/api/public/${clientId}/streaming`,
+      description: 'URL del stream, metadatos del tema en reproducción con carátula, oyentes en vivo y configuración de jingles'
+    },
+    {
       name: 'Datos básicos',
       method: 'GET',
       url: `/api/public/${clientId}/basic-data`,
