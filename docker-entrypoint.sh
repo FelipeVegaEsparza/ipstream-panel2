@@ -100,7 +100,22 @@ const prisma = new PrismaClient();
         INDEX idx_audit_action (action)
       ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `);
-    console.log('[entrypoint] Tabla streaming_audit_logs OK');
+      console.log('[entrypoint] Tabla streaming_audit_logs OK');
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS stream_stats (
+        id VARCHAR(191) NOT NULL PRIMARY KEY,
+        clientId VARCHAR(191) NOT NULL,
+        radioStreamId VARCHAR(191) NOT NULL,
+        listenerCount INT NOT NULL,
+        listenerPeak INT NOT NULL,
+        currentTitle VARCHAR(191),
+        currentArtist VARCHAR(191),
+        timestamp DATETIME(3) NOT NULL,
+        INDEX idx_stats_client_date (clientId, timestamp),
+        INDEX idx_stats_radio_date (radioStreamId, timestamp)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    `);
+    console.log('[entrypoint] Tabla stream_stats OK');
 
     // Asegurar columnas de jingles en radio_streams (si prisma db push no lo hizo)
     try {

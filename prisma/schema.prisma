@@ -70,6 +70,7 @@ model Client {
   streamingAuditLogs StreamingAuditLog[]
   jingles           Jingle[]
   playlistSchedules PlaylistSchedule[]
+  streamStats       StreamStat[]
 
   @@map("clients")
 }
@@ -646,6 +647,7 @@ model RadioStream {
   playlists   Playlist[]
   jingles     Jingle[]
   playlistSchedules PlaylistSchedule[]
+  streamStats StreamStat[]
 
   @@index([status])
   @@index([enabled])
@@ -793,6 +795,25 @@ model PlaylistSchedule {
   @@index([clientId, dayOfWeek, isActive])
   @@index([radioStreamId, dayOfWeek, isActive])
   @@map("playlist_schedules")
+}
+
+// Estadísticas históricas de oyentes (snapshots periódicos del agente)
+model StreamStat {
+  id             String   @id @default(cuid())
+  clientId       String
+  radioStreamId  String
+  listenerCount  Int
+  listenerPeak   Int
+  currentTitle   String?  @db.VarChar(191)
+  currentArtist  String?  @db.VarChar(191)
+  timestamp      DateTime
+
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  radioStream  RadioStream  @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, timestamp])
+  @@index([radioStreamId, timestamp])
+  @@map("stream_stats")
 }
 
 // RadioStream status: "off" | "autodj" | "live"

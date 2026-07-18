@@ -17,6 +17,7 @@ import libraryRoutes from './routes/library.js'
 import playlistRoutes from './routes/playlists.js'
 import jingleRoutes from './routes/jingles.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
+import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 
 const app = Fastify({
   logger,
@@ -191,6 +192,26 @@ try {
   logger.info({ err: err.message }, 'Columnas jingle en radio_streams (ya existían o ignorado)')
 }
 
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS stream_stats (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      radioStreamId VARCHAR(191) NOT NULL,
+      listenerCount INT NOT NULL,
+      listenerPeak INT NOT NULL,
+      currentTitle VARCHAR(191),
+      currentArtist VARCHAR(191),
+      timestamp DATETIME(3) NOT NULL,
+      INDEX idx_stats_client_date (clientId, timestamp),
+      INDEX idx_stats_radio_date (radioStreamId, timestamp)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla stream_stats asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla stream_stats')
+}
+
 // Rutas
 await app.register(streamRoutes)
 await app.register(websocketRoutes)
@@ -198,14 +219,17 @@ await app.register(libraryRoutes)
 await app.register(playlistRoutes)
 await app.register(jingleRoutes)
 await app.register(scheduleRoutes)
+await app.register(statsRoutes)
 
-// Iniciar cron de parrilla horaria
+// Iniciar crons
 startScheduleCron()
+startStatsCron()
 
 // Graceful shutdown
 const shutdown = async (signal) => {
   logger.info({ signal }, 'Shutdown signal recibido')
   try {
+    stopStatsCron()
     await app.close()
     await pool.end()
     logger.info('Cleanup completo. Saliendo.')

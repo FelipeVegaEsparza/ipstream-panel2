@@ -218,6 +218,16 @@ export const streamingClient = {
       body: { jinglePlayEvery, jinglePlayCount },
     }),
 
+  // Stats (estadísticas de oyentes)
+  listStats: (clientId: string, params?: { period?: 'day' | 'week' | 'month'; from?: string; to?: string }) => {
+    const search = new URLSearchParams()
+    if (params?.period) search.set('period', params.period)
+    if (params?.from) search.set('from', params.from)
+    if (params?.to) search.set('to', params.to)
+    const qs = search.toString()
+    return request(`/api/streams/${encodeURIComponent(clientId)}/stats${qs ? `?${qs}` : ''}`)
+  },
+
   // Schedule (parrilla horaria)
   listSchedule: (clientId: string) =>
     request(`/api/streams/${encodeURIComponent(clientId)}/schedule`),

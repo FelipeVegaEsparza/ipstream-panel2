@@ -52,6 +52,7 @@ export type MenuItemKey =
   | 'streaming-jingles'
   | 'streaming-schedule'
   | 'streaming-connection'
+  | 'streaming-stats'
 
 export interface MenuItemDef {
   key: MenuItemKey
@@ -120,6 +121,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   href: '/dashboard/streaming/schedule',
   section: 'Radio',
   icon: CalendarDaysIcon,
+},
+{
+  key: 'streaming-stats',
+  name: 'Estadísticas',
+  href: '/dashboard/streaming/stats',
+  section: 'Radio',
+  icon: ChartBarIcon,
 },
   {
     key: 'basic-data',
