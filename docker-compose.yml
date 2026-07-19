@@ -130,7 +130,6 @@ services:
     # Ajustar HARBOR_PORT_RANGE según cantidad de clientes.
     ports:
       - "${HARBOR_PORT_RANGE:-22340-22350}:${HARBOR_PORT_RANGE:-22340-22350}"
-    entrypoint: ["sleep", "infinity"]   # El agent lanza scripts via docker exec
     volumes:
       - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts:ro
       # Fase 0: bind-mount desde un path dentro del proyecto. En prod, named volume.
