@@ -1,14 +1,17 @@
 // =====================================================
 // DJ Watcher — monitorea estado del DJ en vivo
-// En la nueva arquitectura:
+// En la arquitectura harbor:
 //   - Liquidsoap maneja el switch live/autodj via fallback()
 //   - harbor callbacks (on_connect/on_disconnect) notifican
-//     al agente via HTTP
-//   - Este watcher es un respaldo: detecta si el callback
-//     no llegó y sincroniza el estado en DB
+//     al agente via HTTP (fuente de verdad para _djActive)
+//   - Este watcher es un respaldo SOLO para detectar estados
+//     inconsistentes en DB (status='live' sin harbor activo)
+//
+// IMPORTANTE: NO itera _djActive. Los callbacks de harbor
+// son la fuente de verdad. El watcher solo revisa la DB
+// para casos donde un callback de disconnect no llegó.
 // =====================================================
 
-import { getMountStatus } from './icecast.js'
 import { logger } from './logger.js'
 import { _djActive } from '../routes/streams.js'
 import { pool } from './db.js'
@@ -18,7 +21,7 @@ let intervalHandle = null
 
 export function startDjWatcher() {
   if (intervalHandle) return
-  logger.info('DJ Watcher iniciado (respaldo)')
+  logger.info('DJ Watcher iniciado (respaldo solo para estados inconsistentes)')
   intervalHandle = setInterval(checkMounts, CHECK_INTERVAL)
 }
 
@@ -30,48 +33,36 @@ export function stopDjWatcher() {
 }
 
 async function checkMounts() {
-  const entries = [..._djActive.entries()]
-  for (const [clientMount] of entries) {
+  // Buscar streams con status='live' que NO tengan harbor activo
+  // Esto significa que el on_disconnect callback no llegó
+  const [rows] = await pool.query(
+    `SELECT clientId, icecastMount FROM radio_streams WHERE status = 'live'`
+  )
+
+  for (const row of rows) {
     try {
-      // Verificar si el mount existe en Icecast
-      const currentMount = await getMountStatus(clientMount)
-      if (currentMount && currentMount.listeners > 0) {
-        // DJ sigue activo — ok
-        continue
-      }
+      const { clientId, icecastMount } = row
+      const slots = _djActive.get(icecastMount)
 
-      // El DJ se fue — sincronizar estado
-      if (!currentMount) {
-        logger.info({ mount: clientMount }, 'DJ Watcher: DJ ya no está en Icecast, sincronizando estado')
-      }
+      // Si hay slots activos en harbor, el DJ sigue conectado — ok
+      if (slots && slots.size > 0) continue
 
-      const [rows] = await pool.query(
-        `SELECT clientId, status FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
-        [clientMount]
+      // No hay harbor activo pero DB dice 'live' → callback de disconnect perdido
+      logger.info({ mount: icecastMount, clientId }, 'DJ Watcher: estado inconsistente — corrigiendo a autodj')
+
+      await pool.query(
+        `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
+        [clientId]
       )
-      if (rows.length === 0) {
-        _djActive.delete(clientMount)
-        continue
-      }
+      await pool.query(
+        `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
+         VALUES (UUID(), ?, 'dj_watcher_recovery', ?, NOW())`,
+        [clientId, JSON.stringify({ mount: icecastMount, previousStatus: 'live' })]
+      )
 
-      const { clientId, status } = rows[0]
-      if (status === 'live' && !_djActive.get(clientMount)?.size) {
-        // Callback de disconnect no llegó — actualizar
-        await pool.query(
-          `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
-          [clientId]
-        )
-        await pool.query(
-          `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
-           VALUES (UUID(), ?, 'dj_watcher_recovery', ?, NOW())`,
-          [clientId, JSON.stringify({ mount: clientMount, previousStatus: status })]
-        )
-        logger.info({ mount: clientMount, clientId }, 'DJ Watcher: estado corregido a autodj')
-      }
-
-      _djActive.delete(clientMount)
+      logger.info({ mount: icecastMount, clientId }, 'DJ Watcher: estado corregido a autodj')
     } catch (err) {
-      logger.warn({ mount: clientMount, err: err.message }, 'DJ Watcher: error en check')
+      logger.warn({ mount: row.icecastMount, err: err.message }, 'DJ Watcher: error en check')
     }
   }
 }
