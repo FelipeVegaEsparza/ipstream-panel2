@@ -21,9 +21,9 @@ export default function StreamingPage() {
         </p>
       </div>
 
-      <NowPlayingDisplay />
-
       <StreamControls isRunning={isRunning} onChange={refresh} />
+
+      <NowPlayingDisplay />
     </div>
   )
 }
