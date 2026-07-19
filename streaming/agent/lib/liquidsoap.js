@@ -1,7 +1,3 @@
-// =====================================================
-// Liquidsoap — control de procesos via docker exec
-// =====================================================
-
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { writeFile, unlink, access } from 'fs/promises'
@@ -10,7 +6,7 @@ import { config } from './config.js'
 import { logger } from './logger.js'
 import { generateLiquidsoapScript } from './script-generator.js'
 import { pool } from './db.js'
-
+import { decrypt, isEncrypted } from './encryption.js'
 
 const execp = promisify(exec)
 
@@ -20,6 +16,10 @@ const SCRIPTS_DIR = config.liquidsoap.scriptsPath
 const LIQUIDSOAP_MP3_DIR = config.library.path
 
 const CHECK_SCRIPT_PATH = join(SCRIPTS_DIR, '_check_proc.sh')
+
+export function getHarborPort(telnetPort) {
+  return telnetPort + 10000
+}
 
 async function loadRadioStream(clientId) {
   const [rows] = await pool.query(
@@ -94,6 +94,17 @@ export async function regenerateScript(clientId) {
   const hasJingles = jingleRows[0]?.cnt > 0 && rs.jinglePlayEvery > 0
 
   let sourcePassword = config.ice.sourcePassword
+  let harborPassword = config.ice.sourcePassword
+
+  if (rs.livePasswordEnc && isEncrypted(rs.livePasswordEnc)) {
+    try {
+      harborPassword = decrypt(rs.livePasswordEnc)
+    } catch (err) {
+      logger.warn({ clientId, err: err.message }, 'Error al descifrar livePasswordEnc, usando password compartido para harbor')
+    }
+  } else {
+    logger.warn({ clientId }, 'Sin livePasswordEnc en DB, usando password compartido para harbor')
+  }
 
   const content = generateLiquidsoapScript({
     clientId,
@@ -101,12 +112,14 @@ export async function regenerateScript(clientId) {
     icecastMount: rs.icecastMount,
     sourcePassword,
     telnetPort: rs.liquidsoapTelnetPort,
+    harborPassword,
     bitrate: rs.bitrate,
     playlistM3uPath: m3uPath,
     mode: playlist ? 'playlist' : 'single',
     jinglePlayEvery: hasJingles ? rs.jinglePlayEvery : 0,
     jinglePlayCount: hasJingles ? rs.jinglePlayCount : 0,
     jinglesM3uPath: hasJingles ? jinglesM3uPath : null,
+    agentToken: config.agentToken,
   })
 
   const path = await writeScript(rs.icecastMount, content)
@@ -147,7 +160,7 @@ export async function startStream(clientId) {
     [newStatus.pid, clientId]
   )
 
-  logger.info({ clientId, mount: rs.icecastMount, pid: newStatus.pid, hasPlaylist }, 'Stream iniciado')
+  logger.info({ clientId, mount: rs.icecastMount, pid: newStatus.pid, hasPlaylist, harborPort: getHarborPort(rs.liquidsoapTelnetPort) }, 'Stream iniciado con harbor')
   return { pid: newStatus.pid, scriptPath: path, hasPlaylist }
 }
 

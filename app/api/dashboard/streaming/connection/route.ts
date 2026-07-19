@@ -16,12 +16,34 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
 
+    // Obtener harbor port desde el agente
+    let harborPort: number | null = null
+    let djConnected = false
+    try {
+      const harborRes = await fetch(
+        `${process.env.STREAMING_AGENT_URL || 'http://agent:4000'}/api/streams/${encodeURIComponent(ctx.clientId)}/harbor/status`,
+        { headers: { Authorization: `Bearer ${process.env.STREAMING_AGENT_TOKEN || ''}` } }
+      )
+      if (harborRes.ok) {
+        const harborData = await harborRes.json()
+        harborPort = harborData.harborPort
+        djConnected = harborData.djConnected
+      }
+    } catch {
+      // agent not reachable
+    }
+
     // Datos públicos de conexión (sin password)
+    const iceHost = process.env.ICE_PUBLIC_HOSTNAME || process.env.NEXTAUTH_URL?.replace(/^https?:\/\//, '').split(':')[0] || 'localhost'
     const data = {
       clientId: ctx.clientId,
       mount: ctx.icecastMount,
-      host: process.env.ICE_PUBLIC_HOSTNAME || process.env.NEXTAUTH_URL?.replace(/^https?:\/\//, '').split(':')[0] || 'localhost',
+      host: iceHost,
       port: parseInt(process.env.ICE_PUBLIC_PORT || '8000', 10),
+      harborHost: process.env.HARBOR_PUBLIC_HOSTNAME || iceHost,
+      harborPort,
+      harborMount: '/live',
+      djConnected,
     }
 
     return NextResponse.json(data)
