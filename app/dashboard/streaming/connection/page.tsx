@@ -7,11 +7,18 @@ export default function ConnectionPage() {
   const { status } = useStreamingStatus({ pollingMs: 10000 })
   const [copyText, setCopyText] = useState<string | null>(null)
 
-  const [connectionInfo, setConnectionInfo] = useState<{ host: string; port: number; mount: string } | null>(null)
+  const [connectionInfo, setConnectionInfo] = useState<{
+    host: string
+    port: number
+    mount: string
+    harborHost: string
+    harborPort: number | null
+    harborMount: string
+  } | null>(null)
   const [livePassword, setLivePassword] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [loadingPassword, setLoadingPassword] = useState(false)
-  const [takeoverState, setTakeoverState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [djStatus, setDjStatus] = useState<'autodj' | 'live' | 'unknown'>('unknown')
 
   useEffect(() => {
     fetch('/api/dashboard/streaming/connection')
@@ -24,8 +31,26 @@ export default function ConnectionPage() {
       .catch(() => {})
   }, [])
 
-  const icecastHost = connectionInfo?.host || (typeof window !== 'undefined' ? window.location.hostname : 'localhost')
-  const icecastPort = connectionInfo?.port || 8000
+  // Poll DJ status
+  useEffect(() => {
+    const poll = () => {
+      fetch('/api/dashboard/streaming/connection')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.djConnected !== undefined) {
+            setDjStatus(data.djConnected ? 'live' : 'autodj')
+          }
+        })
+        .catch(() => {})
+    }
+    poll()
+    const iv = setInterval(poll, 10000)
+    return () => clearInterval(iv)
+  }, [])
+
+  const harborHost = connectionInfo?.harborHost || (typeof window !== 'undefined' ? window.location.hostname : 'localhost')
+  const harborPort = connectionInfo?.harborPort || 9000
+  const harborMount = connectionInfo?.harborMount || '/live'
   const mount = connectionInfo?.mount || status?.mount || 'mi-mount'
 
   const revealPassword = useCallback(async () => {
@@ -51,23 +76,6 @@ export default function ConnectionPage() {
     }
   }, [livePassword])
 
-  const doTakeover = useCallback(async () => {
-    setTakeoverState('loading')
-    try {
-      const res = await fetch('/api/dashboard/streaming/dj-takeover', { method: 'POST' })
-      if (res.ok) {
-        setTakeoverState('success')
-        setTimeout(() => setTakeoverState('idle'), 5000)
-      } else {
-        setTakeoverState('error')
-        setTimeout(() => setTakeoverState('idle'), 4000)
-      }
-    } catch {
-      setTakeoverState('error')
-      setTimeout(() => setTakeoverState('idle'), 4000)
-    }
-  }, [])
-
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
     setCopyText(label)
@@ -75,6 +83,9 @@ export default function ConnectionPage() {
   }
 
   const displayPassword = showPassword && livePassword ? livePassword : '********'
+
+  const djStatusColor = djStatus === 'live' ? 'text-green-400' : djStatus === 'autodj' ? 'text-cyan-400' : 'text-gray-400'
+  const djStatusText = djStatus === 'live' ? 'DJ en vivo' : djStatus === 'autodj' ? 'AutoDJ activo' : 'Desconocido'
 
   return (
     <div className="space-y-6">
@@ -85,31 +96,49 @@ export default function ConnectionPage() {
         </p>
       </div>
 
-      <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 text-sm text-green-100">
-        💡 <strong>DJ Automático:</strong> Conectá tu DJ con las credenciales de abajo. El sistema detectará automáticamente tu conexión, detendrá el AutoDJ y te dará el control. Cuando te desconectes, el AutoDJ volverá solo en ~30 segundos.
+      {/* DJ status indicator */}
+      <div className={`rounded-lg p-4 text-sm border ${
+        djStatus === 'live'
+          ? 'bg-green-900/30 border-green-700 text-green-100'
+          : 'bg-gray-800 border-gray-700 text-gray-300'
+      }`}>
+        <div className="flex items-center gap-2">
+          <span className={`inline-block w-3 h-3 rounded-full ${
+            djStatus === 'live' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'
+          }`} />
+          <span className={djStatusColor}>{djStatusText}</span>
+        </div>
+        <p className="mt-1 text-xs text-gray-400">
+          {djStatus === 'live'
+            ? 'DJ conectado. El AutoDJ se reanudará automáticamente al desconectar.'
+            : 'No hay DJ conectado. Configurá tu encoder con los datos de abajo.'}
+        </p>
       </div>
 
       <div className="bg-gray-800 rounded-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold text-white">Configuración de transmisión</h2>
+        <p className="text-xs text-gray-400 -mt-2">
+          Conectá tu encoder directamente a Liquidsoap. El sistema cambia automáticamente entre DJ y AutoDJ.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-gray-400 uppercase">Servidor</label>
+            <label className="text-xs text-gray-400 uppercase">Servidor (Liquidsoap)</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
-                {icecastHost}
+                {harborHost}
               </code>
-              <button onClick={() => copy(icecastHost, 'Servidor')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
+              <button onClick={() => copy(harborHost, 'Servidor')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
                 Copiar
               </button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 uppercase">Puerto</label>
+            <label className="text-xs text-gray-400 uppercase">Puerto (Harbor)</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
-                {icecastPort}
+                {harborPort}
               </code>
-              <button onClick={() => copy(String(icecastPort), 'Puerto')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
+              <button onClick={() => copy(String(harborPort), 'Puerto')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
                 Copiar
               </button>
             </div>
@@ -118,9 +147,9 @@ export default function ConnectionPage() {
             <label className="text-xs text-gray-400 uppercase">Mountpoint</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
-                /{mount}
+                {harborMount}
               </code>
-              <button onClick={() => copy(`/${mount}`, 'Mount')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
+              <button onClick={() => copy(harborMount, 'Mount')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
                 Copiar
               </button>
             </div>
@@ -190,9 +219,9 @@ export default function ConnectionPage() {
         <ol className="text-sm text-gray-300 space-y-2 list-decimal pl-5">
           <li>Abrí BUTT → Settings → Stream</li>
           <li>Server type: <code className="text-cyan-400">Icecast 2</code></li>
-          <li>Address: <code className="text-cyan-400">{icecastHost}</code></li>
-          <li>Port: <code className="text-cyan-400">{icecastPort}</code></li>
-          <li>Mount: <code className="text-cyan-400">/{mount}</code></li>
+          <li>Address: <code className="text-cyan-400">{harborHost}</code></li>
+          <li>Port: <code className="text-cyan-400">{harborPort}</code></li>
+          <li>Mount: <code className="text-cyan-400">{harborMount}</code></li>
           <li>Username: <code className="text-cyan-400">source</code></li>
           <li>Password: tu password DJ</li>
           <li>Stream name: tu nombre artístico</li>

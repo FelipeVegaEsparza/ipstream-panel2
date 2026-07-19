@@ -2,7 +2,7 @@
 // Routes — gestión de streams por cliente
 // =====================================================
 
-import { startStream, stopStream, restartStream, isProcessRunning, regenerateScript, regenerateM3u } from '../lib/liquidsoap.js'
+import { startStream, stopStream, restartStream, isProcessRunning, regenerateScript, regenerateM3u, getHarborPort } from '../lib/liquidsoap.js'
 import { deployIcecastConfig } from '../lib/icecast-config.js'
 import { getMountStatus, getGlobalStatus, ping as icecastPing, killSource } from '../lib/icecast.js'
 import { pool } from '../lib/db.js'
@@ -13,6 +13,11 @@ import crypto from 'crypto'
 
 function uuid() {
   return crypto.randomUUID()
+}
+
+function sanitizeMount(mount) {
+  if (!mount) return ''
+  return mount.replace(/^\//, '')
 }
 
 // DJ takeover tracking: mounts donde un DJ está conectado (para reiniciar AutoDJ al irse)
@@ -202,6 +207,101 @@ export default async function streamRoutes(app) {
     } catch (err) {
       logger.error({ err, clientId }, 'dj-takeover: error')
       return reply.code(500).send({ error: 'dj_takeover_failed', message: err.message })
+    }
+  })
+
+  /**
+   * POST /api/streams/:clientId/harbor/connected
+   * Llamado por Liquidsoap via system("curl ...") cuando un DJ
+   * conecta al input.harbor(). Actualiza estado y log.
+   */
+  app.post('/api/streams/:clientId/harbor/connected', async (request, reply) => {
+    const { clientId } = request.params
+    try {
+      const [rsRows] = await pool.query(
+        `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        [clientId]
+      )
+      if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+      const mount = sanitizeMount(rsRows[0].icecastMount)
+
+      _djActive.add(mount)
+
+      await pool.query(
+        `UPDATE radio_streams SET status = 'live', lastError = NULL, updatedAt = NOW() WHERE clientId = ?`,
+        [clientId]
+      )
+      await pool.query(
+        `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'dj_connected', ?, NOW())`,
+        [uuid(), clientId, JSON.stringify({ mount })]
+      )
+      logger.info({ clientId, mount }, 'harbor: DJ connected')
+      return { ok: true, status: 'live' }
+    } catch (err) {
+      logger.error({ err, clientId }, 'harbor: error on connected')
+      return reply.code(500).send({ error: err.message })
+    }
+  })
+
+  /**
+   * POST /api/streams/:clientId/harbor/disconnected
+   * Llamado por Liquidsoap cuando el DJ se desconecta del harbor.
+   */
+  app.post('/api/streams/:clientId/harbor/disconnected', async (request, reply) => {
+    const { clientId } = request.params
+    try {
+      const [rsRows] = await pool.query(
+        `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        [clientId]
+      )
+      if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+      const mount = sanitizeMount(rsRows[0].icecastMount)
+
+      _djActive.delete(mount)
+
+      await pool.query(
+        `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
+        [clientId]
+      )
+      await pool.query(
+        `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'dj_disconnected', ?, NOW())`,
+        [uuid(), clientId, JSON.stringify({ mount })]
+      )
+      logger.info({ clientId, mount }, 'harbor: DJ disconnected — AutoDJ resumed')
+      return { ok: true, status: 'autodj' }
+    } catch (err) {
+      logger.error({ err, clientId }, 'harbor: error on disconnected')
+      return reply.code(500).send({ error: err.message })
+    }
+  })
+
+  /**
+   * GET /api/streams/:clientId/harbor/status
+   * Retorna el estado actual del harbor: puerto, si hay DJ conectado.
+   */
+  app.get('/api/streams/:clientId/harbor/status', async (request, reply) => {
+    const { clientId } = request.params
+    try {
+      const [rsRows] = await pool.query(
+        `SELECT liquidsoapTelnetPort, icecastMount, status FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        [clientId]
+      )
+      if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+      const { liquidsoapTelnetPort, icecastMount, status } = rsRows[0]
+      const mount = sanitizeMount(icecastMount)
+      const harborPort = getHarborPort(liquidsoapTelnetPort)
+
+      return {
+        ok: true,
+        clientId,
+        harborPort,
+        mount: '/live',
+        djConnected: _djActive.has(mount),
+        streamStatus: status,
+      }
+    } catch (err) {
+      logger.error({ err, clientId }, 'harbor: error on status')
+      return reply.code(500).send({ error: err.message })
     }
   })
 
@@ -452,18 +552,16 @@ export default async function streamRoutes(app) {
       } else if (Buffer.isBuffer(body)) {
         fields = parseFormBody(body.toString('utf8'))
       }
-      const { mount, user, pass } = fields
+      const { mount, pass } = fields
 
       if (!mount || !pass) {
         return reply.code(403).type('text/plain').send('403 missing_fields')
       }
 
-      // mount viene con "/" ej: "/clientId" — lo limpiamos
       const cleanMount = mount.replace(/^\//, '')
 
-      // Buscar el RadioStream por icecastMount
       const [rows] = await pool.query(
-        `SELECT clientId, livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
+        `SELECT livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
         [cleanMount]
       )
 
@@ -472,9 +570,8 @@ export default async function streamRoutes(app) {
         return reply.code(403).type('text/plain').send('403 mount_not_found')
       }
 
-      const { clientId, livePasswordEnc } = rows[0]
+      const { livePasswordEnc } = rows[0]
 
-      // Validar password
       let livePassword = null
       if (livePasswordEnc && isEncrypted(livePasswordEnc)) {
         try {
@@ -491,31 +588,12 @@ export default async function streamRoutes(app) {
       }
 
       if (!validPasswords.includes(pass)) {
-        logger.warn({ mount: cleanMount, user }, 'auth-source: password incorrecto')
+        logger.warn({ mount: cleanMount }, 'auth-source: password incorrecto')
         return reply.code(403).type('text/plain').send('403 invalid_password')
       }
 
-      const isAutoDj = user === 'autodj'
-
-      if (!isAutoDj) {
-        // DJ conectando — kickear AutoDJ y dar prioridad alta
-        try {
-          const currentMount = await getMountStatus(cleanMount)
-          if (currentMount) {
-            logger.info({ mount: cleanMount, user }, 'auth-source: DJ takeover — kickeando source actual')
-            await killSource(cleanMount).catch(() => {})
-            stopStream(clientId).catch(() => {})
-          }
-        } catch (err) {
-          logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error al kickear source')
-        }
-
-        _djActive.add(cleanMount)
-        logger.info({ mount: cleanMount, user }, 'auth-source: DJ autenticado con prioridad alta')
-        return reply.code(200).type('text/plain').send('200 priority=10')
-      }
-
-      logger.info({ mount: cleanMount, user }, 'auth-source: AutoDJ autenticado')
+      // En la nueva arquitectura, DJ se conecta via harbor (Liquidsoap),
+      // no via Icecast. auth-source es solo un respaldo.
       return reply.code(200).type('text/plain').send('200')
     } catch (err) {
       logger.error({ err: err.message, body: request.body }, 'auth-source: error')

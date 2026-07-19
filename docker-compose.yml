@@ -124,7 +124,12 @@ services:
     environment:
       # Para debugging con `docker exec`
       - TERM=xterm
-    command: ["test-playlist.liq"]
+    # Puerto harbor para DJ en vivo: se expone un rango.
+    # Cada cliente usa puerto = liquidsoapTelnetPort + 10000 (default: 22340).
+    # Ajustar HARBOR_PORT_RANGE según cantidad de clientes.
+    ports:
+      - "${HARBOR_PORT_RANGE:-22340-22340}:${HARBOR_PORT_RANGE:-22340-22340}"
+    entrypoint: ["sleep", "infinity"]   # El agent lanza scripts via docker exec
     volumes:
       - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts:ro
       # Fase 0: bind-mount desde un path dentro del proyecto. En prod, named volume.

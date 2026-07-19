@@ -6,9 +6,12 @@
 
 export function buildAuthHook(expectedToken) {
   return async function authHook(request, reply) {
-    // Permitir health check y auth-source sin token (Icecast llama auth-source)
+    // Exento de auth: health, auth-source (Icecast), harbor (Liquidsoap callbacks)
     const url = request.url.split('?')[0].replace(/\/$/, '')
-    if (url === '/health' || url === '/healthz' || url.startsWith('/api/streams/auth-source')) {
+    if (url === '/health' || url === '/healthz' ||
+        url.startsWith('/api/streams/auth-source') ||
+        url.includes('/harbor/connected') ||
+        url.includes('/harbor/disconnected')) {
       return
     }
 

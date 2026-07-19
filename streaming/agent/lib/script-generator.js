@@ -1,30 +1,20 @@
 // =====================================================
 // Generador de scripts .liq por cliente
+// Arquitectura: Liquidsoap permanente con harbor para DJ
+//   - input.harbor() para live DJ (fallback prioritario)
+//   - playlist para AutoDJ (fallback cuando no hay DJ)
+//   - Liquidsoap siempre corre, nunca se reinicia
 // =====================================================
-// Dado un RadioStream + Playlist + Tracks, genera un script liquidsoap
-// que se conecta a Icecast con las credenciales correctas.
 
 import { config } from './config.js'
 
-/**
- * Genera el contenido de un .liq para una radio específica.
- * @param {object} params
- * @param {string} params.clientId
- * @param {string} params.clientName   — ej: "Radio FM 99.5"
- * @param {string} params.icecastMount — ej: "test_abc" (sin slash)
- * @param {string} params.sourcePassword — password en texto plano
- * @param {number} params.telnetPort
- * @param {number} params.bitrate       — kbps
- * @param {string} [params.playlistM3uPath] — ruta absoluta al m3u dentro de liquidsoap
- * @param {string} [params.mode]         — "playlist" | "single" (default playlist)
- * @returns {string} contenido del archivo .liq
- */
 export function generateLiquidsoapScript({
   clientId,
   clientName,
   icecastMount,
   sourcePassword,
   telnetPort,
+  harborPort,
   bitrate = 128,
   playlistM3uPath,
   mode = 'playlist',
@@ -32,43 +22,45 @@ export function generateLiquidsoapScript({
   jinglePlayCount = 1,
   jinglesM3uPath = null,
 }) {
-  // Sanitizar valores que van al .liq
   const safeMount = sanitizeForLiquidsoap(icecastMount)
   const safeName = sanitizeForLiquidsoap(clientName)
   const safePwd = sanitizeForLiquidsoap(sourcePassword)
   const safeClient = sanitizeForLiquidsoap(clientId)
+  const iceHost = sanitizeForLiquidsoap(config.ice.host)
+  const icePort = parseInt(config.ice.port, 10) || 8000
+  const agentUrl = sanitizeForLiquidsoap(`http://agent:4000/api/streams/${safeClient}/harbor`)
   const m3u = playlistM3uPath || `/var/lib/radio/${safeClient}/playlist.m3u`
 
-  // Generar source: con jingles o solo playlist
   const hasJingles = jinglePlayEvery > 0 && jinglesM3uPath
 
-  let sourceBlock
+  let autodjBlock
   if (mode !== 'playlist') {
-    sourceBlock = 'blank()'
+    autodjBlock = 'blank()'
   } else if (hasJingles) {
-    sourceBlock = `mksafe(rotate(
+    autodjBlock = `rotate(
     weights=[${jinglePlayEvery}, ${jinglePlayCount}],
     [
       playlist(id="${safeMount}-music", "${m3u}", mode="normal", reload=5000, loop=true),
       playlist(id="${safeMount}-jingles", "${jinglesM3uPath}", mode="random", reload=5000, loop=true)
     ]
-  ))`
+  )`
   } else {
-    sourceBlock = `mksafe(playlist(
+    autodjBlock = `playlist(
     id="${safeMount}-playlist",
     "${m3u}",
     mode="normal",
     reload=5000,
     loop=true
-  ))`
+  )`
   }
 
   return `# =====================================================
 # Auto-generated for client ${safeClient} (mount: ${safeMount})
-# DO NOT EDIT — será regenerado en cada start/restart.
+# Architecture: permanent Liquidsoap with harbor DJ input
+# DO NOT EDIT
 # =====================================================
 
-# Permitir root (estamos dentro de un container)
+# Allow root (we run inside a container)
 set("init.allow_root", true)
 
 # Logs
@@ -77,38 +69,53 @@ settings.log.file.set(true)
 settings.log.stdout.set(true)
 settings.log.level.set(3)
 
-# Telnet para control remoto (lo usa el streaming-agent)
+# Telnet for remote control (used by streaming-agent)
 settings.server.telnet.set(true)
 settings.server.telnet.port.set(${telnetPort})
 
-# Source: playlist con jingles o solo playlist
-source = ${sourceBlock}
+# ─── Live DJ source via harbor ───────────────────────
+# DJ connects to this Liquidsoap instance on port ${harborPort}
+# with mount /live and the per-client password.
+# When DJ connects, this source becomes "ready" and
+# fallback() switches to it immediately.
+live = input.harbor(
+  port=${harborPort},
+  mount="/live",
+  password="${safePwd}",
+  on_connect=[fun () -> ignore(system("curl -s -o /dev/null -X POST ${agentUrl}/connected &"))],
+  on_disconnect=[fun () -> ignore(system("curl -s -o /dev/null -X POST ${agentUrl}/disconnected &"))]
+)
 
-# Output a Icecast como AutoDJ (prioridad baja — DJ puede tomar el control)
+# ─── AutoDJ source (playlist-based) ──────────────────
+autodj = mksafe(${autodjBlock})
+
+# ─── Fallback: live DJ takes priority ────────────────
+# track_sensitive=false = change immediately, no crossfade
+radio = fallback(track_sensitive=false, [live, autodj])
+
+# ─── Output to Icecast ───────────────────────────────
+# This is the ONLY source connecting to Icecast.
+# Icecast just serves listeners; it never sees the DJ directly.
 output.icecast(
   %mp3(bitrate=${bitrate}),
-  host="${config.ice.host}",
-  port=${config.ice.port},
+  host="${iceHost}",
+  port=${icePort},
   user="autodj",
   password="${safePwd}",
   mount="/${safeMount}",
   name="${safeName}",
   genre="Various",
-  description="AutoDJ stream for ${safeName}",
+  description="Stream for ${safeName}",
   public=true,
-  source
+  radio
 )
 `
 }
 
-/**
- * Sanitiza un string para ser seguro dentro de un script liquidsoap.
- * Liquidsoap interpreta comillas, $, y otros chars especiales.
- */
 function sanitizeForLiquidsoap(s) {
   if (typeof s !== 'string') return ''
   return s
-    .replace(/[\\$"]/g, '\\$&')   // escapar \ $ "
-    .replace(/[\r\n]/g, ' ')        // sin saltos de línea
-    .slice(0, 100)                  // límite defensivo
+    .replace(/[\\$"]/g, '\\$&')
+    .replace(/[\r\n]/g, ' ')
+    .slice(0, 100)
 }

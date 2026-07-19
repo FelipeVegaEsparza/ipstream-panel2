@@ -1,15 +1,11 @@
 // =====================================================
 // Liquidsoap — control de procesos via docker exec
+// Arquitectura: proceso permanente por cliente
+//   - startStream: crea el proceso (una sola vez)
+//   - stopStream: mata el proceso (solo si admin desactiva)
+//   - DJ transitions NO tocan el proceso — lo maneja
+//     internamente Liquidsoap via harbor + fallback()
 // =====================================================
-// Estrategia:
-//   - Los scripts .liq se escriben en /etc/liquidsoap/scripts/
-//     (volumen compartido entre agent y liquidsoap container).
-//   - Para arrancar/kill/reiniciar, hacemos `docker exec` en el
-//     container de liquidsoap.
-//   - El tracking de PIDs se hace desde la DB (RadioStream.liquidsoapPid).
-//
-// IMPORTANTE: este módulo requiere que el agent tenga acceso al
-// docker socket (montar /var/run/docker.sock en docker-compose).
 
 import { exec } from 'child_process'
 import { promisify } from 'util'
@@ -23,18 +19,15 @@ import { decrypt, isEncrypted } from './encryption.js'
 
 const execp = promisify(exec)
 
-const LIQUIDSOAP_CONTAINER = config.liquidsoap.host  // ej: "ipstream-liquidsoap"
-const LIQUIDSOAP_BIN = config.liquidsoap.bin          // ej: "/usr/bin/liquidsoap"
-const SCRIPTS_DIR = config.liquidsoap.scriptsPath     // ej: "/etc/liquidsoap/scripts" (compartido)
-const LIQUIDSOAP_MP3_DIR = config.library.path        // ej: "/var/lib/radio"
+const LIQUIDSOAP_CONTAINER = config.liquidsoap.host
+const LIQUIDSOAP_BIN = config.liquidsoap.bin
+const SCRIPTS_DIR = config.liquidsoap.scriptsPath
+const LIQUIDSOAP_MP3_DIR = config.library.path
 
-// Path a un script de check que escribimos en el volumen compartido.
-// Lo creamos al iniciar el módulo para que docker exec lo pueda correr.
 const CHECK_SCRIPT_PATH = join(SCRIPTS_DIR, '_check_proc.sh')
 
-/**
- * Carga un RadioStream con su Client asociado desde la DB.
- */
+const HARBOR_PORT_OFFSET = 10000
+
 async function loadRadioStream(clientId) {
   const [rows] = await pool.query(
     `SELECT rs.*, c.name AS clientName
@@ -47,9 +40,6 @@ async function loadRadioStream(clientId) {
   return rows[0]
 }
 
-/**
- * Escribe el script .liq en el volumen compartido.
- */
 async function writeScript(mount, content) {
   const path = join(SCRIPTS_DIR, `${mount}.liq`)
   await writeFile(path, content, { mode: 0o644 })
@@ -57,12 +47,6 @@ async function writeScript(mount, content) {
   return path
 }
 
-/**
- * Verifica si el proceso liquidsoap de un cliente está corriendo dentro del container.
- * Usa /proc en vez de ps (ps no está en debian-slim por defecto).
- * Escribimos un script de check en el volumen compartido y lo ejecutamos.
- * @returns {Promise<{ running: boolean, pid: number | null }>}
- */
 export async function isProcessRunning(mount) {
   try {
     await ensureCheckScript()
@@ -82,12 +66,8 @@ export async function isProcessRunning(mount) {
 let _checkScriptWritten = false
 async function ensureCheckScript() {
   if (_checkScriptWritten) return
-  // Construimos el script como string (sin template literal) para evitar
-  // que JS interprete $1, ${MOUNT}, etc.
   const script = [
     '#!/bin/bash',
-    '# Imprime el PID del proceso liquidsoap del mount pasado como $1.',
-    '# Vacío si no se encuentra.',
     'MOUNT="$1"',
     'for p in /proc/[0-9]*; do',
     '  if [ -r "$p/cmdline" ] 2>/dev/null; then',
@@ -106,24 +86,19 @@ async function ensureCheckScript() {
 }
 
 /**
- * Genera el .liq desde la DB y lo escribe al volumen compartido.
- * NO inicia el proceso.
- *
- * Usa la contraseña per-cliente (livePassword) descifrada desde la DB,
- * que coincide con el <source-password> del per-mount generado por
- * icecast-config.js. Si no hay livePasswordEnc o falla el descifrado,
- * cae al sourcePassword global compartido.
+ * Regenera el script .liq desde la DB.
+ * Ahora incluye harbor input para live DJ.
+ * El proceso liquidsoap NO se reinicia — solo se actualiza
+ * el script en disco (la próxima vez que inicie lo usará).
  */
 export async function regenerateScript(clientId) {
   const rs = await loadRadioStream(clientId)
   const playlist = await getActivePlaylist(clientId)
 
-  // Path al m3u dentro del container liquidsoap
   const m3uPath = playlist
     ? `/var/lib/radio/${clientId}/playlist.m3u`
     : null
 
-  // Chequear si hay jingles configurados
   const jinglesM3uPath = `/var/lib/radio/${clientId}/jingles.m3u`
   const [jingleRows] = await pool.query(
     `SELECT COUNT(*) AS cnt FROM jingles WHERE clientId = ?`,
@@ -131,7 +106,6 @@ export async function regenerateScript(clientId) {
   )
   const hasJingles = jingleRows[0]?.cnt > 0 && rs.jinglePlayEvery > 0
 
-  // Usar la contraseña per-cliente (livePassword) en vez de la compartida
   let sourcePassword = config.ice.sourcePassword
   if (rs.livePasswordEnc && isEncrypted(rs.livePasswordEnc)) {
     try {
@@ -143,12 +117,15 @@ export async function regenerateScript(clientId) {
     logger.warn({ clientId }, 'Sin livePasswordEnc en DB, usando password compartido')
   }
 
+  const harborPort = (rs.liquidsoapTelnetPort || 12340) + HARBOR_PORT_OFFSET
+
   const content = generateLiquidsoapScript({
     clientId,
     clientName: rs.clientName,
     icecastMount: rs.icecastMount,
     sourcePassword,
     telnetPort: rs.liquidsoapTelnetPort,
+    harborPort,
     bitrate: rs.bitrate,
     playlistM3uPath: m3uPath,
     mode: playlist ? 'playlist' : 'single',
@@ -158,42 +135,42 @@ export async function regenerateScript(clientId) {
   })
 
   const path = await writeScript(rs.icecastMount, content)
-  return { path, hasPlaylist: !!playlist }
+  return { path, hasPlaylist: !!playlist, harborPort }
 }
 
 /**
  * Inicia el proceso liquidsoap para un cliente.
- * @returns {Promise<{ pid: number, scriptPath: string }>}
+ * Este proceso CORRE PARA SIEMPRE. No se reinicia en transitions DJ.
+ * Si ya está corriendo, solo regenera el script.
  */
 export async function startStream(clientId) {
   const rs = await loadRadioStream(clientId)
 
-  // 1. Verificar si ya está corriendo
   const status = await isProcessRunning(rs.icecastMount)
   if (status.running) {
-    throw new Error(`Stream ya está corriendo (PID ${status.pid}). Usa /restart para reiniciar.`)
+    logger.info({ clientId, pid: status.pid }, 'Stream ya está corriendo — solo regenerando script')
+    const { harborPort } = await regenerateScript(clientId)
+    await pool.query(
+      `UPDATE radio_streams SET status = 'autodj', lastError = NULL, updatedAt = NOW() WHERE clientId = ?`,
+      [clientId]
+    )
+    return { pid: status.pid, alreadyRunning: true, harborPort }
   }
 
-  // 2. Regenerar script (por si cambió la playlist)
-  const { path, hasPlaylist } = await regenerateScript(clientId)
+  const { path, hasPlaylist, harborPort } = await regenerateScript(clientId)
   if (!hasPlaylist) {
-    logger.warn({ clientId }, 'Iniciando stream sin playlist activa — reproducirá silencio')
+    logger.warn({ clientId }, 'Iniciando stream sin playlist activa')
   }
 
-  // 3. Lanzar liquidsoap en background dentro del container
-  // Usamos `nohup ... &` + `disown` para que el proceso sobreviva
-  // al exec de docker. La salida va al log configurado en el .liq.
   const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} bash -c 'nohup ${LIQUIDSOAP_BIN} ${path} > /proc/1/fd/1 2>&1 & disown'`
   await execp(cmd, { timeout: 10000 })
 
-  // 4. Esperar a que el proceso aparezca
   await new Promise((r) => setTimeout(r, 1500))
   const newStatus = await isProcessRunning(rs.icecastMount)
   if (!newStatus.running) {
-    throw new Error(`Liquidsoap arrancó pero no se encontró el proceso. Revisa /var/log/liquidsoap/${rs.icecastMount}.log`)
+    throw new Error(`Liquidsoap no arrancó. Revisa /var/log/liquidsoap/${rs.icecastMount}.log`)
   }
 
-  // 5. Actualizar DB
   await pool.query(
     `UPDATE radio_streams
      SET liquidsoapRunning = 1,
@@ -206,12 +183,14 @@ export async function startStream(clientId) {
     [newStatus.pid, clientId]
   )
 
-  logger.info({ clientId, mount: rs.icecastMount, pid: newStatus.pid, hasPlaylist }, 'Stream iniciado')
-  return { pid: newStatus.pid, scriptPath: path, hasPlaylist }
+  logger.info({ clientId, mount: rs.icecastMount, pid: newStatus.pid, harborPort, hasPlaylist }, 'Stream iniciado (permanente)')
+  return { pid: newStatus.pid, scriptPath: path, hasPlaylist, harborPort }
 }
 
 /**
  * Detiene el proceso liquidsoap de un cliente.
+ * Solo debe llamarse cuando se desactiva el streaming permanentemente,
+ * NO durante transitions DJ (el proceso sigue corriendo).
  */
 export async function stopStream(clientId) {
   const rs = await loadRadioStream(clientId)
@@ -226,7 +205,6 @@ export async function stopStream(clientId) {
     return { wasRunning: false }
   }
 
-  // Kill el proceso dentro del container
   await execp(
     `docker exec ${LIQUIDSOAP_CONTAINER} bash -c "kill -TERM ${status.pid} 2>/dev/null; sleep 1; kill -KILL ${status.pid} 2>/dev/null || true"`,
     { timeout: 8000 }
@@ -241,18 +219,36 @@ export async function stopStream(clientId) {
   return { wasRunning: true, killedPid: status.pid }
 }
 
-/**
- * Reinicia el stream (stop + start).
- */
 export async function restartStream(clientId) {
-  await stopStream(clientId).catch(() => {})  // ignorar si no estaba corriendo
+  await stopStream(clientId).catch(() => {})
   await new Promise((r) => setTimeout(r, 500))
   return startStream(clientId)
 }
 
 /**
- * Obtiene la playlist activa de un cliente (si hay).
+ * Obtiene status en vivo de un stream, incluyendo harbor port.
  */
+export async function getStreamStatus(clientId) {
+  const rs = await loadRadioStream(clientId)
+  const proc = await isProcessRunning(rs.icecastMount)
+  const harborPort = (rs.liquidsoapTelnetPort || 12340) + HARBOR_PORT_OFFSET
+  return {
+    clientId,
+    mount: rs.icecastMount,
+    harborPort,
+    telnetPort: rs.liquidsoapTelnetPort,
+    process: { running: proc.running, pid: proc.pid },
+    db: {
+      status: rs.status,
+      bitrate: rs.bitrate,
+      currentTitle: rs.currentTitle,
+      currentArtist: rs.currentArtist,
+      listenerCount: rs.listenerCount,
+      lastError: rs.lastError,
+    },
+  }
+}
+
 async function getActivePlaylist(clientId) {
   const [rows] = await pool.query(
     "SELECT id, name, shuffle, `repeat` FROM playlists WHERE clientId = ? AND isActive = 1 LIMIT 1",
@@ -261,11 +257,6 @@ async function getActivePlaylist(clientId) {
   return rows[0] || null
 }
 
-/**
- * Genera/actualiza el archivo playlist.m3u en el volumen compartido
- * basado en las entries de la playlist activa.
- * Cada línea es una ruta ABSOLUTA al MP3 (liquidsoap no resuelve paths relativos).
- */
 export async function regenerateM3u(clientId) {
   const [activeRows] = await pool.query(
     `SELECT id FROM playlists WHERE clientId = ? AND isActive = 1 LIMIT 1`,
@@ -276,7 +267,6 @@ export async function regenerateM3u(clientId) {
   const mp3Dir = join(LIQUIDSOAP_MP3_DIR, clientId, 'mp3')
 
   if (activeRows.length === 0) {
-    // No hay playlist activa — vaciar m3u
     await writeFile(m3uPath, '', { mode: 0o644 })
     logger.info({ clientId, m3uPath }, 'm3u vaciado (no hay playlist activa)')
     return { active: false, trackCount: 0 }
@@ -291,17 +281,12 @@ export async function regenerateM3u(clientId) {
     [playlistId]
   )
 
-  // Paths absolutos dentro del container liquidsoap
   const lines = entries.map((e) => join(mp3Dir, e.fileName)).join('\n')
   await writeFile(m3uPath, lines + (lines ? '\n' : ''), { mode: 0o644 })
-  logger.info({ clientId, m3uPath, trackCount: entries.length }, 'm3u regenerado (paths absolutos)')
+  logger.info({ clientId, m3uPath, trackCount: entries.length }, 'm3u regenerado')
   return { active: true, trackCount: entries.length }
 }
 
-/**
- * Genera/actualiza el archivo jingles.m3u en el volumen compartido
- * basado en todos los jingles disponibles del cliente.
- */
 export async function regenerateJinglesM3u(clientId) {
   const [rows] = await pool.query(
     `SELECT fileName FROM jingles WHERE clientId = ? ORDER BY uploadedAt ASC`,
@@ -315,4 +300,12 @@ export async function regenerateJinglesM3u(clientId) {
   await writeFile(m3uPath, lines + (lines ? '\n' : ''), { mode: 0o644 })
   logger.info({ clientId, m3uPath, jingleCount: rows.length }, 'jingles.m3u regenerado')
   return { jingleCount: rows.length }
+}
+
+/**
+ * Devuelve el harbor port para un clientId.
+ * Usado por routes/streams.js para informar al frontend.
+ */
+export function getHarborPort(telnetPort) {
+  return (telnetPort || 12340) + HARBOR_PORT_OFFSET
 }
