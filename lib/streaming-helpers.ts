@@ -65,14 +65,7 @@ export async function createRadioStreamForClient(clientId: string, bitrate = 128
  * Audita el acceso.
  */
 export async function revealLivePassword(clientId: string, requesterId: string) {
-  const rs = await prisma.radioStream.findUnique({
-    where: { clientId },
-    select: { livePasswordEnc: true },
-  })
-  if (!rs) throw new Error('RadioStream no encontrado')
-
-  const { decrypt } = await import('./encryption')
-  const livePassword = decrypt(rs.livePasswordEnc)
+  const sourcePassword = process.env.ICE_SOURCE_PASSWORD || 'hackme'
 
   // Audit log
   await prisma.streamingAuditLog.create({
@@ -83,7 +76,7 @@ export async function revealLivePassword(clientId: string, requesterId: string) 
     },
   })
 
-  return livePassword
+  return sourcePassword
 }
 
 /**

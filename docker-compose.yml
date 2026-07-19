@@ -65,6 +65,7 @@ services:
       STREAMING_AGENT_URL: ${STREAMING_AGENT_URL:-http://agent:4000}
       STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:-dev-agent-token-change-me-in-prod}
       ICE_PUBLIC_URL: ${ICE_PUBLIC_URL:-http://localhost:8000}
+      ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ipstream.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123456}
       ADMIN_NAME: ${ADMIN_NAME:-Administrador Principal}

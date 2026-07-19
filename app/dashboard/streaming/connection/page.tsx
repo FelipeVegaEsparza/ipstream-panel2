@@ -11,9 +11,6 @@ export default function ConnectionPage() {
     host: string
     port: number
     mount: string
-    harborHost: string
-    harborPort: number | null
-    harborMount: string
   } | null>(null)
   const [livePassword, setLivePassword] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -48,9 +45,8 @@ export default function ConnectionPage() {
     return () => clearInterval(iv)
   }, [])
 
-  const harborHost = connectionInfo?.harborHost || (typeof window !== 'undefined' ? window.location.hostname : 'localhost')
-  const harborPort = connectionInfo?.harborPort || 9000
-  const harborMount = connectionInfo?.harborMount || '/live'
+  const djHost = connectionInfo?.host || (typeof window !== 'undefined' ? window.location.hostname : 'localhost')
+  const djPort = connectionInfo?.port || 8000
   const mount = connectionInfo?.mount || status?.mount || 'mi-mount'
 
   const revealPassword = useCallback(async () => {
@@ -118,27 +114,27 @@ export default function ConnectionPage() {
       <div className="bg-gray-800 rounded-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold text-white">Configuración de transmisión</h2>
         <p className="text-xs text-gray-400 -mt-2">
-          Conectá tu encoder directamente a Liquidsoap. El sistema cambia automáticamente entre DJ y AutoDJ.
+          Conectá tu encoder directamente a Icecast.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-gray-400 uppercase">Servidor (Liquidsoap)</label>
+            <label className="text-xs text-gray-400 uppercase">Servidor</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
-                {harborHost}
+                {djHost}
               </code>
-              <button onClick={() => copy(harborHost, 'Servidor')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
+              <button onClick={() => copy(djHost, 'Servidor')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
                 Copiar
               </button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 uppercase">Puerto (Harbor)</label>
+            <label className="text-xs text-gray-400 uppercase">Puerto</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
-                {harborPort}
+                {djPort}
               </code>
-              <button onClick={() => copy(String(harborPort), 'Puerto')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
+              <button onClick={() => copy(String(djPort), 'Puerto')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
                 Copiar
               </button>
             </div>
@@ -147,9 +143,9 @@ export default function ConnectionPage() {
             <label className="text-xs text-gray-400 uppercase">Mountpoint</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">
-                {harborMount}
+                /{mount}
               </code>
-              <button onClick={() => copy(harborMount, 'Mount')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
+              <button onClick={() => copy(`/${mount}`, 'Mount')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">
                 Copiar
               </button>
             </div>
@@ -219,9 +215,9 @@ export default function ConnectionPage() {
         <ol className="text-sm text-gray-300 space-y-2 list-decimal pl-5">
           <li>Abrí BUTT → Settings → Stream</li>
           <li>Server type: <code className="text-cyan-400">Icecast 2</code></li>
-          <li>Address: <code className="text-cyan-400">{harborHost}</code></li>
-          <li>Port: <code className="text-cyan-400">{harborPort}</code></li>
-          <li>Mount: <code className="text-cyan-400">{harborMount}</code></li>
+          <li>Address: <code className="text-cyan-400">{djHost}</code></li>
+          <li>Port: <code className="text-cyan-400">{djPort}</code></li>
+          <li>Mount: <code className="text-cyan-400">/{mount}</code></li>
           <li>Username: <code className="text-cyan-400">source</code></li>
           <li>Password: tu password DJ</li>
           <li>Stream name: tu nombre artístico</li>
