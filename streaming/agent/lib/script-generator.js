@@ -75,12 +75,11 @@ settings.server.telnet.port.set(${telnetPort})
 
 # ─── Live DJ source via harbor ───────────────────────
 # DJ connects to this Liquidsoap instance on port ${harborPort}
-# with mount /live and the per-client password.
+# with the per-client password.
 # When DJ connects, this source becomes "ready" and
 # fallback() switches to it immediately.
 live = input.harbor(
   port=${harborPort},
-  mount="/live",
   password="${safePwd}",
   on_connect=[fun () -> ignore(system("curl -s -o /dev/null -X POST ${agentUrl}/connected &"))],
   on_disconnect=[fun () -> ignore(system("curl -s -o /dev/null -X POST ${agentUrl}/disconnected &"))]
