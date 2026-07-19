@@ -11,4 +11,5 @@ WORKDIR /var/lib/radio
 
 VOLUME ["/var/lib/radio", "/var/log/liquidsoap", "/etc/liquidsoap/scripts"]
 
+ENTRYPOINT []
 CMD ["sleep", "infinity"]
