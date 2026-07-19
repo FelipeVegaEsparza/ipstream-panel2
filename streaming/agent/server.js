@@ -20,6 +20,7 @@ import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
+import { autoStartStreams } from './lib/liquidsoap.js'
 
 const app = Fastify({
   logger,
@@ -204,6 +205,36 @@ try {
 }
 
 try {
+  await pool.query(`ALTER TABLE radio_streams ADD COLUMN IF NOT EXISTS autoStart BOOLEAN NOT NULL DEFAULT false`)
+  logger.info('Columna autoStart en radio_streams asegurada')
+} catch (err) {
+  logger.info({ err: err.message }, 'Columna autoStart en radio_streams (ya existía o ignorado)')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS radio_djs (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      mount VARCHAR(10) NOT NULL,
+      priority INT NOT NULL DEFAULT 1,
+      passwordEnc TEXT,
+      role VARCHAR(10) NOT NULL DEFAULT 'guest',
+      isActive BOOLEAN NOT NULL DEFAULT true,
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      updatedAt DATETIME(3) NOT NULL,
+      INDEX idx_radiodj_client (clientId),
+      UNIQUE INDEX idx_radiodj_client_mount (clientId, mount),
+      CONSTRAINT fk_radiodj_client FOREIGN KEY (clientId) REFERENCES radio_streams(clientId) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla radio_djs asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla radio_djs')
+}
+
+try {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS stream_stats (
       id VARCHAR(191) NOT NULL PRIMARY KEY,
@@ -265,6 +296,13 @@ try {
     logger.info({ ok: r.ok }, 'Deploy icecast config en startup')
   }).catch((err) => {
     logger.warn({ err: err.message }, 'Deploy icecast config en startup falló (no crítico)')
+  })
+
+  // Auto-start streams marcados con autoStart = true
+  autoStartStreams().then((result) => {
+    logger.info({ started: result.started, failed: result.failed }, 'Auto-start streams completado')
+  }).catch((err) => {
+    logger.warn({ err: err.message }, 'Auto-start streams falló')
   })
 } catch (err) {
   logger.fatal({ err }, 'No se pudo arrancar el agent')

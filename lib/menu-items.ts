@@ -102,6 +102,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   icon: QueueListIcon,
 },
 {
+  key: 'streaming-djs',
+  name: 'DJs',
+  href: '/dashboard/streaming/djs',
+  section: 'Radio',
+  icon: UserGroupIcon,
+},
+{
   key: 'streaming-connection',
   name: 'Conexión DJ',
   href: '/dashboard/streaming/connection',

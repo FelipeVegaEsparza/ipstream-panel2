@@ -78,6 +78,37 @@ async function ensureCheckScript() {
   logger.info({ path: CHECK_SCRIPT_PATH }, 'Check script escrito')
 }
 
+export async function getRadioDjs(clientId) {
+  const [rows] = await pool.query(
+    `SELECT id, clientId, name, mount, priority, passwordEnc, role, isActive
+     FROM radio_djs WHERE clientId = ? ORDER BY priority ASC`,
+    [clientId]
+  )
+  const djs = []
+  for (const row of rows) {
+    let password = row.passwordEnc
+    if (row.passwordEnc && isEncrypted(row.passwordEnc)) {
+      try {
+        password = decrypt(row.passwordEnc)
+      } catch (err) {
+        logger.warn({ clientId, dj: row.name, err: err.message }, 'Error descifrando password de DJ')
+        password = null
+      }
+    }
+    djs.push({
+      id: row.id,
+      name: row.name,
+      mount: row.mount,
+      priority: row.priority,
+      password,
+      passwordEnc: row.passwordEnc,
+      role: row.role,
+      isActive: !!row.isActive,
+    })
+  }
+  return djs
+}
+
 export async function regenerateScript(clientId) {
   const rs = await loadRadioStream(clientId)
   const playlist = await getActivePlaylist(clientId)
@@ -106,6 +137,9 @@ export async function regenerateScript(clientId) {
     logger.warn({ clientId }, 'Sin livePasswordEnc en DB, usando password compartido para harbor')
   }
 
+  // Load DJ slots from DB
+  const djs = await getRadioDjs(clientId)
+
   const content = generateLiquidsoapScript({
     clientId,
     clientName: rs.clientName,
@@ -120,6 +154,13 @@ export async function regenerateScript(clientId) {
     jinglePlayCount: hasJingles ? rs.jinglePlayCount : 0,
     jinglesM3uPath: hasJingles ? jinglesM3uPath : null,
     agentToken: config.agentToken,
+    djs: djs.map(d => ({
+      mount: d.mount,
+      password: d.password,
+      priority: d.priority,
+      name: d.name,
+      isActive: d.isActive,
+    })),
   })
 
   const path = await writeScript(rs.icecastMount, content)
@@ -248,4 +289,31 @@ export async function regenerateJinglesM3u(clientId) {
   await writeFile(m3uPath, lines + (lines ? '\n' : ''), { mode: 0o644 })
   logger.info({ clientId, m3uPath, jingleCount: rows.length }, 'jingles.m3u regenerado')
   return { jingleCount: rows.length }
+}
+
+/**
+ * Auto-start: inicia todos los streams marcados con autoStart = true
+ * que no estén ya corriendo. Se llama al arrancar el agente.
+ */
+export async function autoStartStreams() {
+  const [rows] = await pool.query(
+    `SELECT clientId FROM radio_streams WHERE autoStart = 1 AND (status = 'off' OR status IS NULL) AND enabled = 1`
+  )
+
+  logger.info({ count: rows.length }, 'autoStartStreams: streams a iniciar')
+  const started = []
+  const failed = []
+
+  for (const row of rows) {
+    try {
+      const result = await startStream(row.clientId)
+      started.push({ clientId: row.clientId, pid: result.pid })
+      logger.info({ clientId: row.clientId, pid: result.pid }, 'autoStartStreams: iniciado')
+    } catch (err) {
+      failed.push({ clientId: row.clientId, error: err.message })
+      logger.warn({ clientId: row.clientId, err: err.message }, 'autoStartStreams: falló')
+    }
+  }
+
+  return { started, failed }
 }

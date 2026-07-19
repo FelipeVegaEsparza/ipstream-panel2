@@ -70,6 +70,7 @@ export default function AdminStreamingConfigPage() {
 
   // Form state
   const [enabled, setEnabled] = useState(true)
+  const [autoStart, setAutoStart] = useState(false)
   const [bitrate, setBitrate] = useState(128)
   const [storageQuotaMB, setStorageQuotaMB] = useState<string>('')
   const [maxListeners, setMaxListeners] = useState<string>('')
@@ -85,6 +86,7 @@ export default function AdminStreamingConfigPage() {
         setData(d)
         // Init form
         setEnabled(d.radioStream.enabled)
+        setAutoStart(d.radioStream.autoStart ?? false)
         setBitrate(d.radioStream.bitrate)
         setStorageQuotaMB(d.radioStream.storageQuotaMB?.toString() ?? '')
         setMaxListeners(d.radioStream.maxListeners?.toString() ?? '')
@@ -107,6 +109,7 @@ export default function AdminStreamingConfigPage() {
     try {
       const payload: any = {
         enabled,
+        autoStart,
         bitrate: Number(bitrate),
         storageQuotaMB: storageQuotaMB === '' ? null : Number(storageQuotaMB),
         maxListeners: maxListeners === '' ? null : Number(maxListeners),
@@ -255,6 +258,23 @@ export default function AdminStreamingConfigPage() {
             Streaming habilitado
             <span className="block text-xs text-gray-500">
               Si está deshabilitado, el cliente no puede hacer start/stop ni subir tracks.
+            </span>
+          </label>
+        </div>
+
+        {/* Auto-start toggle */}
+        <div className="flex items-center gap-3 pb-3 border-b border-gray-700">
+          <input
+            type="checkbox"
+            id="autoStart"
+            checked={autoStart}
+            onChange={(e) => setAutoStart(e.target.checked)}
+            className="rounded"
+          />
+          <label htmlFor="autoStart" className="text-white">
+            Auto-start al reiniciar
+            <span className="block text-xs text-gray-500">
+              Inicia automáticamente el AutoDJ cuando el servidor se reinicie.
             </span>
           </label>
         </div>

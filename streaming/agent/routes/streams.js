@@ -2,13 +2,13 @@
 // Routes — gestión de streams por cliente
 // =====================================================
 
-import { startStream, stopStream, restartStream, isProcessRunning, regenerateScript, regenerateM3u, getHarborPort } from '../lib/liquidsoap.js'
+import { startStream, stopStream, restartStream, isProcessRunning, regenerateScript, regenerateM3u, getHarborPort, getRadioDjs } from '../lib/liquidsoap.js'
 import { deployIcecastConfig } from '../lib/icecast-config.js'
 import { getMountStatus, getGlobalStatus, ping as icecastPing, killSource } from '../lib/icecast.js'
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { config } from '../lib/config.js'
-import { decrypt, isEncrypted } from '../lib/encryption.js'
+import { decrypt, encrypt, isEncrypted } from '../lib/encryption.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -20,8 +20,33 @@ function sanitizeMount(mount) {
   return mount.replace(/^\//, '')
 }
 
-// DJ takeover tracking: mounts donde un DJ está conectado (para reiniciar AutoDJ al irse)
-export const _djActive = new Set()
+// DJ takeover tracking: Map<clientMount, Set<djMount>>
+// Almacena los slots de DJ activos para cada cliente.
+const _djSlotActive = new Map()
+export { _djSlotActive as _djActive }
+
+// Helper: verificar si algún DJ está conectado para un client mount
+function isAnyDjActive(clientMount) {
+  const slots = _djSlotActive.get(sanitizeMount(clientMount))
+  return slots ? slots.size > 0 : false
+}
+
+// Helper: marcar/desmarcar un slot de DJ como activo
+function setDjSlotActive(clientMount, djMount, active) {
+  const key = sanitizeMount(clientMount)
+  if (!_djSlotActive.has(key)) {
+    _djSlotActive.set(key, new Set())
+  }
+  const slots = _djSlotActive.get(key)
+  if (active) {
+    slots.add(djMount)
+  } else {
+    slots.delete(djMount)
+  }
+  if (slots.size === 0) {
+    _djSlotActive.delete(key)
+  }
+}
 
 export default async function streamRoutes(app) {
   /**
@@ -213,10 +238,11 @@ export default async function streamRoutes(app) {
   /**
    * POST /api/streams/:clientId/harbor/connected
    * Llamado por Liquidsoap via system("curl ...") cuando un DJ
-   * conecta al input.harbor(). Actualiza estado y log.
+   * conecta al input.harbor(). Si viene ?dj=/djX, se trackea el slot.
    */
   app.post('/api/streams/:clientId/harbor/connected', async (request, reply) => {
     const { clientId } = request.params
+    const djMount = request.query?.dj || '/live'
     try {
       const [rsRows] = await pool.query(
         `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
@@ -225,7 +251,7 @@ export default async function streamRoutes(app) {
       if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
       const mount = sanitizeMount(rsRows[0].icecastMount)
 
-      _djActive.add(mount)
+      setDjSlotActive(mount, djMount, true)
 
       await pool.query(
         `UPDATE radio_streams SET status = 'live', lastError = NULL, updatedAt = NOW() WHERE clientId = ?`,
@@ -233,10 +259,10 @@ export default async function streamRoutes(app) {
       )
       await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'dj_connected', ?, NOW())`,
-        [uuid(), clientId, JSON.stringify({ mount })]
+        [uuid(), clientId, JSON.stringify({ mount, djMount })]
       )
-      logger.info({ clientId, mount }, 'harbor: DJ connected')
-      return { ok: true, status: 'live' }
+      logger.info({ clientId, mount, djMount }, 'harbor: DJ connected')
+      return { ok: true, status: 'live', djMount }
     } catch (err) {
       logger.error({ err, clientId }, 'harbor: error on connected')
       return reply.code(500).send({ error: err.message })
@@ -245,10 +271,13 @@ export default async function streamRoutes(app) {
 
   /**
    * POST /api/streams/:clientId/harbor/disconnected
-   * Llamado por Liquidsoap cuando el DJ se desconecta del harbor.
+   * Llamado por Liquidsoap cuando un DJ se desconecta del harbor.
+   * Si viene ?dj=/djX, se desmarca ese slot específico.
+   * Solo cambia a autodj si ningún otro DJ está conectado.
    */
   app.post('/api/streams/:clientId/harbor/disconnected', async (request, reply) => {
     const { clientId } = request.params
+    const djMount = request.query?.dj || '/live'
     try {
       const [rsRows] = await pool.query(
         `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
@@ -257,18 +286,24 @@ export default async function streamRoutes(app) {
       if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
       const mount = sanitizeMount(rsRows[0].icecastMount)
 
-      _djActive.delete(mount)
+      setDjSlotActive(mount, djMount, false)
+      const anyActive = isAnyDjActive(mount)
+
+      if (!anyActive) {
+        await pool.query(
+          `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
+          [clientId]
+        )
+        logger.info({ clientId, mount, djMount }, 'harbor: último DJ desconectado — AutoDJ resumed')
+      } else {
+        logger.info({ clientId, mount, djMount }, 'harbor: DJ slot desconectado, otro DJ aún activo')
+      }
 
       await pool.query(
-        `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
-        [clientId]
-      )
-      await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'dj_disconnected', ?, NOW())`,
-        [uuid(), clientId, JSON.stringify({ mount })]
+        [uuid(), clientId, JSON.stringify({ mount, djMount })]
       )
-      logger.info({ clientId, mount }, 'harbor: DJ disconnected — AutoDJ resumed')
-      return { ok: true, status: 'autodj' }
+      return { ok: true, status: anyActive ? 'live' : 'autodj', djMount }
     } catch (err) {
       logger.error({ err, clientId }, 'harbor: error on disconnected')
       return reply.code(500).send({ error: err.message })
@@ -277,7 +312,7 @@ export default async function streamRoutes(app) {
 
   /**
    * GET /api/streams/:clientId/harbor/status
-   * Retorna el estado actual del harbor: puerto, si hay DJ conectado.
+   * Retorna el estado actual del harbor: puerto, DJs activos, slots configurados.
    */
   app.get('/api/streams/:clientId/harbor/status', async (request, reply) => {
     const { clientId } = request.params
@@ -291,12 +326,29 @@ export default async function streamRoutes(app) {
       const mount = sanitizeMount(icecastMount)
       const harborPort = getHarborPort(liquidsoapTelnetPort)
 
+      // DJ slots activos
+      const activeSlots = _djSlotActive.get(mount)
+      const activeDjMounts = activeSlots ? [...activeSlots] : []
+
+      // DJs configurados en DB
+      const djs = await getRadioDjs(clientId)
+
       return {
         ok: true,
         clientId,
         harborPort,
         mount: '/live',
-        djConnected: _djActive.has(mount),
+        djConnected: activeDjMounts.length > 0,
+        activeDjMounts,
+        djSlots: djs.map(d => ({
+          id: d.id,
+          name: d.name,
+          mount: d.mount,
+          priority: d.priority,
+          role: d.role,
+          isActive: d.isActive,
+          connected: activeDjMounts.includes(d.mount),
+        })),
         streamStatus: status,
       }
     } catch (err) {
@@ -449,6 +501,165 @@ export default async function streamRoutes(app) {
       nextTrack,
       position,
       jingleCount: jingleRows.length,
+    }
+  })
+
+  /**
+   * GET /api/streams/:clientId/djs
+   * Lista los slots de DJ de un cliente.
+   */
+  app.get('/api/streams/:clientId/djs', async (request, reply) => {
+    const { clientId } = request.params
+    try {
+      const djs = await getRadioDjs(clientId)
+      return { ok: true, djs }
+    } catch (err) {
+      logger.error({ err, clientId }, 'Error listando DJs')
+      return reply.code(500).send({ error: err.message })
+    }
+  })
+
+  /**
+   * POST /api/streams/:clientId/djs
+   * Crea un nuevo slot de DJ.
+   * Body: { name, mount, priority, role, password }
+   * mount debe ser uno de: /dj1, /dj2, /dj3, /dj4
+   */
+  app.post('/api/streams/:clientId/djs', async (request, reply) => {
+    const { clientId } = request.params
+    const { name, mount, priority, role, password } = request.body || {}
+    try {
+      if (!name || !mount || !password) {
+        return reply.code(400).send({ error: 'name, mount y password son requeridos' })
+      }
+
+      const validMounts = ['/dj1', '/dj2', '/dj3', '/dj4']
+      if (!validMounts.includes(mount)) {
+        return reply.code(400).send({ error: `mount debe ser uno de: ${validMounts.join(', ')}` })
+      }
+
+      // Verificar unique mount per client
+      const [existing] = await pool.query(
+        `SELECT id FROM radio_djs WHERE clientId = ? AND mount = ? LIMIT 1`,
+        [clientId, mount]
+      )
+      if (existing.length > 0) {
+        return reply.code(409).send({ error: `Ya existe un DJ con mount ${mount}` })
+      }
+
+      // Count existing DJs (max 4)
+      const [countRows] = await pool.query(
+        `SELECT COUNT(*) AS cnt FROM radio_djs WHERE clientId = ?`,
+        [clientId]
+      )
+      if (countRows[0]?.cnt >= 4) {
+        return reply.code(400).send({ error: 'Máximo 4 DJs por radio' })
+      }
+
+      const validRoles = ['owner', 'host', 'guest']
+      const finalRole = validRoles.includes(role) ? role : 'guest'
+
+      const id = uuid()
+      const passwordEnc = encrypt(password)
+
+      await pool.query(
+        `INSERT INTO radio_djs (id, clientId, name, mount, priority, passwordEnc, role, isActive, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
+        [id, clientId, name, mount, priority ?? 1, passwordEnc, finalRole]
+      )
+
+      logger.info({ clientId, djId: id, name, mount, role: finalRole, priority }, 'DJ slot creado')
+      return { ok: true, id, name, mount, priority, role: finalRole }
+    } catch (err) {
+      logger.error({ err, clientId }, 'Error creando DJ slot')
+      return reply.code(500).send({ error: err.message })
+    }
+  })
+
+  /**
+   * PATCH /api/streams/:clientId/djs/:djId
+   * Actualiza un slot de DJ (nombre, mount, priority, role, password, isActive).
+   */
+  app.patch('/api/streams/:clientId/djs/:djId', async (request, reply) => {
+    const { clientId, djId } = request.params
+    const updates = request.body || {}
+    try {
+      // Validar que existe
+      const [existing] = await pool.query(
+        `SELECT id FROM radio_djs WHERE id = ? AND clientId = ? LIMIT 1`,
+        [djId, clientId]
+      )
+      if (existing.length === 0) return reply.code(404).send({ error: 'dj_not_found' })
+
+      const sets = []
+      const params = []
+
+      if (updates.name) { sets.push('name = ?'); params.push(updates.name) }
+      if (updates.mount) {
+        const validMounts = ['/dj1', '/dj2', '/dj3', '/dj4']
+        if (!validMounts.includes(updates.mount)) {
+          return reply.code(400).send({ error: `mount debe ser uno de: ${validMounts.join(', ')}` })
+        }
+        sets.push('mount = ?'); params.push(updates.mount)
+      }
+      if (updates.priority !== undefined) { sets.push('priority = ?'); params.push(updates.priority) }
+      if (updates.role) {
+        const validRoles = ['owner', 'host', 'guest']
+        if (!validRoles.includes(updates.role)) {
+          return reply.code(400).send({ error: 'role debe ser owner, host o guest' })
+        }
+        sets.push('role = ?'); params.push(updates.role)
+      }
+      if (updates.password) {
+        const passwordEnc = encrypt(updates.password)
+        sets.push('passwordEnc = ?'); params.push(passwordEnc)
+      }
+      if (updates.isActive !== undefined) {
+        sets.push('isActive = ?'); params.push(updates.isActive ? 1 : 0)
+      }
+
+      if (sets.length > 0) {
+        sets.push('updatedAt = NOW()')
+        params.push(djId, clientId)
+        await pool.query(
+          `UPDATE radio_djs SET ${sets.join(', ')} WHERE id = ? AND clientId = ?`,
+          params
+        )
+        logger.info({ clientId, djId, updates: Object.keys(updates) }, 'DJ slot actualizado')
+
+        // Regenerar script para aplicar cambios
+        try {
+          await regenerateScript(clientId)
+        } catch (err) {
+          logger.warn({ err, clientId }, 'Error regenerando script tras update DJ')
+        }
+      }
+
+      return { ok: true }
+    } catch (err) {
+      logger.error({ err, clientId, djId }, 'Error actualizando DJ slot')
+      return reply.code(500).send({ error: err.message })
+    }
+  })
+
+  /**
+   * DELETE /api/streams/:clientId/djs/:djId
+   * Elimina un slot de DJ.
+   */
+  app.delete('/api/streams/:clientId/djs/:djId', async (request, reply) => {
+    const { clientId, djId } = request.params
+    try {
+      const [result] = await pool.query(
+        `DELETE FROM radio_djs WHERE id = ? AND clientId = ?`,
+        [djId, clientId]
+      )
+      if (result.affectedRows === 0) return reply.code(404).send({ error: 'dj_not_found' })
+
+      logger.info({ clientId, djId }, 'DJ slot eliminado')
+      return { ok: true }
+    } catch (err) {
+      logger.error({ err, clientId, djId }, 'Error eliminando DJ slot')
+      return reply.code(500).send({ error: err.message })
     }
   })
 

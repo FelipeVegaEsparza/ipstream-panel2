@@ -280,6 +280,7 @@ export type StreamingTrackUpdateInput = z.infer<typeof streamingTrackUpdateSchem
 
 export const streamingAdminConfigSchema = z.object({
   enabled: z.boolean().optional(),
+  autoStart: z.boolean().optional(),
   bitrate: z.number().int().min(32).max(320).optional(),
   storageQuotaMB: z.number().int().min(0).max(1024 * 1024).nullable().optional(),  // max 1TB
   maxListeners: z.number().int().min(0).max(100000).nullable().optional(),

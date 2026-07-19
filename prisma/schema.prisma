@@ -617,7 +617,8 @@ model RadioStream {
   livePasswordEnc       String    @db.Text         // password del DJ en vivo
   // Configuración de audio
   bitrate               Int       @default(128)    // kbps
-  // === Configuración administrativa (configurable desde /admin/streaming) ===
+   autoStart             Boolean   @default(false)  // iniciar AutoDJ al arrancar el agente
+   // === Configuración administrativa (configurable desde /admin/streaming) ===
   enabled               Boolean   @default(true)   // kill switch
   storageQuotaMB        Int?                                       // cuota de AutoDJ library en MB (null = ilimitado)
   maxListeners          Int?                                       // cap de oyentes simultáneos (null = ilimitado)
@@ -648,10 +649,33 @@ model RadioStream {
   jingles     Jingle[]
   playlistSchedules PlaylistSchedule[]
   streamStats StreamStat[]
+  djs         RadioDj[]
 
   @@index([status])
   @@index([enabled])
   @@map("radio_streams")
+}
+
+// RadioDj — Slots de DJ para una radio (máximo 4 por cliente).
+// La prioridad define el orden en fallback: priority=1 es el más prioritario.
+// Roles: owner > host > guest (owner puede interrumpir a todos, host a guest, guest solo si nadie conectó).
+model RadioDj {
+  id          String   @id @default(cuid())
+  clientId    String
+  name        String   @db.VarChar(100)             // nombre del DJ / identificador público
+  mount       String   @db.VarChar(10)              // /dj1, /dj2, /dj3, /dj4
+  priority    Int      @default(1)                  // 1 = más prioritario
+  passwordEnc String?  @db.Text                     // password individual encriptado
+  role        String   @default("guest")            // "owner" | "host" | "guest"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  radioStream RadioStream @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  @@unique([clientId, mount])
+  @@index([clientId])
+  @@map("radio_djs")
 }
 
 // Track es un archivo MP3 en la biblioteca de un cliente.

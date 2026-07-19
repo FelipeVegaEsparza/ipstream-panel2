@@ -16,9 +16,10 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
 
-    // Obtener harbor port desde el agente
+    // Obtener harbor port + DJ slots desde el agente
     let harborPort: number | null = null
     let djConnected = false
+    let djSlots: any[] = []
     try {
       const harborRes = await fetch(
         `${process.env.STREAMING_AGENT_URL || 'http://agent:4000'}/api/streams/${encodeURIComponent(ctx.clientId)}/harbor/status`,
@@ -28,6 +29,7 @@ export async function GET(_request: NextRequest) {
         const harborData = await harborRes.json()
         harborPort = harborData.harborPort
         djConnected = harborData.djConnected
+        djSlots = harborData.djSlots || []
       }
     } catch {
       // agent not reachable
@@ -44,6 +46,7 @@ export async function GET(_request: NextRequest) {
       harborPort,
       harborMount: '/live',
       djConnected,
+      djSlots,
     }
 
     return NextResponse.json(data)

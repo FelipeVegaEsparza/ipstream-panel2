@@ -82,6 +82,7 @@ export async function PATCH(
     const data = parsed.data
     const cleanedData: any = {}
     if (data.enabled !== undefined) cleanedData.enabled = data.enabled
+    if (data.autoStart !== undefined) cleanedData.autoStart = data.autoStart
     if (data.bitrate !== undefined) cleanedData.bitrate = data.bitrate
     if (data.storageQuotaMB !== undefined) cleanedData.storageQuotaMB = data.storageQuotaMB
     if (data.maxListeners !== undefined) cleanedData.maxListeners = data.maxListeners

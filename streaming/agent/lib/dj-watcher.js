@@ -30,10 +30,11 @@ export function stopDjWatcher() {
 }
 
 async function checkMounts() {
-  for (const mount of _djActive) {
+  const entries = [..._djActive.entries()]
+  for (const [clientMount] of entries) {
     try {
       // Verificar si el mount existe en Icecast
-      const currentMount = await getMountStatus(mount)
+      const currentMount = await getMountStatus(clientMount)
       if (currentMount && currentMount.listeners > 0) {
         // DJ sigue activo — ok
         continue
@@ -41,20 +42,20 @@ async function checkMounts() {
 
       // El DJ se fue — sincronizar estado
       if (!currentMount) {
-        logger.info({ mount }, 'DJ Watcher: DJ ya no está en Icecast, sincronizando estado')
+        logger.info({ mount: clientMount }, 'DJ Watcher: DJ ya no está en Icecast, sincronizando estado')
       }
 
       const [rows] = await pool.query(
         `SELECT clientId, status FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
-        [mount]
+        [clientMount]
       )
       if (rows.length === 0) {
-        _djActive.delete(mount)
+        _djActive.delete(clientMount)
         continue
       }
 
       const { clientId, status } = rows[0]
-      if (status === 'live') {
+      if (status === 'live' && !_djActive.get(clientMount)?.size) {
         // Callback de disconnect no llegó — actualizar
         await pool.query(
           `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
@@ -63,14 +64,14 @@ async function checkMounts() {
         await pool.query(
           `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
            VALUES (UUID(), ?, 'dj_watcher_recovery', ?, NOW())`,
-          [clientId, JSON.stringify({ mount, previousStatus: status })]
+          [clientId, JSON.stringify({ mount: clientMount, previousStatus: status })]
         )
-        logger.info({ mount, clientId }, 'DJ Watcher: estado corregido a autodj')
+        logger.info({ mount: clientMount, clientId }, 'DJ Watcher: estado corregido a autodj')
       }
 
-      _djActive.delete(mount)
+      _djActive.delete(clientMount)
     } catch (err) {
-      logger.warn({ mount, err: err.message }, 'DJ Watcher: error en check')
+      logger.warn({ mount: clientMount, err: err.message }, 'DJ Watcher: error en check')
     }
   }
 }
