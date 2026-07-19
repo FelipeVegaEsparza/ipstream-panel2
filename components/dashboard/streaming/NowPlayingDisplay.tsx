@@ -100,12 +100,19 @@ export function NowPlayingDisplay() {
             </>
           )}
         </div>
-        {nowPlaying?.playlist && !isDjLive && (
-          <span className="text-xs text-gray-500 bg-gray-800/60 px-3 py-1 rounded-full border border-gray-700/30">
-            {nowPlaying.playlist.name}
-          </span>
         )}
       </div>
+
+      {/* Playlist name */}
+      {nowPlaying?.playlist && !isDjLive && (
+        <div className="mb-6 flex items-center gap-3">
+          <span className="text-[11px] uppercase tracking-widest text-gray-500 font-medium">Playlist</span>
+          <div className="h-px flex-1 bg-gradient-to-r from-gray-700/50 to-transparent" />
+          <span className="text-sm font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-lg border border-cyan-500/20">
+            {nowPlaying.playlist.name}
+          </span>
+        </div>
+      )}
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
