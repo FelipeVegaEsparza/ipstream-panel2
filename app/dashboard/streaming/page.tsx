@@ -5,11 +5,11 @@
 // =====================================================
 
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
-import { StreamingStatusCard } from '@/components/dashboard/streaming/StreamingStatusCard'
+import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDisplay'
 import { StreamControls } from '@/components/dashboard/streaming/StreamControls'
 
 export default function StreamingPage() {
-  const { status, loading, refresh } = useStreamingStatus({ pollingMs: 5000 })
+  const { status, refresh } = useStreamingStatus({ pollingMs: 5000 })
   const isRunning = !!status?.process?.running
 
   return (
@@ -21,7 +21,7 @@ export default function StreamingPage() {
         </p>
       </div>
 
-      <StreamingStatusCard status={status} loading={loading} onRefresh={refresh} />
+      <NowPlayingDisplay />
 
       <StreamControls isRunning={isRunning} onChange={refresh} />
     </div>
