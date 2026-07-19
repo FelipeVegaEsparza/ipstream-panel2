@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PaymentStatusCard } from '@/components/dashboard/PaymentStatusCard'
-import { StreamingSection } from '@/components/dashboard/streaming/StreamingSection'
+import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDisplay'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 
 export default async function DashboardPage() {
@@ -154,16 +154,14 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <StreamingSection />
+      <NowPlayingDisplay />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PaymentStatusCard
-          nextPaymentDate={nextPaymentDate}
-          planName={planName}
-          planPrice={planPrice}
-          status={paymentStatus}
-        />
-      </div>
+      <PaymentStatusCard
+        nextPaymentDate={nextPaymentDate}
+        planName={planName}
+        planPrice={planPrice}
+        status={paymentStatus}
+      />
     </div>
   )
 }
