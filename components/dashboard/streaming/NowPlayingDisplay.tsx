@@ -99,7 +99,6 @@ export function NowPlayingDisplay() {
             </>
           )}
         </div>
-        )}
       </div>
 
       {/* Playlist name */}
