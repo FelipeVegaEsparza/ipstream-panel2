@@ -1,9 +1,8 @@
 'use client'
 
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
-import type { NowPlayingTrack } from '@/lib/useStreamingStatus'
 
-function TrackRow(props: { track: NowPlayingTrack | null; label: string }) {
+function TrackRow(props: { track: { title: string; artist?: string; coverUrl?: string; isJingle?: boolean } | null; label: string }) {
   const track = props.track
   const label = props.label
   return (
