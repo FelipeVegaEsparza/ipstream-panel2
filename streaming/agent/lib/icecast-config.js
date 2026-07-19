@@ -55,14 +55,6 @@ function generateIcecastXml(streams) {
         <port>${p(config.ice.port)}</port>
     </listen-socket>
 
-    <!-- Auth-source global: se llama para TODA conexión de fuente.
-         Reemplaza el <password> per-mount para que Icecast SIEMPRE
-         consulte al agente y nunca use match local de password. -->
-    <auth-http-source>
-        <option name="auth_url" value="http://agent:4000/api/streams/auth-source"/>
-        <option name="method" value="POST"/>
-    </auth-http-source>
-
     <!-- Mount por defecto -->
     <mount type="default">
         <public>1</public>
@@ -78,6 +70,7 @@ function generateIcecastXml(streams) {
     <mount>
         <mount-name>${p(mountName)}</mount-name>
         <public>1</public>
+        <password>${p(s.livePasswordDecrypted)}</password>
         <bitrate>${p(s.bitrate || 128)}</bitrate>
         <type>audio/mpeg</type>
     </mount>`
