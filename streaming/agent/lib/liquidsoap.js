@@ -94,15 +94,6 @@ export async function regenerateScript(clientId) {
   const hasJingles = jingleRows[0]?.cnt > 0 && rs.jinglePlayEvery > 0
 
   let sourcePassword = config.ice.sourcePassword
-  if (rs.livePasswordEnc && isEncrypted(rs.livePasswordEnc)) {
-    try {
-      sourcePassword = decrypt(rs.livePasswordEnc)
-    } catch (err) {
-      logger.warn({ clientId, err: err.message }, 'Error al descifrar livePasswordEnc, usando password compartido')
-    }
-  } else {
-    logger.warn({ clientId }, 'Sin livePasswordEnc en DB, usando password compartido')
-  }
 
   const content = generateLiquidsoapScript({
     clientId,

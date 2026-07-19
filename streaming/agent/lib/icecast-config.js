@@ -8,7 +8,6 @@ import { promisify } from 'util'
 import { pool } from './db.js'
 import { config } from './config.js'
 import { logger } from './logger.js'
-import { decrypt, isEncrypted } from './encryption.js'
 
 const execp = promisify(exec)
 
@@ -62,15 +61,14 @@ function generateIcecastXml(streams) {
         <type>audio/mpeg</type>
     </mount>`
 
-  // Per-client mounts with decrypted livePassword
+  // Per-client mounts (sin per-mount password — usan el global <source-password>)
   for (const s of streams) {
-    if (!s.livePasswordDecrypted) continue
+    if (!s.icecastMount) continue
     const mountName = s.icecastMount.startsWith('/') ? s.icecastMount : `/${s.icecastMount}`
     xml += `
     <mount>
         <mount-name>${p(mountName)}</mount-name>
         <public>1</public>
-        <password>${p(s.livePasswordDecrypted)}</password>
         <bitrate>${p(s.bitrate || 128)}</bitrate>
         <type>audio/mpeg</type>
     </mount>`
@@ -116,18 +114,10 @@ async function buildConfig() {
     WHERE status != 'disabled'
   `)
 
-  const streams = []
-  for (const row of rows) {
-    const s = { icecastMount: row.icecastMount, bitrate: row.bitrate, livePasswordDecrypted: null }
-    if (row.livePasswordEnc && isEncrypted(row.livePasswordEnc)) {
-      try {
-        s.livePasswordDecrypted = decrypt(row.livePasswordEnc)
-      } catch (err) {
-        logger.warn({ mount: row.icecastMount, err: err.message }, 'icecast-config: fallo descifrado, usa shared password')
-      }
-    }
-    streams.push(s)
-  }
+  const streams = rows.map((row) => ({
+    icecastMount: row.icecastMount,
+    bitrate: row.bitrate,
+  }))
 
   return generateIcecastXml(streams)
 }
