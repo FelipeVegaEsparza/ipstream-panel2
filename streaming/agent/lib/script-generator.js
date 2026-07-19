@@ -82,7 +82,7 @@ live = input.harbor(
   port=${harborPort},
   password="${safePwd}",
   on_connect=fun (_) -> ignore(system("curl -s -o /dev/null -X POST ${agentUrl}/connected &")),
-  on_disconnect=fun (_) -> ignore(system("curl -s -o /dev/null -X POST ${agentUrl}/disconnected &"))
+  on_disconnect=fun () -> ignore(system("curl -s -o /dev/null -X POST ${agentUrl}/disconnected &"))
 )
 
 # ─── AutoDJ source (playlist-based) ──────────────────
