@@ -1,8 +1,13 @@
 'use client'
 
-import { useStreamingStatus } from '@/lib/useStreamingStatus'
+import { useStreamingStatus, type NowPlayingTrack } from '@/lib/useStreamingStatus'
 
-function TrackRow({ track, label }: { track: { title?: string | null; artist?: string | null; coverUrl?: string | null; isJingle?: boolean } | null; label: string }) {
+interface TrackRowProps {
+  track: NowPlayingTrack | null
+  label: string
+}
+
+function TrackRow({ track, label }: TrackRowProps) {
   return (
     <div className="flex items-center gap-4">
       {/* Cover */}
