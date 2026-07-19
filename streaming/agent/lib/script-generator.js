@@ -66,7 +66,7 @@ output.icecast(
   %mp3(bitrate=${bitrate}),
   host="${config.ice.host}",
   port=${config.ice.port},
-  user="autodj",
+  user="source",
   password="${safePwd}",
   mount="/${safeMount}",
   name="${safeName}",

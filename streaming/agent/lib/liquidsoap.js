@@ -10,7 +10,7 @@ import { config } from './config.js'
 import { logger } from './logger.js'
 import { generateLiquidsoapScript } from './script-generator.js'
 import { pool } from './db.js'
-import { decrypt, isEncrypted } from './encryption.js'
+
 
 const execp = promisify(exec)
 
