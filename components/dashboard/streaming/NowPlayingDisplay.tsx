@@ -1,16 +1,13 @@
 'use client'
 
-import { useStreamingStatus, type NowPlayingTrack } from '@/lib/useStreamingStatus'
+import { useStreamingStatus } from '@/lib/useStreamingStatus'
+import type { NowPlayingTrack } from '@/lib/useStreamingStatus'
 
-interface TrackRowProps {
-  track: NowPlayingTrack | null
-  label: string
-}
-
-function TrackRow({ track, label }: TrackRowProps) {
+function TrackRow(props: { track: NowPlayingTrack | null; label: string }) {
+  const track = props.track
+  const label = props.label
   return (
     <div className="flex items-center gap-4">
-      {/* Cover */}
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden shadow-lg bg-gray-900 shrink-0 ring-1 ring-white/5">
         {track?.coverUrl ? (
           <img
@@ -24,10 +21,9 @@ function TrackRow({ track, label }: TrackRowProps) {
             <svg className="w-8 h-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
-        </div>
+          </div>
+        )}
       </div>
-
-      {/* Info */}
       <div className="min-w-0 flex-1">
         <div className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-1.5">{label}</div>
         {track ? (
@@ -84,7 +80,6 @@ export function NowPlayingDisplay() {
 
   return (
     <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-6 md:p-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           {isDjLive ? (
@@ -106,7 +101,6 @@ export function NowPlayingDisplay() {
         </div>
       </div>
 
-      {/* Playlist name */}
       {nowPlaying?.playlist && !isDjLive && (
         <div className="mb-6 flex items-center gap-3">
           <span className="text-[11px] uppercase tracking-widest text-gray-500 font-medium">Playlist</span>
@@ -117,7 +111,6 @@ export function NowPlayingDisplay() {
         </div>
       )}
 
-      {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-3">
           <TrackRow track={current} label="Ahora suena" />
@@ -134,7 +127,6 @@ export function NowPlayingDisplay() {
         </div>
       </div>
 
-      {/* Position */}
       {nowPlaying?.position && !isDjLive && (
         <div className="mt-6 flex items-center gap-2 text-xs text-gray-500">
           <span className="w-1 h-1 rounded-full bg-gray-600" />
