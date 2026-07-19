@@ -42,6 +42,8 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
   const listeners = status.icecast?.listeners ?? 0
   const listenerPeak = status.icecast?.listener_peak ?? 0
   const bitrate = status.icecast?.bitrate ?? status.db?.bitrate ?? 128
+  const isDjLive = status.dj?.connected
+  const djName = status.dj?.name
 
   const streamUrl = status.streamUrl || status.icecast?.listenurl || null
 
@@ -80,7 +82,14 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
           <div className="text-xs text-gray-400 uppercase">Estado</div>
           <div className="text-lg font-semibold mt-1">
             {isRunning ? (
-              <span className="text-green-400">ON AIR</span>
+              isDjLive ? (
+                <span className="text-green-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  {djName ? djName : 'EN VIVO'}
+                </span>
+              ) : (
+                <span className="text-cyan-400">ON AIR</span>
+              )
             ) : (
               <span className="text-gray-400">OFF</span>
             )}
@@ -140,7 +149,23 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
         </div>
       )}
 
-      {isRunning && status.nowPlaying && status.nowPlaying.playlist && (
+      {isRunning && isDjLive && (
+        <div className="bg-green-900/30 border border-green-700 rounded p-4 space-y-2">
+          <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
+            <span className="text-green-400">🔴</span>
+            <span className="text-green-300 font-semibold">Transmitiendo DJ en vivo</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <div>
+              <p className="text-white font-semibold text-lg">{djName || 'DJ en vivo'}</p>
+              <p className="text-gray-400 text-sm">El AutoDJ se reanudará al desconectar</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isRunning && !isDjLive && status.nowPlaying && status.nowPlaying.playlist && (
         <div className="bg-gray-900/60 rounded p-4 space-y-3">
           <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
             <span>🎵</span>

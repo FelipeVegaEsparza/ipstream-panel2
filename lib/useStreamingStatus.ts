@@ -54,6 +54,10 @@ export interface StreamStatus {
     liquidsoapRunning?: boolean
     lastError?: string | null
   }
+  dj?: {
+    connected: boolean
+    name?: string | null
+  }
   timestamp?: string
 }
 

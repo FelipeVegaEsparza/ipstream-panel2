@@ -85,7 +85,7 @@ export default async function streamRoutes(app) {
 
   /**
    * GET /api/streams/:clientId/status
-   * Estado en vivo: combina info de DB + Icecast.
+   * Estado en vivo: combina info de DB + Icecast + DJs.
    */
   app.get('/api/streams/:clientId/status', async (request, reply) => {
     const { clientId } = request.params
@@ -106,6 +106,25 @@ export default async function streamRoutes(app) {
       logger.warn({ err: err.message, clientId }, 'No se pudo leer status de Icecast')
     }
 
+    // DJ info: slots activos y conectados
+    let djConnected = false
+    let djName = null
+    const activeSlots = _djSlotActive.get(rs.icecastMount)
+    if (activeSlots && activeSlots.size > 0) {
+      djConnected = true
+      const activeDjMounts = [...activeSlots]
+      if (activeDjMounts.length > 0) {
+        // Buscar nombre del DJ con mayor prioridad que está conectado
+        const [djRows] = await pool.query(
+          `SELECT name FROM radio_djs WHERE clientId = ? AND mount = ? AND isActive = 1 LIMIT 1`,
+          [clientId, activeDjMounts[0]]
+        )
+        if (djRows.length > 0) {
+          djName = djRows[0].name
+        }
+      }
+    }
+
     return {
       clientId,
       mount: rs.icecastMount,
@@ -124,6 +143,10 @@ export default async function streamRoutes(app) {
         listenerCount: rs.listenerCount,
         lastError: rs.lastError,
         lastStatusAt: rs.lastStatusAt,
+      },
+      dj: {
+        connected: djConnected,
+        name: djName,
       },
       timestamp: new Date().toISOString(),
     }
