@@ -150,6 +150,8 @@ export async function regenerateScript(clientId) {
     bitrate: rs.bitrate,
     playlistM3uPath: m3uPath,
     mode: playlist ? 'playlist' : 'single',
+    shuffle: playlist?.shuffle ?? false,
+    repeat: playlist?.repeat ?? true,
     jinglePlayEvery: hasJingles ? rs.jinglePlayEvery : 0,
     jinglePlayCount: hasJingles ? rs.jinglePlayCount : 0,
     jinglesM3uPath: hasJingles ? jinglesM3uPath : null,
