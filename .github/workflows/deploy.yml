@@ -105,7 +105,11 @@ jobs:
           GITHUB_REPOSITORY_OWNER: ${{ steps.owner.outputs.owner }}
         run: |
           ssh -o StrictHostKeyChecking=accept-new ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "cd /opt/ipstream-panel && IMAGE_TAG='${{ steps.tag.outputs.value }}' GITHUB_REPOSITORY_OWNER='${{ steps.owner.outputs.owner }}' ./deploy/scripts/deploy.sh"
+            "cd /opt/ipstream-panel && \
+             IMAGE_TAG='${{ steps.tag.outputs.value }}' \
+             GITHUB_REPOSITORY_OWNER='${{ steps.owner.outputs.owner }}' \
+             GHCR_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+             ./deploy/scripts/deploy.sh"
 
       # === 10. Health check post-deploy ===
       - name: Post-deploy health check

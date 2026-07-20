@@ -58,12 +58,18 @@ echo "📥 1/9 — Pull del código..."
 git fetch origin main
 git reset --hard origin/main
 
-# === 2. Export IMAGE_TAG para que el compose lo use ===
+# === 2. Export variables ===
 export IMAGE_TAG
 export GITHUB_REPOSITORY_OWNER
 
-# === 3. Pull de la imagen nueva ===
-echo "🐳 2/9 — Pull de la imagen ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG}..."
+# === 3. Login a GHCR si hay token ===
+if [[ -n "${GHCR_TOKEN:-}" ]]; then
+  echo "🔑 2/9 — Autenticando Docker en ghcr.io..."
+  echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_REPOSITORY_OWNER" --password-stdin
+fi
+
+# === 4. Pull de la imagen nueva ===
+echo "🐳 3/9 — Pull de la imagen ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG}..."
 $COMPOSE_CMD pull app || {
   echo "⚠️  No se pudo pull la imagen. Verificá que el build haya terminado en GitHub Actions."
   echo "    Si es el primer deploy, es posible que la imagen no exista todavía."
@@ -71,12 +77,12 @@ $COMPOSE_CMD pull app || {
   $COMPOSE_CMD build app
 }
 
-# === 4. Construir servicios locales (agente, icecast, liquidsoap) ===
-echo "🔨 3/9 — Construyendo servicios locales (agente, icecast, liquidsoap)..."
+# === 5. Construir servicios locales (agente, icecast, liquidsoap) ===
+echo "🔨 4/9 — Construyendo servicios locales (agente, icecast, liquidsoap)..."
 $COMPOSE_CMD build agent icecast liquidsoap
 
-# === 5. Esperar a que la DB esté healthy (DB container sigue corriendo) ===
-echo "⏳ 4/9 — Esperando a que MySQL esté healthy..."
+# === 6. Esperar a que la DB esté healthy (DB container sigue corriendo) ===
+echo "⏳ 5/9 — Esperando a que MySQL esté healthy..."
 TIMEOUT=60
 ELAPSED=0
 until docker inspect --format='{{.State.Health.Status}}' ipstream-db 2>/dev/null | grep -q healthy; do
@@ -89,23 +95,23 @@ until docker inspect --format='{{.State.Health.Status}}' ipstream-db 2>/dev/null
 done
 echo "  ✓ MySQL healthy en ${ELAPSED}s"
 
-# === 6. Migración directa de la columna coverUrl (antes de iniciar nuevos containers) ===
+# === 7. Migración directa de la columna coverUrl (antes de iniciar nuevos containers) ===
 #    Necesitamos que la columna exista antes de que el agente empiece.
-echo "🗄️  5/9 — Agregando columna coverUrl..."
+echo "🗄️  6/9 — Agregando columna coverUrl..."
 docker exec ipstream-db mysql -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" \
   -e "ALTER TABLE tracks ADD COLUMN IF NOT EXISTS coverUrl VARCHAR(255) DEFAULT NULL AFTER filePath;" 2>/dev/null && \
   echo "  ✓ columna coverUrl lista" || echo "  - columna ya existía (o no hace falta)"
 
-# === 7. Up de los containers ===
-echo "🚀 6/9 — Levantando containers..."
+# === 8. Up de los containers ===
+echo "🚀 7/9 — Levantando containers..."
 $COMPOSE_CMD up -d --remove-orphans
 
-# === 8. Prisma db push (resto de migraciones, dentro del nuevo container) ===
-echo "🗄️  7/9 — Sincronizando esquema Prisma..."
+# === 9. Prisma db push (resto de migraciones, dentro del nuevo container) ===
+echo "🗄️  8/9 — Sincronizando esquema Prisma..."
 docker exec ipstream-app npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "  ⚠ prisma db push no crítico, continuando..."
 
-# === 9. Health check ===
-echo "🏥 8/9 — Verificando health (esperando hasta 30s)..."
+# === 10. Health check ===
+echo "🏥 9/9 — Verificando health (esperando hasta 30s)..."
 TIMEOUT=30
 ELAPSED=0
 while true; do
