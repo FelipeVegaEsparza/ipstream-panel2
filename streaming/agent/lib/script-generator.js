@@ -29,14 +29,14 @@ export function generateLiquidsoapScript({
 
   const hasJingles = jinglePlayEvery > 0 && jinglesM3uPath
 
-  const playlistMode = shuffle ? 'randomize' : 'sequential'
+  const playlistMode = shuffle ? 'randomize' : 'normal'
   const loopStr = repeat ? 'true' : 'false'
 
   let sourceBlock
   if (mode !== 'playlist') {
     sourceBlock = 'blank()'
   } else if (hasJingles) {
-    const jingleMode = shuffle ? 'random' : 'sequential'
+    const jingleMode = shuffle ? 'random' : 'normal'
     sourceBlock = `mksafe(rotate(
     weights=[${jinglePlayEvery}, ${jinglePlayCount}],
     [
