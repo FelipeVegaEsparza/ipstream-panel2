@@ -36,11 +36,12 @@ export function generateLiquidsoapScript({
   if (mode !== 'playlist') {
     sourceBlock = 'blank()'
   } else if (hasJingles) {
+    const jingleMode = shuffle ? 'random' : 'sequential'
     sourceBlock = `mksafe(rotate(
     weights=[${jinglePlayEvery}, ${jinglePlayCount}],
     [
       playlist(id="${safeMount}-music", "${m3u}", mode="${playlistMode}", reload=5, loop=${loopStr}),
-      playlist(id="${safeMount}-jingles", "${jinglesM3uPath}", mode="random", reload=5, loop=true)
+      playlist(id="${safeMount}-jingles", "${jinglesM3uPath}", mode="${jingleMode}", reload=5, loop=true)
     ]
   ))`
   } else {
