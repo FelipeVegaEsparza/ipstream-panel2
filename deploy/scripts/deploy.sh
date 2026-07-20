@@ -130,6 +130,10 @@ while true; do
   ELAPSED=$((ELAPSED + 3))
 done
 
+# === 11. Limpieza de imágenes viejas y caché ===
+echo "🧹 Limpieza — Eliminando imágenes y caché Docker no utilizados..."
+docker system prune -f 2>&1 | tail -1
+
 echo
 echo "=================================================="
 echo "  ✅ Deploy exitoso"
