@@ -233,6 +233,10 @@ export const streamingClient = {
     return request(`/api/streams/${encodeURIComponent(clientId)}/stats${qs ? `?${qs}` : ''}`)
   },
 
+  // History (play history)
+  getHistory: (clientId: string, page = 1, limit = 25) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/history?page=${page}&limit=${limit}`),
+
   // Folders
   listFolders: (clientId: string) =>
     request(`/api/streams/${encodeURIComponent(clientId)}/folders`),

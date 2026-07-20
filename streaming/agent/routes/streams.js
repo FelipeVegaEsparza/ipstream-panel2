@@ -9,6 +9,7 @@ import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { config } from '../lib/config.js'
 import { decrypt, encrypt, isEncrypted } from '../lib/encryption.js'
+import { detectAndLogTrack } from '../lib/track-history.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -462,6 +463,10 @@ export default async function streamRoutes(app) {
       try {
         const mount = await getMountStatus(rs.icecastMount)
         icecastTitle = mount?.title || null
+        // Track history — detectar cambios en el track actual y loguear
+        if (mount) {
+          detectAndLogTrack(clientId, rs).catch(() => {})
+        }
       } catch {}
 
       const currentTitle = icecastTitle || rs.currentTitle
@@ -528,6 +533,46 @@ export default async function streamRoutes(app) {
       nextTrack,
       position,
       jingleCount: jingleRows.length,
+    }
+  })
+
+  /**
+   * GET /api/streams/:clientId/history
+   * Historial de reproducción con paginación.
+   * Query: page=1&limit=25
+   */
+  app.get('/api/streams/:clientId/history', async (request, reply) => {
+    const { clientId } = request.params
+    const page = Math.max(1, parseInt(request.query.page, 10) || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(request.query.limit, 10) || 25))
+    const offset = (page - 1) * limit
+
+    try {
+      const [countRows] = await pool.query(
+        `SELECT COUNT(*) AS cnt FROM play_history WHERE clientId = ?`,
+        [clientId]
+      )
+      const total = countRows[0]?.cnt || 0
+
+      const [rows] = await pool.query(
+        `SELECT id, title, artist, type, playedAt
+         FROM play_history
+         WHERE clientId = ?
+         ORDER BY playedAt DESC
+         LIMIT ? OFFSET ?`,
+        [clientId, limit, offset]
+      )
+
+      return {
+        entries: rows,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      }
+    } catch (err) {
+      logger.error({ err, clientId }, 'Error fetching play history')
+      return reply.code(500).send({ error: 'history_error', message: err.message })
     }
   })
 

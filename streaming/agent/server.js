@@ -255,6 +255,25 @@ try {
   logger.error({ err: err.message }, 'Error creando tabla stream_stats')
 }
 
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS play_history (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      radioStreamId VARCHAR(191) NOT NULL,
+      title VARCHAR(191),
+      artist VARCHAR(191),
+      type VARCHAR(20) NOT NULL DEFAULT 'autodj',
+      playedAt DATETIME(3) NOT NULL,
+      INDEX idx_ph_client_time (clientId, playedAt DESC),
+      INDEX idx_ph_radio_time (radioStreamId, playedAt DESC)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla play_history asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla play_history')
+}
+
 // Rutas
 await app.register(streamRoutes)
 await app.register(websocketRoutes)

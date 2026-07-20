@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
 import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDisplay'
 import { StreamControls } from '@/components/dashboard/streaming/StreamControls'
+import { PlayHistory } from '@/components/dashboard/streaming/PlayHistory'
 import { useToast } from '@/components/ui/toast'
 
 export default function StreamingPage() {
@@ -77,6 +78,8 @@ export default function StreamingPage() {
       )}
 
       <NowPlayingDisplay />
+
+      <PlayHistory />
     </div>
   )
 }
