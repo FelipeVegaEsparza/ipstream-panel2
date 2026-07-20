@@ -40,8 +40,8 @@ export function generateLiquidsoapScript({
     sourceBlock = `mksafe(rotate(
     weights=[${jinglePlayEvery}, ${jinglePlayCount}],
     [
-      playlist(id="${safeMount}-music", "${m3u}", mode="${playlistMode}", reload=5, loop=${loopStr}),
-      playlist(id="${safeMount}-jingles", "${jinglesM3uPath}", mode="${jingleMode}", reload=5, loop=true)
+      playlist(id="${safeMount}-music", "${m3u}", mode="${playlistMode}", reload_mode="watch", loop=${loopStr}),
+      playlist(id="${safeMount}-jingles", "${jinglesM3uPath}", mode="${jingleMode}", reload_mode="watch", loop=true)
     ]
   ))`
   } else {
@@ -49,7 +49,7 @@ export function generateLiquidsoapScript({
     id="${safeMount}-playlist",
     "${m3u}",
     mode="${playlistMode}",
-    reload=5,
+    reload_mode="watch",
     loop=${loopStr}
   ))`
   }
