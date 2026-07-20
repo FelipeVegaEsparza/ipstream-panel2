@@ -16,6 +16,13 @@ interface Track {
   duration: number | null
   fileName: string
   coverUrl: string | null
+  folderId: string | null
+}
+
+interface Folder {
+  id: string
+  name: string
+  parentId: string | null
 }
 
 interface Entry {
@@ -53,9 +60,11 @@ export default function PlaylistEditorPage() {
   const router = useRouter()
   const [playlist, setPlaylist] = useState<Playlist | null>(null)
   const [library, setLibrary] = useState<Track[]>([])
+  const [folders, setFolders] = useState<Folder[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [search, setSearch] = useState('')
+  const [folderFilter, setFolderFilter] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
@@ -101,9 +110,10 @@ export default function PlaylistEditorPage() {
   const load = async () => {
     try {
       setLoading(true)
-      const [plRes, libRes] = await Promise.all([
+      const [plRes, libRes, foldersRes] = await Promise.all([
         fetch(`/api/dashboard/streaming/playlists/${id}`, { cache: 'no-store' }),
         fetch('/api/dashboard/streaming/library', { cache: 'no-store' }),
+        fetch('/api/dashboard/streaming/library/folders', { cache: 'no-store' }),
       ])
       if (plRes.ok) {
         const data = await plRes.json()
@@ -117,6 +127,10 @@ export default function PlaylistEditorPage() {
       if (libRes.ok) {
         const data = await libRes.json()
         setLibrary(data.tracks || [])
+      }
+      if (foldersRes.ok) {
+        const data = await foldersRes.json()
+        setFolders(data.folders || [])
       }
     } catch (err) {
       console.error(err)
@@ -285,13 +299,17 @@ export default function PlaylistEditorPage() {
     return <div className="text-gray-400">Cargando...</div>
   }
 
-  const filteredLibrary = library.filter((t) =>
+  const folderLibrary = folderFilter
+    ? library.filter(t => folderFilter === '__none__' ? !t.folderId : t.folderId === folderFilter)
+    : library
+
+  const filteredLibrary = folderLibrary.filter((t) =>
     t.title.toLowerCase().includes(search.toLowerCase()) ||
     (t.artist || '').toLowerCase().includes(search.toLowerCase())
   )
 
   const inPlaylistIds = new Set(playlist.entries.map((e) => e.trackId))
-  const selectableTracks = library.filter((t) => !inPlaylistIds.has(t.id))
+  const selectableTracks = folderLibrary.filter((t) => !inPlaylistIds.has(t.id))
   const allSelected = selectableTracks.length > 0 && selectableTracks.every((t) => selectedTrackIds.has(t.id))
   const orderChanged = loadedTrackIds && loadedTrackIds !== playlist.entries.map((e) => e.trackId).join(',')
 
@@ -434,6 +452,28 @@ export default function PlaylistEditorPage() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
+
+              {/* Folder filter */}
+              {folders.length > 0 && (
+                <div className="px-4 pt-3 pb-1 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <select
+                      value={folderFilter ?? ''}
+                      onChange={e => setFolderFilter(e.target.value || null)}
+                      className="flex-1 bg-gray-900 text-white text-sm px-2 py-1.5 rounded border border-gray-700 outline-none"
+                    >
+                      <option value="">Todas las carpetas</option>
+                      <option value="__none__">Sin carpeta</option>
+                      {folders.map(f => (
+                        <option key={f.id} value={f.id}>{f.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
 
               {/* Search */}
               <div className="p-4 border-b border-gray-700">
