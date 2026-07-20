@@ -51,7 +51,7 @@ export default function StreamingStatsPage() {
       const res = await fetch(`/api/dashboard/streaming/stats?period=${period}`)
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || body.message || `Error ${res.status}`)
+        throw new Error(body.message || body.error || `Error ${res.status}`)
       }
       const json = await res.json()
       setData(json)

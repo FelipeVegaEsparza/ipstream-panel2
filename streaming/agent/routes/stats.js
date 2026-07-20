@@ -54,70 +54,75 @@ async function collectSnapshot() {
 export default async function statsRoutes(app) {
 
   app.get('/api/streams/:clientId/stats', async (request, reply) => {
-    const { clientId } = request.params
-    const { period = 'day', from, to } = request.query
+    try {
+      const { clientId } = request.params
+      const { period = 'day', from, to } = request.query
 
-    const now = new Date()
-    let fromDate, toDate
+      const now = new Date()
+      let fromDate, toDate
 
-    if (from && to) {
-      fromDate = new Date(from)
-      toDate = new Date(to)
-    } else {
-      toDate = now
-      switch (period) {
-        case 'week':
-          fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          break
-        case 'month':
-          fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-          break
-        default:
-          fromDate = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      if (from && to) {
+        fromDate = new Date(from)
+        toDate = new Date(to)
+      } else {
+        toDate = now
+        switch (period) {
+          case 'week':
+            fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            break
+          case 'month':
+            fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+            break
+          default:
+            fromDate = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        }
       }
-    }
 
-    const [rows] = await pool.query(
-      `SELECT
-        DATE_FORMAT(timestamp, '%Y-%m-%d') AS date,
-        COUNT(*) AS snapshots,
-        ROUND(AVG(listenerCount), 1) AS avgListeners,
-        MAX(listenerPeak) AS peakListeners
-       FROM stream_stats
-       WHERE clientId = ?
-         AND timestamp >= ?
-         AND timestamp <= ?
-       GROUP BY DATE(timestamp)
-       ORDER BY date ASC`,
-      [clientId, fromDate, toDate]
-    )
+      const [rows] = await pool.query(
+        `SELECT
+          DATE_FORMAT(timestamp, '%Y-%m-%d') AS date,
+          COUNT(*) AS snapshots,
+          ROUND(AVG(listenerCount), 1) AS avgListeners,
+          MAX(listenerPeak) AS peakListeners
+         FROM stream_stats
+         WHERE clientId = ?
+           AND timestamp >= ?
+           AND timestamp <= ?
+         GROUP BY DATE(timestamp)
+         ORDER BY date ASC`,
+        [clientId, fromDate, toDate]
+      )
 
-    const [allTimePeak] = await pool.query(
-      `SELECT MAX(listenerPeak) AS allTimePeak FROM stream_stats WHERE clientId = ?`,
-      [clientId]
-    )
+      const [allTimePeak] = await pool.query(
+        `SELECT MAX(listenerPeak) AS allTimePeak FROM stream_stats WHERE clientId = ?`,
+        [clientId]
+      )
 
-    const [totals] = await pool.query(
-      `SELECT
-        COUNT(*) AS totalSnapshots,
-        ROUND(AVG(listenerCount), 1) AS overallAvg
-       FROM stream_stats
-       WHERE clientId = ?
-         AND timestamp >= ?
-         AND timestamp <= ?`,
-      [clientId, fromDate, toDate]
-    )
+      const [totals] = await pool.query(
+        `SELECT
+          COUNT(*) AS totalSnapshots,
+          ROUND(AVG(listenerCount), 1) AS overallAvg
+         FROM stream_stats
+         WHERE clientId = ?
+           AND timestamp >= ?
+           AND timestamp <= ?`,
+        [clientId, fromDate, toDate]
+      )
 
-    return {
-      period,
-      from: fromDate.toISOString(),
-      to: toDate.toISOString(),
-      summary: {
-        overallAvgListeners: totals[0]?.overallAvg ?? 0,
-        allTimePeakListeners: allTimePeak[0]?.allTimePeak ?? 0,
-        totalSnapshots: totals[0]?.totalSnapshots ?? 0,
-      },
-      daily: rows,
+      return {
+        period,
+        from: fromDate.toISOString(),
+        to: toDate.toISOString(),
+        summary: {
+          overallAvgListeners: totals[0]?.overallAvg ?? 0,
+          allTimePeakListeners: allTimePeak[0]?.allTimePeak ?? 0,
+          totalSnapshots: totals[0]?.totalSnapshots ?? 0,
+        },
+        daily: rows,
+      }
+    } catch (err) {
+      logger.error({ err: err.message }, 'Error obteniendo stats')
+      return reply.status(500).send({ error: 'stats_error', message: err.message })
     }
   })
 }
