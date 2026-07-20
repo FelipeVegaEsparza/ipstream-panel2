@@ -33,7 +33,8 @@ const PERIODS: { key: Period; label: string }[] = [
 ]
 
 function fmtDate(dateStr: string) {
-  const d = new Date(dateStr + 'T00:00:00')
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
   return d.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 

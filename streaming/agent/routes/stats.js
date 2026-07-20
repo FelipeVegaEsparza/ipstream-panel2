@@ -79,7 +79,7 @@ export default async function statsRoutes(app) {
 
     const [rows] = await pool.query(
       `SELECT
-        DATE(timestamp) AS date,
+        DATE_FORMAT(timestamp, '%Y-%m-%d') AS date,
         COUNT(*) AS snapshots,
         ROUND(AVG(listenerCount), 1) AS avgListeners,
         MAX(listenerPeak) AS peakListeners
