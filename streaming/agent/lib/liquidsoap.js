@@ -113,6 +113,9 @@ export async function regenerateScript(clientId) {
   const rs = await loadRadioStream(clientId)
   const playlist = await getActivePlaylist(clientId)
 
+  // Regenerar M3U primero para asegurar orden actualizado en DB
+  await regenerateM3u(clientId)
+
   const m3uPath = playlist
     ? `/var/lib/radio/${clientId}/playlist.m3u`
     : null
@@ -299,7 +302,7 @@ export async function regenerateJinglesM3u(clientId) {
  */
 export async function autoStartStreams() {
   const [rows] = await pool.query(
-    `SELECT clientId FROM radio_streams WHERE autoStart = 1 AND (status = 'off' OR status IS NULL) AND enabled = 1`
+    `SELECT clientId FROM radio_streams WHERE autoStart = 1 AND enabled = 1`
   )
 
   logger.info({ count: rows.length }, 'autoStartStreams: streams a iniciar')
@@ -308,9 +311,18 @@ export async function autoStartStreams() {
 
   for (const row of rows) {
     try {
-      const result = await startStream(row.clientId)
-      started.push({ clientId: row.clientId, pid: result.pid })
-      logger.info({ clientId: row.clientId, pid: result.pid }, 'autoStartStreams: iniciado')
+      const rs = await loadRadioStream(row.clientId)
+      const status = await isProcessRunning(rs.icecastMount)
+      if (status.running) {
+        // Ya corriendo: regenerar script y reiniciar para asegurar versión actualizada
+        await restartStream(row.clientId)
+        started.push({ clientId: row.clientId, restarted: true })
+        logger.info({ clientId: row.clientId, pid: status.pid }, 'autoStartStreams: reiniciado para refrescar script')
+      } else {
+        const result = await startStream(row.clientId)
+        started.push({ clientId: row.clientId, pid: result.pid })
+        logger.info({ clientId: row.clientId, pid: result.pid }, 'autoStartStreams: iniciado')
+      }
     } catch (err) {
       failed.push({ clientId: row.clientId, error: err.message })
       logger.warn({ clientId: row.clientId, err: err.message }, 'autoStartStreams: falló')
