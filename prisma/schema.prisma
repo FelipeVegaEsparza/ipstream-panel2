@@ -71,6 +71,7 @@ model Client {
   jingles           Jingle[]
   playlistSchedules PlaylistSchedule[]
   streamStats       StreamStat[]
+  folders           Folder[]
 
   @@map("clients")
 }
