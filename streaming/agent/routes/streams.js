@@ -20,8 +20,8 @@ function sanitizeMount(mount) {
   return mount.replace(/^\//, '')
 }
 
-// DJ takeover tracking: Map<clientMount, Set<djMount>>
-// Almacena los slots de DJ activos para cada cliente.
+// DJ takeover tracking: Map<clientMount, Map<djMount, { connectedAt: number }>>
+// Almacena los slots de DJ activos para cada cliente con timestamp de conexión.
 const _djSlotActive = new Map()
 export { _djSlotActive as _djActive }
 
@@ -35,11 +35,11 @@ function isAnyDjActive(clientMount) {
 function setDjSlotActive(clientMount, djMount, active) {
   const key = sanitizeMount(clientMount)
   if (!_djSlotActive.has(key)) {
-    _djSlotActive.set(key, new Set())
+    _djSlotActive.set(key, new Map())
   }
   const slots = _djSlotActive.get(key)
   if (active) {
-    slots.add(djMount)
+    slots.set(djMount, { connectedAt: Date.now() })
   } else {
     slots.delete(djMount)
   }
@@ -109,15 +109,17 @@ export default async function streamRoutes(app) {
     // DJ info: slots activos y conectados
     let djConnected = false
     let djName = null
+    let djConnectedAt = null
     const activeSlots = _djSlotActive.get(rs.icecastMount)
     if (activeSlots && activeSlots.size > 0) {
       djConnected = true
-      const activeDjMounts = [...activeSlots]
-      if (activeDjMounts.length > 0) {
-        // Buscar nombre del DJ con mayor prioridad que está conectado
+      const activeEntries = [...activeSlots.entries()]
+      if (activeEntries.length > 0) {
+        const [firstMount, firstData] = activeEntries[0]
+        djConnectedAt = firstData.connectedAt
         const [djRows] = await pool.query(
           `SELECT name FROM radio_djs WHERE clientId = ? AND mount = ? AND isActive = 1 LIMIT 1`,
-          [clientId, activeDjMounts[0]]
+          [clientId, firstMount]
         )
         if (djRows.length > 0) {
           djName = djRows[0].name
@@ -130,7 +132,7 @@ export default async function streamRoutes(app) {
       mount: rs.icecastMount,
       clientName: rs.clientName,
       // Estado del proceso liquidsoap
-      process: { running: proc.running, pid: proc.pid },
+      process: { running: proc.running, pid: proc.pid, startedAt: rs.liquidsoapStartedAt || null },
       // Estado en Icecast
       icecast: mount,
       // Snapshot de la DB
@@ -147,6 +149,7 @@ export default async function streamRoutes(app) {
       dj: {
         connected: djConnected,
         name: djName,
+        connectedAt: djConnectedAt,
       },
       timestamp: new Date().toISOString(),
     }
@@ -351,7 +354,7 @@ export default async function streamRoutes(app) {
 
       // DJ slots activos
       const activeSlots = _djSlotActive.get(mount)
-      const activeDjMounts = activeSlots ? [...activeSlots] : []
+      const activeDjMounts = activeSlots ? [...activeSlots.keys()] : []
 
       // DJs configurados en DB
       const djs = await getRadioDjs(clientId)
@@ -371,6 +374,7 @@ export default async function streamRoutes(app) {
           role: d.role,
           isActive: d.isActive,
           connected: activeDjMounts.includes(d.mount),
+          connectedAt: activeSlots?.get(d.mount)?.connectedAt || null,
         })),
         streamStatus: status,
       }

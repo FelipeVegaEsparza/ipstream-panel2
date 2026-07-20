@@ -38,7 +38,7 @@ export interface StreamStatus {
   streamUrl?: string
   clientName?: string
   nowPlaying?: NowPlayingData
-  process?: { running: boolean; pid: number | null }
+  process?: { running: boolean; pid: number | null; startedAt?: string | null }
   icecast?: {
     listenurl?: string
     listeners?: number
@@ -57,6 +57,7 @@ export interface StreamStatus {
   dj?: {
     connected: boolean
     name?: string | null
+    connectedAt?: number | null
   }
   timestamp?: string
 }

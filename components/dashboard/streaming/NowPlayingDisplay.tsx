@@ -2,6 +2,22 @@
 
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
 
+function formatDuration(startTimestamp: number): string {
+  const elapsed = Math.floor((Date.now() - startTimestamp) / 1000)
+  if (elapsed < 60) return `${elapsed}s`
+  if (elapsed < 3600) return `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`
+  const h = Math.floor(elapsed / 3600)
+  const m = Math.floor((elapsed % 3600) / 60)
+  return `${h}h ${m}m`
+}
+
+function parseAndFormatDuration(startedAt: string | number | null | undefined): string | null {
+  if (!startedAt) return null
+  const ts = typeof startedAt === 'number' ? startedAt : new Date(startedAt).getTime()
+  if (isNaN(ts)) return null
+  return formatDuration(ts)
+}
+
 function TrackRow(props: { track: { title: string; artist?: string; coverUrl?: string; isJingle?: boolean } | null; label: string }) {
   const track = props.track
   const label = props.label
@@ -76,6 +92,8 @@ export function NowPlayingDisplay() {
   const next = nowPlaying?.nextTrack
   const isDjLive = status.dj?.connected
   const djName = status.dj?.name
+  const djDuration = parseAndFormatDuration(status.dj?.connectedAt)
+  const autodjDuration = parseAndFormatDuration(status.process?.startedAt)
 
   return (
     <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-6 md:p-8">
@@ -97,13 +115,16 @@ export function NowPlayingDisplay() {
             </div>
           </div>
           <p className="text-green-400/60 text-xs mt-3 ml-1">
-            Transmisión en vivo — los temas del AutoDJ se reproducirán al finalizar
+            {djDuration ? `Transmitiendo desde hace ${djDuration}` : 'Transmisión en vivo'} — los temas del AutoDJ se reproducirán al finalizar
           </p>
         </div>
       ) : (
         <div className="flex items-center gap-3 mb-6">
           <span className="w-3 h-3 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/20" />
           <span className="text-gray-300 font-semibold text-sm uppercase tracking-wider">AutoDJ</span>
+          {autodjDuration && (
+            <span className="text-gray-500 text-xs font-mono">{autodjDuration} al aire</span>
+          )}
         </div>
       )}
 
