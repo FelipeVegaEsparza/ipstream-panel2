@@ -40,14 +40,14 @@ async function ensureCoverColumn() {
 async function queryTracks(clientId) {
   if (await ensureCoverColumn()) {
     const [rows] = await pool.query(
-      `SELECT id, title, artist, album, duration, fileName, fileSize, coverUrl, mimeType, uploadedAt, updatedAt
+      `SELECT id, title, artist, album, duration, fileName, fileSize, coverUrl, folderId, mimeType, uploadedAt, updatedAt
        FROM tracks WHERE clientId = ? ORDER BY uploadedAt DESC`,
       [clientId]
     )
     return rows
   }
   const [rows] = await pool.query(
-    `SELECT id, title, artist, album, duration, fileName, fileSize, mimeType, uploadedAt, updatedAt
+    `SELECT id, title, artist, album, duration, fileName, fileSize, folderId, mimeType, uploadedAt, updatedAt
      FROM tracks WHERE clientId = ? ORDER BY uploadedAt DESC`,
     [clientId]
   )

@@ -699,15 +699,39 @@ model Track {
   uploadedAt     DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  folderId    String?
   client      Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
   radioStream RadioStream    @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
   entries     PlaylistEntry[]
+  folder      Folder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   @@index([clientId])
   @@index([radioStreamId])
+  @@index([folderId])
   @@index([artist])
   @@index([title])
   @@map("tracks")
+}
+
+// Folder — organización de tracks por carpetas.
+// Soporta anidación vía parentId para subcarpetas.
+model Folder {
+  id        String   @id @default(cuid())
+  clientId  String
+  name      String   @db.VarChar(200)
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client   Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  parent   Folder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Folder[] @relation("FolderTree")
+  tracks   Track[]
+
+  @@unique([clientId, parentId, name])
+  @@index([clientId])
+  @@index([parentId])
+  @@map("folders")
 }
 
 // Playlist es una lista ordenada de tracks para AutoDJ.

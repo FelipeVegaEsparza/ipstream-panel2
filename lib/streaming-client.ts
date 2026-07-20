@@ -233,6 +233,28 @@ export const streamingClient = {
     return request(`/api/streams/${encodeURIComponent(clientId)}/stats${qs ? `?${qs}` : ''}`)
   },
 
+  // Folders
+  listFolders: (clientId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/folders`),
+  createFolder: (clientId: string, data: { name: string; parentId?: string | null }) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/folders`, { method: 'POST', body: data }),
+  updateFolder: (clientId: string, folderId: string, data: { name?: string; parentId?: string | null }) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/folders/${encodeURIComponent(folderId)}`, {
+      method: 'PATCH',
+      body: data,
+    }),
+  deleteFolder: (clientId: string, folderId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/folders/${encodeURIComponent(folderId)}`, {
+      method: 'DELETE',
+    }),
+  batchMoveTracks: (clientId: string, trackIds: string[], folderId: string | null) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/folders/batch/move`, {
+      method: 'POST',
+      body: { trackIds, folderId },
+    }),
+  getFolderStats: (clientId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/folders/stats`),
+
   // Schedule (parrilla horaria)
   listSchedule: (clientId: string) =>
     request(`/api/streams/${encodeURIComponent(clientId)}/schedule`),

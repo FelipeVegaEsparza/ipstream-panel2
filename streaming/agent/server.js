@@ -17,6 +17,7 @@ import libraryRoutes from './routes/library.js'
 import playlistRoutes from './routes/playlists.js'
 import jingleRoutes from './routes/jingles.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
+import folderRoutes from './routes/folders.js'
 import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
@@ -262,6 +263,7 @@ await app.register(playlistRoutes)
 await app.register(jingleRoutes)
 await app.register(scheduleRoutes)
 await app.register(statsRoutes)
+await app.register(folderRoutes)
 
 // Iniciar crons
 startScheduleCron()
