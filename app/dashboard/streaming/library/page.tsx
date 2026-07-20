@@ -32,9 +32,19 @@ function fmtSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
+interface StorageInfo {
+  totalMB: number
+  quotaMB: number | null
+  percentUsed: number | null
+  remainingMB: number | null
+  exceeded: boolean
+  trackCount: number
+}
+
 export default function LibraryPage() {
   const [tracks, setTracks] = useState<Track[]>([])
   const [loading, setLoading] = useState(true)
+  const [storage, setStorage] = useState<StorageInfo | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
@@ -50,10 +60,16 @@ export default function LibraryPage() {
   const load = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/dashboard/streaming/library', { cache: 'no-store' })
+      const [res, storageRes] = await Promise.all([
+        fetch('/api/dashboard/streaming/library', { cache: 'no-store' }),
+        fetch('/api/dashboard/streaming/library/storage', { cache: 'no-store' }),
+      ])
       if (res.ok) {
         const data = await res.json()
         setTracks(data.tracks || [])
+      }
+      if (storageRes.ok) {
+        setStorage(await storageRes.json())
       }
     } catch (err) {
       console.error(err)
@@ -172,6 +188,47 @@ export default function LibraryPage() {
           Subí tus MP3s para usar en las playlists de AutoDJ.
         </p>
       </div>
+
+      {storage && (
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              <span className="text-sm font-semibold text-gray-300">Almacenamiento</span>
+            </div>
+            <span className="text-xs text-gray-400 font-mono">
+              {storage.totalMB.toFixed(1)} MB {storage.quotaMB ? `/ ${storage.quotaMB} MB` : 'usados'}
+            </span>
+          </div>
+          {storage.quotaMB && storage.percentUsed !== null ? (
+            <>
+              <div className="w-full h-3 bg-gray-900 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    storage.exceeded ? 'bg-red-500' : storage.percentUsed > 80 ? 'bg-amber-500' : 'bg-cyan-500'
+                  }`}
+                  style={{ width: `${Math.min(storage.percentUsed, 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2 text-xs">
+                <span className={storage.exceeded ? 'text-red-400' : 'text-gray-400'}>
+                  {storage.percentUsed.toFixed(1)}% usado
+                </span>
+                <span className="text-gray-500">
+                  {storage.remainingMB !== null ? `${storage.remainingMB.toFixed(1)} MB libres` : '—'}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+              Sin límite de almacenamiento configurado
+            </div>
+          )}
+        </div>
+      )}
 
       <LibraryUploader onUploaded={load} />
 
