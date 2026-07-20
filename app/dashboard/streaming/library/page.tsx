@@ -105,7 +105,7 @@ export default function LibraryPage() {
   useEffect(() => { load() }, [load])
 
   const filteredTracks = selectedFolderId
-    ? tracks.filter(t => t.folderId === selectedFolderId)
+    ? tracks.filter(t => selectedFolderId === '__none__' ? !t.folderId : t.folderId === selectedFolderId)
     : tracks
 
   const rootFolders = folders.filter(f => !f.parentId)
