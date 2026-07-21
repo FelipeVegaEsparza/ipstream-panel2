@@ -19,9 +19,11 @@ import jingleRoutes from './routes/jingles.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import folderRoutes from './routes/folders.js'
 import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
+import videoRoutes from './routes/video.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
 import { autoStartStreams } from './lib/liquidsoap.js'
+import { autoStartVideoStreams, execCmd, ENCODER_CONTAINER } from './lib/video-encoder.js'
 
 const app = Fastify({
   logger,
@@ -126,6 +128,27 @@ app.get('/', async () => ({
     updateSchedule: 'PATCH /api/streams/:clientId/schedule/:id',
     deleteSchedule: 'DELETE /api/streams/:clientId/schedule/:id',
     currentSchedule: 'GET /api/streams/:clientId/schedule/current',
+    // Video (Televisión)
+    videoStatus: 'GET /api/video/:clientId/status',
+    videoStart: 'POST /api/video/:clientId/start',
+    videoStop: 'POST /api/video/:clientId/stop',
+    videoShuffle: 'POST /api/video/:clientId/shuffle',
+    videoTracks: 'GET /api/video/:clientId/tracks',
+    videoUpload: 'POST /api/video/:clientId/tracks/upload',
+    videoDeleteTrack: 'DELETE /api/video/:clientId/tracks/:trackId',
+    videoPlaylists: 'GET /api/video/:clientId/playlists',
+    videoCreatePlaylist: 'POST /api/video/:clientId/playlists',
+    videoPlaylistEntries: 'GET /api/video/:clientId/playlists/:playlistId/entries',
+    videoAddToPlaylist: 'POST /api/video/:clientId/playlists/:playlistId/entries',
+    videoRemoveEntry: 'DELETE /api/video/:clientId/playlists/:playlistId/entries/:entryId',
+    videoReorderEntries: 'PUT /api/video/:clientId/playlists/:playlistId/entries/reorder',
+    videoFolders: 'GET /api/video/:clientId/folders',
+    videoStorage: 'GET /api/video/:clientId/storage',
+    videoHistory: 'GET /api/video/:clientId/history',
+    videoDjStatus: 'GET /api/video/dj-status/:clientId',
+    videoEncoders: 'GET /api/video/encoders',
+    videoHooksPublish: 'POST /api/video/hooks/on-publish',
+    videoHooksUnpublish: 'POST /api/video/hooks/on-unpublish',
   },
 }))
 
@@ -274,8 +297,146 @@ try {
   logger.error({ err: err.message }, 'Error creando tabla play_history')
 }
 
+// Video tables
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS video_streams (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL UNIQUE,
+      status VARCHAR(20) NOT NULL DEFAULT 'off',
+      mode VARCHAR(20) NOT NULL DEFAULT 'playlist',
+      shuffle BOOLEAN NOT NULL DEFAULT false,
+      \`repeat\` BOOLEAN NOT NULL DEFAULT true,
+      autoStart BOOLEAN NOT NULL DEFAULT true,
+      storageQuotaMB INT,
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      updatedAt DATETIME(3) NOT NULL,
+      INDEX idx_video_client (clientId),
+      CONSTRAINT fk_video_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla video_streams asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla video_streams')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS video_tracks (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      videoStreamId VARCHAR(191) NOT NULL,
+      title VARCHAR(191) NOT NULL,
+      filename VARCHAR(255) NOT NULL,
+      filepath VARCHAR(512) NOT NULL,
+      filesize BIGINT NOT NULL DEFAULT 0,
+      duration DOUBLE NOT NULL DEFAULT 0,
+      thumbnail VARCHAR(255),
+      width INT,
+      height INT,
+      codec VARCHAR(31),
+      folderId VARCHAR(191),
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_vt_client (clientId),
+      INDEX idx_vt_stream (videoStreamId),
+      INDEX idx_vt_folder (folderId),
+      CONSTRAINT fk_vt_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_vt_stream FOREIGN KEY (videoStreamId) REFERENCES video_streams(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla video_tracks asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla video_tracks')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS video_playlists (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      name VARCHAR(191) NOT NULL,
+      shuffle BOOLEAN NOT NULL DEFAULT false,
+      \`repeat\` BOOLEAN NOT NULL DEFAULT true,
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      updatedAt DATETIME(3) NOT NULL,
+      INDEX idx_vp_client (clientId),
+      CONSTRAINT fk_vp_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla video_playlists asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla video_playlists')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS video_playlist_entries (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      playlistId VARCHAR(191) NOT NULL,
+      trackId VARCHAR(191) NOT NULL,
+      position INT NOT NULL,
+      INDEX idx_vpe_playlist (playlistId, position),
+      INDEX idx_vpe_track (trackId),
+      CONSTRAINT fk_vpe_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_vpe_playlist FOREIGN KEY (playlistId) REFERENCES video_playlists(id) ON DELETE CASCADE,
+      CONSTRAINT fk_vpe_track FOREIGN KEY (trackId) REFERENCES video_tracks(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla video_playlist_entries asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla video_playlist_entries')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS video_play_history (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      streamId VARCHAR(191) NOT NULL,
+      trackId VARCHAR(191),
+      trackType VARCHAR(20) NOT NULL DEFAULT 'music',
+      title VARCHAR(191) NOT NULL,
+      artist VARCHAR(191),
+      thumbnail VARCHAR(255),
+      playedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_vph_client (clientId, streamId, playedAt),
+      CONSTRAINT fk_vph_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla video_play_history asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla video_play_history')
+}
+
+// Migración: sanitizar filenames con espacios en video_tracks
+try {
+  const [tracksWithSpaces] = await pool.query(
+    `SELECT id, filename, filepath FROM video_tracks WHERE filename LIKE '% %' OR filepath LIKE '% %'`
+  )
+  for (const track of tracksWithSpaces || []) {
+    const newFilename = track.filename.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const newFilepath = track.filepath.replace(/[^a-zA-Z0-9\/._-]/g, '_')
+    const oldContainerPath = `/var/lib/video/${track.filepath}`
+    const newContainerPath = `/var/lib/video/${newFilepath}`
+    try {
+      await execCmd(`docker exec ${ENCODER_CONTAINER} sh -c 'if [ -f "${oldContainerPath}" ]; then cp "${oldContainerPath}" "${newContainerPath}" && rm "${oldContainerPath}"; fi'`)
+      await pool.query(
+        `UPDATE video_tracks SET filename = ?, filepath = ? WHERE id = ?`,
+        [newFilename, newFilepath, track.id]
+      )
+      logger.info({ id: track.id, old: track.filepath, new: newFilepath }, 'Migrated video track filename')
+    } catch (e) {
+      logger.warn({ id: track.id, err: e.message }, 'Failed to migrate video track filename')
+    }
+  }
+} catch (err) {
+  logger.warn({ err: err.message }, 'Error en migración de filenames video_tracks (no crítico)')
+}
+
 // Rutas
 await app.register(streamRoutes)
+await app.register(videoRoutes)
 await app.register(websocketRoutes)
 await app.register(libraryRoutes)
 await app.register(playlistRoutes)
@@ -319,11 +480,18 @@ try {
     logger.warn({ err: err.message }, 'Deploy icecast config en startup falló (no crítico)')
   })
 
-  // Auto-start streams marcados con autoStart = true
+  // Auto-start streams de radio
   autoStartStreams().then((result) => {
-    logger.info({ started: result.started, failed: result.failed }, 'Auto-start streams completado')
+    logger.info({ started: result.started, failed: result.failed }, 'Auto-start radio streams completado')
   }).catch((err) => {
-    logger.warn({ err: err.message }, 'Auto-start streams falló')
+    logger.warn({ err: err.message }, 'Auto-start radio streams falló')
+  })
+
+  // Auto-start streams de televisión
+  autoStartVideoStreams().then(() => {
+    logger.info('Auto-start video streams completado')
+  }).catch((err) => {
+    logger.warn({ err: err.message }, 'Auto-start video streams falló')
   })
 } catch (err) {
   logger.fatal({ err }, 'No se pudo arrancar el agent')

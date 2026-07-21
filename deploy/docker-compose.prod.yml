@@ -74,6 +74,31 @@ networks:
   ipstream-net:
     driver: bridge
 
+  srs:
+    image: ossrs/srs:5
+    container_name: ipstream-srs
+    restart: always
+    ports:
+      - "1935:1935"
+      - "8080:8080"
+    volumes:
+      - ./streaming/srs/conf:/usr/local/srs/conf:ro
+      - srs_hls:/usr/local/srs/objs/nginx/html
+    networks:
+      - ipstream-net
+
+  video-encoder:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-ipstream}/ipstream-video-encoder:${IMAGE_TAG:-latest}
+    container_name: ipstream-video-encoder
+    restart: always
+    ports:
+      - "1936:1936"
+    volumes:
+      - video_library:/var/lib/video
+      - video_logs:/var/log/video-encoder
+    networks:
+      - ipstream-net
+
 volumes:
   app_uploads:
     name: ipstream_app_uploads
@@ -92,3 +117,7 @@ volumes:
     name: ipstream_liquidsoap_logs
   radio_library:
     name: ipstream_radio_library
+  video_library:
+    name: ipstream_video_library
+  srs_hls:
+    name: ipstream_srs_hls

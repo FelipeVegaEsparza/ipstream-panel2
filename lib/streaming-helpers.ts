@@ -111,6 +111,97 @@ export async function revealSourcePassword(clientId: string, requesterId: string
 }
 
 // =====================================================
+// createVideoStreamForClient — helper para crear VideoStream
+// =====================================================
+
+export async function createVideoStreamForClient(clientId: string) {
+  const videoStream = await prisma.videoStream.create({
+    data: {
+      clientId,
+      status: 'off',
+      mode: 'playlist',
+      shuffle: false,
+      repeat: true,
+      autoStart: true,
+    },
+  })
+
+  return { videoStream }
+}
+
+/**
+ * Retorna el stream key de Televisión para el DJ (OBS).
+ * Usa un hash del clientId como stream key.
+ */
+export function getVideoStreamKey(clientId: string): string {
+  return `tv_${crypto.createHash('sha256').update(clientId).digest('hex').slice(0, 12)}`
+}
+
+/**
+ * Retorna la RTMP URL para que OBS se conecte.
+ */
+export function getVideoRtmpUrl(baseHost: string, clientId: string): string {
+  const key = getVideoStreamKey(clientId)
+  return `rtmp://${baseHost}:1935/live/${key}`
+}
+
+/**
+ * Retorna la URL HLS del stream.
+ */
+export function getVideoHlsUrl(baseHost: string, clientId: string): string {
+  const key = getVideoStreamKey(clientId)
+  return `http://${baseHost}:8080/live/${key}.m3u8`
+}
+
+// =====================================================
+// Video Storage usage
+// =====================================================
+
+export async function getVideoStorageUsage(clientId: string): Promise<StorageUsage> {
+  const [trackAgg, playlistCount] = await Promise.all([
+    prisma.videoTrack.aggregate({
+      where: { clientId },
+      _sum: { filesize: true },
+      _count: true,
+    }),
+    prisma.videoPlaylist.count({ where: { clientId } }),
+  ])
+
+  const vs = await prisma.videoStream.findUnique({
+    where: { clientId },
+    select: { storageQuotaMB: true },
+  })
+
+  const totalBytes = Number(trackAgg._sum.filesize ?? 0)
+  const totalMB = totalBytes / (1024 * 1024)
+  const totalGB = totalMB / 1024
+  const quotaMB = vs?.storageQuotaMB ?? null
+  const quotaBytes = quotaMB !== null ? quotaMB * 1024 * 1024 : null
+
+  let percentUsed: number | null = null
+  let remainingMB: number | null = null
+  let exceeded = false
+  if (quotaBytes !== null && quotaBytes > 0) {
+    percentUsed = Math.min(100, (totalBytes / quotaBytes) * 100)
+    remainingMB = Math.max(0, quotaMB! - totalMB)
+    exceeded = totalBytes > quotaBytes
+  }
+
+  return {
+    totalBytes,
+    totalMB: Math.round(totalMB * 100) / 100,
+    totalGB: Math.round(totalGB * 1000) / 1000,
+    trackCount: trackAgg._count,
+    playlistCount,
+    quotaMB,
+    quotaBytes,
+    percentUsed: percentUsed !== null ? Math.round(percentUsed * 10) / 10 : null,
+    remainingMB: remainingMB !== null ? Math.round(remainingMB * 100) / 100 : null,
+    exceeded,
+  }
+}
+
+// =====================================================
 // Storage usage
 // =====================================================
 

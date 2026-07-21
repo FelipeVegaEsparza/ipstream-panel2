@@ -145,6 +145,45 @@ services:
       start_period: 15s
 
   # =====================================================
+  # SRS — RTMP + HLS server para Televisión
+  # =====================================================
+  srs:
+    image: ossrs/srs:5
+    container_name: ipstream-srs
+    restart: unless-stopped
+    ports:
+      - "1935:1935"       # RTMP
+      - "8080:8080"       # HTTP API + HLS
+    volumes:
+      - ./streaming/srs/conf:/usr/local/srs/conf:ro
+      - srs_hls:/usr/local/srs/objs/nginx/html
+    networks:
+      - ipstream-net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/v1/versions"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # =====================================================
+  # Video Encoder — FFmpeg para AutoDJ de Televisión
+  # =====================================================
+  video-encoder:
+    build:
+      context: ./streaming/video
+      dockerfile: Dockerfile
+    container_name: ipstream-video-encoder
+    restart: unless-stopped
+    ports:
+      - "1936:1936"
+    volumes:
+      - ./data/video:/var/lib/video
+      - video_logs:/var/log/video-encoder
+    networks:
+      - ipstream-net
+
+  # =====================================================
   # Streaming Agent — sidecar Node.js + Fastify
   # Controla icecast + liquidsoap por cliente.
   # El IPStream Panel lo consume vía HTTP.
@@ -216,5 +255,9 @@ volumes:
     name: ipstream_icecast_logs
   radio_library:
     name: ipstream_radio_library
+  srs_hls:
+    name: ipstream_srs_hls
+  video_logs:
+    name: ipstream_video_logs
   liquidsoap_logs:
     name: ipstream_liquidsoap_logs

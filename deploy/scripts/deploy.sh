@@ -77,6 +77,13 @@ $COMPOSE_CMD pull app || {
   $COMPOSE_CMD build app
 }
 
+# === 4b. Pull de imagen video-encoder ===
+echo "🐳 3b/9 — Pull de la imagen video-encoder..."
+$COMPOSE_CMD pull video-encoder || {
+  echo "⚠️  No se pudo pull video-encoder. Build local como fallback..."
+  $COMPOSE_CMD build video-encoder
+}
+
 # === 5. Construir servicios locales (agente, icecast, liquidsoap) ===
 echo "🔨 4/9 — Construyendo servicios locales (agente, icecast, liquidsoap)..."
 $COMPOSE_CMD build agent icecast liquidsoap
@@ -138,8 +145,10 @@ echo
 echo "=================================================="
 echo "  ✅ Deploy exitoso"
 echo "=================================================="
-echo "  Panel:   https://${STREAM_DOMAIN}"
-echo "  Stream:  ${ICE_PUBLIC_URL}"
+echo "  Panel:     https://${STREAM_DOMAIN}"
+echo "  Radio:     ${ICE_PUBLIC_URL}"
+echo "  Televisión: rtmp://${STREAM_DOMAIN}:1935/live/{stream_key}"
+echo "  HLS:       http://${STREAM_DOMAIN}:8080/live/{stream_key}.m3u8"
 echo
 echo "  Para ver logs:"
 echo "    docker compose ${COMPOSE_FILES#-f } logs -f app"

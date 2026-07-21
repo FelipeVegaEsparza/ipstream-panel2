@@ -63,7 +63,7 @@ model Client {
   supportTickets    SupportTicket[]
   chatMessages      ChatMessage[]
   chatBans          ChatBan[]
-  // Streaming (Phase 1)
+  // Streaming — Audio (Radio)
   radioStream       RadioStream?
   tracks            Track[]
   playlists         Playlist[]
@@ -72,6 +72,13 @@ model Client {
   playlistSchedules PlaylistSchedule[]
   streamStats       StreamStat[]
   folders           Folder[]
+  // Streaming — Video (Televisión)
+  videoStream          VideoStream?
+  videoTracks          VideoTrack[]
+  videoPlaylists       VideoPlaylist[]
+  videoPlaylistEntries VideoPlaylistEntry[]
+  videoPlaylistSchedules VideoPlaylistSchedule[]
+  clientEdgeAssignments ClientEdgeAssignment[]
 
   @@map("clients")
 }
@@ -724,10 +731,11 @@ model Folder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  client   Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  parent   Folder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: SetNull)
-  children Folder[] @relation("FolderTree")
-  tracks   Track[]
+  client     Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  parent     Folder?     @relation("FolderTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children   Folder[]    @relation("FolderTree")
+  tracks     Track[]
+  videoTracks VideoTrack[]
 
   @@unique([clientId, parentId, name])
   @@index([clientId])
@@ -866,3 +874,157 @@ model StreamStat {
 }
 
 // RadioStream status: "off" | "autodj" | "live"
+
+// ================================================================
+// Televisión — Video Streaming Models
+// ================================================================
+
+// Canal de televisión por cliente
+model VideoStream {
+  id        String   @id @default(cuid())
+  clientId  String   @unique
+  status    String   @default("off")          // "off" | "autodj" | "live"
+  mode      String   @default("playlist")     // "playlist" | "schedule"
+  shuffle   Boolean  @default(false)
+  repeat    Boolean  @default(true)
+  autoStart Boolean  @default(true)
+  storageQuotaMB Int?   // cuota de almacenamiento en MB
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client            Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  videoTracks       VideoTrack[]
+  videoPlaylistSchedules VideoPlaylistSchedule[]
+
+  @@map("video_streams")
+}
+
+// Archivos de video subidos
+model VideoTrack {
+  id             String   @id @default(cuid())
+  clientId       String
+  videoStreamId  String
+  title          String   @db.VarChar(191)
+  filename       String   @db.VarChar(255)
+  filepath       String   @db.VarChar(512)
+  filesize       BigInt   @default(0)
+  duration       Float    @default(0)
+  thumbnail      String?  @db.VarChar(255)
+  width          Int?
+  height         Int?
+  codec          String?  @db.VarChar(31)
+  folderId       String?
+  createdAt      DateTime @default(now())
+
+  client      Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  videoStream VideoStream       @relation(fields: [videoStreamId], references: [id], onDelete: Cascade)
+  folder      Folder?           @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  playlistEntries VideoPlaylistEntry[]
+
+  @@index([clientId])
+  @@index([videoStreamId])
+  @@index([folderId])
+  @@map("video_tracks")
+}
+
+// Playlists de video
+model VideoPlaylist {
+  id        String   @id @default(cuid())
+  clientId  String
+  name      String   @db.VarChar(191)
+  shuffle   Boolean  @default(false)
+  repeat    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client  Client               @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  entries VideoPlaylistEntry[]
+  schedules VideoPlaylistSchedule[]
+
+  @@index([clientId])
+  @@map("video_playlists")
+}
+
+// Orden de tracks dentro de una playlist de video
+model VideoPlaylistEntry {
+  id          String @id @default(cuid())
+  clientId    String
+  playlistId  String
+  trackId     String
+  position    Int
+
+  client    Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  playlist  VideoPlaylist  @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track     VideoTrack     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([playlistId, position])
+  @@index([trackId])
+  @@map("video_playlist_entries")
+}
+
+// Programación horaria de playlists de video
+model VideoPlaylistSchedule {
+  id            String   @id @default(cuid())
+  clientId      String
+  videoStreamId String
+  playlistId    String
+  dayOfWeek     Int
+  startTime     String   @db.VarChar(191)
+  endTime       String   @db.VarChar(191)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  videoStream VideoStream   @relation(fields: [videoStreamId], references: [id], onDelete: Cascade)
+  playlist    VideoPlaylist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, dayOfWeek, isActive])
+  @@index([videoStreamId, dayOfWeek, isActive])
+  @@map("video_playlist_schedules")
+}
+
+// Historial de reproducción de video
+model VideoPlayHistory {
+  id          String   @id @default(cuid())
+  clientId    String
+  streamId    String
+  trackId     String?
+  trackType   String   @default("music")
+  title       String   @db.VarChar(191)
+  artist      String?  @db.VarChar(191)
+  thumbnail   String?  @db.VarChar(255)
+  playedAt    DateTime @default(now())
+
+  @@index([clientId, streamId, playedAt])
+  @@map("video_play_history")
+}
+
+// Servidores edge para escalar HLS
+model EdgeServer {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(191)
+  url       String   @db.VarChar(255)
+  apiKey    String   @db.VarChar(255)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clientAssignments ClientEdgeAssignment[]
+
+  @@map("edge_servers")
+}
+
+// Asignación de client a edge server
+model ClientEdgeAssignment {
+  id            String   @id @default(cuid())
+  clientId      String
+  edgeServerId  String
+  createdAt     DateTime @default(now())
+
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  edgeServer  EdgeServer  @relation(fields: [edgeServerId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, edgeServerId])
+  @@map("client_edge_assignments")
+}

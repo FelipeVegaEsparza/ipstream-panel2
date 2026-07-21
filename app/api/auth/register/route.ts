@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/validations'
-import { createRadioStreamForClient } from '@/lib/streaming-helpers'
+import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/streaming-helpers'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,14 +41,18 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Auto-crear RadioStream para el nuevo cliente (Phase 6)
+    // Auto-crear RadioStream + VideoStream para el nuevo cliente
     let streamInfo = null
     if (user.client) {
       try {
         streamInfo = await createRadioStreamForClient(user.client.id)
       } catch (err) {
         console.error('Error creando RadioStream para nuevo cliente:', err)
-        // No fallamos el registro por esto — el admin puede crearlo después
+      }
+      try {
+        await createVideoStreamForClient(user.client.id)
+      } catch (err) {
+        console.error('Error creando VideoStream para nuevo cliente:', err)
       }
     }
 

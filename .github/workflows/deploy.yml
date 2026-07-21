@@ -74,6 +74,20 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
+      # === 5b. Build + Push de video-encoder ===
+      - name: Build and push video-encoder image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./streaming/video
+          file: ./streaming/video/Dockerfile
+          push: true
+          tags: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:${{ github.sha }},ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:latest
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
       # === 6. Configurar SSH ===
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0

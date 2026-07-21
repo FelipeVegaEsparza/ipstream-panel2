@@ -1,6 +1,4 @@
 #!/bin/bash
-# Imprime el PID del proceso liquidsoap del mount pasado como $1.
-# Vacío si no se encuentra.
 MOUNT="$1"
 for p in /proc/[0-9]*; do
   if [ -r "$p/cmdline" ] 2>/dev/null; then

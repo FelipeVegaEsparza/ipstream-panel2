@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { encrypt } from '@/lib/encryption'
-import { createRadioStreamForClient } from '@/lib/streaming-helpers'
+import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/streaming-helpers'
 
 // GET - Obtener todos los usuarios (sin API keys en la lista)
 export async function GET() {
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       return { user, client }
     })
 
-    // Auto-crear RadioStream (Phase 7 fix)
+    // Auto-crear RadioStream + VideoStream
     let streamInfo = null
     let streamError: string | null = null
     try {
@@ -120,7 +120,11 @@ export async function POST(request: NextRequest) {
     } catch (err: any) {
       console.error('Error creando RadioStream para nuevo cliente:', err)
       streamError = err.message
-      // No fallamos la creación del user por esto
+    }
+    try {
+      await createVideoStreamForClient(result.client.id)
+    } catch (err) {
+      console.error('Error creando VideoStream:', err)
     }
 
     return NextResponse.json({

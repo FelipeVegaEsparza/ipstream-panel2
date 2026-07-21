@@ -279,3 +279,113 @@ export const streamingClient = {
   getCurrentSchedule: (clientId: string) =>
     request(`/api/streams/${encodeURIComponent(clientId)}/schedule/current`),
 }
+
+// =====================================================
+// Video / Televisión Client
+// =====================================================
+
+export const videoClient = {
+  // Status
+  getStatus: (clientId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/status`),
+
+  // Control
+  start: (clientId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/start`, { method: 'POST' }),
+  stop: (clientId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/stop`, { method: 'POST' }),
+  setShuffle: (clientId: string, shuffle: boolean) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/shuffle`, { method: 'POST', body: { shuffle } }),
+
+  // DJ Status
+  getDjStatus: (clientId: string) =>
+    request(`/api/video/dj-status/${encodeURIComponent(clientId)}`),
+
+  // Tracks
+  listTracks: (clientId: string, params?: { page?: number; limit?: number; folderId?: string; search?: string }) => {
+    const search = new URLSearchParams()
+    if (params?.page) search.set('page', String(params.page))
+    if (params?.limit) search.set('limit', String(params.limit))
+    if (params?.folderId) search.set('folderId', params.folderId)
+    if (params?.search) search.set('search', params.search)
+    const qs = search.toString()
+    return request(`/api/video/${encodeURIComponent(clientId)}/tracks${qs ? `?${qs}` : ''}`)
+  },
+  uploadTrack: async (clientId: string, file: File, folderId?: string) => {
+    const form = new FormData()
+    form.append('file', file)
+    if (folderId) form.append('folderId', folderId)
+    return request(`/api/video/${encodeURIComponent(clientId)}/tracks/upload`, {
+      method: 'POST',
+      body: form,
+      isMultipart: true,
+      timeoutMs: UPLOAD_TIMEOUT_MS,
+    })
+  },
+  deleteTrack: (clientId: string, trackId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/tracks/${encodeURIComponent(trackId)}`, {
+      method: 'DELETE',
+    }),
+
+  // Playlists
+  listPlaylists: (clientId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/playlists`),
+  createPlaylist: (clientId: string, data: { name: string }) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/playlists`, { method: 'POST', body: data }),
+  deletePlaylist: (clientId: string, playlistId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}`, {
+      method: 'DELETE',
+    }),
+
+  // Playlist entries
+  listEntries: (clientId: string, playlistId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}/entries`),
+  addEntry: (clientId: string, playlistId: string, trackId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}/entries`, {
+      method: 'POST',
+      body: { trackId },
+    }),
+  removeEntry: (clientId: string, playlistId: string, entryId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}/entries/${encodeURIComponent(entryId)}`, {
+      method: 'DELETE',
+    }),
+  reorderEntries: (clientId: string, playlistId: string, entryIds: string[]) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}/entries/reorder`, {
+      method: 'PUT',
+      body: { entryIds },
+    }),
+
+  // Folders
+  listFolders: (clientId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/folders`),
+  createFolder: (clientId: string, data: { name: string; parentId?: string | null }) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/folders`, { method: 'POST', body: data }),
+  updateFolder: (clientId: string, folderId: string, data: { name: string }) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/folders/${encodeURIComponent(folderId)}`, {
+      method: 'PUT',
+      body: data,
+    }),
+  deleteFolder: (clientId: string, folderId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/folders/${encodeURIComponent(folderId)}`, {
+      method: 'DELETE',
+    }),
+
+  // Batch move
+  batchMoveTracks: (clientId: string, trackIds: string[], folderId: string | null) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/tracks/batch-move`, {
+      method: 'POST',
+      body: { trackIds, folderId },
+    }),
+
+  // Storage
+  getStorage: (clientId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/storage`),
+
+  // History
+  getHistory: (clientId: string, page = 1, limit = 25) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/history?page=${page}&limit=${limit}`),
+
+  // Encoders all
+  getAllEncoders: () =>
+    request('/api/video/encoders'),
+}

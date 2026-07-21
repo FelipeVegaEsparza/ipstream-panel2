@@ -53,12 +53,19 @@ export type MenuItemKey =
   | 'streaming-schedule'
   | 'streaming-connection'
   | 'streaming-stats'
+  // Televisión
+  | 'television'
+  | 'television-transmission'
+  | 'television-library'
+  | 'television-playlists'
+  | 'television-connection'
+  | 'television-schedule'
 
 export interface MenuItemDef {
   key: MenuItemKey
   name: string
   href: string
-  section: 'Radio' | 'General' | 'Contenido' | 'Interactivos' | 'Sistema'
+  section: 'Radio' | 'Televisión' | 'General' | 'Contenido' | 'Interactivos' | 'Sistema'
   icon: React.ComponentType<{ className?: string }>
   alwaysEnabled?: boolean
   children?: SubMenuItemDef[]
@@ -129,6 +136,45 @@ export const MENU_ITEMS: MenuItemDef[] = [
   section: 'Radio',
   icon: ChartBarIcon,
 },
+  // ================================================================
+  // Televisión
+  // ================================================================
+  {
+    key: 'television',
+    name: 'Transmisión',
+    href: '/dashboard/television',
+    section: 'Televisión',
+    icon: VideoCameraIcon,
+  },
+  {
+    key: 'television-connection',
+    name: 'Conexión OBS',
+    href: '/dashboard/television/connection',
+    section: 'Televisión',
+    icon: LinkIcon,
+  },
+  {
+    key: 'television-library',
+    name: 'Videoteca',
+    href: '/dashboard/television/library',
+    section: 'Televisión',
+    icon: MusicalNoteIcon,
+  },
+  {
+    key: 'television-playlists',
+    name: 'Programación',
+    href: '/dashboard/television/playlists',
+    section: 'Televisión',
+    icon: QueueListIcon,
+  },
+  {
+    key: 'television-schedule',
+    name: 'Parrilla TV',
+    href: '/dashboard/television/schedule',
+    section: 'Televisión',
+    icon: CalendarDaysIcon,
+  },
+
   {
     key: 'basic-data',
     name: 'Datos Básicos',
@@ -260,7 +306,7 @@ export const MENU_ITEMS: MenuItemDef[] = [
   },
 ]
 
-export const MENU_SECTIONS = ['General', 'Radio', 'Contenido', 'Interactivos', 'Sistema'] as const
+export const MENU_SECTIONS = ['General', 'Radio', 'Televisión', 'Contenido', 'Interactivos', 'Sistema'] as const
 
 export function getMenuItemsBySection(): Record<string, MenuItemDef[]> {
   const map: Record<string, MenuItemDef[]> = Object.fromEntries(MENU_SECTIONS.map((s) => [s, []]))

@@ -27,7 +27,7 @@ ERRORS=0
 
 # === 1. Containers corriendo ===
 log "=== Containers ==="
-for svc in ipstream-db ipstream-app ipstream-icecast ipstream-liquidsoap ipstream-streaming-agent ipstream-caddy; do
+for svc in ipstream-db ipstream-app ipstream-icecast ipstream-liquidsoap ipstream-streaming-agent ipstream-caddy ipstream-srs ipstream-video-encoder; do
   STATUS=$(docker inspect --format='{{.State.Status}}' "$svc" 2>/dev/null || echo "not_found")
   HEALTH=$(docker inspect --format='{{.State.Health.Status}}' "$svc" 2>/dev/null || echo "n/a")
   if [[ "$STATUS" == "running" ]]; then
@@ -71,7 +71,18 @@ else
   ERRORS=$((ERRORS + 1))
 fi
 
-# === 4. Caddy ===
+# === 5. SRS ===
+log
+log "=== SRS (Televisión) ==="
+SRS=$(curl -sf http://localhost:8080/api/v1/versions 2>&1)
+if [[ -n "$SRS" ]]; then
+  log "  ✓ SRS: OK"
+else
+  log "  ✗ SRS: NO RESPONDE"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# === 6. Caddy ===
 log
 log "=== Caddy (HTTPS) ==="
 CADDY=$(docker inspect --format='{{.State.Health.Status}}' ipstream-caddy 2>/dev/null || echo "n/a")
