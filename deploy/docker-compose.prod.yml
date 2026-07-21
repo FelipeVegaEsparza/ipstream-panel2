@@ -70,10 +70,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-networks:
-  ipstream-net:
-    driver: bridge
-
   srs:
     image: ossrs/srs:5
     container_name: ipstream-srs
@@ -98,6 +94,10 @@ networks:
       - video_logs:/var/log/video-encoder
     networks:
       - ipstream-net
+
+networks:
+  ipstream-net:
+    driver: bridge
 
 volumes:
   app_uploads:
