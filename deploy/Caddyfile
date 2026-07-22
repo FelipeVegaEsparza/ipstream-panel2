@@ -35,7 +35,7 @@
     }
 
     # === HLS streaming (proxy a SRS) ===
-    handle_path /live/* {
+    handle /live/* {
         reverse_proxy srs:8080
     }
 
