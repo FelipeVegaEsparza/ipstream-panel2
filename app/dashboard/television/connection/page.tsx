@@ -23,8 +23,9 @@ export default function TvConnectionPage() {
   const [copiedRtmp, setCopiedRtmp] = useState(false)
   const [copiedRelay, setCopiedRelay] = useState(false)
   const [copiedKey, setCopiedKey] = useState(false)
-  const serverUrl = 'rtmp://localhost:1935/live'
-  const relayUrl = 'rtmp://127.0.0.1:1936/live/relay'
+  const host = typeof window !== 'undefined' ? window.location.hostname : 'panelipstream.cl'
+  const serverUrl = `rtmp://${host}:1935/live`
+  const relayUrl = `rtmp://${host}:1936/live/relay`
   const { toast } = useToast()
 
   useEffect(() => {
@@ -109,12 +110,12 @@ export default function TvConnectionPage() {
               <input
                 type="text"
                 readOnly
-                value={`rtmp://127.0.0.1:1936/live/relay`}
+                value={relayUrl}
                 className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
                 onClick={(e) => e.currentTarget.select()}
               />
               <button
-                onClick={() => copy(`rtmp://127.0.0.1:1936/live/relay`, setCopiedRelay, 'URL Relay')}
+                onClick={() => copy(relayUrl, setCopiedRelay, 'URL Relay')}
                 className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm whitespace-nowrap"
               >
                 {copiedRelay ? '✓ Copiado' : 'Copiar Relay'}
@@ -159,6 +160,9 @@ export default function TvConnectionPage() {
                 {copiedKey ? '✓ Copiado' : 'Copiar Key'}
               </button>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              En OBS: Settings → Stream → Servicio: Custom, Servidor: <span className="text-cyan-400">{serverUrl}</span>, Clave de stream: <span className="text-cyan-400">{info.streamKey}</span>
+            </p>
           </div>
         </>
       )}
