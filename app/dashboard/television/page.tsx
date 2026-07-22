@@ -21,8 +21,12 @@ export default function TelevisionPage() {
   const hlsRef = useRef<Hls | null>(null)
   const { toast } = useToast()
 
+  const hlsUrl = videoStatus?.streamKey
+    ? `${window.location.protocol}//${window.location.host}/live/${videoStatus.streamKey}.m3u8`
+    : null
+
   useEffect(() => {
-    if (!videoRef.current || !videoStatus?.hlsUrl) return
+    if (!videoRef.current || !hlsUrl) return
     if (!Hls.isSupported()) return
 
     if (hlsRef.current) {
@@ -31,14 +35,14 @@ export default function TelevisionPage() {
 
     const hls = new Hls()
     hlsRef.current = hls
-    hls.loadSource(videoStatus.hlsUrl)
+    hls.loadSource(hlsUrl)
     hls.attachMedia(videoRef.current)
 
     return () => {
       hls.destroy()
       hlsRef.current = null
     }
-  }, [videoStatus?.hlsUrl])
+  }, [hlsUrl])
 
   const fetchStatus = async () => {
     try {
@@ -80,8 +84,8 @@ export default function TelevisionPage() {
   }
 
   const copyHls = () => {
-    if (!videoStatus?.hlsUrl) return
-    navigator.clipboard.writeText(videoStatus.hlsUrl)
+    if (!hlsUrl) return
+    navigator.clipboard.writeText(hlsUrl)
     setCopiedHls(true)
     toast({ type: 'success', title: 'URL HLS copiada' })
     setTimeout(() => setCopiedHls(false), 2000)
@@ -135,7 +139,7 @@ export default function TelevisionPage() {
       </div>
 
       {/* HLS Player */}
-      {videoStatus?.hlsUrl && (isAutoDj || isLive) && (
+      {hlsUrl && (isAutoDj || isLive) && (
         <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
           <h2 className="text-lg font-semibold text-white mb-3">Vista previa</h2>
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
@@ -152,7 +156,7 @@ export default function TelevisionPage() {
             <input
               type="text"
               readOnly
-              value={videoStatus.hlsUrl}
+              value={hlsUrl || ''}
               className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
               onClick={(e) => e.currentTarget.select()}
             />

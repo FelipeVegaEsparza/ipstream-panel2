@@ -34,6 +34,11 @@
         -Server
     }
 
+    # === HLS streaming (proxy a SRS) ===
+    handle_path /live/* {
+        reverse_proxy srs:8080
+    }
+
     # === Logging ===
     log {
         output file /data/access.log {
