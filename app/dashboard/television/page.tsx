@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Hls from 'hls.js'
 import { useToast } from '@/components/ui/toast'
 
 interface VideoStatus {
@@ -16,7 +17,28 @@ export default function TelevisionPage() {
   const [videoStatus, setVideoStatus] = useState<VideoStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [copiedHls, setCopiedHls] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<Hls | null>(null)
   const { toast } = useToast()
+
+  useEffect(() => {
+    if (!videoRef.current || !videoStatus?.hlsUrl) return
+    if (!Hls.isSupported()) return
+
+    if (hlsRef.current) {
+      hlsRef.current.destroy()
+    }
+
+    const hls = new Hls()
+    hlsRef.current = hls
+    hls.loadSource(videoStatus.hlsUrl)
+    hls.attachMedia(videoRef.current)
+
+    return () => {
+      hls.destroy()
+      hlsRef.current = null
+    }
+  }, [videoStatus?.hlsUrl])
 
   const fetchStatus = async () => {
     try {
@@ -118,14 +140,13 @@ export default function TelevisionPage() {
           <h2 className="text-lg font-semibold text-white mb-3">Vista previa</h2>
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
             <video
-              key={videoStatus.hlsUrl}
+              ref={videoRef}
               className="w-full h-full"
               controls
               autoPlay
               muted
-            >
-              <source src={videoStatus.hlsUrl} type="application/x-mpegURL" />
-            </video>
+              playsInline
+            />
           </div>
           <div className="mt-3 flex flex-col md:flex-row gap-2">
             <input
