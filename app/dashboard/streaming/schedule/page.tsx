@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useEffect, useState, useCallback } from 'react'
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
@@ -130,10 +132,10 @@ export default function SchedulePage() {
         load()
       } else {
         const err = await res.json()
-        alert(err.message || 'Error al guardar')
+        showToast({ type: 'error', title: err.message || 'Error al guardar' })
       }
     } catch {
-      alert('Error al guardar')
+      showToast({ type: 'error', title: 'Error al guardar' })
     } finally {
       setFormSaving(false)
     }
@@ -147,10 +149,10 @@ export default function SchedulePage() {
       if (res.ok) {
         load()
       } else {
-        alert('Error al eliminar')
+        showToast({ type: 'error', title: 'Error al eliminar' })
       }
     } catch {
-      alert('Error al eliminar')
+      showToast({ type: 'error', title: 'Error al eliminar' })
     } finally {
       setDeletingId(null)
     }

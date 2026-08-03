@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Filter, Search, Calendar, Download, RefreshCw } from 'lucide-react'
 
 export function LogsFilters() {
+  const router = useRouter()
   const [filters, setFilters] = useState({
     level: 'all',
     category: 'all',
@@ -65,10 +70,10 @@ export function LogsFilters() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        alert('Error al exportar logs')
+        showToast({ type: 'error', title: 'Error al exportar logs' })
       }
     } catch (error) {
-      alert('Error al exportar logs')
+      showToast({ type: 'error', title: 'Error al exportar logs' })
     }
   }
 
@@ -205,7 +210,7 @@ export function LogsFilters() {
         {/* Acciones */}
         <div className="space-y-2 pt-4">
           <Button
-            onClick={() => window.location.reload()}
+            onClick={() => router.refresh()}
             className="w-full bg-blue-600 hover:bg-blue-700"
           >
             <Search className="h-4 w-4 mr-2" />

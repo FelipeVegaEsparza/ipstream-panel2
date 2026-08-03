@@ -1,4 +1,5 @@
 #!/bin/bash
+# OBSOLETO: usar deploy/scripts/deploy.sh
 
 # Configuración
 VPS_USER="tu-usuario"

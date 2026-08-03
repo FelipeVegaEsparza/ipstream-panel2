@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ type StatusFilter = 'all' | 'overdue' | 'due_soon' | 'current' | 'no_plan'
 type IntervalFilter = 'all' | 'monthly' | 'yearly'
 
 export function ClientesTable({ clients, plans }: ClientesTableProps) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<StatusFilter>('all')
   const [intervalFilter, setIntervalFilter] = useState<IntervalFilter>('all')
@@ -86,7 +88,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
         throw new Error(data.error || 'Error al quitar plan')
       }
       showFeedback('success', 'Plan quitado')
-      setTimeout(() => window.location.reload(), 800)
+      setTimeout(() => router.refresh(), 800)
     } catch (err) {
       showFeedback('error', err instanceof Error ? err.message : 'Error al quitar plan')
     }
@@ -104,7 +106,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
         throw new Error(data.error || 'Error al renovar')
       }
       showFeedback('success', 'Suscripción renovada')
-      setTimeout(() => window.location.reload(), 800)
+      setTimeout(() => router.refresh(), 800)
     } catch (err) {
       showFeedback('error', err instanceof Error ? err.message : 'Error al renovar')
     }
@@ -122,7 +124,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
         throw new Error(data.error || 'Error al cancelar')
       }
       showFeedback('success', 'Suscripción cancelada')
-      setTimeout(() => window.location.reload(), 800)
+      setTimeout(() => router.refresh(), 800)
     } catch (err) {
       showFeedback('error', err instanceof Error ? err.message : 'Error al cancelar')
     }
@@ -140,7 +142,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
         throw new Error(data.error || 'Error al marcar como pagado')
       }
       showFeedback('success', 'Pago marcado como pagado')
-      setTimeout(() => window.location.reload(), 800)
+      setTimeout(() => router.refresh(), 800)
     } catch (err) {
       showFeedback('error', err instanceof Error ? err.message : 'Error')
     }
@@ -273,7 +275,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
           onClose={() => setAsignarClient(null)}
           onSuccess={() => {
             setAsignarClient(null)
-            window.location.reload()
+            router.refresh()
           }}
           clientId={asignarClient.id}
           clientName={asignarClient.name}

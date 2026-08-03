@@ -75,7 +75,12 @@ export default function ConnectionPage() {
     return () => clearInterval(iv)
   }, [load])
 
-  const harborHost = connectionInfo?.harborHost || (typeof window !== 'undefined' ? window.location.hostname : 'localhost')
+  const [mountedHost, setMountedHost] = useState<string | null>(null)
+  useEffect(() => {
+    setMountedHost(window.location.hostname)
+  }, [])
+
+  const harborHost = connectionInfo?.harborHost || mountedHost || 'localhost'
   const harborPort = connectionInfo?.harborPort || 9000
   const connectedSlot = djSlots.find(s => s.connected)
 
@@ -121,7 +126,11 @@ export default function ConnectionPage() {
   }
 
   const handleSave = async () => {
-    if (!editId && (!form.name || !form.password)) {
+    if (!form.name.trim()) {
+      setError('El nombre es requerido')
+      return
+    }
+    if (!editId && !form.password) {
       setError('Nombre y password son requeridos')
       return
     }

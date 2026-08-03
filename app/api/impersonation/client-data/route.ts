@@ -2,28 +2,40 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { verifyImpersonationToken } from '@/lib/impersonation'
 
 export async function GET(request: NextRequest) {
   try {
-    // Obtener token de impersonación del header
-    const impersonationToken = request.headers.get('x-impersonation-token')
-    
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
+    // Obtener token de impersonación del header o de la cookie
+    const impersonationToken =
+      request.headers.get('x-impersonation-token') ||
+      request.cookies.get('impersonation_token')?.value
+
     if (!impersonationToken) {
       return NextResponse.json({ error: 'Token de impersonación requerido' }, { status: 400 })
     }
 
-    // Decodificar y verificar token de impersonación
-    let impersonationData
-    try {
-      impersonationData = JSON.parse(Buffer.from(impersonationToken, 'base64').toString())
-    } catch (error) {
-      console.error('Error decoding token:', error)
-      return NextResponse.json({ error: 'Token de impersonación inválido' }, { status: 401 })
+    // Verificar token firmado
+    const impersonationData = await verifyImpersonationToken(impersonationToken)
+
+    if (!impersonationData) {
+      return NextResponse.json({ error: 'Token de impersonación inválido o expirado' }, { status: 401 })
     }
-    
-    // Verificar que el token no haya expirado
-    if (Date.now() > impersonationData.expires) {
-      return NextResponse.json({ error: 'Token de impersonación expirado' }, { status: 401 })
+
+    // Solo el admin que creó el token puede usarlo
+    const isAuthorized =
+      session.user.role === 'ADMIN' ||
+      session.user.id === impersonationData.adminId ||
+      session.originalUser?.id === impersonationData.adminId
+
+    if (!isAuthorized) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
     // Verificar que el admin existe

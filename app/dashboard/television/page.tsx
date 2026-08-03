@@ -20,9 +20,14 @@ export default function TelevisionPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
   const { toast } = useToast()
+  const [origin, setOrigin] = useState<string | null>(null)
 
-  const hlsUrl = videoStatus?.streamKey
-    ? `${window.location.protocol}//${window.location.host}/live/${videoStatus.streamKey}.m3u8`
+  useEffect(() => {
+    setOrigin(`${window.location.protocol}//${window.location.host}`)
+  }, [])
+
+  const hlsUrl = videoStatus?.streamKey && origin
+    ? `${origin}/live/${videoStatus.streamKey}.m3u8`
     : null
 
   useEffect(() => {
@@ -120,7 +125,7 @@ export default function TelevisionPage() {
         </span>
         {videoStatus?.dj.active && (
           <span className="text-xs text-red-300">
-            DJ conectado desde {new Date(videoStatus.dj.connectedAt!).toLocaleTimeString()}
+            DJ conectado desde {new Date(videoStatus.dj.connectedAt!).toLocaleTimeString('es-CL')}
           </span>
         )}
       </div>

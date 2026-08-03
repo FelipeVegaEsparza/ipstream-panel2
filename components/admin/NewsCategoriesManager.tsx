@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -59,9 +61,9 @@ export function NewsCategoriesManager() {
     try {
       const res = await fetch(`/api/admin/news-categories/${id}`, { method: 'DELETE' })
       if (res.ok) fetchCategories()
-      else alert('Error al eliminar')
+      else showToast({ type: 'error', title: 'Error al eliminar' })
     } catch (error) {
-      alert('Error al eliminar')
+      showToast({ type: 'error', title: 'Error al eliminar' })
     }
   }
 
@@ -87,10 +89,10 @@ export function NewsCategoriesManager() {
         fetchCategories()
       } else {
         const data = await res.json()
-        alert(data.error || 'Error al guardar')
+        showToast({ type: 'error', title: data.error || 'Error al guardar' })
       }
     } catch (error) {
-      alert('Error al guardar')
+      showToast({ type: 'error', title: 'Error al guardar' })
     } finally {
       setSaving(false)
     }

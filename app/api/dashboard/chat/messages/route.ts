@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      messages: messages.map(serializeMessage),
+      messages: messages.map((m) => serializeMessage(m, { includePrivate: true })),
       pagination: {
         page,
         limit,
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ message: serializeMessage(created) }, { status: 201 })
+    return NextResponse.json({ message: serializeMessage(created, { includePrivate: true }) }, { status: 201 })
   } catch (error) {
     console.error('Error creating staff chat message:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

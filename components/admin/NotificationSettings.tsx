@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -64,12 +66,12 @@ export function NotificationSettings() {
       })
 
       if (response.ok) {
-        alert('Configuración de notificaciones guardada exitosamente')
+        showToast({ type: 'success', title: 'Configuración de notificaciones guardada exitosamente' })
       } else {
-        alert('Error al guardar la configuración de notificaciones')
+        showToast({ type: 'error', title: 'Error al guardar la configuración de notificaciones' })
       }
     } catch (error) {
-      alert('Error al guardar la configuración de notificaciones')
+      showToast({ type: 'error', title: 'Error al guardar la configuración de notificaciones' })
     } finally {
       setLoading(false)
     }
@@ -77,7 +79,7 @@ export function NotificationSettings() {
 
   const sendTestEmail = async () => {
     if (!testEmail) {
-      alert('Por favor ingresa un email para la prueba')
+      showToast({ type: 'info', title: 'Por favor ingresa un email para la prueba' })
       return
     }
 
@@ -89,12 +91,12 @@ export function NotificationSettings() {
       })
 
       if (response.ok) {
-        alert('Email de prueba enviado exitosamente')
+        showToast({ type: 'success', title: 'Email de prueba enviado exitosamente' })
       } else {
-        alert('Error al enviar email de prueba')
+        showToast({ type: 'error', title: 'Error al enviar email de prueba' })
       }
     } catch (error) {
-      alert('Error al enviar email de prueba')
+      showToast({ type: 'error', title: 'Error al enviar email de prueba' })
     }
   }
 

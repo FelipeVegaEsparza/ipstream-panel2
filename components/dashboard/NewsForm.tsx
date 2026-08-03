@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -70,10 +72,10 @@ export function NewsForm({ initialData }: NewsFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al guardar la noticia')
+        showToast({ type: 'error', title: error.error || 'Error al guardar la noticia' })
       }
     } catch (error) {
-      alert('Error al guardar la noticia')
+      showToast({ type: 'error', title: 'Error al guardar la noticia' })
     } finally {
       setLoading(false)
     }

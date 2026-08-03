@@ -7,8 +7,6 @@ import { getEffectiveClient } from '@/lib/getEffectiveClient'
 
 export interface StreamingContext {
   clientId: string
-  userId: string
-  userRole: string
   isImpersonating: boolean
   radioStreamId: string
   icecastMount: string
@@ -55,24 +53,18 @@ export async function requireStreamingClient(requestedClientId?: string): Promis
   if (!radioStream) {
     return {
       clientId: effectiveClientId,
-      userId: '',
-      userRole: '',
       isImpersonating: session.isImpersonating,
       radioStreamId: '',
       icecastMount: '',
       hasRadioStream: false,
-      enabled: false,
     }
   }
 
   return {
     clientId: effectiveClientId,
-    userId: '',
-    userRole: '',
     isImpersonating: session.isImpersonating,
     radioStreamId: radioStream.id,
     icecastMount: radioStream.icecastMount,
     hasRadioStream: true,
-    enabled: radioStream.enabled,
   }
 }

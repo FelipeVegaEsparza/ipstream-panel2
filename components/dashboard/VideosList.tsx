@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { PencilIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, PlayIcon } from '@heroicons/react/24/outline'
@@ -18,6 +22,7 @@ interface VideosListProps {
 }
 
 export function VideosList({ videos }: VideosListProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
@@ -32,12 +37,12 @@ export function VideosList({ videos }: VideosListProps) {
       })
 
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
-        alert('Error al eliminar el video')
+        showToast({ type: 'error', title: 'Error al eliminar el video' })
       }
     } catch (error) {
-      alert('Error al eliminar el video')
+      showToast({ type: 'error', title: 'Error al eliminar el video' })
     } finally {
       setLoading(null)
     }
@@ -55,12 +60,12 @@ export function VideosList({ videos }: VideosListProps) {
       })
 
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
-        alert('Error al reordenar el video')
+        showToast({ type: 'error', title: 'Error al reordenar el video' })
       }
     } catch (error) {
-      alert('Error al reordenar el video')
+      showToast({ type: 'error', title: 'Error al reordenar el video' })
     } finally {
       setLoading(null)
     }

@@ -23,10 +23,14 @@ export default function TvConnectionPage() {
   const [copiedRtmp, setCopiedRtmp] = useState(false)
   const [copiedRelay, setCopiedRelay] = useState(false)
   const [copiedKey, setCopiedKey] = useState(false)
-  const host = typeof window !== 'undefined' ? window.location.hostname : 'panelipstream.cl'
+  const [host, setHost] = useState('panelipstream.cl')
   const serverUrl = `rtmp://${host}:1935/live`
   const relayUrl = `rtmp://${host}:1936/live/relay`
   const { toast } = useToast()
+
+  useEffect(() => {
+    setHost(window.location.hostname)
+  }, [])
 
   useEffect(() => {
     fetchInfo()
@@ -76,7 +80,7 @@ export default function TvConnectionPage() {
         </div>
         {info?.dj.active && info.dj.connectedAt && (
           <p className="text-xs text-gray-500 mt-1">
-            Conectado desde {new Date(info.dj.connectedAt).toLocaleString()}
+            Conectado desde {new Date(info.dj.connectedAt).toLocaleString('es-CL')}
           </p>
         )}
       </div>

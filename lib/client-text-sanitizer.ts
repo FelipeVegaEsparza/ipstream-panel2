@@ -54,15 +54,15 @@ export function sanitizeTextClient(text: string): string {
  * Sanitiza un objeto completo en el cliente
  */
 export function sanitizeObjectClient<T extends Record<string, any>>(obj: T): T {
-  const sanitized = { ...obj };
+  const sanitized: Record<string, unknown> = { ...obj };
   
-  for (const key in sanitized) {
+  for (const key of Object.keys(sanitized)) {
     if (typeof sanitized[key] === 'string') {
-      sanitized[key] = sanitizeTextClient(sanitized[key]);
+      sanitized[key] = sanitizeTextClient(sanitized[key] as string);
     }
   }
   
-  return sanitized;
+  return sanitized as T;
 }
 
 /**

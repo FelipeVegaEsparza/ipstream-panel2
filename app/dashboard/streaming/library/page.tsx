@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { LibraryUploader } from '@/components/dashboard/streaming/LibraryUploader'
 
@@ -174,7 +176,7 @@ export default function LibraryPage() {
       if (!res.ok) throw new Error('Error al eliminar')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setDeletingId(null)
     }
@@ -199,7 +201,7 @@ export default function LibraryPage() {
       setEditingId(null)
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setSavingEdit(false)
     }
@@ -220,7 +222,7 @@ export default function LibraryPage() {
       }
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setCoverUploadingId(null)
       setCoverTrackId(null)
@@ -235,7 +237,7 @@ export default function LibraryPage() {
       if (!res.ok) throw new Error('Error al eliminar carátula')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setCoverDeletingId(null)
     }
@@ -255,11 +257,11 @@ export default function LibraryPage() {
       audio.onended = () => setPlayingId(null)
       audio.onerror = () => {
         setPlayingId(null)
-        alert(`Error al reproducir "${trackTitle}"`)
+        showToast({ type: 'error', title: `Error al reproducir "${trackTitle}"` })
       }
       audio.play().catch(() => {
         setPlayingId(null)
-        alert(`Error al reproducir "${trackTitle}"`)
+        showToast({ type: 'error', title: `Error al reproducir "${trackTitle}"` })
       })
       audioRef.current = audio
       setPlayingId(id)

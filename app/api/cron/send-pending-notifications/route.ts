@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { decrypt } from '@/lib/encryption'
+import crypto from 'crypto'
+
+function isAuthorized(authHeader: string | null, secret: string): boolean {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return false
+  const provided = authHeader.slice('Bearer '.length)
+  const a = Buffer.from(provided)
+  const b = Buffer.from(secret)
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
 
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret) {
+      console.error('CRON_SECRET no está configurado')
+      return NextResponse.json({ error: 'Error de configuración' }, { status: 500 })
+    }
+
+    if (!isAuthorized(authHeader, cronSecret)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 

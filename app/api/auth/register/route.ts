@@ -3,9 +3,33 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/validations'
 import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/streaming-helpers'
+import { rateLimit } from '@/lib/rate-limit'
+import { z } from 'zod'
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  )
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request)
+    const { allowed } = rateLimit({
+      maxRequests: 5,
+      windowMs: 60 * 60 * 1000, // 5 registros por hora por IP
+      identifier: `register:${ip}`,
+    })
+
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Demasiados intentos de registro. Inténtalo más tarde.' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const { name, email, password } = registerSchema.parse(body)
 
@@ -73,6 +97,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error creating user:', error)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
+    }
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

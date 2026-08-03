@@ -43,7 +43,18 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const result = await streamingClient.createPlaylist(ctx.clientId, parsed.data)
+    if (!parsed.data.name || !parsed.data.name.trim()) {
+      return NextResponse.json({ error: 'El nombre es requerido' }, { status: 400 })
+    }
+
+    const playlistData: { name: string; description?: string; shuffle?: boolean; repeat?: boolean } = {
+      name: parsed.data.name,
+      description: parsed.data.description,
+      shuffle: parsed.data.shuffle,
+      repeat: parsed.data.repeat,
+    }
+
+    const result = await streamingClient.createPlaylist(ctx.clientId, playlistData)
     return NextResponse.json(result)
   } catch (err) {
     if (err instanceof StreamingAuthError) {

@@ -17,6 +17,7 @@ export default async function UsersPage() {
     include: {
       client: {
         include: {
+          plan: true,
           _count: {
             select: {
               programs: true,
@@ -30,7 +31,7 @@ export default async function UsersPage() {
       }
     },
     orderBy: { createdAt: 'desc' }
-  })
+  }) as any[]
 
   return (
     <div className="space-y-8">

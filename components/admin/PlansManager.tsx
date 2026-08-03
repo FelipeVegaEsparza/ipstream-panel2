@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,6 +32,7 @@ interface PlansManagerProps {
 }
 
 export function PlansManager({ plans }: PlansManagerProps) {
+  const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
 
@@ -45,12 +50,12 @@ export function PlansManager({ plans }: PlansManagerProps) {
       })
       
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
-        alert('Error al eliminar el plan')
+        showToast({ type: 'error', title: 'Error al eliminar el plan' })
       }
     } catch (error) {
-      alert('Error al eliminar el plan')
+      showToast({ type: 'error', title: 'Error al eliminar el plan' })
     }
   }
 

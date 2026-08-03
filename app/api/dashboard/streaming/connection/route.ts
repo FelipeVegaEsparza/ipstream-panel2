@@ -82,10 +82,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'invalid_password_type' }, { status: 400 })
     }
 
-    // Solo ADMINs (o en impersonación) pueden ver el sourcePassword
+    // Solo ADMINs en impersonación pueden ver el sourcePassword
     if (which === 'source') {
-      // Verificar que sea ADMIN
-      if (!session.impersonationData && (session as any).role !== 'ADMIN') {
+      if (!session.isImpersonating) {
         return NextResponse.json({ error: 'forbidden' }, { status: 403 })
       }
     }

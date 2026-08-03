@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -20,6 +24,7 @@ interface NewsListProps {
 }
 
 export function NewsList({ news }: NewsListProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
@@ -34,12 +39,12 @@ export function NewsList({ news }: NewsListProps) {
       })
 
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
-        alert('Error al eliminar la noticia')
+        showToast({ type: 'error', title: 'Error al eliminar la noticia' })
       }
     } catch (error) {
-      alert('Error al eliminar la noticia')
+      showToast({ type: 'error', title: 'Error al eliminar la noticia' })
     } finally {
       setLoading(null)
     }

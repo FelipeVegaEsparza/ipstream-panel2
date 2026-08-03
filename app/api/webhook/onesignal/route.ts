@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import crypto from 'crypto'
+
+function isAuthorized(authHeader: string | null, secret: string): boolean {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return false
+  const provided = authHeader.slice('Bearer '.length)
+  const a = Buffer.from(provided)
+  const b = Buffer.from(secret)
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
 
 export async function POST(request: NextRequest) {
   try {
     const webhookSecret = process.env.ONESIGNAL_WEBHOOK_SECRET
     const authHeader = request.headers.get('authorization')
 
-    if (webhookSecret && authHeader !== `Bearer ${webhookSecret}`) {
+    if (!webhookSecret) {
+      console.error('ONESIGNAL_WEBHOOK_SECRET no está configurado')
+      return NextResponse.json({ error: 'Error de configuración' }, { status: 500 })
+    }
+
+    if (!isAuthorized(authHeader, webhookSecret)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 

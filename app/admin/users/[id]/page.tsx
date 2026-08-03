@@ -45,6 +45,7 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
                         orderBy: { createdAt: 'desc' },
                         take: 5
                     },
+                    plan: true,
                     _count: {
                         select: {
                             programs: true,
@@ -155,12 +156,19 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
                             </div>
                             <div>
                                 <label className="text-sm text-gray-400">Plan</label>
-                                <span className={`inline-flex px-2 py-1 text-xs rounded-full ${user.client?.plan === 'pro' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' :
-                                    user.client?.plan === 'enterprise' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                                        'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                    }`}>
-                                    {user.client?.plan || 'basic'}
-                                </span>
+                                {(() => {
+                                    const planName = user.client?.plan?.name?.toLowerCase() || 'basic'
+                                    const planClasses = planName === 'pro'
+                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                        : planName === 'enterprise'
+                                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                    return (
+                                        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${planClasses}`}>
+                                            {user.client?.plan?.name || 'basic'}
+                                        </span>
+                                    )
+                                })()}
                             </div>
                             <div>
                                 <label className="text-sm text-gray-400">Fecha de Registro</label>

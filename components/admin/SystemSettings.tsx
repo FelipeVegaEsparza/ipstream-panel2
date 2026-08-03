@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -34,6 +38,7 @@ interface SystemSettingsProps {
 }
 
 export function SystemSettings({ stats }: SystemSettingsProps) {
+  const router = useRouter()
   const [settings, setSettings] = useState({
     siteName: 'IPStream Panel',
     siteDescription: 'Panel de administración para clientes de radio streaming',
@@ -83,12 +88,12 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
       })
 
       if (response.ok) {
-        alert('Configuración guardada exitosamente')
+        showToast({ type: 'success', title: 'Configuración guardada exitosamente' })
       } else {
-        alert('Error al guardar la configuración')
+        showToast({ type: 'error', title: 'Error al guardar la configuración' })
       }
     } catch (error) {
-      alert('Error al guardar la configuración')
+      showToast({ type: 'error', title: 'Error al guardar la configuración' })
     } finally {
       setLoading(false)
     }
@@ -304,7 +309,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
               {loading ? 'Guardando...' : 'Guardar Configuración'}
             </Button>
             <Button
-              onClick={() => window.location.reload()}
+              onClick={() => router.refresh()}
               variant="outline"
               className="border-gray-600 hover:bg-gray-700"
             >

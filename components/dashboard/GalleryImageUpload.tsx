@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState, useRef } from 'react'
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
@@ -40,10 +42,10 @@ export function GalleryImageUpload({
         onChange([...images, data.url])
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al subir la imagen')
+        showToast({ type: 'error', title: error.error || 'Error al subir la imagen' })
       }
     } catch (error) {
-      alert('Error al subir la imagen')
+      showToast({ type: 'error', title: 'Error al subir la imagen' })
     } finally {
       setUploading(false)
     }

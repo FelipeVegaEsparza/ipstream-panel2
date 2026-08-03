@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -80,12 +82,12 @@ export function BackupSettings() {
       })
 
       if (response.ok) {
-        alert('Configuración de respaldos guardada exitosamente')
+        showToast({ type: 'success', title: 'Configuración de respaldos guardada exitosamente' })
       } else {
-        alert('Error al guardar la configuración de respaldos')
+        showToast({ type: 'error', title: 'Error al guardar la configuración de respaldos' })
       }
     } catch (error) {
-      alert('Error al guardar la configuración de respaldos')
+      showToast({ type: 'error', title: 'Error al guardar la configuración de respaldos' })
     } finally {
       setLoading(false)
     }
@@ -100,12 +102,12 @@ export function BackupSettings() {
       })
       
       if (response.ok) {
-        alert('Respaldo manual iniciado. Recibirás una notificación cuando termine.')
+        showToast({ type: 'success', title: 'Respaldo manual iniciado. Recibirás una notificación cuando termine.' })
       } else {
-        alert('Error al crear respaldo manual')
+        showToast({ type: 'error', title: 'Error al crear respaldo manual' })
       }
     } catch (error) {
-      alert('Error al crear respaldo manual')
+      showToast({ type: 'error', title: 'Error al crear respaldo manual' })
     }
   }
 
@@ -124,10 +126,10 @@ export function BackupSettings() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        alert('Error al descargar respaldo')
+        showToast({ type: 'error', title: 'Error al descargar respaldo' })
       }
     } catch (error) {
-      alert('Error al descargar respaldo')
+      showToast({ type: 'error', title: 'Error al descargar respaldo' })
     }
   }
 
@@ -140,12 +142,12 @@ export function BackupSettings() {
       })
       
       if (response.ok) {
-        alert('Restauración iniciada. El sistema se reiniciará automáticamente.')
+        showToast({ type: 'success', title: 'Restauración iniciada. El sistema se reiniciará automáticamente.' })
       } else {
-        alert('Error al restaurar respaldo')
+        showToast({ type: 'error', title: 'Error al restaurar respaldo' })
       }
     } catch (error) {
-      alert('Error al restaurar respaldo')
+      showToast({ type: 'error', title: 'Error al restaurar respaldo' })
     }
   }
 

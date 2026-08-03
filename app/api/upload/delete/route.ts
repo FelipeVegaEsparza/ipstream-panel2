@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { unlink } from 'fs/promises'
-import { join } from 'path'
+import path from 'path'
 import { existsSync } from 'fs'
 
 export async function DELETE(request: NextRequest) {
@@ -26,9 +26,26 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Verificar que el archivo pertenece al cliente
-    const filePath = join(process.cwd(), 'public', 'uploads', session.user.clientId, fileName)
-    
+    // Rechazar cualquier path traversal: solo se acepta un nombre de archivo simple
+    if (fileName !== path.basename(fileName) || fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      return NextResponse.json(
+        { error: 'Nombre de archivo inválido' },
+        { status: 400 }
+      )
+    }
+    const safeFileName = path.basename(fileName)
+
+    // Verificar que el archivo pertenece al cliente (carpeta por clientId)
+    const uploadsDir = path.resolve(process.cwd(), 'public', 'uploads', session.user.clientId)
+    const filePath = path.resolve(uploadsDir, safeFileName)
+
+    if (!filePath.startsWith(uploadsDir + path.sep)) {
+      return NextResponse.json(
+        { error: 'Nombre de archivo inválido' },
+        { status: 400 }
+      )
+    }
+
     if (!existsSync(filePath)) {
       return NextResponse.json(
         { error: 'Archivo no encontrado' },

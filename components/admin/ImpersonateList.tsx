@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
@@ -63,10 +65,10 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
         window.location.href = data.redirectUrl || '/dashboard'
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al impersonar cliente')
+        showToast({ type: 'error', title: error.error || 'Error al impersonar cliente' })
       }
     } catch (error) {
-      alert('Error al impersonar cliente')
+      showToast({ type: 'error', title: 'Error al impersonar cliente' })
     } finally {
       setLoading(null)
     }

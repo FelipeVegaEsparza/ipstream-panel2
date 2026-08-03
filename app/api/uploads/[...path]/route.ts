@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
-import { join } from 'path'
+import path from 'path'
 import { existsSync } from 'fs'
 import { corsHeaders, handleCors } from '@/lib/cors'
 
@@ -14,8 +14,26 @@ export async function GET(
 ) {
   try {
     console.log('Serving file request for path:', params.path)
-    
-    const filePath = join(process.cwd(), 'public', 'uploads', ...params.path)
+
+    if (!params.path.length) {
+      return new NextResponse('Bad request', { status: 400, headers: corsHeaders })
+    }
+
+    const baseDir = path.resolve(process.cwd(), 'public', 'uploads')
+
+    // Rechazar segmentos peligrosos
+    for (const segment of params.path) {
+      if (!segment || segment === '.' || segment === '..' || segment.includes('/') || segment.includes('\\')) {
+        return new NextResponse('Bad request', { status: 400, headers: corsHeaders })
+      }
+    }
+
+    const filePath = path.resolve(baseDir, ...params.path)
+
+    // Verificar que la ruta final quede dentro del directorio de uploads
+    if (!filePath.startsWith(baseDir + path.sep)) {
+      return new NextResponse('Forbidden', { status: 403, headers: corsHeaders })
+    }
     console.log('Full file path:', filePath)
     
     if (!existsSync(filePath)) {

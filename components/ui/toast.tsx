@@ -18,6 +18,16 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null)
 
+let toastRef: ToastContextValue['toast'] | null = null
+
+export function showToast(opts: Omit<Toast, 'id'> & { duration?: number }) {
+  if (toastRef) {
+    toastRef(opts)
+  } else {
+    console.warn('showToast llamado sin ToastProvider montado')
+  }
+}
+
 const ICONS: Record<ToastType, ReactNode> = {
   success: <CheckCircle className="h-5 w-5 text-green-400" />,
   error: <AlertCircle className="h-5 w-5 text-red-400" />,
@@ -43,6 +53,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setToasts((prev) => prev.filter((t) => t.id !== id))
     }, duration)
   }, [])
+
+  // Exponer referencia para llamadas imperativas (showToast)
+  toastRef = toast
 
   const dismiss = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))

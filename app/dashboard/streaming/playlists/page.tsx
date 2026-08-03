@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 // =====================================================
 // Page — /dashboard/streaming/playlists
 // =====================================================
@@ -72,7 +74,7 @@ export default function PlaylistsPage() {
       setNewDesc('')
       router.push(`/dashboard/streaming/playlists/${data.playlistId}`)
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setCreating(false)
     }
@@ -85,7 +87,7 @@ export default function PlaylistsPage() {
       if (!res.ok) throw new Error('Error activando')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setActivatingId(null)
     }
@@ -99,7 +101,7 @@ export default function PlaylistsPage() {
       if (!res.ok) throw new Error('Error eliminando')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setDeletingId(null)
     }

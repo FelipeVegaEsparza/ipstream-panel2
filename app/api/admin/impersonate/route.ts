@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { signImpersonationToken } from '@/lib/impersonation'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,18 +31,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
     }
 
-    // Crear un token temporal de impersonación
-    const impersonationToken = Buffer.from(JSON.stringify({
+    // Crear un token temporal de impersonación firmado
+    const impersonationToken = await signImpersonationToken({
       adminId: session.user.id,
-      adminEmail: session.user.email,
-      adminName: session.user.name,
+      adminEmail: session.user.email || '',
       clientId: client.id,
       clientUserId: client.user.id,
       clientEmail: client.user.email,
-      clientName: client.user.name || client.name,
-      timestamp: Date.now(),
-      expires: Date.now() + (2 * 60 * 60 * 1000) // 2 horas
-    })).toString('base64')
+      clientName: client.user.name || client.name
+    })
 
     // Registrar la impersonación en logs
     console.log(`Admin ${session.user.email} is impersonating client ${client.user.email}`)

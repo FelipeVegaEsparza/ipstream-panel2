@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -19,6 +23,7 @@ interface PromotionsListProps {
 }
 
 export function PromotionsList({ promotions }: PromotionsListProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
@@ -33,12 +38,12 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
       })
 
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
-        alert('Error al eliminar la promoción')
+        showToast({ type: 'error', title: 'Error al eliminar la promoción' })
       }
     } catch (error) {
-      alert('Error al eliminar la promoción')
+      showToast({ type: 'error', title: 'Error al eliminar la promoción' })
     } finally {
       setLoading(null)
     }

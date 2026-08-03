@@ -26,13 +26,13 @@ FROM base AS deps
 
 # Copiamos solo lo necesario para resolver deps.
 # prisma/schema es necesario porque el postinstall corre `prisma generate`.
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+COPY package.json package-lock.json ./
 COPY prisma ./prisma
 
 # Cache mount: guarda node_modules entre builds (solo con BuildKit).
 # Sin BuildKit, este RUN funciona igual pero sin caché.
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+    npm ci --legacy-peer-deps
 
 # ---------- 2. Build ----------
 FROM base AS builder

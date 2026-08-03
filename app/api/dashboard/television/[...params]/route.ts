@@ -78,6 +78,24 @@ async function handleRequest(req: NextRequest, { params }: { params: { params: s
     const ctx = await requireStreamingClient()
     const segments = params.params
 
+    // Validar segmentos contra path/URL escape antes de concatenarlos a la URL del agente
+    for (const segment of segments) {
+      let decoded: string
+      try {
+        decoded = decodeURIComponent(segment)
+      } catch {
+        return NextResponse.json({ error: 'Invalid path segment' }, { status: 400 })
+      }
+      if (
+        !decoded ||
+        decoded === '.' ||
+        decoded === '..' ||
+        !/^[a-zA-Z0-9._-]+$/.test(decoded)
+      ) {
+        return NextResponse.json({ error: 'Invalid path segment' }, { status: 400 })
+      }
+    }
+
     // Leer body una sola vez
     const contentType = req.headers.get('content-type') || ''
     let body: any = undefined

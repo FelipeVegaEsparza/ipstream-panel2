@@ -1,4 +1,6 @@
+import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -38,12 +40,15 @@ export async function POST(request: NextRequest) {
         ...data,
         weekDays: JSON.stringify(data.weekDays),
         clientId: session.user.clientId,
-      }
+      } as Prisma.ProgramUncheckedCreateInput
     })
 
     return NextResponse.json(program)
   } catch (error) {
     console.error('Error creating program:', error)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
+    }
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

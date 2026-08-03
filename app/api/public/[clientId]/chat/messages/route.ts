@@ -67,7 +67,7 @@ export async function GET(
     })
 
     return createCorsResponse({
-      messages: messages.map(serializeMessage),
+      messages: messages.map(msg => serializeMessage(msg)),
       serverTime: new Date().toISOString(),
       retentionHours: CHAT_MESSAGE_RETENTION_HOURS,
     })

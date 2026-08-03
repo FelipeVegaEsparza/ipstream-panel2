@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -18,6 +22,7 @@ interface AnnouncersListProps {
 }
 
 export function AnnouncersList({ announcers }: AnnouncersListProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
@@ -25,10 +30,10 @@ export function AnnouncersList({ announcers }: AnnouncersListProps) {
     setLoading(id)
     try {
       const response = await fetch(`/api/announcers/${id}`, { method: 'DELETE' })
-      if (response.ok) window.location.reload()
-      else alert('Error al eliminar el locutor')
+      if (response.ok) router.refresh()
+      else showToast({ type: 'error', title: 'Error al eliminar el locutor' })
     } catch (error) {
-      alert('Error al eliminar el locutor')
+      showToast({ type: 'error', title: 'Error al eliminar el locutor' })
     } finally {
       setLoading(null)
     }

@@ -1,4 +1,6 @@
+import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { gallerySchema } from '@/lib/validations'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
@@ -36,13 +38,15 @@ export async function POST(request: NextRequest) {
       data: {
         ...data,
         clientId: effectiveClient.clientId,
-        images: undefined,
-      }
+      } as Prisma.GalleryUncheckedCreateInput
     })
 
     return NextResponse.json(gallery)
   } catch (error) {
     console.error('Error creating gallery:', error)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
+    }
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

@@ -4,18 +4,6 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar si ya existe un super usuario
-    const existingAdmin = await prisma.user.findFirst({
-      where: { role: 'ADMIN' }
-    })
-
-    if (existingAdmin) {
-      return NextResponse.json(
-        { error: 'Ya existe un super usuario en el sistema' },
-        { status: 400 }
-      )
-    }
-
     const body = await request.json()
     const { name, email, password } = body
 
@@ -26,38 +14,53 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar que el email no exista
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'El email ya está en uso' },
-        { status: 400 }
-      )
-    }
-
     // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Crear super usuario (sin cliente asociado)
-    const superUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role: 'ADMIN'
+    // Verificación + creación atómica para evitar doble creación concurrente
+    const result = await prisma.$transaction(async (tx) => {
+      const existingAdmin = await tx.user.findFirst({
+        where: { role: 'ADMIN' }
+      })
+
+      if (existingAdmin) {
+        return { error: 'Ya existe un super usuario en el sistema', status: 400 as const }
       }
+
+      const existingUser = await tx.user.findUnique({
+        where: { email }
+      })
+
+      if (existingUser) {
+        return { error: 'El email ya está en uso', status: 400 as const }
+      }
+
+      const superUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: 'ADMIN'
+        }
+      })
+
+      return { superUser }
     })
+
+    if ('error' in result) {
+      return NextResponse.json(
+        { error: result.error },
+        { status: result.status }
+      )
+    }
 
     return NextResponse.json({
       message: 'Super usuario creado exitosamente',
       user: {
-        id: superUser.id,
-        name: superUser.name,
-        email: superUser.email,
-        role: superUser.role
+        id: result.superUser.id,
+        name: result.superUser.name,
+        email: result.superUser.email,
+        role: result.superUser.role
       }
     })
   } catch (error) {

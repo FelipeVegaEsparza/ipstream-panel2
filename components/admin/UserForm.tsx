@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -93,10 +95,10 @@ export function UserForm({ initialData }: UserFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al guardar el usuario')
+        showToast({ type: 'error', title: error.error || 'Error al guardar el usuario' })
       }
     } catch (error) {
-      alert('Error al guardar el usuario')
+      showToast({ type: 'error', title: 'Error al guardar el usuario' })
     } finally {
       setLoading(false)
     }

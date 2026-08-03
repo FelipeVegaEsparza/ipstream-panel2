@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { CHAT_MESSAGE_RETENTION_HOURS } from '@/lib/chat-helpers'
+import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
+
+function isAuthorized(authHeader: string | null, secret: string): boolean {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return false
+  const provided = authHeader.slice('Bearer '.length)
+  const a = Buffer.from(provided)
+  const b = Buffer.from(secret)
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
 
 /**
  * Cron que borra mensajes de chat con más de 48h de antigüedad.
@@ -15,7 +24,12 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret) {
+      console.error('CRON_SECRET no está configurado')
+      return NextResponse.json({ error: 'Error de configuración' }, { status: 500 })
+    }
+
+    if (!isAuthorized(authHeader, cronSecret)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -37,7 +51,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Permitir GET para testing manual desde el navegador
-export async function GET(request: NextRequest) {
-  return POST(request)
+// GET no permitido: la limpieza es una operación destructiva, solo POST protegido
+export async function GET() {
+  return NextResponse.json({ error: 'Método no permitido' }, { status: 405 })
 }

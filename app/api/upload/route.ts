@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer()
-    let buffer = Buffer.from(bytes)
+    let buffer: Buffer<ArrayBufferLike> = Buffer.from(bytes)
 
     // Crear directorio si no existe
     const uploadDir = join(process.cwd(), 'public', 'uploads', uploadClientId)

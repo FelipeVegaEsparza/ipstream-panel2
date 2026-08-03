@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,6 +14,18 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        // Rate-limit por email (fuerza bruta de credenciales)
+        const { allowed } = rateLimit({
+          maxRequests: 10,
+          windowMs: 15 * 60 * 1000, // 10 intentos cada 15 min
+          identifier: `login:${credentials.email.toLowerCase()}`,
+        })
+
+        if (!allowed) {
+          console.warn('Rate limit de login excedido:', credentials.email)
           return null
         }
 
@@ -77,13 +90,14 @@ export const authOptions: NextAuthOptions = {
       
       // Manejar actualizaciones de sesión para impersonación
       if (trigger === 'update' && session) {
-        if (session.impersonation) {
+        const isAdmin = token.role === 'ADMIN' || token.originalRole === 'ADMIN'
+        if (session.impersonation && isAdmin) {
           token.impersonation = session.impersonation
-          token.originalRole = token.role
-          token.originalClientId = token.clientId
+          token.originalRole = token.originalRole || token.role
+          token.originalClientId = token.originalClientId ?? token.clientId
           token.role = 'CLIENT'
           token.clientId = session.impersonation.clientId
-        } else if (token.impersonation) {
+        } else if ('impersonation' in session && !session.impersonation && token.impersonation) {
           // Restaurar sesión original
           token.role = token.originalRole
           token.clientId = token.originalClientId

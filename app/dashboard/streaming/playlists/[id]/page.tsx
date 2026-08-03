@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 // =====================================================
 // Page — /dashboard/streaming/playlists/[id]
 // =====================================================
@@ -96,11 +98,11 @@ export default function PlaylistEditorPage() {
       audio.onended = () => setPlayingId(null)
       audio.onerror = () => {
         setPlayingId(null)
-        alert(`Error al reproducir "${title}"`)
+        showToast({ type: 'error', title: `Error al reproducir "${title}"` })
       }
       audio.play().catch(() => {
         setPlayingId(null)
-        alert(`Error al reproducir "${title}"`)
+        showToast({ type: 'error', title: `Error al reproducir "${title}"` })
       })
       audioRef.current = audio
       setPlayingId(id)
@@ -162,7 +164,7 @@ export default function PlaylistEditorPage() {
       setEditing(false)
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setSavingEdit(false)
     }
@@ -175,7 +177,7 @@ export default function PlaylistEditorPage() {
       if (!res.ok) throw new Error('Error activando')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setActivating(false)
     }
@@ -196,7 +198,7 @@ export default function PlaylistEditorPage() {
       setSearch('')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     }
   }
 
@@ -236,7 +238,7 @@ export default function PlaylistEditorPage() {
       setSelectedTrackIds(new Set())
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setAddingBulk(false)
     }
@@ -249,7 +251,7 @@ export default function PlaylistEditorPage() {
       if (!res.ok) throw new Error('Error quitando')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     }
   }
 
@@ -288,7 +290,7 @@ export default function PlaylistEditorPage() {
       if (!res.ok) throw new Error('Error guardando orden')
       setLoadedTrackIds(playlist.entries.map((e) => e.trackId).join(','))
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
       await load()
     } finally {
       setSavingOrder(false)

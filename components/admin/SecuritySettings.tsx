@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,6 +23,7 @@ import {
 } from 'lucide-react'
 
 export function SecuritySettings() {
+  const router = useRouter()
   const [settings, setSettings] = useState({
     passwordMinLength: 8,
     requireSpecialChars: true,
@@ -48,12 +53,12 @@ export function SecuritySettings() {
       })
 
       if (response.ok) {
-        alert('Configuración de seguridad guardada exitosamente')
+        showToast({ type: 'success', title: 'Configuración de seguridad guardada exitosamente' })
       } else {
-        alert('Error al guardar la configuración de seguridad')
+        showToast({ type: 'error', title: 'Error al guardar la configuración de seguridad' })
       }
     } catch (error) {
-      alert('Error al guardar la configuración de seguridad')
+      showToast({ type: 'error', title: 'Error al guardar la configuración de seguridad' })
     } finally {
       setLoading(false)
     }
@@ -68,13 +73,13 @@ export function SecuritySettings() {
       })
       
       if (response.ok) {
-        alert('Nueva API Key generada exitosamente')
-        window.location.reload()
+        showToast({ type: 'success', title: 'Nueva API Key generada exitosamente' })
+        router.refresh()
       } else {
-        alert('Error al generar nueva API Key')
+        showToast({ type: 'error', title: 'Error al generar nueva API Key' })
       }
     } catch (error) {
-      alert('Error al generar nueva API Key')
+      showToast({ type: 'error', title: 'Error al generar nueva API Key' })
     }
   }
 
@@ -326,7 +331,7 @@ export function SecuritySettings() {
           {loading ? 'Guardando...' : 'Guardar Configuración'}
         </Button>
         <Button
-          onClick={() => window.location.reload()}
+          onClick={() => router.refresh()}
           variant="outline"
           className="border-gray-600 hover:bg-gray-700"
         >

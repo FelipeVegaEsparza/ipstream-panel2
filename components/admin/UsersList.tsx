@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { PencilIcon, TrashIcon, EyeIcon, ArrowPathRoundedSquareIcon } from '@heroicons/react/24/outline'
@@ -13,7 +17,7 @@ interface User {
   client?: {
     id: string
     name: string
-    plan?: string | null
+    plan?: { name: string } | null
     phone?: string | null
     createdAt: Date
     _count: {
@@ -31,6 +35,7 @@ interface UsersListProps {
 }
 
 export function UsersList({ users }: UsersListProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -46,13 +51,13 @@ export function UsersList({ users }: UsersListProps) {
       })
 
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al eliminar el usuario')
+        showToast({ type: 'error', title: error.error || 'Error al eliminar el usuario' })
       }
     } catch (error) {
-      alert('Error al eliminar el usuario')
+      showToast({ type: 'error', title: 'Error al eliminar el usuario' })
     } finally {
       setLoading(null)
     }
@@ -145,7 +150,7 @@ export function UsersList({ users }: UsersListProps) {
                         {user.name || 'Sin nombre'}
                       </h3>
                       <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                        {user.client?.plan || 'basic'}
+                        {user.client?.plan?.name || 'basic'}
                       </span>
                     </div>
                     <p className="text-gray-400 text-sm mb-1">{user.email}</p>

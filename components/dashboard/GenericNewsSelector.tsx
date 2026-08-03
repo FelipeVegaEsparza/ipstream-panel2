@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { useState } from 'react'
 
 interface Category {
@@ -15,6 +17,7 @@ interface GenericNewsSelectorProps {
 }
 
 export function GenericNewsSelector({ useGenericNews, selectedCategories, allCategories }: GenericNewsSelectorProps) {
+  const router = useRouter()
   const [enabled, setEnabled] = useState(useGenericNews)
   const [selected, setSelected] = useState<string[]>(selectedCategories.map(c => c.id))
   const [saving, setSaving] = useState(false)
@@ -29,7 +32,7 @@ export function GenericNewsSelector({ useGenericNews, selectedCategories, allCat
       })
       if (res.ok) {
         setEnabled(!enabled)
-        window.location.reload()
+        router.refresh()
       }
     } finally {
       setSaving(false)

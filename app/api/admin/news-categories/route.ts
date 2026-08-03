@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -49,7 +50,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const category = await prisma.globalNewsCategory.create({ data })
+    const category = await prisma.globalNewsCategory.create({
+      data: { ...data } as Prisma.GlobalNewsCategoryUncheckedCreateInput
+    })
 
     return NextResponse.json(category)
   } catch (error) {

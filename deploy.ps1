@@ -1,3 +1,4 @@
+# OBSOLETO: usar deploy/scripts/deploy.sh
 # Configuración - EDITA ESTOS VALORES
 $VPS_USER = "tu-usuario"
 $VPS_HOST = "tu-vps-ip"

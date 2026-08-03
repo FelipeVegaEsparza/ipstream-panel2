@@ -76,24 +76,35 @@ export function getClientIp(request: Request): string | null {
 /**
  * Serializa un mensaje para respuesta JSON
  */
-export function serializeMessage(msg: {
-  id: string
-  authorType: string
-  name: string
-  body: string
-  email: string | null
-  ipAddress: string | null
-  createdAt: Date
-}) {
-  return {
+export function serializeMessage(
+  msg: {
+    id: string
+    authorType: string
+    name: string
+    body: string
+    email: string | null
+    ipAddress: string | null
+    createdAt: Date
+  },
+  options?: { includePrivate?: boolean }
+) {
+  const base = {
     id: msg.id,
     authorType: msg.authorType,
     name: msg.name,
     body: msg.body,
-    email: msg.email,
-    ipAddress: msg.ipAddress,
     createdAt: msg.createdAt.toISOString(),
   }
+
+  if (options?.includePrivate) {
+    return {
+      ...base,
+      email: msg.email,
+      ipAddress: msg.ipAddress,
+    }
+  }
+
+  return base
 }
 
 /**

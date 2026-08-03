@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,6 +29,7 @@ interface TemplatesManagerProps {
 }
 
 export function TemplatesManager({ templates: initialTemplates }: TemplatesManagerProps) {
+  const router = useRouter()
   const [templates, setTemplates] = useState<Template[]>(initialTemplates)
   const [showForm, setShowForm] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null)
@@ -112,7 +115,7 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
             : 'La plantilla se creó correctamente'
         )
         resetForm()
-        setTimeout(() => window.location.reload(), 1500)
+        setTimeout(() => router.refresh(), 1500)
       } else {
         const error = await response.json()
         showModalMessage('error', 'Error', error.error || 'Error al guardar la plantilla')

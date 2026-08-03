@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -30,6 +34,7 @@ function isPast(date: Date) {
 }
 
 export function EventsList({ events }: EventsListProps) {
+  const router = useRouter()
   const [deleting, setDeleting] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
@@ -37,10 +42,10 @@ export function EventsList({ events }: EventsListProps) {
     setDeleting(id)
     try {
       const res = await fetch(`/api/events/${id}`, { method: 'DELETE' })
-      if (res.ok) window.location.reload()
-      else alert('Error al eliminar')
+      if (res.ok) router.refresh()
+      else showToast({ type: 'error', title: 'Error al eliminar' })
     } catch {
-      alert('Error al eliminar')
+      showToast({ type: 'error', title: 'Error al eliminar' })
     } finally {
       setDeleting(null)
     }

@@ -9,7 +9,6 @@ streaming/agent/node_modules/
 .env
 .env.*
 !.env.prod.example
-!.env.docker
 !.env.example
 
 # Backups
@@ -27,3 +26,7 @@ backups/
 *.log
 logs/
 credenciales.md
+
+# Next.js build
+.next/
+tsconfig.tsbuildinfo

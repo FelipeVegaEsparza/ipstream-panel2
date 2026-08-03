@@ -9,7 +9,16 @@ function getKey(): Buffer {
   if (!key) {
     throw new Error('ENCRYPTION_KEY environment variable is not set')
   }
-  return Buffer.from(key, 'hex')
+  let buf: Buffer
+  if (/^[a-f0-9]{64}$/i.test(key)) {
+    buf = Buffer.from(key, 'hex')
+  } else {
+    buf = Buffer.from(key, 'base64')
+  }
+  if (buf.length !== 32) {
+    throw new Error('ENCRYPTION_KEY debe ser 32 bytes en hex (64 chars) o base64')
+  }
+  return buf
 }
 
 export function encrypt(text: string): string {

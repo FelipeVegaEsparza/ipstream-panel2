@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useEffect, useState, useRef } from 'react'
 
 interface Jingle {
@@ -91,7 +93,7 @@ export default function JinglesPage() {
       const data = await res.json()
       setConfig({ jinglePlayEvery: data.jinglePlayEvery, jinglePlayCount: data.jinglePlayCount })
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setConfigSaving(false)
     }
@@ -105,7 +107,7 @@ export default function JinglesPage() {
       if (!res.ok) throw new Error('Error al eliminar')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setDeletingId(null)
     }
@@ -130,7 +132,7 @@ export default function JinglesPage() {
       setEditingId(null)
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setSavingEdit(false)
     }
@@ -151,7 +153,7 @@ export default function JinglesPage() {
       }
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setCoverUploadingId(null)
       setCoverJingleId(null)
@@ -166,7 +168,7 @@ export default function JinglesPage() {
       if (!res.ok) throw new Error('Error al eliminar carátula')
       await load()
     } catch (err: any) {
-      alert(err.message)
+      showToast({ type: 'info', title: err.message })
     } finally {
       setCoverDeletingId(null)
     }
@@ -186,11 +188,11 @@ export default function JinglesPage() {
       audio.onended = () => setPlayingId(null)
       audio.onerror = () => {
         setPlayingId(null)
-        alert(`Error al reproducir "${title}"`)
+        showToast({ type: 'error', title: `Error al reproducir "${title}"` })
       }
       audio.play().catch(() => {
         setPlayingId(null)
-        alert(`Error al reproducir "${title}"`)
+        showToast({ type: 'error', title: `Error al reproducir "${title}"` })
       })
       audioRef.current = audio
       setPlayingId(id)
@@ -268,7 +270,7 @@ export default function JinglesPage() {
               }
               await load()
             } catch (err: any) {
-              alert(err.message)
+              showToast({ type: 'info', title: err.message })
             }
             e.target.value = ''
           }}

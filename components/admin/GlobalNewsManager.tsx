@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -202,9 +204,9 @@ export function GlobalNewsManager() {
       if (res.ok) {
         fetchPublished(publishedPagination.page)
         fetchDrafts(draftsPagination.page)
-      } else alert('Error al eliminar')
+      } else showToast({ type: 'error', title: 'Error al eliminar' })
     } catch {
-      alert('Error al eliminar')
+      showToast({ type: 'error', title: 'Error al eliminar' })
     }
   }
 
@@ -227,10 +229,10 @@ export function GlobalNewsManager() {
         fetchDrafts(1)
       } else {
         const data = await res.json()
-        alert(data.error || 'Error al guardar')
+        showToast({ type: 'error', title: data.error || 'Error al guardar' })
       }
     } catch {
-      alert('Error al guardar')
+      showToast({ type: 'error', title: 'Error al guardar' })
     } finally {
       setSaving(false)
     }
@@ -280,10 +282,10 @@ export function GlobalNewsManager() {
         setSelectedDraftIds((prev) => prev.filter((x) => x !== id))
       } else {
         const data = await res.json()
-        alert(data.error || 'Error al aprobar')
+        showToast({ type: 'error', title: data.error || 'Error al aprobar' })
       }
     } catch {
-      alert('Error al aprobar')
+      showToast({ type: 'error', title: 'Error al aprobar' })
     }
   }
 
@@ -302,12 +304,12 @@ export function GlobalNewsManager() {
         fetchDrafts(draftsPagination.page)
         fetchPublished(publishedPagination.page)
         setSelectedDraftIds([])
-        alert(`${data.approved} borrador(es) aprobado(s)`)
+        showToast({ type: 'success', title: `${data.approved} borrador(es) aprobado(s)` })
       } else {
-        alert(data.error || 'Error al aprobar')
+        showToast({ type: 'error', title: data.error || 'Error al aprobar' })
       }
     } catch {
-      alert('Error al aprobar')
+      showToast({ type: 'error', title: 'Error al aprobar' })
     } finally {
       setBulkApproving(false)
     }
@@ -327,14 +329,14 @@ export function GlobalNewsManager() {
       const res = await fetch(`/api/admin/news-global/run/${runId}`, { method: 'DELETE' })
       const data = await res.json()
       if (res.ok) {
-        alert(`${data.deleted} borrador(es) eliminado(s)`)
+        showToast({ type: 'success', title: `${data.deleted} borrador(es) eliminado(s)` })
         fetchDrafts(1)
         setSelectedDraftIds([])
       } else {
-        alert(data.error || 'Error al descartar')
+        showToast({ type: 'error', title: data.error || 'Error al descartar' })
       }
     } catch {
-      alert('Error al descartar')
+      showToast({ type: 'error', title: 'Error al descartar' })
     }
   }
 

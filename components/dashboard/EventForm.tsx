@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -66,10 +68,10 @@ export function EventForm({ initialData }: EventFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al guardar el evento')
+        showToast({ type: 'error', title: error.error || 'Error al guardar el evento' })
       }
     } catch {
-      alert('Error al guardar el evento')
+      showToast({ type: 'error', title: 'Error al guardar el evento' })
     } finally {
       setLoading(false)
     }

@@ -41,7 +41,7 @@ npx prisma generate >/dev/null 2>&1 || true
 
 # --- 3. Sincronizar schema (db push) ---
 echo "[entrypoint] Sincronizando schema con la base de datos..."
-npx prisma db push --skip-generate --accept-data-loss || echo "[entrypoint] WARNING: prisma db push falló, continuando con migraciones manuales..."
+npx prisma db push --skip-generate || echo "[entrypoint] WARNING: prisma db push falló, continuando con migraciones manuales..."
 
 # --- 4. Migraciones manuales (tablas que el agente necesita, se crean si no existen) ---
 echo "[entrypoint] Ejecutando migraciones manuales..."
@@ -118,12 +118,23 @@ const prisma = new PrismaClient();
     console.log('[entrypoint] Tabla stream_stats OK');
 
     // Asegurar columnas de jingles en radio_streams (si prisma db push no lo hizo)
+    // MySQL 8.0 no soporta ADD COLUMN IF NOT EXISTS: verificamos en information_schema
+    const ensureColumn = async (column, definition) => {
+      const rows = await prisma.$queryRawUnsafe(
+        `SELECT COUNT(*) AS n FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'radio_streams' AND COLUMN_NAME = ?`,
+        column
+      );
+      if (Number(rows[0].n) === 0) {
+        await prisma.$executeRawUnsafe(`ALTER TABLE radio_streams ADD COLUMN ${column} ${definition}`);
+      }
+    };
     try {
-      await prisma.$executeRawUnsafe(`ALTER TABLE radio_streams ADD COLUMN IF NOT EXISTS jinglePlayEvery INT NOT NULL DEFAULT 5`);
-      await prisma.$executeRawUnsafe(`ALTER TABLE radio_streams ADD COLUMN IF NOT EXISTS jinglePlayCount INT NOT NULL DEFAULT 1`);
+      await ensureColumn('jinglePlayEvery', 'INT NOT NULL DEFAULT 5');
+      await ensureColumn('jinglePlayCount', 'INT NOT NULL DEFAULT 1');
       console.log('[entrypoint] Columnas jingle en radio_streams OK');
     } catch (e2) {
-      console.log('[entrypoint] Columnas jingle en radio_streams ya existían:', e2.message);
+      console.log('[entrypoint] Error asegurando columnas jingle en radio_streams:', e2.message);
     }
   } catch (e) {
     console.error('[entrypoint] Error en migraciones manuales:', e.message);

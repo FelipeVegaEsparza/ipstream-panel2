@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -87,7 +88,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const news = await prisma.globalNews.create({ data })
+    const news = await prisma.globalNews.create({
+      data: { ...data } as Prisma.GlobalNewsUncheckedCreateInput
+    })
 
     return NextResponse.json(news)
   } catch (error) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -66,6 +67,7 @@ export function ClienteRow({
   onCancelar,
   onMarkPaymentPaid,
 }: ClienteRowProps) {
+  const router = useRouter()
   const [expanded, setExpanded] = useState(false)
   const [showPago, setShowPago] = useState(false)
   const [showEditarFecha, setShowEditarFecha] = useState(false)
@@ -429,7 +431,7 @@ export function ClienteRow({
           onClose={() => setShowPago(false)}
           onSuccess={() => {
             setShowPago(false)
-            window.location.reload()
+            router.refresh()
           }}
           subscriptionId={client.subscription.id}
           clientName={client.name}
@@ -445,7 +447,7 @@ export function ClienteRow({
           onClose={() => setShowEditarFecha(false)}
           onSuccess={() => {
             setShowEditarFecha(false)
-            window.location.reload()
+            router.refresh()
           }}
           subscriptionId={client.subscription.id}
           clientName={client.name}

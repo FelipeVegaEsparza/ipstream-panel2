@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { PencilIcon, TrashIcon, EyeIcon, ChartBarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
@@ -23,6 +27,7 @@ interface PollsListProps {
 }
 
 export function PollsList({ polls }: PollsListProps) {
+  const router = useRouter()
   const [deleting, setDeleting] = useState<string | null>(null)
   const [toggling, setToggling] = useState<string | null>(null)
 
@@ -31,10 +36,10 @@ export function PollsList({ polls }: PollsListProps) {
     setDeleting(id)
     try {
       const res = await fetch(`/api/polls/${id}`, { method: 'DELETE' })
-      if (res.ok) window.location.reload()
-      else alert('Error al eliminar')
+      if (res.ok) router.refresh()
+      else showToast({ type: 'error', title: 'Error al eliminar' })
     } catch {
-      alert('Error al eliminar')
+      showToast({ type: 'error', title: 'Error al eliminar' })
     } finally {
       setDeleting(null)
     }
@@ -48,10 +53,10 @@ export function PollsList({ polls }: PollsListProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !currentActive }),
       })
-      if (res.ok) window.location.reload()
-      else alert('Error al cambiar estado')
+      if (res.ok) router.refresh()
+      else showToast({ type: 'error', title: 'Error al cambiar estado' })
     } catch {
-      alert('Error al cambiar estado')
+      showToast({ type: 'error', title: 'Error al cambiar estado' })
     } finally {
       setToggling(null)
     }

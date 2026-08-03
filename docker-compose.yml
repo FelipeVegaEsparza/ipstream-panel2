@@ -59,12 +59,13 @@ services:
       DB_PORT: 3306
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-me-in-prod-32chars-minimum}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY es requerida (generar con: openssl rand -hex 32)}
       CRON_SECRET: ${CRON_SECRET:-}
       # Streaming agent
       STREAMING_AGENT_URL: ${STREAMING_AGENT_URL:-http://agent:4000}
       STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:-dev-agent-token-change-me-in-prod}
       ICE_PUBLIC_URL: ${ICE_PUBLIC_URL:-http://localhost:8000}
+      ICE_PUBLIC_PORT: ${ICE_PUBLIC_PORT:-8000}
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ipstream.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123456}
@@ -207,7 +208,7 @@ services:
       # Auth
       STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:-dev-agent-token-change-me-in-prod}
       # Encryption (misma key que el panel)
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY es requerida (generar con: openssl rand -hex 32)}
       # DB
       DB_HOST: db
       DB_PORT: 3306
@@ -253,8 +254,6 @@ volumes:
     name: ipstream_uploads
   icecast_logs:
     name: ipstream_icecast_logs
-  radio_library:
-    name: ipstream_radio_library
   srs_hls:
     name: ipstream_srs_hls
   video_logs:

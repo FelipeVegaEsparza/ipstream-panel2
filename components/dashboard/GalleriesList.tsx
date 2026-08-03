@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -24,6 +28,7 @@ interface GalleriesListProps {
 }
 
 export function GalleriesList({ galleries }: GalleriesListProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
@@ -38,12 +43,12 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
       })
 
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
-        alert('Error al eliminar la galería')
+        showToast({ type: 'error', title: 'Error al eliminar la galería' })
       }
     } catch (error) {
-      alert('Error al eliminar la galería')
+      showToast({ type: 'error', title: 'Error al eliminar la galería' })
     } finally {
       setLoading(null)
     }

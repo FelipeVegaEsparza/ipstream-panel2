@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,6 +28,7 @@ interface PlanFormProps {
 }
 
 export function PlanForm({ plan, onClose }: PlanFormProps) {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: plan?.name || '',
     description: plan?.description || '',
@@ -59,13 +64,13 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
       })
 
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
         const error = await response.json()
-        alert(error.message || 'Error al guardar el plan')
+        showToast({ type: 'error', title: error.message || 'Error al guardar el plan' })
       }
     } catch (error) {
-      alert('Error al guardar el plan')
+      showToast({ type: 'error', title: 'Error al guardar el plan' })
     } finally {
       setLoading(false)
     }

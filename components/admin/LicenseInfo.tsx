@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -114,10 +116,10 @@ export function LicenseInfo() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        alert('Error al generar reporte de licencias')
+        showToast({ type: 'error', title: 'Error al generar reporte de licencias' })
       }
     } catch (error) {
-      alert('Error al generar reporte de licencias')
+      showToast({ type: 'error', title: 'Error al generar reporte de licencias' })
     }
   }
 

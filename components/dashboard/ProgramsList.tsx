@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -21,6 +25,7 @@ interface ProgramsListProps {
 }
 
 export function ProgramsList({ programs }: ProgramsListProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
@@ -35,12 +40,12 @@ export function ProgramsList({ programs }: ProgramsListProps) {
       })
 
       if (response.ok) {
-        window.location.reload()
+        router.refresh()
       } else {
-        alert('Error al eliminar el programa')
+        showToast({ type: 'error', title: 'Error al eliminar el programa' })
       }
     } catch (error) {
-      alert('Error al eliminar el programa')
+      showToast({ type: 'error', title: 'Error al eliminar el programa' })
     } finally {
       setLoading(null)
     }

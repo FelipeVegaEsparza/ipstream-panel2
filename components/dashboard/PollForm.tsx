@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm, useFieldArray } from 'react-hook-form'
@@ -32,7 +34,7 @@ export function PollForm({ initialData }: PollFormProps) {
     },
   })
 
-  const { fields, append, remove } = useFieldArray({ control, name: 'options' })
+  const { fields, append, remove } = useFieldArray({ control, name: 'options' as never })
 
   const onSubmit = async (data: PollInput) => {
     setLoading(true)
@@ -49,10 +51,10 @@ export function PollForm({ initialData }: PollFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al guardar la encuesta')
+        showToast({ type: 'error', title: error.error || 'Error al guardar la encuesta' })
       }
     } catch {
-      alert('Error al guardar la encuesta')
+      showToast({ type: 'error', title: 'Error al guardar la encuesta' })
     } finally {
       setLoading(false)
     }

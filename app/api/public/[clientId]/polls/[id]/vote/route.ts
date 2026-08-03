@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function OPTIONS() {
   return handleCors()
@@ -12,6 +13,21 @@ export async function POST(
 ) {
   try {
     const { clientId, id } = params
+
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || 'unknown'
+
+    const { allowed } = rateLimit({
+      maxRequests: 10,
+      windowMs: 60 * 1000,
+      identifier: `poll-vote:${ip}:${id}`,
+    })
+
+    if (!allowed) {
+      return createCorsErrorResponse('Demasiados votos, inténtalo más tarde', 429)
+    }
+
     const body = await request.json()
     const optionId = body.optionId
 

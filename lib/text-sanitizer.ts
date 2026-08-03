@@ -51,15 +51,15 @@ export function sanitizeText(text: string): string {
  * Sanitiza un objeto completo, limpiando todos los campos de texto
  */
 export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
-  const sanitized = { ...obj };
+  const sanitized: Record<string, unknown> = { ...obj };
   
-  for (const key in sanitized) {
+  for (const key of Object.keys(sanitized)) {
     if (typeof sanitized[key] === 'string') {
-      sanitized[key] = sanitizeText(sanitized[key]);
+      sanitized[key] = sanitizeText(sanitized[key] as string);
     }
   }
   
-  return sanitized;
+  return sanitized as T;
 }
 
 /**

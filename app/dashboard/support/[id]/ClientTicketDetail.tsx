@@ -61,9 +61,9 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
         const newOnes = msgs.slice(knownCount.current)
         const hasAdmin = newOnes.some((m) => m.authorType === 'admin')
         console.log('[poll] newOnes:', newOnes.length, 'hasAdmin:', hasAdmin)
+        setTicket((prev) => ({ ...prev, messages: msgs as typeof prev.messages, status: data.ticket?.status || prev.status }))
+        knownCount.current = msgs.length
         if (hasAdmin) {
-          setTicket((prev) => ({ ...prev, messages: msgs as typeof prev.messages, status: data.ticket?.status || prev.status }))
-          knownCount.current = msgs.length
           markTicketRead(ticket.id)
           if (!document.hidden) {
             setNewReply({ body: newOnes.find((m) => m.authorType === 'admin')?.body || '' })
@@ -104,6 +104,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
         ...prev,
         messages: [...prev.messages, { ...data.message, attachments: pending }],
       }))
+      knownCount.current += 1
       setBody('')
       setPending([])
     } catch (err) {

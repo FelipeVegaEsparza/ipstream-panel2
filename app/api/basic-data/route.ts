@@ -1,4 +1,6 @@
+import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -88,7 +90,7 @@ async function handleBasicData(request: NextRequest) {
       create: {
         ...data,
         clientId: effectiveClient.clientId,
-      }
+      } as Prisma.BasicDataUncheckedCreateInput
     })
 
     console.log('🏠 Basic data updated successfully:', basicData.id)

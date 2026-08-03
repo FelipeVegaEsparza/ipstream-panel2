@@ -1,60 +1,64 @@
-import jwt from 'jsonwebtoken'
+import { SignJWT, jwtVerify } from 'jose'
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-key'
+const TOKEN_MAX_AGE_MS = 2 * 60 * 60 * 1000 // 2 horas
 
-export interface ImpersonationPayload {
+export interface ImpersonationData {
   adminId: string
-  adminEmail: string | null | undefined
+  adminEmail: string
   clientId: string
   clientUserId: string
   clientEmail: string
   clientName: string
-  projectName: string
   timestamp: number
+  expires: number
 }
 
-export async function signJWT(payload: ImpersonationPayload): Promise<string> {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' })
+function getSecret(): Uint8Array {
+  const secret = process.env.NEXTAUTH_SECRET
+  if (!secret) {
+    throw new Error('NEXTAUTH_SECRET no está definida')
+  }
+  return new TextEncoder().encode(secret)
 }
 
-export async function verifyJWT(token: string): Promise<ImpersonationPayload | null> {
+export async function signImpersonationToken(
+  data: Omit<ImpersonationData, 'timestamp' | 'expires'>
+): Promise<string> {
+  const now = Date.now()
+  return new SignJWT({
+    adminId: data.adminId,
+    adminEmail: data.adminEmail,
+    clientId: data.clientId,
+    clientUserId: data.clientUserId,
+    clientEmail: data.clientEmail,
+    clientName: data.clientName,
+    timestamp: now,
+    expires: now + TOKEN_MAX_AGE_MS
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(Math.floor((now + TOKEN_MAX_AGE_MS) / 1000))
+    .sign(getSecret())
+}
+
+export async function verifyImpersonationToken(
+  token: string
+): Promise<ImpersonationData | null> {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as ImpersonationPayload
-    return decoded
-  } catch (error) {
-    console.error('Error verifying JWT:', error)
+    const { payload } = await jwtVerify(token, getSecret())
+    const data = payload as unknown as ImpersonationData
+
+    if (
+      typeof data.adminId !== 'string' ||
+      typeof data.clientId !== 'string' ||
+      typeof data.expires !== 'number' ||
+      Date.now() >= data.expires
+    ) {
+      return null
+    }
+
+    return data
+  } catch {
     return null
   }
-}
-
-export function isImpersonating(): boolean {
-  if (typeof window === 'undefined') return false
-  
-  const urlParams = new URLSearchParams(window.location.search)
-  return urlParams.get('impersonate') === 'true'
-}
-
-export function getImpersonationToken(): string | null {
-  if (typeof window === 'undefined') return null
-  
-  return localStorage.getItem('impersonation_token')
-}
-
-export function setImpersonationToken(token: string): void {
-  if (typeof window === 'undefined') return
-  
-  localStorage.setItem('impersonation_token', token)
-}
-
-export function clearImpersonationToken(): void {
-  if (typeof window === 'undefined') return
-  
-  localStorage.removeItem('impersonation_token')
-}
-
-export async function getImpersonationData(): Promise<ImpersonationPayload | null> {
-  const token = getImpersonationToken()
-  if (!token) return null
-  
-  return await verifyJWT(token)
 }

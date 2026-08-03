@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     const bytes = await fileBlob.arrayBuffer()
-    let buffer = Buffer.from(bytes)
+    let buffer: Buffer<ArrayBufferLike> = Buffer.from(bytes)
 
     const uploadDir = join(process.cwd(), 'public', 'uploads', 'login')
     if (!existsSync(uploadDir)) {
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       if (metadata.width && metadata.width > 1920) {
         image.resize(1920, undefined, { fit: 'inside', withoutEnlargement: true })
       }
-      buffer = (await image.webp({ quality: 82 }).toBuffer()) as unknown as Buffer
+      buffer = await image.webp({ quality: 82 }).toBuffer()
     } catch (sharpError) {
       console.error('Error procesando imagen con sharp:', sharpError)
     }

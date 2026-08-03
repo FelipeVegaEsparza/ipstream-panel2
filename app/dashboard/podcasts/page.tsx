@@ -1,5 +1,7 @@
 'use client'
 
+import { showToast } from '@/components/ui/toast'
+
 import { useState, useEffect } from 'react'
 import { PodcastCard } from '@/components/dashboard/PodcastCard'
 import { PodcastForm } from '@/components/dashboard/PodcastForm'
@@ -73,11 +75,11 @@ export default function PodcastsPage() {
       } else {
         const error = await response.json()
         console.error('🎙️ API Error:', error)
-        alert(error.error || 'Error al crear el episodio')
+        showToast({ type: 'error', title: error.error || 'Error al crear el episodio' })
       }
     } catch (error) {
       console.error('🎙️ Network/Parse Error:', error)
-      alert('Error al crear el episodio')
+      showToast({ type: 'error', title: 'Error al crear el episodio' })
     } finally {
       setSubmitting(false)
     }
@@ -103,11 +105,11 @@ export default function PodcastsPage() {
         setEditingPodcast(null)
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al actualizar el episodio')
+        showToast({ type: 'error', title: error.error || 'Error al actualizar el episodio' })
       }
     } catch (error) {
       console.error('Error updating podcast:', error)
-      alert('Error al actualizar el episodio')
+      showToast({ type: 'error', title: 'Error al actualizar el episodio' })
     } finally {
       setSubmitting(false)
     }
@@ -125,11 +127,11 @@ export default function PodcastsPage() {
         await loadPodcasts()
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al eliminar el episodio')
+        showToast({ type: 'error', title: error.error || 'Error al eliminar el episodio' })
       }
     } catch (error) {
       console.error('Error deleting podcast:', error)
-      alert('Error al eliminar el episodio')
+      showToast({ type: 'error', title: 'Error al eliminar el episodio' })
     } finally {
       setDeletingId(null)
     }
