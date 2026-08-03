@@ -228,6 +228,7 @@ services:
       ICE_ADMIN_USER: ${ICE_ADMIN_USER:-admin}
       ICE_ADMIN_PASSWORD: ${ICE_ADMIN_PASSWORD:-hackme}
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
+      ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD:-hackme}
       # Liquidsoap
       LIQUIDSOAP_BIN: /usr/bin/liquidsoap
       LIQUIDSOAP_SCRIPTS_PATH: /etc/liquidsoap/scripts
