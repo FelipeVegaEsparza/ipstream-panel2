@@ -70,6 +70,70 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  agent:
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      LOG_LEVEL: info
+      STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN}
+      HARBOR_CALLBACK_SECRET: ${HARBOR_CALLBACK_SECRET}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_DATABASE: ${MYSQL_DATABASE}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ICE_HOST: icecast
+      ICE_PORT: 8000
+      ICE_ADMIN_USER: ${ICE_ADMIN_USER}
+      ICE_ADMIN_PASSWORD: ${ICE_ADMIN_PASSWORD}
+      ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD}
+      ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD}
+      ICE_HOSTNAME: ${ICE_HOSTNAME}
+      LIQUIDSOAP_BIN: /usr/bin/liquidsoap
+      LIQUIDSOAP_SCRIPTS_PATH: /etc/liquidsoap/scripts
+      LIQUIDSOAP_LOG_PATH: /var/log/liquidsoap
+      LIQUIDSOAP_TELNET_BASE_PORT: 12340
+      LIQUIDSOAP_HOST: ipstream-liquidsoap
+      RADIO_LIBRARY_PATH: /var/lib/radio
+    volumes:
+      - radio_library:/var/lib/radio
+      - liquidsoap_logs:/var/log/liquidsoap
+      # Los scripts se generan dinámicamente en /etc/liquidsoap/scripts
+      # Montamos un named volume para no depender de bind mounts del host.
+      - agent_scripts:/etc/liquidsoap/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  icecast:
+    environment:
+      ICE_ADMIN_USER: ${ICE_ADMIN_USER}
+      ICE_ADMIN_PASSWORD: ${ICE_ADMIN_PASSWORD}
+      ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD}
+      ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD}
+      ICE_HOSTNAME: ${ICE_HOSTNAME}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  liquidsoap:
+    environment:
+      - TERM=xterm
+      - HARBOR_CALLBACK_TOKEN=${HARBOR_CALLBACK_SECRET}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   srs:
     image: ossrs/srs:5
     container_name: ipstream-srs
@@ -117,6 +181,8 @@ volumes:
     name: ipstream_liquidsoap_logs
   radio_library:
     name: ipstream_radio_library
+  agent_scripts:
+    name: ipstream_agent_scripts
   video_library:
     name: ipstream_video_library
   srs_hls:
