@@ -27,6 +27,7 @@ import { autoStartStreams } from './lib/liquidsoap.js'
 import { autoStartVideoStreams, execCmd, ENCODER_CONTAINER } from './lib/video-encoder.js'
 import { startRetentionCron, stopRetentionCron } from './lib/retention.js'
 import { startStreamSupervisor, stopStreamSupervisor } from './lib/stream-supervisor.js'
+import { startHistoryCron, stopHistoryCron } from './lib/track-history.js'
 
 const app = Fastify({
   logger,
@@ -473,6 +474,7 @@ startStatsCron()
 startDjWatcher()
 startRetentionCron()
 startStreamSupervisor()
+startHistoryCron()
 
 // Graceful shutdown
 const shutdown = async (signal) => {
@@ -482,6 +484,7 @@ const shutdown = async (signal) => {
     stopDjWatcher()
     stopRetentionCron()
     stopStreamSupervisor()
+    stopHistoryCron()
     await app.close()
     await pool.end()
     logger.info('Cleanup completo. Saliendo.')

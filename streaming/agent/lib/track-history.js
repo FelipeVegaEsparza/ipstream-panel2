@@ -16,6 +16,9 @@ const _lastTrack = new Map()
 
 export { _lastTrack }
 
+const HISTORY_INTERVAL_MS = 15_000
+let intervalHandle = null
+
 function parseArtistFromTitle(title) {
   if (!title) return { title: null, artist: null }
   const separators = [' - ', ' – ', ' — ', '_-_', '_–_']
@@ -33,7 +36,7 @@ function parseArtistFromTitle(title) {
 
 /**
  * Detecta si el track cambió en Icecast y lo registra en play_history.
- * Se llama desde el endpoint /now-playing (que ya se ejecuta cada 5s).
+ * Se llama desde el endpoint /now-playing y desde el history cron.
  */
 export async function detectAndLogTrack(clientId, rs) {
   try {
@@ -46,8 +49,8 @@ export async function detectAndLogTrack(clientId, rs) {
     const last = _lastTrack.get(clientId)
     if (last && last.title === icecastTitle) return
 
-    // Intentar determinar el tipo buscando en playlist activa y jingles
-    let type = 'autodj'
+    // Si el stream está en estado 'live', el contenido viene de un DJ en vivo.
+    let type = rs.status === 'live' ? 'live_dj' : 'autodj'
     let resolvedTitle = icecastTitle
     let resolvedArtist = null
 
@@ -70,7 +73,8 @@ export async function detectAndLogTrack(clientId, rs) {
         (e) => e.title && icecastTitle.toLowerCase().includes(e.title.toLowerCase())
       )
       if (matched) {
-        type = 'music'
+        // Solo marcamos como 'music' si no es un DJ en vivo
+        if (type !== 'live_dj') type = 'music'
         resolvedTitle = matched.title
         resolvedArtist = matched.artist || parsed.artist
       } else {
@@ -107,5 +111,40 @@ export async function detectAndLogTrack(clientId, rs) {
     logger.info({ clientId, title: resolvedTitle, type }, 'Track logged')
   } catch (err) {
     logger.warn({ err: err.message, clientId }, 'detectAndLogTrack error')
+  }
+}
+
+/**
+ * Inicia un cron que revisa periódicamente todos los streams activos
+ * y registra cambios de tema en play_history. Así no depende de que
+ * el dashboard esté abierto.
+ */
+export function startHistoryCron() {
+  if (intervalHandle) return
+  logger.info(`History cron iniciado (intervalo: ${HISTORY_INTERVAL_MS}ms)`)
+  intervalHandle = setInterval(collectHistoryForActiveStreams, HISTORY_INTERVAL_MS)
+}
+
+export function stopHistoryCron() {
+  if (intervalHandle) {
+    clearInterval(intervalHandle)
+    intervalHandle = null
+  }
+}
+
+async function collectHistoryForActiveStreams() {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, clientId, icecastMount, status FROM radio_streams WHERE enabled = 1 AND status != 'off'`
+    )
+    for (const rs of rows) {
+      try {
+        await detectAndLogTrack(rs.clientId, rs)
+      } catch (err) {
+        logger.warn({ err: err.message, clientId: rs.clientId }, 'Error en history cron para stream')
+      }
+    }
+  } catch (err) {
+    logger.error({ err: err.message }, 'Error en history cron')
   }
 }
