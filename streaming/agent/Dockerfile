@@ -13,16 +13,17 @@ RUN npm install --omit=dev
 FROM node:20-bookworm-slim
 WORKDIR /app
 
-# tini + docker CLI (para `docker exec` en el container de liquidsoap) + curl
+# tini + docker CLI (para `docker exec` en el container de liquidsoap) + curl + gosu
 RUN apt-get update && apt-get install -y --no-install-recommends \
         tini \
         curl \
         ca-certificates \
+        gosu \
         docker.io \
     && rm -rf /var/lib/apt/lists/*
 
 # Verificar
-RUN node --version && docker --version
+RUN node --version && docker --version && gosu --version
 
 # Copiamos solo lo necesario
 COPY --from=deps /app/node_modules ./node_modules
@@ -41,7 +42,9 @@ RUN groupadd --system --gid 1001 nodejs \
     && useradd --system --uid 1001 --gid nodejs --groups docker streamagent \
     && chown -R streamagent:nodejs /app /var/lib/radio /var/log/liquidsoap /etc/liquidsoap/scripts
 
-USER streamagent
+# Entrypoint: ajusta permisos, acceso al socket Docker y corre como no-root.
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENV NODE_ENV=production
 ENV PORT=4000
@@ -52,4 +55,4 @@ EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -fsS http://localhost:4000/health || exit 1
 
-ENTRYPOINT ["/usr/bin/tini", "--", "node", "server.js"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
