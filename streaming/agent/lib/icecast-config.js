@@ -8,12 +8,27 @@ import { promisify } from 'util'
 import { pool } from './db.js'
 import { config } from './config.js'
 import { logger } from './logger.js'
+import { decrypt, isEncrypted } from './encryption.js'
 
 const execp = promisify(exec)
 
 const ICECAST_CONTAINER = config.ice.host === 'localhost' ? 'ipstream-icecast' : 'ipstream-icecast'
 const ICECAST_CONFIG_PATH = '/etc/icecast2/icecast.xml'
 const ICECAST_BIN = 'icecast2'
+
+/**
+ * Descifra sourcePasswordEnc/livePasswordEnc de un stream; devuelve null si falla.
+ */
+function getMountPassword(row) {
+  const enc = row.sourcePasswordEnc || row.livePasswordEnc
+  if (!enc || !isEncrypted(enc)) return null
+  try {
+    return decrypt(enc)
+  } catch (err) {
+    logger.warn({ mount: row.icecastMount, err: err.message }, 'Error descifrando password para icecast.xml')
+    return null
+  }
+}
 
 /**
  * Genera el XML completo de icecast con per-client mounts.
@@ -61,16 +76,18 @@ function generateIcecastXml(streams) {
         <type>audio/mpeg</type>
     </mount>`
 
-  // Per-client mounts (sin per-mount password — usan el global <source-password>)
+  // Per-client mounts: cada uno con su propio password de source (livePassword).
   for (const s of streams) {
     if (!s.icecastMount) continue
     const mountName = s.icecastMount.startsWith('/') ? s.icecastMount : `/${s.icecastMount}`
+    const mountPwd = s.mountPassword || config.ice.sourcePassword
     xml += `
     <mount>
         <mount-name>${p(mountName)}</mount-name>
         <public>1</public>
         <bitrate>${p(s.bitrate || 128)}</bitrate>
         <type>audio/mpeg</type>
+        <password>${p(mountPwd)}</password>
     </mount>`
   }
 
@@ -95,10 +112,6 @@ function generateIcecastXml(streams) {
     <security>
         <chroot>0</chroot>
     </security>
-
-    <changeowner>
-        <user>root</user>
-    </changeowner>
 </icecast>`
 
   return xml
@@ -109,7 +122,7 @@ function generateIcecastXml(streams) {
  */
 async function buildConfig() {
   const [rows] = await pool.query(`
-    SELECT icecastMount, bitrate, livePasswordEnc
+    SELECT icecastMount, bitrate, sourcePasswordEnc, livePasswordEnc
     FROM radio_streams
     WHERE status != 'disabled'
   `)
@@ -117,6 +130,7 @@ async function buildConfig() {
   const streams = rows.map((row) => ({
     icecastMount: row.icecastMount,
     bitrate: row.bitrate,
+    mountPassword: getMountPassword(row),
   }))
 
   return generateIcecastXml(streams)

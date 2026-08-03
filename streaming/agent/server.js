@@ -5,6 +5,7 @@
 
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import rateLimit from '@fastify/rate-limit'
 import multipart from '@fastify/multipart'
 import websocket from '@fastify/websocket'
 import { config } from './lib/config.js'
@@ -24,6 +25,8 @@ import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
 import { autoStartStreams } from './lib/liquidsoap.js'
 import { autoStartVideoStreams, execCmd, ENCODER_CONTAINER } from './lib/video-encoder.js'
+import { startRetentionCron, stopRetentionCron } from './lib/retention.js'
+import { startStreamSupervisor, stopStreamSupervisor } from './lib/stream-supervisor.js'
 
 const app = Fastify({
   logger,
@@ -33,8 +36,27 @@ const app = Fastify({
   bodyLimit: 50 * 1024 * 1024, // 50 MB
 })
 
-// CORS: solo el panel debería llamar. Por ahora permito todo en dev.
-await app.register(cors, { origin: true, credentials: true })
+// CORS: en producción solo orígenes explícitos; en dev se permite todo si no se configura.
+let corsOrigin = true
+if (config.corsAllowedOrigins.length > 0) {
+  corsOrigin = config.corsAllowedOrigins
+} else if (config.nodeEnv === 'production') {
+  logger.warn('CORS_ALLOWED_ORIGINS no está configurado. En producción esto bloqueará peticiones CORS.')
+  corsOrigin = false
+}
+await app.register(cors, { origin: corsOrigin, credentials: true })
+
+// Rate limiting global
+await app.register(rateLimit, {
+  global: true,
+  max: 200,
+  timeWindow: '1 minute',
+  allowList: (req) => {
+    const url = req.url.split('?')[0]
+    // Eximir health y callbacks internos de Liquidsoap
+    return url === '/health' || url === '/healthz' || url.startsWith('/api/streams/auth-source')
+  },
+})
 
 // Parser para form-urlencoded (Icecast auth-http-source envía este formato)
 // Usamos regex para cubrir charset y otras variantes
@@ -53,8 +75,8 @@ await app.register(websocket, {
   options: { maxPayload: 1048576 },
 })
 
-// Hook de auth (aplica a todo excepto /health)
-app.addHook('onRequest', buildAuthHook(config.agentToken))
+// Hook de auth (aplica a todo excepto /health y auth-source POST)
+app.addHook('onRequest', buildAuthHook(config.agentToken, config.harborCallbackSecret))
 
 // Health check
 app.get('/health', async (request, reply) => {
@@ -449,6 +471,8 @@ await app.register(folderRoutes)
 startScheduleCron()
 startStatsCron()
 startDjWatcher()
+startRetentionCron()
+startStreamSupervisor()
 
 // Graceful shutdown
 const shutdown = async (signal) => {
@@ -456,6 +480,8 @@ const shutdown = async (signal) => {
   try {
     stopStatsCron()
     stopDjWatcher()
+    stopRetentionCron()
+    stopStreamSupervisor()
     await app.close()
     await pool.end()
     logger.info('Cleanup completo. Saliendo.')

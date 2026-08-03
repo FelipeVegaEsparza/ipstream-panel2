@@ -252,7 +252,7 @@ export default async function streamRoutes(app) {
       await stopStream(clientId)
 
       // Marcar para que DJ watcher reinicie cuando DJ se vaya
-      _djActive.add(mount)
+      setDjSlotActive(mount, '/live', true)
 
       logger.info({ clientId, mount }, 'dj-takeover: listo para DJ')
       return { ok: true, message: 'AutoDJ detenido. Conectá tu DJ ahora.' }
@@ -578,13 +578,24 @@ export default async function streamRoutes(app) {
 
   /**
    * GET /api/streams/:clientId/djs
-   * Lista los slots de DJ de un cliente.
+   * Lista los slots de DJ de un cliente (sin exponer passwords).
    */
   app.get('/api/streams/:clientId/djs', async (request, reply) => {
     const { clientId } = request.params
     try {
       const djs = await getRadioDjs(clientId)
-      return { ok: true, djs }
+      return {
+        ok: true,
+        djs: djs.map((d) => ({
+          id: d.id,
+          name: d.name,
+          mount: d.mount,
+          priority: d.priority,
+          role: d.role,
+          isActive: d.isActive,
+          hasPassword: Boolean(d.password),
+        })),
+      }
     } catch (err) {
       logger.error({ err, clientId }, 'Error listando DJs')
       return reply.code(500).send({ error: err.message })
@@ -758,8 +769,15 @@ export default async function streamRoutes(app) {
   /**
    * GET /api/streams/auth-source/diag?mount=xxxx&pass=yyyy
    * Diagnóstico: simula una autenticación y devuelve el resultado sin efectos.
+   * Requiere el token del agente (no es público).
    */
   app.get('/api/streams/auth-source/diag', async (request, reply) => {
+    const auth = request.headers.authorization || ''
+    const [scheme, token] = auth.split(' ')
+    if (scheme !== 'Bearer' || token !== config.agentToken) {
+      return reply.code(401).send({ error: 'unauthorized' })
+    }
+
     const { mount: qMount, pass: qPass } = request.query
 
     if (!qMount) {
@@ -770,43 +788,34 @@ export default async function streamRoutes(app) {
     const result = {
       mount: cleanMount,
       queryPassProvided: !!qPass,
-      sharedPassword: config.ice.sourcePassword ? `***${config.ice.sourcePassword.slice(-3)}` : null,
-      livePasswordEnc: null,
-      livePasswordDecrypted: null,
-      validPasswords: [config.ice.sourcePassword ? `***${config.ice.sourcePassword.slice(-3)}` : '(empty)'],
+      sharedPasswordConfigured: !!config.ice.sourcePassword,
+      livePasswordConfigured: false,
       wouldAuthenticate: false,
       error: null,
     }
 
     try {
       const [rows] = await pool.query(
-        `SELECT livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
+        `SELECT sourcePasswordEnc, livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
         [cleanMount]
       )
 
       if (rows.length === 0) {
         result.error = 'mount_not_found'
       } else {
-        result.livePasswordEnc = rows[0].livePasswordEnc ? 'exists' : 'null'
-        if (rows[0].livePasswordEnc && isEncrypted(rows[0].livePasswordEnc)) {
-          try {
-            const livePwd = decrypt(rows[0].livePasswordEnc)
-            result.livePasswordDecrypted = `***${livePwd.slice(-3)}`
-            if (livePwd !== config.ice.sourcePassword) {
-              result.validPasswords.push(`***${livePwd.slice(-3)}`)
+        const passwords = []
+        for (const key of ['sourcePasswordEnc', 'livePasswordEnc']) {
+          if (rows[0][key] && isEncrypted(rows[0][key])) {
+            try {
+              const pwd = decrypt(rows[0][key])
+              if (pwd) passwords.push(pwd)
+            } catch (err) {
+              result.error = 'decrypt_error'
             }
-          } catch (err) {
-            result.error = `decrypt_error: ${err.message}`
           }
         }
-      }
-
-      if (qPass) {
-        const expectedPasses = [config.ice.sourcePassword]
-        if (result.livePasswordDecrypted) {
-          const actualLive = expectedPasses.length > 1 ? expectedPasses[1] : null
-        }
-        result.wouldAuthenticate = (config.ice.sourcePassword === qPass)
+        result.livePasswordConfigured = passwords.length > 0
+        result.wouldAuthenticate = (config.ice.sourcePassword === qPass) || passwords.includes(qPass)
       }
     } catch (err) {
       result.error = err.message
@@ -844,7 +853,7 @@ export default async function streamRoutes(app) {
       const cleanMount = mount.replace(/^\//, '')
 
       const [rows] = await pool.query(
-        `SELECT livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
+        `SELECT sourcePasswordEnc, livePasswordEnc FROM radio_streams WHERE icecastMount = ? LIMIT 1`,
         [cleanMount]
       )
 
@@ -853,24 +862,22 @@ export default async function streamRoutes(app) {
         return reply.code(403).type('text/plain').send('403 mount_not_found')
       }
 
-      const { livePasswordEnc } = rows[0]
+      const { sourcePasswordEnc, livePasswordEnc } = rows[0]
 
-      let livePassword = null
-      if (livePasswordEnc && isEncrypted(livePasswordEnc)) {
-        try {
-          livePassword = decrypt(livePasswordEnc)
-        } catch (err) {
-          logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error descifrando livePasswordEnc')
+      const validPasswords = new Set([config.ice.sourcePassword])
+
+      for (const enc of [sourcePasswordEnc, livePasswordEnc]) {
+        if (enc && isEncrypted(enc)) {
+          try {
+            const pwd = decrypt(enc)
+            if (pwd) validPasswords.add(pwd)
+          } catch (err) {
+            logger.warn({ mount: cleanMount, err: err.message }, 'auth-source: error descifrando password')
+          }
         }
       }
 
-      const sharedPassword = config.ice.sourcePassword
-      const validPasswords = [sharedPassword]
-      if (livePassword && livePassword !== sharedPassword) {
-        validPasswords.push(livePassword)
-      }
-
-      if (!validPasswords.includes(pass)) {
+      if (!validPasswords.has(pass)) {
         logger.warn({ mount: cleanMount }, 'auth-source: password incorrecto')
         return reply.code(403).type('text/plain').send('403 invalid_password')
       }

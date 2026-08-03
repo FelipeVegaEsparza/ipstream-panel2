@@ -18,7 +18,7 @@ export ICE_HOSTNAME="${ICE_HOSTNAME:-localhost}"
 
 echo "[icecast] admin user: ${ICE_ADMIN_USER}"
 echo "[icecast] hostname:   ${ICE_HOSTNAME}"
-echo "[icecast] source pwd: ${ICE_SOURCE_PASSWORD:0:2}***"
+echo "[icecast] source pwd: configured"
 
 # Renderizar el template con envsubst
 # -i: in-place, pero como el archivo está en la imagen, podemos escribirlo.

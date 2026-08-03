@@ -16,6 +16,21 @@ const _lastTrack = new Map()
 
 export { _lastTrack }
 
+function parseArtistFromTitle(title) {
+  if (!title) return { title: null, artist: null }
+  const separators = [' - ', ' – ', ' — ', '_-_', '_–_']
+  for (const sep of separators) {
+    const idx = title.indexOf(sep)
+    if (idx > 0) {
+      return {
+        artist: title.slice(0, idx).trim() || null,
+        title: title.slice(idx + sep.length).trim() || title.trim(),
+      }
+    }
+  }
+  return { title: title.trim(), artist: null }
+}
+
 /**
  * Detecta si el track cambió en Icecast y lo registra en play_history.
  * Se llama desde el endpoint /now-playing (que ya se ejecuta cada 5s).
@@ -34,7 +49,9 @@ export async function detectAndLogTrack(clientId, rs) {
     // Intentar determinar el tipo buscando en playlist activa y jingles
     let type = 'autodj'
     let resolvedTitle = icecastTitle
-    let resolvedArtist = mount.server_name?.trim() || null
+    let resolvedArtist = null
+
+    const parsed = parseArtistFromTitle(icecastTitle)
 
     const [plRows] = await pool.query(
       `SELECT id FROM playlists WHERE clientId = ? AND isActive = 1 LIMIT 1`,
@@ -55,7 +72,10 @@ export async function detectAndLogTrack(clientId, rs) {
       if (matched) {
         type = 'music'
         resolvedTitle = matched.title
-        resolvedArtist = matched.artist || resolvedArtist
+        resolvedArtist = matched.artist || parsed.artist
+      } else {
+        resolvedTitle = parsed.title
+        resolvedArtist = parsed.artist
       }
     }
 
@@ -70,7 +90,10 @@ export async function detectAndLogTrack(clientId, rs) {
       if (matched) {
         type = 'jingle'
         resolvedTitle = matched.title
-        resolvedArtist = matched.artist || resolvedArtist
+        resolvedArtist = matched.artist || parsed.artist
+      } else {
+        resolvedTitle = parsed.title
+        resolvedArtist = parsed.artist
       }
     }
 

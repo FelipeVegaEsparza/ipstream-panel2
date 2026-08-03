@@ -24,6 +24,21 @@ export function stopStatsCron() {
   }
 }
 
+function parseArtistFromTitle(title) {
+  if (!title) return { title: null, artist: null }
+  const separators = [' - ', ' – ', ' — ', '_-_', '_–_']
+  for (const sep of separators) {
+    const idx = title.indexOf(sep)
+    if (idx > 0) {
+      return {
+        artist: title.slice(0, idx).trim() || null,
+        title: title.slice(idx + sep.length).trim() || title.trim(),
+      }
+    }
+  }
+  return { title: title.trim(), artist: null }
+}
+
 async function collectSnapshot() {
   try {
     const [streams] = await pool.query(
@@ -35,8 +50,9 @@ async function collectSnapshot() {
         if (!mount) continue
         const listenerCount = mount.listeners ?? 0
         const listenerPeak = mount.listener_peak ?? 0
-        const currentTitle = mount.title?.slice(0, 191) ?? null
-        const currentArtist = mount.server_name?.slice(0, 191) ?? null
+        const parsed = parseArtistFromTitle(mount.title)
+        const currentTitle = parsed.title?.slice(0, 191) ?? null
+        const currentArtist = parsed.artist?.slice(0, 191) ?? null
         await pool.query(
           `INSERT INTO stream_stats (id, clientId, radioStreamId, listenerCount, listenerPeak, currentTitle, currentArtist, timestamp)
            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,

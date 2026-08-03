@@ -64,6 +64,8 @@ services:
       # Streaming agent
       STREAMING_AGENT_URL: ${STREAMING_AGENT_URL:-http://agent:4000}
       STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:-dev-agent-token-change-me-in-prod}
+      HARBOR_CALLBACK_SECRET: ${HARBOR_CALLBACK_SECRET:-dev-harbor-callback-token-change-me}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       ICE_PUBLIC_URL: ${ICE_PUBLIC_URL:-http://localhost:8000}
       ICE_PUBLIC_PORT: ${ICE_PUBLIC_PORT:-8000}
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
@@ -126,6 +128,9 @@ services:
     environment:
       # Para debugging con `docker exec`
       - TERM=xterm
+      # Token compartido con el agente para callbacks de harbor.
+      # Debe coincidir con HARBOR_CALLBACK_SECRET del servicio agent.
+      - HARBOR_CALLBACK_TOKEN=${HARBOR_CALLBACK_SECRET:-dev-harbor-callback-token-change-me}
     # Puerto harbor para DJ en vivo: se expone un rango.
     # Cada cliente usa puerto = liquidsoapTelnetPort + 10000 (default: 22340).
     # Ajustar HARBOR_PORT_RANGE según cantidad de clientes.
@@ -207,6 +212,8 @@ services:
       LOG_LEVEL: info
       # Auth
       STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:-dev-agent-token-change-me-in-prod}
+      HARBOR_CALLBACK_SECRET: ${HARBOR_CALLBACK_SECRET:-dev-harbor-callback-token-change-me}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       # Encryption (misma key que el panel)
       ENCRYPTION_KEY: "${ENCRYPTION_KEY:?ENCRYPTION_KEY es requerida (generar con: openssl rand -hex 32)}"
       # DB

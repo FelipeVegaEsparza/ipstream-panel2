@@ -54,10 +54,15 @@ export function generateLiquidsoapScript({
   ))`
   }
 
-  const agentUrl = process.env.AGENT_URL || 'http://localhost:4000'
   const agentHost = config.ice.host === 'localhost' ? 'localhost' : 'agent'
   const agentBase = `http://${agentHost}:4000`
-  const authHeader = agentToken ? `-H 'Authorization: Bearer ${agentToken}'` : ''
+  // El token de callback se lee desde una variable de entorno del container
+  // de Liquidsoap, para no quedar expuesto en el cmdline del proceso.
+  const tokenExpr = `getenv("HARBOR_CALLBACK_TOKEN")`
+
+  function harborCallbackCmd(action, djMount) {
+    return `system("curl -s -X POST '${agentBase}/api/streams/${safeClient}/harbor/${action}?token=" ^ ${tokenExpr} ^ "&dj=${djMount}' &>/dev/null &")`
+  }
 
   // DJs sorted by priority (1 = highest)
   const sortedDjs = [...djs].sort((a, b) => a.priority - b.priority)
@@ -68,15 +73,12 @@ export function generateLiquidsoapScript({
 
   if (activeDjs.length === 0) {
     // Single DJ slot (legacy) using harborPassword
-    const onConnectCmd = `curl -s -X POST ${agentBase}/api/streams/${safeClient}/harbor/connected ${authHeader} &>/dev/null &`
-    const onDisconnectCmd = `curl -s -X POST ${agentBase}/api/streams/${safeClient}/harbor/disconnected ${authHeader} &>/dev/null &`
-
     harborInputs = `
 live = input.harbor("/live",
   port=${harborPort},
   password="${safeHarborPwd}",
-  on_connect=fun (_) -> system("${onConnectCmd}"),
-  on_disconnect=fun () -> system("${onDisconnectCmd}")
+  on_connect=fun (_) -> ${harborCallbackCmd('connected', '/live')},
+  on_disconnect=fun () -> ${harborCallbackCmd('disconnected', '/live')}
 )`
     fallbackSources = ['live']
   } else {
@@ -84,16 +86,13 @@ live = input.harbor("/live",
     const lines = activeDjs.map((dj, idx) => {
       const djMount = sanitizeForLiquidsoap(dj.mount || `/dj${idx + 1}`)
       const djPwd = sanitizeForLiquidsoap(dj.password || safeHarborPwd)
-      const djName = sanitizeForLiquidsoap(dj.name || `DJ${idx + 1}`)
       const slotName = `dj${idx}`
-      const onConnectCmd = `curl -s -X POST "${agentBase}/api/streams/${safeClient}/harbor/connected?dj=${djMount}" ${authHeader} &>/dev/null &`
-      const onDisconnectCmd = `curl -s -X POST "${agentBase}/api/streams/${safeClient}/harbor/disconnected?dj=${djMount}" ${authHeader} &>/dev/null &`
       fallbackSources.push(slotName)
       return `${slotName} = input.harbor("${djMount}",
   port=${harborPort},
   password="${djPwd}",
-  on_connect=fun (_) -> system("${onConnectCmd}"),
-  on_disconnect=fun () -> system("${onDisconnectCmd}")
+  on_connect=fun (_) -> ${harborCallbackCmd('connected', djMount)},
+  on_disconnect=fun () -> ${harborCallbackCmd('disconnected', djMount)}
 )`
     })
     harborInputs = '\n' + lines.join('\n\n')
@@ -106,8 +105,6 @@ live = input.harbor("/live",
   return `# =====================================================
 # Auto-generated for client ${safeClient} (mount: ${safeMount})
 # =====================================================
-
-set("init.allow_root", true)
 
 settings.log.file.path.set("/var/log/liquidsoap/${safeMount}.log")
 settings.log.file.set(true)

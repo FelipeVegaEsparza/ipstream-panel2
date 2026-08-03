@@ -34,17 +34,14 @@ COPY routes ./routes
 # Creamos directorios que vamos a montar
 RUN mkdir -p /var/lib/radio /var/log/liquidsoap /etc/liquidsoap/scripts
 
-# Usuario no-root (Fase 2: corremos como root para acceder al socket de Docker
-# del host, que en dev suele ser root:root. En prod, montar un socket con
-# group docker y USER streamagent.)
+# Usuario no-root. En producción, el socket de Docker del host debe tener
+# el grupo `docker` con gid 999 o montarse con permisos para este usuario.
 RUN groupadd --system --gid 1001 nodejs \
     && groupadd --system --gid 999 docker 2>/dev/null || true \
     && useradd --system --uid 1001 --gid nodejs --groups docker streamagent \
-    && chown -R streamagent:nodejs /app
+    && chown -R streamagent:nodejs /app /var/lib/radio /var/log/liquidsoap /etc/liquidsoap/scripts
 
-# DEV: corremos como root para tener acceso al docker socket
-# En prod, cambiar a USER streamagent y configurar socket con grupo docker
-# USER streamagent
+USER streamagent
 
 ENV NODE_ENV=production
 ENV PORT=4000

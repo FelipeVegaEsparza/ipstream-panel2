@@ -1,20 +1,19 @@
-// =====================================================
-// /api/public/[clientId]/streaming/status — Status público del stream
-// =====================================================
-
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 
-// Sin auth — endpoint público (CORS abierto)
 export const dynamic = 'force-dynamic'
+
+export async function OPTIONS() {
+  return handleCors()
+}
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: { clientId: string } }
 ) {
   try {
-    // Verificar que el cliente existe y tiene streaming habilitado
     const radioStream = await prisma.radioStream.findUnique({
       where: { clientId: params.clientId },
       select: {
@@ -30,10 +29,9 @@ export async function GET(
       },
     })
     if (!radioStream) {
-      return NextResponse.json({ error: 'not_found' }, { status: 404 })
+      return createCorsErrorResponse('Streaming no encontrado', 404)
     }
 
-    // Obtener status en vivo del agent (combina DB + Icecast)
     let live: any = null
     try {
       live = await streamingClient.getStatus(params.clientId)
@@ -42,21 +40,18 @@ export async function GET(
     }
 
     const icecast = live?.icecast
-    return NextResponse.json({
+    return createCorsResponse({
       clientId: params.clientId,
       clientName: radioStream.client.name,
       mount: radioStream.icecastMount,
       bitrate: radioStream.bitrate,
-      // Snapshot DB
       status: radioStream.status,
-      // Datos en vivo (de Icecast si están disponibles)
       isLive: icecast ? true : false,
       listeners: icecast?.listeners ?? 0,
       listenerPeak: icecast?.listener_peak ?? 0,
       currentTitle: icecast?.title ?? radioStream.currentTitle,
       currentArtist: null,
       currentCoverUrl: null,
-      // URLs públicas para el reproductor
       streamUrls: {
         http: `${process.env.ICE_PUBLIC_URL || 'http://localhost:8000'}/${radioStream.icecastMount}`,
       },
@@ -64,6 +59,6 @@ export async function GET(
     })
   } catch (err) {
     console.error('[public/streaming/status]', err)
-    return NextResponse.json({ error: 'internal_error' }, { status: 500 })
+    return createCorsErrorResponse('Error interno del servidor', 500)
   }
 }

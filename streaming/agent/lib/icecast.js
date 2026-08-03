@@ -57,7 +57,8 @@ export async function getMountStatus(mount) {
   const sources = status?.icestats?.source
   if (!sources) return null
   const list = Array.isArray(sources) ? sources : [sources]
-  return list.find((s) => s.listenurl?.endsWith(`/${mount}`) || s.mount === `/${mount}`) || null
+  const targetMount = mount.startsWith('/') ? mount : `/${mount}`
+  return list.find((s) => s.mount === targetMount) || null
 }
 
 /**

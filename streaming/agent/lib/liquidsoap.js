@@ -35,7 +35,7 @@ async function loadRadioStream(clientId) {
 
 async function writeScript(mount, content) {
   const path = join(SCRIPTS_DIR, `${mount}.liq`)
-  await writeFile(path, content, { mode: 0o644 })
+  await writeFile(path, content, { mode: 0o600 })
   logger.info({ path, bytes: content.length }, 'Script .liq escrito')
   return path
 }
@@ -129,6 +129,16 @@ export async function regenerateScript(clientId) {
 
   let sourcePassword = config.ice.sourcePassword
   let harborPassword = config.ice.sourcePassword
+
+  if (rs.sourcePasswordEnc && isEncrypted(rs.sourcePasswordEnc)) {
+    try {
+      sourcePassword = decrypt(rs.sourcePasswordEnc)
+    } catch (err) {
+      logger.warn({ clientId, err: err.message }, 'Error al descifrar sourcePasswordEnc, usando password compartido para source')
+    }
+  } else {
+    logger.warn({ clientId }, 'Sin sourcePasswordEnc en DB, usando password compartido para source')
+  }
 
   if (rs.livePasswordEnc && isEncrypted(rs.livePasswordEnc)) {
     try {
@@ -309,7 +319,12 @@ export async function autoStartStreams() {
   const started = []
   const failed = []
 
-  for (const row of rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    // Escalonar inicios para evitar thundering herd
+    if (i > 0) {
+      await new Promise((r) => setTimeout(r, 2000))
+    }
     try {
       const rs = await loadRadioStream(row.clientId)
       const status = await isProcessRunning(rs.icecastMount)

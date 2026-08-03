@@ -69,12 +69,4 @@
     <security>
         <chroot>0</chroot>
     </security>
-
-    <!-- changeowner va como top-level en Icecast 2.4.
-         Como ya corremos como icecast en el container, queda en root
-         para que icecast se "cambie" a root tras abrir el puerto
-         (es el comportamiento requerido por Icecast 2.4). -->
-    <changeowner>
-        <user>root</user>
-    </changeowner>
 </icecast>

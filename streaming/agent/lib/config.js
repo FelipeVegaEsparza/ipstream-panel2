@@ -22,6 +22,15 @@ function intEnv(name, fallback) {
   return n
 }
 
+function listEnv(name, fallback) {
+  const v = process.env[name]
+  if (v === undefined || v === '') {
+    if (fallback !== undefined) return fallback
+    return []
+  }
+  return v.split(',').map((s) => s.trim()).filter(Boolean)
+}
+
 export const config = {
   port: intEnv('PORT', 4000),
   host: required('HOST', '0.0.0.0'),
@@ -29,15 +38,17 @@ export const config = {
   nodeEnv: required('NODE_ENV', 'production'),
 
   // Auth
-  agentToken: required('STREAMING_AGENT_TOKEN', 'dev-agent-token-change-me'),
+  agentToken: required('STREAMING_AGENT_TOKEN'),
+  harborCallbackSecret: required('HARBOR_CALLBACK_SECRET'),
+  corsAllowedOrigins: listEnv('CORS_ALLOWED_ORIGINS'),
 
   // DB
   db: {
     host: required('DB_HOST', 'db'),
     port: intEnv('DB_PORT', 3306),
-    user: required('DB_USER', 'ipstream'),
-    password: required('DB_PASSWORD', 'ipstream_secret'),
-    database: required('DB_DATABASE', 'ipstream_panel'),
+    user: required('DB_USER'),
+    password: required('DB_PASSWORD'),
+    database: required('DB_DATABASE'),
     connectionLimit: intEnv('DB_CONNECTION_LIMIT', 10),
   },
 
@@ -45,13 +56,13 @@ export const config = {
   ice: {
     host: required('ICE_HOST', 'icecast'),
     port: intEnv('ICE_PORT', 8000),
-    adminUser: required('ICE_ADMIN_USER', 'admin'),
-    adminPassword: required('ICE_ADMIN_PASSWORD', 'hackme'),
-    // Password que los SOURCES (liquidsoap, DJ) usan para conectar.
-    // Compartido por ahora (todos los mounts usan el mismo).
-    sourcePassword: required('ICE_SOURCE_PASSWORD', 'hackme'),
-    relayPassword: required('ICE_RELAY_PASSWORD', 'hackme'),
-    hostname: required('ICE_HOSTNAME', 'localhost'),
+    adminUser: required('ICE_ADMIN_USER'),
+    adminPassword: required('ICE_ADMIN_PASSWORD'),
+    // Password compartida de fallback. En producción cada mount usa su propia
+    // livePassword descifrada desde la DB (ver icecast-config.js).
+    sourcePassword: required('ICE_SOURCE_PASSWORD'),
+    relayPassword: required('ICE_RELAY_PASSWORD'),
+    hostname: required('ICE_HOSTNAME'),
   },
 
   // Liquidsoap

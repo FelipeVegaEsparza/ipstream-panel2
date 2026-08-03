@@ -1,7 +1,7 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { readMetadata, sanitizeFileName, isMp3 } from '../lib/id3.js'
-import { saveJingle, deleteJingleFile, saveCover, deleteCover, getCoverPath, isSafeFileName } from '../lib/files.js'
+import { saveJingle, deleteJingleFile, saveCover, deleteCover, getCoverPath, isSafeFileName, uniqueFileName } from '../lib/files.js'
 import { regenerateJinglesM3u, restartStream } from '../lib/liquidsoap.js'
 import { existsSync, createReadStream } from 'fs'
 import { readFile, stat } from 'fs/promises'
@@ -106,7 +106,7 @@ export default async function jingleRoutes(app) {
         return reply.code(413).send({ error: 'file_too_large', message: `Máximo ${MAX_FILE_SIZE / 1024 / 1024} MB` })
       }
 
-      const fileName = sanitizeFileName(data.filename)
+      const fileName = uniqueFileName(data.filename)
 
       const { path: filePath, size } = await saveJingle(clientId, fileName, buffer)
       savedFileName = fileName

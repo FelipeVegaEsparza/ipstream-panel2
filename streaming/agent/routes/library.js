@@ -1,7 +1,7 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { readMetadata, fetchCoverFromMusicBrainz, sanitizeFileName, isMp3 } from '../lib/id3.js'
-import { saveMp3, deleteMp3, saveCover, deleteCover, getCoverPath, isSafeFileName, ensureClientDir, mp3Path } from '../lib/files.js'
+import { saveMp3, deleteMp3, saveCover, deleteCover, getCoverPath, isSafeFileName, ensureClientDir, mp3Path, uniqueFileName } from '../lib/files.js'
 import { regenerateM3u } from '../lib/liquidsoap.js'
 import { existsSync } from 'fs'
 import { readFile, stat } from 'fs/promises'
@@ -105,7 +105,7 @@ export default async function libraryRoutes(app) {
         return reply.code(413).send({ error: 'file_too_large', message: `Máximo ${MAX_FILE_SIZE / 1024 / 1024} MB` })
       }
 
-      const fileName = sanitizeFileName(data.filename)
+      const fileName = uniqueFileName(data.filename)
 
       const { path: filePath, size } = await saveMp3(clientId, fileName, buffer)
       savedFileName = fileName
