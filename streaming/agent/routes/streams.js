@@ -6,6 +6,8 @@ import { startStream, stopStream, restartStream, isProcessRunning, regenerateScr
 import { deployIcecastConfig } from '../lib/icecast-config.js'
 import { getMountStatus, getGlobalStatus, ping as icecastPing, killSource } from '../lib/icecast.js'
 import { pool } from '../lib/db.js'
+import { getPlanMaxDjs } from '../lib/plan-caps.js'
+import { nextAvailableMount, listAvailableMounts, isMountInUse } from '../lib/mount-allocation.js'
 import { logger } from '../lib/logger.js'
 import { config } from '../lib/config.js'
 import { decrypt, encrypt, isEncrypted } from '../lib/encryption.js'
@@ -360,6 +362,10 @@ export default async function streamRoutes(app) {
       // DJs configurados en DB
       const djs = await getRadioDjs(clientId)
 
+      // Plan cap + lista dinámica de mounts disponibles (cambio multi-DJ).
+      const planMaxDjs = await getPlanMaxDjs(clientId)
+      const availableMounts = await listAvailableMounts(clientId, planMaxDjs)
+
       return {
         ok: true,
         clientId,
@@ -367,6 +373,8 @@ export default async function streamRoutes(app) {
         mount: '/live',
         djConnected: activeDjMounts.length > 0,
         activeDjMounts,
+        planMaxDjs,
+        availableMounts,
         djSlots: djs.map(d => ({
           id: d.id,
           name: d.name,
@@ -606,37 +614,26 @@ export default async function streamRoutes(app) {
    * POST /api/streams/:clientId/djs
    * Crea un nuevo slot de DJ.
    * Body: { name, mount, priority, role, password }
-   * mount debe ser uno de: /dj1, /dj2, /dj3, /dj4
+   * El cap viene de Plan.maxDjs; el mount se asigna dinámicamente (próximo /djK libre).
    */
   app.post('/api/streams/:clientId/djs', async (request, reply) => {
     const { clientId } = request.params
-    const { name, mount, priority, role, password } = request.body || {}
+    const { name, priority, role, password } = request.body || {}
     try {
-      if (!name || !mount || !password) {
-        return reply.code(400).send({ error: 'name, mount y password son requeridos' })
+      if (!name || !password) {
+        return reply.code(400).send({ error: 'name y password son requeridos' })
       }
 
-      const validMounts = ['/dj1', '/dj2', '/dj3', '/dj4']
-      if (!validMounts.includes(mount)) {
-        return reply.code(400).send({ error: `mount debe ser uno de: ${validMounts.join(', ')}` })
-      }
+      const planMaxDjs = await getPlanMaxDjs(clientId)
 
-      // Verificar unique mount per client
-      const [existing] = await pool.query(
-        `SELECT id FROM radio_djs WHERE clientId = ? AND mount = ? LIMIT 1`,
-        [clientId, mount]
-      )
-      if (existing.length > 0) {
-        return reply.code(409).send({ error: `Ya existe un DJ con mount ${mount}` })
-      }
-
-      // Count existing DJs (max 4)
-      const [countRows] = await pool.query(
-        `SELECT COUNT(*) AS cnt FROM radio_djs WHERE clientId = ?`,
-        [clientId]
-      )
-      if (countRows[0]?.cnt >= 4) {
-        return reply.code(400).send({ error: 'Máximo 4 DJs por radio' })
+      // Asignar mount dinámicamente: próximo /djK libre hasta planMaxDjs.
+      const mount = await nextAvailableMount(clientId, planMaxDjs)
+      if (!mount) {
+        return reply.code(400).send({
+          error: 'max_djs_reached',
+          planMaxDjs,
+          message: `El plan permite hasta ${planMaxDjs} DJs por radio.`,
+        })
       }
 
       const validRoles = ['owner', 'host', 'guest']
@@ -651,8 +648,8 @@ export default async function streamRoutes(app) {
         [id, clientId, name, mount, priority ?? 1, passwordEnc, finalRole]
       )
 
-      logger.info({ clientId, djId: id, name, mount, role: finalRole, priority }, 'DJ slot creado')
-      return { ok: true, id, name, mount, priority, role: finalRole }
+      logger.info({ clientId, djId: id, name, mount, role: finalRole, priority, planMaxDjs }, 'DJ slot creado')
+      return { ok: true, id, name, mount, priority, role: finalRole, planMaxDjs }
     } catch (err) {
       logger.error({ err, clientId }, 'Error creando DJ slot')
       return reply.code(500).send({ error: err.message })
@@ -679,9 +676,18 @@ export default async function streamRoutes(app) {
 
       if (updates.name) { sets.push('name = ?'); params.push(updates.name) }
       if (updates.mount) {
-        const validMounts = ['/dj1', '/dj2', '/dj3', '/dj4']
-        if (!validMounts.includes(updates.mount)) {
-          return reply.code(400).send({ error: `mount debe ser uno de: ${validMounts.join(', ')}` })
+        const planMaxDjs = await getPlanMaxDjs(clientId)
+        const parsed = parseDjMountIndex(updates.mount)
+        if (parsed === null || parsed > planMaxDjs) {
+          return reply.code(400).send({
+            error: 'no_available_mount',
+            planMaxDjs,
+            message: `mount debe ser uno de /dj1..${planMaxDjs} y estar libre`,
+          })
+        }
+        const inUse = await isMountInUse(clientId, updates.mount, djId)
+        if (inUse) {
+          return reply.code(409).send({ error: 'mount_in_use', mount: updates.mount })
         }
         sets.push('mount = ?'); params.push(updates.mount)
       }
@@ -724,6 +730,17 @@ export default async function streamRoutes(app) {
       return reply.code(500).send({ error: err.message })
     }
   })
+
+  /**
+   * Parsea /djK y devuelve K, o null si el formato no es válido.
+   */
+  function parseDjMountIndex(mount) {
+    if (typeof mount !== 'string') return null
+    if (!mount.startsWith('/dj')) return null
+    const n = parseInt(mount.slice(3), 10)
+    if (!Number.isFinite(n) || n < 1) return null
+    return n
+  }
 
   /**
    * DELETE /api/streams/:clientId/djs/:djId

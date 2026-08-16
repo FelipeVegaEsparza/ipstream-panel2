@@ -1,5 +1,10 @@
 import { config } from './config.js'
 
+// Defensa en profundidad: tope absoluto de DJs por radio. Si Plan.maxDjs se
+// configura a un valor absurdo, este cap evita generar un .liq patológico.
+// 50 DJs simultáneos cubre el 99% de casos reales.
+export const HARD_DJS_LIMIT = 50
+
 export function generateLiquidsoapScript({
   clientId,
   clientName,
@@ -67,6 +72,14 @@ export function generateLiquidsoapScript({
   // DJs sorted by priority (1 = highest)
   const sortedDjs = [...djs].sort((a, b) => a.priority - b.priority)
   const activeDjs = sortedDjs.filter(d => d.isActive !== false)
+
+  // Defensa contra Plan.maxDjs absurdo. Ver HARD_DJS_LIMIT arriba.
+  if (activeDjs.length > HARD_DJS_LIMIT) {
+    throw new Error(
+      `DJs activos (${activeDjs.length}) exceden el tope absoluto (${HARD_DJS_LIMIT}). ` +
+      `Revisar Plan.maxDjs del cliente ${safeClient}.`
+    )
+  }
 
   let harborInputs = ''
   let fallbackSources = []

@@ -20,6 +20,8 @@ export async function GET(_request: NextRequest) {
     let harborPort: number | null = null
     let djConnected = false
     let djSlots: any[] = []
+    let planMaxDjs: number = 4
+    let availableMounts: string[] = []
     try {
       const harborRes = await fetch(
         `${process.env.STREAMING_AGENT_URL || 'http://agent:4000'}/api/streams/${encodeURIComponent(ctx.clientId)}/harbor/status`,
@@ -30,6 +32,10 @@ export async function GET(_request: NextRequest) {
         harborPort = harborData.harborPort
         djConnected = harborData.djConnected
         djSlots = harborData.djSlots || []
+        // Campos nuevos (change scale-and-stabilize-multi-dj): planMaxDjs y availableMounts.
+        // Si el agente aún no los expone (versión vieja), caemos al default 4 y lista vacía.
+        planMaxDjs = typeof harborData.planMaxDjs === 'number' ? harborData.planMaxDjs : 4
+        availableMounts = Array.isArray(harborData.availableMounts) ? harborData.availableMounts : []
       }
     } catch {
       // agent not reachable
@@ -47,6 +53,8 @@ export async function GET(_request: NextRequest) {
       harborMount: '/live',
       djConnected,
       djSlots,
+      planMaxDjs,
+      availableMounts,
     }
 
     return NextResponse.json(data)

@@ -1,0 +1,9 @@
+schema: spec-driven
+created: 2026-08-16
+goal: Eliminar el tope rígido de 4 DJs por radio y hacer que el máximo de DJs sea configurable por Plan (Plan.maxDjs, entero), generar mounts dinámicamente hasta ese límite, permitir múltiples DJs simultáneos con el ciclo AutoDJ correcto y actualizar el Panel para que no use listas hardcodeadas de mounts. Sin breaking changes en APIs existentes.
+affected_areas:
+  - streaming/agent (lib/mount-allocation.js, lib/plan-caps.js, routes/streams.js, lib/script-generator.js)
+  - prisma/schema.prisma (modelo Plan + columna maxDjs)
+  - app/dashboard/streaming/connection/page.tsx
+  - app/api/dashboard/streaming/connection/route.ts
+  - streaming/PHASE-8-RESULTS.md

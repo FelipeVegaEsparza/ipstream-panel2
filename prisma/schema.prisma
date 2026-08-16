@@ -327,6 +327,7 @@ model Plan {
   interval    String // "monthly" | "yearly"
   features    String   @db.Text // JSON array de características
   isActive    Boolean  @default(true)
+  maxDjs      Int      @default(4) // Máximo de DJs simultáneos por radio. NULL no soportado.
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

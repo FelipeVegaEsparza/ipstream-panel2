@@ -23,8 +23,6 @@ const ROLE_HIERARCHY: Record<string, number> = {
   owner: 3, host: 2, guest: 1,
 }
 
-const MOUNTS = ['/dj1', '/dj2', '/dj3', '/dj4']
-
 const ROLE_STYLES: Record<string, string> = {
   owner: 'bg-red-900/50 text-red-300',
   host: 'bg-blue-900/50 text-blue-300',
@@ -43,6 +41,8 @@ export default function ConnectionPage() {
   const [loadingPassword, setLoadingPassword] = useState(false)
   const [djSlots, setDjSlots] = useState<DjSlotInfo[]>([])
   const [djConnected, setDjConnected] = useState(false)
+  const [planMaxDjs, setPlanMaxDjs] = useState<number>(4)
+  const [apiAvailableMounts, setApiAvailableMounts] = useState<string[]>([])
   const [copyText, setCopyText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -63,6 +63,10 @@ export default function ConnectionPage() {
         if (data.host) setConnectionInfo(data)
         setDjConnected(data.djConnected || false)
         if (data.djSlots) setDjSlots(data.djSlots)
+        // Campos nuevos (change scale-and-stabilize-multi-dj). Si el backend
+        // aún no los expone (versión vieja), caemos al default 4 y lista vacía.
+        setPlanMaxDjs(typeof data.planMaxDjs === 'number' ? data.planMaxDjs : 4)
+        setApiAvailableMounts(Array.isArray(data.availableMounts) ? data.availableMounts : [])
       }
     } catch {}
   }, [])
@@ -82,7 +86,23 @@ export default function ConnectionPage() {
 
   const harborHost = connectionInfo?.harborHost || mountedHost || 'localhost'
   const harborPort = connectionInfo?.harborPort || 9000
-  const connectedSlot = djSlots.find(s => s.connected)
+
+  // Orden estable para TODA la página: por rol (owner > host > guest) y luego
+  // por priority ascendente. Reutilizado por el banner multi-DJ, la lista de
+  // slots y cualquier otra vista que liste DJs.
+  const sortedSlots = [...djSlots].sort((a, b) => {
+    const r = (ROLE_HIERARCHY[b.role] || 0) - (ROLE_HIERARCHY[a.role] || 0)
+    return r !== 0 ? r : a.priority - b.priority
+  })
+
+  // DJs conectados en orden de prioridad (los mismos criterios que el fallback
+  // de Liquidsoap: rol alto gana; empate → priority menor primero).
+  const connectedSlots = sortedSlots.filter(s => s.connected)
+  const connectedLabel = connectedSlots.length === 0
+    ? null
+    : connectedSlots.length === 1
+      ? connectedSlots[0].name
+      : connectedSlots.map(s => s.name).join(' + ')
 
   const revealPassword = useCallback(async () => {
     if (livePassword) { setShowPassword(p => !p); return }
@@ -107,7 +127,11 @@ export default function ConnectionPage() {
 
   // --- DJ CRUD ---
   const resetForm = () => {
-    setForm({ name: '', mount: '/dj1', priority: 1, role: 'guest', password: '' })
+    // El mount inicial del form es el primero disponible (dinámico); si no hay
+    // ninguno libre, caemos a '/dj1' como placeholder visual (el POST igual va
+    // a fallar con 400 max_djs_reached, que mostramos al usuario).
+    const initialMount = apiAvailableMounts[0] || '/dj1'
+    setForm({ name: '', mount: initialMount, priority: 1, role: 'guest', password: '' })
     setEditId(null)
     setShowForm(false)
     setError(null)
@@ -173,14 +197,13 @@ export default function ConnectionPage() {
     } catch { setError('Error al eliminar DJ') }
   }
 
-  const availableMounts = MOUNTS.filter(
-    m => !djSlots.some(d => d.mount === m && d.id !== editId)
-  )
-
-  const sortDjs = [...djSlots].sort((a, b) => {
-    const r = (ROLE_HIERARCHY[b.role] || 0) - (ROLE_HIERARCHY[a.role] || 0)
-    return r !== 0 ? r : a.priority - b.priority
-  })
+  // Mounts que se muestran en el dropdown: los devueltos por el agente (ya libres
+// según Plan.maxDjs) + el mount del slot que estamos editando (para no perder
+// la selección al recargar la página tras un PATCH).
+  const mountChoices = Array.from(new Set([
+    ...apiAvailableMounts,
+    ...(editId ? djSlots.filter(d => d.id === editId).map(d => d.mount) : []),
+  ]))
 
   const displayPassword = showPassword && livePassword ? livePassword : '********'
 
@@ -200,12 +223,14 @@ export default function ConnectionPage() {
         <div className="flex items-center gap-2">
           <span className={`inline-block w-3 h-3 rounded-full ${djConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
           <span className={djConnected ? 'text-green-400' : 'text-cyan-400'}>
-            {djConnected ? `DJ en vivo${connectedSlot ? ` (${connectedSlot.name})` : ''}` : 'AutoDJ activo'}
+            {djConnected
+              ? `DJ en vivo${connectedLabel ? ` (${connectedLabel})` : ''}`
+              : 'AutoDJ activo'}
           </span>
         </div>
         <p className="mt-1 text-xs text-gray-400">
           {djConnected
-            ? 'DJ conectado. El AutoDJ se reanudará automáticamente al desconectar.'
+            ? `${connectedSlots.length > 1 ? `${connectedSlots.length} DJs conectados` : 'DJ conectado'}. El AutoDJ se reanudará automáticamente al desconectarse todos.`
             : 'No hay DJ conectado. Configurá tu encoder con los datos de abajo.'}
         </p>
       </div>
@@ -234,11 +259,14 @@ export default function ConnectionPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-white">Slots de DJ</h2>
-            <p className="text-xs text-gray-400">Máximo 4. Cada slot tiene mount y password propio.</p>
+            <p className="text-xs text-gray-400">
+              Plan máximo: {planMaxDjs} DJs. Cada slot tiene mount y password propio.
+            </p>
           </div>
           <button
             onClick={startCreate}
-            disabled={djSlots.length >= 4}
+            disabled={djSlots.length >= planMaxDjs}
+            title={djSlots.length >= planMaxDjs ? `Plan máximo: ${planMaxDjs} DJs` : 'Crear nuevo slot'}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-sm"
           >
             + Nuevo DJ
@@ -251,7 +279,7 @@ export default function ConnectionPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {sortDjs.map(slot => (
+            {sortedSlots.map(slot => (
               <div key={slot.id} className={`border rounded-lg p-4 ${
                 slot.connected ? 'border-green-700 bg-green-900/20' : 'border-gray-700 bg-gray-900/50'
               }`}>
@@ -373,12 +401,17 @@ export default function ConnectionPage() {
               <label className="text-xs text-gray-400 uppercase">Mountpoint</label>
               <select value={form.mount} onChange={e => setForm({...form, mount: e.target.value})}
                 className="w-full mt-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm">
-                {MOUNTS.map(m => (
-                  <option key={m} value={m} disabled={!availableMounts.includes(m) && m !== form.mount}>
-                    {m} {!availableMounts.includes(m) && m !== form.mount ? '(en uso)' : ''}
-                  </option>
+                {mountChoices.length === 0 ? (
+                  <option value={form.mount}>{form.mount} (sin huecos libres)</option>
+                ) : mountChoices.map(m => (
+                  <option key={m} value={m}>{m}</option>
                 ))}
               </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {editId
+                  ? 'Cambiá el mount si querés reasignar este slot.'
+                  : 'El próximo mount libre se asigna automáticamente al guardar.'}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
