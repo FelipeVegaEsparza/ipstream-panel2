@@ -20,7 +20,17 @@ export async function GET(
       if (agentRes.status === 404) {
         return new NextResponse(null, { status: 404 })
       }
-      return new NextResponse(null, { status: agentRes.status })
+      let detail = ''
+      try { detail = (await agentRes.text()).slice(0, 200) } catch {}
+      console.error(`[cover GET] agent ${agentRes.status} for track ${params.trackId}: ${detail}`)
+      return new NextResponse(
+        JSON.stringify({
+          error: 'agent_error',
+          status: agentRes.status,
+          detail,
+        }),
+        { status: 502, headers: { 'Content-Type': 'application/json' } }
+      )
     }
 
     const contentType = agentRes.headers.get('content-type') || 'image/jpeg'

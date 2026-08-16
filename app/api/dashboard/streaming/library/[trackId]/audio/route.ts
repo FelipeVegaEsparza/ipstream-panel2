@@ -20,7 +20,21 @@ export async function GET(_request: NextRequest, { params }: { params: { trackId
     )
 
     if (!agentRes.ok) {
-      return new NextResponse(null, { status: agentRes.status })
+      // Loggear para diagnóstico en producción; el browser verá un 502 con detalle.
+      let detail = ''
+      try { detail = (await agentRes.text()).slice(0, 200) } catch {}
+      console.error(`[streaming/library/audio] agent ${agentRes.status} for track ${params.trackId}: ${detail}`)
+      return new NextResponse(
+        JSON.stringify({
+          error: 'agent_error',
+          status: agentRes.status,
+          detail,
+          message: agentRes.status === 404
+            ? 'El archivo no está disponible en el servidor de streaming. Reintentá subirlo.'
+            : 'El servidor de streaming no respondió correctamente.',
+        }),
+        { status: agentRes.status === 404 ? 404 : 502, headers: { 'Content-Type': 'application/json' } }
+      )
     }
 
     const blob = await agentRes.blob()

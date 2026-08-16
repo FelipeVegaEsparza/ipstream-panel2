@@ -99,7 +99,10 @@ services:
       LIQUIDSOAP_HOST: ipstream-liquidsoap
       RADIO_LIBRARY_PATH: /var/lib/radio
     volumes:
-      - radio_library:/var/lib/radio
+      # Bind-mount al host para que los MP3 y covers persistan entre deploys
+      # y sean fáciles de respaldar/migrar. El agent corre como uid 1001,
+      # así que el deploy.sh hace chown antes de levantar containers.
+      - ./data/radio:/var/lib/radio
       - liquidsoap_logs:/var/log/liquidsoap
       # Los scripts se generan dinámicamente en /etc/liquidsoap/scripts
       # Montamos un named volume para no depender de bind mounts del host.
@@ -179,8 +182,9 @@ volumes:
     name: ipstream_icecast_logs
   liquidsoap_logs:
     name: ipstream_liquidsoap_logs
-  radio_library:
-    name: ipstream_radio_library
+  # radio_library se montaba como named volume aquí; eso rompía la persistencia
+  # porque un named volume recién creado está vacío aunque ./data/radio tenga
+  # archivos del deploy anterior. Ahora es bind-mount (./data/radio:/var/lib/radio).
   agent_scripts:
     name: ipstream_agent_scripts
   video_library:

@@ -109,6 +109,16 @@ docker exec ipstream-db mysql -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_D
   -e "ALTER TABLE tracks ADD COLUMN IF NOT EXISTS coverUrl VARCHAR(255) DEFAULT NULL AFTER filePath;" 2>/dev/null && \
   echo "  ✓ columna coverUrl lista" || echo "  - columna ya existía (o no hace falta)"
 
+# === 7b. Asegurar permisos del data dir antes del up ===
+# El streaming-agent corre como uid 1001 (streamagent). Si ./data/radio quedó
+# propiedad de otro usuario (típico cuando se subió algo desde el host), el
+# agent no podrá leer los MP3/covers y devolverá 404 en cada cover/audio.
+echo "🔐  6b/9 — Ajustando permisos de ./data/radio..."
+mkdir -p ./data/radio
+# chown -R para que los nuevos archivos también queden propiedad de 1001.
+chown -R 1001:1001 ./data/radio 2>/dev/null && echo "  ✓ ./data/radio → 1001:1001" || \
+  echo "  ⚠ no se pudo chown ./data/radio (¿docker no disponible en el host?). Continuando."
+
 # === 8. Up de los containers ===
 echo "🚀 7/9 — Levantando containers..."
 $COMPOSE_CMD up -d --remove-orphans
