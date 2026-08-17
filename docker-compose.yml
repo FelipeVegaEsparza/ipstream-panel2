@@ -245,7 +245,9 @@ services:
       - "127.0.0.1:4000:4000"   # accesible solo desde el host (para debug)
     volumes:
       - ./data/radio:/var/lib/radio
-      - liquidsoap_logs:/var/log/liquidsoap
+      # El agent usa /var/log/liquidsoap solo como STRING (LIQUIDSOAP_LOG_PATH
+      # se inyecta en el .liq que corre dentro del contenedor liquidsoap).
+      # No necesita montar el dir; eso era una referencia huérfana.
       # Fase 1: montamos los scripts generados dinámicamente.
       # En prod, agent ejecutará liquidsoap vía docker exec en lugar de generar scripts.
       - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts
