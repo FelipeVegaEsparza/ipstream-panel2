@@ -138,9 +138,12 @@ services:
       - "${HARBOR_PORT_RANGE:-22340-22350}:${HARBOR_PORT_RANGE:-22340-22350}"
     volumes:
       - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts:ro
-      # Fase 0: bind-mount desde un path dentro del proyecto. En prod, named volume.
+      # Fase 0: bind-mount desde un path dentro del proyecto.
       - ./data/radio:/var/lib/radio
-      - liquidsoap_logs:/var/log/liquidsoap
+      # Bind-mount al host. Antes era named volume "liquidsoap_logs" que el contenedor
+      # liquidsoap (uid 100) no podía escribir si lo había tocado antes otro proceso
+      # (permission denied al primer arranque). El deploy.sh hace chown 100:101.
+      - ./data/logs/liquidsoap:/var/log/liquidsoap
     networks:
       - ipstream-net
     healthcheck:
@@ -267,5 +270,5 @@ volumes:
     name: ipstream_srs_hls
   video_logs:
     name: ipstream_video_logs
-  liquidsoap_logs:
-    name: ipstream_liquidsoap_logs
+  # liquidsoap_logs se reemplazó por bind-mount ./data/logs/liquidsoap en el
+  # servicio `liquidsoap` arriba; mantenerlo como named rompía los logs.
