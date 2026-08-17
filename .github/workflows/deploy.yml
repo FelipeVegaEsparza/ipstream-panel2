@@ -24,6 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
+    # GitHub deprecó Node 20 en los runners (predeterminado ahora es Node 24).
+    # Mientras el proyecto siga en Node 20 forzamos el uso de la versión "insecure"
+    # para no recibir el warning. Eliminar cuando el proyecto migre a Node 22+.
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
+
     steps:
       # === 1. Checkout ===
       - name: Checkout
