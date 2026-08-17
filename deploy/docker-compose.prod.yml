@@ -103,10 +103,13 @@ services:
       # y sean fáciles de respaldar/migrar. El agent corre como uid 1001,
       # así que el deploy.sh hace chown antes de levantar containers.
       - ./data/radio:/var/lib/radio
-      - liquidsoap_logs:/var/log/liquidsoap
-      # Los scripts se generan dinámicamente en /etc/liquidsoap/scripts
-      # Montamos un named volume para no depender de bind mounts del host.
-      - agent_scripts:/etc/liquidsoap/scripts
+      # Bind-mount para que liquidsoap pueda escribir sus logs con su uid (100:101).
+      # Antes era named volume "liquidsoap_logs" propiedad de otro uid → permission denied.
+      - ./data/logs/liquidsoap:/var/log/liquidsoap
+      # Bind-mount compartido con el contenedor liquidsoap: el agent escribe los
+      # .liq dinámicamente y liquidsoap los lee (ro en su compose). Antes era named
+      # volume "agent_scripts" que nadie más veía → no se generaban .liq.
+      - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts
       - /var/run/docker.sock:/var/run/docker.sock
     logging:
       driver: json-file
@@ -180,13 +183,9 @@ volumes:
     name: ipstream_db_data
   icecast_logs:
     name: ipstream_icecast_logs
-  liquidsoap_logs:
-    name: ipstream_liquidsoap_logs
-  # radio_library se montaba como named volume aquí; eso rompía la persistencia
-  # porque un named volume recién creado está vacío aunque ./data/radio tenga
-  # archivos del deploy anterior. Ahora es bind-mount (./data/radio:/var/lib/radio).
-  agent_scripts:
-    name: ipstream_agent_scripts
+  # Los siguientes volúmenes se reemplazan por bind-mounts en el servicio
+  # `agent` arriba; mantenerlos como named rompe la persistencia entre deploys.
+  # Ver agent.volumes y el comentario histórico que dejamos al migrarlos.
   video_library:
     name: ipstream_video_library
   srs_hls:

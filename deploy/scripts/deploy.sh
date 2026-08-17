@@ -113,11 +113,21 @@ docker exec ipstream-db mysql -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_D
 # El streaming-agent corre como uid 1001 (streamagent). Si ./data/radio quedó
 # propiedad de otro usuario (típico cuando se subió algo desde el host), el
 # agent no podrá leer los MP3/covers y devolverá 404 en cada cover/audio.
-echo "🔐  6b/9 — Ajustando permisos de ./data/radio..."
-mkdir -p ./data/radio
-# chown -R para que los nuevos archivos también queden propiedad de 1001.
+echo "🔐  6b/9 — Ajustando permisos de volúmenes bind-mount..."
+mkdir -p ./data/radio ./data/logs/liquidsoap ./streaming/liquidsoap/scripts
+
+# Agent (uid 1001) escribe los .liq y lee los MP3/covers.
 chown -R 1001:1001 ./data/radio 2>/dev/null && echo "  ✓ ./data/radio → 1001:1001" || \
-  echo "  ⚠ no se pudo chown ./data/radio (¿docker no disponible en el host?). Continuando."
+  echo "  ⚠ no se pudo chown ./data/radio. Continuando."
+
+# Agent (uid 1001) genera los .liq aquí. Liquidsoap los lee (ro en su compose).
+chown -R 1001:1001 ./streaming/liquidsoap/scripts 2>/dev/null && echo "  ✓ ./streaming/liquidsoap/scripts → 1001:1001" || \
+  echo "  ⚠ no se pudo chown ./streaming/liquidsoap/scripts. Continuando."
+
+# Liquidsoap (uid 100, gid 101) escribe sus logs aquí. Antes era named volume
+# propiedad de otro uid y moría con "Permission denied" al primer arranque.
+chown -R 100:101 ./data/logs/liquidsoap 2>/dev/null && echo "  ✓ ./data/logs/liquidsoap → 100:101" || \
+  echo "  ⚠ no se pudo chown ./data/logs/liquidsoap. Continuando."
 
 # === 8. Up de los containers ===
 echo "🚀 7/9 — Levantando containers..."
