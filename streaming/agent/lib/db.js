@@ -14,7 +14,10 @@ export const pool = mysql.createPool({
   database: config.db.database,
   waitForConnections: true,
   connectionLimit: config.db.connectionLimit,
-  queueLimit: 0,
+  // queueLimit=0 (mysql2 default) significa "ilimitado". Si la DB se cae,
+  // cada request entrante se enqueuea indefinidamente → OOM del agente.
+  // 100 es suficiente para picos normales y corta la hemorragia.
+  queueLimit: 100,
   charset: 'utf8mb4',
   decimalNumbers: true,
   dateStrings: false,

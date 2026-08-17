@@ -9,6 +9,11 @@ import { pool } from './db.js'
 
 const MOUNT_PREFIX = '/dj'
 
+// Defensa en profundidad: tope absoluto. Si Plan.maxDjs viene con un valor
+// absurdo (admin typo, JSON malformado, etc.) iteramos 1..N veces. 50 cubre
+// el 99% de casos reales y previene OOM si N es patológico.
+const HARD_DJS_LIMIT = 50
+
 /**
  * Devuelve el mount /djK con K = entero más bajo entre 1 y planMaxDjs
  * que NO esté en uso en radio_djs para ese cliente.
@@ -22,6 +27,10 @@ export async function nextAvailableMount(clientId, planMaxDjs) {
   if (!Number.isFinite(planMaxDjs) || planMaxDjs < 1) {
     throw new Error('planMaxDjs must be a positive integer')
   }
+  // Cap defensivo. El caller (routes/streams.js) ya debe haber chequeado
+  // contra el plan, pero si planMaxDjs viene enorme (e.g. 1_000_000) lo
+  // acotamos para no iterar indefinidamente.
+  const effectiveMax = Math.min(Math.floor(planMaxDjs), HARD_DJS_LIMIT)
 
   // 1) Traer todos los mounts ya ocupados por el cliente (parseados a int).
   const [rows] = await pool.query(
@@ -35,8 +44,8 @@ export async function nextAvailableMount(clientId, planMaxDjs) {
     if (n !== null) used.add(n)
   }
 
-  // 2) Buscar el entero más bajo entre 1 y planMaxDjs no usado.
-  for (let k = 1; k <= planMaxDjs; k++) {
+  // 2) Buscar el entero más bajo entre 1 y effectiveMax no usado.
+  for (let k = 1; k <= effectiveMax; k++) {
     if (!used.has(k)) return `${MOUNT_PREFIX}${k}`
   }
 
@@ -57,6 +66,7 @@ export async function listAvailableMounts(clientId, planMaxDjs) {
   if (!Number.isFinite(planMaxDjs) || planMaxDjs < 1) {
     throw new Error('planMaxDjs must be a positive integer')
   }
+  const effectiveMax = Math.min(Math.floor(planMaxDjs), HARD_DJS_LIMIT)
 
   const [rows] = await pool.query(
     `SELECT mount FROM radio_djs WHERE clientId = ?`,
@@ -70,7 +80,7 @@ export async function listAvailableMounts(clientId, planMaxDjs) {
   }
 
   const available = []
-  for (let k = 1; k <= planMaxDjs; k++) {
+  for (let k = 1; k <= effectiveMax; k++) {
     if (!used.has(k)) available.push(`${MOUNT_PREFIX}${k}`)
   }
   return available

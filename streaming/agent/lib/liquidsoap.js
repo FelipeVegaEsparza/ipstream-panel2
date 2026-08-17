@@ -1,7 +1,7 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { writeFile, unlink, access } from 'fs/promises'
-import { join } from 'path'
+import { writeFile, unlink, access, mkdir } from 'fs/promises'
+import { join, dirname } from 'path'
 import { config } from './config.js'
 import { logger } from './logger.js'
 import { generateLiquidsoapScript } from './script-generator.js'
@@ -16,6 +16,11 @@ const SCRIPTS_DIR = config.liquidsoap.scriptsPath
 const LIQUIDSOAP_MP3_DIR = config.library.path
 
 const CHECK_SCRIPT_PATH = join(SCRIPTS_DIR, '_check_proc.sh')
+
+// Mutex por cliente para evitar que dos llamadas concurrentes a startStream
+// (o start+restart) terminen spawnando dos procesos liquidsoap para el mismo
+// mount. El primer caller ejecuta; los siguientes esperan el resultado.
+const _startLocks = new Map() // clientId → Promise
 
 export function getHarborPort(telnetPort) {
   return telnetPort + 10000
@@ -43,8 +48,11 @@ async function writeScript(mount, content) {
 export async function isProcessRunning(mount) {
   try {
     await ensureCheckScript()
+    // Usamos `sh` (POSIX) en vez de `bash`. La imagen savonet/liquidsoap:v2.4.5
+    // solo instala curl+ca-certificates+tini, no bash, y `docker exec ... bash`
+    // fallaba con exit code 127 silenciosamente. El script es POSIX-compatible.
     const { stdout } = await execp(
-      `docker exec ${LIQUIDSOAP_CONTAINER} bash /etc/liquidsoap/scripts/_check_proc.sh '${mount}'`,
+      `docker exec ${LIQUIDSOAP_CONTAINER} sh /etc/liquidsoap/scripts/_check_proc.sh '${mount}'`,
       { timeout: 10000, maxBuffer: 64 * 1024 }
     )
     const pid = parseInt(stdout.trim(), 10)
@@ -168,7 +176,7 @@ export async function regenerateScript(clientId) {
     jinglePlayEvery: hasJingles ? rs.jinglePlayEvery : 0,
     jinglePlayCount: hasJingles ? rs.jinglePlayCount : 0,
     jinglesM3uPath: hasJingles ? jinglesM3uPath : null,
-    agentToken: config.agentToken,
+    agentToken: config.harborCallbackSecret,
     djs: djs.map(d => ({
       mount: d.mount,
       password: d.password,
@@ -183,41 +191,71 @@ export async function regenerateScript(clientId) {
 }
 
 export async function startStream(clientId) {
-  const rs = await loadRadioStream(clientId)
-
-  const status = await isProcessRunning(rs.icecastMount)
-  if (status.running) {
-    throw new Error(`Stream ya está corriendo (PID ${status.pid}). Usa /restart para reiniciar.`)
+  // Si ya hay un start en curso para este cliente, esperamos su resultado
+  // y devolvemos lo mismo (o re-lanzamos su error).
+  const prev = _startLocks.get(clientId)
+  if (prev) {
+    logger.info({ clientId }, 'startStream: ya hay un start en curso, esperando')
+    return prev
   }
 
-  const { path, hasPlaylist } = await regenerateScript(clientId)
-  if (!hasPlaylist) {
-    logger.warn({ clientId }, 'Iniciando stream sin playlist activa')
+  // Timeout de seguridad: si algún docker exec se cuelga indefinidamente,
+  // liberamos el lock para no bloquear futuros intentos de forma permanente.
+  const START_TIMEOUT_MS = 120_000
+
+  const runStart = async () => {
+    const rs = await loadRadioStream(clientId)
+
+    const status = await isProcessRunning(rs.icecastMount)
+    if (status.running) {
+      throw new Error(`Stream ya está corriendo (PID ${status.pid}). Usa /restart para reiniciar.`)
+    }
+
+    const { path, hasPlaylist } = await regenerateScript(clientId)
+    if (!hasPlaylist) {
+      logger.warn({ clientId }, 'Iniciando stream sin playlist activa')
+    }
+
+    // Igual que isProcessRunning: usar `sh` (POSIX) en vez de `bash`.
+    // El script es nohup ... &; POSIX sh lo soporta igual.
+    const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} sh -c 'nohup ${LIQUIDSOAP_BIN} ${path} > /proc/1/fd/1 2>&1 & disown'`
+    await execp(cmd, { timeout: 10000 })
+
+    await new Promise((r) => setTimeout(r, 1500))
+    const newStatus = await isProcessRunning(rs.icecastMount)
+    if (!newStatus.running) {
+      throw new Error(`Liquidsoap arrancó pero no se encontró el proceso. Revisa /var/log/liquidsoap/${rs.icecastMount}.log`)
+    }
+
+    await pool.query(
+      `UPDATE radio_streams
+       SET liquidsoapRunning = 1,
+           liquidsoapPid = ?,
+           liquidsoapStartedAt = NOW(),
+           status = 'autodj',
+           lastError = NULL,
+           updatedAt = NOW()
+       WHERE clientId = ?`,
+      [newStatus.pid, clientId]
+    )
+
+    logger.info({ clientId, mount: rs.icecastMount, pid: newStatus.pid, hasPlaylist, harborPort: getHarborPort(rs.liquidsoapTelnetPort) }, 'Stream iniciado con harbor')
+    return { pid: newStatus.pid, scriptPath: path, hasPlaylist }
   }
 
-  const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} bash -c 'nohup ${LIQUIDSOAP_BIN} ${path} > /proc/1/fd/1 2>&1 & disown'`
-  await execp(cmd, { timeout: 10000 })
+  const promise = runStart()
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`startStream timeout (${START_TIMEOUT_MS}ms) para clientId=${clientId}`)), START_TIMEOUT_MS)
+  })
 
-  await new Promise((r) => setTimeout(r, 1500))
-  const newStatus = await isProcessRunning(rs.icecastMount)
-  if (!newStatus.running) {
-    throw new Error(`Liquidsoap arrancó pero no se encontró el proceso. Revisa /var/log/liquidsoap/${rs.icecastMount}.log`)
+  const guarded = Promise.race([promise, timeoutPromise])
+
+  _startLocks.set(clientId, guarded)
+  try {
+    return await guarded
+  } finally {
+    _startLocks.delete(clientId)
   }
-
-  await pool.query(
-    `UPDATE radio_streams
-     SET liquidsoapRunning = 1,
-         liquidsoapPid = ?,
-         liquidsoapStartedAt = NOW(),
-         status = 'autodj',
-         lastError = NULL,
-         updatedAt = NOW()
-     WHERE clientId = ?`,
-    [newStatus.pid, clientId]
-  )
-
-  logger.info({ clientId, mount: rs.icecastMount, pid: newStatus.pid, hasPlaylist, harborPort: getHarborPort(rs.liquidsoapTelnetPort) }, 'Stream iniciado con harbor')
-  return { pid: newStatus.pid, scriptPath: path, hasPlaylist }
 }
 
 export async function stopStream(clientId) {
@@ -234,7 +272,8 @@ export async function stopStream(clientId) {
   }
 
   await execp(
-    `docker exec ${LIQUIDSOAP_CONTAINER} bash -c "kill -TERM ${status.pid} 2>/dev/null; sleep 1; kill -KILL ${status.pid} 2>/dev/null || true"`,
+    // Mismo motivo: usar `sh` (POSIX) en lugar de `bash` (no instalado en el container).
+    `docker exec ${LIQUIDSOAP_CONTAINER} sh -c "kill -TERM ${status.pid} 2>/dev/null; sleep 1; kill -KILL ${status.pid} 2>/dev/null || true"`,
     { timeout: 8000 }
   )
 
@@ -270,6 +309,10 @@ export async function regenerateM3u(clientId) {
   const m3uPath = join(LIQUIDSOAP_MP3_DIR, clientId, 'playlist.m3u')
   const mp3Dir = join(LIQUIDSOAP_MP3_DIR, clientId, 'mp3')
 
+  // Asegurar que el dir padre existe. Sin esto, clientes nuevos (que nunca
+  // subieron tracks) rompen con ENOENT al primer start.
+  await mkdir(dirname(m3uPath), { recursive: true })
+
   if (activeRows.length === 0) {
     await writeFile(m3uPath, '', { mode: 0o644 })
     logger.info({ clientId, m3uPath }, 'm3u vaciado (no hay playlist activa)')
@@ -299,6 +342,9 @@ export async function regenerateJinglesM3u(clientId) {
 
   const m3uPath = join(LIQUIDSOAP_MP3_DIR, clientId, 'jingles.m3u')
   const jinglesDir = join(LIQUIDSOAP_MP3_DIR, clientId, 'jingles')
+
+  // Igual que en regenerateM3u: el dir padre puede no existir.
+  await mkdir(dirname(m3uPath), { recursive: true })
 
   const lines = rows.map((r) => join(jinglesDir, r.fileName)).join('\n')
   await writeFile(m3uPath, lines + (lines ? '\n' : ''), { mode: 0o644 })

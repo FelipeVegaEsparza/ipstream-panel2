@@ -215,7 +215,9 @@ try {
       createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
       updatedAt DATETIME(3) NOT NULL,
       INDEX idx_client_day (clientId, dayOfWeek, isActive),
-      INDEX idx_radio_day (radioStreamId, dayOfWeek, isActive)
+      INDEX idx_radio_day (radioStreamId, dayOfWeek, isActive),
+      CONSTRAINT fk_ps_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_ps_radio FOREIGN KEY (radioStreamId) REFERENCES radio_streams(id) ON DELETE CASCADE
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `)
   logger.info('Tabla playlist_schedules asegurada')
@@ -234,7 +236,8 @@ try {
       userAgent VARCHAR(500),
       createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
       INDEX idx_audit_client_date (clientId, createdAt),
-      INDEX idx_audit_action (action)
+      INDEX idx_audit_action (action),
+      CONSTRAINT fk_audit_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `)
   logger.info('Tabla streaming_audit_logs asegurada')
@@ -293,7 +296,9 @@ try {
       currentArtist VARCHAR(191),
       timestamp DATETIME(3) NOT NULL,
       INDEX idx_stats_client_date (clientId, timestamp),
-      INDEX idx_stats_radio_date (radioStreamId, timestamp)
+      INDEX idx_stats_radio_date (radioStreamId, timestamp),
+      CONSTRAINT fk_stats_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_stats_radio FOREIGN KEY (radioStreamId) REFERENCES radio_streams(id) ON DELETE CASCADE
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `)
   logger.info('Tabla stream_stats asegurada')
@@ -312,7 +317,9 @@ try {
       type VARCHAR(20) NOT NULL DEFAULT 'autodj',
       playedAt DATETIME(3) NOT NULL,
       INDEX idx_ph_client_time (clientId, playedAt DESC),
-      INDEX idx_ph_radio_time (radioStreamId, playedAt DESC)
+      INDEX idx_ph_radio_time (radioStreamId, playedAt DESC),
+      CONSTRAINT fk_ph_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_ph_radio FOREIGN KEY (radioStreamId) REFERENCES radio_streams(id) ON DELETE CASCADE
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `)
   logger.info('Tabla play_history asegurada')

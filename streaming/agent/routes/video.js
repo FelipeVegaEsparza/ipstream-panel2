@@ -65,36 +65,19 @@ export default async function videoRoutes(fastify) {
       return
     }
 
-    // Buscar client por stream_key
-    const [rows] = await pool.query(
-      `SELECT id FROM clients WHERE id = ? OR id = (SELECT clientId FROM video_streams WHERE id = ?)`,
-      [client_id || '', '']
+    // Resolver el clientId a partir del stream_key. La query original con
+    // clientId directo + subquery era dead code (segundo parámetro siempre
+    // vacío). Buscamos por stream_key que es lo único confiable.
+    const [allStreams] = await pool.query(
+      `SELECT clientId FROM video_streams`
     )
-
-    if (!rows || rows.length === 0) {
-      // Buscar por stream_key
-      const [allStreams] = await pool.query(
-        `SELECT clientId FROM video_streams`
-      )
-      const matched = allStreams.find(s => getStreamKey(s.clientId) === stream_key)
-      if (!matched) {
-        reply.send({ code: 0, message: 'unknown stream_key' })
-        return
-      }
-      // Update state
-      _djActive.set(matched.clientId, { streamKey: stream_key, connectedAt: new Date().toISOString() })
-
-      await pool.query(`UPDATE video_streams SET status = 'live' WHERE clientId = ?`, [matched.clientId])
-      await stopEncoder(matched.clientId)
-      stopTracking(matched.clientId)
-
-      logger.info({ clientId: matched.clientId }, 'DJ live on video — AutoDJ stopped')
-      detectAndLogVideoTrack(matched.clientId, 'dj', 'DJ conectado', null, null)
-      reply.send({ code: 0, message: 'OK' })
+    const matched = allStreams.find(s => getStreamKey(s.clientId) === stream_key)
+    if (!matched) {
+      reply.send({ code: 0, message: 'unknown stream_key' })
       return
     }
 
-    const clientId = rows[0].id
+    const clientId = matched.clientId
     _djActive.set(clientId, { streamKey: stream_key, connectedAt: new Date().toISOString() })
 
     await pool.query(`UPDATE video_streams SET status = 'live' WHERE clientId = ?`, [clientId])
@@ -164,6 +147,7 @@ export default async function videoRoutes(fastify) {
     const encoderStatus = getEncoderStatus(clientId)
     const djStatus = await checkDJStatus(clientId)
     const streamKey = getStreamKey(clientId)
+    const relayUrl = getRelayUrl(clientId)
 
     return {
       id: vs.id,
@@ -175,7 +159,8 @@ export default async function videoRoutes(fastify) {
       storageQuotaMB: vs.storageQuotaMB,
       streamKey,
       rtmpUrl: `rtmp://localhost:1935/live/${streamKey}`,
-      relayUrl: getRelayUrl(clientId),
+      relayUrl,
+      relayPort: relayUrl ? parseInt(relayUrl.split(':').pop().split('/')[0], 10) : null,
       hlsUrl: `http://localhost:8080/live/${streamKey}.m3u8`,
       encoder: encoderStatus,
       dj: djStatus,

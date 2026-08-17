@@ -5,6 +5,10 @@ import { config } from './config.js'
 // 50 DJs simultáneos cubre el 99% de casos reales.
 export const HARD_DJS_LIMIT = 50
 
+// Paths derivados de env vars (con defaults) en lugar de hardcoded.
+const LIQUIDSOAP_LOG_PATH = config.liquidsoap.logPath || '/var/log/liquidsoap'
+const LIQUIDSOAP_LIBRARY_PATH = config.library.path || '/var/lib/radio'
+
 export function generateLiquidsoapScript({
   clientId,
   clientName,
@@ -28,7 +32,7 @@ export function generateLiquidsoapScript({
   const safePwd = sanitizeForLiquidsoap(sourcePassword)
   const safeClient = sanitizeForLiquidsoap(clientId)
   const safeHarborPwd = sanitizeForLiquidsoap(harborPassword || sourcePassword)
-  const m3u = playlistM3uPath || `/var/lib/radio/${safeClient}/playlist.m3u`
+  const m3u = playlistM3uPath || `${LIQUIDSOAP_LIBRARY_PATH}/${safeClient}/playlist.m3u`
 
   const harborPort = telnetPort + 10000
 
@@ -61,12 +65,15 @@ export function generateLiquidsoapScript({
 
   const agentHost = config.ice.host === 'localhost' ? 'localhost' : 'agent'
   const agentBase = `http://${agentHost}:4000`
-  // El token de callback se lee desde una variable de entorno del container
-  // de Liquidsoap, para no quedar expuesto en el cmdline del proceso.
-  const tokenExpr = `getenv("HARBOR_CALLBACK_TOKEN")`
+  // El token de callback se inyecta como string literal en el .liq.
+  // No usamos getenv() porque Liquidsoap 2.4.5 no permite concatenar
+  // strings dentro de la expresión de system() de forma directa.
+  // El archivo .liq solo es legible por el usuario liquidsoap/root.
+  const safeCallbackToken = sanitizeForLiquidsoap(agentToken || '')
 
   function harborCallbackCmd(action, djMount) {
-    return `system("curl -s -X POST '${agentBase}/api/streams/${safeClient}/harbor/${action}?token=" ^ ${tokenExpr} ^ "&dj=${djMount}' &>/dev/null &")`
+    const url = `${agentBase}/api/streams/${safeClient}/harbor/${action}?token=${encodeURIComponent(safeCallbackToken)}&dj=${encodeURIComponent(djMount)}`
+    return `system("curl -s -X POST '${url}' &>/dev/null &")`
   }
 
   // DJs sorted by priority (1 = highest)
@@ -119,7 +126,7 @@ live = input.harbor("/live",
 # Auto-generated for client ${safeClient} (mount: ${safeMount})
 # =====================================================
 
-settings.log.file.path.set("/var/log/liquidsoap/${safeMount}.log")
+settings.log.file.path.set("${LIQUIDSOAP_LOG_PATH}/${safeMount}.log")
 settings.log.file.set(true)
 settings.log.stdout.set(true)
 settings.log.level.set(3)

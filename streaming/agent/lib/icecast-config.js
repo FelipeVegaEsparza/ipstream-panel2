@@ -121,10 +121,14 @@ function generateIcecastXml(streams) {
  * Lee todos los streams, descifra livePasswordEnc y genera el XML.
  */
 async function buildConfig() {
+  // Filtramos por `enabled` (kill switch del admin) en lugar de `status`,
+  // porque los valores válidos de status son "off"|"autodj"|"live" y nunca
+  // "disabled". Sin este filtro, streams desactivados por admin seguían
+  // siendo publicados en icecast.xml con su password compartida.
   const [rows] = await pool.query(`
     SELECT icecastMount, bitrate, sourcePasswordEnc, livePasswordEnc
     FROM radio_streams
-    WHERE status != 'disabled'
+    WHERE enabled = 1
   `)
 
   const streams = rows.map((row) => ({

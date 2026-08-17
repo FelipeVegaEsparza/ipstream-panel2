@@ -6,10 +6,12 @@
 
 export function buildAuthHook(expectedToken, harborSecret) {
   return async function authHook(request, reply) {
-    // Exento de auth: health, auth-source POST (Icecast)
+    // Exento de auth: health, auth-source POST (Icecast), video hooks (SRS)
     const url = request.url.split('?')[0].replace(/\/$/, '')
     if (url === '/health' || url === '/healthz' ||
-        url === '/api/streams/auth-source') {
+        url === '/api/streams/auth-source' ||
+        url === '/api/video/hooks/on-publish' ||
+        url === '/api/video/hooks/on-unpublish') {
       return
     }
 

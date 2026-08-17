@@ -30,3 +30,8 @@ credenciales.md
 # Next.js build
 .next/
 tsconfig.tsbuildinfo
+
+# Liquidsoap runtime: el agent genera estos .liq dinámicamente.
+# En dev están en el repo (bind-mount al host); en prod están en ./data/scripts.
+# No commitear los generados en runtime.
+streaming/liquidsoap/scripts/*.liq

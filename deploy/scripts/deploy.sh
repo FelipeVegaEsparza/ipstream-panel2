@@ -113,29 +113,51 @@ docker exec ipstream-db mysql -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_D
 # El streaming-agent corre como uid 1001 (streamagent). Si ./data/radio quedó
 # propiedad de otro usuario (típico cuando se subió algo desde el host), el
 # agent no podrá leer los MP3/covers y devolverá 404 en cada cover/audio.
+#
+# El liquidsoap container corre como uid 100 (no 1001) y también escribe
+# en ./data/radio (cover bytes, etc.) y en ./data/logs/liquidsoap.
+# Por eso, además del chown al uid del agent, dejamos los dirs legibles-y-
+# escribibles para otros (o+rwX). Esto es aceptable porque los containers
+# son parte de un sistema privado detrás de Caddy.
 echo "🔐  6b/9 — Ajustando permisos de volúmenes bind-mount..."
-mkdir -p ./data/radio ./data/logs/liquidsoap ./streaming/liquidsoap/scripts
+mkdir -p ./data/radio ./data/logs/liquidsoap ./data/scripts
+# Seed inicial de ./data/scripts con los scripts del repo, si está vacío.
+# En deploys posteriores, el agent ya habrá escrito los .liq sobre este dir.
+if [[ -z "$(ls -A ./data/scripts 2>/dev/null)" ]]; then
+  cp -n ./streaming/liquidsoap/scripts/* ./data/scripts/ 2>/dev/null || true
+  echo "  ✓ ./data/scripts sembrado desde el repo"
+fi
 
 # Agent (uid 1001) escribe los .liq y lee los MP3/covers.
-chown -R 1001:1001 ./data/radio 2>/dev/null && echo "  ✓ ./data/radio → 1001:1001" || \
-  echo "  ⚠ no se pudo chown ./data/radio. Continuando."
+chown -R 1001:1001 ./data/radio 2>/dev/null
+chmod -R u+rwX,g+rwX,o+rX ./data/radio 2>/dev/null
+echo "  ✓ ./data/radio → 1001:1001 + world-readable"
 
-# Agent (uid 1001) genera los .liq aquí. Liquidsoap los lee (ro en su compose).
-chown -R 1001:1001 ./streaming/liquidsoap/scripts 2>/dev/null && echo "  ✓ ./streaming/liquidsoap/scripts → 1001:1001" || \
-  echo "  ⚠ no se pudo chown ./streaming/liquidsoap/scripts. Continuando."
+# Scripts runtime: agent los escribe (uid 1001), liquidsoap los lee (ro, uid 100).
+chown -R 1001:1001 ./data/scripts 2>/dev/null
+chmod -R u+rwX,g+rwX,o+rX ./data/scripts 2>/dev/null
+echo "  ✓ ./data/scripts → 1001:1001 + world-readable"
 
-# Liquidsoap (uid 100, gid 101) escribe sus logs aquí. Antes era named volume
-# propiedad de otro uid y moría con "Permission denied" al primer arranque.
-chown -R 100:101 ./data/logs/liquidsoap 2>/dev/null && echo "  ✓ ./data/logs/liquidsoap → 100:101" || \
-  echo "  ⚠ no se pudo chown ./data/logs/liquidsoap. Continuando."
+# Liquidsoap (uid 100, gid 101) escribe sus logs aquí.
+chown -R 100:101 ./data/logs/liquidsoap 2>/dev/null
+chmod -R u+rwX,g+rwX,o+rX ./data/logs/liquidsoap 2>/dev/null
+echo "  ✓ ./data/logs/liquidsoap → 100:101 + world-readable"
 
-# === 8. Up de los containers ===
-echo "🚀 7/9 — Levantando containers..."
-$COMPOSE_CMD up -d --remove-orphans
-
-# === 9. Prisma db push (resto de migraciones, dentro del nuevo container) ===
-echo "🗄️  8/9 — Sincronizando esquema Prisma..."
+# === 8. Prisma db push ANTES de levantar containers ===
+# El agente arranca crons (stats/history/retention) que consultan tablas
+# (radio_streams, tracks, playlists, play_history). Si lo levantamos antes
+# de prisma db push, esos crons fallan en cada primer arranque con tablas
+# inexistentes. Por eso db push va primero.
+echo "🗄️  7/9 — Sincronizando esquema Prisma (antes del up)..."
+# Levantamos solo el app temporalmente para correr prisma db push.
+$COMPOSE_CMD up -d app
 docker exec ipstream-app npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "  ⚠ prisma db push no crítico, continuando..."
+# Apagamos el app para que el siguiente up -d lo levante limpio.
+docker stop ipstream-app 2>/dev/null || true
+
+# === 9. Up de los containers ===
+echo "🚀 8/9 — Levantando containers..."
+$COMPOSE_CMD up -d --remove-orphans
 
 # === 10. Health check ===
 echo "🏥 9/9 — Verificando health (esperando hasta 30s)..."

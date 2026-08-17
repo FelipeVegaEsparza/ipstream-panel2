@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const SRS_INTERNAL_URL = process.env.SRS_INTERNAL_URL || 'http://srs:8080'
+
 const nextConfig = {
   images: {
     domains: ['localhost', 'uploadthing.com'],
@@ -25,6 +27,16 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+  },
+  async rewrites() {
+    return [
+      // Proxy HLS de SRS a través del panel para evitar problemas de CORS
+      // y no exponer SRS públicamente. /live/* → SRS /live/*
+      {
+        source: '/live/:path*',
+        destination: `${SRS_INTERNAL_URL}/live/:path*`,
+      },
+    ]
   },
 }
 

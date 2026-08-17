@@ -20,14 +20,9 @@ export default function TelevisionPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
   const { toast } = useToast()
-  const [origin, setOrigin] = useState<string | null>(null)
 
-  useEffect(() => {
-    setOrigin(`${window.location.protocol}//${window.location.host}`)
-  }, [])
-
-  const hlsUrl = videoStatus?.streamKey && origin
-    ? `${origin}/live/${videoStatus.streamKey}.m3u8`
+  const hlsUrl = videoStatus?.streamKey
+    ? `/live/${videoStatus.streamKey}.m3u8`
     : null
 
   useEffect(() => {
@@ -38,8 +33,33 @@ export default function TelevisionPage() {
       hlsRef.current.destroy()
     }
 
-    const hls = new Hls()
+    const hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: false,
+      backBufferLength: 30,
+    })
     hlsRef.current = hls
+
+    hls.on(Hls.Events.ERROR, (_event, data) => {
+      console.error('[HLS] error:', data.type, data.details, data.fatal)
+      if (data.fatal) {
+        switch (data.type) {
+          case Hls.ErrorTypes.NETWORK_ERROR:
+            console.error('[HLS] fatal network error, trying to recover')
+            hls.startLoad()
+            break
+          case Hls.ErrorTypes.MEDIA_ERROR:
+            console.error('[HLS] fatal media error, recovering')
+            hls.recoverMediaError()
+            break
+          default:
+            console.error('[HLS] fatal error, cannot recover')
+            hls.destroy()
+            break
+        }
+      }
+    })
+
     hls.loadSource(hlsUrl)
     hls.attachMedia(videoRef.current)
 

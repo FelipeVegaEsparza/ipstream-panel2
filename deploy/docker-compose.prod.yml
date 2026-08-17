@@ -106,10 +106,12 @@ services:
       # Bind-mount para que liquidsoap pueda escribir sus logs con su uid (100:101).
       # Antes era named volume "liquidsoap_logs" propiedad de otro uid → permission denied.
       - ./data/logs/liquidsoap:/var/log/liquidsoap
-      # Bind-mount compartido con el contenedor liquidsoap: el agent escribe los
-      # .liq dinámicamente y liquidsoap los lee (ro en su compose). Antes era named
-      # volume "agent_scripts" que nadie más veía → no se generaban .liq.
-      - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts
+      # Bind-mount a un dir FUERA del repo. En dev (base compose) se monta
+      # ./streaming/liquidsoap/scripts al repo para inspección; en prod esto
+      # sería destruido por `git reset --hard` en cada deploy. Por eso prod
+      # override usa ./data/scripts (que NO está en git). El deploy.sh hace
+      # chown al uid del agent y siembra los scripts seed.
+      - ./data/scripts:/etc/liquidsoap/scripts
       - /var/run/docker.sock:/var/run/docker.sock
     logging:
       driver: json-file
@@ -131,6 +133,12 @@ services:
         max-file: "3"
 
   liquidsoap:
+    # Override del mount de scripts: en prod el agent escribe los .liq en
+    # ./data/scripts (no en el repo), entonces liquidsoap debe leer de ahí.
+    volumes:
+      - ./data/scripts:/etc/liquidsoap/scripts:ro
+      - ./data/radio:/var/lib/radio
+      - ./data/logs/liquidsoap:/var/log/liquidsoap
     environment:
       - TERM=xterm
       - HARBOR_CALLBACK_TOKEN=${HARBOR_CALLBACK_SECRET}

@@ -229,8 +229,10 @@ export default async function streamRoutes(app) {
 
   /**
    * POST /api/streams/:clientId/dj-takeover
-   * Kickea el AutoDJ actual para que un DJ en vivo pueda conectar.
-   * El DJ watcher reiniciará el AutoDJ cuando el DJ se desconecte.
+   * Kickea el source de Icecast para que un DJ en vivo pueda conectar.
+   * NO matamos liquidsoap: el fallback [djs..., autodj] hace que el DJ tome
+   * el aire y al desconectarse, el autodj se reanude automáticamente vía la
+   * harbor callback on_disconnected.
    */
   app.post('/api/streams/:clientId/dj-takeover', async (request, reply) => {
     const { clientId } = request.params
@@ -242,7 +244,8 @@ export default async function streamRoutes(app) {
       if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
       const mount = rsRows[0].icecastMount
 
-      // Kick source de Icecast
+      // Kick source actual de Icecast (la autodj).
+      // El DJ que conecte por harbor toma el control vía fallback().
       try {
         await killSource(mount)
         logger.info({ clientId, mount }, 'dj-takeover: source kickeado de Icecast')
@@ -250,14 +253,8 @@ export default async function streamRoutes(app) {
         logger.warn({ clientId, mount, err: err.message }, 'dj-takeover: killSource falló (no source?)')
       }
 
-      // Detener AutoDJ
-      await stopStream(clientId)
-
-      // Marcar para que DJ watcher reinicie cuando DJ se vaya
-      setDjSlotActive(mount, '/live', true)
-
-      logger.info({ clientId, mount }, 'dj-takeover: listo para DJ')
-      return { ok: true, message: 'AutoDJ detenido. Conectá tu DJ ahora.' }
+      logger.info({ clientId, mount }, 'dj-takeover: listo para DJ (autodj pausará via fallback al detectar conexión harbor)')
+      return { ok: true, message: 'Conectá tu DJ. AutoDJ se reanudará automáticamente cuando se desconecte.' }
     } catch (err) {
       logger.error({ err, clientId }, 'dj-takeover: error')
       return reply.code(500).send({ error: 'dj_takeover_failed', message: err.message })
@@ -755,7 +752,16 @@ export default async function streamRoutes(app) {
       )
       if (result.affectedRows === 0) return reply.code(404).send({ error: 'dj_not_found' })
 
-      logger.info({ clientId, djId }, 'DJ slot eliminado')
+      // Regenerar el script para que el .liq no incluya el input.harbor() del
+      // DJ eliminado. Si no, el harbor input queda corriendo hasta el próximo
+      // restart de liquidsoap (mantiene el puerto y password viejos).
+      try {
+        await regenerateScript(clientId)
+        logger.info({ clientId, djId }, 'DJ slot eliminado + script regenerado')
+      } catch (err) {
+        logger.warn({ err, clientId, djId }, 'DJ slot eliminado, pero regenerateScript falló (se arregla en próximo restart)')
+      }
+
       return { ok: true }
     } catch (err) {
       logger.error({ err, clientId, djId }, 'Error eliminando DJ slot')

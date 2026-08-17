@@ -179,25 +179,90 @@ export function isRunning(clientId) {
 }
 
 // =====================================================
-// Relay FFmpeg — recibe en puerto 1936, reencoda a H.264, envía a SRS
+// Relay FFmpeg — recibe en un puerto único por cliente, reencoda a H.264, envía a SRS
 // Compatible con OBS enhanced RTMP y cualquier codec
 // =====================================================
+//
+// Cada cliente con TV necesita su propio puerto relay, porque solo puede
+// haber un proceso FFmpeg escuchando en un puerto TCP a la vez.
+// Asignamos puertos de un rango configurable (default 1936-2235) basándonos
+// en un hash del clientId, evitando colisiones con los puertos ya en uso.
+//
+// Para producción, hay que publicar el rango en docker-compose:
+//   ports: "1936-2235:1936-2235"
+// Y configurar RTMP_RELAY_PORT_RANGE_START / _END + RTMP_RELAY_PUBLIC_HOST.
 
-const RELAY_BASE_PORT = 1936
+const RELAY_PORT_RANGE_START = parseInt(process.env.RTMP_RELAY_PORT_RANGE_START || '1936', 10)
+const RELAY_PORT_RANGE_END = parseInt(process.env.RTMP_RELAY_PORT_RANGE_END || '2235', 10)
+const RELAY_PUBLIC_HOST = process.env.RTMP_RELAY_PUBLIC_HOST || 'localhost'
+
+const RELAY_PORT_RANGE_SIZE = RELAY_PORT_RANGE_END - RELAY_PORT_RANGE_START + 1
+
+// clientId -> { streamKey, port, startedAt }
 const _activeRelays = new Map()
+// Set<number> — puertos ya reservados (incluso si el relay aún no arrancó,
+// para evitar que dos clientes peleen por el mismo puerto durante el arranque)
+const _usedRelayPorts = new Set()
+
+/**
+ * Asigna un puerto único en el rango configurado para el cliente dado.
+ * Usa un hash determinístico del clientId como base, y si ese puerto está
+ * ocupado, busca el siguiente libre.
+ */
+export function allocateRelayPort(clientId) {
+  // Releer del estado actual para no asignar dos veces el mismo puerto.
+  for (const [cid, info] of _activeRelays.entries()) {
+    _usedRelayPorts.add(info.port)
+  }
+
+  // Hash determinístico
+  let hash = 0
+  for (let i = 0; i < clientId.length; i++) {
+    hash = ((hash << 5) - hash + clientId.charCodeAt(i)) | 0
+  }
+  const base = Math.abs(hash) % RELAY_PORT_RANGE_SIZE
+
+  // Buscar puerto libre empezando por el hash
+  for (let i = 0; i < RELAY_PORT_RANGE_SIZE; i++) {
+    const candidate = RELAY_PORT_RANGE_START + ((base + i) % RELAY_PORT_RANGE_SIZE)
+    if (!_usedRelayPorts.has(candidate)) {
+      _usedRelayPorts.add(candidate)
+      return candidate
+    }
+  }
+
+  // Rango agotado
+  throw new Error(
+    `No hay puertos relay disponibles en el rango ${RELAY_PORT_RANGE_START}-${RELAY_PORT_RANGE_END}`
+  )
+}
 
 export function getRelayUrl(clientId) {
   const relay = _activeRelays.get(clientId)
-  return relay ? `rtmp://localhost:${RELAY_BASE_PORT}/live/relay` : null
+  if (!relay) return null
+  return `rtmp://${RELAY_PUBLIC_HOST}:${relay.port}/live/relay`
+}
+
+export function getRelayPort(clientId) {
+  const relay = _activeRelays.get(clientId)
+  return relay ? relay.port : null
 }
 
 /**
  * Inicia relay FFmpeg para un cliente.
- * Escucha en puerto 1936, recibe stream OBS, reencoda a H.264 y envía a SRS.
+ * Escucha en un puerto único del rango, recibe stream OBS, reencoda a
+ * H.264 y envía a SRS.
  */
 export async function startRelay(clientId, streamKey) {
   const existing = _activeRelays.get(clientId)
-  if (existing) return { status: 'already_running' }
+  if (existing) return { status: 'already_running', port: existing.port }
+
+  let port
+  try {
+    port = allocateRelayPort(clientId)
+  } catch (err) {
+    return { status: 'error', error: err.message }
+  }
 
   const logFile = `${PROCESS_LOG_DIR}/relay_${clientId}.log`
   const shScript =
@@ -205,7 +270,7 @@ export async function startRelay(clientId, streamKey) {
     `while true; do ` +
     `ffmpeg -loglevel error -stats ` +
     `-listen 1 -timeout 30000000 ` +
-    `-i rtmp://0.0.0.0:${RELAY_BASE_PORT}/live/relay ` +
+    `-i rtmp://0.0.0.0:${port}/live/relay ` +
     `-c:v libx264 -preset veryfast -b:v 2000k -maxrate 2500k -bufsize 4000k ` +
     `-c:a aac -b:a 128k -ar 44100 -ac 2 ` +
     `-f flv rtmp://srs:1935/live/${streamKey} ` +
@@ -215,21 +280,27 @@ export async function startRelay(clientId, streamKey) {
 
   try {
     await execCmd(cmd)
-    _activeRelays.set(clientId, { streamKey, startedAt: new Date().toISOString() })
-    console.log(`[video-encoder] Relay started for ${clientId} -> ${streamKey}`)
-    return { status: 'started' }
+    _activeRelays.set(clientId, { streamKey, port, startedAt: new Date().toISOString() })
+    console.log(`[video-encoder] Relay started for ${clientId} on port ${port} -> ${streamKey}`)
+    return { status: 'started', port }
   } catch (err) {
+    // Liberar el puerto reservado si falla el arranque
+    _usedRelayPorts.delete(port)
     console.error(`[video-encoder] Error starting relay for ${clientId}:`, err.message)
     return { status: 'error', error: err.message }
   }
 }
 
 export async function stopRelay(clientId) {
-  try {
-    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "relay_${clientId}" || true`)
-    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "listen 1.*relay" || true`)
-  } catch (_) {}
-  _activeRelays.delete(clientId)
+  const relay = _activeRelays.get(clientId)
+  if (relay) {
+    try {
+      await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "relay_${clientId}" || true`)
+      await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "listen 1.*relay" || true`)
+    } catch (_) {}
+    _usedRelayPorts.delete(relay.port)
+    _activeRelays.delete(clientId)
+  }
   return { status: 'stopped' }
 }
 
