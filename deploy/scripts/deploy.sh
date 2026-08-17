@@ -136,7 +136,10 @@ echo "  ✓ ./data/radio → 1001:1001 + world-readable"
 # Scripts runtime: agent los escribe (uid 1001), liquidsoap los lee (ro, uid 100).
 chown -R 1001:1001 ./data/scripts 2>/dev/null
 chmod -R u+rwX,g+rwX,o+rX ./data/scripts 2>/dev/null
-echo "  ✓ ./data/scripts → 1001:1001 + world-readable"
+# Forzar modo legible para .liq pre-existentes (versión vieja del agente
+# usaba 0o600 que bloquea la lectura por liquidsoap).
+find ./data/scripts -name "*.liq" -exec chmod 644 {} + 2>/dev/null || true
+echo "  ✓ ./data/scripts → 1001:1001 + world-readable (.liq = 644)"
 
 # Liquidsoap (uid 100, gid 101) escribe sus logs aquí.
 chown -R 100:101 ./data/logs/liquidsoap 2>/dev/null

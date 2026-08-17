@@ -40,7 +40,10 @@ async function loadRadioStream(clientId) {
 
 async function writeScript(mount, content) {
   const path = join(SCRIPTS_DIR, `${mount}.liq`)
-  await writeFile(path, content, { mode: 0o600 })
+  // Permisos 0o644 (rw-r--r--): el contenedor liquidsoap corre como uid 100
+  // (savonet) y necesita poder leer el script. Antes era 0o600 (rw solo para
+  // owner streamagent uid 1001) y producia "Permission denied" al iniciar.
+  await writeFile(path, content, { mode: 0o644 })
   logger.info({ path, bytes: content.length }, 'Script .liq escrito')
   return path
 }
