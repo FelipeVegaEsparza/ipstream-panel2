@@ -219,9 +219,11 @@ export async function startStream(clientId) {
       logger.warn({ clientId }, 'Iniciando stream sin playlist activa')
     }
 
-    // Igual que isProcessRunning: usar `sh` (POSIX) en vez de `bash`.
-    // El script es nohup ... &; POSIX sh lo soporta igual.
-    const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} sh -c 'nohup ${LIQUIDSOAP_BIN} ${path} > /proc/1/fd/1 2>&1 & disown'`
+    // Usar `setsid` para crear una nueva sesion (independiente de tini/PID1)
+    // y `exec` para reemplazar el shell por el proceso liquidsoap, asi no
+    // queda un shell padre que pueda terminar y matar al hijo.
+    // Ademas `setsid` redirige correctamente el output al fd 1 del contenedor.
+    const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} setsid ${LIQUIDSOAP_BIN} ${path} < /dev/null > /proc/1/fd/1 2>&1`
     await execp(cmd, { timeout: 10000 })
 
     await new Promise((r) => setTimeout(r, 1500))
