@@ -22,7 +22,7 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
 
     # GitHub deprecó Node 20 en los runners (predeterminado ahora es Node 24).
     # Mientras el proyecto siga en Node 20 forzamos el uso de la versión "insecure"
@@ -88,22 +88,43 @@ jobs:
           # cross-compile con qemu-binfmt, lo que duplica o triplica
           # el tiempo de build.
 
+      - name: Login a GHCR (re-confirmar antes de push)
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Push Docker image to registry
         if: github.event_name == 'push'
         run: |
           set -e
-          # Las imágenes se construyeron con los tags definidos en el step
-          # metadata (ej: ghcr.io/owner/ipstream-panel:sha, latest, branch).
-          # Los usamos directamente para push.
+          # Verificar autenticación antes de pushear
+          echo "🔐 Verificación de auth GHCR:"
+          docker info 2>&1 | grep -i "username\|registry" | head -5 || true
+
           TAG_STRING='${{ steps.meta.outputs.tags }}'
           echo "📦 Tags a pushear:"
           echo "$TAG_STRING"
+
+          PUSH_FAILED=0
           for tag in $TAG_STRING; do
             if [ -n "$tag" ]; then
               echo "  → push $tag"
-              docker push "$tag"
+              if ! docker push "$tag" 2>&1 | tee /tmp/push.log; then
+                echo "❌ Push falló para: $tag"
+                echo "--- últimas líneas del log:"
+                tail -20 /tmp/push.log
+                PUSH_FAILED=1
+              fi
             fi
           done
+
+          if [ $PUSH_FAILED -eq 1 ]; then
+            echo "❌ Uno o más pushes fallaron. Abortando."
+            exit 1
+          fi
           echo "  ✓ Imagen principal pusheada"
 
       # === 5b. Build + Push de video-encoder ===
