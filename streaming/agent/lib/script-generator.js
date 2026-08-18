@@ -131,6 +131,15 @@ settings.log.file.set(true)
 settings.log.stdout.set(true)
 settings.log.level.set(3)
 
+# Excluir tags ID3 problematicos que pueden romper el stream title.
+# Si un tag tiene encoding invalido (ej geob con URL larga), liquidsoap
+# descarta el bloque entero de metadata, incluyendo title/artist, y
+# Icecast nunca actualiza el stream title.
+settings.request.metadata_decoders.recode.exclude.add("geob")
+settings.request.metadata_decoders.recode.exclude.add("TXXX")
+settings.request.metadata_decoders.recode.exclude.add("WXXX")
+settings.request.metadata_decoders.recode.exclude.add("USLT")
+
 settings.server.telnet.set(true)
 settings.server.telnet.port.set(${telnetPort})
 
