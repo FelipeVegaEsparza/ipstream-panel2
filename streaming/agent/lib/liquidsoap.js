@@ -14,6 +14,7 @@ const LIQUIDSOAP_CONTAINER = config.liquidsoap.host
 const LIQUIDSOAP_BIN = config.liquidsoap.bin
 const SCRIPTS_DIR = config.liquidsoap.scriptsPath
 const LIQUIDSOAP_MP3_DIR = config.library.path
+const LIQUIDSOAP_LOG_PATH = config.liquidsoap.logPath
 
 const CHECK_SCRIPT_PATH = join(SCRIPTS_DIR, '_check_proc.sh')
 
