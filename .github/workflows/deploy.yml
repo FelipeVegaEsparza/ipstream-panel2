@@ -66,35 +66,58 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       # === 5. Build + Push de la imagen ===
-      - name: Build and push Docker image
+      # Separamos build (load local) de push (push explícito) para
+      # diagnosticar si el push falla silenciosamente con la action
+      # combinada.
+      - name: Build Docker image (load local)
         if: github.event_name == 'push'
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: true
+          push: false
+          load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Cache de layers de Docker para builds rápidos
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # NOTA: NO setear platforms — los runners ubuntu-latest ya son
-          # linux/amd64 y especificar platform fuerza cross-compile con
-          # emulation (qemu-binfmt), lo que duplica o triplica el tiempo
-          # de build.
+          # NOTA: NO setear platforms — los runners ubuntu-latest ya
+          # son linux/amd64 y especificar la plataforma fuerza
+          # cross-compile con qemu-binfmt, lo que duplica o triplica
+          # el tiempo de build.
+
+      - name: Push Docker image to registry
+        if: github.event_name == 'push'
+        run: |
+          set -e
+          echo "📦 Push de la imagen con tags:"
+          docker image inspect ipstream-panel:${{ github.sha }} > /dev/null
+          FULL_TAGS=$(docker image inspect --format='{{range .RepoTags}}{{println .}}{{end}}' ipstream-panel:${{ github.sha }})
+          echo "$FULL_TAGS"
+          for tag in $FULL_TAGS; do
+            echo "  → push $tag"
+            docker push "$tag"
+          done
 
       # === 5b. Build + Push de video-encoder ===
-      - name: Build and push video-encoder image
+      - name: Build video-encoder image (load local)
         if: github.event_name == 'push'
         uses: docker/build-push-action@v5
         with:
           context: ./streaming/video
           file: ./streaming/video/Dockerfile
-          push: true
-          tags: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:${{ github.sha }},ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:latest
-          labels: ${{ steps.meta.outputs.labels }}
+          push: false
+          load: true
+          tags: ipstream-video-encoder:${{ github.sha }},ipstream-video-encoder:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Push video-encoder image to registry
+        if: github.event_name == 'push'
+        run: |
+          set -e
+          docker push ipstream-video-encoder:${{ github.sha }}
+          docker push ipstream-video-encoder:latest
 
       # === 6. Configurar SSH ===
       - name: Setup SSH
@@ -125,11 +148,16 @@ jobs:
       # en vez de tirar un error genérico más adelante.
       - name: Verify image was pushed
         run: |
-          docker pull ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-panel:${{ steps.tag.outputs.value }} || {
-            echo "❌ Image no encontrada en el registry."
-            echo "   Esperado: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-panel:${{ steps.tag.outputs.value }}"
+          set -e
+          IMG="ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-panel:${{ steps.tag.outputs.value }}"
+          echo "🔎 Pull de verificación: $IMG"
+          docker pull "$IMG" || {
+            echo "❌ Image no encontrada en el registry: $IMG"
+            echo "   Imágenes locales que pudimos haber construido:"
+            docker images | grep ipstream-panel || true
             exit 1
           }
+          echo "  ✓ Imagen verificada en el registry"
 
       # === 10. Deploy al VPS via SSH ===
       - name: Run deploy script on VPS
