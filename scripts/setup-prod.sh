@@ -46,11 +46,12 @@ SECRET_VARS=(
 
 # ====== Defaults inseguros conocidos ======
 INSECURE_PATTERNS=(
-  "^change-me"
+  "change-me"       # matchea en cualquier posicion (case-insensitive abajo)
   "REEMPLAZAR"
   "CHANGE_ME"
   "dev-agent-token-change-me-in-prod"
   "dev-harbor-callback-token-change-me"
+  "dev-secret-change-me"
   "hackme"
   "admin123456"
   "your-secret"
@@ -64,7 +65,8 @@ is_insecure() {
     return 0
   fi
   for pattern in "${INSECURE_PATTERNS[@]}"; do
-    if [[ "$val" =~ $pattern ]]; then
+    # Case-insensitive match para capturar 'Change-Me', 'CHANGE-ME', etc.
+    if [[ "${val,,}" =~ ${pattern,,} ]]; then
       echo "matches: $pattern"
       return 0
     fi
