@@ -6,7 +6,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 
+// Sin este flag, Next.js puede cachear la respuesta y mostrar siempre
+// la misma data aunque Icecast ya reporto un cambio de tema.
+export const dynamic = 'force-dynamic'
+
 export async function GET(_request: NextRequest) {
+  const noStoreHeaders = { 'Cache-Control': 'no-store, must-revalidate' }
   try {
     const ctx = await requireStreamingClient()
 
@@ -37,12 +42,12 @@ export async function GET(_request: NextRequest) {
       console.error('[streaming/status] status failed:', status.reason)
     }
 
-    if (nowPlaying.status === 'fulfilled') {
-      body.nowPlaying = nowPlaying.value
-    }
+if (nowPlaying.status === 'fulfilled') {
+    body.nowPlaying = nowPlaying.value
+  }
 
-    return NextResponse.json(body)
-  } catch (err) {
+  return NextResponse.json(body, { headers: noStoreHeaders })
+} catch (err) {
     if (err instanceof StreamingAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.statusCode })
     }

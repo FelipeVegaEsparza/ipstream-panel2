@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const ctx = await requireStreamingClient()
@@ -14,7 +16,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit') || '25'
 
     const result = await streamingClient.getHistory(ctx.clientId, Number(page), Number(limit))
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: { 'Cache-Control': 'no-store, must-revalidate' } })
   } catch (err) {
     if (err instanceof StreamingAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.statusCode })
