@@ -8,6 +8,11 @@ import { ModalProvider } from '@/components/ui/modal'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { getDisabledMenuItems, getGloballyHiddenMenuItems } from '@/lib/menu-permissions'
 
+// getServerSession() lee cookies (next-auth), lo que impide que Next.js
+// genere las páginas estáticamente. Sin este flag, el build tira error
+// "cannot be statically generated".
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({
   children,
 }: {
