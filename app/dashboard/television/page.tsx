@@ -21,8 +21,11 @@ export default function TelevisionPage() {
   const hlsRef = useRef<Hls | null>(null)
   const { toast } = useToast()
 
+  const publicBase = process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
   const hlsUrl = videoStatus?.streamKey
-    ? `/live/${videoStatus.streamKey}.m3u8`
+    ? publicBase
+      ? `${publicBase.replace(/\/$/, '')}/live/${videoStatus.streamKey}.m3u8`
+      : `/live/${videoStatus.streamKey}.m3u8`
     : null
 
   useEffect(() => {

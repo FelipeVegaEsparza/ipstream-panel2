@@ -17,6 +17,11 @@ export default function StreamingPage() {
   const [copied, setCopied] = useState(false)
   const isRunning = !!status?.process?.running
   const streamUrl = status?.streamUrl || status?.icecast?.listenurl || null
+  // Si streamUrl viene relativa (/radio_xxx) y tenemos dominio público,
+  // la convertimos a absoluta para que sea compartible externamente.
+  const absoluteStreamUrl = streamUrl && streamUrl.startsWith('/') && process.env.NEXT_PUBLIC_ICE_PUBLIC_URL
+    ? `${process.env.NEXT_PUBLIC_ICE_PUBLIC_URL.replace(/\/$/, '')}${streamUrl}`
+    : streamUrl
 
   const copyUrl = () => {
     if (!streamUrl) return
@@ -49,12 +54,12 @@ export default function StreamingPage() {
             <input
               type="text"
               readOnly
-              value={streamUrl}
+              value={absoluteStreamUrl}
               className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none focus:ring-2 focus:ring-cyan-500/30"
               onClick={(e) => e.currentTarget.select()}
             />
             <a
-              href={streamUrl}
+              href={absoluteStreamUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg text-center whitespace-nowrap transition-colors"
