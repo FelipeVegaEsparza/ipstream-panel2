@@ -95,8 +95,13 @@ for var in "${SECRET_VARS[@]}"; do
   current=$(grep "^$var=" "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
   CURRENT_VALUES[$var]="$current"
 
-  reason=$(is_insecure "$current")
-  if [[ $? -eq 0 ]]; then
+  # Capturar el exit code ANTES de cualquier otra asignacion. Si usamos
+  # $() + $?, el exit code siempre es 0 (del command substitution).
+  # Por eso lo hacemos en dos pasos: ejecutar y capturar despues.
+  is_insecure "$current"
+  insecure_exit=$?
+  reason=$(is_insecure "$current" 2>/dev/null)
+  if [[ $insecure_exit -eq 0 ]]; then
     NEEDS_FIX=1
     echo "  ⚠ $var: insecure ($reason)"
 
