@@ -141,10 +141,11 @@ chmod -R u+rwX,g+rwX,o+rX ./data/scripts 2>/dev/null
 find ./data/scripts -name "*.liq" -exec chmod 644 {} + 2>/dev/null || true
 echo "  ✓ ./data/scripts → 1001:1001 + world-readable (.liq = 644)"
 
-# Liquidsoap (uid 100, gid 101) escribe sus logs aquí.
+# Liquidsoap (uid 100, gid 101) escribe sus logs aquí. Si el agente
+# (uid 1001) creó el directorio antes, liquidsoap no puede escribir.
 chown -R 100:101 ./data/logs/liquidsoap 2>/dev/null
-chmod -R u+rwX,g+rwX,o+rX ./data/logs/liquidsoap 2>/dev/null
-echo "  ✓ ./data/logs/liquidsoap → 100:101 + world-readable"
+chmod -R u+rwX,g+rwX,o+rwX ./data/logs/liquidsoap 2>/dev/null
+echo "  ✓ ./data/logs/liquidsoap → 100:101 (g+w o+w)"
 
 # === 8. Prisma db push ANTES de levantar containers ===
 # El agente arranca crons (stats/history/retention) que consultan tablas
