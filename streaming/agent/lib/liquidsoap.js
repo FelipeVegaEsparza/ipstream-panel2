@@ -219,11 +219,13 @@ export async function startStream(clientId) {
       logger.warn({ clientId }, 'Iniciando stream sin playlist activa')
     }
 
-    // Usar `setsid` para crear una nueva sesion (independiente de tini/PID1)
-    // y `exec` para reemplazar el shell por el proceso liquidsoap, asi no
-    // queda un shell padre que pueda terminar y matar al hijo.
-    // Ademas `setsid` redirige correctamente el output al fd 1 del contenedor.
-    const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} setsid ${LIQUIDSOAP_BIN} ${path} < /dev/null > /proc/1/fd/1 2>&1`
+    // Escribir directo a un archivo de log dentro del contenedor.
+// Antes redirigiamos a /proc/1/fd/1 (stdout de tini) pero liquidsoap
+// corre como uid 1001 y tini como root -> Permission denied.
+    // El user liquidsoap (uid 1001, gid 101) puede escribir en
+    // /var/log/liquidsoap/ (es propiedad de 100:101 desde el entrypoint).
+    const logFile = `${LIQUIDSOAP_LOG_PATH}/${rs.icecastMount}.log`
+    const cmd = `docker exec -d -u liquidsoap ${LIQUIDSOAP_CONTAINER} setsid ${LIQUIDSOAP_BIN} ${path} < /dev/null > ${logFile} 2>&1`
     await execp(cmd, { timeout: 10000 })
 
     await new Promise((r) => setTimeout(r, 1500))
