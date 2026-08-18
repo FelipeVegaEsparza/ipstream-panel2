@@ -129,13 +129,13 @@ if [[ -z "$(ls -A ./data/scripts 2>/dev/null)" ]]; then
 fi
 
 # Agent (uid 1001) escribe los .liq y lee los MP3/covers.
-chown -R 1001:1001 ./data/radio 2>/dev/null
-chmod -R u+rwX,g+rwX,o+rX ./data/radio 2>/dev/null
+chown -R 1001:1001 ./data/radio 2>/dev/null || true
+chmod -R u+rwX,g+rwX,o+rX ./data/radio 2>/dev/null || true
 echo "  ✓ ./data/radio → 1001:1001 + world-readable"
 
 # Scripts runtime: agent los escribe (uid 1001), liquidsoap los lee (ro, uid 100).
-chown -R 1001:1001 ./data/scripts 2>/dev/null
-chmod -R u+rwX,g+rwX,o+rX ./data/scripts 2>/dev/null
+chown -R 1001:1001 ./data/scripts 2>/dev/null || true
+chmod -R u+rwX,g+rwX,o+rX ./data/scripts 2>/dev/null || true
 # Forzar modo legible para .liq pre-existentes (versión vieja del agente
 # usaba 0o600 que bloquea la lectura por liquidsoap).
 find ./data/scripts -name "*.liq" -exec chmod 644 {} + 2>/dev/null || true
@@ -143,8 +143,8 @@ echo "  ✓ ./data/scripts → 1001:1001 + world-readable (.liq = 644)"
 
 # Liquidsoap (uid 100, gid 101) escribe sus logs aquí. Si el agente
 # (uid 1001) creó el directorio antes, liquidsoap no puede escribir.
-chown -R 100:101 ./data/logs/liquidsoap 2>/dev/null
-chmod -R u+rwX,g+rwX,o+rwX ./data/logs/liquidsoap 2>/dev/null
+chown -R 100:101 ./data/logs/liquidsoap 2>/dev/null || true
+chmod -R u+rwX,g+rwX,o+rwX ./data/logs/liquidsoap 2>/dev/null || true
 echo "  ✓ ./data/logs/liquidsoap → 100:101 (g+w o+w)"
 
 # === 8. Prisma db push ANTES de levantar containers ===
