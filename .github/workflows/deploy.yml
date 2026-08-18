@@ -77,6 +77,8 @@ jobs:
           file: ./Dockerfile
           push: false
           load: true
+          # Tags con prefijo del registry para que docker push los
+          # encuentre localmente.
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -90,14 +92,19 @@ jobs:
         if: github.event_name == 'push'
         run: |
           set -e
-          echo "📦 Push de la imagen con tags:"
-          docker image inspect ipstream-panel:${{ github.sha }} > /dev/null
-          FULL_TAGS=$(docker image inspect --format='{{range .RepoTags}}{{println .}}{{end}}' ipstream-panel:${{ github.sha }})
-          echo "$FULL_TAGS"
-          for tag in $FULL_TAGS; do
-            echo "  → push $tag"
-            docker push "$tag"
+          # Las imágenes se construyeron con los tags definidos en el step
+          # metadata (ej: ghcr.io/owner/ipstream-panel:sha, latest, branch).
+          # Los usamos directamente para push.
+          TAG_STRING='${{ steps.meta.outputs.tags }}'
+          echo "📦 Tags a pushear:"
+          echo "$TAG_STRING"
+          for tag in $TAG_STRING; do
+            if [ -n "$tag" ]; then
+              echo "  → push $tag"
+              docker push "$tag"
+            fi
           done
+          echo "  ✓ Imagen principal pusheada"
 
       # === 5b. Build + Push de video-encoder ===
       - name: Build video-encoder image (load local)
@@ -108,7 +115,7 @@ jobs:
           file: ./streaming/video/Dockerfile
           push: false
           load: true
-          tags: ipstream-video-encoder:${{ github.sha }},ipstream-video-encoder:latest
+          tags: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:${{ github.sha }},ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -116,8 +123,11 @@ jobs:
         if: github.event_name == 'push'
         run: |
           set -e
-          docker push ipstream-video-encoder:${{ github.sha }}
-          docker push ipstream-video-encoder:latest
+          OWNER='${{ steps.owner.outputs.owner }}'
+          SHA='${{ github.sha }}'
+          docker push "ghcr.io/$OWNER/ipstream-video-encoder:$SHA"
+          docker push "ghcr.io/$OWNER/ipstream-video-encoder:latest"
+          echo "  ✓ Imagen video-encoder pusheada"
 
       # === 6. Configurar SSH ===
       - name: Setup SSH
