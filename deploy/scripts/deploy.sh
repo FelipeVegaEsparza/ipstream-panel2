@@ -19,7 +19,22 @@ cd "$PROJECT_DIR"
 
 # IMAGE_TAG: argumento o env var, default "latest"
 IMAGE_TAG="${1:-${IMAGE_TAG:-latest}}"
-GITHUB_REPOSITORY_OWNER="${GITHUB_REPOSITORY_OWNER:-ipstream}"
+# GITHUB_REPOSITORY_OWNER se lee del env (que viene de GH Actions o del .env).
+# Si no esta definido, NO usamos 'ipstream' como default porque ese namespace
+# no existe (causa pull denied). exigir el valor o fallar.
+GITHUB_REPOSITORY_OWNER="${GITHUB_REPOSITORY_OWNER:-}"
+if [[ -z "$GITHUB_REPOSITORY_OWNER" ]]; then
+  echo "⚠️  GITHUB_REPOSITORY_OWNER no definido. Buscando en .env..."
+  if [[ -f .env ]]; then
+    GITHUB_REPOSITORY_OWNER=$(grep '^GITHUB_REPOSITORY_OWNER=' .env | cut -d= -f2- || true)
+  fi
+fi
+if [[ -z "$GITHUB_REPOSITORY_OWNER" ]]; then
+  echo "❌ ERROR: GITHUB_REPOSITORY_OWNER es requerido para que docker compose"
+  echo "         pueda hacer pull del registry. Definilo en .env o como env var."
+  exit 1
+fi
+echo "📦 Usando GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER"
 COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ipstream-sonicpanel}"
 COMPOSE_FILES="-f docker-compose.yml -f deploy/docker-compose.prod.yml"
 COMPOSE_CMD="docker compose --project-name ${COMPOSE_PROJECT_NAME} ${COMPOSE_FILES}"
