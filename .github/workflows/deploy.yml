@@ -78,7 +78,10 @@ jobs:
           # Cache de layers de Docker para builds rápidos
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64
+          # NOTA: NO setear platforms — los runners ubuntu-latest ya son
+          # linux/amd64 y especificar platform fuerza cross-compile con
+          # emulation (qemu-binfmt), lo que duplica o triplica el tiempo
+          # de build.
 
       # === 5b. Build + Push de video-encoder ===
       - name: Build and push video-encoder image
@@ -92,7 +95,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64
 
       # === 6. Configurar SSH ===
       - name: Setup SSH

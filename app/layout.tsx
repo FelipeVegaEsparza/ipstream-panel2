@@ -9,6 +9,12 @@ import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'] })
 
+// Toda la app es dinámica: cada página usa getServerSession() (cookies),
+// fetch a la DB, o consulta el agente. Marcar todo el árbol como
+// force-dynamic evita errores 'cannot be statically generated' durante
+// el build de Next.js.
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'IPStream Panel',
   description: 'Panel de gestión de contenido para radio y streaming',
