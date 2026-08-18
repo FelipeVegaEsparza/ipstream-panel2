@@ -68,7 +68,7 @@ export async function GET(
           isJingle: false,
         }
 
-    return createCorsResponse({
+    const res = createCorsResponse({
       clientId: params.clientId,
       clientName: radioStream.client.name,
       mount: radioStream.icecastMount,
@@ -95,9 +95,10 @@ export async function GET(
         : null,
       position: nowPlaying?.position ?? null,
       lastUpdate: icecast ? status?.timestamp : radioStream.lastStatusAt,
-    }, {
-      headers: { 'Cache-Control': 'no-store, must-revalidate' },
     })
+    // Evitar cache del browser/CDN para que el dashboard vea cambios en vivo.
+    res.headers.set('Cache-Control', 'no-store, must-revalidate')
+    return res
   } catch (err) {
     console.error('[public/streaming]', err)
     return createCorsErrorResponse('Error interno del servidor', 500)
