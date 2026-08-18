@@ -51,6 +51,10 @@ export async function getGlobalStatus() {
  * Lee el estado de un mountpoint específico.
  * @param {string} mount — el nombre del mount SIN slash (ej: "test_abc")
  * @returns {Promise<MountStatus | null>}
+ *
+ * Icecast 2.4.x a veces NO incluye el campo `mount` en el JSON del source,
+ * solo `listenurl` con la URL completa. Para hacerlo robusto, matchea
+ * por `mount` o por el path final de `listenurl`.
  */
 export async function getMountStatus(mount) {
   const status = await getGlobalStatus()
@@ -58,7 +62,24 @@ export async function getMountStatus(mount) {
   if (!sources) return null
   const list = Array.isArray(sources) ? sources : [sources]
   const targetMount = mount.startsWith('/') ? mount : `/${mount}`
-  return list.find((s) => s.mount === targetMount) || null
+
+  return (
+    list.find((s) => {
+      // Match directo por mount (Icecast ≥2.5 devuelve esto)
+      if (s.mount && (s.mount === targetMount || s.mount === mount)) return true
+      // Fallback: extraer el path de listenurl (ej: ".../radio_xxx")
+      if (s.listenurl) {
+        try {
+          const url = new URL(s.listenurl)
+          const path = url.pathname.replace(/^\//, '')
+          return path === mount
+        } catch {
+          return false
+        }
+      }
+      return false
+    }) || null
+  )
 }
 
 /**
