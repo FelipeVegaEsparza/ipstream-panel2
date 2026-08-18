@@ -148,7 +148,8 @@ jobs:
         run: |
           set -e
           OWNER='${{ steps.owner.outputs.owner }}'
-          SHA='${{ github.sha }}'
+          # Usamos SHA corto para matchear el tag local que produce el build.
+          SHA=$(echo '${{ github.sha }}' | cut -c1-7)
           docker push "ghcr.io/$OWNER/ipstream-video-encoder:$SHA"
           docker push "ghcr.io/$OWNER/ipstream-video-encoder:latest"
           echo "  ✓ Imagen video-encoder pusheada"
@@ -211,11 +212,13 @@ jobs:
              ./deploy/scripts/deploy.sh"
 
       # === 10. Health check post-deploy ===
+      # Damos 45s para que la app y el agente terminen de arrancar.
       - name: Post-deploy health check
         run: |
-          sleep 15
+          sleep 45
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /opt/ipstream-panel && ./deploy/scripts/health-check.sh" || {
             echo "⚠ Health check remoto falló. Verificar manualmente."
+            echo "   Para debug: docker logs ipstream-app --tail 30 && docker logs ipstream-streaming-agent --tail 30"
             exit 1
           }
 
