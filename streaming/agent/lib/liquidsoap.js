@@ -222,10 +222,12 @@ export async function startStream(clientId) {
     // Escribir directo a un archivo de log dentro del contenedor.
 // Antes redirigiamos a /proc/1/fd/1 (stdout de tini) pero liquidsoap
 // corre como uid 1001 y tini como root -> Permission denied.
-    // El user liquidsoap (uid 1001, gid 101) puede escribir en
-    // /var/log/liquidsoap/ (es propiedad de 100:101 desde el entrypoint).
+// El directorio /var/log/liquidsoap es world-writable (chmod 777
+// desde deploy.sh) asi que liquidsoap puede escribir.
     const logFile = `${LIQUIDSOAP_LOG_PATH}/${rs.icecastMount}.log`
-    const cmd = `docker exec -d -u liquidsoap ${LIQUIDSOAP_CONTAINER} setsid ${LIQUIDSOAP_BIN} ${path} < /dev/null > ${logFile} 2>&1`
+    // nohup + & (background) + redireccion a archivo. Funciona
+    // porque el archivo de log no tiene problemas de permisos.
+    const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} sh -c 'nohup ${LIQUIDSOAP_BIN} ${path} > ${logFile} 2>&1 &'`
     await execp(cmd, { timeout: 10000 })
 
     await new Promise((r) => setTimeout(r, 1500))
