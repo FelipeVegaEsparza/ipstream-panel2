@@ -61,7 +61,10 @@ jobs:
         with:
           images: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-panel
           tags: |
-            type=sha,prefix=
+            # SHA corto (7 chars), igual al tag local que produce
+            # docker/build-push-action. Sin format=short da SHA completo
+            # (40 chars) que no existe localmente y el push falla.
+            type=sha,prefix=,format=short
             type=ref,event=branch
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -165,14 +168,18 @@ jobs:
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" 2>/dev/null | head -1 >> ~/.ssh/known_hosts || true
 
       # === 8. Determinar IMAGE_TAG ===
+      # Usamos SHA corto (7 chars) para matchear el tag que produce el
+      # build. Si fuera completo, el pull de verificaci\u00f3n no encontrar\u00eda
+      # la imagen en el registry.
       - name: Determine image tag
         id: tag
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "value=${{ github.event.inputs.image_tag || 'latest' }}" >> $GITHUB_OUTPUT
           else
-            echo "value=${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "value=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
           fi
+          echo "Tag para verificacion: $(cat $GITHUB_OUTPUT)"
 
       # === 9. Verify image was pushed successfully ===
       # Si la imagen no está en el registry, falla acá con un mensaje claro
