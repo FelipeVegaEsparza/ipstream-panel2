@@ -130,7 +130,22 @@ jobs:
           fi
           echo "  ✓ Imagen principal pusheada"
 
-      # === 5b. Build + Push de video-encoder ===
+      # === 5b. Determinar IMAGE_TAG (antes del build de video-encoder que lo usa) ===
+      # Usamos SHA corto (7 chars) para matchear el tag que produce el
+      # build. Si fuera completo, el pull de verificación no encontraría
+      # la imagen en el registry. Este step DEBE ir antes de cualquier
+      # build que use steps.tag.outputs.value.
+      - name: Determine image tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "value=${{ github.event.inputs.image_tag || 'latest' }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          fi
+          echo "Tag para verificacion: $(cat $GITHUB_OUTPUT)"
+
+      # === 5c. Build + Push de video-encoder ===
       - name: Build video-encoder image (load local)
         if: github.event_name == 'push'
         uses: docker/build-push-action@v5
@@ -161,27 +176,13 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
-      # === 7. Add known hosts (evita el prompt de host key) ===
+# === 7. Add known hosts (evita el prompt de host key) ===
       - name: Add VPS to known hosts
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
           # También aceptamos el caso de host alias
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" 2>/dev/null | head -1 >> ~/.ssh/known_hosts || true
-
-      # === 8. Determinar IMAGE_TAG ===
-      # Usamos SHA corto (7 chars) para matchear el tag que produce el
-      # build. Si fuera completo, el pull de verificaci\u00f3n no encontrar\u00eda
-      # la imagen en el registry.
-      - name: Determine image tag
-        id: tag
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "value=${{ github.event.inputs.image_tag || 'latest' }}" >> $GITHUB_OUTPUT
-          else
-            echo "value=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-          fi
-          echo "Tag para verificacion: $(cat $GITHUB_OUTPUT)"
 
       # === 9. Verify image was pushed successfully ===
       # Si la imagen no está en el registry, falla acá con un mensaje claro
