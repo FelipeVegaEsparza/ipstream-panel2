@@ -26,6 +26,14 @@ const nextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
+      // Lista de hosts confiables cuando Next.js está detrás de un proxy
+      // inverso (Caddy, Nginx, etc.). Sin esto, fallan los formularios
+      // con "Failed to find Server Action" / "Missing origin header".
+      allowedOrigins: [
+        'localhost:3000',
+        process.env.PANEL_PUBLIC_URL?.replace(/^https?:\/\//, '') || 'panelipstream.cl',
+        process.env.PANEL_PUBLIC_URL || 'https://panelipstream.cl',
+      ],
     },
   },
   async rewrites() {

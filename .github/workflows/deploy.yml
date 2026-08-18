@@ -118,7 +118,18 @@ jobs:
             echo "value=${{ github.sha }}" >> $GITHUB_OUTPUT
           fi
 
-      # === 9. Deploy al VPS via SSH ===
+      # === 9. Verify image was pushed successfully ===
+      # Si la imagen no está en el registry, falla acá con un mensaje claro
+      # en vez de tirar un error genérico más adelante.
+      - name: Verify image was pushed
+        run: |
+          docker pull ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-panel:${{ steps.tag.outputs.value }} || {
+            echo "❌ Image no encontrada en el registry."
+            echo "   Esperado: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-panel:${{ steps.tag.outputs.value }}"
+            exit 1
+          }
+
+      # === 10. Deploy al VPS via SSH ===
       - name: Run deploy script on VPS
         env:
           IMAGE_TAG: ${{ steps.tag.outputs.value }}
@@ -140,7 +151,7 @@ jobs:
             exit 1
           }
 
-      # === 11. Notificar resultado (opcional: Slack/Discord) ===
+      # === 12. Notificar resultado (opcional: Slack/Discord) ===
       - name: Notify success
         if: success()
         run: |

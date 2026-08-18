@@ -38,19 +38,31 @@ if [ -S /var/run/docker.sock ]; then
     fi
 fi
 
-# Verificar que las variables críticas no estén con defaults inseguros
-WARN=0
+# Verificar que las variables críticas no estén con defaults inseguros.
+# En PRODUCCIÓN esto debe abortar el arranque, no solo avisar.
+ENV_OK=1
 for var in STREAMING_AGENT_TOKEN HARBOR_CALLBACK_SECRET ENCRYPTION_KEY; do
-    val="${!var:-}"
-    if [ -z "$val" ] || \
-       [ "$val" = "dev-agent-token-change-me-in-prod" ] || \
-       [ "$val" = "dev-harbor-callback-token-change-me" ] || \
-       [ "$val" = "CHANGE_ME_genera_con_openssl_rand_-hex_32" ]; then
-        echo "[entrypoint] WARNING: $var está vacía o usando default inseguro"
-        WARN=1
-    fi
+  val="${!var:-}"
+  if [ -z "$val" ] || \
+     [ "$val" = "dev-agent-token-change-me-in-prod" ] || \
+     [ "$val" = "dev-harbor-callback-token-change-me" ] || \
+     [ "$val" = "CHANGE_ME_genera_con_openssl_rand_-hex_32" ]; then
+    echo "[entrypoint] WARNING: $var está vacía o usando default inseguro"
+    ENV_OK=0
+  fi
 done
-[ "$WARN" -eq 1 ] && echo "[entrypoint] REVISÁ LAS VARIABLES DE ENTORNO ANTES DE USAR EN PRODUCCIÓN"
+
+# Si NODE_ENV=production, fallar si hay secrets inseguros.
+if [ "$NODE_ENV" = "production" ] && [ "$ENV_OK" -ne 1 ]; then
+  echo "[entrypoint] ❌ Abortando arranque: NODE_ENV=production con secrets inseguros."
+  echo "[entrypoint]    Generá tokens seguros antes de usar en producción:"
+  echo "[entrypoint]      openssl rand -hex 32"
+  exit 1
+fi
+
+if [ "$ENV_OK" -ne 1 ]; then
+  echo "[entrypoint] ⚠ Modo dev: REVISÁ LAS VARIABLES DE ENTORNO ANTES DE USAR EN PRODUCCIÓN"
+fi
 
 echo "[entrypoint] Arrancando agente como $USER_NAME..."
 exec gosu "$USER_NAME" node server.js

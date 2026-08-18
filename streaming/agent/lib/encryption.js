@@ -1,7 +1,7 @@
 // =====================================================
-// AES-256-GCM — formato compatible con lib/encryption.ts del panel
+// AES-256-GCM — formato id\u00e9ntico a lib/encryption.ts del panel
 // Formato: "iv:tag:ciphertext" todo en hex
-// Key: 32 bytes en hex (64 chars), leída de process.env.ENCRYPTION_KEY
+// Key: 32 bytes en hex (64 chars) o base64 de 32 bytes
 // =====================================================
 
 import crypto from 'crypto'
@@ -15,10 +15,18 @@ function getKey() {
   if (!key) {
     throw new Error('ENCRYPTION_KEY environment variable is not set')
   }
-  if (key.length !== 64) {
-    throw new Error(`ENCRYPTION_KEY debe ser hex de 64 chars (32 bytes), recibido ${key.length} chars`)
+  let buf
+  if (/^[a-f0-9]{64}$/i.test(key)) {
+    buf = Buffer.from(key, 'hex')
+  } else {
+    buf = Buffer.from(key, 'base64')
   }
-  return Buffer.from(key, 'hex')
+  if (buf.length !== 32) {
+    throw new Error(
+      `ENCRYPTION_KEY debe ser 32 bytes en hex (64 chars) o base64 — recibido ${key.length} chars que decodifican a ${buf.length} bytes`
+    )
+  }
+  return buf
 }
 
 export function encrypt(text) {
