@@ -198,6 +198,24 @@ jobs:
           }
           echo "  ✓ Imagen verificada en el registry"
 
+      # === 9b. Validar secrets en .env del VPS ===
+      # Falla rápido si los secrets son inseguros, antes de hacer el deploy.
+      # El agente tiene un secret gate que aborta el arranque con tokens
+      # de dev; mejor detectar esto acá.
+      - name: Validate .env secrets on VPS
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /opt/ipstream-panel && bash scripts/setup-prod.sh --check" || {
+            echo "❌ El .env del VPS tiene secrets inseguros."
+            echo "   Para solucionarlo desde el VPS:"
+            echo "     ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+            echo "     cd /opt/ipstream-panel"
+            echo "     bash scripts/setup-prod.sh --force"
+            echo "     docker exec -i ipstream-app node - < scripts/rotate-stream-passwords.js"
+            echo "     docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d"
+            exit 1
+          }
+
       # === 10. Deploy al VPS via SSH ===
       - name: Run deploy script on VPS
         env:
@@ -218,7 +236,12 @@ jobs:
           sleep 45
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /opt/ipstream-panel && ./deploy/scripts/health-check.sh" || {
             echo "⚠ Health check remoto falló. Verificar manualmente."
-            echo "   Para debug: docker logs ipstream-app --tail 30 && docker logs ipstream-streaming-agent --tail 30"
+            echo "   Para debug:"
+            echo "     ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+            echo "     cd /opt/ipstream-panel"
+            echo "     docker compose ps"
+            echo "     docker logs ipstream-app --tail 30"
+            echo "     docker logs ipstream-streaming-agent --tail 30"
             exit 1
           }
 
