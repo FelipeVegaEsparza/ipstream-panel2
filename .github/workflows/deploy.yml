@@ -139,7 +139,8 @@ jobs:
           file: ./streaming/video/Dockerfile
           push: false
           load: true
-          tags: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:${{ github.sha }},ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:latest
+          # Usamos SHA corto para matchear el push step (que también usa SHA corto).
+          tags: ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:${{ steps.tag.outputs.value }},ghcr.io/${{ steps.owner.outputs.owner }}/ipstream-video-encoder:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
