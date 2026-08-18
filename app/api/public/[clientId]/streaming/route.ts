@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 
+export const dynamic = 'force-dynamic'
+
 export async function OPTIONS() {
   return handleCors()
 }
@@ -41,9 +43,16 @@ export async function GET(
     const currentTrack = nowPlaying?.currentTrack
     const nextTrack = nowPlaying?.nextTrack
 
+    // Preferir icecast.title (real) sobre currentTrack (match por substring).
+    // currentTrack puede matchear siempre el primer track si el substring
+    // matchea contra titles largos. icecast.title es lo que liquidsoap
+    // realmente reporta a Icecast.
+    const rawTitle = icecast?.title || null
     const track = currentTrack
       ? {
-          title: currentTrack.title,
+          // Si hay currentTrack (local), usar su info enriquecida (coverUrl,
+          // album) pero preferir el titulo de Icecast si esta disponible.
+          title: rawTitle || currentTrack.title,
           artist: currentTrack.artist,
           album: currentTrack.album,
           coverUrl: currentTrack.coverUrl,
@@ -51,7 +60,7 @@ export async function GET(
           isJingle: currentTrack.isJingle,
         }
       : {
-          title: icecast?.title ?? radioStream.currentTitle,
+          title: rawTitle ?? radioStream.currentTitle,
           artist: radioStream.currentArtist,
           album: null,
           coverUrl: null,
@@ -86,6 +95,8 @@ export async function GET(
         : null,
       position: nowPlaying?.position ?? null,
       lastUpdate: icecast ? status?.timestamp : radioStream.lastStatusAt,
+    }, {
+      headers: { 'Cache-Control': 'no-store, must-revalidate' },
     })
   } catch (err) {
     console.error('[public/streaming]', err)
