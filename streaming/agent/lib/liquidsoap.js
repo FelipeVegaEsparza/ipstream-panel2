@@ -241,7 +241,10 @@ export async function startStream(clientId) {
     await execp(cmd, { timeout: 10000 })
 
     await new Promise((r) => setTimeout(r, 1500))
-    const newStatus = await isProcessRunning(rs.icecastMount)
+    // bypassCache: la linea 222 (isProcessRunning al inicio) cacheó running:false
+    // y está dentro del TTL de 5s. Sin bypass leeríamos ese resultado stale y
+    // reportaríamos "proceso no encontrado" aunque liquidsoap ya arrancó.
+    const newStatus = await isProcessRunning(rs.icecastMount, { bypassCache: true })
     if (!newStatus.running) {
       throw new Error(`Liquidsoap arrancó pero no se encontró el proceso. Revisa /var/log/liquidsoap/${rs.icecastMount}.log`)
     }
