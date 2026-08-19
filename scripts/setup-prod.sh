@@ -44,6 +44,14 @@ SECRET_VARS=(
   "ONESIGNAL_WEBHOOK_SECRET"
 )
 
+# ====== Variables opcionales ======
+# Vacías NO fallan el check (el template .env.prod.example las documenta como
+# opcionales). Solo se marcan si contienen un patrón inseguro.
+OPTIONAL_VARS=(
+  "CRON_SECRET"
+  "ONESIGNAL_WEBHOOK_SECRET"
+)
+
 # ====== Defaults inseguros conocidos ======
 INSECURE_PATTERNS=(
   "change-me"       # matchea en cualquier posicion (case-insensitive abajo)
@@ -94,16 +102,23 @@ declare -A CURRENT_VALUES
 declare -A NEW_VALUES
 
 for var in "${SECRET_VARS[@]}"; do
-  current=$(grep "^$var=" "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
+  # tr -d '"' y "'": los .env pueden tener valores con o sin comillas
+  # envolventes; los secretos (openssl) nunca contienen comillas, así que
+  # normalizarlas no altera la validación.
+  current=$(grep "^$var=" "$ENV_FILE" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" || true)
   CURRENT_VALUES[$var]="$current"
 
-  # Capturar el exit code ANTES de cualquier otra asignacion. Si usamos
-  # $() + $?, el exit code siempre es 0 (del command substitution).
-  # Por eso lo hacemos en dos pasos: ejecutar y capturar despues.
-  is_insecure "$current"
-  insecure_exit=$?
-  reason=$(is_insecure "$current" 2>/dev/null)
-  if [[ $insecure_exit -eq 0 ]]; then
+  # Opcionales: vacías son aceptables (no fallan el check)
+  if [[ -z "$current" && " ${OPTIONAL_VARS[*]} " == *" $var "* ]]; then
+    echo "  ✓ $var: ok (opcional, vacío)"
+    continue
+  fi
+
+  # is_insecure retorna 0 si es inseguro, 1 si es seguro. Con set -e,
+  # llamarlo en una linea propia aborta el script cuando el valor es
+  # seguro (exit 1). Por eso lo usamos como condicion del if.
+  if is_insecure "$current"; then
+    reason=$(is_insecure "$current" 2>/dev/null)
     NEEDS_FIX=1
     echo "  ⚠ $var: insecure ($reason)"
 
