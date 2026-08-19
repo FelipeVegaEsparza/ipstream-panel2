@@ -176,7 +176,9 @@ settings.request.metadata_decoders.recode.exclude.set(["geob", "TXXX", "WXXX", "
 
 settings.server.telnet.set(true)
 settings.server.telnet.port.set(${telnetPort})
-settings.server.telnet.bind_addrs.set(["0.0.0.0"])
+# Liquidsoap 2.4.x: settings.server.telnet.bind_addr (singular, string).
+# El plural bind_addrs NO existe en settings.server.telnet (solo en harbor).
+settings.server.telnet.bind_addr.set("0.0.0.0")
 
 settings.harbor.bind_addrs := ["0.0.0.0"]
 
