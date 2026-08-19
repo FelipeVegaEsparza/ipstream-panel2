@@ -35,7 +35,7 @@ if [[ -z "$GITHUB_REPOSITORY_OWNER" ]]; then
   exit 1
 fi
 echo "📦 Usando GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER"
-COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ipstream-sonicpanel}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ipstream-panel}"
 COMPOSE_FILES="-f docker-compose.yml -f deploy/docker-compose.prod.yml"
 COMPOSE_CMD="docker compose --project-name ${COMPOSE_PROJECT_NAME} ${COMPOSE_FILES}"
 
