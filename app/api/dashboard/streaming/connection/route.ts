@@ -10,6 +10,9 @@ import { revealLivePassword, revealSourcePassword } from '@/lib/streaming-helper
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 
+// Evitar cacheo: el estado DJ cambia en tiempo real.
+export const dynamic = 'force-dynamic'
+
 export async function GET(_request: NextRequest) {
   try {
     const ctx = await requireStreamingClient()
@@ -74,7 +77,7 @@ export async function GET(_request: NextRequest) {
       logs,
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store, must-revalidate' } })
   } catch (err) {
     if (err instanceof StreamingAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.statusCode })

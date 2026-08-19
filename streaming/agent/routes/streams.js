@@ -92,7 +92,7 @@ export default async function streamRoutes(app) {
     let djConnected = false
     let djName = null
     let djConnectedAt = null
-    const activeSlots = _djSlotActive.get(rs.icecastMount)
+    const activeSlots = _djSlotActive.get(sanitizeMount(rs.icecastMount))
     if (activeSlots && activeSlots.size > 0) {
       djConnected = true
       const activeEntries = [...activeSlots.entries()]
