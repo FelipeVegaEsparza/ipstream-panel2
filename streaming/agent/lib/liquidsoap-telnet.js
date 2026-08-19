@@ -77,6 +77,9 @@ export async function telnetCommand(port, command) {
 
 /**
  * Verifica si una variable de source está activa (ready).
+ * NOTA: en Liquidsoap 2.4.x el método source.is_ready() NO está expuesto
+ * por telnet. Este helper queda para versiones antiguas / compatibilidad;
+ * el watcher principal usa isAnyHarborSourceConnected().
  * @param {number} port
  * @param {string} sourceName
  */
@@ -85,7 +88,28 @@ export async function isSourceReady(port, sourceName) {
     const res = await telnetCommand(port, `${sourceName}.is_ready`)
     return res.trim() === 'true'
   } catch (err) {
-    logger.warn({ port, sourceName, err: err.message }, 'isSourceReady falló')
+    logger.debug({ port, sourceName, err: err.message }, 'isSourceReady falló (esperado en LS 2.4.x)')
+    return null
+  }
+}
+
+/**
+ * Liquidsoap 2.4.x no expone source.is_ready() por telnet. En cambio,
+ * input.harbor.status devuelve una línea por cada fuente conectada
+ * ("source client connected from <ip>"). Usamos eso como proxy de
+ * "hay al menos un DJ conectado".
+ * @param {number} port
+ * @returns {Promise<boolean|null>}
+ */
+export async function isAnyHarborSourceConnected(port) {
+  try {
+    const res = await telnetCommand(port, 'input.harbor.status')
+    // Ejemplos:
+    //   - "source client connected from 201.187.111.162"
+    //   - "No source connected"
+    return /connected from/i.test(res)
+  } catch (err) {
+    logger.warn({ port, err: err.message }, 'isAnyHarborSourceConnected falló')
     return null
   }
 }

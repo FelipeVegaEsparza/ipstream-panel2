@@ -7,7 +7,7 @@
 import { pool } from './db.js'
 import { logger } from './logger.js'
 import { getRadioDjs } from './liquidsoap.js'
-import { listActiveHarborMounts } from './liquidsoap-telnet.js'
+import { isAnyHarborSourceConnected } from './liquidsoap-telnet.js'
 
 // Map<clientMount, Map<djMount, { connectedAt: number, slotName: string }>>
 const _djActive = new Map()
@@ -46,8 +46,16 @@ export function setDjSlotActive(clientMount, djMount, active, slotName = null) {
 }
 
 /**
- * Rebuild _djActive for a single client by asking Liquidsoap which harbor
- * inputs are currently ready. Returns true if state was rebuilt.
+ * Rebuild _djActive for a single client by asking Liquidsoap whether ANY
+ * harbor source is connected. Liquidsoap 2.4.x no expone source.is_ready()
+ * por telnet, así que no podemos saber qué slot específico está conectado
+ * sin ayuda de los callbacks. Estrategia:
+ *   - Si input.harbor.status dice "no hay fuente": limpiamos el estado
+ *     (maneja disconnect callbacks perdidos).
+ *   - Si hay fuente y nuestro estado está vacío: inferimos el slot de
+ *     mayor prioridad como conectado (startup recovery / connect callback perdido).
+ *   - Si hay fuente y ya tenemos estado: no tocamos nada (los callbacks
+ *     tienen la info precisa por slot).
  */
 export async function rebuildDjState(clientId) {
   const [rsRows] = await pool.query(
@@ -56,22 +64,38 @@ export async function rebuildDjState(clientId) {
   )
   if (rsRows.length === 0) return false
   const rs = rsRows[0]
+  const clientMount = sanitizeMount(rs.icecastMount)
 
-  const djs = await getRadioDjs(clientId)
-  if (djs.length === 0) {
-    // Legacy single harbor input named 'live'
-    const activeMounts = await listActiveHarborMounts(rs.liquidsoapTelnetPort, [
-      { mount: '/live', sourceName: 'live' },
-    ])
-    if (activeMounts.includes('/live')) {
-      setDjSlotActive(rs.icecastMount, '/live', true, 'live')
-    } else {
-      setDjSlotActive(rs.icecastMount, '/live', false)
+  const anyConnected = await isAnyHarborSourceConnected(rs.liquidsoapTelnetPort)
+  if (anyConnected === null) {
+    logger.debug({ clientId, clientMount }, 'rebuildDjState: no se pudo consultar telnet, conservando estado')
+    return false
+  }
+
+  if (!anyConnected) {
+    if (_djActive.has(clientMount)) {
+      logger.info({ clientId, clientMount }, 'rebuildDjState: ningún harbor conectado, limpiando estado')
+      _djActive.delete(clientMount)
     }
     return true
   }
 
-  const slots = djs
+  // Hay al menos un DJ conectado.
+  const activeSlots = _djActive.get(clientMount)
+  if (activeSlots && activeSlots.size > 0) {
+    logger.debug({ clientId, clientMount }, 'rebuildDjState: harbor conectado y estado presente, sin cambios')
+    return true
+  }
+
+  // Estado vacío: inferir el slot de mayor prioridad.
+  const djs = await getRadioDjs(clientId)
+  if (djs.length === 0) {
+    setDjSlotActive(clientMount, '/live', true, 'live')
+    logger.info({ clientId, clientMount }, 'rebuildDjState: inferido harbor legacy /live conectado')
+    return true
+  }
+
+  const sortedDjs = djs
     .filter(d => d.isActive !== false)
     .sort((a, b) => {
       const ROLE_ORDER = { owner: 0, host: 1, guest: 2 }
@@ -79,17 +103,11 @@ export async function rebuildDjState(clientId) {
       if (roleDiff !== 0) return roleDiff
       return (a.priority ?? 1) - (b.priority ?? 1)
     })
-    .map((dj, idx) => ({ mount: dj.mount, sourceName: `dj${idx}` }))
 
-  const activeMounts = await listActiveHarborMounts(rs.liquidsoapTelnetPort, slots)
-
-  // Reset map for this client to mirror reality
-  _djActive.delete(sanitizeMount(rs.icecastMount))
-  for (const slot of slots) {
-    const isActive = activeMounts.includes(slot.mount)
-    if (isActive) {
-      setDjSlotActive(rs.icecastMount, slot.mount, true, slot.sourceName)
-    }
+  if (sortedDjs.length > 0) {
+    const inferred = sortedDjs[0]
+    setDjSlotActive(clientMount, inferred.mount, true, 'dj0')
+    logger.info({ clientId, clientMount, inferredMount: inferred.mount }, 'rebuildDjState: inferido slot conectado')
   }
 
   return true
