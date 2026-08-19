@@ -1,10 +1,4 @@
-# Multi-DJ Support Specification
-
-## Purpose
-
-Support multiple simultaneous DJ slots on a single radio with independent connection tracking, on-air/standby indication, and plan-aware mount allocation.
-
-## Requirements
+## ADDED Requirements
 
 ### Requirement: UI distinguishes DJs that are on air from DJs that are on standby
 The system SHALL indicate for every connected DJ whether that DJ is currently broadcasting or is connected but preempted by a higher-priority role.
@@ -26,6 +20,8 @@ When the plan allows more than a small number of DJs, the system SHALL provide a
 #### Scenario: Plan allows 16 DJs
 - **WHEN** a client with `Plan.maxDjs = 16` creates a DJ slot
 - **THEN** the UI offers the next available mount by default and allows numeric selection within the allowed range
+
+## MODIFIED Requirements
 
 ### Requirement: DJ slots connect and disconnect independently
 The system SHALL track the connection state of each DJ slot independently. Multiple DJ slots on the same radio MAY be connected at the same time, and the system SHALL report each one in the harbor status without conflating them. An authorized user MAY forcibly disconnect an individual slot through a kick action.
