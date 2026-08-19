@@ -10,6 +10,7 @@ import { config } from './config.js'
 
 const DEFAULT_TIMEOUT_MS = 5000
 const END_MARKER = 'END\n'
+const END_MARKER_CRLF = 'END\r\n'
 
 function sendCommand(host, port, command, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   return new Promise((resolve, reject) => {
@@ -26,8 +27,9 @@ function sendCommand(host, port, command, { timeoutMs = DEFAULT_TIMEOUT_MS } = {
 
     socket.on('data', (data) => {
       buffer += data.toString('utf8')
-      // Liquidsoap telnet responde con el resultado del comando seguido de "END"
-      if (buffer.endsWith(END_MARKER)) {
+      // Liquidsoap telnet responde con el resultado seguido de "END".
+      // LS 2.4.x envía CRLF, por eso aceptamos tanto END\n como END\r\n.
+      if (buffer.endsWith(END_MARKER) || buffer.endsWith(END_MARKER_CRLF)) {
         if (settled) return
         settled = true
         clearTimeout(timer)
