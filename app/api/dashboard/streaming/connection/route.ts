@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { revealLivePassword, revealSourcePassword } from '@/lib/streaming-helpers'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 
 export async function GET(_request: NextRequest) {
   try {
@@ -41,6 +42,20 @@ export async function GET(_request: NextRequest) {
       // agent not reachable
     }
 
+    let sessions: any = null
+    let logs: string[] = []
+    try {
+      sessions = await streamingClient.getDjSessions(ctx.clientId, 1, 10)
+    } catch {
+      // agent may be old or unreachable
+    }
+    try {
+      const logsRes = await streamingClient.getLogs(ctx.clientId, 50)
+      logs = logsRes.lines || []
+    } catch {
+      // agent may be old or unreachable
+    }
+
     // Datos públicos de conexión (sin password)
     const iceHost = process.env.ICE_PUBLIC_HOSTNAME || process.env.NEXTAUTH_URL?.replace(/^https?:\/\//, '').split(':')[0] || 'localhost'
     const data = {
@@ -55,12 +70,17 @@ export async function GET(_request: NextRequest) {
       djSlots,
       planMaxDjs,
       availableMounts,
+      sessions,
+      logs,
     }
 
     return NextResponse.json(data)
   } catch (err) {
     if (err instanceof StreamingAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.statusCode })
+    }
+    if (err instanceof StreamingAgentError) {
+      // Agent errors are non-fatal for the public connection data
     }
     console.error('[streaming/connection]', err)
     return NextResponse.json({ error: 'internal_error' }, { status: 500 })

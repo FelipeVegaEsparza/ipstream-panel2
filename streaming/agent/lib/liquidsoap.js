@@ -17,6 +17,8 @@ const LIQUIDSOAP_MP3_DIR = config.library.path
 const LIQUIDSOAP_LOG_PATH = config.liquidsoap.logPath
 
 const CHECK_SCRIPT_PATH = join(SCRIPTS_DIR, '_check_proc.sh')
+const PROCESS_CACHE_TTL_MS = 5000
+const _processCache = new Map() // mount -> { ts, result }
 
 // Mutex por cliente para evitar que dos llamadas concurrentes a startStream
 // (o start+restart) terminen spawnando dos procesos liquidsoap para el mismo
@@ -49,7 +51,13 @@ async function writeScript(mount, content) {
   return path
 }
 
-export async function isProcessRunning(mount) {
+export async function isProcessRunning(mount, { bypassCache = false } = {}) {
+  const now = Date.now()
+  const cached = _processCache.get(mount)
+  if (!bypassCache && cached && (now - cached.ts) < PROCESS_CACHE_TTL_MS) {
+    return cached.result
+  }
+
   try {
     await ensureCheckScript()
     // Usamos `sh` (POSIX) en vez de `bash`. La imagen savonet/liquidsoap:v2.4.5
@@ -60,8 +68,9 @@ export async function isProcessRunning(mount) {
       { timeout: 10000, maxBuffer: 64 * 1024 }
     )
     const pid = parseInt(stdout.trim(), 10)
-    if (isNaN(pid)) return { running: false, pid: null }
-    return { running: true, pid }
+    const result = isNaN(pid) ? { running: false, pid: null } : { running: true, pid }
+    _processCache.set(mount, { ts: now, result })
+    return result
   } catch (err) {
     logger.warn({ err: err.message, mount }, 'isProcessRunning check failed')
     return { running: false, pid: null }
@@ -210,7 +219,7 @@ export async function startStream(clientId) {
   const runStart = async () => {
     const rs = await loadRadioStream(clientId)
 
-    const status = await isProcessRunning(rs.icecastMount)
+    const status = await isProcessRunning(rs.icecastMount, { bypassCache: true })
     if (status.running) {
       throw new Error(`Stream ya está corriendo (PID ${status.pid}). Usa /restart para reiniciar.`)
     }
@@ -270,7 +279,7 @@ export async function startStream(clientId) {
 
 export async function stopStream(clientId) {
   const rs = await loadRadioStream(clientId)
-  const status = await isProcessRunning(rs.icecastMount)
+  const status = await isProcessRunning(rs.icecastMount, { bypassCache: true })
 
   if (!status.running) {
     logger.info({ clientId, mount: rs.icecastMount }, 'Stream ya estaba detenido')

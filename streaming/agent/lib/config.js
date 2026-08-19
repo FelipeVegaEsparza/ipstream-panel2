@@ -65,6 +65,9 @@ export const config = {
     hostname: required('ICE_HOSTNAME'),
   },
 
+  // Public hostname DJs use to reach the Liquidsoap harbor input
+  harborPublicHostname: required('HARBOR_PUBLIC_HOSTNAME'),
+
   // Liquidsoap
   liquidsoap: {
     bin: required('LIQUIDSOAP_BIN', '/usr/bin/liquidsoap'),

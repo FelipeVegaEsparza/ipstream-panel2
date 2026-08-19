@@ -37,6 +37,7 @@ services:
       STREAMING_AGENT_URL: http://agent:4000
       STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN}
       ICE_PUBLIC_URL: ${ICE_PUBLIC_URL}
+      HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME}
     volumes:
       - app_uploads:/app/public/uploads
       # No bind-mount schema.prisma en producción — la imagen ya lo trae
@@ -92,6 +93,7 @@ services:
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD}
       ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD}
       ICE_HOSTNAME: ${ICE_HOSTNAME}
+      HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME}
       LIQUIDSOAP_BIN: /usr/bin/liquidsoap
       LIQUIDSOAP_SCRIPTS_PATH: /etc/liquidsoap/scripts
       LIQUIDSOAP_LOG_PATH: /var/log/liquidsoap

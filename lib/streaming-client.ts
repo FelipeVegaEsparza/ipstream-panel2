@@ -178,6 +178,21 @@ export const streamingClient = {
       body: { trackIds },
     }),
 
+  // DJs
+  listDjs: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/djs`),
+  createDj: (clientId: string, data: { name: string; mount: string; priority: number; role: string; password: string }) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/djs`, { method: 'POST', body: data }),
+  updateDj: (clientId: string, djId: string, data: Partial<{ name: string; mount: string; priority: number; role: string; password: string; isActive: boolean }>) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/djs/${encodeURIComponent(djId)}`, { method: 'PATCH', body: data }),
+  deleteDj: (clientId: string, djId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/djs/${encodeURIComponent(djId)}`, { method: 'DELETE' }),
+  kickDj: (clientId: string, djId: string) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/djs/${encodeURIComponent(djId)}/kick`, { method: 'POST' }),
+  getDjSessions: (clientId: string, page = 1, limit = 25) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/dj-sessions?page=${page}&limit=${limit}`),
+  getLogs: (clientId: string, lines = 100) =>
+    request(`/api/streams/${encodeURIComponent(clientId)}/logs?lines=${lines}`),
+
   // Jingles
   listJingles: (clientId: string) => request(`/api/streams/${encodeURIComponent(clientId)}/jingles`),
   uploadJingle: async (clientId: string, file: File) => {

@@ -71,14 +71,20 @@ export function generateLiquidsoapScript({
   // El archivo .liq solo es legible por el usuario liquidsoap/root.
   const safeCallbackToken = sanitizeForLiquidsoap(agentToken || '')
 
-  function harborCallbackCmd(action, djMount) {
-    const url = `${agentBase}/api/streams/${safeClient}/harbor/${action}?token=${encodeURIComponent(safeCallbackToken)}&dj=${encodeURIComponent(djMount)}`
-    return `system("curl -s -X POST '${url}' &>/dev/null &")`
+  function harborCallbackCmd(action, djMount, slotName) {
+    const url = `${agentBase}/api/streams/${safeClient}/harbor/${action}?dj=${encodeURIComponent(djMount)}&slot=${encodeURIComponent(slotName)}`
+    return `system("curl -s -H \\"X-Harbor-Token: ${safeCallbackToken}\\" -X POST '${url}' &>/dev/null &")`
   }
 
-  // DJs sorted by priority (1 = highest)
-  const sortedDjs = [...djs].sort((a, b) => a.priority - b.priority)
-  const activeDjs = sortedDjs.filter(d => d.isActive !== false)
+  // DJs sorted by priority (1 = highest) within each role
+  const ROLE_ORDER = { owner: 0, host: 1, guest: 2 }
+  const activeDjs = [...djs]
+    .filter(d => d.isActive !== false)
+    .sort((a, b) => {
+      const roleDiff = (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2)
+      if (roleDiff !== 0) return roleDiff
+      return (a.priority ?? 1) - (b.priority ?? 1)
+    })
 
   // Defensa contra Plan.maxDjs absurdo. Ver HARD_DJS_LIMIT arriba.
   if (activeDjs.length > HARD_DJS_LIMIT) {
@@ -97,28 +103,56 @@ export function generateLiquidsoapScript({
 live = input.harbor("/live",
   port=${harborPort},
   password="${safeHarborPwd}",
-  on_connect=fun (_) -> ${harborCallbackCmd('connected', '/live')},
-  on_disconnect=fun () -> ${harborCallbackCmd('disconnected', '/live')}
+  on_connect=fun (_) -> ${harborCallbackCmd('connected', '/live', 'live')},
+  on_disconnect=fun () -> ${harborCallbackCmd('disconnected', '/live', 'live')}
 )`
     fallbackSources = ['live']
   } else {
-    // Multiple DJ slots — generate one input.harbor per DJ
-    const lines = activeDjs.map((dj, idx) => {
-      const djMount = sanitizeForLiquidsoap(dj.mount || `/dj${idx + 1}`)
-      const djPwd = sanitizeForLiquidsoap(dj.password || safeHarborPwd)
-      const slotName = `dj${idx}`
-      fallbackSources.push(slotName)
-      return `${slotName} = input.harbor("${djMount}",
+    // Multiple DJ slots — generate one input.harbor per DJ, grouped by role
+    const slotsByRole = {}
+    for (const dj of activeDjs) {
+      const role = dj.role || 'guest'
+      if (!slotsByRole[role]) slotsByRole[role] = []
+      slotsByRole[role].push(dj)
+    }
+
+    const slotDefinitions = []
+    const slotsByGroup = {} // role -> [slotName, ...]
+    const roleOrder = ['owner', 'host', 'guest']
+
+    for (const role of roleOrder) {
+      const roleDjs = slotsByRole[role]
+      if (!roleDjs || roleDjs.length === 0) continue
+      slotsByGroup[role] = []
+      for (let i = 0; i < roleDjs.length; i++) {
+        const dj = roleDjs[i]
+        const globalIdx = slotDefinitions.length
+        const djMount = sanitizeForLiquidsoap(dj.mount || `/dj${globalIdx + 1}`)
+        const djPwd = sanitizeForLiquidsoap(dj.password || safeHarborPwd)
+        const slotName = `dj${globalIdx}`
+        slotsByGroup[role].push(slotName)
+        slotDefinitions.push(`${slotName} = input.harbor("${djMount}",
   port=${harborPort},
   password="${djPwd}",
-  on_connect=fun (_) -> ${harborCallbackCmd('connected', djMount)},
-  on_disconnect=fun () -> ${harborCallbackCmd('disconnected', djMount)}
-)`
-    })
-    harborInputs = '\n' + lines.join('\n\n')
+  on_connect=fun (_) -> ${harborCallbackCmd('connected', djMount, slotName)},
+  on_disconnect=fun () -> ${harborCallbackCmd('disconnected', djMount, slotName)}
+)`)
+      }
+    }
+
+    const groupDefinitions = []
+    for (const role of roleOrder) {
+      const groupSlots = slotsByGroup[role]
+      if (!groupSlots || groupSlots.length === 0) continue
+      const groupName = `${role}_djs`
+      fallbackSources.push(groupName)
+      groupDefinitions.push(`${groupName} = fallback(track_sensitive=false, [${groupSlots.join(', ')}])`)
+    }
+
+    harborInputs = '\n' + slotDefinitions.join('\n\n') + '\n\n' + groupDefinitions.join('\n')
   }
 
-  // fallback: DJs in priority order, then autodj
+  // fallback: role groups (owner > host > guest), then autodj
   fallbackSources.push('autodj')
   const fallbackList = fallbackSources.join(', ')
 
@@ -142,6 +176,7 @@ settings.request.metadata_decoders.recode.exclude.set(["geob", "TXXX", "WXXX", "
 
 settings.server.telnet.set(true)
 settings.server.telnet.port.set(${telnetPort})
+settings.server.telnet.bind_addrs.set(["0.0.0.0"])
 
 settings.harbor.bind_addrs := ["0.0.0.0"]
 

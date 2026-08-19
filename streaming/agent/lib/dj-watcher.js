@@ -1,19 +1,17 @@
 // =====================================================
-// DJ Watcher — monitorea estado del DJ en vivo
+// DJ Watcher — reconcilia estado del DJ entre Liquidsoap,
+// el agente y la base de datos.
 // En la arquitectura harbor:
 //   - Liquidsoap maneja el switch live/autodj via fallback()
 //   - harbor callbacks (on_connect/on_disconnect) notifican
-//     al agente via HTTP (fuente de verdad para _djActive)
-//   - Este watcher es un respaldo SOLO para detectar estados
-//     inconsistentes en DB (status='live' sin harbor activo)
-//
-// IMPORTANTE: NO itera _djActive. Los callbacks de harbor
-// son la fuente de verdad. El watcher solo revisa la DB
-// para casos donde un callback de disconnect no llegó.
+//     al agente via HTTP
+//   - Este watcher reconstruye y verifica el estado periódicamente
+//     para detectar callbacks perdidos o estado desfasado tras
+//     reinicios del agente.
 // =====================================================
 
 import { logger } from './logger.js'
-import { _djActive } from '../routes/streams.js'
+import { _djActive, isAnyDjActive, rebuildDjState } from './dj-state.js'
 import { pool } from './db.js'
 
 const CHECK_INTERVAL = 30_000
@@ -21,7 +19,7 @@ let intervalHandle = null
 
 export function startDjWatcher() {
   if (intervalHandle) return
-  logger.info('DJ Watcher iniciado (respaldo solo para estados inconsistentes)')
+  logger.info('DJ Watcher iniciado (reconciliación Liquidsoap ↔ Agente ↔ DB)')
   intervalHandle = setInterval(checkMounts, CHECK_INTERVAL)
 }
 
@@ -33,36 +31,54 @@ export function stopDjWatcher() {
 }
 
 async function checkMounts() {
-  // Buscar streams con status='live' que NO tengan harbor activo
-  // Esto significa que el on_disconnect callback no llegó
-  const [rows] = await pool.query(
-    `SELECT clientId, icecastMount FROM radio_streams WHERE status = 'live'`
+  // Reconstruir estado desde Liquidsoap para streams running
+  const [runningRows] = await pool.query(
+    `SELECT clientId, icecastMount, status FROM radio_streams WHERE liquidsoapRunning = 1`
   )
 
-  for (const row of rows) {
+  for (const row of runningRows) {
     try {
-      const { clientId, icecastMount } = row
-      const slots = _djActive.get(icecastMount)
+      await rebuildDjState(row.clientId)
+    } catch (err) {
+      logger.warn({ clientId: row.clientId, err: err.message }, 'DJ Watcher: rebuildDjState falló')
+    }
+  }
 
-      // Si hay slots activos en harbor, el DJ sigue conectado — ok
-      if (slots && slots.size > 0) continue
+  // Corregir inconsistencias entre _djActive y DB
+  const [statusRows] = await pool.query(
+    `SELECT clientId, icecastMount, status FROM radio_streams WHERE status IN ('live', 'autodj')`
+  )
 
-      // No hay harbor activo pero DB dice 'live' → callback de disconnect perdido
-      logger.info({ mount: icecastMount, clientId }, 'DJ Watcher: estado inconsistente — corrigiendo a autodj')
+  for (const row of statusRows) {
+    try {
+      const { clientId, icecastMount, status } = row
+      const anyActive = isAnyDjActive(icecastMount)
 
-      await pool.query(
-        `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
-        [clientId]
-      )
-      await pool.query(
-        `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
-         VALUES (UUID(), ?, 'dj_watcher_recovery', ?, NOW())`,
-        [clientId, JSON.stringify({ mount: icecastMount, previousStatus: 'live' })]
-      )
-
-      logger.info({ mount: icecastMount, clientId }, 'DJ Watcher: estado corregido a autodj')
+      if (status === 'live' && !anyActive) {
+        logger.info({ mount: icecastMount, clientId }, 'DJ Watcher: live sin DJs — corrigiendo a autodj')
+        await pool.query(
+          `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
+          [clientId]
+        )
+        await logRecovery(clientId, icecastMount, 'live', 'autodj')
+      } else if (status === 'autodj' && anyActive) {
+        logger.info({ mount: icecastMount, clientId }, 'DJ Watcher: autodj con DJs activos — corrigiendo a live')
+        await pool.query(
+          `UPDATE radio_streams SET status = 'live', lastError = NULL, updatedAt = NOW() WHERE clientId = ?`,
+          [clientId]
+        )
+        await logRecovery(clientId, icecastMount, 'autodj', 'live')
+      }
     } catch (err) {
       logger.warn({ mount: row.icecastMount, err: err.message }, 'DJ Watcher: error en check')
     }
   }
+}
+
+async function logRecovery(clientId, mount, previousStatus, newStatus) {
+  await pool.query(
+    `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
+     VALUES (UUID(), ?, 'dj_watcher_recovery', ?, NOW())`,
+    [clientId, JSON.stringify({ mount, previousStatus, newStatus })]
+  )
 }

@@ -111,7 +111,7 @@ export async function isMountInUse(clientId, mount, excludeDjId = null) {
 /**
  * Parsea /djK a entero K. Devuelve null si el formato no es válido.
  */
-function parseMount(mount) {
+export function parseMount(mount) {
   if (typeof mount !== 'string') return null
   if (!mount.startsWith(MOUNT_PREFIX)) return null
   const n = parseInt(mount.slice(MOUNT_PREFIX.length), 10)

@@ -23,6 +23,7 @@ import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import videoRoutes from './routes/video.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
+import { rebuildAllDjState } from './lib/dj-state.js'
 import { autoStartStreams } from './lib/liquidsoap.js'
 import { autoStartVideoStreams, execCmd, ENCODER_CONTAINER } from './lib/video-encoder.js'
 import { startRetentionCron, stopRetentionCron } from './lib/retention.js'
@@ -327,6 +328,33 @@ try {
   logger.error({ err: err.message }, 'Error creando tabla play_history')
 }
 
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS dj_sessions (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      radioStreamId VARCHAR(191) NOT NULL,
+      djId VARCHAR(191) NOT NULL,
+      mount VARCHAR(10) NOT NULL,
+      role VARCHAR(10) NOT NULL,
+      ipAddress VARCHAR(45),
+      startedAt DATETIME(3) NOT NULL,
+      endedAt DATETIME(3),
+      durationSeconds INT,
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_djs_client_started (clientId, startedAt DESC),
+      INDEX idx_djs_radio_started (radioStreamId, startedAt DESC),
+      INDEX idx_djs_dj (djId),
+      CONSTRAINT fk_djs_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_djs_radio FOREIGN KEY (radioStreamId) REFERENCES radio_streams(id) ON DELETE CASCADE,
+      CONSTRAINT fk_djs_dj FOREIGN KEY (djId) REFERENCES radio_djs(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla dj_sessions asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla dj_sessions')
+}
+
 // Video tables
 try {
   await pool.query(`
@@ -473,15 +501,24 @@ await app.register(playlistRoutes)
 await app.register(jingleRoutes)
 await app.register(scheduleRoutes)
 await app.register(statsRoutes)
-await app.register(folderRoutes)
+  await app.register(folderRoutes)
 
-// Iniciar crons
-startScheduleCron()
-startStatsCron()
-startDjWatcher()
-startRetentionCron()
-startStreamSupervisor()
-startHistoryCron()
+  // Reconstruir estado DJ desde Liquidsoap antes de iniciar watchers
+  // (solo streams running tienen puerto telnet activo).
+  try {
+    await rebuildAllDjState()
+    logger.info('Rebuild DJ state completado')
+  } catch (err) {
+    logger.warn({ err: err.message }, 'Rebuild DJ state falló (no crítico)')
+  }
+
+  // Iniciar crons
+  startScheduleCron()
+  startStatsCron()
+  startDjWatcher()
+  startRetentionCron()
+  startStreamSupervisor()
+  startHistoryCron()
 
 // Graceful shutdown
 const shutdown = async (signal) => {
@@ -517,8 +554,15 @@ try {
   })
 
   // Auto-start streams de radio
-  autoStartStreams().then((result) => {
+  autoStartStreams().then(async (result) => {
     logger.info({ started: result.started, failed: result.failed }, 'Auto-start radio streams completado')
+    // Reconstruir estado DJ ahora que los streams running tienen telnet activo
+    try {
+      await rebuildAllDjState()
+      logger.info('Rebuild DJ state post-auto-start completado')
+    } catch (err) {
+      logger.warn({ err: err.message }, 'Rebuild DJ state post-auto-start falló')
+    }
   }).catch((err) => {
     logger.warn({ err: err.message }, 'Auto-start radio streams falló')
   })

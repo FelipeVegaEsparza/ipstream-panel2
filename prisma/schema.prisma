@@ -72,6 +72,7 @@ model Client {
   playlistSchedules      PlaylistSchedule[]
   streamStats            StreamStat[]
   folders                Folder[]
+  djSessions             DjSession[]
   // Streaming — Video (Televisión)
   videoStream            VideoStream?
   videoTracks            VideoTrack[]
@@ -658,6 +659,7 @@ model RadioStream {
   playlistSchedules PlaylistSchedule[]
   streamStats       StreamStat[]
   djs               RadioDj[]
+  djSessions        DjSession[]
 
   @@index([status])
   @@index([enabled])
@@ -680,10 +682,35 @@ model RadioDj {
   updatedAt   DateTime @updatedAt
 
   radioStream RadioStream @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessions    DjSession[]
 
   @@unique([clientId, mount])
   @@index([clientId])
   @@map("radio_djs")
+}
+
+// DjSession — historial de conexiones de DJs a una radio.
+model DjSession {
+  id              String    @id @default(cuid())
+  clientId        String
+  radioStreamId   String
+  djId            String
+  mount           String    @db.VarChar(10)
+  role            String    @db.VarChar(10)
+  ipAddress       String?   @db.VarChar(45)
+  startedAt       DateTime
+  endedAt         DateTime?
+  durationSeconds Int?
+  createdAt       DateTime  @default(now())
+
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  radioStream RadioStream @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+  dj          RadioDj     @relation(fields: [djId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, startedAt])
+  @@index([radioStreamId, startedAt])
+  @@index([djId])
+  @@map("dj_sessions")
 }
 
 // Track es un archivo MP3 en la biblioteca de un cliente.

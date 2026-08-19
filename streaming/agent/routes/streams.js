@@ -2,16 +2,23 @@
 // Routes — gestión de streams por cliente
 // =====================================================
 
+import { exec } from 'child_process'
+import { promisify } from 'util'
 import { startStream, stopStream, restartStream, isProcessRunning, regenerateScript, regenerateM3u, getHarborPort, getRadioDjs } from '../lib/liquidsoap.js'
+
+const execp = promisify(exec)
 import { deployIcecastConfig } from '../lib/icecast-config.js'
 import { getMountStatus, getGlobalStatus, ping as icecastPing, killSource } from '../lib/icecast.js'
 import { pool } from '../lib/db.js'
 import { getPlanMaxDjs } from '../lib/plan-caps.js'
-import { nextAvailableMount, listAvailableMounts, isMountInUse } from '../lib/mount-allocation.js'
+import { nextAvailableMount, listAvailableMounts, isMountInUse, parseMount } from '../lib/mount-allocation.js'
 import { logger } from '../lib/logger.js'
 import { config } from '../lib/config.js'
 import { decrypt, encrypt, isEncrypted } from '../lib/encryption.js'
 import { detectAndLogTrack } from '../lib/track-history.js'
+import { _djActive as _djSlotActive, isAnyDjActive, setDjSlotActive } from '../lib/dj-state.js'
+import { startSession, endSession, listSessions } from '../lib/dj-sessions.js'
+import { stopHarborInput } from '../lib/liquidsoap-telnet.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -21,34 +28,6 @@ function uuid() {
 function sanitizeMount(mount) {
   if (!mount) return ''
   return mount.replace(/^\//, '')
-}
-
-// DJ takeover tracking: Map<clientMount, Map<djMount, { connectedAt: number }>>
-// Almacena los slots de DJ activos para cada cliente con timestamp de conexión.
-const _djSlotActive = new Map()
-export { _djSlotActive as _djActive }
-
-// Helper: verificar si algún DJ está conectado para un client mount
-function isAnyDjActive(clientMount) {
-  const slots = _djSlotActive.get(sanitizeMount(clientMount))
-  return slots ? slots.size > 0 : false
-}
-
-// Helper: marcar/desmarcar un slot de DJ como activo
-function setDjSlotActive(clientMount, djMount, active) {
-  const key = sanitizeMount(clientMount)
-  if (!_djSlotActive.has(key)) {
-    _djSlotActive.set(key, new Map())
-  }
-  const slots = _djSlotActive.get(key)
-  if (active) {
-    slots.set(djMount, { connectedAt: Date.now() })
-  } else {
-    slots.delete(djMount)
-  }
-  if (slots.size === 0) {
-    _djSlotActive.delete(key)
-  }
 }
 
 export default async function streamRoutes(app) {
@@ -269,15 +248,33 @@ export default async function streamRoutes(app) {
   app.post('/api/streams/:clientId/harbor/connected', async (request, reply) => {
     const { clientId } = request.params
     const djMount = request.query?.dj || '/live'
+    const slotName = request.query?.slot || null
     try {
       const [rsRows] = await pool.query(
-        `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        `SELECT id, icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
         [clientId]
       )
       if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
-      const mount = sanitizeMount(rsRows[0].icecastMount)
+      const rs = rsRows[0]
+      const mount = sanitizeMount(rs.icecastMount)
 
-      setDjSlotActive(mount, djMount, true)
+      setDjSlotActive(mount, djMount, true, slotName)
+
+      // Resolver DJ slot para auditoría
+      const [djRows] = await pool.query(
+        `SELECT id, role FROM radio_djs WHERE clientId = ? AND mount = ? LIMIT 1`,
+        [clientId, djMount]
+      )
+      if (djRows.length > 0) {
+        await startSession({
+          clientId,
+          radioStreamId: rs.id,
+          djId: djRows[0].id,
+          mount: djMount,
+          role: djRows[0].role,
+          ipAddress: request.ip || null,
+        })
+      }
 
       await pool.query(
         `UPDATE radio_streams SET status = 'live', lastError = NULL, updatedAt = NOW() WHERE clientId = ?`,
@@ -287,7 +284,7 @@ export default async function streamRoutes(app) {
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'dj_connected', ?, NOW())`,
         [uuid(), clientId, JSON.stringify({ mount, djMount })]
       )
-      logger.info({ clientId, mount, djMount }, 'harbor: DJ connected')
+      logger.info({ clientId, mount, djMount, slotName }, 'harbor: DJ connected')
       return { ok: true, status: 'live', djMount }
     } catch (err) {
       logger.error({ err, clientId }, 'harbor: error on connected')
@@ -304,6 +301,7 @@ export default async function streamRoutes(app) {
   app.post('/api/streams/:clientId/harbor/disconnected', async (request, reply) => {
     const { clientId } = request.params
     const djMount = request.query?.dj || '/live'
+    const slotName = request.query?.slot || null
     try {
       const [rsRows] = await pool.query(
         `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
@@ -312,17 +310,26 @@ export default async function streamRoutes(app) {
       if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
       const mount = sanitizeMount(rsRows[0].icecastMount)
 
-      setDjSlotActive(mount, djMount, false)
+      setDjSlotActive(mount, djMount, false, slotName)
       const anyActive = isAnyDjActive(mount)
+
+      // Finalizar sesión abierta para este slot
+      const [djRows] = await pool.query(
+        `SELECT id FROM radio_djs WHERE clientId = ? AND mount = ? LIMIT 1`,
+        [clientId, djMount]
+      )
+      if (djRows.length > 0) {
+        await endSession({ clientId, djId: djRows[0].id })
+      }
 
       if (!anyActive) {
         await pool.query(
           `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
           [clientId]
         )
-        logger.info({ clientId, mount, djMount }, 'harbor: último DJ desconectado — AutoDJ resumed')
+        logger.info({ clientId, mount, djMount, slotName }, 'harbor: último DJ desconectado — AutoDJ resumed')
       } else {
-        logger.info({ clientId, mount, djMount }, 'harbor: DJ slot desconectado, otro DJ aún activo')
+        logger.info({ clientId, mount, djMount, slotName }, 'harbor: DJ slot desconectado, otro DJ aún activo')
       }
 
       await pool.query(
@@ -359,6 +366,25 @@ export default async function streamRoutes(app) {
       // DJs configurados en DB
       const djs = await getRadioDjs(clientId)
 
+      // Determinar qué slot está "on air" según la jerarquía de roles
+      const ROLE_ORDER = { owner: 0, host: 1, guest: 2 }
+      const sortedActive = activeDjMounts
+        .map(m => {
+          const dj = djs.find(d => d.mount === m)
+          return {
+            mount: m,
+            role: dj?.role || 'guest',
+            priority: dj?.priority ?? 1,
+            connectedAt: activeSlots?.get(m)?.connectedAt || null,
+          }
+        })
+        .sort((a, b) => {
+          const roleDiff = (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2)
+          if (roleDiff !== 0) return roleDiff
+          return (a.priority ?? 1) - (b.priority ?? 1)
+        })
+      const onAirMount = sortedActive.length > 0 ? sortedActive[0].mount : null
+
       // Plan cap + lista dinámica de mounts disponibles (cambio multi-DJ).
       const planMaxDjs = await getPlanMaxDjs(clientId)
       const availableMounts = await listAvailableMounts(clientId, planMaxDjs)
@@ -370,6 +396,7 @@ export default async function streamRoutes(app) {
         mount: '/live',
         djConnected: activeDjMounts.length > 0,
         activeDjMounts,
+        onAirMount,
         planMaxDjs,
         availableMounts,
         djSlots: djs.map(d => ({
@@ -380,6 +407,7 @@ export default async function streamRoutes(app) {
           role: d.role,
           isActive: d.isActive,
           connected: activeDjMounts.includes(d.mount),
+          onAir: onAirMount === d.mount,
           connectedAt: activeSlots?.get(d.mount)?.connectedAt || null,
         })),
         streamStatus: status,
@@ -623,8 +651,18 @@ export default async function streamRoutes(app) {
 
       const planMaxDjs = await getPlanMaxDjs(clientId)
 
-      // Asignar mount dinámicamente: próximo /djK libre hasta planMaxDjs.
-      const mount = await nextAvailableMount(clientId, planMaxDjs)
+      // Asignar mount: usar el solicitado si está disponible, si no, el próximo libre.
+      let mount = null
+      if (request.body?.mount) {
+        const requested = sanitizeMount(request.body.mount)
+        const parsed = parseMount('/' + requested)
+        if (parsed !== null && parsed <= planMaxDjs && !(await isMountInUse(clientId, '/' + requested))) {
+          mount = '/' + requested
+        }
+      }
+      if (!mount) {
+        mount = await nextAvailableMount(clientId, planMaxDjs)
+      }
       if (!mount) {
         return reply.code(400).send({
           error: 'max_djs_reached',
@@ -913,4 +951,128 @@ export default async function streamRoutes(app) {
       return reply.code(403).type('text/plain').send('403 auth_error')
     }
   })
+
+  /**
+   * POST /api/streams/:clientId/djs/:djId/kick
+   * Desconecta un DJ de su harbor input. Requiere token del panel.
+   */
+  app.post('/api/streams/:clientId/djs/:djId/kick', async (request, reply) => {
+    const { clientId, djId } = request.params
+    try {
+      const [rsRows] = await pool.query(
+        `SELECT id, icecastMount, liquidsoapTelnetPort FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        [clientId]
+      )
+      if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+      const rs = rsRows[0]
+
+      const [djRows] = await pool.query(
+        `SELECT id, mount, role FROM radio_djs WHERE id = ? AND clientId = ? LIMIT 1`,
+        [djId, clientId]
+      )
+      if (djRows.length === 0) return reply.code(404).send({ error: 'dj_not_found' })
+      const dj = djRows[0]
+
+      // Resolver sourceName para telnet
+      const slotName = await resolveSlotName(clientId, dj.mount, rs.id, rs.liquidsoapTelnetPort)
+      if (!slotName) {
+        return reply.code(400).send({ error: 'slot_not_resolved', message: 'No se pudo resolver el slot de Liquidsoap' })
+      }
+
+      const kicked = await stopHarborInput(rs.liquidsoapTelnetPort, slotName)
+      if (!kicked) {
+        return reply.code(502).send({ error: 'kick_failed', message: 'No se pudo detener el harbor input' })
+      }
+
+      // Actualizar estado local y DB
+      const mount = sanitizeMount(rs.icecastMount)
+      setDjSlotActive(mount, dj.mount, false, slotName)
+      const anyActive = isAnyDjActive(mount)
+      await endSession({ clientId, djId })
+
+      if (!anyActive) {
+        await pool.query(
+          `UPDATE radio_streams SET status = 'autodj', updatedAt = NOW() WHERE clientId = ?`,
+          [clientId]
+        )
+      }
+
+      await pool.query(
+        `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'dj_kicked', ?, NOW())`,
+        [uuid(), clientId, JSON.stringify({ mount, djId, djMount: dj.mount })]
+      )
+
+      logger.info({ clientId, djId, mount, slotName }, 'DJ kickeado')
+      return { ok: true, status: anyActive ? 'live' : 'autodj', djMount: dj.mount }
+    } catch (err) {
+      logger.error({ err, clientId, djId }, 'Error kickeando DJ')
+      return reply.code(500).send({ error: 'kick_failed', message: err.message })
+    }
+  })
+
+  /**
+   * GET /api/streams/:clientId/dj-sessions
+   * Historial de sesiones de DJ paginado.
+   */
+  app.get('/api/streams/:clientId/dj-sessions', async (request, reply) => {
+    const { clientId } = request.params
+    const page = Math.max(1, parseInt(request.query.page, 10) || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(request.query.limit, 10) || 25))
+    try {
+      const result = await listSessions(clientId, { page, limit })
+      return { ok: true, ...result }
+    } catch (err) {
+      logger.error({ err, clientId }, 'Error listando DJ sessions')
+      return reply.code(500).send({ error: 'sessions_error', message: err.message })
+    }
+  })
+
+  /**
+   * GET /api/streams/:clientId/logs
+   * Últimas N líneas del log de Liquidsoap.
+   */
+  app.get('/api/streams/:clientId/logs', async (request, reply) => {
+    const { clientId } = request.params
+    const lines = Math.min(500, Math.max(1, parseInt(request.query.lines, 10) || 100))
+    try {
+      const [rsRows] = await pool.query(
+        `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        [clientId]
+      )
+      if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+      const logPath = `${config.liquidsoap.logPath}/${rsRows[0].icecastMount}.log`
+      const { stdout } = await execp(`tail -n ${lines} ${logPath}`, { timeout: 5000 })
+      return { ok: true, lines: stdout.split('\n').filter(Boolean) }
+    } catch (err) {
+      logger.error({ err, clientId }, 'Error leyendo log de Liquidsoap')
+      return reply.code(500).send({ error: 'log_error', message: err.message })
+    }
+  })
+}
+
+async function resolveSlotName(clientId, djMount, radioStreamId, telnetPort) {
+  // Primero: buscar en estado activo local
+  const [rsRows] = await pool.query(
+    `SELECT icecastMount FROM radio_streams WHERE id = ? LIMIT 1`,
+    [radioStreamId]
+  )
+  if (rsRows.length === 0) return null
+  const activeSlots = _djSlotActive.get(sanitizeMount(rsRows[0].icecastMount))
+  if (activeSlots) {
+    const entry = activeSlots.get(djMount)
+    if (entry?.slotName) return entry.slotName
+  }
+  // Fallback: reconstruir orden del script generado
+  const djs = await getRadioDjs(clientId)
+  const ROLE_ORDER = { owner: 0, host: 1, guest: 2 }
+  const sorted = djs
+    .filter(d => d.isActive !== false)
+    .sort((a, b) => {
+      const roleDiff = (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2)
+      if (roleDiff !== 0) return roleDiff
+      return (a.priority ?? 1) - (b.priority ?? 1)
+    })
+  const idx = sorted.findIndex(d => d.mount === djMount)
+  if (idx === -1) return null
+  return `dj${idx}`
 }

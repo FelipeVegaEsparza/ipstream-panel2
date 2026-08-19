@@ -68,6 +68,7 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       ICE_PUBLIC_URL: ${ICE_PUBLIC_URL:-http://localhost:8000}
       ICE_PUBLIC_PORT: ${ICE_PUBLIC_PORT:-8000}
+      HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME:-localhost}
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ipstream.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123456}
@@ -241,6 +242,7 @@ services:
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
       ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD:-hackme}
       ICE_HOSTNAME: ${ICE_HOSTNAME:-localhost}
+      HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME:-localhost}
       # Liquidsoap
       LIQUIDSOAP_BIN: /usr/bin/liquidsoap
       LIQUIDSOAP_SCRIPTS_PATH: /etc/liquidsoap/scripts

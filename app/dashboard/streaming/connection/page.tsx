@@ -11,6 +11,18 @@ interface DjSlotInfo {
   role: string
   isActive: boolean
   connected: boolean
+  onAir: boolean
+}
+
+interface DjSession {
+  id: string
+  djId: string
+  mount: string
+  role: string
+  ipAddress: string | null
+  startedAt: string
+  endedAt: string | null
+  durationSeconds: number | null
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -43,6 +55,9 @@ export default function ConnectionPage() {
   const [djConnected, setDjConnected] = useState(false)
   const [planMaxDjs, setPlanMaxDjs] = useState<number>(4)
   const [apiAvailableMounts, setApiAvailableMounts] = useState<string[]>([])
+  const [sessions, setSessions] = useState<DjSession[]>([])
+  const [logs, setLogs] = useState<string[]>([])
+  const [showLogs, setShowLogs] = useState(false)
   const [copyText, setCopyText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -67,6 +82,8 @@ export default function ConnectionPage() {
         // aún no los expone (versión vieja), caemos al default 4 y lista vacía.
         setPlanMaxDjs(typeof data.planMaxDjs === 'number' ? data.planMaxDjs : 4)
         setApiAvailableMounts(Array.isArray(data.availableMounts) ? data.availableMounts : [])
+        if (Array.isArray(data.sessions?.entries)) setSessions(data.sessions.entries)
+        if (Array.isArray(data.logs)) setLogs(data.logs)
       }
     } catch {}
   }, [])
@@ -197,6 +214,17 @@ export default function ConnectionPage() {
     } catch { setError('Error al eliminar DJ') }
   }
 
+  const handleKick = async (dj: DjSlotInfo) => {
+    if (!dj.connected) return
+    if (!confirm(`¿Desconectar al DJ "${dj.name}" (${dj.mount})?`)) return
+    try {
+      const res = await fetch(`/api/dashboard/streaming/djs/${dj.id}/kick`, { method: 'POST' })
+      if (!res.ok) throw new Error()
+      setSuccess(`DJ "${dj.name}" desconectado`)
+      await load()
+    } catch { setError('Error al desconectar DJ') }
+  }
+
   // Mounts que se muestran en el dropdown: los devueltos por el agente (ya libres
 // según Plan.maxDjs) + el mount del slot que estamos editando (para no perder
 // la selección al recargar la página tras un PATCH).
@@ -288,10 +316,17 @@ export default function ConnectionPage() {
                     <span className={`w-2.5 h-2.5 rounded-full ${slot.connected ? 'bg-green-500 animate-pulse' : 'bg-gray-600'}`} />
                     <span className="text-white font-medium">{slot.name}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded uppercase ${ROLE_STYLES[slot.role]}`}>{slot.role}</span>
-                    {slot.connected && <span className="text-xs text-green-400">Conectado</span>}
+                    {slot.connected && slot.onAir && <span className="text-xs font-semibold text-green-400">ON AIR</span>}
+                    {slot.connected && !slot.onAir && <span className="text-xs text-yellow-400">Conectado — en espera</span>}
+                    {!slot.connected && slot.isActive && <span className="text-xs text-gray-400">Disponible</span>}
                     {!slot.isActive && <span className="text-xs text-red-400">Inactivo</span>}
                   </div>
                   <div className="flex gap-2">
+                    {slot.connected && (
+                      <button onClick={() => handleKick(slot)} className="text-xs px-2.5 py-1.5 bg-orange-900/50 hover:bg-orange-800 text-orange-300 rounded">
+                        Desconectar
+                      </button>
+                    )}
                     <button onClick={() => startEdit(slot)} className="text-xs px-2.5 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded">
                       Editar
                     </button>
@@ -318,7 +353,7 @@ export default function ConnectionPage() {
                   </div>
                   <div>
                     <span className="text-gray-500">Estado</span>
-                    <div className="mt-0.5">{slot.isActive ? (slot.connected ? 'En vivo' : 'Disponible') : 'Inactivo'}</div>
+                    <div className="mt-0.5">{slot.isActive ? (slot.connected ? (slot.onAir ? 'Transmitiendo' : 'En espera') : 'Disponible') : 'Inactivo'}</div>
                   </div>
                 </div>
               </div>
@@ -369,6 +404,51 @@ export default function ConnectionPage() {
         </div>
       </div>
 
+      {/* Recent sessions */}
+      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-white">Últimas sesiones de DJ</h2>
+        {sessions.length === 0 ? (
+          <p className="text-sm text-gray-500">No hay sesiones recientes.</p>
+        ) : (
+          <div className="space-y-2">
+            {sessions.map(s => (
+              <div key={s.id} className="flex items-center justify-between text-sm border-b border-gray-700 pb-2">
+                <div className="text-gray-300">
+                  <span className="font-medium text-white">{s.mount}</span>
+                  <span className="text-xs text-gray-500 ml-2">({s.role})</span>
+                </div>
+                <div className="text-gray-400 text-xs">
+                  {new Date(s.startedAt).toLocaleString('es-CL')}
+                  {s.endedAt ? ` — ${formatDuration(s.durationSeconds)}` : ' — en curso'}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Logs */}
+      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Logs de conexión</h2>
+          <button
+            onClick={() => setShowLogs(v => !v)}
+            className="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded"
+          >
+            {showLogs ? 'Ocultar' : 'Ver últimas líneas'}
+          </button>
+        </div>
+        {showLogs && (
+          <div className="bg-gray-900 rounded p-3 text-xs font-mono text-gray-400 max-h-64 overflow-y-auto space-y-1">
+            {logs.length === 0 ? (
+              <p>No hay logs disponibles.</p>
+            ) : (
+              logs.map((line, i) => <p key={i}>{line}</p>)
+            )}
+          </div>
+        )}
+      </div>
+
       {/* BUTT example */}
       <div className="bg-gray-800 rounded-lg p-6 space-y-3">
         <h2 className="text-lg font-semibold text-white">Configuración en BUTT (ejemplo)</h2>
@@ -399,18 +479,25 @@ export default function ConnectionPage() {
 
             <div>
               <label className="text-xs text-gray-400 uppercase">Mountpoint</label>
-              <select value={form.mount} onChange={e => setForm({...form, mount: e.target.value})}
-                className="w-full mt-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm">
-                {mountChoices.length === 0 ? (
-                  <option value={form.mount}>{form.mount} (sin huecos libres)</option>
-                ) : mountChoices.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
+              <div className="flex items-center mt-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                <span className="text-gray-500 mr-2">/dj</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={planMaxDjs}
+                  value={form.mount.replace(/^\/dj/, '')}
+                  onChange={e => {
+                    const n = Math.max(1, Math.min(planMaxDjs, parseInt(e.target.value) || 1))
+                    setForm({ ...form, mount: `/dj${n}` })
+                  }}
+                  disabled={!!editId}
+                  className="bg-transparent w-full outline-none disabled:opacity-50"
+                />
+              </div>
               <p className="text-xs text-gray-500 mt-1">
                 {editId
-                  ? 'Cambiá el mount si querés reasignar este slot.'
-                  : 'El próximo mount libre se asigna automáticamente al guardar.'}
+                  ? 'El mount no se puede cambiar al editar.'
+                  : `Elegí un número entre 1 y ${planMaxDjs}. El próximo libre se sugiere automáticamente.`}
               </p>
             </div>
 
@@ -467,4 +554,14 @@ export default function ConnectionPage() {
       )}
     </div>
   )
+}
+
+function formatDuration(seconds: number | null): string {
+  if (!seconds || seconds <= 0) return '0s'
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
 }
