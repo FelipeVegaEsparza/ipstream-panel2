@@ -257,6 +257,16 @@ export async function startRelay(clientId, streamKey) {
   const existing = _activeRelays.get(clientId)
   if (existing) return { status: 'already_running', port: existing.port }
 
+  // Matar relays stale del mismo cliente antes de bindear el puerto.
+  // Los procesos ffmpeg viven en el contenedor video-encoder y sobreviven
+  // a reinicios del agent (estado en memoria): sin este cleanup, un relay
+  // viejo (target `live/`) sigue ocupando el puerto y el nuevo no puede
+  // bindear (Address in use), dejando a OBS conectado a un relay muerto.
+  try {
+    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "relay_${clientId}" || true`)
+    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "listen 1.*relay" || true`)
+  } catch (_) { }
+
   let port
   try {
     port = allocateRelayPort(clientId)
@@ -340,6 +350,14 @@ export async function extractThumbnail(clientId, filepath) {
  */
 export async function autoStartVideoStreams() {
   console.log('[video-encoder] Auto-starting video streams...')
+
+  // Limpiar relays stale de ejecuciones previas: el estado en memoria
+  // (_activeRelays) se pierde al reiniciar el agent, pero los procesos ffmpeg
+  // del contenedor video-encoder sobreviven y siguen ocupando sus puertos.
+  try {
+    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "listen 1.*relay" || true`)
+    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "relay_" || true`)
+  } catch (_) { }
 
   const [rows] = await pool.query(
     `SELECT vs.clientId, c.name as clientName FROM video_streams vs
