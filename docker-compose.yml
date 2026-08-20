@@ -160,6 +160,9 @@ services:
   srs:
     image: ossrs/srs:5
     container_name: ipstream-srs
+    # La imagen por defecto arranca con `-c conf/docker.conf`; nosotros
+    # proveemos `conf/srs.conf`, así que fijamos el command explícitamente.
+    command: ["./objs/srs", "-c", "conf/srs.conf"]
     restart: unless-stopped
     ports:
       - "1935:1935"       # RTMP

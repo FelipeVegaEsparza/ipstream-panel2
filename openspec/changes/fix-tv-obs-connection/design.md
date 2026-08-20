@@ -2,7 +2,7 @@
 
 Ver proposal.md (Why/What) para la motivación. Estado actual relevante:
 
-- SRS v5 (`ossrs/srs:5`) arranca con `./objs/srs -c conf/srs.conf`; el compose monta el dir `./streaming/srs/conf` (solo `docker.conf`) sobre `/usr/local/srs/conf`, ocultando el `srs.conf` de la imagen → SRS no arranca.
+- La imagen `ossrs/srs:5` arranca **por defecto** con `./objs/srs -c conf/docker.conf`. El compose monta el dir `./streaming/srs/conf` sobre `/usr/local/srs/conf` (ro), ocultando el config de la imagen. Si el archivo que la imagen espera no existe en el mount, SRS entra en crash loop (exit 255) y el puerto 1935 no escucha.
 - SRS impone **un publisher por stream**: un segundo publisher del mismo `app/stream` es rechazado (no "patea" al primero). El diseño actual (DJ publica el mismo `live/<key>` que el AutoDJ y el hook detiene al encoder) no puede funcionar: el hook `on-publish` solo se dispara si SRS acepta el publish.
 - Los hooks actuales leen `stream_key`/`client_id` del body de SRS, pero SRS envía `app` y `stream` (y `client_id` es el id interno de SRS, no el del panel).
 - SRS parsea la respuesta del hook con `atol(body)`: un objeto JSON `{"code":0,...}` se lee como 0 (permite); para **denegar** hay que responder un entero plano (p.ej. `-1`).
@@ -24,9 +24,10 @@ Ver proposal.md (Why/What) para la motivación. Estado actual relevante:
 
 ## Decisions
 
-### D1. Config de SRS montada como `srs.conf`
-Renombrar `streaming/srs/conf/docker.conf` → `streaming/srs/conf/srs.conf` y mantener el mount del dir tal cual. El CMD de la imagen (`-c conf/srs.conf`) encuentra el archivo.
-- Alternativa considerada: mount del archivo individual (`docker.conf:/usr/local/srs/conf/srs.conf:ro`). Funciona igual, pero renombrar deja el repo como fuente única y evita editar ambos composes. Elegida: renombrar.
+### D1. Config de SRS montada como `srs.conf` con command fijo
+Renombrar `streaming/srs/conf/docker.conf` → `streaming/srs/conf/srs.conf` y fijar en ambos composes el `command` del service `srs` a `./objs/srs -c conf/srs.conf`. La imagen por defecto arranca con `-c conf/docker.conf`; al pinar el command, la config deja de depender del default de la imagen y el mount encuentra `srs.conf`.
+- Alternativa considerada: dejar el archivo como `docker.conf` (el default de la imagen lo encuentra sin tocar composes). Descartada: deja implícita la dependencia del default de la imagen y el nombre `srs.conf` no se usa.
+- Descubrimiento en validación: `docker compose up -d` no recrea SRS si el compose no cambia (la imagen con su default `conf/docker.conf`). Por eso el `command` explícito en el compose es necesario para que el deploy aplique el cambio de forma reproducible.
 
 ### D2. Takeover DJ/AutoDJ con apps separados (`dj` vs `live`)
 - El encoder de AutoDJ (ffmpeg) publica en `live/<streamKey>` (sin cambios).
@@ -69,7 +70,7 @@ Renombrar `streaming/srs/conf/docker.conf` → `streaming/srs/conf/srs.conf` y m
 
 ## Migration Plan
 
-1. **Infra**: renombrar `streaming/srs/conf/docker.conf` → `srs.conf`; ajustar `deploy/Caddyfile` (`/dj/*`); exponer rango relay en `deploy/docker-compose.prod.yml`; abrir puertos en firewall.
+1. **Infra**: renombrar `streaming/srs/conf/docker.conf` → `srs.conf`; fijar `command` del service `srs` en `docker-compose.yml` y `deploy/docker-compose.prod.yml`; ajustar `deploy/Caddyfile` (`/dj/*`); exponer rango relay en `deploy/docker-compose.prod.yml`; abrir puertos en firewall.
 2. **Agent**: actualizar hooks (`stream`/`app`, resolución, deny con `-1`), encoder y relay a `dj/`, relay en `/start`.
 3. **Panel**: URL HLS según estado; página de conexión con puerto relay real.
 4. **Deploy**: `docker compose up -d --build srs agent video-encoder app` y validar SRS healthy (`curl :8080/api/v1/versions`).
