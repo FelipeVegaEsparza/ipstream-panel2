@@ -15,6 +15,7 @@ interface StreamInfo {
   relayUrl: string | null
   status: string
   dj: DjStatus
+  encoder?: { status: string }
 }
 
 export default function TvConnectionPage() {
@@ -24,8 +25,10 @@ export default function TvConnectionPage() {
   const [copiedRelay, setCopiedRelay] = useState(false)
   const [copiedKey, setCopiedKey] = useState(false)
   const [host, setHost] = useState('panelipstream.cl')
-  const serverUrl = `rtmp://${host}:1935/live`
-  const relayUrl = `rtmp://${host}:1936/live/relay`
+  // El DJ (OBS) publica en el app 'dj': no compite con el AutoDJ (que usa 'live').
+  const serverUrl = `rtmp://${host}:1935/dj`
+  const relayUrl = info?.relayUrl ?? ''
+  const relayActive = !!info?.relayUrl
   const { toast } = useToast()
 
   useEffect(() => {
@@ -83,6 +86,15 @@ export default function TvConnectionPage() {
             Conectado desde {new Date(info.dj.connectedAt).toLocaleString('es-CL')}
           </p>
         )}
+        <div className="flex items-center gap-2 mt-3">
+          <span className={`w-2.5 h-2.5 rounded-full ${info?.status === 'autodj' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
+          <span className={info?.status === 'autodj' ? 'text-green-300 text-sm font-medium' : 'text-gray-400 text-sm'}>
+            {info?.status === 'autodj' ? 'AutoDJ activo' : info?.status === 'off' ? 'AutoDJ detenido' : 'AutoDJ detenido (DJ en vivo)'}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Al conectar tu transmisión, el AutoDJ se detiene automáticamente. Al terminar, se reanuda.
+        </p>
       </div>
 
       {/* RTMP URL */}
@@ -110,17 +122,25 @@ export default function TvConnectionPage() {
           {/* Relay URL (compatible con OBS enhanced RTMP) */}
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
             <h2 className="text-lg font-semibold text-white mb-3">Conexión Universal (cualquier codec)</h2>
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`w-2.5 h-2.5 rounded-full ${relayActive ? 'bg-green-500' : 'bg-gray-500'}`} />
+              <span className={relayActive ? 'text-green-300 text-sm font-medium' : 'text-gray-400 text-sm'}>
+                {relayActive ? 'Relay activo' : 'Relay inactivo'}
+              </span>
+            </div>
             <div className="flex flex-col md:flex-row gap-2">
               <input
                 type="text"
                 readOnly
                 value={relayUrl}
+                placeholder={relayActive ? '' : 'Iniciá el AutoDJ para habilitar la Conexión Universal'}
                 className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
-                onClick={(e) => e.currentTarget.select()}
+                onClick={(e) => relayUrl && e.currentTarget.select()}
               />
               <button
-                onClick={() => copy(relayUrl, setCopiedRelay, 'URL Relay')}
-                className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm whitespace-nowrap"
+                onClick={() => relayUrl && copy(relayUrl, setCopiedRelay, 'URL Relay')}
+                disabled={!relayActive}
+                className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm whitespace-nowrap"
               >
                 {copiedRelay ? '✓ Copiado' : 'Copiar Relay'}
               </button>

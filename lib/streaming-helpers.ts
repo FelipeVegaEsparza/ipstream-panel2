@@ -138,11 +138,11 @@ export function getVideoStreamKey(clientId: string): string {
 }
 
 /**
- * Retorna la RTMP URL para que OBS se conecte.
+ * Retorna la RTMP URL para que OBS se conecte (app 'dj': no compite con el AutoDJ en 'live').
  */
 export function getVideoRtmpUrl(baseHost: string, clientId: string): string {
   const key = getVideoStreamKey(clientId)
-  return `rtmp://${baseHost}:1935/live/${key}`
+  return `rtmp://${baseHost}:1935/dj/${key}`
 }
 
 /**

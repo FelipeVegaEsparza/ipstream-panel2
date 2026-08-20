@@ -35,7 +35,12 @@
     }
 
     # === HLS streaming (proxy a SRS) ===
+    # AutoDJ se sirve en /live/* y el DJ en vivo en /dj/*
     handle /live/* {
+        reverse_proxy srs:8080
+    }
+
+    handle /dj/* {
         reverse_proxy srs:8080
     }
 

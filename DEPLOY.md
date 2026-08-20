@@ -105,6 +105,35 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 ---
 
+## Televisión — puertos RTMP (OBS)
+
+Caddy **no proxya RTMP** (no es HTTP). Para que OBS pueda conectarse hay que abrir puertos TCP directos al host:
+
+| Puerto(s) | Servicio | Uso |
+|---|---|---|
+| `1935` | SRS | Ingesta directa del DJ: `rtmp://<host>:1935/dj/<stream_key>` y AutoDJ `.../live/<stream_key>` |
+| `1936–2235` (rango relay) | video-encoder | "Conexión Universal" (OBS enhanced RTMP): un puerto por cliente |
+
+Verificar desde fuera del VPS:
+
+```bash
+nc -zv <host> 1935
+nc -zv <host> 1936
+```
+
+En el VPS (ufw):
+
+```bash
+sudo ufw allow 1935/tcp
+sudo ufw allow 1936:2235/tcp
+```
+
+Notas:
+- El rango relay es configurable con `RTMP_RELAY_PORT_RANGE_START` / `RTMP_RELAY_PORT_RANGE_END`. Si tenés pocos clientes, acotalo (ej. `1936–1995`) para reducir superficie.
+- La URL HLS del espectador cambia según el estado: `/live/<stream_key>.m3u8` con AutoDJ y `/dj/<stream_key>.m3u8` con DJ en vivo. Caddy proxya ambos.
+
+---
+
 ## Errores comunes y solución
 
 ### ❌ "Stream no inicia" / "File is not readable" (Liquidsoap)

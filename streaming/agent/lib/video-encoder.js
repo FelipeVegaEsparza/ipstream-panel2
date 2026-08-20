@@ -273,7 +273,7 @@ export async function startRelay(clientId, streamKey) {
     `-i rtmp://0.0.0.0:${port}/live/relay ` +
     `-c:v libx264 -preset veryfast -b:v 2000k -maxrate 2500k -bufsize 4000k ` +
     `-c:a aac -b:a 128k -ar 44100 -ac 2 ` +
-    `-f flv rtmp://srs:1935/live/${streamKey} ` +
+    `-f flv rtmp://srs:1935/dj/${streamKey} ` +
     `>>${logFile} 2>&1; sleep 1; ` +
     `done &`
   const cmd = `docker exec ${ENCODER_CONTAINER} sh -c '${shScript}'`

@@ -22,10 +22,12 @@ export default function TelevisionPage() {
   const { toast } = useToast()
 
   const publicBase = process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
+  // El DJ en vivo se sirve desde el app 'dj'; el AutoDJ desde 'live'.
+  const hlsApp = videoStatus?.status === 'live' ? 'dj' : 'live'
   const hlsUrl = videoStatus?.streamKey
     ? publicBase
-      ? `${publicBase.replace(/\/$/, '')}/live/${videoStatus.streamKey}.m3u8`
-      : `/live/${videoStatus.streamKey}.m3u8`
+      ? `${publicBase.replace(/\/$/, '')}/${hlsApp}/${videoStatus.streamKey}.m3u8`
+      : `/${hlsApp}/${videoStatus.streamKey}.m3u8`
     : null
 
   useEffect(() => {

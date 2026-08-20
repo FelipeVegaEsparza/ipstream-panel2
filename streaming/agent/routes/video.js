@@ -56,29 +56,36 @@ export default async function videoRoutes(fastify) {
   // SRS Hooks
   // ================================================================
 
-  // on-publish: DJ conecta a SRS por RTMP
+  // on-publish: DJ conecta a SRS por RTMP en el app 'dj'
   fastify.post('/api/video/hooks/on-publish', async (req, reply) => {
-    const { stream_key, client_id } = req.body || {}
+    const { app, stream } = req.body || {}
 
-    if (!stream_key) {
-      reply.send({ code: 0, message: 'no stream_key' })
+    // El app 'live' lo usan el encoder de AutoDJ y el relay: nunca es un DJ.
+    if (app !== 'dj') {
+      reply.send({ code: 0, message: 'ignored' })
       return
     }
 
-    // Resolver el clientId a partir del stream_key. La query original con
-    // clientId directo + subquery era dead code (segundo parámetro siempre
-    // vacío). Buscamos por stream_key que es lo único confiable.
+    if (!stream) {
+      reply.send({ code: 0, message: 'no stream' })
+      return
+    }
+
+    // Resolver el clientId a partir del stream key. SRS envía el campo
+    // `stream` (nombre del stream), no `stream_key`.
     const [allStreams] = await pool.query(
       `SELECT clientId FROM video_streams`
     )
-    const matched = allStreams.find(s => getStreamKey(s.clientId) === stream_key)
+    const matched = allStreams.find(s => getStreamKey(s.clientId) === stream)
     if (!matched) {
-      reply.send({ code: 0, message: 'unknown stream_key' })
+      // Key desconocido: denegar el publish. SRS parsea el body con atol(),
+      // un JSON {code:...} se lee siempre como 0 => responder entero plano.
+      reply.type('text/plain').send('-1')
       return
     }
 
     const clientId = matched.clientId
-    _djActive.set(clientId, { streamKey: stream_key, connectedAt: new Date().toISOString() })
+    _djActive.set(clientId, { streamKey: stream, connectedAt: new Date().toISOString() })
 
     await pool.query(`UPDATE video_streams SET status = 'live' WHERE clientId = ?`, [clientId])
     await stopEncoder(clientId)
@@ -90,14 +97,26 @@ export default async function videoRoutes(fastify) {
     reply.send({ code: 0, message: 'OK' })
   })
 
-  // on-unpublish: DJ se desconecta de SRS
+  // on-unpublish: DJ se desconecta de SRS (app 'dj')
   fastify.post('/api/video/hooks/on-unpublish', async (req, reply) => {
-    const { stream_key, client_id } = req.body || {}
+    const { app, stream } = req.body || {}
 
-    let clientId = client_id || null
-    if (!clientId) {
-      const entry = Array.from(_djActive.entries()).find(([_, v]) => v.streamKey === stream_key)
+    // El app 'live' lo usan el encoder de AutoDJ y el relay: no es un DJ.
+    if (app !== 'dj') {
+      reply.send({ code: 0, message: 'ignored' })
+      return
+    }
+
+    // Resolver el clientId por el stream key (el DJ quedó registrado en on-publish)
+    let clientId = null
+    if (stream) {
+      const entry = Array.from(_djActive.entries()).find(([_, v]) => v.streamKey === stream)
       if (entry) clientId = entry[0]
+    }
+    if (!clientId) {
+      const [allStreams] = await pool.query(`SELECT clientId FROM video_streams`)
+      const matched = allStreams.find(s => getStreamKey(s.clientId) === stream)
+      if (matched) clientId = matched.clientId
     }
 
     if (!clientId) {
@@ -158,10 +177,11 @@ export default async function videoRoutes(fastify) {
       repeat: !!vs.repeat,
       storageQuotaMB: vs.storageQuotaMB,
       streamKey,
-      rtmpUrl: `rtmp://localhost:1935/live/${streamKey}`,
+      // El DJ (OBS) publica en el app 'dj'; el AutoDJ usa 'live'.
+      rtmpUrl: `rtmp://localhost:1935/dj/${streamKey}`,
       relayUrl,
       relayPort: relayUrl ? parseInt(relayUrl.split(':').pop().split('/')[0], 10) : null,
-      hlsUrl: `http://localhost:8080/live/${streamKey}.m3u8`,
+      hlsUrl: `http://localhost:8080/${vs.status === 'live' ? 'dj' : 'live'}/${streamKey}.m3u8`,
       encoder: encoderStatus,
       dj: djStatus,
     }
@@ -197,6 +217,8 @@ export default async function videoRoutes(fastify) {
         const status = getEncoderStatus(cid)
         return status.currentTrack ? { trackId: status.currentTrack, trackType: 'autodj', title: status.currentTrack } : null
       })
+      // El relay (Conexión Universal) debe estar escuchando junto al AutoDJ
+      await startRelay(clientId, streamKey)
     }
 
     return result

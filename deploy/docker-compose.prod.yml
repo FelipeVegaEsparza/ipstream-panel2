@@ -168,7 +168,9 @@ services:
     container_name: ipstream-video-encoder
     restart: always
     ports:
-      - "1936:1936"
+      # Rango de relays RTMP por cliente (cada cliente usa un puerto único).
+      # Ajustar RTMP_RELAY_PORT_RANGE_START/END según cantidad de clientes.
+      - "${RTMP_RELAY_PORT_RANGE_START:-1936}-${RTMP_RELAY_PORT_RANGE_END:-2235}:${RTMP_RELAY_PORT_RANGE_START:-1936}-${RTMP_RELAY_PORT_RANGE_END:-2235}"
     volumes:
       - video_library:/var/lib/video
       - video_logs:/var/log/video-encoder
