@@ -59,10 +59,11 @@ Renombrar `streaming/srs/conf/docker.conf` → `streaming/srs/conf/srs.conf` y f
 - `docker-compose.prod.yml`: exponer el rango `${RTMP_RELAY_PORT_RANGE_START:-1936}-${RTMP_RELAY_PORT_RANGE_END:-2235}` (igual que dev) en `video-encoder`, o un rango reducido documentado.
 - Documentar en deploy que el firewall debe abrir 1935 (RTMP SRS) y el rango relay.
 
-### D6. `http_hooks` debe declarar `enabled on` explícitamente
-- En SRS v5 el default de `http_hooks.enabled` es **off** (`full.conf`: "default off"). Un bloque `http_hooks` sin `enabled` hace que SRS acepte el publish y genere HLS, pero **nunca dispare los callbacks**.
-- Fix: declarar `enabled on;` dentro de `http_hooks` en `srs.conf`.
-- Bonus: habilitar `http_api { enabled on; listen 8080; }` (v5 permite el mismo puerto que `http_server`) para poder verificar streams/vhosts con `/api/v1/streams` y `/api/v1/vhosts`.
+### D6. Causa raíz del "AutoDJ pegado": relays stale, no la config de hooks
+- El hook `on_publish` de SRS se dispara **una vez al inicio del publish**, no de forma continua. Si el relay está corriendo hace mucho sin un publish nuevo, no hay llamada al hook aunque esté "transmitiendo".
+- Causa raíz real: relays ffmpeg stale seguían vivos tras reinicios del agent (el estado `_activeRelays` es in-memory) peleando por el puerto y publicando a SRS en un ciclo fallido. Tras matarlos y reiniciar el agent (limpieza en `startRelay` + `autoStartVideoStreams`), el publish fresco disparó `on_publish` correctamente → `status='live'`. Cubierto en el commit 62ca78b.
+- `http_hooks { enabled on; }` se agrega como hardening explícito (la referencia `full.conf` de v5 anota default `off`, aunque en la build v5.0.213 en uso los hooks dispararon sin él).
+- Bonus: habilitar `http_api { enabled on; listen 8080; }` (v5 permite el mismo puerto que `http_server`) para verificar streams/vhosts con `/api/v1/streams` y `/api/v1/vhosts`.
 
 ## Risks / Trade-offs
 
