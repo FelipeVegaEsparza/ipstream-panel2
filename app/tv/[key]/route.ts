@@ -16,33 +16,70 @@ function playerHtml(origin: string, streamKey: string): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Transmisión en vivo</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0f1115; color: #e5e7eb; font-family: system-ui, -apple-system, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
   h1 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
-  .wrap { width: 100%; max-width: 960px; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; box-shadow: 0 8px 30px rgba(0,0,0,.5); }
+  .wrap { position: relative; width: 100%; max-width: 960px; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; box-shadow: 0 8px 30px rgba(0,0,0,.5); }
   video { width: 100%; height: 100%; display: block; }
+  .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); color: #d1d5db; font-size: 14px; z-index: 2; text-align: center; padding: 16px; }
   .state { margin-top: 12px; font-size: 13px; color: #9ca3af; word-break: break-all; text-align: center; }
 </style>
 </head>
 <body>
   <h1>Transmisión en vivo</h1>
-  <div class="wrap"><video id="v" controls autoplay muted playsinline></video></div>
+  <div class="wrap">
+    <video id="v" controls autoplay muted playsinline></video>
+    <div id="ov" class="overlay"><span id="ovt">Cargando…</span></div>
+  </div>
   <p class="state">${playlist}</p>
 <script>
   var video = document.getElementById('v');
+  var overlay = document.getElementById('ov');
+  var ovt = document.getElementById('ovt');
   var src = ${JSON.stringify(playlist)};
-  if (window.Hls && Hls.isSupported()) {
-    var hls = new Hls({ lowLatencyMode: false, backBufferLength: 30 });
-    hls.on(Hls.Events.ERROR, function (_e, data) {
-      if (data.fatal) hls.startLoad();
-    });
-    hls.loadSource(src);
-    hls.attachMedia(video);
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = src;
+  var hls = null;
+  var retries = 0;
+  var maxRetries = 10;
+
+  function setState(msg, err) {
+    ovt.textContent = msg ? msg + (err ? ' (' + err + ')' : '') : '';
+    overlay.style.display = msg ? 'flex' : 'none';
   }
+
+  function start() {
+    if (hls) { hls.destroy(); hls = null; }
+    if (window.Hls && Hls.isSupported()) {
+      hls = new Hls({ lowLatencyMode: false, backBufferLength: 30 });
+      hls.on(Hls.Events.MANIFEST_PARSED, function () { retries = 0; setState(''); });
+      hls.on(Hls.Events.ERROR, function (_e, data) {
+        if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retries < maxRetries) {
+          retries++;
+          setState('Reconectando… (' + retries + ')', data.details);
+          setTimeout(start, 2000);
+        } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          hls.recoverMediaError();
+        } else {
+          setState('Sin señal', data.details);
+          setTimeout(function () { retries = 0; start(); }, 5000);
+        }
+      });
+      hls.loadSource(src);
+      hls.attachMedia(video);
+      setState('Cargando…');
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.addEventListener('loadedmetadata', function () { setState(''); });
+      video.addEventListener('error', function () { setState('Sin señal'); setTimeout(function () { retries = 0; video.load(); }, 5000); });
+      video.src = src;
+      setState('Cargando…');
+    } else {
+      setState('Reproductor no soportado');
+    }
+  }
+
+  start();
 </script>
 </body>
 </html>`
