@@ -34,5 +34,5 @@
 - [x] 6.1 Tras el deploy, `docker ps`/health: SRS healthy y `nc -zv <host> 1935` responde
 - [x] 6.2 Test directo: `ffmpeg -f lavfi -i testsrc ... -f flv rtmp://<host>:1935/dj/<streamKey>` → status `live`, AutoDJ detenido; al cortar, status `autodj` y AutoDJ reanuda (verificado con OBS: apagado→`autodj`, encendido→`live`)
 - [x] 6.3 Test relay: publicar al puerto relay del cliente → status `live` y HLS `/dj/<key>.m3u8` sirve la señal (m3u8 con segmentos y video reproducido en el dashboard)
-- [ ] 6.4 Test de seguridad: publicar con un stream key desconocido → publish rechazado
+- [x] 6.4 Test de seguridad: publicar con un stream key desconocido → publish rechazado (SRS loguea `response=-1` del hook y ffmpeg termina con I/O error)
 - [x] 6.5 Test HLS: con AutoDJ activo `/live/<key>.m3u8` reproduce; con DJ en vivo `/dj/<key>.m3u8` reproduce (verificado en el dashboard tras el rewrite `/dj/*` en next.config.js)

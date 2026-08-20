@@ -74,9 +74,12 @@ git fetch origin main
 git reset --hard origin/main
 
 # === 1b. Recargar Caddy (el Caddyfile está bind-mounted y puede haber cambiado) ===
-echo "🔁 1b/9 — Recargando Caddy con el Caddyfile nuevo..."
-docker exec ipstream-caddy caddy reload --config /etc/caddy/Caddyfile 2>/dev/null \
-  || docker restart ipstream-caddy 2>/dev/null || true
+# git reset --hard reemplaza el archivo (inode nuevo); el bind-mount del
+# contenedor sigue apuntando al inode viejo con el contenido anterior.
+# caddy reload lee el inode stale, así que hay que reiniciar el contenedor
+# para que remonte el bind y vea el Caddyfile nuevo.
+echo "🔁 1b/9 — Reiniciando Caddy para tomar el Caddyfile nuevo (bind-mount stale)..."
+docker restart ipstream-caddy 2>/dev/null || true
 
 # === 2. Export variables ===
 export IMAGE_TAG

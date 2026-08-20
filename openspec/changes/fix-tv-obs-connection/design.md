@@ -65,6 +65,11 @@ Renombrar `streaming/srs/conf/docker.conf` → `streaming/srs/conf/srs.conf` y f
 - `http_hooks { enabled on; }` se agrega como hardening explícito (la referencia `full.conf` de v5 anota default `off`, aunque en la build v5.0.213 en uso los hooks dispararon sin él).
 - Bonus: habilitar `http_api { enabled on; listen 8080; }` (v5 permite el mismo puerto que `http_server`) para verificar streams/vhosts con `/api/v1/streams` y `/api/v1/vhosts`.
 
+### D7. Bind-mounts stale tras `git reset --hard`
+- El `deploy.sh` hace `git reset --hard origin/main`, que reemplaza archivos con **inode nuevo**. Los bind-mounts de contenedores siguen apuntando al inode viejo (contenido anterior) hasta que el contenedor se reinicia.
+- Ocurrió con `srs.conf` (montado en `/usr/local/srs/conf`) y con `deploy/Caddyfile` (montado en `/etc/caddy/Caddyfile`): el archivo en disco tenía el contenido nuevo pero el contenedor seguía leyendo el viejo.
+- Fix: reiniciar el contenedor (remonta el bind). Un `caddy reload` no sirve porque lee el inode stale. Aplicado en `deploy.sh` (1b: `docker restart ipstream-caddy`).
+
 ## Risks / Trade-offs
 
 - [La URL HLS cambia entre `live/` y `dj/`] → el panel y el player la conmutan según el estado (polling de status). Riesgo de un breve corte al conmutar → mitigación: seleccionar el app en el mismo ciclo de status; el player ya maneja errores de red y reintenta.
