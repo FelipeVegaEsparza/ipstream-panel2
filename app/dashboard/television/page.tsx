@@ -17,6 +17,7 @@ export default function TelevisionPage() {
   const [videoStatus, setVideoStatus] = useState<VideoStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [copiedHls, setCopiedHls] = useState(false)
+  const [copiedStable, setCopiedStable] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
   const { toast } = useToast()
@@ -37,6 +38,13 @@ export default function TelevisionPage() {
       : typeof window !== 'undefined'
         ? `${window.location.origin}${hlsUrl}`
         : hlsUrl
+    : null
+  // URL estable: /tv/<streamKey>.m3u8 siempre muestra lo que esté al aire
+  // (AutoDJ o OBS), redirige según el estado.
+  const stableUrl = videoStatus?.streamKey
+    ? typeof window !== 'undefined'
+      ? `${window.location.origin}/tv/${videoStatus.streamKey}.m3u8`
+      : null
     : null
 
   useEffect(() => {
@@ -142,6 +150,14 @@ export default function TelevisionPage() {
     setTimeout(() => setCopiedHls(false), 2000)
   }
 
+  const copyStable = () => {
+    if (!stableUrl) return
+    navigator.clipboard.writeText(stableUrl)
+    setCopiedStable(true)
+    toast({ type: 'success', title: 'URL estable copiada' })
+    setTimeout(() => setCopiedStable(false), 2000)
+  }
+
   const isAutoDj = videoStatus?.status === 'autodj'
   const isLive = videoStatus?.status === 'live'
   const isOff = videoStatus?.status === 'off'
@@ -204,18 +220,51 @@ export default function TelevisionPage() {
               playsInline
             />
           </div>
-          <div className="mt-3 flex flex-col md:flex-row gap-2">
-            <input
-              type="text"
-              readOnly
-              value={displayUrl || ''}
-              className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
-              onClick={(e) => e.currentTarget.select()}
-            />
-            <button onClick={copyHls} className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
-              {copiedHls ? '✓ Copiado' : 'Copiar URL HLS'}
-            </button>
+        </div>
+      )}
+
+      {/* URLs de transmisión */}
+      {stableUrl && (
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5 space-y-3">
+          <h2 className="text-lg font-semibold text-white mb-1">URL de transmisión</h2>
+
+          <div>
+            <p className="text-xs text-gray-400 mb-1.5">
+              Estable (muestra AutoDJ u OBS según lo que esté al aire)
+            </p>
+            <div className="flex flex-col md:flex-row gap-2">
+              <input
+                type="text"
+                readOnly
+                value={stableUrl}
+                className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                onClick={(e) => e.currentTarget.select()}
+              />
+              <button onClick={copyStable} className="px-4 py-2.5 bg-cyan-700 hover:bg-cyan-600 text-white rounded-lg transition-colors text-sm">
+                {copiedStable ? '✓ Copiado' : 'Copiar'}
+              </button>
+            </div>
           </div>
+
+          {displayUrl && (
+            <div>
+              <p className="text-xs text-gray-400 mb-1.5">
+                Actual ({isLive ? 'OBS en vivo' : isAutoDj ? 'AutoDJ' : 'Detenido'})
+              </p>
+              <div className="flex flex-col md:flex-row gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={displayUrl}
+                  className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <button onClick={copyHls} className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
+                  {copiedHls ? '✓ Copiado' : 'Copiar'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
