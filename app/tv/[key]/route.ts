@@ -45,74 +45,111 @@ function playerHtml(streamKey: string): string {
   } else {
     stateEl.textContent = src;
   }
+
+  // Controlador robusto:
+  //  - Nunca abandona: reintenta con backoff acotado ante errores fatales.
+  //  - Cada 5s consulta /tv/<key>/app (estado en DB) y cambia de app si cambió.
+  //  - Si lleva >20s sin reproducir, verifica qué app tiene stream REAL (probe
+  //    del m3u8: 200 y sin #EXT-X-ENDLIST) y cae al que esté vivo (cubre
+  //    estado en DB desactualizado o encoder caído).
   var hls = null;
-  var currentApp = 'live';
-  var retries = 0;
-  var maxRetries = 10;
+  var currentApp = null;
+  var lastHealthyAt = 0;
+  var backoff = 0;
+  var retryTimer = null;
+  var MAX_BACKOFF = 5000;
+  var HEALTHY_TIMEOUT = 20000;
 
   function setState(msg, err) {
     ovt.textContent = msg ? msg + (err ? ' (' + err + ')' : '') : '';
     overlay.style.display = msg ? 'flex' : 'none';
   }
 
-  // El redirect /tv/<key>.m3u8 solo aplica al primer load; hls.js pola el
-  // playlist resuelto. Para conmutar AutoDJ<->OBS en vivo, se consulta el
-  // estado cada 5s y se recrea la instancia cuando cambia el app.
-  function start() {
+  function manifestUrl(app) {
+    return '/' + app + '/' + key + '.m3u8';
+  }
+
+  function probe(url) {
+    return fetch(url, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) return false; return r.text(); })
+      .then(function (t) { return t ? t.indexOf('#EXT-X-ENDLIST') === -1 : false; })
+      .catch(function () { return false; });
+  }
+
+  function start(app) {
+    if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
     if (hls) { hls.destroy(); hls = null; }
     video.removeAttribute('src');
     video.load();
-    var src2 = '/' + currentApp + '/' + key + '.m3u8';
+    currentApp = app;
+    var url = manifestUrl(app);
+    setState('Cargando…');
     if (window.Hls && Hls.isSupported()) {
       hls = new Hls({ lowLatencyMode: false, backBufferLength: 30 });
-      hls.on(Hls.Events.MANIFEST_PARSED, function () { retries = 0; setState(''); });
+      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        lastHealthyAt = Date.now();
+        backoff = 0;
+        setState('');
+      });
       hls.on(Hls.Events.ERROR, function (_e, data) {
         if (!data.fatal) return;
-        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retries < maxRetries) {
-          retries++;
-          setState('Reconectando… (' + retries + ')', data.details);
-          setTimeout(start, 2000);
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR || data.type === Hls.ErrorTypes.OTHER_ERROR) {
+          backoff = Math.min(backoff ? backoff * 2 : 800, MAX_BACKOFF);
+          setState('Reconectando…', data.details);
+          retryTimer = setTimeout(function () { start(currentApp); }, backoff);
         } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
           hls.recoverMediaError();
-        } else {
-          setState('Sin señal', data.details);
-          setTimeout(function () { retries = 0; start(); }, 5000);
         }
       });
-      hls.loadSource(src2);
+      hls.loadSource(url);
       hls.attachMedia(video);
-      setState('Cargando…');
+      video.play().catch(function () {});
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.addEventListener('loadedmetadata', function () { setState(''); });
-      video.addEventListener('error', function () { setState('Sin señal'); setTimeout(function () { retries = 0; video.load(); }, 5000); });
-      video.src = src2;
-      setState('Cargando…');
+      video.addEventListener('loadedmetadata', function () { lastHealthyAt = Date.now(); backoff = 0; setState(''); });
+      video.addEventListener('error', function () {
+        setState('Sin señal');
+        retryTimer = setTimeout(function () { start(currentApp); }, 4000);
+      });
+      video.src = url;
+      video.play().catch(function () {});
     } else {
       setState('Reproductor no soportado');
     }
   }
 
-  function getApp() {
-    return fetch('/tv/' + key + '/app')
+  function getDesiredApp() {
+    return fetch('/tv/' + key + '/app', { cache: 'no-store' })
       .then(function (r) { return r.json(); })
-      .then(function (d) { return d && d.app; })
+      .then(function (d) { return d && (d.app === 'dj' ? 'dj' : 'live'); })
       .catch(function () { return null; });
   }
 
-  function pollApp() {
-    getApp().then(function (app) {
-      if (app && app !== currentApp) {
-        currentApp = app;
-        start();
+  function tick() {
+    getDesiredApp().then(function (desired) {
+      if (desired) {
+        var healthy = (Date.now() - lastHealthyAt) < HEALTHY_TIMEOUT;
+        if (currentApp === null) {
+          start(desired);
+        } else if (desired !== currentApp) {
+          start(desired);
+        } else if (!healthy) {
+          probe(manifestUrl(currentApp)).then(function (selfLive) {
+            if (selfLive) {
+              start(currentApp);
+            } else {
+              var other = currentApp === 'live' ? 'dj' : 'live';
+              probe(manifestUrl(other)).then(function (otherLive) {
+                if (otherLive) start(other);
+              });
+            }
+          });
+        }
       }
+      setTimeout(tick, 5000);
     });
   }
 
-  getApp().then(function (app) {
-    currentApp = app || 'live';
-    start();
-  });
-  setInterval(pollApp, 5000);
+  tick();
 </script>
 </body>
 </html>`

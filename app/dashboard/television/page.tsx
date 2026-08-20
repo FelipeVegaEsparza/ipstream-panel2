@@ -21,6 +21,7 @@ export default function TelevisionPage() {
   const [copiedPlayer, setCopiedPlayer] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
+  const videoStatusRef = useRef<VideoStatus | null>(null)
   const { toast } = useToast()
 
   const publicBase = process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
@@ -55,60 +56,121 @@ export default function TelevisionPage() {
     : null
 
   useEffect(() => {
-    if (!videoRef.current || !hlsUrl) return
-    if (!Hls.isSupported()) return
+    videoStatusRef.current = videoStatus
+  }, [videoStatus])
 
-    let hls = null
+  // Controlador robusto del player:
+  //  - Nunca abandona: ante error fatal reintenta con backoff acotado (máx 5s).
+  //  - Sigue el estado (DJ -> app 'dj', AutoDJ -> app 'live') vía videoStatusRef.
+  //  - Si lleva >20s sin reproducir, verifica qué app tiene stream REAL (probe
+  //    del m3u8: 200 y sin #EXT-X-ENDLIST) y cae al que esté vivo (cubre estado
+  //    desactualizado en DB o encoder caído).
+  // Se recrea cuando cambia hlsUrl (cambio de app / on/off) y se auto-cura por
+  // dentro sin depender de que cambie la URL.
+  useEffect(() => {
+    if (!videoRef.current || !Hls.isSupported()) return
+
+    let hls: Hls | null = null
     let disposed = false
-    let retries = 0
-    const maxRetries = 6
+    let currentApp: 'live' | 'dj' | null = null
+    let lastHealthyAt = 0
+    let backoff = 0
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
+    const MAX_BACKOFF = 5000
+    const HEALTHY_TIMEOUT = 20000
 
-    const start = () => {
+    const manifestUrl = (app: 'live' | 'dj') => {
+      const key = videoStatusRef.current?.streamKey
+      if (!key) return null
+      return publicBase
+        ? `${publicBase.replace(/\/$/, '')}/${app}/${key}.m3u8`
+        : `/${app}/${key}.m3u8`
+    }
+
+    const probe = async (url: string | null): Promise<boolean> => {
+      if (!url) return false
+      try {
+        const res = await fetch(url, { cache: 'no-store' })
+        if (!res.ok) return false
+        const txt = await res.text()
+        return !txt.includes('#EXT-X-ENDLIST')
+      } catch {
+        return false
+      }
+    }
+
+    const desiredApp = (): 'live' | 'dj' =>
+      videoStatusRef.current?.status === 'live' ? 'dj' : 'live'
+
+    const start = (app: 'live' | 'dj') => {
       if (disposed || !videoRef.current) return
+      if (retryTimer) {
+        clearTimeout(retryTimer)
+        retryTimer = null
+      }
+      const url = manifestUrl(app)
+      if (!url) return
       if (hls) {
         hls.destroy()
         hls = null
       }
-
+      videoRef.current.removeAttribute('src')
+      videoRef.current.load()
+      currentApp = app
       hls = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
         backBufferLength: 30,
       })
       hlsRef.current = hls
-
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        lastHealthyAt = Date.now()
+        backoff = 0
+      })
       hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (!data.fatal) return
-        console.error('[HLS] fatal error:', data.type, data.details)
-        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retries < maxRetries) {
-          // El manifiesto del nuevo app (dj/live) puede no estar listo aún:
-          // recrear la instancia en vez de startLoad() para no quedar colgado.
-          retries += 1
-          console.error('[HLS] reintentando nueva instancia', retries)
-          setTimeout(start, 600)
+        if (!data.fatal || disposed) return
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR || data.type === Hls.ErrorTypes.OTHER_ERROR) {
+          backoff = Math.min(backoff ? backoff * 2 : 800, MAX_BACKOFF)
+          console.error('[HLS] reintentando nueva instancia en', backoff, 'ms')
+          retryTimer = setTimeout(() => start(currentApp!), backoff)
         } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-          hls.recoverMediaError()
-        } else {
-          console.error('[HLS] error fatal sin recuperación, se abandona')
-          hls.destroy()
-          hlsRef.current = null
+          hls?.recoverMediaError()
         }
       })
-
       hls.attachMedia(videoRef.current)
-      hls.loadSource(hlsUrl)
+      hls.loadSource(url)
+      videoRef.current.play().catch(() => {})
     }
 
-    start()
+    const tick = async () => {
+      if (disposed) return
+      const desired = desiredApp()
+      if (currentApp === null) {
+        start(desired)
+      } else if (desired !== currentApp) {
+        start(desired)
+      } else if (Date.now() - lastHealthyAt >= HEALTHY_TIMEOUT) {
+        const selfLive = await probe(manifestUrl(currentApp))
+        if (selfLive) {
+          start(currentApp)
+        } else {
+          const other: 'live' | 'dj' = currentApp === 'live' ? 'dj' : 'live'
+          const otherLive = await probe(manifestUrl(other))
+          if (otherLive) start(other)
+        }
+      }
+    }
+
+    tick()
+    const interval = setInterval(tick, 5000)
 
     return () => {
       disposed = true
-      if (hls) {
-        hls.destroy()
-        hlsRef.current = null
-      }
+      if (retryTimer) clearTimeout(retryTimer)
+      if (hls) hls.destroy()
+      hlsRef.current = null
     }
-  }, [hlsUrl])
+  }, [hlsUrl, publicBase])
 
   const fetchStatus = async () => {
     try {
@@ -126,7 +188,7 @@ export default function TelevisionPage() {
 
   useEffect(() => {
     fetchStatus()
-    const interval = setInterval(fetchStatus, 8000)
+    const interval = setInterval(fetchStatus, 5000)
     return () => clearInterval(interval)
   }, [])
 
