@@ -29,6 +29,15 @@ export default function TelevisionPage() {
       ? `${publicBase.replace(/\/$/, '')}/${hlsApp}/${videoStatus.streamKey}.m3u8`
       : `/${hlsApp}/${videoStatus.streamKey}.m3u8`
     : null
+  // Link completo para mostrar/copiar: si la URL es relativa, la volvemos
+  // absoluta con el dominio actual del navegador.
+  const displayUrl = hlsUrl
+    ? /^https?:\/\//.test(hlsUrl)
+      ? hlsUrl
+      : typeof window !== 'undefined'
+        ? `${window.location.origin}${hlsUrl}`
+        : hlsUrl
+    : null
 
   useEffect(() => {
     if (!videoRef.current || !hlsUrl) return
@@ -114,8 +123,8 @@ export default function TelevisionPage() {
   }
 
   const copyHls = () => {
-    if (!hlsUrl) return
-    navigator.clipboard.writeText(hlsUrl)
+    if (!displayUrl) return
+    navigator.clipboard.writeText(displayUrl)
     setCopiedHls(true)
     toast({ type: 'success', title: 'URL HLS copiada' })
     setTimeout(() => setCopiedHls(false), 2000)
@@ -186,7 +195,7 @@ export default function TelevisionPage() {
             <input
               type="text"
               readOnly
-              value={hlsUrl || ''}
+              value={displayUrl || ''}
               className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
               onClick={(e) => e.currentTarget.select()}
             />
