@@ -44,6 +44,10 @@ const nextConfig = {
         source: '/live/:path*',
         destination: `${SRS_INTERNAL_URL}/live/:path*`,
       },
+      {
+        source: '/dj/:path*',
+        destination: `${SRS_INTERNAL_URL}/dj/:path*`,
+      },
     ]
   },
 }
