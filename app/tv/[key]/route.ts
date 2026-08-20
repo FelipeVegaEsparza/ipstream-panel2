@@ -38,8 +38,6 @@ function playerHtml(streamKey: string): string {
   var overlay = document.getElementById('ov');
   var ovt = document.getElementById('ovt');
   var key = ${JSON.stringify(streamKey)};
-  // Ruta relativa: se resuelve contra el origen de la página (no usar req.url
-  // del server, que detrás de Caddy es localhost:3000).
   var src = '/tv/' + key + '.m3u8';
   var stateEl = document.querySelector('.state');
   if (window.location.origin.indexOf('localhost') === -1) {
@@ -48,6 +46,7 @@ function playerHtml(streamKey: string): string {
     stateEl.textContent = src;
   }
   var hls = null;
+  var currentApp = 'live';
   var retries = 0;
   var maxRetries = 10;
 
@@ -56,8 +55,14 @@ function playerHtml(streamKey: string): string {
     overlay.style.display = msg ? 'flex' : 'none';
   }
 
+  // El redirect /tv/<key>.m3u8 solo aplica al primer load; hls.js pola el
+  // playlist resuelto. Para conmutar AutoDJ<->OBS en vivo, se consulta el
+  // estado cada 5s y se recrea la instancia cuando cambia el app.
   function start() {
     if (hls) { hls.destroy(); hls = null; }
+    video.removeAttribute('src');
+    video.load();
+    var src2 = '/' + currentApp + '/' + key + '.m3u8';
     if (window.Hls && Hls.isSupported()) {
       hls = new Hls({ lowLatencyMode: false, backBufferLength: 30 });
       hls.on(Hls.Events.MANIFEST_PARSED, function () { retries = 0; setState(''); });
@@ -74,20 +79,40 @@ function playerHtml(streamKey: string): string {
           setTimeout(function () { retries = 0; start(); }, 5000);
         }
       });
-      hls.loadSource(src);
+      hls.loadSource(src2);
       hls.attachMedia(video);
       setState('Cargando…');
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.addEventListener('loadedmetadata', function () { setState(''); });
       video.addEventListener('error', function () { setState('Sin señal'); setTimeout(function () { retries = 0; video.load(); }, 5000); });
-      video.src = src;
+      video.src = src2;
       setState('Cargando…');
     } else {
       setState('Reproductor no soportado');
     }
   }
 
-  start();
+  function getApp() {
+    return fetch('/tv/' + key + '/app')
+      .then(function (r) { return r.json(); })
+      .then(function (d) { return d && d.app; })
+      .catch(function () { return null; });
+  }
+
+  function pollApp() {
+    getApp().then(function (app) {
+      if (app && app !== currentApp) {
+        currentApp = app;
+        start();
+      }
+    });
+  }
+
+  getApp().then(function (app) {
+    currentApp = app || 'live';
+    start();
+  });
+  setInterval(pollApp, 5000);
 </script>
 </body>
 </html>`
