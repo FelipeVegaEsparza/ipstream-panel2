@@ -73,6 +73,11 @@ echo "📥 1/9 — Pull del código..."
 git fetch origin main
 git reset --hard origin/main
 
+# === 1b. Recargar Caddy (el Caddyfile está bind-mounted y puede haber cambiado) ===
+echo "🔁 1b/9 — Recargando Caddy con el Caddyfile nuevo..."
+docker exec ipstream-caddy caddy reload --config /etc/caddy/Caddyfile 2>/dev/null \
+  || docker restart ipstream-caddy 2>/dev/null || true
+
 # === 2. Export variables ===
 export IMAGE_TAG
 export GITHUB_REPOSITORY_OWNER
