@@ -43,43 +43,55 @@ export default function TelevisionPage() {
     if (!videoRef.current || !hlsUrl) return
     if (!Hls.isSupported()) return
 
-    if (hlsRef.current) {
-      hlsRef.current.destroy()
+    let hls = null
+    let disposed = false
+    let retries = 0
+    const maxRetries = 6
+
+    const start = () => {
+      if (disposed || !videoRef.current) return
+      if (hls) {
+        hls.destroy()
+        hls = null
+      }
+
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+        backBufferLength: 30,
+      })
+      hlsRef.current = hls
+
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (!data.fatal) return
+        console.error('[HLS] fatal error:', data.type, data.details)
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retries < maxRetries) {
+          // El manifiesto del nuevo app (dj/live) puede no estar listo aún:
+          // recrear la instancia en vez de startLoad() para no quedar colgado.
+          retries += 1
+          console.error('[HLS] reintentando nueva instancia', retries)
+          setTimeout(start, 600)
+        } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          hls.recoverMediaError()
+        } else {
+          console.error('[HLS] error fatal sin recuperación, se abandona')
+          hls.destroy()
+          hlsRef.current = null
+        }
+      })
+
+      hls.attachMedia(videoRef.current)
+      hls.loadSource(hlsUrl)
     }
 
-    const hls = new Hls({
-      enableWorker: true,
-      lowLatencyMode: false,
-      backBufferLength: 30,
-    })
-    hlsRef.current = hls
-
-    hls.on(Hls.Events.ERROR, (_event, data) => {
-      console.error('[HLS] error:', data.type, data.details, data.fatal)
-      if (data.fatal) {
-        switch (data.type) {
-          case Hls.ErrorTypes.NETWORK_ERROR:
-            console.error('[HLS] fatal network error, trying to recover')
-            hls.startLoad()
-            break
-          case Hls.ErrorTypes.MEDIA_ERROR:
-            console.error('[HLS] fatal media error, recovering')
-            hls.recoverMediaError()
-            break
-          default:
-            console.error('[HLS] fatal error, cannot recover')
-            hls.destroy()
-            break
-        }
-      }
-    })
-
-    hls.loadSource(hlsUrl)
-    hls.attachMedia(videoRef.current)
+    start()
 
     return () => {
-      hls.destroy()
-      hlsRef.current = null
+      disposed = true
+      if (hls) {
+        hls.destroy()
+        hlsRef.current = null
+      }
     }
   }, [hlsUrl])
 
@@ -183,6 +195,7 @@ export default function TelevisionPage() {
           <h2 className="text-lg font-semibold text-white mb-3">Vista previa</h2>
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
             <video
+              key={hlsApp}
               ref={videoRef}
               className="w-full h-full"
               controls
