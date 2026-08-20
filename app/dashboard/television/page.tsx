@@ -18,6 +18,7 @@ export default function TelevisionPage() {
   const [loading, setLoading] = useState(true)
   const [copiedHls, setCopiedHls] = useState(false)
   const [copiedStable, setCopiedStable] = useState(false)
+  const [copiedPlayer, setCopiedPlayer] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<Hls | null>(null)
   const { toast } = useToast()
@@ -44,6 +45,12 @@ export default function TelevisionPage() {
   const stableUrl = videoStatus?.streamKey
     ? typeof window !== 'undefined'
       ? `${window.location.origin}/tv/${videoStatus.streamKey}.m3u8`
+      : null
+    : null
+  // URL del reproductor público: /tv/<streamKey> abre una página con player
+  const playerUrl = videoStatus?.streamKey
+    ? typeof window !== 'undefined'
+      ? `${window.location.origin}/tv/${videoStatus.streamKey}`
       : null
     : null
 
@@ -158,6 +165,14 @@ export default function TelevisionPage() {
     setTimeout(() => setCopiedStable(false), 2000)
   }
 
+  const copyPlayer = () => {
+    if (!playerUrl) return
+    navigator.clipboard.writeText(playerUrl)
+    setCopiedPlayer(true)
+    toast({ type: 'success', title: 'URL del reproductor copiada' })
+    setTimeout(() => setCopiedPlayer(false), 2000)
+  }
+
   const isAutoDj = videoStatus?.status === 'autodj'
   const isLive = videoStatus?.status === 'live'
   const isOff = videoStatus?.status === 'off'
@@ -245,6 +260,34 @@ export default function TelevisionPage() {
               </button>
             </div>
           </div>
+
+          {playerUrl && (
+            <div>
+              <p className="text-xs text-gray-400 mb-1.5">
+                Reproductor (abre una página para ver lo que esté al aire)
+              </p>
+              <div className="flex flex-col md:flex-row gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={playerUrl}
+                  className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <a
+                  href={playerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 bg-green-700 hover:bg-green-600 text-white rounded-lg transition-colors text-sm text-center"
+                >
+                  Abrir
+                </a>
+                <button onClick={copyPlayer} className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
+                  {copiedPlayer ? '✓ Copiado' : 'Copiar'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {displayUrl && (
             <div>
