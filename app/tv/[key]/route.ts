@@ -8,8 +8,7 @@ function getStreamKey(clientId: string): string {
 }
 
 // Player público embebido con hls.js, apuntando a la URL estable /tv/<key>.m3u8
-function playerHtml(origin: string, streamKey: string): string {
-  const playlist = `${origin}/tv/${streamKey}.m3u8`
+function playerHtml(streamKey: string): string {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -33,12 +32,21 @@ function playerHtml(origin: string, streamKey: string): string {
     <video id="v" controls autoplay muted playsinline></video>
     <div id="ov" class="overlay"><span id="ovt">Cargando…</span></div>
   </div>
-  <p class="state">${playlist}</p>
+  <p class="state"></p>
 <script>
   var video = document.getElementById('v');
   var overlay = document.getElementById('ov');
   var ovt = document.getElementById('ovt');
-  var src = ${JSON.stringify(playlist)};
+  var key = ${JSON.stringify(streamKey)};
+  // Ruta relativa: se resuelve contra el origen de la página (no usar req.url
+  // del server, que detrás de Caddy es localhost:3000).
+  var src = '/tv/' + key + '.m3u8';
+  var stateEl = document.querySelector('.state');
+  if (window.location.origin.indexOf('localhost') === -1) {
+    stateEl.textContent = window.location.origin + src;
+  } else {
+    stateEl.textContent = src;
+  }
   var hls = null;
   var retries = 0;
   var maxRetries = 10;
@@ -88,7 +96,7 @@ function playerHtml(origin: string, streamKey: string): string {
 // URL pública:
 //   /tv/<streamKey>        → página con reproductor (muestra lo que esté al aire)
 //   /tv/<streamKey>.m3u8   → 302 al app que corresponda (dj si live, live si autodj)
-export async function GET(req: NextRequest, { params }: { params: { key: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: { key: string } }) {
   const rawKey = params.key || ''
   const isPlaylist = rawKey.endsWith('.m3u8')
   const streamKey = rawKey.replace(/\.m3u8$/, '')
@@ -104,13 +112,15 @@ export async function GET(req: NextRequest, { params }: { params: { key: string 
 
   if (isPlaylist) {
     const app = match.status === 'live' ? 'dj' : 'live'
-    const res = NextResponse.redirect(new URL(`/${app}/${streamKey}.m3u8`, req.url), 302)
+    // Location relativo: el cliente lo resuelve contra su propio origen
+    // (req.url del server, detrás de Caddy, es localhost:3000 y rompería la URL).
+    const res = new NextResponse(null, { status: 302 })
+    res.headers.set('Location', `/${app}/${streamKey}.m3u8`)
     res.headers.set('Cache-Control', 'no-store')
     return res
   }
 
-  const origin = new URL(req.url).origin
-  return new NextResponse(playerHtml(origin, streamKey), {
+  return new NextResponse(playerHtml(streamKey), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
   })
 }
