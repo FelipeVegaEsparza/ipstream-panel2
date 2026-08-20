@@ -59,6 +59,11 @@ Renombrar `streaming/srs/conf/docker.conf` → `streaming/srs/conf/srs.conf` y f
 - `docker-compose.prod.yml`: exponer el rango `${RTMP_RELAY_PORT_RANGE_START:-1936}-${RTMP_RELAY_PORT_RANGE_END:-2235}` (igual que dev) en `video-encoder`, o un rango reducido documentado.
 - Documentar en deploy que el firewall debe abrir 1935 (RTMP SRS) y el rango relay.
 
+### D6. `http_hooks` debe declarar `enabled on` explícitamente
+- En SRS v5 el default de `http_hooks.enabled` es **off** (`full.conf`: "default off"). Un bloque `http_hooks` sin `enabled` hace que SRS acepte el publish y genere HLS, pero **nunca dispare los callbacks**.
+- Fix: declarar `enabled on;` dentro de `http_hooks` en `srs.conf`.
+- Bonus: habilitar `http_api { enabled on; listen 8080; }` (v5 permite el mismo puerto que `http_server`) para poder verificar streams/vhosts con `/api/v1/streams` y `/api/v1/vhosts`.
+
 ## Risks / Trade-offs
 
 - [La URL HLS cambia entre `live/` y `dj/`] → el panel y el player la conmutan según el estado (polling de status). Riesgo de un breve corte al conmutar → mitigación: seleccionar el app en el mismo ciclo de status; el player ya maneja errores de red y reintenta.
