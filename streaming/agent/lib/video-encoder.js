@@ -231,10 +231,16 @@ export async function startTranscoder(clientId, streamKey) {
     `ffmpeg -loglevel error -stats ` +
     // rw_timeout: si el DJ se desconecta, ffmpeg no queda colgado esperando
     // datos (RTMP sin publisher) y termina solo pasados 5s.
-    `-rw_timeout 5000000 ` +
+    // genpts+discardcorrupt: estabiliza timestamps del pull de SRS; sin esto
+    // el re-encode sale con dts erráticos y SRS escribe fragmentos HLS que el
+    // player no puede decodificar (pantalla negra).
+    `-rw_timeout 5000000 -fflags +genpts+discardcorrupt ` +
     `-i rtmp://srs:1935/relay/${streamKey} ` +
     `-c:v libx264 -preset veryfast -b:v 2000k -maxrate 2500k -bufsize 4000k ` +
     `-c:a aac -b:a 128k -ar 44100 -ac 2 ` +
+    // use_wallclock_as_timestamps + no_duration_filesize: timestamps
+    // monotónicos y FLV limpio para el muxer HLS de SRS.
+    `-use_wallclock_as_timestamps 1 -flvflags no_duration_filesize ` +
     `-f flv rtmp://srs:1935/dj/${streamKey} ` +
     `>>${logFile} 2>&1; sleep 1; ` +
     `done &`
