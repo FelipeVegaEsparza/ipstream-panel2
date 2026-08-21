@@ -188,12 +188,6 @@ services:
       dockerfile: Dockerfile
     container_name: ipstream-video-encoder
     restart: unless-stopped
-    # Rango de puertos para relays RTMP de DJs en vivo.
-    # Cada cliente usa un puerto único dentro de este rango.
-    # Ajustar RTMP_RELAY_PORT_RANGE_START y RTMP_RELAY_PORT_RANGE_END para
-    # soportar más clientes simultáneos. Default: 300 puertos (1936-2235).
-    ports:
-      - "${RTMP_RELAY_PORT_RANGE_START:-1936}-${RTMP_RELAY_PORT_RANGE_END:-2235}:${RTMP_RELAY_PORT_RANGE_START:-1936}-${RTMP_RELAY_PORT_RANGE_END:-2235}"
     volumes:
       - ./data/video:/var/lib/video
       - video_logs:/var/log/video-encoder
@@ -236,9 +230,7 @@ services:
       # Icecast
       ICE_HOST: icecast
       ICE_PORT: 8000
-      # Video relay RTMP (para DJs en vivo de TV)
-      RTMP_RELAY_PORT_RANGE_START: ${RTMP_RELAY_PORT_RANGE_START:-1936}
-      RTMP_RELAY_PORT_RANGE_END: ${RTMP_RELAY_PORT_RANGE_END:-2235}
+      # Conexión Universal (host público para la URL de ingesta relay)
       RTMP_RELAY_PUBLIC_HOST: ${RTMP_RELAY_PUBLIC_HOST:-localhost}
       ICE_ADMIN_USER: ${ICE_ADMIN_USER:-admin}
       ICE_ADMIN_PASSWORD: ${ICE_ADMIN_PASSWORD:-hackme}

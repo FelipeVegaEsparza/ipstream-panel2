@@ -12,7 +12,7 @@ import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import crypto from 'crypto'
 import fs from 'fs'
-import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, extractThumbnail, autoStartVideoStreams, ENCODER_CONTAINER, getRelayUrl, startRelay, stopRelay } from '../lib/video-encoder.js'
+import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, extractThumbnail, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus } from '../lib/video-encoder.js'
 import { startTracking, stopTracking, getTrackHistory, detectAndLogVideoTrack } from '../lib/track-history-video.js'
 
 // Estado en memoria: DJ conectados vía SRS
@@ -56,12 +56,13 @@ export default async function videoRoutes(fastify) {
   // SRS Hooks
   // ================================================================
 
-  // on-publish: DJ conecta a SRS por RTMP en el app 'dj'
+  // on-publish: DJ conecta a SRS por RTMP en los apps 'dj' (OBS directo) y
+  // 'relay' (Conexión Universal).
   fastify.post('/api/video/hooks/on-publish', async (req, reply) => {
     const { app, stream } = req.body || {}
 
-    // El app 'live' lo usan el encoder de AutoDJ y el relay: nunca es un DJ.
-    if (app !== 'dj') {
+    // El app 'live' lo usan el encoder de AutoDJ: nunca es un DJ.
+    if (app !== 'dj' && app !== 'relay') {
       reply.send({ code: 0, message: 'ignored' })
       return
     }
@@ -85,6 +86,18 @@ export default async function videoRoutes(fastify) {
     }
 
     const clientId = matched.clientId
+
+    // Conexión Universal: OBS publica en SRS (app 'relay') con su key. El
+    // transcoder re-publica en 'dj', y ese publish dispara el on-publish de
+    // 'dj' de abajo (AutoDJ stop, status live, HLS).
+    if (app === 'relay') {
+      const result = await startTranscoder(clientId, stream)
+      logger.info({ clientId }, `Universal connection accepted — transcoder ${result.status}`)
+      reply.send({ code: 0, message: 'OK' })
+      return
+    }
+
+    // App 'dj': DJ directo (OBS)
     _djActive.set(clientId, { streamKey: stream, connectedAt: new Date().toISOString() })
 
     await pool.query(`UPDATE video_streams SET status = 'live' WHERE clientId = ?`, [clientId])
@@ -97,11 +110,26 @@ export default async function videoRoutes(fastify) {
     reply.send({ code: 0, message: 'OK' })
   })
 
-  // on-unpublish: DJ se desconecta de SRS (app 'dj')
+  // on-unpublish: DJ se desconecta de SRS (apps 'dj' y 'relay')
   fastify.post('/api/video/hooks/on-unpublish', async (req, reply) => {
     const { app, stream } = req.body || {}
 
-    // El app 'live' lo usan el encoder de AutoDJ y el relay: no es un DJ.
+    // Conexión Universal: detener el transcoder. Su unpublish en 'dj' dispara
+    // el flujo de abajo que reanuda el AutoDJ.
+    if (app === 'relay') {
+      if (stream) {
+        const [allStreams] = await pool.query(`SELECT clientId FROM video_streams`)
+        const matched = allStreams.find(s => getStreamKey(s.clientId) === stream)
+        if (matched) {
+          await stopTranscoder(matched.clientId)
+          logger.info({ clientId: matched.clientId }, 'Universal connection ended — transcoder stopped')
+        }
+      }
+      reply.send({ code: 0, message: 'OK' })
+      return
+    }
+
+    // El app 'live' lo usan el encoder de AutoDJ: no es un DJ.
     if (app !== 'dj') {
       reply.send({ code: 0, message: 'ignored' })
       return
@@ -166,7 +194,7 @@ export default async function videoRoutes(fastify) {
     const encoderStatus = getEncoderStatus(clientId)
     const djStatus = await checkDJStatus(clientId)
     const streamKey = getStreamKey(clientId)
-    const relayUrl = getRelayUrl(clientId)
+    const transcoder = getTranscoderStatus(clientId)
 
     return {
       id: vs.id,
@@ -179,8 +207,10 @@ export default async function videoRoutes(fastify) {
       streamKey,
       // El DJ (OBS) publica en el app 'dj'; el AutoDJ usa 'live'.
       rtmpUrl: `rtmp://localhost:1935/dj/${streamKey}`,
-      relayUrl,
-      relayPort: relayUrl ? parseInt(relayUrl.split(':').pop().split('/')[0], 10) : null,
+      // La Conexión Universal entra por SRS (puerto 1935) en el app 'relay',
+      // con el mismo stream key. Siempre disponible.
+      relayUrl: getRelayIngestUrl(),
+      relay: transcoder,
       hlsUrl: `http://localhost:8080/${vs.status === 'live' ? 'dj' : 'live'}/${streamKey}.m3u8`,
       encoder: encoderStatus,
       dj: djStatus,
@@ -217,8 +247,6 @@ export default async function videoRoutes(fastify) {
         const status = getEncoderStatus(cid)
         return status.currentTrack ? { trackId: status.currentTrack, trackType: 'autodj', title: status.currentTrack } : null
       })
-      // El relay (Conexión Universal) debe estar escuchando junto al AutoDJ
-      await startRelay(clientId, streamKey)
     }
 
     return result

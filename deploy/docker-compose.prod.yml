@@ -93,6 +93,8 @@ services:
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD}
       ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD}
       ICE_HOSTNAME: ${ICE_HOSTNAME}
+      # Conexión Universal (host público para la URL de ingesta relay)
+      RTMP_RELAY_PUBLIC_HOST: ${RTMP_RELAY_PUBLIC_HOST}
       HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME}
       LIQUIDSOAP_BIN: /usr/bin/liquidsoap
       LIQUIDSOAP_SCRIPTS_PATH: /etc/liquidsoap/scripts
@@ -170,10 +172,6 @@ services:
     image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-ipstream}/ipstream-video-encoder:${IMAGE_TAG:-latest}
     container_name: ipstream-video-encoder
     restart: always
-    ports:
-      # Rango de relays RTMP por cliente (cada cliente usa un puerto único).
-      # Ajustar RTMP_RELAY_PORT_RANGE_START/END según cantidad de clientes.
-      - "${RTMP_RELAY_PORT_RANGE_START:-1936}-${RTMP_RELAY_PORT_RANGE_END:-2235}:${RTMP_RELAY_PORT_RANGE_START:-1936}-${RTMP_RELAY_PORT_RANGE_END:-2235}"
     volumes:
       - video_library:/var/lib/video
       - video_logs:/var/log/video-encoder

@@ -24,11 +24,12 @@ export default function TvConnectionPage() {
   const [copiedRtmp, setCopiedRtmp] = useState(false)
   const [copiedRelay, setCopiedRelay] = useState(false)
   const [copiedKey, setCopiedKey] = useState(false)
+  const [copiedRelayKey, setCopiedRelayKey] = useState(false)
   const [host, setHost] = useState('panelipstream.cl')
   // El DJ (OBS) publica en el app 'dj': no compite con el AutoDJ (que usa 'live').
   const serverUrl = `rtmp://${host}:1935/dj`
-  const relayUrl = info?.relayUrl ?? ''
-  const relayActive = !!info?.relayUrl
+  // La Conexión Universal entra por el app 'relay' de SRS con el mismo stream key.
+  const relayServerUrl = `rtmp://${host}:1935/relay`
   const { toast } = useToast()
 
   useEffect(() => {
@@ -119,34 +120,46 @@ export default function TvConnectionPage() {
             </div>
           </div>
 
-          {/* Relay URL (compatible con OBS enhanced RTMP) */}
+          {/* Conexión Universal (compatible con OBS enhanced RTMP) */}
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
-            <h2 className="text-lg font-semibold text-white mb-3">Conexión Universal (cualquier codec)</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">Conexión Universal (H.264 / H.265)</h2>
             <div className="flex items-center gap-2 mb-3">
-              <span className={`w-2.5 h-2.5 rounded-full ${relayActive ? 'bg-green-500' : 'bg-gray-500'}`} />
-              <span className={relayActive ? 'text-green-300 text-sm font-medium' : 'text-gray-400 text-sm'}>
-                {relayActive ? 'Relay activo' : 'Relay inactivo'}
-              </span>
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              <span className="text-green-300 text-sm font-medium">Relay activo</span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-2 mb-3">
+              <input
+                type="text"
+                readOnly
+                value={relayServerUrl}
+                className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                onClick={(e) => e.currentTarget.select()}
+              />
+              <button
+                onClick={() => copy(relayServerUrl, setCopiedRelay, 'Servidor Relay')}
+                className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm whitespace-nowrap"
+              >
+                {copiedRelay ? '✓ Copiado' : 'Copiar Relay'}
+              </button>
             </div>
             <div className="flex flex-col md:flex-row gap-2">
               <input
                 type="text"
                 readOnly
-                value={relayUrl}
-                placeholder={relayActive ? '' : 'Iniciá el AutoDJ para habilitar la Conexión Universal'}
+                value={info.streamKey}
                 className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
-                onClick={(e) => relayUrl && e.currentTarget.select()}
+                onClick={(e) => e.currentTarget.select()}
               />
               <button
-                onClick={() => relayUrl && copy(relayUrl, setCopiedRelay, 'URL Relay')}
-                disabled={!relayActive}
-                className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm whitespace-nowrap"
+                onClick={() => copy(info.streamKey, setCopiedRelayKey, 'Stream Key')}
+                className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm whitespace-nowrap"
               >
-                {copiedRelay ? '✓ Copiado' : 'Copiar Relay'}
+                {copiedRelayKey ? '✓ Copiado' : 'Copiar Key'}
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Usá esta URL en OBS como Servidor. Acepta cualquier códec (H.265, AV1, enhanced RTMP). No necesita Stream Key.
+              Usá esta URL en OBS como Servidor y tu Stream Key en "Clave de stream". Acepta H.264 y H.265
+              (enhanced RTMP). Con un key incorrecto la conexión es rechazada.
             </p>
           </div>
 

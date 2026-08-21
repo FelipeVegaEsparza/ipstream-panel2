@@ -4,7 +4,9 @@
 # Contenedor para ejecutar procesos FFmpeg por cliente.
 # El agente hace `docker exec` para lanzar/kill procesos.
 
-FROM alpine:3.20
+# alpine:3.21 trae FFmpeg 7.x, que soporta demux enhanced RTMP (HEVC/AV1 en
+# FLV) para la Conexión Universal. 3.20 trae FFmpeg 6.1 que no lo soporta.
+FROM alpine:3.21
 
 RUN apk add --no-cache ffmpeg bash curl
 
