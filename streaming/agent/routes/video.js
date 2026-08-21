@@ -91,8 +91,14 @@ export default async function videoRoutes(fastify) {
     // transcoder re-publica en 'dj', y ese publish dispara el on-publish de
     // 'dj' de abajo (AutoDJ stop, status live, HLS).
     if (app === 'relay') {
-      const result = await startTranscoder(clientId, stream)
-      logger.info({ clientId }, `Universal connection accepted — transcoder ${result.status}`)
+      // Responder 0 primero para que SRS acepte al DJ, y arrancar el
+      // transcoder async: así para cuando ffmpeg conecte el stream ya está
+      // fluyendo y el HLS no nace con segmentos vacíos (pantalla negra).
+      startTranscoder(clientId, stream).then((result) => {
+        logger.info({ clientId }, `Universal connection accepted — transcoder ${result.status}`)
+      }).catch((err) => {
+        logger.error({ clientId, err: err.message }, 'Error starting transcoder')
+      })
       reply.send({ code: 0, message: 'OK' })
       return
     }

@@ -211,12 +211,15 @@ const _activeTranscoders = new Map()
 /**
  * Inicia un transcoder FFmpeg para un cliente.
  * Jala el stream publicado en SRS (app 'relay') y lo re-publica en 'dj'.
+ *
+ * Un solo proceso ffmpeg por conexión (sin loop de respawn): un loop que
+ * reintente en idle publica vacío en 'dj' y llena el HLS de segmentos rotos
+ * y discontinuidades que el player no puede reproducir (pantalla negra).
+ * Si ffmpeg muere, la reconexión del DJ vuelve a llamar startTranscoder y
+ * reinicia desde cero.
  */
 export async function startTranscoder(clientId, streamKey) {
-  const existing = _activeTranscoders.get(clientId)
-  if (existing) return { status: 'already_running', startedAt: existing.startedAt }
-
-  // Matar transcodificadores stale del mismo cliente antes de arrancar.
+  // Matar procesos previos/stale del mismo cliente antes de arrancar.
   // Los procesos ffmpeg viven en el contenedor video-encoder y sobreviven
   // a reinicios del agent (estado en memoria): sin este cleanup, un
   // transcoder viejo seguiría jalando/publicando y peleando con el nuevo.
@@ -227,7 +230,6 @@ export async function startTranscoder(clientId, streamKey) {
   const logFile = `${PROCESS_LOG_DIR}/transcoder_${clientId}.log`
   const shScript =
     `mkdir -p ${PROCESS_LOG_DIR} && ` +
-    `while true; do ` +
     `ffmpeg -loglevel error -stats ` +
     // rw_timeout: si el DJ se desconecta, ffmpeg no queda colgado esperando
     // datos (RTMP sin publisher) y termina solo pasados 5s.
@@ -237,13 +239,16 @@ export async function startTranscoder(clientId, streamKey) {
     `-rw_timeout 5000000 -fflags +genpts+discardcorrupt ` +
     `-i rtmp://srs:1935/relay/${streamKey} ` +
     `-c:v libx264 -preset veryfast -b:v 2000k -maxrate 2500k -bufsize 4000k ` +
+    // pix_fmt yuv420p obligatorio: si el input llega 4:4:4 (RGB), libx264
+    // puede emitir High 4:4:4 Predictive, que Chrome/Firefox NO decodifican
+    // (pantalla negra en el player).
+    `-pix_fmt yuv420p ` +
     `-c:a aac -b:a 128k -ar 44100 -ac 2 ` +
     // use_wallclock_as_timestamps + no_duration_filesize: timestamps
     // monotónicos y FLV limpio para el muxer HLS de SRS.
     `-use_wallclock_as_timestamps 1 -flvflags no_duration_filesize ` +
     `-f flv rtmp://srs:1935/dj/${streamKey} ` +
-    `>>${logFile} 2>&1; sleep 1; ` +
-    `done &`
+    `>>${logFile} 2>&1 &`
   const cmd = `docker exec ${ENCODER_CONTAINER} sh -c '${shScript}'`
 
   try {
