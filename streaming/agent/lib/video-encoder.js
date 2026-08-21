@@ -221,7 +221,7 @@ export async function startTranscoder(clientId, streamKey) {
   // a reinicios del agent (estado en memoria): sin este cleanup, un
   // transcoder viejo seguiría jalando/publicando y peleando con el nuevo.
   try {
-    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "transcoder_${clientId}" || true`)
+    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -9 -f "transcoder_${clientId}" || true`)
   } catch (_) { }
 
   const logFile = `${PROCESS_LOG_DIR}/transcoder_${clientId}.log`
@@ -229,6 +229,9 @@ export async function startTranscoder(clientId, streamKey) {
     `mkdir -p ${PROCESS_LOG_DIR} && ` +
     `while true; do ` +
     `ffmpeg -loglevel error -stats ` +
+    // rw_timeout: si el DJ se desconecta, ffmpeg no queda colgado esperando
+    // datos (RTMP sin publisher) y termina solo pasados 5s.
+    `-rw_timeout 5000000 ` +
     `-i rtmp://srs:1935/relay/${streamKey} ` +
     `-c:v libx264 -preset veryfast -b:v 2000k -maxrate 2500k -bufsize 4000k ` +
     `-c:a aac -b:a 128k -ar 44100 -ac 2 ` +
@@ -252,7 +255,9 @@ export async function stopTranscoder(clientId) {
   const transcoder = _activeTranscoders.get(clientId)
   if (transcoder) {
     try {
-      await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "transcoder_${clientId}" || true`)
+      // -9: ffmpeg puede estar bloqueado en un recv() de RTMP sin datos y no
+      // procesa SIGTERM; SIGKILL lo mata siempre.
+      await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -9 -f "transcoder_${clientId}" || true`)
     } catch (_) {}
     _activeTranscoders.delete(clientId)
   }
@@ -309,7 +314,7 @@ export async function autoStartVideoStreams() {
   // procesos ffmpeg del contenedor video-encoder sobreviven. Un transcoder
   // huérfano seguiría jalando/publicando en 'dj' y peleando con el AutoDJ.
   try {
-    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -f "transcoder_" || true`)
+    await execCmd(`docker exec ${ENCODER_CONTAINER} pkill -9 -f "transcoder_" || true`)
   } catch (_) { }
 
   const [rows] = await pool.query(
