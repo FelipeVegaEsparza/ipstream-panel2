@@ -94,11 +94,11 @@ export default function TvConnectionPage() {
         </p>
       </div>
 
-      {/* Conexión Universal (compatible con OBS enhanced RTMP) */}
+      {/* Conexión Universal (H.264 estándar; HEVC/AV1 por enhanced RTMP se descartan en ingesta con SRS v5) */}
       {info && (
         <>
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
-            <h2 className="text-lg font-semibold text-white mb-3">Conexión Universal (H.264 / H.265)</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">Conexión Universal (H.264)</h2>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
               <span className="text-green-300 text-sm font-medium">Relay activo</span>
@@ -134,8 +134,9 @@ export default function TvConnectionPage() {
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Usá esta URL en OBS como Servidor y tu Stream Key en "Clave de stream". Acepta H.264 y H.265
-              (enhanced RTMP). Con un key incorrecto la conexión es rechazada.
+              Usá esta URL en OBS como Servidor y tu Stream Key en "Clave de stream". Configurá un encoder
+              H.264 estándar (x264, NVENC, QuickSync o AMF) y desactivá "Enhanced streaming" (HEVC/AV1): esos
+              códecs no se soportan y el video se ve en negro. Con un key incorrecto la conexión es rechazada.
             </p>
           </div>
         </>
