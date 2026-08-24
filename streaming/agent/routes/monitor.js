@@ -59,17 +59,16 @@ async function readHostStats() {
   const memInfo = readHostFile(`${HOST_PROC}/meminfo`)
   if (memInfo) {
     const parseKB = (key) => {
-      const m = memInfo.match(new RegExp(`^${key}:\\s+(\\d+)`))
+      const m = memInfo.match(new RegExp(`^${key}:\\s+(\\d+)`, 'm'))
       return m ? Math.round(parseInt(m[1], 10) / 1024) : 0
     }
     const memTotal = parseKB('MemTotal')
-    const memFree = parseKB('MemFree')
-    const memBuff = parseKB('Buffers')
-    const memCache = parseKB('Cached')
-    const memUsed = memTotal - memFree - memBuff - memCache
+    // MemAvailable es la métrica real de RAM disponible del host
+    const memAvail = parseKB('MemAvailable')
+    const memUsed = memTotal - memAvail
     out.memory = {
       totalMB: memTotal,
-      freeMB: memFree,
+      freeMB: Math.max(0, memAvail),
       usedMB: Math.max(0, memUsed),
       percentUsed: memTotal ? Math.round((memUsed / memTotal) * 100) : 0,
     }
