@@ -12,7 +12,7 @@ import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import crypto from 'crypto'
 import fs from 'fs'
-import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, extractThumbnail, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus } from '../lib/video-encoder.js'
+import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, extractThumbnail, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus, resolvePlaylistEntries } from '../lib/video-encoder.js'
 import { startTracking, stopTracking, getTrackHistory, detectAndLogVideoTrack } from '../lib/track-history-video.js'
 
 // Estado en memoria: DJ conectados vía SRS
@@ -229,13 +229,8 @@ export default async function videoRoutes(fastify) {
 
     await ensureVideoStream(clientId)
 
-    // Obtener entries de la playlist activa
-    const [entries] = await pool.query(
-      `SELECT vt.filepath FROM video_playlist_entries vpe
-       JOIN video_tracks vt ON vt.id = vpe.trackId
-       WHERE vpe.clientId = ? ORDER BY vpe.position ASC`,
-      [clientId]
-    )
+    // Obtener entries de la playlist activa (o todas si no hay activa)
+    const { entries } = await resolvePlaylistEntries(clientId)
 
     if (!entries || entries.length === 0) {
       reply.code(400).send({ code: 400, message: 'No hay videos en la playlist' })

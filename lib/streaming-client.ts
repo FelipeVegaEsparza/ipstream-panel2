@@ -400,6 +400,26 @@ export const videoClient = {
   getHistory: (clientId: string, page = 1, limit = 25) =>
     request(`/api/video/${encodeURIComponent(clientId)}/history?page=${page}&limit=${limit}`),
 
+  // Schedule (parrilla horaria TV)
+  listSchedule: (clientId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/schedule`),
+  createSchedule: (clientId: string, data: { playlistId: string; dayOfWeek: number; startTime: string; endTime: string }) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/schedule`, {
+      method: 'POST',
+      body: data,
+    }),
+  updateSchedule: (clientId: string, scheduleId: string, data: { playlistId?: string; dayOfWeek?: number; startTime?: string; endTime?: string; isActive?: boolean }) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/schedule/${encodeURIComponent(scheduleId)}`, {
+      method: 'PATCH',
+      body: data,
+    }),
+  deleteSchedule: (clientId: string, scheduleId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/schedule/${encodeURIComponent(scheduleId)}`, {
+      method: 'DELETE',
+    }),
+  getCurrentSchedule: (clientId: string) =>
+    request(`/api/video/${encodeURIComponent(clientId)}/schedule/current`),
+
   // Encoders all
   getAllEncoders: () =>
     request('/api/video/encoders'),

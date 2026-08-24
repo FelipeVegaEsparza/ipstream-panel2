@@ -961,6 +961,7 @@ model VideoPlaylist {
   name      String   @db.VarChar(191)
   shuffle   Boolean  @default(false)
   repeat    Boolean  @default(true)
+  isActive  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -969,6 +970,7 @@ model VideoPlaylist {
   schedules VideoPlaylistSchedule[]
 
   @@index([clientId])
+  @@index([clientId, isActive])
   @@map("video_playlists")
 }
 
@@ -1010,6 +1012,5 @@ model VideoPlaylistSchedule {
   @@index([videoStreamId, dayOfWeek, isActive])
   @@map("video_playlist_schedules")
 }
-
 
 // Modelos no utilizados eliminados: VideoPlayHistory, EdgeServer, ClientEdgeAssignment

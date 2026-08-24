@@ -42,6 +42,38 @@ export function getPlaylistPath(clientId) {
 }
 
 /**
+ * Resuelve las entries que debe reproducir el AutoDJ de un cliente.
+ * Si el cliente tiene una playlist marcada como activa (isActive=1), usa sus
+ * entries; si no, cae a todas las entries del cliente (comportamiento previo).
+ */
+export async function resolvePlaylistEntries(clientId) {
+  const [activeRows] = await pool.query(
+    'SELECT id FROM video_playlists WHERE clientId = ? AND isActive = 1 LIMIT 1',
+    [clientId]
+  )
+  const activePlaylistId = activeRows[0]?.id || null
+
+  if (activePlaylistId) {
+    const [entries] = await pool.query(
+      `SELECT vt.filepath FROM video_playlist_entries vpe
+       JOIN video_tracks vt ON vt.id = vpe.trackId
+       WHERE vpe.clientId = ? AND vpe.playlistId = ?
+       ORDER BY vpe.position ASC`,
+      [clientId, activePlaylistId]
+    )
+    return { activePlaylistId, entries: entries || [] }
+  }
+
+  const [entries] = await pool.query(
+    `SELECT vt.filepath FROM video_playlist_entries vpe
+     JOIN video_tracks vt ON vt.id = vpe.trackId
+     WHERE vpe.clientId = ? ORDER BY vpe.position ASC`,
+    [clientId]
+  )
+  return { activePlaylistId: null, entries: entries || [] }
+}
+
+/**
  * Genera un archivo playlist.txt con la lista de videos a reproducir.
  * Formato: file '/var/lib/video/{filepath}'
  * El orden y shuffle se maneja desde el playlist M3U-like.
@@ -339,13 +371,8 @@ export async function autoStartVideoStreams() {
   for (const vs of videoStreams) {
     const key = `tv_${crypto.createHash('sha256').update(vs.clientId).digest('hex').slice(0, 12)}`
 
-    // Generar playlist con entries existentes
-    const [entries] = await pool.query(
-      `SELECT vt.filepath FROM video_playlist_entries vpe
-       JOIN video_tracks vt ON vt.id = vpe.trackId
-       WHERE vpe.clientId = ? ORDER BY vpe.position ASC`,
-      [vs.clientId]
-    )
+    // Generar playlist con entries de la playlist activa (o todas)
+    const { activePlaylistId, entries } = await resolvePlaylistEntries(vs.clientId)
 
     if (!entries || entries.length === 0) {
       console.log(`[video-encoder] No entries for ${vs.clientName || vs.clientId}, skipping auto-start`)
@@ -362,7 +389,7 @@ export async function autoStartVideoStreams() {
 
     await startEncoder(vs.clientId, key)
 
-    console.log(`[video-encoder] Started video stream for ${vs.clientName || vs.clientId}`)
+    console.log(`[video-encoder] Started video stream for ${vs.clientName || vs.clientId}${activePlaylistId ? ` (playlist ${activePlaylistId})` : ' (todas las entries)'}`)
   }
 
   console.log(`[video-encoder] Auto-started ${videoStreams.length} video streams`)

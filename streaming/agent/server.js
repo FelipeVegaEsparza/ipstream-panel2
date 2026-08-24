@@ -21,6 +21,7 @@ import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import folderRoutes from './routes/folders.js'
 import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import videoRoutes from './routes/video.js'
+import videoScheduleRoutes, { startVideoScheduleCron } from './routes/video-schedule.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
 import { rebuildAllDjState } from './lib/dj-state.js'
@@ -415,15 +416,24 @@ try {
       name VARCHAR(191) NOT NULL,
       shuffle BOOLEAN NOT NULL DEFAULT false,
       \`repeat\` BOOLEAN NOT NULL DEFAULT true,
+      isActive BOOLEAN NOT NULL DEFAULT false,
       createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
       updatedAt DATETIME(3) NOT NULL,
       INDEX idx_vp_client (clientId),
+      INDEX idx_vp_active (clientId, isActive),
       CONSTRAINT fk_vp_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `)
   logger.info('Tabla video_playlists asegurada')
 } catch (err) {
   logger.error({ err: err.message }, 'Error creando tabla video_playlists')
+}
+
+try {
+  await pool.query(`ALTER TABLE video_playlists ADD COLUMN IF NOT EXISTS isActive BOOLEAN NOT NULL DEFAULT false`)
+  logger.info('Columna isActive en video_playlists asegurada')
+} catch (err) {
+  logger.info({ err: err.message }, 'Columna isActive en video_playlists (ya existía o ignorado)')
 }
 
 try {
@@ -467,6 +477,31 @@ try {
   logger.error({ err: err.message }, 'Error creando tabla video_play_history')
 }
 
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS video_playlist_schedules (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      videoStreamId VARCHAR(191) NOT NULL,
+      playlistId VARCHAR(191) NOT NULL,
+      dayOfWeek INT NOT NULL,
+      startTime VARCHAR(191) NOT NULL,
+      endTime VARCHAR(191) NOT NULL,
+      isActive BOOLEAN NOT NULL DEFAULT true,
+      createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      updatedAt DATETIME(3) NOT NULL,
+      INDEX idx_vps_client_day (clientId, dayOfWeek, isActive),
+      INDEX idx_vps_stream_day (videoStreamId, dayOfWeek, isActive),
+      CONSTRAINT fk_vps_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_vps_stream FOREIGN KEY (videoStreamId) REFERENCES video_streams(id) ON DELETE CASCADE,
+      CONSTRAINT fk_vps_playlist FOREIGN KEY (playlistId) REFERENCES video_playlists(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla video_playlist_schedules asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla video_playlist_schedules')
+}
+
 // Migración: sanitizar filenames con espacios en video_tracks
 try {
   const [tracksWithSpaces] = await pool.query(
@@ -495,6 +530,7 @@ try {
 // Rutas
 await app.register(streamRoutes)
 await app.register(videoRoutes)
+await app.register(videoScheduleRoutes)
 await app.register(websocketRoutes)
 await app.register(libraryRoutes)
 await app.register(playlistRoutes)
@@ -514,6 +550,7 @@ await app.register(statsRoutes)
 
   // Iniciar crons
   startScheduleCron()
+  startVideoScheduleCron()
   startStatsCron()
   startDjWatcher()
   startRetentionCron()
