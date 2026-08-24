@@ -12,7 +12,7 @@ import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import crypto from 'crypto'
 import fs from 'fs'
-import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, extractThumbnail, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus, resolvePlaylistEntries } from '../lib/video-encoder.js'
+import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, extractThumbnail, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus, resolvePlaylistEntries, normalizeVideo } from '../lib/video-encoder.js'
 import { startTracking, stopTracking, getTrackHistory, detectAndLogVideoTrack } from '../lib/track-history-video.js'
 
 // Estado en memoria: DJ conectados vía SRS
@@ -364,22 +364,17 @@ export default async function videoRoutes(fastify) {
     await execAsync(`docker cp '${tmpFile}' 'ipstream-video-encoder:/var/lib/video/${filepath}'`)
     fs.unlinkSync(tmpFile)
 
-    // Extraer metadatos
-    let duration = 0, width = null, height = null, codec = null
+    // Normalizar al formato canónico (1080p H.264/AAC 4500k) y obtener metadatos finales
+    let duration = 0, width = null, height = null, codec = null, filesize = buffer.length
     try {
-      const { stdout } = await execAsync(
-        `docker exec ipstream-video-encoder ffprobe -v quiet -print_format json -show_format -show_streams '/var/lib/video/${filepath}'`
-      )
-      const info = JSON.parse(stdout)
-      if (info.format) duration = parseFloat(info.format.duration || 0)
-      const vs = info.streams?.find(s => s.codec_type === 'video')
-      if (vs) {
-        width = vs.width || null
-        height = vs.height || null
-        codec = vs.codec_name || null
-      }
+      const normalized = await normalizeVideo(clientId, filepath)
+      width = normalized.width
+      height = normalized.height
+      codec = normalized.codec
+      filesize = normalized.filesize
+      duration = normalized.duration
     } catch (e) {
-      logger.warn({ err: e.message }, 'Error probing video')
+      logger.warn({ err: e.message }, 'Error normalizando video, se conserva el original')
     }
 
     const thumbnail = await extractThumbnail(clientId, filepath)
@@ -388,7 +383,7 @@ export default async function videoRoutes(fastify) {
     await pool.query(
       `INSERT INTO video_tracks (id, clientId, videoStreamId, title, filename, filepath, filesize, duration, thumbnail, width, height, codec, folderId, createdAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [id, clientId, videoStreamId, data.filename.replace(/\.[^/.]+$/, ''), filename, filepath, buffer.length, duration, thumbnail, width, height, codec, data.fields?.folderId || null]
+      [id, clientId, videoStreamId, data.filename.replace(/\.[^/.]+$/, ''), filename, filepath, filesize, duration, thumbnail, width, height, codec, data.fields?.folderId || null]
     )
 
     const [track] = await pool.query(`SELECT * FROM video_tracks WHERE id = ?`, [id])

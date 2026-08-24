@@ -21,6 +21,17 @@ const VIDEO_DIR = '/var/lib/video'
 const PLAYLIST_DIR = '/var/lib/video/playlists'
 const PROCESS_LOG_DIR = '/var/log/video-encoder'
 
+// Formato canónico de los videos de TV: 1080p H.264/AAC 4500k.
+// Al normalizar cada video a este formato al subir, el AutoDJ puede
+// reproducirlo por remux (-c:v copy) y el costo de CPU por stream ≈ 0.
+const VIDEO_BITRATE = '4500k'
+const VIDEO_MAX_WIDTH = 1920
+const VIDEO_MAX_HEIGHT = 1080
+const VIDEO_FPS = 30
+const AUDIO_BITRATE = '128k'
+const AUDIO_SAMPLE_RATE = 44100
+const AUDIO_CHANNELS = 2
+
 // Los stream keys se mapean: clientId -> { streamKey, ffmpegProcess, startedAt }
 const _activeEncoders = new Map()
 
@@ -55,7 +66,7 @@ export async function resolvePlaylistEntries(clientId) {
 
   if (activePlaylistId) {
     const [entries] = await pool.query(
-      `SELECT vt.filepath FROM video_playlist_entries vpe
+      `SELECT vt.filepath, vt.codec, vt.width, vt.height FROM video_playlist_entries vpe
        JOIN video_tracks vt ON vt.id = vpe.trackId
        WHERE vpe.clientId = ? AND vpe.playlistId = ?
        ORDER BY vpe.position ASC`,
@@ -65,7 +76,7 @@ export async function resolvePlaylistEntries(clientId) {
   }
 
   const [entries] = await pool.query(
-    `SELECT vt.filepath FROM video_playlist_entries vpe
+    `SELECT vt.filepath, vt.codec, vt.width, vt.height FROM video_playlist_entries vpe
      JOIN video_tracks vt ON vt.id = vpe.trackId
      WHERE vpe.clientId = ? ORDER BY vpe.position ASC`,
     [clientId]
@@ -74,11 +85,42 @@ export async function resolvePlaylistEntries(clientId) {
 }
 
 /**
+ * Verifica que todos los entries de la playlist cumplan el formato canónico.
+ * Los que no (videos viejos subidos antes de la normalización) se normalizan
+ * una vez con ffmpeg para que el AutoDJ por remux (-c:v copy) no se rompa.
+ */
+async function ensureCanonicalEntries(clientId, entries) {
+  for (const entry of entries) {
+    const meta = {
+      codec: entry.codec,
+      width: entry.width,
+      height: entry.height,
+      pixFmt: null,
+    }
+    // Si la DB no tiene metadatos confiables (null), normalizar por las dudas
+    if (!meta.codec || !meta.width || !meta.height) {
+      await normalizeVideo(clientId, entry.filepath)
+      continue
+    }
+    if (!(meta.codec === 'h264' && (meta.width || 0) <= VIDEO_MAX_WIDTH && (meta.height || 0) <= VIDEO_MAX_HEIGHT)) {
+      await normalizeVideo(clientId, entry.filepath)
+    }
+  }
+}
+
+/**
  * Genera un archivo playlist.txt con la lista de videos a reproducir.
  * Formato: file '/var/lib/video/{filepath}'
  * El orden y shuffle se maneja desde el playlist M3U-like.
  */
 export async function generatePlaylist(clientId, entries) {
+  // Fallback: normalizar videos viejos que no cumplan el formato canónico
+  try {
+    await ensureCanonicalEntries(clientId, entries)
+  } catch (err) {
+    console.error(`[video-encoder] Error normalizando entries de ${clientId}:`, err.message)
+  }
+
   const content = entries
     .map(e => `file '${VIDEO_DIR}/${e.filepath}'`)
     .join('\n')
@@ -121,9 +163,12 @@ export async function startEncoder(clientId, videoStreamKey) {
   await killAllFfmpegForClient(clientId)
 
   // Ciclo de reproducción: cuando termina, vuelve a empezar
-  // FFmpeg con stream_loop -1 para loop infinito
+  // FFmpeg con stream_loop -1 para loop infinito.
+  // Los videos ya se normalizan a 1080p H.264/AAC al subir, así que el AutoDJ
+  // hace remux (-c:v copy) → CPU por stream ≈ 0. Si un video viejo no
+  // cumple el formato, el fallback en generatePlaylist lo normaliza antes.
   // Las paths ya están sanitizadas (sin espacios), no requieren quoting
-  const shScript = `mkdir -p ${PROCESS_LOG_DIR} && nohup ffmpeg -loglevel error -stats -re -f concat -safe 0 -stream_loop -1 -i ${playlistPath} -c:v libx264 -preset veryfast -b:v 2000k -maxrate 2500k -bufsize 4000k -c:a aac -b:a 128k -ar 44100 -ac 2 -f flv ${rtmpUrl} >${logFile} 2>&1 &`
+  const shScript = `mkdir -p ${PROCESS_LOG_DIR} && nohup ffmpeg -loglevel error -stats -re -f concat -safe 0 -stream_loop -1 -i ${playlistPath} -c:v copy -c:a copy -f flv ${rtmpUrl} >${logFile} 2>&1 &`
   const cmd = `docker exec ${ENCODER_CONTAINER} sh -c '${shScript}'`
 
   try {
@@ -338,6 +383,96 @@ export async function extractThumbnail(clientId, filepath) {
   } catch (err) {
     console.error(`[video-encoder] Error extracting thumbnail for ${filepath}:`, err.message)
     return null
+  }
+}
+
+// =====================================================
+// Normalización de videos de TV
+// =====================================================
+
+/**
+ * Analiza un video dentro del contenedor con ffprobe y retorna metadatos.
+ */
+async function probeVideo(filepath) {
+  const stdout = await execCmd(
+    `docker exec ${ENCODER_CONTAINER} ffprobe -v quiet -print_format json -show_format -show_streams '${VIDEO_DIR}/${filepath}'`
+  )
+  const info = JSON.parse(stdout)
+  const vs = info.streams?.find(s => s.codec_type === 'video')
+  const as = info.streams?.find(s => s.codec_type === 'audio')
+  return {
+    duration: parseFloat(info.format?.duration || 0),
+    width: vs?.width || null,
+    height: vs?.height || null,
+    codec: vs?.codec_name || null,
+    pixFmt: vs?.pix_fmt || null,
+    fps: vs?.r_frame_rate || null,
+    audioCodec: as?.codec_name || null,
+  }
+}
+
+/**
+ * Verifica si un video ya cumple el formato canónico (1080p H.264 yuv420p).
+ * En ese caso solo se remuxea el audio (para normalizarlo a AAC) manteniendo
+ * la resolución del video original.
+ */
+function isCanonical(meta) {
+  return meta.codec === 'h264' &&
+    meta.pixFmt === 'yuv420p' &&
+    (meta.width || 0) <= VIDEO_MAX_WIDTH &&
+    (meta.height || 0) <= VIDEO_MAX_HEIGHT
+}
+
+/**
+ * Normaliza un video de TV al formato canónico dentro del contenedor:
+ *  - Si ya es H.264 yuv420p ≤1080p → remux (copy video + re-encode audio a AAC).
+ *  - Si no → re-encode a 1080p H.264 4500k, 30fps, audio AAC 128k.
+ *  - Si es menor a 1080p → mantiene su resolución (sin upscale).
+ *
+ * Reemplaza el archivo en el contenedor y retorna los metadatos finales para
+ * registrar en la DB (width/height/codec/filesize/duration).
+ */
+export async function normalizeVideo(clientId, filepath) {
+  const containerPath = `${VIDEO_DIR}/${filepath}`
+  const tmpPath = `${VIDEO_DIR}/normalize_tmp_${Date.now()}.mp4`
+
+  try {
+    const meta = await probeVideo(filepath)
+
+    let cmd
+    if (isCanonical(meta)) {
+      // Ya es H.264 yuv420p ≤1080p: remux video + normalizar audio a AAC
+      cmd = `ffmpeg -y -i '${containerPath}' -c:v copy -c:a aac -b:a ${AUDIO_BITRATE} -ar ${AUDIO_SAMPLE_RATE} -ac ${AUDIO_CHANNELS} '${tmpPath}'`
+    } else {
+      // Re-encode a 1080p H.264 (sin upscale si es menor)
+      cmd = `ffmpeg -y -i '${containerPath}' ` +
+        `-vf scale=${VIDEO_MAX_WIDTH}:${VIDEO_MAX_HEIGHT}:force_original_aspect_ratio=decrease ` +
+        `-c:v libx264 -preset fast -b:v ${VIDEO_BITRATE} -pix_fmt yuv420p -r ${VIDEO_FPS} ` +
+        `-c:a aac -b:a ${AUDIO_BITRATE} -ar ${AUDIO_SAMPLE_RATE} -ac ${AUDIO_CHANNELS} '${tmpPath}'`
+    }
+
+    await execCmd(`docker exec ${ENCODER_CONTAINER} sh -c "${cmd}"`)
+
+    // Reemplazar el archivo original por el normalizado
+    await execCmd(`docker exec ${ENCODER_CONTAINER} mv '${tmpPath}' '${containerPath}'`)
+
+    // Metadatos finales
+    const final = await probeVideo(filepath)
+    const sizeOut = await execCmd(`docker exec ${ENCODER_CONTAINER} stat -c%s '${containerPath}'`).catch(() => '0')
+
+    console.log(`[video-encoder] Normalized video ${clientId}/${filepath} -> ${final.width}x${final.height} ${final.codec}`)
+
+    return {
+      width: final.width,
+      height: final.height,
+      codec: final.codec,
+      filesize: Number(sizeOut) || 0,
+      duration: final.duration,
+    }
+  } catch (err) {
+    console.error(`[video-encoder] Error normalizing video ${filepath}:`, err.message)
+    try { await execCmd(`docker exec ${ENCODER_CONTAINER} rm -f '${tmpPath}' || true`) } catch (_) {}
+    throw err
   }
 }
 
