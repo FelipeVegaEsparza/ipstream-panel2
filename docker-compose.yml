@@ -259,6 +259,10 @@ services:
       # Docker socket: necesario para que el agent pueda hacer `docker exec`
       # en el container de liquidsoap. En prod, restringir el acceso.
       - /var/run/docker.sock:/var/run/docker.sock
+      # /proc y raíz del host (read-only): para leer la carga real del VPS
+      # en el panel de monitoreo (/admin/monitor).
+      - /proc:/host/proc:ro
+      - /:/hostroot:ro
     networks:
       - ipstream-net
 

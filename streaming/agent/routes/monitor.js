@@ -10,35 +10,40 @@ import { pool } from '../lib/db.js'
 import { getMountStatus } from '../lib/icecast.js'
 import { execCmd } from '../lib/video-encoder.js'
 import crypto from 'crypto'
+import fs from 'fs'
 
 const CADDY_CONTAINER = 'ipstream-caddy'
 const CADDY_LOG = '/data/access.log'
+
+// El agente monta /proc y / del host (read-only) en /host/proc y /hostroot
+// para poder leer la carga real del VPS en el panel de monitoreo.
+const HOST_PROC = '/host/proc'
+const HOST_ROOT = '/hostroot'
 
 function getStreamKey(clientId) {
   return `tv_${crypto.createHash('sha256').update(clientId).digest('hex').slice(0, 12)}`
 }
 
-async function execRaw(cmd) {
-  return new Promise((resolve) => {
-    const { exec } = require('child_process')
-    exec(cmd, { timeout: 10000 }, (err, stdout) => {
-      if (err) resolve(null)
-      else resolve(stdout || '')
-    })
-  })
+/** Lee un archivo del host (montado en /host/proc o /hostroot), o null. */
+function readHostFile(path) {
+  try {
+    return fs.readFileSync(path, 'utf8')
+  } catch {
+    return null
+  }
 }
 
 /**
  * Lee la carga real del host (no la del contenedor).
- * El agente tiene docker.sock; ejecuta uptime/free/df en el host vía docker.
+ * El agente monta /proc y / del host en /host/proc y /hostroot (read-only).
  */
 async function readHostStats() {
   const out = {}
 
-  // Load average y uptime
-  const uptime = await execRaw(`cat /proc/loadavg`)
-  if (uptime) {
-    const parts = uptime.trim().split(/\s+/)
+  // Load average
+  const loadAvgRaw = readHostFile(`${HOST_PROC}/loadavg`)
+  if (loadAvgRaw) {
+    const parts = loadAvgRaw.trim().split(/\s+/)
     out.loadAvg = {
       one: parseFloat(parts[0]) || 0,
       five: parseFloat(parts[1]) || 0,
@@ -47,11 +52,11 @@ async function readHostStats() {
   }
 
   // CPUs del host (para calcular % de carga relativa)
-  const cpuInfo = await execRaw(`grep -c ^processor /proc/cpuinfo`)
-  out.cpuCount = parseInt((cpuInfo || '').trim(), 10) || 1
+  const cpuInfo = readHostFile(`${HOST_PROC}/cpuinfo`)
+  out.cpuCount = (cpuInfo?.match(/^processor\s*:/gm) || []).length || 1
 
   // Memoria
-  const memInfo = await execRaw(`cat /proc/meminfo`)
+  const memInfo = readHostFile(`${HOST_PROC}/meminfo`)
   if (memInfo) {
     const parseKB = (key) => {
       const m = memInfo.match(new RegExp(`^${key}:\\s+(\\d+)`))
@@ -70,24 +75,42 @@ async function readHostStats() {
     }
   }
 
-  // Disco de la raíz
-  const df = await execRaw(`df -P / | tail -1`)
-  if (df) {
-    const parts = df.trim().split(/\s+/)
-    if (parts.length >= 4) {
-      const totalKB = parseInt(parts[1], 10) || 0
-      const usedKB = parseInt(parts[2], 10) || 0
-      out.disk = {
-        totalMB: Math.round(totalKB / 1024),
-        usedMB: Math.round(usedKB / 1024),
-        freeMB: Math.round((totalKB - usedKB) / 1024),
-        percentUsed: totalKB ? Math.round((usedKB / totalKB) * 100) : 0,
-      }
+  // Disco de la raíz del host
+  const df = readHostFile(`${HOST_PROC}/mounts`)
+  // df del host raíz: usamos statfs de /hostroot vía fs.statfs si está disponible
+  try {
+    const statfs = fs.statfsSync(HOST_ROOT)
+    const totalKB = Math.round((statfs.blocks * statfs.bsize) / 1024)
+    const freeKB = Math.round((statfs.bavail * statfs.bsize) / 1024)
+    const usedKB = totalKB - freeKB
+    out.disk = {
+      totalMB: Math.round(totalKB / 1024),
+      usedMB: Math.round(usedKB / 1024),
+      freeMB: Math.round(freeKB / 1024),
+      percentUsed: totalKB ? Math.round((usedKB / totalKB) * 100) : 0,
     }
+  } catch {
+    // fallback: df vía exec si statfs no está disponible
+    try {
+      const dfRaw = await execCmd(`df -P /hostroot | tail -1`).catch(() => null)
+      if (dfRaw) {
+        const parts = dfRaw.trim().split(/\s+/)
+        if (parts.length >= 4) {
+          const totalKB = parseInt(parts[1], 10) || 0
+          const usedKB = parseInt(parts[2], 10) || 0
+          out.disk = {
+            totalMB: Math.round(totalKB / 1024),
+            usedMB: Math.round(usedKB / 1024),
+            freeMB: Math.round((totalKB - usedKB) / 1024),
+            percentUsed: totalKB ? Math.round((usedKB / totalKB) * 100) : 0,
+          }
+        }
+      }
+    } catch {}
   }
 
   // Uptime del host
-  const upRaw = await execRaw(`cat /proc/uptime`)
+  const upRaw = readHostFile(`${HOST_PROC}/uptime`)
   if (upRaw) {
     const secs = parseFloat(upRaw.trim().split(/\s+/)[0]) || 0
     out.uptime = Math.round(secs)
@@ -109,9 +132,9 @@ async function readHostStats() {
 async function countVideoViewers(windowMs = 30000) {
   const viewers = {}
   try {
-    const log = await execRaw(
+    const log = await execCmd(
       `docker exec ${CADDY_CONTAINER} sh -c "tail -c 2000000 ${CADDY_LOG} 2>/dev/null | grep m3u8 || true"`
-    )
+    ).catch(() => null)
     if (!log) return viewers
 
     const cutoff = Date.now() - windowMs

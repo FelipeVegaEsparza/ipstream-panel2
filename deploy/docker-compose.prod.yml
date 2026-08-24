@@ -117,6 +117,9 @@ services:
       # chown al uid del agent y siembra los scripts seed.
       - ./data/scripts:/etc/liquidsoap/scripts
       - /var/run/docker.sock:/var/run/docker.sock
+      # /proc y raíz del host (read-only): para el panel de monitoreo.
+      - /proc:/host/proc:ro
+      - /:/hostroot:ro
     logging:
       driver: json-file
       options:
