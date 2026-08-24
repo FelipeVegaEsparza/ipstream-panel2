@@ -35,9 +35,16 @@ interface StorageInfo {
   remainingMB: number | null
 }
 
+interface VideoPlaylist {
+  id: string
+  name: string
+  trackCount: number
+}
+
 export default function TvLibraryPage() {
   const [tracks, setTracks] = useState<VideoTrack[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
+  const [playlists, setPlaylists] = useState<VideoPlaylist[]>([])
   const [storage, setStorage] = useState<StorageInfo | null>(null)
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -57,10 +64,11 @@ export default function TvLibraryPage() {
       if (search) params.set('search', search)
       params.set('limit', '200')
 
-      const [tracksRes, foldersRes, storageRes] = await Promise.all([
+      const [tracksRes, foldersRes, storageRes, playlistsRes] = await Promise.all([
         fetch(`/api/dashboard/television/tracks?${params}`),
         fetch('/api/dashboard/television/folders'),
         fetch('/api/dashboard/television/storage'),
+        fetch('/api/dashboard/television/playlists'),
       ])
 
       if (tracksRes.ok) {
@@ -73,6 +81,10 @@ export default function TvLibraryPage() {
       }
       if (storageRes.ok) {
         setStorage(await storageRes.json())
+      }
+      if (playlistsRes.ok) {
+        const data = await playlistsRes.json()
+        setPlaylists(data.playlists || [])
       }
     } catch (err) {
       console.error('[tv-library] fetch error:', err)
@@ -178,6 +190,23 @@ export default function TvLibraryPage() {
       setSelectedTracks(new Set())
       fetchAll()
     }
+  }
+
+  const addToPlaylist = async (playlistId: string) => {
+    if (selectedTracks.size === 0 || !playlistId) return
+    const ids = Array.from(selectedTracks)
+    let added = 0
+    for (const trackId of ids) {
+      const res = await fetch(`/api/dashboard/television/playlists/${playlistId}/entries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackId }),
+      })
+      if (res.ok) added++
+    }
+    toast({ type: 'success', title: `${added} videos agregados a la playlist` })
+    setSelectedTracks(new Set())
+    fetchAll()
   }
 
   const formatDuration = (sec: number) => {
@@ -323,7 +352,7 @@ export default function TvLibraryPage() {
 
           {/* Batch actions */}
           {selectedTracks.size > 0 && (
-            <div className="bg-gray-800 rounded-lg p-3 flex items-center gap-2">
+            <div className="bg-gray-800 rounded-lg p-3 flex items-center gap-2 flex-wrap">
               <span className="text-sm text-gray-300">{selectedTracks.size} seleccionados</span>
               <button onClick={() => setSelectedTracks(new Set())} className="text-xs text-gray-500 hover:text-white">
                 Deseleccionar
@@ -338,6 +367,23 @@ export default function TvLibraryPage() {
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
               </select>
+              {playlists.length > 0 && (
+                <select
+                  defaultValue=""
+                  onChange={e => {
+                    if (e.target.value) {
+                      addToPlaylist(e.target.value)
+                      e.target.value = ''
+                    }
+                  }}
+                  className="bg-gray-700 text-white text-xs px-2 py-1 rounded"
+                >
+                  <option value="">Agregar a playlist...</option>
+                  {playlists.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
 
