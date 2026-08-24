@@ -5,6 +5,7 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { generatePlaylist, startEncoder, stopEncoder } from '../lib/video-encoder.js'
+import { isTimeInSlot } from '../lib/time.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -13,23 +14,6 @@ function uuid() {
 
 function getStreamKey(clientId) {
   return `tv_${crypto.createHash('sha256').update(clientId).digest('hex').slice(0, 12)}`
-}
-
-/**
- * Dado dayOfWeek (0=Dom..6=Sáb) y "HH:mm", devuelve true si el momento
- * actual cae dentro de la franja. Soporta franjas que cruzan la medianoche.
- */
-function isTimeInSlot(now, dayOfWeek, startTime, endTime) {
-  if (now.getDay() !== dayOfWeek) return false
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const [sh, sm] = startTime.split(':').map(Number)
-  const [eh, em] = endTime.split(':').map(Number)
-  const startMinutes = sh * 60 + sm
-  const endMinutes = eh * 60 + em
-  if (endMinutes <= startMinutes) {
-    return currentMinutes >= startMinutes || currentMinutes < endMinutes
-  }
-  return currentMinutes >= startMinutes && currentMinutes < endMinutes
 }
 
 export default async function videoScheduleRoutes(app) {
@@ -195,6 +179,12 @@ export default async function videoScheduleRoutes(app) {
   app.get('/api/video/:clientId/schedule/current', async (request, reply) => {
     const { clientId } = request.params
 
+    const [tzRows] = await pool.query(
+      'SELECT timezone FROM clients WHERE id = ? LIMIT 1',
+      [clientId]
+    )
+    const timeZone = tzRows[0]?.timezone || 'UTC'
+
     const [rows] = await pool.query(
       `SELECT vps.id, vps.playlistId, vps.dayOfWeek, vps.startTime, vps.endTime,
               vp.name AS playlistName
@@ -207,7 +197,7 @@ export default async function videoScheduleRoutes(app) {
 
     const now = new Date()
     for (const slot of rows) {
-      if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime)) {
+      if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime, timeZone)) {
         return { current: slot }
       }
     }
@@ -252,6 +242,12 @@ export function startVideoScheduleCron() {
 async function applyVideoScheduleForClient(clientId) {
   const now = new Date()
 
+  const [tzRows] = await pool.query(
+    'SELECT timezone FROM clients WHERE id = ? LIMIT 1',
+    [clientId]
+  )
+  const timeZone = tzRows[0]?.timezone || 'UTC'
+
   // Obtener la franja activa para este momento
   const [schedules] = await pool.query(
     `SELECT vps.playlistId, vps.startTime, vps.endTime, vps.dayOfWeek
@@ -262,7 +258,7 @@ async function applyVideoScheduleForClient(clientId) {
 
   let scheduledPlaylistId = null
   for (const slot of schedules) {
-    if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime)) {
+    if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime, timeZone)) {
       scheduledPlaylistId = slot.playlistId
       break
     }

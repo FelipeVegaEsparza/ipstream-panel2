@@ -35,6 +35,7 @@ model Client {
   oneSignalApiKey String?  @db.Text // OneSignal REST API Key (encriptada)
   useGenericNews  Boolean  @default(false)
   phone           String? // Número de WhatsApp (con código de país, ej: 56912345678)
+  timezone        String   @default("UTC")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

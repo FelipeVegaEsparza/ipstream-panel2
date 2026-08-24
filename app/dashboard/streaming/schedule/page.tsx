@@ -3,6 +3,7 @@
 import { showToast } from '@/components/ui/toast'
 
 import { useEffect, useState, useCallback } from 'react'
+import TimezoneSelector from '@/components/dashboard/streaming/TimezoneSelector'
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
@@ -55,14 +56,16 @@ export default function SchedulePage() {
   const [formStartTime, setFormStartTime] = useState('08:00')
   const [formEndTime, setFormEndTime] = useState('09:00')
   const [formSaving, setFormSaving] = useState(false)
+  const [timezone, setTimezone] = useState('UTC')
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const [sRes, pRes, cRes] = await Promise.all([
+      const [sRes, pRes, cRes, tzRes] = await Promise.all([
         fetch('/api/dashboard/streaming/schedule', { cache: 'no-store' }),
         fetch('/api/dashboard/streaming/playlists', { cache: 'no-store' }),
         fetch('/api/dashboard/streaming/schedule/current', { cache: 'no-store' }),
+        fetch('/api/dashboard/settings/timezone', { cache: 'no-store' }),
       ])
       if (sRes.ok) {
         const data = await sRes.json()
@@ -75,6 +78,10 @@ export default function SchedulePage() {
       if (cRes.ok) {
         const data = await cRes.json()
         setCurrentSlot(data.current)
+      }
+      if (tzRes.ok) {
+        const data = await tzRes.json()
+        setTimezone(data.timezone || 'UTC')
       }
     } catch (err) {
       console.error('Error loading schedule data:', err)
@@ -173,6 +180,7 @@ export default function SchedulePage() {
           <h1 className="text-2xl font-bold text-white">Programación</h1>
           <p className="text-sm text-gray-400 mt-1">
             Asigna playlists a franjas horarias por día de la semana.
+            <span className="ml-2 text-xs text-gray-500">Horario: {timezone}</span>
             {currentSlot && (
               <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
@@ -181,9 +189,12 @@ export default function SchedulePage() {
             )}
           </p>
         </div>
-        <button onClick={openCreate} className="btn-primary">
-          + Añadir franja
-        </button>
+        <div className="flex items-center gap-4">
+          <TimezoneSelector onChanged={() => { load() }} compact />
+          <button onClick={openCreate} className="btn-primary">
+            + Añadir franja
+          </button>
+        </div>
       </div>
 
       {loading ? (

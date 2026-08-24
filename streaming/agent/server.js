@@ -444,6 +444,24 @@ try {
   logger.info({ err: err.message }, 'Columna isActive en video_playlists (ya existía o ignorado)')
 }
 
+// Columna timezone en clients: el agente la lee para evaluar la parrilla en
+// la zona del cliente. Prisma la crea en su migración, pero el agente no
+// depende del orden de migración de Prisma.
+try {
+  const [tzCols] = await pool.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clients' AND COLUMN_NAME = 'timezone'`
+  )
+  if (tzCols.length === 0) {
+    await pool.query(`ALTER TABLE clients ADD COLUMN timezone VARCHAR(191) NOT NULL DEFAULT 'UTC'`)
+    logger.info('Columna timezone en clients asegurada')
+  } else {
+    logger.info('Columna timezone en clients (ya existía)')
+  }
+} catch (err) {
+  logger.info({ err: err.message }, 'Columna timezone en clients (ya existía o ignorado)')
+}
+
 try {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS video_playlist_entries (

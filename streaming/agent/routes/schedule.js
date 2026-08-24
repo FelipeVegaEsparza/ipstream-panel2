@@ -5,28 +5,11 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { regenerateM3u } from '../lib/liquidsoap.js'
+import { isTimeInSlot } from '../lib/time.js'
 import crypto from 'crypto'
 
 function uuid() {
   return crypto.randomUUID()
-}
-
-/**
- * Dado dayOfWeek (0=Dom..6=Sáb) y "HH:mm", devuelve el timestamp del
- * momento actual si cae dentro de la franja.
- */
-function isTimeInSlot(now, dayOfWeek, startTime, endTime) {
-  if (now.getDay() !== dayOfWeek) return false
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const [sh, sm] = startTime.split(':').map(Number)
-  const [eh, em] = endTime.split(':').map(Number)
-  const startMinutes = sh * 60 + sm
-  const endMinutes = eh * 60 + em
-  if (endMinutes <= startMinutes) {
-    // Franja que cruza la medianoche (ej: 23:00-01:00)
-    return currentMinutes >= startMinutes || currentMinutes < endMinutes
-  }
-  return currentMinutes >= startMinutes && currentMinutes < endMinutes
 }
 
 export default async function scheduleRoutes(app) {
@@ -177,6 +160,12 @@ export default async function scheduleRoutes(app) {
   app.get('/api/streams/:clientId/schedule/current', async (request, reply) => {
     const { clientId } = request.params
 
+    const [tzRows] = await pool.query(
+      'SELECT timezone FROM clients WHERE id = ? LIMIT 1',
+      [clientId]
+    )
+    const timeZone = tzRows[0]?.timezone || 'UTC'
+
     const [rows] = await pool.query(
       `SELECT ps.id, ps.playlistId, ps.dayOfWeek, ps.startTime, ps.endTime,
               p.name AS playlistName
@@ -189,7 +178,7 @@ export default async function scheduleRoutes(app) {
 
     const now = new Date()
     for (const slot of rows) {
-      if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime)) {
+      if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime, timeZone)) {
         return { current: slot }
       }
     }
@@ -235,6 +224,12 @@ export function startScheduleCron() {
 async function applyScheduleForClient(clientId) {
   const now = new Date()
 
+  const [tzRows] = await pool.query(
+    'SELECT timezone FROM clients WHERE id = ? LIMIT 1',
+    [clientId]
+  )
+  const timeZone = tzRows[0]?.timezone || 'UTC'
+
   // Obtener la franja activa para este momento
   const [schedules] = await pool.query(
     `SELECT ps.playlistId, ps.startTime, ps.endTime, ps.dayOfWeek
@@ -245,7 +240,7 @@ async function applyScheduleForClient(clientId) {
 
   let scheduledPlaylistId = null
   for (const slot of schedules) {
-    if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime)) {
+    if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime, timeZone)) {
       scheduledPlaylistId = slot.playlistId
       break
     }
