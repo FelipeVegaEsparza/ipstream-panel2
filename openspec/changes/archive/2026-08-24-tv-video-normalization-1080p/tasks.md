@@ -12,6 +12,6 @@
 ## 3. Verificación
 
 - [x] 3.1 `npx tsc --noEmit` sin errores nuevos (el agente no usa TS, pero el panel sí; verificar que no haya referencias rotas).
-- [ ] 3.2 En producción: subir un video 1080p H.264 (debe quedar sin re-encode, remux) y otro H.265/4K (debe normalizarse a 1080p); verificar metadatos en DB.
-- [ ] 3.3 Medir CPU del encoder con un stream activo: debe ser ≈0 (remux) en lugar de ~3.2 cores.
-- [ ] 3.4 Verificar que el HLS sigue reproduciéndose correctamente (sin pantalla negra) con los videos normalizados.
+- [x] 3.2 En producción: subir un video 1080p H.264 (debe quedar sin re-encode, remux) y otro H.265/4K (debe normalizarse a 1080p); verificar metadatos en DB.
+- [x] 3.3 Medir CPU del encoder con un stream activo: debe ser ≈0 (remux) en lugar de ~3.2 cores.
+- [x] 3.4 Verificar que el HLS sigue reproduciéndose correctamente (sin pantalla negra) con los videos normalizados.

@@ -18,5 +18,5 @@
 ## 4. Verificación
 
 - [x] 4.1 `npx tsc --noEmit` sin errores nuevos.
-- [ ] 4.2 En producción: abrir `/admin/monitor` y verificar que muestra la carga real del VPS y el estado de los clientes.
-- [ ] 4.3 Verificar que el conteo de espectadores de video refleja las IPs del `.m3u8` y que los oyentes de radio salen en vivo.
+- [x] 4.2 En producción: abrir `/admin/monitor` y verificar que muestra la carga real del VPS y el estado de los clientes.
+- [x] 4.3 Verificar que el conteo de espectadores de video refleja las IPs del `.m3u8` y que los oyentes de radio salen en vivo.

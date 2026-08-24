@@ -13,4 +13,4 @@
 
 - [x] 3.1 `npx tsc --noEmit` sin errores nuevos.
 - [x] 3.2 Verificar en producción que `/admin/settings` muestra solo Sistema y Login y que el resto de la app no referencia componentes eliminados.
-- [ ] 3.3 Verificar en producción que la sección Sistema muestra solo stats reales + el switch de Noticias Genéricas.
+- [x] 3.3 Verificar en producción que la sección Sistema muestra solo stats reales + el switch de Noticias Genéricas.
