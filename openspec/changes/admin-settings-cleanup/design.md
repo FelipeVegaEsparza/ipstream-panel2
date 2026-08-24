@@ -1,17 +1,18 @@
 ## Context
 
-`/admin/settings` usa un layout de tabs (Radix) con 5 pestañas; 3 de ellas montan componentes que son shells sin backend. La página es un Server Component (`page.tsx`) que renderiza `Tabs`/`TabsList`/`TabsContent`. El cambio es puramente de UI: reducir a 2 pestañas funcionales y eliminar los componentes huérfanos.
+`/admin/settings` usa un layout de tabs (Radix) con 5 pestañas; 3 de ellas montan componentes que son shells sin backend. La pestaña **Sistema** además muestra 9 ajustes, de los cuales 8 son decorativos (no se persisten ni se usan). La página es un Server Component (`page.tsx`) que renderiza `Tabs`/`TabsList`/`TabsContent`. El cambio es puramente de UI: reducir a 2 pestañas funcionales, eliminar los componentes huérfanos y recortar `SystemSettings` a lo funcional.
 
 ## Goals / Non-Goals
 
 **Goals:**
 - Dejar `/admin/settings` con solo las pestañas **Sistema** y **Login**.
 - Eliminar los componentes `SecuritySettings`, `NotificationSettings`, `BackupSettings`.
+- Recortar `SystemSettings` a solo `enableGenericNews` + stats reales.
 - No dejar imports muertos ni código huérfano.
 
 **Non-Goals:**
 - Crear backend para las secciones eliminadas (no hay intención de implementarlas).
-- Cambiar el comportamiento de Sistema o Login.
+- Implementar de verdad los ajustes decorativos (maintenance, sessionTimeout, etc.).
 - Tocar modelos Prisma ni datos.
 
 ## Decisions
@@ -24,18 +25,23 @@ Se reduce el `TabsList` a `grid-cols-2` con los triggers Sistema y Login, y se e
 Se borran `components/admin/SecuritySettings.tsx`, `NotificationSettings.tsx`, `BackupSettings.tsx`. No hay otros consumidores (verificado por búsqueda de imports).
 - **Alternativa**: conservarlos por si se reimplementan → descartada, son shells que no persisten nada; el historial de git los preserva.
 
-### 3. Sin cambios en endpoints ni datos
-Los endpoints que llamaban los componentes eliminados nunca existieron; no se crean ni se borran.
+### 3. Recortar `SystemSettings.tsx`
+Se mantienen la tarjeta "Información del Sistema" con las stats reales (usuarios, clientes, contenido, uptime, node) y se elimina la entrada "Tamaño BD" (placeholder `'0 MB'`). En "Configuración General" se deja solo el switch de **Noticias Genéricas** (el único persistido por `/api/admin/app-config`); se eliminan los otros 8 ajustes y sus estados.
+- **Alternativa**: implementar los 8 ajustes de verdad → descartada, requiere columnas en `AppConfig` y gates en middleware/auth; fuera de alcance.
+
+### 4. Sin cambios en endpoints ni datos
+Los endpoints que llamaban los componentes eliminados nunca existieron; no se crean ni se borran. `app-config` queda intacto.
 
 ## Risks / Trade-offs
 
 - **Alguien esperaba esas secciones** → [Riesgo] Mitigación: eran shells no funcionales (guardar siempre fallaba); eliminar mejora la honestidad de la UI.
 - **`grid-cols-2` con 2 tabs** → [Riesgo] Mitigación: ajuste cosmético trivial; el layout de Radix sigue igual.
+- **Quitar ajustes que parecían configurables** → [Riesgo] Mitigación: nunca tuvieron efecto real; quitarlos evita que el admin crea que los guardó.
 
 ## Migration Plan
 
 1. Commit + push → deploy por GitHub Actions.
-2. Rollback: restaurar `page.tsx` y los 3 componentes desde git (todo el cambio es local a la UI).
+2. Rollback: restaurar `page.tsx` y los componentes desde git (todo el cambio es local a la UI).
 
 ## Open Questions
 

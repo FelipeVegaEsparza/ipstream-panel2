@@ -22,10 +22,8 @@ export default async function SettingsPage() {
                   await prisma.rankingVideo.count() +
                   await prisma.sponsor.count() +
                   await prisma.promotion.count(),
-    databaseSize: '0 MB', // Placeholder - en producción calcular tamaño real
     uptime: process.uptime(),
-    nodeVersion: process.version,
-    platform: process.platform
+    nodeVersion: process.version
   }
 
   const currentLoginImage = await getLoginBackground()
