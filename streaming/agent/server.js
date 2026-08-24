@@ -430,8 +430,16 @@ try {
 }
 
 try {
-  await pool.query(`ALTER TABLE video_playlists ADD COLUMN IF NOT EXISTS isActive BOOLEAN NOT NULL DEFAULT false`)
-  logger.info('Columna isActive en video_playlists asegurada')
+  const [cols] = await pool.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'video_playlists' AND COLUMN_NAME = 'isActive'`
+  )
+  if (cols.length === 0) {
+    await pool.query(`ALTER TABLE video_playlists ADD COLUMN isActive BOOLEAN NOT NULL DEFAULT false`)
+    logger.info('Columna isActive en video_playlists asegurada')
+  } else {
+    logger.info('Columna isActive en video_playlists (ya existía)')
+  }
 } catch (err) {
   logger.info({ err: err.message }, 'Columna isActive en video_playlists (ya existía o ignorado)')
 }
