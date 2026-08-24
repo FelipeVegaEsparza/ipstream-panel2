@@ -2,9 +2,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SystemSettings } from '@/components/admin/SystemSettings'
-import { SecuritySettings } from '@/components/admin/SecuritySettings'
-import { NotificationSettings } from '@/components/admin/NotificationSettings'
-import { BackupSettings } from '@/components/admin/BackupSettings'
 import { LoginBackgroundSettings } from '@/components/admin/LoginBackgroundSettings'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getLoginBackground } from '@/lib/login-background'
@@ -45,21 +42,12 @@ export default async function SettingsPage() {
       </div>
 
       <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 bg-gray-800 border-gray-700">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-800 border-gray-700">
           <TabsTrigger value="system" className="data-[state=active]:bg-blue-600">
             Sistema
           </TabsTrigger>
           <TabsTrigger value="login" className="data-[state=active]:bg-blue-600">
             Login
-          </TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-blue-600">
-            Seguridad
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-blue-600">
-            Notificaciones
-          </TabsTrigger>
-          <TabsTrigger value="backup" className="data-[state=active]:bg-blue-600">
-            Respaldos
           </TabsTrigger>
         </TabsList>
 
@@ -71,18 +59,6 @@ export default async function SettingsPage() {
           <div className="card max-w-2xl">
             <LoginBackgroundSettings currentImage={currentLoginImage} />
           </div>
-        </TabsContent>
-
-        <TabsContent value="security" className="space-y-6">
-          <SecuritySettings />
-        </TabsContent>
-
-        <TabsContent value="notifications" className="space-y-6">
-          <NotificationSettings />
-        </TabsContent>
-
-        <TabsContent value="backup" className="space-y-6">
-          <BackupSettings />
         </TabsContent>
       </Tabs>
     </div>
