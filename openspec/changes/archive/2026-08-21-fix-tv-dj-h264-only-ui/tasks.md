@@ -6,4 +6,4 @@
 ## 2. Verificación
 
 - [x] 2.1 Verificar que el texto nuevo no rompe el layout ni el copy-paste de la URL relay (`relayServerUrl`) y stream key
-- [ ] 2.2 Deploy a producción (push a main) y confirmar que la página de conexión muestra el requisito H.264
+- [x] 2.2 Deploy a producción (push a main) y confirmar que la página de conexión muestra el requisito H.264
