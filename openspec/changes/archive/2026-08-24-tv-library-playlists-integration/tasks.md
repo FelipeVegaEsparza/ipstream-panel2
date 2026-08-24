@@ -15,5 +15,5 @@
 
 ## 3. Verificación
 
-- [ ] 3.1 `npx tsc --noEmit` sin errores nuevos.
-- [ ] 3.2 Probar en producción: subir video en Videoteca, agregarlo a una playlist desde la Videoteca (selección batch), y en el editor agregar varios con búsqueda/carpeta, reordenar y guardar.
+- [x] 3.1 `npx tsc --noEmit` sin errores nuevos.
+- [x] 3.2 Probar en producción: subir video en Videoteca, agregarlo a una playlist desde la Videoteca (selección batch), y en el editor agregar varios con búsqueda/carpeta, reordenar y guardar.

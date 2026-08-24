@@ -21,5 +21,5 @@
 ## 4. Verificación
 
 - [x] 4.1 `npx tsc --noEmit` sin errores nuevos.
-- [ ] 4.2 En producción: configurar la zona del cliente, crear franja, verificar que `/schedule/current` la resuelve en la zona configurada (radio y TV).
-- [ ] 4.3 Verificar el cron aplica el cambio de playlist en la zona del cliente (isActive + reinicio del encoder).
+- [x] 4.2 En producción: configurar la zona del cliente, crear franja, verificar que `/schedule/current` la resuelve en la zona configurada (radio y TV).
+- [x] 4.3 Verificar el cron aplica el cambio de playlist en la zona del cliente (isActive + reinicio del encoder).
