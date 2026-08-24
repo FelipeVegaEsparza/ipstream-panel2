@@ -54,6 +54,43 @@ function FolderIcon() {
   )
 }
 
+const PAGE_SIZE = 20
+
+function renderPageButtons(current: number, total: number, goTo: (p: number) => void) {
+  if (total <= 1) return null
+  const pages: (number | 'ellipsis')[] = []
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (current > 3) pages.push('ellipsis')
+    const start = Math.max(2, current - 1)
+    const end = Math.min(total - 1, current + 1)
+    for (let i = start; i <= end; i++) pages.push(i)
+    if (current < total - 2) pages.push('ellipsis')
+    pages.push(total)
+  }
+
+  return pages.map((p, idx) =>
+    p === 'ellipsis' ? (
+      <span key={`e${idx}`} className="px-1 text-gray-500 text-xs">...</span>
+    ) : (
+      <button
+        key={p}
+        onClick={() => goTo(p)}
+        className={`px-2.5 py-1 text-xs rounded transition-colors ${
+          p === current
+            ? 'bg-cyan-600 text-white'
+            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+        }`}
+      >
+        {p}
+      </button>
+    )
+  )
+}
+
 export default function LibraryPage() {
   const [tracks, setTracks] = useState<Track[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
@@ -77,6 +114,7 @@ export default function LibraryPage() {
   const [playingId, setPlayingId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [savingEdit, setSavingEdit] = useState(false)
+  const [page, setPage] = useState(1)
 
   const load = useCallback(async () => {
     try {
@@ -109,6 +147,12 @@ export default function LibraryPage() {
   const filteredTracks = selectedFolderId
     ? tracks.filter(t => selectedFolderId === '__none__' ? !t.folderId : t.folderId === selectedFolderId)
     : tracks
+
+  useEffect(() => { setPage(1) }, [selectedFolderId, tracks.length])
+
+  const totalPages = Math.max(1, Math.ceil(filteredTracks.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const pageTracks = filteredTracks.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   const rootFolders = folders.filter(f => !f.parentId)
   const childFolders = (parentId: string) => folders.filter(f => f.parentId === parentId)
@@ -504,7 +548,7 @@ export default function LibraryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTracks.map((t) => (
+                  {pageTracks.map((t) => (
                     <tr key={t.id} className="border-t border-gray-700/50 hover:bg-gray-700/20">
                       <td className="p-3">
                         <button
@@ -628,6 +672,28 @@ export default function LibraryPage() {
               </table>
             )}
           </div>
+
+          {filteredTracks.length > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded transition-colors"
+              >
+                « Anterior
+              </button>
+              <div className="flex items-center gap-1">
+                {renderPageButtons(currentPage, totalPages, (p) => setPage(p))}
+              </div>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded transition-colors"
+              >
+                Siguiente »
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
