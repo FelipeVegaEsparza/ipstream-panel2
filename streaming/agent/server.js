@@ -20,6 +20,7 @@ import jingleRoutes from './routes/jingles.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import folderRoutes from './routes/folders.js'
 import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
+import monitorRoutes from './routes/monitor.js'
 import videoRoutes from './routes/video.js'
 import videoScheduleRoutes, { startVideoScheduleCron } from './routes/video-schedule.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
@@ -563,6 +564,7 @@ await app.register(playlistRoutes)
 await app.register(jingleRoutes)
 await app.register(scheduleRoutes)
 await app.register(statsRoutes)
+await app.register(monitorRoutes)
   await app.register(folderRoutes)
 
   // Reconstruir estado DJ desde Liquidsoap antes de iniciar watchers

@@ -293,6 +293,12 @@ export const streamingClient = {
     }),
   getCurrentSchedule: (clientId: string) =>
     request(`/api/streams/${encodeURIComponent(clientId)}/schedule/current`),
+
+  // Monitor
+  getHostStats: () =>
+    request('/api/admin/host-stats'),
+  getStreamingStatus: () =>
+    request('/api/admin/streaming-status'),
 }
 
 // =====================================================
