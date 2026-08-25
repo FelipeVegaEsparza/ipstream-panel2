@@ -23,6 +23,7 @@ import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import monitorRoutes from './routes/monitor.js'
 import videoRoutes from './routes/video.js'
 import videoScheduleRoutes, { startVideoScheduleCron } from './routes/video-schedule.js'
+import migrationRoutes from './routes/migration.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
 import { rebuildAllDjState } from './lib/dj-state.js'
@@ -566,6 +567,7 @@ await app.register(scheduleRoutes)
 await app.register(statsRoutes)
 await app.register(monitorRoutes)
   await app.register(folderRoutes)
+await app.register(migrationRoutes)
 
   // Reconstruir estado DJ desde Liquidsoap antes de iniciar watchers
   // (solo streams running tienen puerto telnet activo).

@@ -6,15 +6,20 @@
 
 import { prisma } from '@/lib/prisma'
 import { encrypt } from './encryption'
+import { getDefaultServerDbId } from './streaming-servers'
 import crypto from 'crypto'
 
 /**
  * Crea un RadioStream para un Client.
  * @param clientId
  * @param bitrate (opcional, default 128)
+ * @param serverId (opcional, default: primer servidor activo)
  * @returns {RadioStream}
  */
-export async function createRadioStreamForClient(clientId: string, bitrate = 128) {
+export async function createRadioStreamForClient(clientId: string, bitrate = 128, serverId?: string) {
+  // Asignar servidor por defecto si no se indica
+  const assignedServerId = serverId ?? (await getDefaultServerDbId())
+
   // Generar identificadores únicos
   // icecastMount: nombre corto basado en hash del clientId
   const mountSuffix = crypto.createHash('sha256')
@@ -48,6 +53,7 @@ export async function createRadioStreamForClient(clientId: string, bitrate = 128
   const radioStream = await prisma.radioStream.create({
     data: {
       clientId,
+      serverId: assignedServerId,
       icecastMount,
       liquidsoapTelnetPort: telnetPort,
       sourcePasswordEnc,
@@ -114,10 +120,12 @@ export async function revealSourcePassword(clientId: string, requesterId: string
 // createVideoStreamForClient — helper para crear VideoStream
 // =====================================================
 
-export async function createVideoStreamForClient(clientId: string) {
+export async function createVideoStreamForClient(clientId: string, serverId?: string) {
+  const assignedServerId = serverId ?? (await getDefaultServerDbId())
   const videoStream = await prisma.videoStream.create({
     data: {
       clientId,
+      serverId: assignedServerId,
       status: 'off',
       mode: 'playlist',
       shuffle: false,
@@ -151,6 +159,111 @@ export function getVideoRtmpUrl(baseHost: string, clientId: string): string {
 export function getVideoHlsUrl(baseHost: string, clientId: string): string {
   const key = getVideoStreamKey(clientId)
   return `http://${baseHost}:8080/live/${key}.m3u8`
+}
+
+/**
+ * Base URL pública de la radio de un cliente, derivada del hostname
+ * del servidor de streaming asignado. Fallback a env (legacy).
+ */
+export async function getRadioPublicBaseUrl(clientId: string): Promise<string> {
+  const rs = await prisma.radioStream.findUnique({
+    where: { clientId },
+    select: { serverId: true },
+  })
+  if (rs?.serverId) {
+    const { getServerTarget } = await import('./streaming-servers')
+    const target = await getServerTarget(rs.serverId)
+    if (target) return `http://${target.publicHostname}:8000`
+  }
+  const { getDefaultServerTarget } = await import('./streaming-servers')
+  const def = await getDefaultServerTarget()
+  if (def && def.id !== '__env__') return `http://${def.publicHostname}:8000`
+  return process.env.ICE_PUBLIC_URL || 'http://localhost:8000'
+}
+
+/**
+ * Hostname público de la radio de un cliente (para DJs y player).
+ * Fallback a env (legacy).
+ */
+export async function getRadioPublicHost(clientId: string): Promise<string> {
+  const rs = await prisma.radioStream.findUnique({
+    where: { clientId },
+    select: { serverId: true },
+  })
+  if (rs?.serverId) {
+    const { getServerTarget } = await import('./streaming-servers')
+    const target = await getServerTarget(rs.serverId)
+    if (target) return target.publicHostname
+  }
+  const { getDefaultServerTarget } = await import('./streaming-servers')
+  const def = await getDefaultServerTarget()
+  if (def && def.id !== '__env__') return def.publicHostname
+  return (
+    process.env.ICE_PUBLIC_HOSTNAME ||
+    process.env.ICE_PUBLIC_URL?.replace(/^https?:\/\//, '').split(':')[0] ||
+    process.env.NEXTAUTH_URL?.replace(/^https?:\/\//, '').split(':')[0] ||
+    'localhost'
+  )
+}
+
+/**
+ * Reescribe BasicData.radioStreamingUrl / videoStreamingUrl según el
+ * servidor asignado de cada servicio. Se usa al asignar/migrar un cliente.
+ */
+export async function rewriteClientPublicUrls(
+  clientId: string,
+  opts: { radioServerId?: string | null; videoServerId?: string | null }
+) {
+  const { getServerTarget } = await import('./streaming-servers')
+  const radioStream = await prisma.radioStream.findUnique({
+    where: { clientId },
+    select: { serverId: true, icecastMount: true },
+  })
+  const videoStream = await prisma.videoStream.findUnique({
+    where: { clientId },
+    select: { serverId: true },
+  })
+
+  const radioServerId = opts.radioServerId !== undefined ? opts.radioServerId : radioStream?.serverId
+  const videoServerId = opts.videoServerId !== undefined ? opts.videoServerId : videoStream?.serverId
+
+  let radioStreamingUrl: string | null = null
+  if (radioServerId) {
+    const target = await getServerTarget(radioServerId)
+    if (target && radioStream) {
+      radioStreamingUrl = `http://${target.publicHostname}:8000/${radioStream.icecastMount}`
+    }
+  }
+  if (radioStreamingUrl === null) {
+    // fallback: env legacy
+    radioStreamingUrl = radioStream
+      ? `${process.env.ICE_PUBLIC_URL || 'http://localhost:8000'}/${radioStream.icecastMount}`
+      : null
+  }
+
+  let videoStreamingUrl: string | null = null
+  if (videoServerId) {
+    const target = await getServerTarget(videoServerId)
+    if (target) {
+      videoStreamingUrl = getVideoHlsUrl(target.publicHostname, clientId)
+    }
+  }
+  if (videoStreamingUrl === null) {
+    const host = process.env.RTMP_RELAY_PUBLIC_HOST || process.env.HARBOR_PUBLIC_HOSTNAME || 'localhost'
+    videoStreamingUrl = getVideoHlsUrl(host, clientId)
+  }
+
+  const clientName = (
+    await prisma.client.findUnique({ where: { id: clientId }, select: { name: true } })
+  )?.name || 'Cliente'
+
+  await prisma.basicData.upsert({
+    where: { clientId },
+    create: { clientId, projectName: clientName, projectDescription: '', radioStreamingUrl, videoStreamingUrl },
+    update: { radioStreamingUrl, videoStreamingUrl },
+  })
+
+  return { radioStreamingUrl, videoStreamingUrl }
 }
 
 // =====================================================

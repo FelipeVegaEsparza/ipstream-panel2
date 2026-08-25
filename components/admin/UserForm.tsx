@@ -2,7 +2,7 @@
 
 import { showToast } from '@/components/ui/toast'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -17,6 +17,8 @@ const createUserSchema = z.object({
   phone: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
+  radioServerId: z.string().optional().transform(val => val?.trim() || undefined),
+  videoServerId: z.string().optional().transform(val => val?.trim() || undefined),
 })
 
 // Esquema para editar usuario (contraseña opcional)
@@ -51,8 +53,15 @@ interface UserFormProps {
   } | null
 }
 
+interface ServerOption {
+  id: string
+  name: string
+  type: string
+}
+
 export function UserForm({ initialData }: UserFormProps) {
   const [loading, setLoading] = useState(false)
+  const [servers, setServers] = useState<ServerOption[]>([])
   const router = useRouter()
 
   // Usar el esquema apropiado según si es creación o edición
@@ -74,6 +83,15 @@ export function UserForm({ initialData }: UserFormProps) {
       oneSignalApiKey: initialData?.client?.oneSignalApiKey || '',
     },
   })
+
+  useEffect(() => {
+    // Solo en creación: listar servidores para asignar radio y/o TV
+    if (initialData) return
+    fetch('/api/admin/servers')
+      .then((r) => r.json())
+      .then((data) => setServers(data?.servers || []))
+      .catch(() => {})
+  }, [initialData])
 
   const onSubmit = async (data: UserInput) => {
     setLoading(true)
@@ -206,6 +224,44 @@ export function UserForm({ initialData }: UserFormProps) {
             Los planes se gestionan desde el módulo de facturación
           </p>
         </div>
+
+        {!initialData && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="form-group">
+              <label htmlFor="radioServerId" className="form-label">
+                Servidor de Radio
+              </label>
+              <select id="radioServerId" className="form-input" {...register('radioServerId')}>
+                <option value="">Auto (servidor principal)</option>
+                {servers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.type === 'radio' ? 'Radio' : s.type === 'tv' ? 'TV' : 'Radio+TV'})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">
+                Servidor donde se hospedará la radio de este cliente
+              </p>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="videoServerId" className="form-label">
+                Servidor de TV
+              </label>
+              <select id="videoServerId" className="form-input" {...register('videoServerId')}>
+                <option value="">Auto (servidor principal)</option>
+                {servers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.type === 'radio' ? 'Radio' : s.type === 'tv' ? 'TV' : 'Radio+TV'})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">
+                Servidor donde se hospedará la televisión de este cliente
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="border-t border-gray-700 pt-6">

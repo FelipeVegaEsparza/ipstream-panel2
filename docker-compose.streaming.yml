@@ -1,0 +1,186 @@
+# =====================================================
+# IPStream Panel — docker-compose para NODO DE STREAMING
+# =====================================================
+# Stack reducido para un VPS de streaming (radio y/o TV).
+# NO incluye app ni db: el panel y la MySQL central corren en el VPS principal.
+#
+# Servicios:
+#   - agent         Sidecar que controla icecast + liquidsoap (+ srs/video-encoder)
+#   - icecast       Servidor de streaming HTTP (audio)
+#   - liquidsoap    Motor AutoDJ (radio)
+#   - srs           RTMP + HLS (televisión)   [comentar si el nodo es solo radio]
+#   - video-encoder FFmpeg AutoDJ TV          [comentar si el nodo es solo radio]
+#
+# Uso en el nodo:
+#   cp .env.example .env && nano .env          # apuntar DB_HOST/DB_PORT a la MySQL central
+#   docker compose -f docker-compose.streaming.yml up -d --build
+# =====================================================
+
+services:
+  # =====================================================
+  # Icecast 2 — servidor de streaming HTTP
+  # =====================================================
+  icecast:
+    build:
+      context: ./streaming/icecast
+      dockerfile: Dockerfile
+    container_name: ipstream-icecast
+    restart: unless-stopped
+    environment:
+      ICE_ADMIN_USER: ${ICE_ADMIN_USER:-admin}
+      ICE_ADMIN_PASSWORD: ${ICE_ADMIN_PASSWORD:-hackme}
+      ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
+      ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD:-hackme}
+      ICE_HOSTNAME: ${ICE_HOSTNAME:-localhost}
+    ports:
+      - "8000:8000"     # listeners + admin (HTTP)
+    volumes:
+      - icecast_logs:/var/log/icecast2
+    networks:
+      - ipstream-net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/status-json.xsl"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # =====================================================
+  # Liquidsoap — motor AutoDJ (radio)
+  # =====================================================
+  liquidsoap:
+    build:
+      context: ./streaming/liquidsoap
+      dockerfile: Dockerfile
+    container_name: ipstream-liquidsoap
+    restart: unless-stopped
+    depends_on:
+      icecast:
+        condition: service_healthy
+    environment:
+      - TERM=xterm
+      - HARBOR_CALLBACK_TOKEN=${HARBOR_CALLBACK_SECRET:-dev-harbor-callback-token-change-me}
+    ports:
+      - "${HARBOR_PORT_RANGE:-22340-22350}:${HARBOR_PORT_RANGE:-22340-22350}"
+    volumes:
+      - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts:ro
+      - ./data/radio:/var/lib/radio
+      - ./data/logs/liquidsoap:/var/log/liquidsoap
+    networks:
+      - ipstream-net
+    healthcheck:
+      test: ["CMD", "liquidsoap", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # =====================================================
+  # SRS — RTMP + HLS server para Televisión
+  # (comentar si el nodo es SOLO radio)
+  # =====================================================
+  srs:
+    image: ossrs/srs:5
+    container_name: ipstream-srs
+    command: ["./objs/srs", "-c", "conf/srs.conf"]
+    restart: unless-stopped
+    ports:
+      - "1935:1935"       # RTMP
+      - "8080:8080"       # HTTP API + HLS
+    volumes:
+      - ./streaming/srs/conf:/usr/local/srs/conf:ro
+      - srs_hls:/usr/local/srs/objs/nginx/html
+    networks:
+      - ipstream-net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/v1/versions"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # =====================================================
+  # Video Encoder — FFmpeg AutoDJ TV
+  # (comentar si el nodo es SOLO radio)
+  # =====================================================
+  video-encoder:
+    build:
+      context: ./streaming/video
+      dockerfile: Dockerfile
+    container_name: ipstream-video-encoder
+    restart: unless-stopped
+    volumes:
+      - ./data/video:/var/lib/video
+      - video_logs:/var/log/video-encoder
+    networks:
+      - ipstream-net
+
+  # =====================================================
+  # Streaming Agent — sidecar que el panel controla vía HTTP
+  # =====================================================
+  agent:
+    build:
+      context: ./streaming/agent
+      dockerfile: Dockerfile
+    container_name: ipstream-streaming-agent
+    restart: unless-stopped
+    depends_on:
+      icecast:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      LOG_LEVEL: info
+      # Auth (mismo token registrado en el panel para este nodo)
+      STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:?STREAMING_AGENT_TOKEN es requerida}
+      HARBOR_CALLBACK_SECRET: ${HARBOR_CALLBACK_SECRET:-dev-harbor-callback-token-change-me}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      # Encryption (misma key que el panel)
+      ENCRYPTION_KEY: "${ENCRYPTION_KEY:?ENCRYPTION_KEY es requerida}"
+      # DB CENTRAL (la del VPS principal, accesible por red)
+      DB_HOST: ${DB_HOST:?DB_HOST apunta a la MySQL central}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER:-ipstream}
+      DB_PASSWORD: ${DB_PASSWORD:-ipstream_secret}
+      DB_DATABASE: ${DB_DATABASE:-ipstream_panel}
+      # Icecast local
+      ICE_HOST: icecast
+      ICE_PORT: 8000
+      ICE_ADMIN_USER: ${ICE_ADMIN_USER:-admin}
+      ICE_ADMIN_PASSWORD: ${ICE_ADMIN_PASSWORD:-hackme}
+      ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
+      ICE_RELAY_PASSWORD: ${ICE_RELAY_PASSWORD:-hackme}
+      ICE_HOSTNAME: ${ICE_HOSTNAME:-localhost}
+      RTMP_RELAY_PUBLIC_HOST: ${RTMP_RELAY_PUBLIC_HOST:-localhost}
+      HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME:-localhost}
+      # Liquidsoap local
+      LIQUIDSOAP_BIN: /usr/bin/liquidsoap
+      LIQUIDSOAP_SCRIPTS_PATH: /etc/liquidsoap/scripts
+      LIQUIDSOAP_LOG_PATH: /var/log/liquidsoap
+      LIQUIDSOAP_TELNET_BASE_PORT: 12340
+      LIQUIDSOAP_HOST: ipstream-liquidsoap
+      RADIO_LIBRARY_PATH: /var/lib/radio
+    ports:
+      # El panel central debe poder alcanzar este puerto (acotar por firewall a la IP del panel)
+      - "4000:4000"
+    volumes:
+      - ./data/radio:/var/lib/radio
+      - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc:/host/proc:ro
+      - /:/hostroot:ro
+    networks:
+      - ipstream-net
+
+networks:
+  ipstream-net:
+    driver: bridge
+
+volumes:
+  icecast_logs:
+    name: ipstream_icecast_logs
+  srs_hls:
+    name: ipstream_srs_hls
+  video_logs:
+    name: ipstream_video_logs

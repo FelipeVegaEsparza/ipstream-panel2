@@ -23,6 +23,7 @@ import {
   EyeSlashIcon,
   RadioIcon,
   SignalIcon,
+  ServerStackIcon,
 } from '@heroicons/react/24/outline'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 
@@ -32,6 +33,7 @@ const navigation = [
   { name: 'Estadísticas Globales', href: '/admin/stats', icon: ChartBarIcon },
   { name: 'Planes y Pagos', href: '/admin/billing', icon: CreditCardIcon },
   { name: 'Streaming', href: '/admin/streaming', icon: RadioIcon },
+  { name: 'Servidores de Streaming', href: '/admin/servers', icon: ServerStackIcon },
   { name: 'Monitor', href: '/admin/monitor', icon: SignalIcon },
   { name: 'Tickets de soporte', href: '/admin/tickets', icon: LifebuoyIcon },
   { name: 'Plantillas Sitio', href: '/admin/templates', icon: PaintBrushIcon },

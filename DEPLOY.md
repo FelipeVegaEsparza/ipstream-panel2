@@ -214,6 +214,65 @@ docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d
 
 ---
 
+## Nodos de streaming (multi-servidor)
+
+El panel puede gestionar servidores de streaming separados (radio y/o TV) además del VPS principal. El contenido y los clientes se gestionan siempre desde el panel central; cada nodo solo corre el stack de streaming.
+
+### Arquitectura
+
+```
+PANEL CENTRAL (app + MySQL)          NODOS (radio/TV)
+┌───────────────────────┐           ┌────────────────────────────┐
+│  app (Next.js)        │  HTTP     │  agent + icecast           │
+│  db (MySQL) ◄─────────┼──────────►│  + liquidsoap (+ srs,      │
+│  /admin/servers       │  :4000    │  + video-encoder)          │
+└───────────────────────┘           └────────────────────────────┘
+```
+
+### Registrar un nodo en el panel
+
+1. En `/admin/servers` → **Agregar servidor**: nombre, tipo (`radio`, `tv` o `ambos`), **URL del agente** (`http://<ip-del-nodo>:4000`) y **hostname público** (el dominio/IP donde escucharán los oyentes/espectadores).
+2. El **token del agente** (`STREAMING_AGENT_TOKEN`) debe ser el mismo que tendrá el `.env` del nodo. Se guarda encriptado.
+3. El panel hace un health check inicial y muestra el estado.
+
+### Desplegar un nodo
+
+En el VPS del nodo (clonar el repo, igual que el principal):
+
+```bash
+ssh usuario@nodo
+git clone https://github.com/FelipeVegaEsparza/ipstream-panel2.git /opt/ipstream-node
+cd /opt/ipstream-node
+cp .env.example .env
+nano .env
+#   DB_HOST=<ip-del-VPS-principal>      ← MySQL central
+#   DB_PORT=3306
+#   DB_USER=ipstream  DB_PASSWORD=...  DB_DATABASE=ipstream_panel
+#   ENCRYPTION_KEY=<misma que el panel>
+#   STREAMING_AGENT_TOKEN=<el que registraste en el panel>
+#   ICE_HOSTNAME=<hostname público del nodo>
+#   HARBOR_PUBLIC_HOSTNAME=<hostname público del nodo>
+#   RTMP_RELAY_PUBLIC_HOST=<hostname público del nodo>
+
+docker compose -f docker-compose.streaming.yml up -d --build
+```
+
+### Firewall / seguridad
+
+- El agente escucha en `:4000`. **Acotar por firewall** el acceso a la IP del VPS del panel (o usar WireGuard/VPN).
+- La MySQL central debe aceptar conexiones del nodo: acotar el bind de MySQL a las IPs de los nodos (y opcionalmente WireGuard).
+- Cada nodo expone sus propios puertos públicos (icecast `:8000`, SRS `:1935`/`:8080`, harbor `:22340+`).
+
+### Asignar y migrar clientes
+
+- Al crear un cliente (admin) se elige el servidor de radio y/o TV.
+- La migración es **100% manual**: botón **"Migrar a otro servidor"** en `/admin/streaming/<clientId>` o en el monitor. El panel copia la biblioteca, cambia la asignación, arranca en el destino y detiene el origen.
+- El panel **nunca** migra automáticamente. Si un servidor cae, `/admin/monitor` lo marca con una alerta y muestra cuántos clientes afecta; el admin decide migrarlos.
+
+> Nota: para migrar un cliente el servidor **origen** debe estar alcanzable (sus archivos se copian desde ahí). Si el origen está caído no se puede migrar sin perder contenido.
+
+---
+
 ## Próximas mejoras pendientes (no críticas)
 
 - Tests automatizados del flujo de streaming.

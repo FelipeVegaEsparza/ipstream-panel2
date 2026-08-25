@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
-
-const AGENT_URL = process.env.STREAMING_AGENT_URL || 'http://agent:4000'
-const AGENT_TOKEN = process.env.STREAMING_AGENT_TOKEN || ''
+import { resolveRadioServerTarget } from '@/lib/streaming-servers'
 
 export async function GET(_request: NextRequest, { params }: { params: { trackId: string } }) {
   try {
@@ -11,10 +9,18 @@ export async function GET(_request: NextRequest, { params }: { params: { trackId
       return new NextResponse(null, { status: 404 })
     }
 
+    const target = await resolveRadioServerTarget(ctx.clientId)
+    if (!target) {
+      return new NextResponse(
+        JSON.stringify({ error: 'no_streaming_server', message: 'No hay servidor de streaming configurado' }),
+        { status: 502, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
     const agentRes = await fetch(
-      `${AGENT_URL}/api/streams/${encodeURIComponent(ctx.clientId)}/library/${encodeURIComponent(params.trackId)}/audio`,
+      `${target.baseUrl}/api/streams/${encodeURIComponent(ctx.clientId)}/library/${encodeURIComponent(params.trackId)}/audio`,
       {
-        headers: { Authorization: `Bearer ${AGENT_TOKEN}` },
+        headers: { Authorization: `Bearer ${target.token}` },
         signal: AbortSignal.timeout(30000),
       }
     )

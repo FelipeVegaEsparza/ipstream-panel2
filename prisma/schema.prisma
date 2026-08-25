@@ -619,9 +619,10 @@ model ChatBan {
 model RadioStream {
   id                   String    @id @default(cuid())
   clientId             String    @unique
+  serverId             String? // servidor de streaming asignado (radio)
   // Identificadores de conexión (cómo aparece en Icecast)
   icecastMount         String    @unique // ej: "abc123" (sin slash)
-  liquidsoapTelnetPort Int       @unique // ej: 12345 (1 por cliente)
+  liquidsoapTelnetPort Int // ej: 12345 (único por servidor)
   // Credenciales encriptadas (AES-256-GCM via lib/encryption.ts)
   sourcePasswordEnc    String    @db.Text // password del AutoDJ (liquidsoap → icecast)
   livePasswordEnc      String    @db.Text // password del DJ en vivo
@@ -654,6 +655,7 @@ model RadioStream {
   updatedAt            DateTime  @updatedAt
 
   client            Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  server            StreamingServer?   @relation(fields: [serverId], references: [id], onDelete: SetNull)
   tracks            Track[]
   playlists         Playlist[]
   jingles           Jingle[]
@@ -664,6 +666,8 @@ model RadioStream {
 
   @@index([status])
   @@index([enabled])
+  @@index([serverId])
+  @@unique([serverId, liquidsoapTelnetPort])
   @@map("radio_streams")
 }
 
@@ -901,6 +905,30 @@ model StreamStat {
   @@map("stream_stats")
 }
 
+// ================================================================
+// Servidores de streaming — nodos (radio/tv) registrados en el panel
+// ================================================================
+model StreamingServer {
+  id             String   @id @default(cuid())
+  name           String // nombre identificativo (ej: "Radio VPS 1")
+  type           String   @default("both") // "radio" | "tv" | "both"
+  baseUrl        String // URL del agente (ej: http://agent:4000)
+  tokenEnc       String   @db.Text // token de autenticación encriptado (AES-256-GCM)
+  publicHostname String // hostname público para generar URLs de streaming
+  isActive       Boolean  @default(true)
+  isHealthy      Boolean  @default(true) // actualizado por health checks del panel
+  lastHealthAt   DateTime? // última vez que el health check tuvo éxito
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  radioStreams RadioStream[]
+  videoStreams VideoStream[]
+
+  @@index([type])
+  @@index([isActive])
+  @@map("streaming_servers")
+}
+
 // RadioStream status: "off" | "autodj" | "live"
 
 // ================================================================
@@ -911,6 +939,7 @@ model StreamStat {
 model VideoStream {
   id             String   @id @default(cuid())
   clientId       String   @unique
+  serverId       String? // servidor de streaming asignado (televisión)
   status         String   @default("off") // "off" | "autodj" | "live"
   mode           String   @default("playlist") // "playlist" | "schedule"
   shuffle        Boolean  @default(false)
@@ -921,9 +950,11 @@ model VideoStream {
   updatedAt      DateTime @updatedAt
 
   client                 Client                  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  server                 StreamingServer?        @relation(fields: [serverId], references: [id], onDelete: SetNull)
   videoTracks            VideoTrack[]
   videoPlaylistSchedules VideoPlaylistSchedule[]
 
+  @@index([serverId])
   @@map("video_streams")
 }
 

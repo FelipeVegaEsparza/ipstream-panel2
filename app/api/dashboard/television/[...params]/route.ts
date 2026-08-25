@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
-
-const AGENT_URL = process.env.STREAMING_AGENT_URL || 'http://agent:4000'
-const AGENT_TOKEN = process.env.STREAMING_AGENT_TOKEN || ''
+import { resolveVideoServerTarget, StreamingServerTarget } from '@/lib/streaming-servers'
 
 const PATH_MAP: Record<string, (clientId: string) => string> = {
   'status': (id) => `/api/video/${id}/status`,
@@ -16,11 +14,11 @@ const PATH_MAP: Record<string, (clientId: string) => string> = {
   'thumbnails': (id) => `/api/video/${id}/thumbnails`,
 }
 
-async function proxyToAgent(targetPath: string, method: string, headersIn: Record<string, string>, body: any) {
-  const target = `${AGENT_URL}${targetPath}`
+async function proxyToAgent(target: StreamingServerTarget, targetPath: string, method: string, headersIn: Record<string, string>, body: any) {
+  const targetUrl = `${target.baseUrl}${targetPath}`
 
   const headers: Record<string, string> = {
-    'Authorization': `Bearer ${AGENT_TOKEN}`,
+    'Authorization': `Bearer ${target.token}`,
   }
 
   // Only forward Content-Type when there's a body
@@ -34,7 +32,7 @@ async function proxyToAgent(targetPath: string, method: string, headersIn: Recor
     opts.duplex = 'half'
   }
 
-  const res = await fetch(target, opts)
+  const res = await fetch(targetUrl, opts)
 
   // Thumbnails: return binary response directly
   if (targetPath.includes('/thumbnails/')) {
@@ -96,6 +94,11 @@ async function handleRequest(req: NextRequest, { params }: { params: { params: s
       }
     }
 
+    const target = await resolveVideoServerTarget(ctx.clientId)
+    if (!target) {
+      return NextResponse.json({ error: 'no_streaming_server', message: 'No hay servidor de streaming configurado' }, { status: 502 })
+    }
+
     // Leer body una sola vez
     const contentType = req.headers.get('content-type') || ''
     let body: any = undefined
@@ -120,7 +123,7 @@ async function handleRequest(req: NextRequest, { params }: { params: { params: s
       else return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 
       // Control actions are POST with no additional body needed
-      return proxyToAgent(targetPath, 'POST', headersOut, undefined)
+      return proxyToAgent(target, targetPath, 'POST', headersOut, undefined)
     }
 
     // Resolve path
@@ -134,7 +137,7 @@ async function handleRequest(req: NextRequest, { params }: { params: { params: s
       targetPath = `/api/video/${ctx.clientId}/${segments.join('/')}`
     }
 
-    return proxyToAgent(targetPath, req.method, headersOut, body)
+    return proxyToAgent(target, targetPath, req.method, headersOut, body)
   } catch (err) {
     if (err instanceof StreamingAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.statusCode })

@@ -43,6 +43,12 @@ npx prisma generate >/dev/null 2>&1 || true
 echo "[entrypoint] Sincronizando schema con la base de datos..."
 npx prisma db push --skip-generate || echo "[entrypoint] WARNING: prisma db push falló, continuando con migraciones manuales..."
 
+# --- 3b. Seed del servidor de streaming principal ---
+if [ -n "${STREAMING_AGENT_TOKEN:-}" ]; then
+  echo "[entrypoint] Verificando servidor de streaming principal..."
+  node scripts/seed-streaming-server.js || echo "[entrypoint] WARNING: seed de streaming server falló"
+fi
+
 # --- 4. Migraciones manuales (tablas que el agente necesita, se crean si no existen) ---
 echo "[entrypoint] Ejecutando migraciones manuales..."
 node << 'SQL_EOF'

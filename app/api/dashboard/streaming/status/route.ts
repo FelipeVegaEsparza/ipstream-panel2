@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
+import { getRadioPublicBaseUrl } from '@/lib/streaming-helpers'
 
 // Sin este flag, Next.js puede cachear la respuesta y mostrar siempre
 // la misma data aunque Icecast ya reporto un cambio de tema.
@@ -27,7 +28,7 @@ export async function GET(_request: NextRequest) {
       streamingClient.getNowPlaying(ctx.clientId),
     ])
 
-    const icePublicUrl = process.env.ICE_PUBLIC_URL || 'http://localhost:8000'
+    const icePublicUrl = await getRadioPublicBaseUrl(ctx.clientId)
 
     const body: Record<string, unknown> = {
       hasRadioStream: true,

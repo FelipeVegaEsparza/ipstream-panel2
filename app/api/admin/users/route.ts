@@ -49,6 +49,8 @@ const createUserSchema = z.object({
   clientName: z.string().min(1, 'El nombre del proyecto es requerido'),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
+  radioServerId: z.string().optional().transform(val => val?.trim() || undefined),
+  videoServerId: z.string().optional().transform(val => val?.trim() || undefined),
 })
 
 export async function POST(request: NextRequest) {
@@ -112,7 +114,7 @@ export async function POST(request: NextRequest) {
     let streamInfo = null
     let streamError: string | null = null
     try {
-      const created = await createRadioStreamForClient(result.client.id)
+      const created = await createRadioStreamForClient(result.client.id, 128, data.radioServerId)
       streamInfo = {
         icecastMount: created.icecastMount,
         telnetPort: created.telnetPort,
@@ -122,7 +124,7 @@ export async function POST(request: NextRequest) {
       streamError = err.message
     }
     try {
-      await createVideoStreamForClient(result.client.id)
+      await createVideoStreamForClient(result.client.id, data.videoServerId)
     } catch (err) {
       console.error('Error creando VideoStream:', err)
     }

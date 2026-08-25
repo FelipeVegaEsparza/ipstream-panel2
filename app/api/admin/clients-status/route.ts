@@ -2,9 +2,26 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { streamingClient } from '@/lib/streaming-client'
+import { getServerTarget } from '@/lib/streaming-servers'
 
 export const dynamic = 'force-dynamic'
+
+// Estado de streaming agregado de TODOS los servidores de streaming.
+// Si un servidor no responde, sus clientes se marcan con el servidor "sin respuesta".
+async function fetchServerStreamingStatus(serverId: string) {
+  const target = await getServerTarget(serverId)
+  if (!target) return { radio: [], video: [] }
+  try {
+    const res = await fetch(`${target.baseUrl}/api/admin/streaming-status`, {
+      headers: { Authorization: `Bearer ${target.token}` },
+      signal: AbortSignal.timeout(15000),
+    })
+    if (!res.ok) return { radio: [], video: [] }
+    return await res.json()
+  } catch {
+    return { radio: [], video: [] }
+  }
+}
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -13,38 +30,56 @@ export async function GET() {
   }
 
   try {
-    const [clients, live] = await Promise.all([
+    const [clients, servers] = await Promise.all([
       prisma.client.findMany({
         select: {
           id: true,
           name: true,
           user: { select: { email: true } },
-          radioStream: { select: { id: true, status: true, icecastMount: true } },
-          videoStream: { select: { id: true, status: true } },
+          radioStream: { select: { id: true, status: true, icecastMount: true, serverId: true } },
+          videoStream: { select: { id: true, status: true, serverId: true } },
         },
         orderBy: { name: 'asc' },
       }),
-      streamingClient.getStreamingStatus().catch(() => null),
+      prisma.streamingServer.findMany({
+        select: { id: true, name: true, type: true, isHealthy: true, isActive: true },
+      }),
     ])
+
+    const serverHealth = new Map(servers.map((s) => [s.id, s.isHealthy && s.isActive]))
+    const healthyServers = servers.filter((s) => s.isHealthy && s.isActive).map((s) => s.id)
+
+    // Consultar streaming-status de cada servidor sano
+    const perServer = await Promise.all(
+      healthyServers.map(async (id) => ({ id, data: await fetchServerStreamingStatus(id) }))
+    )
 
     const listenersByClient = new Map<string, number>()
     const viewersByClient = new Map<string, number>()
-    if (live) {
-      for (const r of live.radio || []) listenersByClient.set(r.clientId, r.listeners ?? 0)
-      for (const v of live.video || []) viewersByClient.set(v.clientId, v.viewers ?? 0)
+    for (const { data } of perServer) {
+      for (const r of data.radio || []) listenersByClient.set(r.clientId, (listenersByClient.get(r.clientId) ?? 0) + (r.listeners ?? 0))
+      for (const v of data.video || []) viewersByClient.set(v.clientId, (viewersByClient.get(v.clientId) ?? 0) + (v.viewers ?? 0))
     }
 
-    const rows = clients.map((c) => ({
-      clientId: c.id,
-      clientName: c.name,
-      email: c.user.email,
-      hasRadio: !!c.radioStream,
-      radioStatus: c.radioStream?.status ?? null,
-      hasVideo: !!c.videoStream,
-      videoStatus: c.videoStream?.status ?? null,
-      listeners: listenersByClient.get(c.id) ?? 0,
-      viewers: viewersByClient.get(c.id) ?? 0,
-    }))
+    const rows = clients.map((c) => {
+      const radioServerOnline = c.radioStream?.serverId ? (serverHealth.get(c.radioStream.serverId) ?? false) : true
+      const videoServerOnline = c.videoStream?.serverId ? (serverHealth.get(c.videoStream.serverId) ?? false) : true
+      return {
+        clientId: c.id,
+        clientName: c.name,
+        email: c.user.email,
+        hasRadio: !!c.radioStream,
+        radioStatus: c.radioStream?.status ?? null,
+        radioServerId: c.radioStream?.serverId ?? null,
+        radioServerOnline,
+        hasVideo: !!c.videoStream,
+        videoStatus: c.videoStream?.status ?? null,
+        videoServerId: c.videoStream?.serverId ?? null,
+        videoServerOnline,
+        listeners: listenersByClient.get(c.id) ?? 0,
+        viewers: viewersByClient.get(c.id) ?? 0,
+      }
+    })
 
     return NextResponse.json({ clients: rows })
   } catch (err) {

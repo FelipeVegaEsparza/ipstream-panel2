@@ -5,27 +5,26 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
+import { resolveRadioServerTarget } from '@/lib/streaming-servers'
 
-const AGENT_URL = process.env.STREAMING_AGENT_URL || 'http://agent:4000'
-const AGENT_TOKEN = process.env.STREAMING_AGENT_TOKEN || ''
-
-function agentHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${AGENT_TOKEN}`,
+async function resolveTarget(ctx: { clientId: string; hasRadioStream: boolean }) {
+  if (!ctx.hasRadioStream) {
+    return null
   }
+  return resolveRadioServerTarget(ctx.clientId)
 }
 
 export async function GET() {
   try {
     const ctx = await requireStreamingClient()
-    if (!ctx.hasRadioStream) {
+    const target = await resolveTarget(ctx)
+    if (!target) {
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
 
     const res = await fetch(
-      `${AGENT_URL}/api/streams/${encodeURIComponent(ctx.clientId)}/djs`,
-      { headers: agentHeaders() }
+      `${target.baseUrl}/api/streams/${encodeURIComponent(ctx.clientId)}/djs`,
+      { headers: { Authorization: `Bearer ${target.token}` } }
     )
     if (!res.ok) {
       return NextResponse.json({ error: 'agent_error' }, { status: res.status })
@@ -44,17 +43,21 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const ctx = await requireStreamingClient()
-    if (!ctx.hasRadioStream) {
+    const target = await resolveTarget(ctx)
+    if (!target) {
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
 
     const body = await request.json()
 
     const res = await fetch(
-      `${AGENT_URL}/api/streams/${encodeURIComponent(ctx.clientId)}/djs`,
+      `${target.baseUrl}/api/streams/${encodeURIComponent(ctx.clientId)}/djs`,
       {
         method: 'POST',
-        headers: agentHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${target.token}`,
+        },
         body: JSON.stringify(body),
       }
     )

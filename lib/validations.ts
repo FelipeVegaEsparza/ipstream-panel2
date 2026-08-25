@@ -288,3 +288,26 @@ export const streamingAdminConfigSchema = z.object({
   adminNotes: z.string().max(5000).nullable().optional(),
 })
 export type StreamingAdminConfigInput = z.infer<typeof streamingAdminConfigSchema>
+
+// =====================================================
+// Servidores de Streaming (multi-servidor)
+// =====================================================
+
+export const streamingServerCreateSchema = z.object({
+  name: z.string().min(1).max(191),
+  type: z.enum(['radio', 'tv', 'both']),
+  baseUrl: z.string().url().max(500),
+  token: z.string().min(1).max(500),
+  publicHostname: z.string().min(1).max(191),
+})
+export type StreamingServerCreateInput = z.infer<typeof streamingServerCreateSchema>
+
+export const streamingServerUpdateSchema = z.object({
+  name: z.string().min(1).max(191).optional(),
+  type: z.enum(['radio', 'tv', 'both']).optional(),
+  baseUrl: z.string().url().max(500).optional(),
+  token: z.string().min(1).max(500).optional(),
+  publicHostname: z.string().min(1).max(191).optional(),
+  isActive: z.boolean().optional(),
+})
+export type StreamingServerUpdateInput = z.infer<typeof streamingServerUpdateSchema>

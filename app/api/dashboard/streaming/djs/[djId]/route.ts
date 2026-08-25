@@ -5,16 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
-
-const AGENT_URL = process.env.STREAMING_AGENT_URL || 'http://agent:4000'
-const AGENT_TOKEN = process.env.STREAMING_AGENT_TOKEN || ''
-
-function agentHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${AGENT_TOKEN}`,
-  }
-}
+import { resolveRadioServerTarget } from '@/lib/streaming-servers'
 
 export async function PATCH(request: NextRequest, { params }: { params: { djId: string } }) {
   try {
@@ -23,12 +14,20 @@ export async function PATCH(request: NextRequest, { params }: { params: { djId: 
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
 
+    const target = await resolveRadioServerTarget(ctx.clientId)
+    if (!target) {
+      return NextResponse.json({ error: 'no_streaming_server' }, { status: 502 })
+    }
+
     const body = await request.json()
     const res = await fetch(
-      `${AGENT_URL}/api/streams/${encodeURIComponent(ctx.clientId)}/djs/${params.djId}`,
+      `${target.baseUrl}/api/streams/${encodeURIComponent(ctx.clientId)}/djs/${params.djId}`,
       {
         method: 'PATCH',
-        headers: agentHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${target.token}`,
+        },
         body: JSON.stringify(body),
       }
     )
@@ -53,11 +52,16 @@ export async function DELETE(_request: NextRequest, { params }: { params: { djId
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
 
+    const target = await resolveRadioServerTarget(ctx.clientId)
+    if (!target) {
+      return NextResponse.json({ error: 'no_streaming_server' }, { status: 502 })
+    }
+
     const res = await fetch(
-      `${AGENT_URL}/api/streams/${encodeURIComponent(ctx.clientId)}/djs/${params.djId}`,
+      `${target.baseUrl}/api/streams/${encodeURIComponent(ctx.clientId)}/djs/${params.djId}`,
       {
         method: 'DELETE',
-        headers: agentHeaders(),
+        headers: { Authorization: `Bearer ${target.token}` },
       }
     )
     const data = await res.json()

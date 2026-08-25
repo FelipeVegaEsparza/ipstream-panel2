@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/toast'
+import { ClientMigrateModal } from '@/components/admin/ClientMigrateModal'
 
 interface Usage {
   totalBytes: number
@@ -67,6 +68,7 @@ export default function AdminStreamingConfigPage() {
   const [saving, setSaving] = useState(false)
   const [revealing, setRevealing] = useState<'live' | 'source' | null>(null)
   const [revealedPwd, setRevealedPwd] = useState<{ live?: string; source?: string }>({})
+  const [migrateOpen, setMigrateOpen] = useState(false)
 
   // Form state
   const [enabled, setEnabled] = useState(true)
@@ -356,6 +358,13 @@ export default function AdminStreamingConfigPage() {
             {saving ? 'Guardando...' : 'Guardar configuración'}
           </button>
           <button
+            onClick={() => setMigrateOpen(true)}
+            disabled={saving}
+            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded"
+          >
+            ⇄ Migrar a otro servidor
+          </button>
+          <button
             onClick={load}
             disabled={saving}
             className="px-6 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white rounded"
@@ -434,6 +443,14 @@ export default function AdminStreamingConfigPage() {
           Ver todos los logs en <Link href="/admin/logs" className="text-cyan-400 hover:text-cyan-300">Logs de Actividad</Link>
         </p>
       </div>
+
+      <ClientMigrateModal
+        clientId={client.id}
+        clientName={client.name}
+        open={migrateOpen}
+        onClose={() => setMigrateOpen(false)}
+        onMigrated={load}
+      />
     </div>
   )
 }

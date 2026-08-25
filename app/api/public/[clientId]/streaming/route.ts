@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
+import { getRadioPublicBaseUrl } from '@/lib/streaming-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,11 +69,12 @@ export async function GET(
           isJingle: false,
         }
 
+    const icePublicBase = await getRadioPublicBaseUrl(params.clientId)
     const res = createCorsResponse({
       clientId: params.clientId,
       clientName: radioStream.client.name,
       mount: radioStream.icecastMount,
-      streamUrl: `${process.env.ICE_PUBLIC_URL || 'http://localhost:8000'}/${radioStream.icecastMount}`,
+      streamUrl: `${icePublicBase}/${radioStream.icecastMount}`,
       bitrate: radioStream.bitrate,
       status: radioStream.status,
       isLive: icecast ? true : false,

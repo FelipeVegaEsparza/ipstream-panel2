@@ -6,6 +6,7 @@
 // =====================================================
 
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { ClientMigrateModal } from '@/components/admin/ClientMigrateModal'
 
 interface HostStats {
   loadAvg?: { one: number; five: number; fifteen: number }
@@ -22,14 +23,27 @@ interface ClientStatus {
   email: string
   hasRadio: boolean
   radioStatus: string | null
+  radioServerOnline: boolean
   hasVideo: boolean
   videoStatus: string | null
+  videoServerOnline: boolean
   listeners: number
   viewers: number
 }
 
-interface ClientsStatus {
-  clients: ClientStatus[]
+interface ServerHealthRow {
+  server: {
+    id: string
+    name: string
+    type: string
+    isActive: boolean
+    isHealthy: boolean
+    lastHealthAt: string | null
+  }
+  online: boolean
+  radioClients: number
+  videoClients: number
+  affectedClients: number
 }
 
 const REFRESH_MS = 10000
@@ -48,9 +62,12 @@ function fmtUptime(secs: number | undefined) {
   return `${days}d ${hours}h ${mins}m`
 }
 
-function StatusBadge({ status, has }: { status: string | null; has: boolean }) {
+function StatusBadge({ status, has, unavailable }: { status: string | null; has: boolean; unavailable?: boolean }) {
   if (!has) {
     return <span className="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-500">Sin servicio</span>
+  }
+  if (unavailable) {
+    return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-red-900 text-red-300">⚠ Sin respuesta</span>
   }
   if (status === 'autodj') {
     return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">● AutoDJ</span>
@@ -64,23 +81,30 @@ function StatusBadge({ status, has }: { status: string | null; has: boolean }) {
 export function MonitorClient() {
   const [host, setHost] = useState<HostStats | null>(null)
   const [clients, setClients] = useState<ClientStatus[]>([])
+  const [servers, setServers] = useState<ServerHealthRow[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [migrateClient, setMigrateClient] = useState<{ id: string; name: string } | null>(null)
   const mountedRef = useRef(true)
 
   const load = useCallback(async () => {
     try {
       setRefreshing(true)
-      const [hRes, cRes] = await Promise.all([
+      const [hRes, cRes, sRes] = await Promise.all([
         fetch('/api/admin/server-stats', { cache: 'no-store' }),
         fetch('/api/admin/clients-status', { cache: 'no-store' }),
+        fetch('/api/admin/servers/health', { cache: 'no-store' }),
       ])
       if (hRes.ok) setHost(await hRes.json())
       if (cRes.ok) {
-        const data: ClientsStatus = await cRes.json()
+        const data: { clients: ClientStatus[] } = await cRes.json()
         setClients(data.clients || [])
+      }
+      if (sRes.ok) {
+        const data = await sRes.json()
+        setServers(data.servers || [])
       }
       setLastUpdate(new Date())
       setError(null)
@@ -147,7 +171,40 @@ export function MonitorClient() {
         <div className="text-center py-12 text-gray-400">Cargando...</div>
       ) : (
         <>
-          {/* ====== SERVIDOR ====== */}
+          {/* ====== SERVIDORES DE STREAMING ====== */}
+          <div className="bg-gray-800 rounded-lg p-5">
+            <h2 className="text-lg font-semibold text-white mb-3">Servidores de Streaming</h2>
+            {servers.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No hay servidores de streaming registrados. Agregalos en{' '}
+                <a href="/admin/servers" className="text-cyan-400 hover:text-cyan-300">Servidores de Streaming</a>.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {servers.map((s) => (
+                  <div key={s.server.id} className={`rounded-lg border p-3 ${s.online ? 'border-green-700/40' : 'border-red-700/40'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-white">{s.server.name}</span>
+                      {s.online ? (
+                        <span className="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">● En línea</span>
+                      ) : (
+                        <span className="text-xs px-2 py-0.5 rounded bg-red-900 text-red-300">⚠ Caído</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {s.server.type === 'radio' ? 'Radio' : s.server.type === 'tv' ? 'TV' : 'Radio+TV'} ·{' '}
+                      {s.radioClients} radios · {s.videoClients} TV
+                    </div>
+                    {!s.online && s.server.isActive && (
+                      <div className="text-xs text-red-400 mt-1">{s.affectedClients} clientes afectados</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ====== SERVIDOR (PANEL) ====== */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div className="bg-gray-800 rounded-lg p-4">
               <div className="text-xs text-gray-400 uppercase">CPU Load (1m)</div>
@@ -222,6 +279,7 @@ export function MonitorClient() {
                   <th className="text-left p-3">Video</th>
                   <th className="text-right p-3">Oyentes</th>
                   <th className="text-right p-3">Espectadores</th>
+                  <th className="text-right p-3">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,10 +289,18 @@ export function MonitorClient() {
                       <div className="text-white font-medium">{c.clientName}</div>
                       <div className="text-xs text-gray-500">{c.email}</div>
                     </td>
-                    <td className="p-3"><StatusBadge status={c.radioStatus} has={c.hasRadio} /></td>
-                    <td className="p-3"><StatusBadge status={c.videoStatus} has={c.hasVideo} /></td>
+                    <td className="p-3"><StatusBadge status={c.radioStatus} has={c.hasRadio} unavailable={c.hasRadio && !c.radioServerOnline} /></td>
+                    <td className="p-3"><StatusBadge status={c.videoStatus} has={c.hasVideo} unavailable={c.hasVideo && !c.videoServerOnline} /></td>
                     <td className="p-3 text-right text-white">{c.listeners}</td>
                     <td className="p-3 text-right text-white">{c.viewers}</td>
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => setMigrateClient({ id: c.clientId, name: c.clientName })}
+                        className="text-xs px-2 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        ⇄ Migrar
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -243,6 +309,14 @@ export function MonitorClient() {
               <div className="p-8 text-center text-gray-500">No hay clientes</div>
             )}
           </div>
+
+          <ClientMigrateModal
+            clientId={migrateClient?.id || ''}
+            clientName={migrateClient?.name || ''}
+            open={!!migrateClient}
+            onClose={() => setMigrateClient(null)}
+            onMigrated={load}
+          />
         </>
       )}
     </div>
