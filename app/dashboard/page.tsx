@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PaymentStatusCard } from '@/components/dashboard/PaymentStatusCard'
 import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDisplay'
+import { NowPlayingTvDisplay } from '@/components/dashboard/NowPlayingTvDisplay'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 
 export default async function DashboardPage() {
@@ -155,6 +156,8 @@ export default async function DashboardPage() {
       )}
 
       <NowPlayingDisplay />
+
+      <NowPlayingTvDisplay />
 
       <PaymentStatusCard
         nextPaymentDate={nextPaymentDate}
