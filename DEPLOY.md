@@ -286,7 +286,10 @@ En `/admin/servers` → **Provisionar nodo (SSH)** el panel hace TODO por sí so
 4. Al terminar, el nodo queda registrado y "En línea". Si falla, se puede **Reintentar** y ver el log paso a paso.
 
 Consideraciones:
-- El nodo debe poder alcanzar la DB central: MySQL está expuesta en el VPS central en el puerto **3307** (`DB_HOST` se deriva de `NEXTAUTH_URL`, o se fuerza con `PANEL_PUBLIC_HOST`). Abrí el firewall del central a la IP del nodo (o usá WireGuard).
+- **Firewall / red** (ver también la tarjeta "Puertos y firewall" en `/admin/servers`):
+  - **VPS central**: abrir MySQL (`3307`) **a la IP del nodo** (el agente del nodo lee/escribe la DB central). El panel ya sale por SSH `22` a los nodos.
+  - **Nodo**: abrir `4000` **solo a la IP del panel** (control); `8000` Icecast (oyentes de radio, público); `1935`+`8080` RTMP/HLS (solo si es TV); `22340-22350` harbor (solo si es radio, DJs en vivo).
+  - Opcional: WireGuard/VPN para el tráfico privado (panel ↔ nodo ↔ MySQL).
 - Tras el provisioning podés **"Quitar SSH"** desde el panel para borrar la clave almacenada.
 - El DNS del hostname público del nodo debe apuntar al IP del nodo (oyentes).
 

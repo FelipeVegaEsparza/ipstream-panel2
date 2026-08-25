@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { showToast } from '@/components/ui/toast'
 import {
   Plus, Trash2, Pencil, RefreshCw, Radio, MonitorPlay, Wifi, WifiOff, Rocket,
-  Loader2, RotateCw, KeyRound, ChevronDown, ChevronUp, Server,
+  Loader2, RotateCw, KeyRound, ChevronDown, ChevronUp, Server, Network, Database, ShieldCheck, Music, Clapperboard, Mic,
 } from 'lucide-react'
 import { ServerFormModal, EditableServer } from './ServerFormModal'
 import { ProvisionNodeModal } from './ProvisionNodeModal'
@@ -181,6 +181,56 @@ export function StreamingServersManager() {
           </span>
         )}
       </div>
+
+      {/* Guía de puertos y firewall */}
+      <Card className="border-cyan-500/20 bg-cyan-500/5">
+        <CardContent className="p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Network className="h-5 w-5 text-cyan-400" />
+            <h3 className="font-semibold text-white">Puertos y firewall</h3>
+            <span className="text-xs text-gray-400 font-normal">Requisitos de red para que un nodo quede operativo</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="rounded-lg bg-gray-800/70 border border-gray-700 p-4 space-y-2">
+              <p className="font-medium text-cyan-300 flex items-center gap-1.5"><Database className="h-4 w-4" /> VPS central (panel)</p>
+              <ul className="space-y-1.5 text-gray-300">
+                <li className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400 shrink-0" />
+                  <span><code className="text-cyan-400">3307</code> — MySQL (DB central): abrir <b>al IP del nodo</b> para que el agente del nodo lea/escriba la DB.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400 shrink-0" />
+                  <span>SSH <code className="text-cyan-400">22</code> saliente (el panel ya se conecta a los nodos para provisionarlos).</span>
+                </li>
+              </ul>
+            </div>
+            <div className="rounded-lg bg-gray-800/70 border border-gray-700 p-4 space-y-2">
+              <p className="font-medium text-purple-300 flex items-center gap-1.5"><Server className="h-4 w-4" /> Nodo de streaming</p>
+              <ul className="space-y-1.5 text-gray-300">
+                <li className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400 shrink-0" />
+                  <span><code className="text-cyan-400">4000</code> — agente: abrir <b>solo a la IP del panel</b> (control).</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400 shrink-0" />
+                  <span><code className="text-cyan-400">8000</code> — Icecast: oyentes de radio (público).</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Clapperboard className="h-4 w-4 mt-0.5 text-gray-400 shrink-0" />
+                  <span><code className="text-cyan-400">1935</code> (RTMP) y <code className="text-cyan-400">8080</code> (HLS) — TV, solo si el nodo es <b>TV</b>.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Mic className="h-4 w-4 mt-0.5 text-gray-400 shrink-0" />
+                  <span><code className="text-cyan-400">22340-22350</code> — harbor (DJs en vivo), solo si el nodo es <b>radio</b>.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            Consejo: usá WireGuard/VPN para el tráfico privado (panel ↔ nodo ↔ MySQL) y exponé solo lo público (8000, 1935, 8080).
+          </p>
+        </CardContent>
+      </Card>
 
       {loading ? (
         <div className="flex items-center justify-center py-16 text-gray-400">
