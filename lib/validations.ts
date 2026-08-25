@@ -309,5 +309,20 @@ export const streamingServerUpdateSchema = z.object({
   token: z.string().min(1).max(500).optional(),
   publicHostname: z.string().min(1).max(191).optional(),
   isActive: z.boolean().optional(),
+  revokeSsh: z.boolean().optional(),
 })
 export type StreamingServerUpdateInput = z.infer<typeof streamingServerUpdateSchema>
+
+// Provisioning automático de nodos (SSH desde el panel)
+export const streamingServerProvisionSchema = z.object({
+  name: z.string().min(1).max(191),
+  type: z.enum(['radio', 'tv', 'both']),
+  publicHostname: z.string().min(1).max(191),
+  sshHost: z.string().min(1).max(191),
+  sshPort: z.number().int().min(1).max(65535).optional().default(22),
+  sshUser: z.string().min(1).max(191).optional().default('root'),
+  sshAuthType: z.enum(['key', 'password']).optional().default('key'),
+  sshPrivateKey: z.string().min(1).optional(),
+  sshPassword: z.string().min(1).optional(),
+})
+export type StreamingServerProvisionInput = z.infer<typeof streamingServerProvisionSchema>

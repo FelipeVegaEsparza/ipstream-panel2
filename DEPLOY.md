@@ -271,6 +271,25 @@ docker compose -f docker-compose.streaming.yml up -d --build
 
 > Nota: para migrar un cliente el servidor **origen** debe estar alcanzable (sus archivos se copian desde ahí). Si el origen está caído no se puede migrar sin perder contenido.
 
+### Provisioning automático de nodos (desde el panel)
+
+En `/admin/servers` → **Provisionar nodo (SSH)** el panel hace TODO por sí solo, sin tocar la terminal del nodo:
+
+1. Completar: nombre, tipo, hostname público (oyentes), **host SSH (IP)**, puerto, usuario y **clave privada** (o password).
+2. El panel **guarda la clave encriptada** (ENCRYPTION_KEY), genera un token de agente nuevo y un `.env` para el nodo (apunta la DB central, usa la misma ENCRYPTION_KEY).
+3. El panel se conecta por SSH y ejecuta el provisioning:
+   - Instala Docker si falta
+   - Descarga el código desde GitHub y lo sube al nodo (SFTP)
+   - Escribe `/opt/ipstream-node/.env`
+   - `docker compose -f docker-compose.streaming.yml up -d --build`
+   - Espera a que el agente responda en `/health`
+4. Al terminar, el nodo queda registrado y "En línea". Si falla, se puede **Reintentar** y ver el log paso a paso.
+
+Consideraciones:
+- El nodo debe poder alcanzar la DB central: MySQL está expuesta en el VPS central en el puerto **3307** (`DB_HOST` se deriva de `NEXTAUTH_URL`, o se fuerza con `PANEL_PUBLIC_HOST`). Abrí el firewall del central a la IP del nodo (o usá WireGuard).
+- Tras el provisioning podés **"Quitar SSH"** desde el panel para borrar la clave almacenada.
+- El DNS del hostname público del nodo debe apuntar al IP del nodo (oyentes).
+
 ---
 
 ## Próximas mejoras pendientes (no críticas)

@@ -918,14 +918,28 @@ model StreamingServer {
   isActive       Boolean  @default(true)
   isHealthy      Boolean  @default(true) // actualizado por health checks del panel
   lastHealthAt   DateTime? // última vez que el health check tuvo éxito
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  // === Provisioning automático (SSH) ===
+  sshHost        String? // IP/hostname del nodo para SSH
+  sshPort        Int      @default(22)
+  sshUser        String   @default("root")
+  sshAuthType    String   @default("key") // "key" | "password"
+  sshKeyEnc      String?  @db.Text // clave privada encriptada (AES-256-GCM)
+  sshPasswordEnc String?  @db.Text // password encriptado (AES-256-GCM)
+  provisionStatus   String   @default("none") // "none" | "provisioning" | "done" | "failed"
+  provisionStep     String?
+  provisionError    String?  @db.Text
+  provisionLog      Json?
+  provisionStartedAt DateTime?
+  provisionedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   radioStreams RadioStream[]
   videoStreams VideoStream[]
 
   @@index([type])
   @@index([isActive])
+  @@index([provisionStatus])
   @@map("streaming_servers")
 }
 

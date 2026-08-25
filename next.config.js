@@ -24,6 +24,7 @@ const nextConfig = {
   },
   // Force redeploy: trigger menu page rebuild
   experimental: {
+    serverComponentsExternalPackages: ['ssh2'],
     serverActions: {
       bodySizeLimit: '2mb',
       // Lista de hosts confiables cuando Next.js está detrás de un proxy

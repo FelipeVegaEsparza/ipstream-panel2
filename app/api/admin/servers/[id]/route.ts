@@ -43,6 +43,19 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (data.isActive !== undefined) cleaned.isActive = data.isActive
     if (data.token !== undefined) cleaned.tokenEnc = encrypt(data.token)
 
+    // Revocar acceso SSH: borra credenciales y estado de provisioning
+    if (data.revokeSsh === true) {
+      cleaned.sshHost = null
+      cleaned.sshKeyEnc = null
+      cleaned.sshPasswordEnc = null
+      cleaned.provisionStatus = 'none'
+      cleaned.provisionStep = null
+      cleaned.provisionError = null
+      cleaned.provisionLog = null
+      cleaned.provisionStartedAt = null
+      cleaned.provisionedAt = null
+    }
+
     const existing = await prisma.streamingServer.findUnique({ where: { id: params.id } })
     if (!existing) {
       return NextResponse.json({ error: 'server_not_found' }, { status: 404 })
