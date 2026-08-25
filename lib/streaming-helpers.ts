@@ -210,6 +210,63 @@ export async function getRadioPublicHost(clientId: string): Promise<string> {
 }
 
 /**
+ * Hostname público del servidor de VIDEO de un cliente (para RTMP/OBS).
+ * Fallback a env (legacy).
+ */
+export async function getVideoPublicHost(clientId: string): Promise<string> {
+  const vs = await prisma.videoStream.findUnique({
+    where: { clientId },
+    select: { serverId: true },
+  })
+  if (vs?.serverId) {
+    const { getServerTarget } = await import('./streaming-servers')
+    const target = await getServerTarget(vs.serverId)
+    if (target) return target.publicHostname
+  }
+  const { getDefaultServerTarget } = await import('./streaming-servers')
+  const def = await getDefaultServerTarget()
+  if (def && def.id !== '__env__') return def.publicHostname
+  return (
+    process.env.RTMP_RELAY_PUBLIC_HOST ||
+    process.env.HARBOR_PUBLIC_HOSTNAME ||
+    process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL?.replace(/^https?:\/\//, '').split(':')[0] ||
+    'localhost'
+  )
+}
+
+/**
+ * Base URL pública para HLS de un cliente (TV), derivada del servidor asignado.
+ * - Servidor principal (el panel): HLS sale por el rewrite /live/* del panel con TLS
+ *   → usa el origin del panel (NEXTAUTH_URL), ej: https://panelipstream.cl
+ * - Nodo: si tiene publicUrl (TLS/nginx propio), se usa; si no, http://<host>:8080 (SRS directo).
+ */
+export async function getVideoPublicBase(clientId: string): Promise<string> {
+  const vs = await prisma.videoStream.findUnique({
+    where: { clientId },
+    select: { serverId: true },
+  })
+  const { getServerTarget } = await import('./streaming-servers')
+  let target = vs?.serverId ? await getServerTarget(vs.serverId) : null
+  if (!target) {
+    const { getDefaultServerTarget } = await import('./streaming-servers')
+    target = await getDefaultServerTarget()
+  }
+
+  const mainAgentUrl = (process.env.STREAMING_AGENT_URL || 'http://agent:4000').replace(/\/+$/, '')
+  if (target && target.baseUrl === mainAgentUrl) {
+    // Servidor principal: el panel proxea /live/* a su SRS con TLS (Caddy).
+    try {
+      return new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000').origin
+    } catch {
+      return ''
+    }
+  }
+  if (target?.publicUrl) return target.publicUrl.replace(/\/+$/, '')
+  if (target) return `http://${target.publicHostname}:8080`
+  return process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
+}
+
+/**
  * Reescribe BasicData.radioStreamingUrl / videoStreamingUrl según el
  * servidor asignado de cada servicio. Se usa al asignar/migrar un cliente.
  */
@@ -217,48 +274,26 @@ export async function rewriteClientPublicUrls(
   clientId: string,
   opts: { radioServerId?: string | null; videoServerId?: string | null }
 ) {
-  const { getServerTarget } = await import('./streaming-servers')
   const radioStream = await prisma.radioStream.findUnique({
     where: { clientId },
-    select: { serverId: true, icecastMount: true },
+    select: { icecastMount: true },
   })
-  const videoStream = await prisma.videoStream.findUnique({
-    where: { clientId },
-    select: { serverId: true },
-  })
+  void opts
 
-  const radioServerId = opts.radioServerId !== undefined ? opts.radioServerId : radioStream?.serverId
-  const videoServerId = opts.videoServerId !== undefined ? opts.videoServerId : videoStream?.serverId
-
-  let radioStreamingUrl: string | null = null
-  if (radioServerId) {
-    const target = await getServerTarget(radioServerId)
-    if (target && radioStream) {
-      const base = (target.publicUrl || `http://${target.publicHostname}:8000`).replace(/\/+$/, '')
-      radioStreamingUrl = `${base}/${radioStream.icecastMount}`
-    }
-  }
-  if (radioStreamingUrl === null) {
-    // fallback: env legacy
-    radioStreamingUrl = radioStream
-      ? `${process.env.ICE_PUBLIC_URL || 'http://localhost:8000'}/${radioStream.icecastMount}`
-      : null
+  // Radio: base pública del servidor de radio asignado
+  const radioBase = await getRadioPublicBaseUrl(clientId)
+  let radioStreamingUrl: string | null = radioStream && radioBase
+    ? `${radioBase.replace(/\/+$/, '')}/${radioStream.icecastMount}`
+    : null
+  if (radioStreamingUrl === null && radioStream) {
+    radioStreamingUrl = `${process.env.ICE_PUBLIC_URL || 'http://localhost:8000'}/${radioStream.icecastMount}`
   }
 
-  let videoStreamingUrl: string | null = null
-  if (videoServerId) {
-    const target = await getServerTarget(videoServerId)
-    if (target) {
-      // HLS se sirve en /live/* (el panel lo proxea a SRS con TLS vía Caddy).
-      // Si la base pública es https, usar https://host/live/<key>.m3u8.
-      // Si no (icecast/nodo sin TLS), usar http://host:8080/live/<key>.m3u8.
-      if (target.publicUrl) {
-        videoStreamingUrl = `${target.publicUrl.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
-      } else {
-        videoStreamingUrl = getVideoHlsUrl(target.publicHostname, clientId)
-      }
-    }
-  }
+  // Video: base pública del servidor de video asignado (HLS por /live/*)
+  const videoBase = await getVideoPublicBase(clientId)
+  let videoStreamingUrl: string | null = videoBase
+    ? `${videoBase.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
+    : null
   if (videoStreamingUrl === null) {
     const host = process.env.RTMP_RELAY_PUBLIC_HOST || process.env.HARBOR_PUBLIC_HOSTNAME || 'localhost'
     videoStreamingUrl = getVideoHlsUrl(host, clientId)

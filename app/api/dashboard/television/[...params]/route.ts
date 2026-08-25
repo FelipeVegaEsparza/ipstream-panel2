@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { resolveVideoServerTarget, StreamingServerTarget } from '@/lib/streaming-servers'
+import { getVideoPublicHost, getVideoPublicBase } from '@/lib/streaming-helpers'
 
 const PATH_MAP: Record<string, (clientId: string) => string> = {
   'status': (id) => `/api/video/${id}/status`,
@@ -14,7 +15,14 @@ const PATH_MAP: Record<string, (clientId: string) => string> = {
   'thumbnails': (id) => `/api/video/${id}/thumbnails`,
 }
 
-async function proxyToAgent(target: StreamingServerTarget, targetPath: string, method: string, headersIn: Record<string, string>, body: any) {
+async function proxyToAgent(
+  target: StreamingServerTarget,
+  targetPath: string,
+  method: string,
+  headersIn: Record<string, string>,
+  body: any,
+  extra?: Record<string, unknown>,
+) {
   const targetUrl = `${target.baseUrl}${targetPath}`
 
   const headers: Record<string, string> = {
@@ -51,6 +59,11 @@ async function proxyToAgent(target: StreamingServerTarget, targetPath: string, m
   let json: any = null
   if (text) {
     try { json = JSON.parse(text) } catch { json = text }
+  }
+
+  // Merge info del servidor asignado (URLs públicas de TV)
+  if (json && typeof json === 'object' && extra) {
+    json = { ...json, ...extra }
   }
 
   // Rewrite thumbnail URLs to go through dashboard proxy
@@ -137,7 +150,18 @@ async function handleRequest(req: NextRequest, { params }: { params: { params: s
       targetPath = `/api/video/${ctx.clientId}/${segments.join('/')}`
     }
 
-    return proxyToAgent(target, targetPath, req.method, headersOut, body)
+    // En el status, adjuntamos el servidor público de video del cliente para
+    // que las URLs (HLS/RTMP) apunten al servidor correcto, no al del panel.
+    let extra: Record<string, unknown> | undefined
+    if (base === 'status' || base === 'connection') {
+      const [publicHost, publicBase] = await Promise.all([
+        getVideoPublicHost(ctx.clientId),
+        getVideoPublicBase(ctx.clientId),
+      ])
+      extra = { publicHost, publicBase }
+    }
+
+    return proxyToAgent(target, targetPath, req.method, headersOut, body, extra)
   } catch (err) {
     if (err instanceof StreamingAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.statusCode })

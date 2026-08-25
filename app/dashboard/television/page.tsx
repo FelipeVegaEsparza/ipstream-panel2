@@ -9,6 +9,8 @@ interface VideoStatus {
   streamKey: string
   rtmpUrl: string
   hlsUrl: string
+  publicHost: string
+  publicBase: string
   encoder: { status: string; startedAt: string | null; currentTrack: string | null }
   dj: { active: boolean; streamKey: string | null; connectedAt: string | null }
 }
@@ -24,7 +26,9 @@ export default function TelevisionPage() {
   const videoStatusRef = useRef<VideoStatus | null>(null)
   const { toast } = useToast()
 
-  const publicBase = process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
+  // Base pública del servidor de video asignado al cliente (viene en el status).
+  // Si no llega (fallback), se usa NEXT_PUBLIC_STREAM_PUBLIC_URL o la relativa del panel.
+  const publicBase = videoStatus?.publicBase || process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
   // El DJ en vivo se sirve desde el app 'dj'; el AutoDJ desde 'live'.
   const hlsApp = videoStatus?.status === 'live' ? 'dj' : 'live'
   const hlsUrl = videoStatus?.streamKey

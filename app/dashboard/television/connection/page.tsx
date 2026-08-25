@@ -14,6 +14,7 @@ interface StreamInfo {
   rtmpUrl: string
   relayUrl: string | null
   status: string
+  publicHost?: string
   dj: DjStatus
   encoder?: { status: string }
 }
@@ -24,8 +25,9 @@ export default function TvConnectionPage() {
   const [copiedRelay, setCopiedRelay] = useState(false)
   const [copiedRelayKey, setCopiedRelayKey] = useState(false)
   const [host, setHost] = useState('panelipstream.cl')
-  // La Conexión Universal entra por el app 'relay' de SRS con el mismo stream key.
-  const relayServerUrl = `rtmp://${host}:1935/relay`
+  // La Conexión Universal entra por el app 'relay' de SRS del servidor asignado al cliente.
+  const relayHost = info?.publicHost || host
+  const relayServerUrl = `rtmp://${relayHost}:1935/relay`
   const { toast } = useToast()
 
   useEffect(() => {
