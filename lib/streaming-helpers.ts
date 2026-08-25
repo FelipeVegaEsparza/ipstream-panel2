@@ -162,8 +162,9 @@ export function getVideoHlsUrl(baseHost: string, clientId: string): string {
 }
 
 /**
- * Base URL pública de la radio de un cliente, derivada del hostname
- * del servidor de streaming asignado. Fallback a env (legacy).
+ * Base URL pública de la radio de un cliente, derivada del servidor asignado.
+ * Prioriza `publicUrl` del servidor (ej: https://stream.midominio.cl vía Caddy).
+ * Fallback: http://<publicHostname>:8000 (icecast directo) y luego env (legacy).
  */
 export async function getRadioPublicBaseUrl(clientId: string): Promise<string> {
   const rs = await prisma.radioStream.findUnique({
@@ -173,10 +174,12 @@ export async function getRadioPublicBaseUrl(clientId: string): Promise<string> {
   if (rs?.serverId) {
     const { getServerTarget } = await import('./streaming-servers')
     const target = await getServerTarget(rs.serverId)
+    if (target?.publicUrl) return target.publicUrl.replace(/\/+$/, '')
     if (target) return `http://${target.publicHostname}:8000`
   }
   const { getDefaultServerTarget } = await import('./streaming-servers')
   const def = await getDefaultServerTarget()
+  if (def?.publicUrl) return def.publicUrl.replace(/\/+$/, '')
   if (def && def.id !== '__env__') return `http://${def.publicHostname}:8000`
   return process.env.ICE_PUBLIC_URL || 'http://localhost:8000'
 }
@@ -231,7 +234,8 @@ export async function rewriteClientPublicUrls(
   if (radioServerId) {
     const target = await getServerTarget(radioServerId)
     if (target && radioStream) {
-      radioStreamingUrl = `http://${target.publicHostname}:8000/${radioStream.icecastMount}`
+      const base = (target.publicUrl || `http://${target.publicHostname}:8000`).replace(/\/+$/, '')
+      radioStreamingUrl = `${base}/${radioStream.icecastMount}`
     }
   }
   if (radioStreamingUrl === null) {
@@ -245,7 +249,14 @@ export async function rewriteClientPublicUrls(
   if (videoServerId) {
     const target = await getServerTarget(videoServerId)
     if (target) {
-      videoStreamingUrl = getVideoHlsUrl(target.publicHostname, clientId)
+      // HLS se sirve en /live/* (el panel lo proxea a SRS con TLS vía Caddy).
+      // Si la base pública es https, usar https://host/live/<key>.m3u8.
+      // Si no (icecast/nodo sin TLS), usar http://host:8080/live/<key>.m3u8.
+      if (target.publicUrl) {
+        videoStreamingUrl = `${target.publicUrl.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
+      } else {
+        videoStreamingUrl = getVideoHlsUrl(target.publicHostname, clientId)
+      }
     }
   }
   if (videoStreamingUrl === null) {

@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
         baseUrl: `http://${data.sshHost}:4000`,
         tokenEnc: encrypt(agentToken),
         publicHostname: data.publicHostname,
+        publicUrl: `http://${data.publicHostname}:8000`,
         sshHost: data.sshHost,
         sshPort: data.sshPort,
         sshUser: data.sshUser,

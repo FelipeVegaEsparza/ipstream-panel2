@@ -299,6 +299,7 @@ export const streamingServerCreateSchema = z.object({
   baseUrl: z.string().url().max(500),
   token: z.string().min(1).max(500),
   publicHostname: z.string().min(1).max(191),
+  publicUrl: z.string().url().max(500).optional(),
 })
 export type StreamingServerCreateInput = z.infer<typeof streamingServerCreateSchema>
 
@@ -308,6 +309,7 @@ export const streamingServerUpdateSchema = z.object({
   baseUrl: z.string().url().max(500).optional(),
   token: z.string().min(1).max(500).optional(),
   publicHostname: z.string().min(1).max(191).optional(),
+  publicUrl: z.string().url().max(500).nullable().optional(),
   isActive: z.boolean().optional(),
   revokeSsh: z.boolean().optional(),
 })

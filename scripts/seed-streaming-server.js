@@ -57,6 +57,15 @@ function publicHostnameFromEnv() {
   )
 }
 
+function publicUrlFromEnv(hostname) {
+  // URL base que usan los oyentes. Prioriza ICE_PUBLIC_URL (ej: https://stream.midominio.cl
+  // servido por Caddy con TLS). Si no, deriva http://<hostname>:8000 (icecast directo).
+  if (process.env.ICE_PUBLIC_URL) {
+    return process.env.ICE_PUBLIC_URL.replace(/\/+$/, '')
+  }
+  return `http://${hostname}:8000`
+}
+
 async function main() {
   const baseUrl = process.env.STREAMING_AGENT_URL || 'http://agent:4000'
   const token = process.env.STREAMING_AGENT_TOKEN || ''
@@ -68,18 +77,29 @@ async function main() {
   let server = await prisma.streamingServer.findFirst({ orderBy: { createdAt: 'asc' } })
 
   if (!server) {
+    const publicHostname = publicHostnameFromEnv()
     server = await prisma.streamingServer.create({
       data: {
         name: 'Servidor Principal',
         type: 'both',
         baseUrl,
         tokenEnc: encrypt(token),
-        publicHostname: publicHostnameFromEnv(),
+        publicHostname,
+        publicUrl: publicUrlFromEnv(publicHostname),
       },
     })
     console.log(`✅ Servidor principal creado: ${server.id} (${server.baseUrl})`)
   } else {
     console.log(`ℹ️ Ya existe un servidor: ${server.id} (${server.baseUrl})`)
+    // Backfill: asegurar publicUrl si falta
+    if (!server.publicUrl) {
+      const publicHostname = server.publicHostname || publicHostnameFromEnv()
+      await prisma.streamingServer.update({
+        where: { id: server.id },
+        data: { publicUrl: publicUrlFromEnv(publicHostname) },
+      })
+      console.log(`✅ publicUrl backfilled: ${publicUrlFromEnv(publicHostname)}`)
+    }
   }
 
   const [radioCount, videoCount] = await Promise.all([

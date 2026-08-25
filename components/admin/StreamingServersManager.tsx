@@ -18,6 +18,7 @@ interface ServerRow {
   type: string
   baseUrl: string
   publicHostname: string
+  publicUrl: string | null
   isActive: boolean
   isHealthy: boolean
   lastHealthAt: string | null
@@ -95,7 +96,7 @@ export function StreamingServersManager() {
   }
 
   const openEdit = (server: ServerRow) => {
-    setEditing({ id: server.id, name: server.name, type: server.type, baseUrl: server.baseUrl, publicHostname: server.publicHostname })
+    setEditing({ id: server.id, name: server.name, type: server.type, baseUrl: server.baseUrl, publicHostname: server.publicHostname, publicUrl: server.publicUrl })
     setShowForm(true)
   }
 
@@ -316,8 +317,8 @@ export function StreamingServersManager() {
                       <span className="font-mono text-cyan-400 truncate pl-3">{server.baseUrl.replace(/^https?:\/\//, '')}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Hostname público</span>
-                      <span className="font-mono truncate pl-3">{server.publicHostname}</span>
+                      <span className="text-gray-500">URL oyentes</span>
+                      <span className="font-mono text-cyan-400 truncate pl-3">{server.publicUrl || server.publicHostname}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-500">Clientes</span>

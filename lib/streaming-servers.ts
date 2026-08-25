@@ -13,6 +13,7 @@ export interface StreamingServerTarget {
   baseUrl: string
   token: string
   publicHostname: string
+  publicUrl?: string | null
 }
 
 // Cache corto (TTL 15s) para no golpear la DB en cada llamada de streaming.
@@ -28,7 +29,13 @@ function legacyEnvTarget(): StreamingServerTarget | null {
     process.env.ICE_PUBLIC_URL?.replace(/^https?:\/\//, '').split(':')[0] ||
     process.env.ICE_HOSTNAME ||
     'localhost'
-  return { id: '__env__', baseUrl, token, publicHostname }
+  return {
+    id: '__env__',
+    baseUrl,
+    token,
+    publicHostname,
+    publicUrl: process.env.ICE_PUBLIC_URL || undefined,
+  }
 }
 
 async function fetchServerTarget(id: string): Promise<StreamingServerTarget | null> {
@@ -45,6 +52,7 @@ async function fetchServerTarget(id: string): Promise<StreamingServerTarget | nu
         baseUrl: s.baseUrl.replace(/\/+$/, ''),
         token,
         publicHostname: s.publicHostname,
+        publicUrl: s.publicUrl,
       }
     } catch {
       target = null

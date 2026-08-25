@@ -40,6 +40,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (data.type !== undefined) cleaned.type = data.type
     if (data.baseUrl !== undefined) cleaned.baseUrl = data.baseUrl.replace(/\/+$/, '')
     if (data.publicHostname !== undefined) cleaned.publicHostname = data.publicHostname
+    if (data.publicUrl !== undefined) cleaned.publicUrl = data.publicUrl ? data.publicUrl.replace(/\/+$/, '') : null
     if (data.isActive !== undefined) cleaned.isActive = data.isActive
     if (data.token !== undefined) cleaned.tokenEnc = encrypt(data.token)
 

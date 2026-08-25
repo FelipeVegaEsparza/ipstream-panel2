@@ -915,6 +915,7 @@ model StreamingServer {
   baseUrl        String // URL del agente (ej: http://agent:4000)
   tokenEnc       String   @db.Text // token de autenticación encriptado (AES-256-GCM)
   publicHostname String // hostname público para generar URLs de streaming
+  publicUrl      String? // URL base pública para oyentes (ej: https://stream.midominio.cl o http://ip:8000). Si es null se deriva del publicHostname
   isActive       Boolean  @default(true)
   isHealthy      Boolean  @default(true) // actualizado por health checks del panel
   lastHealthAt   DateTime? // última vez que el health check tuvo éxito

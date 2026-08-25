@@ -11,6 +11,7 @@ export interface EditableServer {
   type: string
   baseUrl: string
   publicHostname: string
+  publicUrl?: string | null
 }
 
 interface ServerFormModalProps {
@@ -27,6 +28,7 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
   const [type, setType] = useState('both')
   const [baseUrl, setBaseUrl] = useState('')
   const [publicHostname, setPublicHostname] = useState('')
+  const [publicUrl, setPublicUrl] = useState('')
   const [token, setToken] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,6 +39,7 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
       setType(editing?.type || 'both')
       setBaseUrl(editing?.baseUrl || '')
       setPublicHostname(editing?.publicHostname || '')
+      setPublicUrl(editing?.publicUrl || '')
       setToken('')
       setError(null)
     }
@@ -57,7 +60,13 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
     setError(null)
     try {
       const url = editing ? `/api/admin/servers/${editing.id}` : '/api/admin/servers'
-      const body: any = { name: name.trim(), type, baseUrl: baseUrl.trim(), publicHostname: publicHostname.trim() }
+      const body: any = {
+        name: name.trim(),
+        type,
+        baseUrl: baseUrl.trim(),
+        publicHostname: publicHostname.trim(),
+      }
+      if (publicUrl.trim()) body.publicUrl = publicUrl.trim()
       if (token.trim()) body.token = token.trim()
       const res = await fetch(url, {
         method: editing ? 'PATCH' : 'POST',
@@ -129,6 +138,17 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
                 <label className="form-label">Hostname público</label>
                 <input className="form-input" value={publicHostname} onChange={(e) => setPublicHostname(e.target.value)} placeholder="stream1.example.com" />
                 <p className="text-xs text-gray-400 mt-1">Lo usan los oyentes/espectadores para conectarse</p>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  URL pública para oyentes <span className="text-gray-500">(opcional)</span>
+                </label>
+                <input className="form-input" value={publicUrl} onChange={(e) => setPublicUrl(e.target.value)} placeholder="https://stream.midominio.cl" />
+                <p className="text-xs text-gray-400 mt-1">
+                  Base que verán los oyentes. Ej: <code className="text-cyan-400">https://stream.midominio.cl</code> (vía Caddy con TLS)
+                  o <code className="text-cyan-400">http://ip:8000</code> (icecast directo). Vacío = se deriva del hostname.
+                </p>
               </div>
 
               <div className="form-group">

@@ -33,6 +33,7 @@ export async function GET() {
         type: true,
         baseUrl: true,
         publicHostname: true,
+        publicUrl: true,
         isActive: true,
         isHealthy: true,
         lastHealthAt: true,
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
         baseUrl: data.baseUrl.replace(/\/+$/, ''),
         tokenEnc: encrypt(data.token),
         publicHostname: data.publicHostname,
+        publicUrl: data.publicUrl?.replace(/\/+$/, '') ?? `http://${data.publicHostname}:8000`,
       },
     })
 
