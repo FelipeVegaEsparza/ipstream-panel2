@@ -16,10 +16,13 @@ const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET || ''
 const STATUS_MAP: Record<string, string> = {
   'email.sent': 'sent',
   'email.delivered': 'delivered',
+  'email.delivery_delayed': 'sent', // transitorio: se conserva el estado actual
   'email.bounced': 'bounced',
   'email.complained': 'complained',
   'email.opened': 'opened',
   'email.clicked': 'clicked',
+  'email.failed': 'failed',
+  'email.suppressed': 'bounced',
 }
 
 function signingKey(secret: string): Buffer {
