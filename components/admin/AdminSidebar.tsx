@@ -28,26 +28,51 @@ import {
 } from '@heroicons/react/24/outline'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 
-const navigation = [
-  { name: 'Dashboard Admin', href: '/admin', icon: HomeIcon },
-  { name: 'Gestión de Usuarios', href: '/admin/users', icon: UserGroupIcon },
-  { name: 'Estadísticas Globales', href: '/admin/stats', icon: ChartBarIcon },
-  { name: 'Planes y Pagos', href: '/admin/billing', icon: CreditCardIcon },
-  { name: 'Streaming', href: '/admin/streaming', icon: RadioIcon },
-  { name: 'Servidores de Streaming', href: '/admin/servers', icon: ServerStackIcon },
-  { name: 'Monitor', href: '/admin/monitor', icon: SignalIcon },
-  { name: 'Comunicaciones', href: '/admin/comunicaciones', icon: EnvelopeIcon },
-  { name: 'Tickets de soporte', href: '/admin/tickets', icon: LifebuoyIcon },
-  { name: 'Plantillas Sitio', href: '/admin/templates', icon: PaintBrushIcon },
-  { name: 'Noticias Genéricas', href: '/admin/news-global', icon: NewspaperIcon },
-  { name: 'Categorías Noticias', href: '/admin/news-categories', icon: TagIcon },
-  { name: 'Tutoriales', href: '/admin/tutorials', icon: PlayCircleIcon },
-  { name: 'Categorías Tutoriales', href: '/admin/tutorial-categories', icon: RectangleStackIcon },
-  { name: 'Impersonar Cliente', href: '/admin/impersonate', icon: ArrowPathRoundedSquareIcon },
-  { name: 'Menú Global', href: '/admin/menu', icon: EyeSlashIcon },
-  { name: 'Configuración Sistema', href: '/admin/settings', icon: Cog6ToothIcon },
-  { name: 'Logs de Actividad', href: '/admin/logs', icon: DocumentTextIcon },
-  { name: 'Acerca del Sistema', href: '/admin/about', icon: InformationCircleIcon },
+const navigationGroups = [
+  {
+    label: 'Principal',
+    items: [
+      { name: 'Dashboard Admin', href: '/admin', icon: HomeIcon },
+    ],
+  },
+  {
+    label: 'Clientes y Pagos',
+    items: [
+      { name: 'Gestión de Usuarios', href: '/admin/users', icon: UserGroupIcon },
+      { name: 'Planes y Pagos', href: '/admin/billing', icon: CreditCardIcon },
+      { name: 'Tickets de soporte', href: '/admin/tickets', icon: LifebuoyIcon },
+      { name: 'Impersonar Cliente', href: '/admin/impersonate', icon: ArrowPathRoundedSquareIcon },
+    ],
+  },
+  {
+    label: 'Streaming',
+    items: [
+      { name: 'Streaming', href: '/admin/streaming', icon: RadioIcon },
+      { name: 'Servidores de Streaming', href: '/admin/servers', icon: ServerStackIcon },
+      { name: 'Monitor', href: '/admin/monitor', icon: SignalIcon },
+      { name: 'Comunicaciones', href: '/admin/comunicaciones', icon: EnvelopeIcon },
+    ],
+  },
+  {
+    label: 'Contenido',
+    items: [
+      { name: 'Plantillas Sitio', href: '/admin/templates', icon: PaintBrushIcon },
+      { name: 'Noticias Genéricas', href: '/admin/news-global', icon: NewspaperIcon },
+      { name: 'Categorías Noticias', href: '/admin/news-categories', icon: TagIcon },
+      { name: 'Tutoriales', href: '/admin/tutorials', icon: PlayCircleIcon },
+      { name: 'Categorías Tutoriales', href: '/admin/tutorial-categories', icon: RectangleStackIcon },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { name: 'Estadísticas Globales', href: '/admin/stats', icon: ChartBarIcon },
+      { name: 'Menú Global', href: '/admin/menu', icon: EyeSlashIcon },
+      { name: 'Configuración Sistema', href: '/admin/settings', icon: Cog6ToothIcon },
+      { name: 'Logs de Actividad', href: '/admin/logs', icon: DocumentTextIcon },
+      { name: 'Acerca del Sistema', href: '/admin/about', icon: InformationCircleIcon },
+    ],
+  },
 ]
 
 interface AdminSidebarProps {
@@ -79,36 +104,41 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
       </div>
 
       <nav className="flex flex-1 flex-col">
-        <ul role="list" className="flex flex-1 flex-col gap-y-7">
-          <li>
-            <ul role="list" className="space-y-2">
-              {navigation.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-                return (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      onClick={onLinkClick}
-                      className={`sidebar-item group ${
-                        isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'
-                      }`}
-                    >
-                      <item.icon
-                        className={`h-6 w-6 shrink-0 transition-colors ${
-                          isActive ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
+        <ul role="list" className="flex flex-1 flex-col gap-y-6">
+          {navigationGroups.map((group) => (
+            <li key={group.label}>
+              <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+                {group.label}
+              </p>
+              <ul role="list" className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                  return (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        onClick={onLinkClick}
+                        className={`sidebar-item group ${
+                          isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'
                         }`}
-                        aria-hidden="true"
-                      />
-                      <span className="truncate">{item.name}</span>
-                      {isActive && (
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-l-full"></div>
-                      )}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </li>
+                      >
+                        <item.icon
+                          className={`h-6 w-6 shrink-0 transition-colors ${
+                            isActive ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span className="truncate">{item.name}</span>
+                        {isActive && (
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-l-full"></div>
+                        )}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </li>
+          ))}
         </ul>
       </nav>
       
