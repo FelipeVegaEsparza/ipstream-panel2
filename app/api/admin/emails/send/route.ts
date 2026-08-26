@@ -11,6 +11,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { emailSendSchema } from '@/lib/validations'
 import { sendEmail, sendTemplateEmail } from '@/lib/resend'
+import { sendAccountEmail } from '@/lib/email-hooks'
 import { generateAccountPdf } from '@/lib/account-pdf'
 
 export const dynamic = 'force-dynamic'
@@ -19,6 +20,29 @@ async function requireAdmin() {
   const session = await getServerSession(authOptions)
   if (!session?.user || session.user.role !== 'ADMIN') return null
   return session
+}
+
+/** Datos del próximo pago pendiente + plan, para renderizar la plantilla boleta. */
+async function getBoletaInfo(clientId: string) {
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    include: {
+      plan: { select: { name: true } },
+      subscription: {
+        include: {
+          plan: { select: { name: true } },
+          payments: { where: { status: 'pending' }, orderBy: { dueDate: 'asc' } },
+        },
+      },
+    },
+  })
+  const pending = client?.subscription?.payments?.[0] ?? null
+  return {
+    payment: pending
+      ? { amount: pending.amount, currency: pending.currency, dueDate: pending.dueDate, description: pending.description }
+      : null,
+    planName: client?.subscription?.plan?.name || client?.plan?.name || undefined,
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -79,7 +103,11 @@ export async function POST(request: NextRequest) {
         }
 
         let result: { ok: boolean; status: string }
-        if (data.templateKey) {
+        if (data.templateKey === 'boleta' && r.id) {
+          // Boleta: usar datos reales del cliente + PDF (mismo envío que el hook automático)
+          const info = await getBoletaInfo(r.id)
+          result = await sendAccountEmail(r.id, info.payment, info.planName)
+        } else if (data.templateKey) {
           result = await sendTemplateEmail({
             templateKey: data.templateKey,
             to: r.email,
