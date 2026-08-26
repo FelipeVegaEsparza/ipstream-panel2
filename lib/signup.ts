@@ -83,7 +83,6 @@ export async function createSignupSubscription(clientId: string, planId: string)
 export async function notifyAdminNewSignup(info: { name: string; email: string; planName?: string }) {
   const config = await prisma.appConfig.findFirst({ select: { adminNotifyEmail: true } })
   const to = config?.adminNotifyEmail || process.env.ADMIN_NOTIFY_EMAIL || 'felipevegaesparza@gmail.com'
-  console.log('[notify][debug] to =', to)
   if (!to) return
 
   const panelUrl = process.env.NEXTAUTH_URL || 'https://panelipstream.cl'

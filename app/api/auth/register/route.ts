@@ -97,11 +97,9 @@ export async function POST(request: NextRequest) {
       const planName = body.planId
         ? (await prisma.plan.findUnique({ where: { id: body.planId }, select: { name: true } }))?.name
         : undefined
-      console.log('[register][debug] calling notifyAdminNewSignup', { name, email, planName })
       await notifyAdminNewSignup({ name, email, planName })
-      console.log('[register][debug] notify done')
     } catch (err) {
-      console.error('[register][debug] Error notificando registro al admin:', err)
+      console.error('Error notificando registro al admin:', err)
     }
 
     return NextResponse.json({

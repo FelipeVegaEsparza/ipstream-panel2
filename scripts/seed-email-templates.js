@@ -81,6 +81,13 @@ const TEMPLATES = [
   </div>
 </div>`,
   },
+  {
+    key: 'aviso-admin',
+    name: 'Notificación interna (admin)',
+    description: 'Notificaciones internas al administrador (nuevos registros, etc.). Cuerpo fijo en código.',
+    subject: 'IPStream — notificación interna',
+    htmlBody: '<p>Notificación interna del panel.</p>',
+  },
 ]
 
 async function main() {
