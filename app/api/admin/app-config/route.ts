@@ -17,7 +17,7 @@ export async function GET() {
       })
     }
 
-    return NextResponse.json({ enableGenericNews: config.enableGenericNews })
+    return NextResponse.json({ enableGenericNews: config.enableGenericNews, adminNotifyEmail: config.adminNotifyEmail })
   } catch (error) {
     console.error('Error getting app config:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
@@ -32,21 +32,27 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { enableGenericNews } = body
+    const { enableGenericNews, adminNotifyEmail } = body
 
     let config = await prisma.appConfig.findFirst()
     if (!config) {
       config = await prisma.appConfig.create({
-        data: { enableGenericNews }
+        data: {
+          enableGenericNews: enableGenericNews ?? false,
+          adminNotifyEmail: adminNotifyEmail ?? null,
+        },
       })
     } else {
       config = await prisma.appConfig.update({
         where: { id: config.id },
-        data: { enableGenericNews }
+        data: {
+          ...(enableGenericNews !== undefined ? { enableGenericNews } : {}),
+          ...(adminNotifyEmail !== undefined ? { adminNotifyEmail: adminNotifyEmail || null } : {}),
+        },
       })
     }
 
-    return NextResponse.json({ enableGenericNews: config.enableGenericNews })
+    return NextResponse.json({ enableGenericNews: config.enableGenericNews, adminNotifyEmail: config.adminNotifyEmail })
   } catch (error) {
     console.error('Error updating app config:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

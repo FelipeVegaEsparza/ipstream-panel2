@@ -91,6 +91,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Notificar al admin del nuevo registro (email)
+    try {
+      const { notifyAdminNewSignup } = await import('@/lib/signup')
+      const planName = body.planId
+        ? (await prisma.plan.findUnique({ where: { id: body.planId }, select: { name: true } }))?.name
+        : undefined
+      await notifyAdminNewSignup({ name, email, planName })
+    } catch (err) {
+      console.error('Error notificando registro al admin:', err)
+    }
+
     return NextResponse.json({
       message: 'Usuario creado exitosamente',
       user: {

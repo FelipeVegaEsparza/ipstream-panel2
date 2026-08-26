@@ -433,6 +433,7 @@ model AppConfig {
   enableGenericNews    Boolean @default(false)
   loginBackgroundImage String? // URL de la imagen de fondo del login (null = fondo animado por defecto)
   hiddenMenuItems      String? @db.Text // JSON array de MenuItemKey ocultos globalmente (override de per-client)
+  adminNotifyEmail     String? // correo que recibe notificaciones del panel (nuevos registros, etc.)
 
   @@map("app_config")
 }

@@ -22,6 +22,7 @@ interface SystemSettingsProps {
 
 export function SystemSettings({ stats }: SystemSettingsProps) {
   const [enableGenericNews, setEnableGenericNews] = useState(false)
+  const [adminNotifyEmail, setAdminNotifyEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
 
@@ -32,6 +33,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
         if (res.ok) {
           const data = await res.json()
           setEnableGenericNews(data.enableGenericNews)
+          setAdminNotifyEmail(data.adminNotifyEmail || '')
         }
       } catch (error) {
         console.error('Error fetching app config:', error)
@@ -55,7 +57,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
       const response = await fetch('/api/admin/app-config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enableGenericNews })
+        body: JSON.stringify({ enableGenericNews, adminNotifyEmail: adminNotifyEmail.trim() || null })
       })
 
       if (response.ok) {
@@ -148,6 +150,22 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
                 {enableGenericNews ? 'Activado' : 'Desactivado'}
               </Badge>
             </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-gray-700/50">
+            <label className="block text-white font-medium mb-1">
+              Email de notificaciones del panel
+            </label>
+            <input
+              type="email"
+              value={adminNotifyEmail}
+              onChange={(e) => setAdminNotifyEmail(e.target.value)}
+              placeholder="felipevegaesparza@gmail.com"
+              className="w-full bg-gray-900 border border-gray-600 text-white rounded-md px-3 py-2 text-sm"
+            />
+            <p className="text-sm text-gray-400 mt-1">
+              Recibe avisos de nuevos registros de clientes y otras notificaciones del sistema.
+            </p>
           </div>
 
           <div className="flex gap-3 pt-4">

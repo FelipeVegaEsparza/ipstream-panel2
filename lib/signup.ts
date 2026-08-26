@@ -6,6 +6,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { sendAccountEmail } from './email-hooks'
+import { sendEmail } from './resend'
 
 /** Aplica las cuotas de almacenamiento del plan a los streams del cliente. */
 export async function applyPlanQuotasToClient(
@@ -72,4 +73,43 @@ export async function createSignupSubscription(clientId: string, planId: string)
   } catch {}
 
   return { subscription, payment }
+}
+
+/**
+ * Notifica al administrador por email cuando se registra un cliente nuevo.
+ * El destino se configura en /admin/settings (AppConfig.adminNotifyEmail).
+ * Fallback: ADMIN_NOTIFY_EMAIL (env) o felipevegaesparza@gmail.com.
+ */
+export async function notifyAdminNewSignup(info: { name: string; email: string; planName?: string }) {
+  const config = await prisma.appConfig.findFirst({ select: { adminNotifyEmail: true } })
+  const to = config?.adminNotifyEmail || process.env.ADMIN_NOTIFY_EMAIL || 'felipevegaesparza@gmail.com'
+  if (!to) return
+
+  const panelUrl = process.env.NEXTAUTH_URL || 'https://panelipstream.cl'
+  const planLabel = info.planName ? ` · Plan: <strong>${info.planName}</strong>` : ' · Sin plan'
+
+  const html = `
+<div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
+  <div style="max-width:520px;margin:0 auto">
+    <h2 style="margin:0 0 4px">IPStream</h2>
+    <p style="color:#6b7280;margin:0 0 16px">Nuevo registro de cliente 🎉</p>
+    <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px">
+      <p style="margin:0 0 8px"><strong>Nombre:</strong> ${info.name}</p>
+      <p style="margin:0 0 8px"><strong>Email:</strong> ${info.email}</p>
+      <p style="margin:0">${planLabel}</p>
+    </div>
+    <p style="margin:20px 0 0">
+      <a href="${panelUrl}/admin/users" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Ver clientes</a>
+    </p>
+  </div>
+</div>`
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Nuevo registro: ${info.name}`,
+      html,
+      templateKey: 'aviso-admin',
+    })
+  } catch {}
 }
