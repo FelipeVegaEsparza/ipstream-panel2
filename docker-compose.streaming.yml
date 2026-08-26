@@ -173,6 +173,29 @@ services:
     networks:
       - ipstream-net
 
+  # =====================================================
+  # Caddy — reverse proxy TLS para el stream (https)
+  # Termina SSL (Let's Encrypt automático) y proxea a icecast:8000.
+  # El Caddyfile usa {$SITE_DOMAIN} del .env (hostname público del nodo).
+  # =====================================================
+  caddy:
+    image: caddy:2-alpine
+    container_name: ipstream-caddy
+    restart: unless-stopped
+    depends_on:
+      - icecast
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - ipstream-net
+
 networks:
   ipstream-net:
     driver: bridge
@@ -184,3 +207,7 @@ volumes:
     name: ipstream_srs_hls
   video_logs:
     name: ipstream_video_logs
+  caddy_data:
+    name: ipstream_caddy_data
+  caddy_config:
+    name: ipstream_caddy_config

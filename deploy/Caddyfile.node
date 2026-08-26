@@ -1,0 +1,6 @@
+# IPStream — Caddyfile para nodos de streaming
+# Termina TLS (Let's Encrypt automático) para el hostname público del nodo
+# y proxea a icecast:8000. El provisioning lo escribe en /opt/ipstream-node/Caddyfile.
+{$SITE_DOMAIN} {
+	reverse_proxy icecast:8000
+}

@@ -101,6 +101,7 @@ function buildNodeEnv(server: {
     ICE_HOSTNAME: server.publicHostname,
     HARBOR_PUBLIC_HOSTNAME: server.publicHostname,
     RTMP_RELAY_PUBLIC_HOST: server.publicHostname,
+    SITE_DOMAIN: server.publicHostname,
     ICE_HOST: 'icecast',
     ICE_PORT: '8000',
     HARBOR_PORT_RANGE: '22340-22350',
@@ -111,6 +112,22 @@ function buildNodeEnv(server: {
   return Object.entries(env)
     .map(([k, v]) => `${k}=${v}`)
     .join('\n') + '\n'
+}
+
+const CADDYFILE = `# IPStream — Caddyfile para nodos de streaming
+{$SITE_DOMAIN} {
+\treverse_proxy icecast:8000
+}
+`
+
+/** Override para nodos SOLO radio: excluye SRS y video-encoder (perfiles). */
+function radioOverrideYml(): string {
+  return `services:
+  srs:
+    profiles: ["disabled"]
+  video-encoder:
+    profiles: ["disabled"]
+`
 }
 
 export async function startNodeProvisioning(serverId: string): Promise<void> {
@@ -206,17 +223,24 @@ async function runProvision(serverId: string): Promise<void> {
       await setProgress(serverId, 'Preparando directorio', setup.stdout.trim().split('\n').slice(-3).join(' '))
     })
 
-    // 4. Escribir .env
+    // 4. Escribir .env + Caddyfile + override según tipo
     await step('Escribiendo configuración (.env)', async () => {
       const envContent = buildNodeEnv(server)
       await sftpWrite(ssh, `${NODE_DIR}/.env`, Buffer.from(envContent, 'utf8'))
+      // Caddyfile (TLS https vía Caddy para el hostname público)
+      await sftpWrite(ssh, `${NODE_DIR}/Caddyfile`, Buffer.from(CADDYFILE, 'utf8'))
+      // Nodo solo radio: excluir SRS/video-encoder vía perfiles
+      if (server.type === 'radio') {
+        await sftpWrite(ssh, `${NODE_DIR}/docker-compose.streaming.override.yml`, Buffer.from(radioOverrideYml(), 'utf8'))
+      }
     })
 
     // 5. Levantar el stack
     await step('Levantando el stack de streaming', async () => {
+      const override = server.type === 'radio' ? ' -f docker-compose.streaming.override.yml' : ''
       const up = await sshExec(
         ssh,
-        `cd ${NODE_DIR} && docker compose -f docker-compose.streaming.yml up -d --build`,
+        `cd ${NODE_DIR} && docker compose -f docker-compose.streaming.yml${override} up -d --build`,
         (l) => {
           const t = l.trim()
           if (t && !t.startsWith('#') && !t.includes('=>') && !t.includes('extracting') && !t.includes('waiting') && !t.includes('Downloading')) {
