@@ -65,6 +65,7 @@ export default withAuth(
         // Permitir acceso a rutas públicas
         if (pathname.startsWith('/auth') ||
             pathname === '/' ||
+            pathname.startsWith('/registro') ||
             pathname.startsWith('/api/public') ||
             pathname.startsWith('/api/uploads') ||
             pathname.startsWith('/api/auth') ||

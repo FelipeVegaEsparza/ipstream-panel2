@@ -101,6 +101,7 @@ export const registerSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  planId: z.string().optional().transform((v) => v?.trim() || undefined),
 })
 
 export type BasicDataInput = z.infer<typeof basicDataSchema>

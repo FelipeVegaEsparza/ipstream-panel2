@@ -80,6 +80,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Si viene un plan elegido (registro desde /registro), crear suscripción + cuota
+    let planAssigned = null
+    if (body.planId && user.client) {
+      try {
+        const { createSignupSubscription } = await import('@/lib/signup')
+        planAssigned = await createSignupSubscription(user.client.id, body.planId)
+      } catch (err) {
+        console.error('Error asignando plan al registrarse:', err)
+      }
+    }
+
     return NextResponse.json({
       message: 'Usuario creado exitosamente',
       user: {
@@ -88,6 +99,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         role: user.role
       },
+      planAssigned: planAssigned ? { planId: body.planId } : null,
       // Devolvemos info del stream para que la UI pueda mostrarlo
       stream: streamInfo ? {
         icecastMount: streamInfo.icecastMount,
