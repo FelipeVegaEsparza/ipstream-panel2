@@ -127,15 +127,16 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           URL de Streaming de Radio
         </label>
         <input
-          type="url"
+          type="text"
           id="radioStreamingUrl"
-          className="form-input"
-          placeholder="https://streaming.ejemplo.com/radio"
-          {...register('radioStreamingUrl')}
+          readOnly
+          className="form-input bg-gray-800 text-cyan-400 font-mono text-sm cursor-not-allowed"
+          value={initialData?.radioStreamingUrl || ''}
+          placeholder="Se genera automáticamente según tu servidor"
         />
-        {errors.radioStreamingUrl && (
-          <p className="text-sm text-red-600">{errors.radioStreamingUrl.message}</p>
-        )}
+        <p className="text-xs text-gray-400 mt-1">
+          Generada automáticamente según el servidor configurado. Copiala para usarla en tu sitio o player.
+        </p>
       </div>
 
       <div className="form-group">
@@ -143,15 +144,16 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           URL de Streaming de Video
         </label>
         <input
-          type="url"
+          type="text"
           id="videoStreamingUrl"
-          className="form-input"
-          placeholder="https://streaming.ejemplo.com/video"
-          {...register('videoStreamingUrl')}
+          readOnly
+          className="form-input bg-gray-800 text-cyan-400 font-mono text-sm cursor-not-allowed"
+          value={initialData?.videoStreamingUrl || ''}
+          placeholder="Se genera automáticamente según tu servidor"
         />
-        {errors.videoStreamingUrl && (
-          <p className="text-sm text-red-600">{errors.videoStreamingUrl.message}</p>
-        )}
+        <p className="text-xs text-gray-400 mt-1">
+          Generada automáticamente según el servidor configurado. Copiala para usarla en tu sitio o player.
+        </p>
       </div>
 
       <div className="flex justify-end space-x-3">

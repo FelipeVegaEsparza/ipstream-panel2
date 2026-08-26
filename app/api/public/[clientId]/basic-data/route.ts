@@ -42,7 +42,11 @@ export async function GET(
       return createCorsErrorResponse('Datos básicos no encontrados', 404)
     }
 
-    return createCorsResponse(basicData)
+    // Las URLs de streaming se derivan del servidor asignado al cliente.
+    const { getClientStreamUrls } = await import('@/lib/streaming-helpers')
+    const { radioStreamingUrl, videoStreamingUrl } = await getClientStreamUrls(clientId)
+
+    return createCorsResponse({ ...basicData, radioStreamingUrl, videoStreamingUrl })
 
   } catch (error) {
     console.error('Error getting basic data:', error)

@@ -267,12 +267,34 @@ export async function getVideoPublicBase(clientId: string): Promise<string> {
 }
 
 /**
+ * URLs públicas de streaming de un cliente (radio + video), derivadas del
+ * servidor asignado a cada servicio (configurado desde el admin).
+ */
+export async function getClientStreamUrls(clientId: string): Promise<{ radioStreamingUrl: string | null; videoStreamingUrl: string | null }> {
+  const [radioBase, videoBase, radioStream] = await Promise.all([
+    getRadioPublicBaseUrl(clientId),
+    getVideoPublicBase(clientId),
+    prisma.radioStream.findUnique({ where: { clientId }, select: { icecastMount: true } }),
+  ])
+
+  const radioStreamingUrl = radioStream && radioBase
+    ? `${radioBase.replace(/\/+$/, '')}/${radioStream.icecastMount}`
+    : null
+
+  const videoStreamingUrl = videoBase
+    ? `${videoBase.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
+    : null
+
+  return { radioStreamingUrl, videoStreamingUrl }
+}
+
+/**
  * Reescribe BasicData.radioStreamingUrl / videoStreamingUrl según el
  * servidor asignado de cada servicio. Se usa al asignar/migrar un cliente.
  */
 export async function rewriteClientPublicUrls(
   clientId: string,
-  opts: { radioServerId?: string | null; videoServerId?: string | null }
+  opts: { radioServerId?: string | null; videoServerId?: string | null } = {}
 ) {
   const radioStream = await prisma.radioStream.findUnique({
     where: { clientId },

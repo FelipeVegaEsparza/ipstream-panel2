@@ -93,6 +93,10 @@ async function handleBasicData(request: NextRequest) {
       } as Prisma.BasicDataUncheckedCreateInput
     })
 
+    // Re-derivar y almacenar las URLs de streaming desde el servidor asignado
+    const { rewriteClientPublicUrls } = await import('@/lib/streaming-helpers')
+    await rewriteClientPublicUrls(effectiveClient.clientId).catch(() => {})
+
     console.log('🏠 Basic data updated successfully:', basicData.id)
     return NextResponse.json(basicData)
   } catch (error) {

@@ -46,7 +46,15 @@ export async function GET(request: NextRequest) {
       where: { clientId }
     })
 
-    return NextResponse.json({ basicData })
+    // Las URLs de streaming se derivan SIEMPRE del servidor asignado (admin).
+    const { getClientStreamUrls } = await import('@/lib/streaming-helpers')
+    const { radioStreamingUrl, videoStreamingUrl } = await getClientStreamUrls(clientId)
+
+    return NextResponse.json({
+      basicData: basicData
+        ? { ...basicData, radioStreamingUrl, videoStreamingUrl }
+        : null,
+    })
 
   } catch (error) {
     console.error('Error al obtener datos básicos:', error)
