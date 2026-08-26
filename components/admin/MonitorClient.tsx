@@ -24,9 +24,11 @@ interface ClientStatus {
   email: string
   hasRadio: boolean
   radioStatus: string | null
+  radioServerName: string | null
   radioServerOnline: boolean
   hasVideo: boolean
   videoStatus: string | null
+  videoServerName: string | null
   videoServerOnline: boolean
   listeners: number
   viewers: number
@@ -344,7 +346,9 @@ export function MonitorClient() {
                 <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
                   <tr>
                     <th className="text-left p-3">Cliente</th>
+                    <th className="text-left p-3">Servidor Audio</th>
                     <th className="text-left p-3">Audio</th>
+                    <th className="text-left p-3">Servidor Video</th>
                     <th className="text-left p-3">Video</th>
                     <th className="text-right p-3">Oyentes</th>
                     <th className="text-right p-3">Espectadores</th>
@@ -358,7 +362,25 @@ export function MonitorClient() {
                         <div className="text-white font-medium">{c.clientName}</div>
                         <div className="text-xs text-gray-500">{c.email}</div>
                       </td>
+                      <td className="p-3">
+                        {c.hasRadio ? (
+                          <span className={`text-xs font-medium ${c.radioServerOnline ? 'text-cyan-300' : 'text-red-400'}`}>
+                            {c.radioServerName || '—'}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-600">—</span>
+                        )}
+                      </td>
                       <td className="p-3"><StatusBadge status={c.radioStatus} has={c.hasRadio} unavailable={c.hasRadio && !c.radioServerOnline} /></td>
+                      <td className="p-3">
+                        {c.hasVideo ? (
+                          <span className={`text-xs font-medium ${c.videoServerOnline ? 'text-cyan-300' : 'text-red-400'}`}>
+                            {c.videoServerName || '—'}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-600">—</span>
+                        )}
+                      </td>
                       <td className="p-3"><StatusBadge status={c.videoStatus} has={c.hasVideo} unavailable={c.hasVideo && !c.videoServerOnline} /></td>
                       <td className="p-3 text-right text-white">{c.listeners}</td>
                       <td className="p-3 text-right text-white">{c.viewers}</td>

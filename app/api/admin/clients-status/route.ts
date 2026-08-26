@@ -47,6 +47,7 @@ export async function GET() {
     ])
 
     const serverHealth = new Map(servers.map((s) => [s.id, s.isHealthy && s.isActive]))
+    const serverNames = new Map(servers.map((s) => [s.id, s.name]))
     const healthyServers = servers.filter((s) => s.isHealthy && s.isActive).map((s) => s.id)
 
     // Consultar streaming-status de cada servidor sano
@@ -71,10 +72,12 @@ export async function GET() {
         hasRadio: !!c.radioStream,
         radioStatus: c.radioStream?.status ?? null,
         radioServerId: c.radioStream?.serverId ?? null,
+        radioServerName: c.radioStream?.serverId ? (serverNames.get(c.radioStream.serverId) ?? null) : null,
         radioServerOnline,
         hasVideo: !!c.videoStream,
         videoStatus: c.videoStream?.status ?? null,
         videoServerId: c.videoStream?.serverId ?? null,
+        videoServerName: c.videoStream?.serverId ? (serverNames.get(c.videoStream.serverId) ?? null) : null,
         videoServerOnline,
         listeners: listenersByClient.get(c.id) ?? 0,
         viewers: viewersByClient.get(c.id) ?? 0,
