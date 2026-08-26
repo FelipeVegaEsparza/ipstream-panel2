@@ -57,25 +57,50 @@ export async function GET() {
 
     const listenersByClient = new Map<string, number>()
     const viewersByClient = new Map<string, number>()
+    const radioLiveByClient = new Map<string, boolean>()
+    const radioDjByClient = new Map<string, boolean>()
+    const videoLiveByClient = new Map<string, boolean>()
+    const videoDjByClient = new Map<string, boolean>()
     for (const { data } of perServer) {
-      for (const r of data.radio || []) listenersByClient.set(r.clientId, (listenersByClient.get(r.clientId) ?? 0) + (r.listeners ?? 0))
-      for (const v of data.video || []) viewersByClient.set(v.clientId, (viewersByClient.get(v.clientId) ?? 0) + (v.viewers ?? 0))
+      for (const r of data.radio || []) {
+        listenersByClient.set(r.clientId, (listenersByClient.get(r.clientId) ?? 0) + (r.listeners ?? 0))
+        if (typeof r.live === 'boolean') radioLiveByClient.set(r.clientId, r.live)
+        if (typeof r.djLive === 'boolean') radioDjByClient.set(r.clientId, r.djLive)
+      }
+      for (const v of data.video || []) {
+        viewersByClient.set(v.clientId, (viewersByClient.get(v.clientId) ?? 0) + (v.viewers ?? 0))
+        if (typeof v.live === 'boolean') videoLiveByClient.set(v.clientId, v.live)
+        if (typeof v.djLive === 'boolean') videoDjByClient.set(v.clientId, v.djLive)
+      }
     }
 
     const rows = clients.map((c) => {
       const radioServerOnline = c.radioStream?.serverId ? (serverHealth.get(c.radioStream.serverId) ?? false) : true
       const videoServerOnline = c.videoStream?.serverId ? (serverHealth.get(c.videoStream.serverId) ?? false) : true
+      // Estado EN VIVO (fuente real en icecast/SRS), con fallback a la DB
+      let radioStatus: string | null = null
+      if (c.radioStream) {
+        radioStatus = radioLiveByClient.has(c.id)
+          ? (radioLiveByClient.get(c.id) ? (radioDjByClient.get(c.id) ? 'live' : 'autodj') : 'off')
+          : c.radioStream.status
+      }
+      let videoStatus: string | null = null
+      if (c.videoStream) {
+        videoStatus = videoLiveByClient.has(c.id)
+          ? (videoLiveByClient.get(c.id) ? (videoDjByClient.get(c.id) ? 'live' : 'autodj') : 'off')
+          : c.videoStream.status
+      }
       return {
         clientId: c.id,
         clientName: c.name,
         email: c.user.email,
         hasRadio: !!c.radioStream,
-        radioStatus: c.radioStream?.status ?? null,
+        radioStatus,
         radioServerId: c.radioStream?.serverId ?? null,
         radioServerName: c.radioStream?.serverId ? (serverNames.get(c.radioStream.serverId) ?? null) : null,
         radioServerOnline,
         hasVideo: !!c.videoStream,
-        videoStatus: c.videoStream?.status ?? null,
+        videoStatus,
         videoServerId: c.videoStream?.serverId ?? null,
         videoServerName: c.videoStream?.serverId ? (serverNames.get(c.videoStream.serverId) ?? null) : null,
         videoServerOnline,

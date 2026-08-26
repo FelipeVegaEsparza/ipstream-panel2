@@ -8,7 +8,8 @@
 import { logger } from '../lib/logger.js'
 import { pool } from '../lib/db.js'
 import { getMountStatus } from '../lib/icecast.js'
-import { execCmd } from '../lib/video-encoder.js'
+import { execCmd, getEncoderStatus, getTranscoderStatus } from '../lib/video-encoder.js'
+import { isAnyDjActive } from '../lib/dj-state.js'
 import crypto from 'crypto'
 import fs from 'fs'
 
@@ -203,32 +204,50 @@ export default async function monitorRoutes(app) {
 
       // Oyentes en vivo de radio (Icecast)
       const listenersByClient = {}
+      const radioLiveByClient = {}
+      const radioDjByClient = {}
       for (const rs of radios[0] || []) {
         try {
           const mount = await getMountStatus(rs.icecastMount)
           listenersByClient[rs.clientId] = mount?.listeners ?? 0
+          radioLiveByClient[rs.clientId] = !!mount
+          radioDjByClient[rs.clientId] = isAnyDjActive(rs.icecastMount)
         } catch {
           listenersByClient[rs.clientId] = 0
+          radioLiveByClient[rs.clientId] = false
+          radioDjByClient[rs.clientId] = false
         }
       }
 
       // Espectadores de video (log de Caddy)
       const viewersByStreamKey = await countVideoViewers()
       const viewersByClient = {}
+      const videoLiveByClient = {}
+      const videoDjByClient = {}
       for (const v of videos[0] || []) {
         const key = getStreamKey(v.clientId)
         viewersByClient[v.clientId] = viewersByStreamKey[key] || 0
+        const enc = getEncoderStatus(v.clientId)
+        const tr = getTranscoderStatus(v.clientId)
+        const encRunning = enc?.status === 'running'
+        const djRunning = tr?.status === 'running'
+        videoLiveByClient[v.clientId] = encRunning || djRunning
+        videoDjByClient[v.clientId] = djRunning
       }
 
       return {
         radio: (radios[0] || []).map((rs) => ({
           clientId: rs.clientId,
           status: rs.status,
+          live: radioLiveByClient[rs.clientId] ?? false,
+          djLive: radioDjByClient[rs.clientId] ?? false,
           listeners: listenersByClient[rs.clientId] ?? 0,
         })),
         video: (videos[0] || []).map((v) => ({
           clientId: v.clientId,
           status: v.status,
+          live: videoLiveByClient[v.clientId] ?? false,
+          djLive: videoDjByClient[v.clientId] ?? false,
           viewers: viewersByClient[v.clientId] || 0,
         })),
       }
