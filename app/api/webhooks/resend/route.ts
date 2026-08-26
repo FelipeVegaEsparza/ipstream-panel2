@@ -22,6 +22,15 @@ const STATUS_MAP: Record<string, string> = {
   'email.clicked': 'clicked',
 }
 
+function signingKey(secret: string): Buffer {
+  // Svix: si el secreto empieza con `whsec_`, la clave de firma es el resto
+  // decodificado en base64. Si no, se usa la cadena cruda como bytes.
+  if (secret.startsWith('whsec_')) {
+    return Buffer.from(secret.slice('whsec_'.length), 'base64')
+  }
+  return Buffer.from(secret, 'utf8')
+}
+
 function verifySvix(rawBody: string, headers: Headers): boolean {
   if (!WEBHOOK_SECRET) return false
   const id = headers.get('svix-id')
@@ -30,15 +39,23 @@ function verifySvix(rawBody: string, headers: Headers): boolean {
   if (!id || !ts || !sigHeader) return false
 
   const signedContent = `${id}.${ts}.${rawBody}`
-  const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(signedContent).digest('base64')
 
-  // svix-signature puede traer varias firmas separadas por espacio: "v1,xxx v1,yyy"
+  // Intentar con la clave del secreto (whsec_ → base64) y con la cruda,
+  // por si Resend cambia el formato. Tiempo constante para evitar timing.
+  const candidates = [signingKey(WEBHOOK_SECRET)]
+  if (WEBHOOK_SECRET.startsWith('whsec_')) {
+    candidates.push(Buffer.from(WEBHOOK_SECRET, 'utf8'))
+  }
+
   return sigHeader.split(' ').some((part) => {
     const [version, sig] = part.split(',')
     if (version !== 'v1' || !sig) return false
     const a = Buffer.from(sig)
-    const b = Buffer.from(expected)
-    return a.length === b.length && crypto.timingSafeEqual(a, b)
+    return candidates.some((key) => {
+      const expected = crypto.createHmac('sha256', key).update(signedContent).digest('base64')
+      const b = Buffer.from(expected)
+      return a.length === b.length && crypto.timingSafeEqual(a, b)
+    })
   })
 }
 

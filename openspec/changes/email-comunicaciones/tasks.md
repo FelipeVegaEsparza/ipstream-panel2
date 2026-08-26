@@ -36,4 +36,4 @@
 
 - [x] 6.1 Envío a "todos los clientes" con throttling secuencial y log por destinatario
 - [x] 6.2 Documentar en `DEPLOY.md`: verificación de dominio en Resend (DKIM/SPF), `RESEND_FROM_EMAIL`, configuración del webhook y límites del plan
-- [ ] 6.3 Verificar end-to-end: correo de prueba, boleta automática (cuota + pago confirmado con PDF), aviso de soporte y un envío masivo con rastreo en el historial
+- [x] 6.3 Verificar end-to-end: correo de prueba, boleta automática (cuota + pago confirmado con PDF), aviso de soporte y un envío masivo con rastreo en el historial
