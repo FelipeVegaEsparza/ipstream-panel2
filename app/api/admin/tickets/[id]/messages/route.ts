@@ -67,6 +67,14 @@ export async function POST(
       return message
     })
 
+    // Hook: respuesta del admin → notificar al cliente por correo (aislado, opt-in)
+    try {
+      if (data.notifyByEmail !== false) {
+        const { sendSupportReplyEmail } = await import('@/lib/email-hooks')
+        await sendSupportReplyEmail(params.id, data.body)
+      }
+    } catch {}
+
     return NextResponse.json({ ok: true, message: result }, { status: 201 })
   } catch (error) {
     console.error('Error al crear mensaje:', error)

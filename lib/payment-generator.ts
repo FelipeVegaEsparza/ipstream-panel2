@@ -124,7 +124,7 @@ export async function completePaymentAndGenerateNext(
   receiptUrl?: string,
   customPaidDate?: Date
 ) {
-  return await prisma.$transaction(async (tx: any) => {
+  const result = await prisma.$transaction(async (tx: any) => {
     const currentPayment = await tx.payment.findUnique({
       where: { id: paymentId },
       include: { subscription: { include: { plan: true } } },
@@ -190,6 +190,23 @@ export async function completePaymentAndGenerateNext(
 
     return { updatedPayment, nextPayment }
   })
+
+  // Hook: confirmar pago → boleta con PDF (tras el commit, aislado)
+  try {
+    const { sendAccountEmail } = await import('./email-hooks')
+    await sendAccountEmail(
+      result.updatedPayment.clientId,
+      {
+        amount: result.updatedPayment.amount,
+        currency: result.updatedPayment.currency,
+        dueDate: result.updatedPayment.dueDate,
+        description: result.updatedPayment.description,
+      },
+      result.updatedPayment.subscription?.plan?.name
+    )
+  } catch {}
+
+  return result
 }
 
 /**
@@ -211,7 +228,7 @@ export async function createManualPayment(
 ) {
   const { subscriptionId, amount, currency, paymentMethod, description, paidAt } = params
 
-  return await prisma.$transaction(async (tx: any) => {
+  const result = await prisma.$transaction(async (tx: any) => {
     const subscription = await tx.subscription.findUnique({
       where: { id: subscriptionId },
       include: { plan: true, client: true },
@@ -289,4 +306,21 @@ export async function createManualPayment(
 
     return { payment, nextPayment }
   })
+
+  // Hook: registrar pago → boleta con PDF (tras el commit, aislado)
+  try {
+    const { sendAccountEmail } = await import('./email-hooks')
+    await sendAccountEmail(
+      result.payment.clientId,
+      {
+        amount: result.payment.amount,
+        currency: result.payment.currency,
+        dueDate: result.payment.dueDate,
+        description: result.payment.description,
+      },
+      undefined
+    )
+  } catch {}
+
+  return result
 }

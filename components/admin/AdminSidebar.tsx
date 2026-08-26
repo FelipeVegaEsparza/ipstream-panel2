@@ -24,6 +24,7 @@ import {
   RadioIcon,
   SignalIcon,
   ServerStackIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 
@@ -35,6 +36,7 @@ const navigation = [
   { name: 'Streaming', href: '/admin/streaming', icon: RadioIcon },
   { name: 'Servidores de Streaming', href: '/admin/servers', icon: ServerStackIcon },
   { name: 'Monitor', href: '/admin/monitor', icon: SignalIcon },
+  { name: 'Comunicaciones', href: '/admin/comunicaciones', icon: EnvelopeIcon },
   { name: 'Tickets de soporte', href: '/admin/tickets', icon: LifebuoyIcon },
   { name: 'Plantillas Sitio', href: '/admin/templates', icon: PaintBrushIcon },
   { name: 'Noticias Genéricas', href: '/admin/news-global', icon: NewspaperIcon },

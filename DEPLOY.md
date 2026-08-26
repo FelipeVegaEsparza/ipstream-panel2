@@ -295,6 +295,29 @@ Consideraciones:
 
 ---
 
+## Correo transaccional (Resend)
+
+El panel envía correos a los clientes (boletas, avisos, soporte) vía **Resend**. Para activarlo:
+
+1. Creá una cuenta en [resend.com](https://resend.com) y agregá la **API Key** en `.env`:
+   ```
+   RESEND_API_KEY=re_...
+   RESEND_FROM_EMAIL=no-reply@ipstream.cl
+   RESEND_WEBHOOK_SECRET=<openssl rand -hex 32>
+   ```
+2. **Verificá el dominio** en Resend (`ipstream.cl`): agregá los registros **DKIM/SPF** que te muestra Resend en tu DNS y pulsá "Verify". El `RESEND_FROM_EMAIL` debe usar un dominio verificado (si no, los correos no salen o caen en spam).
+3. **Webhook de rastreo** (entregado/abierto/clic): en Resend → *Webhooks* → crear webhook apuntando a:
+   ```
+   https://panelipstream.cl/api/webhooks/resend
+   ```
+   y pegar el secreto en `RESEND_WEBHOOK_SECRET`. Resend firma los payloads (Svix) y el panel los valida.
+4. **Plantillas**: se siembran solas al arrancar (`boleta`, `soporte`, `aviso`) y se editan desde `/admin/comunicaciones` → Plantillas.
+5. **Límites**: el plan gratuito incluye 3.000 emails/mes. Los envíos masivos van secuenciales con throttle.
+
+> Sin `RESEND_API_KEY` el panel funciona igual (no envía correos) y cada intento queda registrado como `skipped` en el historial.
+
+---
+
 ## Próximas mejoras pendientes (no críticas)
 
 - Tests automatizados del flujo de streaming.

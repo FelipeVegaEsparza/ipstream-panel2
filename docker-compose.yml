@@ -70,6 +70,10 @@ services:
       ICE_PUBLIC_PORT: ${ICE_PUBLIC_PORT:-8000}
       HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME:-localhost}
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
+      # Email (Resend)
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-no-reply@ipstream.cl}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ipstream.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123456}
       ADMIN_NAME: ${ADMIN_NAME:-Administrador Principal}

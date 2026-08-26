@@ -80,6 +80,7 @@ model Client {
   videoPlaylists         VideoPlaylist[]
   videoPlaylistEntries   VideoPlaylistEntry[]
   videoPlaylistSchedules VideoPlaylistSchedule[]
+  emailLogs              EmailLog[]
 
   @@map("clients")
 }
@@ -1058,6 +1059,57 @@ model VideoPlaylistSchedule {
   @@index([clientId, dayOfWeek, isActive])
   @@index([videoStreamId, dayOfWeek, isActive])
   @@map("video_playlist_schedules")
+}
+
+// ================================================================
+// Email — plantillas y log de envíos (Resend)
+// ================================================================
+
+// Plantillas de correo editables desde el admin.
+// El subject y htmlBody pueden contener variables {{nombre}}, {{plan}},
+// {{monto}}, {{fecha}}, {{link}}, {{descripcion}} según el tipo.
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique // "boleta" | "soporte" | "aviso" | "general"
+  name        String // nombre legible para el admin
+  description String?  @db.Text
+  subject     String // con {{variables}}
+  htmlBody    String   @db.Text // HTML con {{variables}}
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  emails EmailLog[]
+
+  @@map("email_templates")
+}
+
+// Historial de envíos con rastreo (entregado/abierto/clic vía webhook).
+// status: "sent" | "delivered" | "bounced" | "opened" | "clicked" | "failed" | "skipped" | "complained"
+model EmailLog {
+  id          String   @id @default(cuid())
+  clientId    String?
+  to          String // destinatario
+  from        String // remitente usado
+  subject     String
+  templateKey String?
+  status      String   @default("sent")
+  resendId    String? // id devuelto por Resend (para webhook)
+  error       String?  @db.Text
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  template EmailTemplate? @relation(fields: [templateKey], references: [key], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([status])
+  @@index([templateKey])
+  @@index([resendId])
+  @@index([createdAt])
+  @@map("email_logs")
 }
 
 // Modelos no utilizados eliminados: VideoPlayHistory, EdgeServer, ClientEdgeAssignment

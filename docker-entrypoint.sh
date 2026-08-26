@@ -49,6 +49,10 @@ if [ -n "${STREAMING_AGENT_TOKEN:-}" ]; then
   node scripts/seed-streaming-server.js || echo "[entrypoint] WARNING: seed de streaming server falló"
 fi
 
+# --- 3c. Seed de plantillas de email ---
+echo "[entrypoint] Verificando plantillas de email..."
+node scripts/seed-email-templates.js || echo "[entrypoint] WARNING: seed de plantillas de email falló"
+
 # --- 4. Migraciones manuales (tablas que el agente necesita, se crean si no existen) ---
 echo "[entrypoint] Ejecutando migraciones manuales..."
 node << 'SQL_EOF'

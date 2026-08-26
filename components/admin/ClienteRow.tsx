@@ -32,6 +32,8 @@ import {
 import { RegistrarPagoModal } from './RegistrarPagoModal'
 import { EditarFechaInicioModal } from './EditarFechaInicioModal'
 import { buildWhatsAppUrl, defaultAccountMessage, normalizeChileanPhone } from '@/lib/whatsapp'
+import { showToast } from '@/components/ui/toast'
+import { Mail } from 'lucide-react'
 
 export interface ClienteRowData {
   id: string
@@ -73,7 +75,34 @@ export function ClienteRow({
   const [showEditarFecha, setShowEditarFecha] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [markingId, setMarkingId] = useState<string | null>(null)
+  const [sendingBoleta, setSendingBoleta] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const enviarBoleta = async () => {
+    setSendingBoleta(true)
+    try {
+      const res = await fetch('/api/admin/emails/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientType: 'single',
+          clientIds: [client.id],
+          templateKey: 'boleta',
+          attachBoleta: true,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        showToast({ type: 'success', title: 'Boleta enviada', description: `Enviada a ${client.email}` })
+      } else {
+        showToast({ type: 'error', title: data?.message || 'Error al enviar la boleta' })
+      }
+    } catch {
+      showToast({ type: 'error', title: 'Error al enviar la boleta' })
+    } finally {
+      setSendingBoleta(false)
+    }
+  }
 
   useEffect(() => {
     if (!menuOpen) return
@@ -266,6 +295,17 @@ export function ClienteRow({
                     >
                       <FileText className="h-4 w-4 text-cyan-400" />
                       Generar boleta de pago
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false)
+                        enviarBoleta()
+                      }}
+                      disabled={sendingBoleta}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <Mail className="h-4 w-4 text-cyan-400" />
+                      {sendingBoleta ? 'Enviando...' : 'Enviar boleta por correo'}
                     </button>
                     {subscriptionActive && (
                       <button

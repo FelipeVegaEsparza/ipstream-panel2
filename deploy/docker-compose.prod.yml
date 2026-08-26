@@ -38,6 +38,9 @@ services:
       STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN}
       ICE_PUBLIC_URL: ${ICE_PUBLIC_URL}
       HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-no-reply@ipstream.cl}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
     volumes:
       - app_uploads:/app/public/uploads
       # No bind-mount schema.prisma en producción — la imagen ya lo trae

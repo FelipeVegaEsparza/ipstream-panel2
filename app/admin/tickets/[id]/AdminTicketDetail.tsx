@@ -37,6 +37,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
   const [ticket, setTicket] = useState(initial)
   const [body, setBody] = useState('')
   const [pending, setPending] = useState<SupportAttachment[]>(initial.attachments)
+  const [notifyByEmail, setNotifyByEmail] = useState(true)
   const [sending, setSending] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +62,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
         body: JSON.stringify({
           body: body.trim(),
           attachmentIds: pending.map((a) => a.id),
+          notifyByEmail,
         }),
       })
       if (!res.ok) {
@@ -168,6 +170,16 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
                 pending={pending}
                 onChange={setPending}
               />
+
+              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notifyByEmail}
+                  onChange={(e) => setNotifyByEmail(e.target.checked)}
+                  className="accent-cyan-500"
+                />
+                <Mail className="h-4 w-4 text-cyan-400" /> Avisar al cliente por correo
+              </label>
 
               {error && (
                 <div className="flex items-center gap-1.5 text-xs text-red-400">

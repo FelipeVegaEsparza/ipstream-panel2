@@ -196,6 +196,7 @@ export const supportTicketSchema = z.object({
 export const supportTicketMessageSchema = z.object({
   body: z.string().min(1, 'El mensaje no puede estar vacío').max(5000, 'Máximo 5000 caracteres'),
   attachmentIds: z.array(z.string()).max(5).optional().default([]),
+  notifyByEmail: z.boolean().optional().default(true),
 })
 
 export const supportTicketUpdateSchema = z.object({
@@ -328,3 +329,28 @@ export const streamingServerProvisionSchema = z.object({
   sshPassword: z.string().min(1).optional(),
 })
 export type StreamingServerProvisionInput = z.infer<typeof streamingServerProvisionSchema>
+
+// =====================================================
+// Email (Resend) — plantillas y envío
+// =====================================================
+
+export const emailTemplateSchema = z.object({
+  key: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
+  name: z.string().min(1).max(191),
+  description: z.string().max(5000).nullable().optional(),
+  subject: z.string().min(1).max(191),
+  htmlBody: z.string().min(1),
+  isActive: z.boolean().optional().default(true),
+})
+export type EmailTemplateInput = z.infer<typeof emailTemplateSchema>
+
+export const emailSendSchema = z.object({
+  recipientType: z.enum(['single', 'selected', 'all']),
+  clientIds: z.array(z.string()).optional(),
+  templateKey: z.string().optional(),
+  subject: z.string().max(191).optional(),
+  html: z.string().optional(),
+  attachBoleta: z.boolean().optional(),
+  test: z.boolean().optional(),
+})
+export type EmailSendInput = z.infer<typeof emailSendSchema>

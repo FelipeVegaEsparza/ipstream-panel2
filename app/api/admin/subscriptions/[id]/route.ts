@@ -79,6 +79,21 @@ export async function PATCH(
       return { subscription: updatedSubscription, payments }
     })
 
+    // Hook: se regeneran cuotas pendientes → aviso de cobro (tras el commit, aislado)
+    try {
+      const pending = (result.payments as any[])
+        .filter((p) => p.status === 'pending')
+        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
+      if (pending) {
+        const { sendAccountEmail } = await import('@/lib/email-hooks')
+        await sendAccountEmail(
+          pending.clientId,
+          { amount: pending.amount, currency: pending.currency, dueDate: pending.dueDate, description: pending.description },
+          undefined
+        )
+      }
+    } catch {}
+
     return NextResponse.json({
       message: 'Fecha de inicio actualizada y pagos regenerados',
       subscription: result.subscription,

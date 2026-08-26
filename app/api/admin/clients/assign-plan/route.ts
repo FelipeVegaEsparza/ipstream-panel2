@@ -127,6 +127,21 @@ export async function POST(request: NextRequest) {
       return { client: updatedClient, subscription, payments }
     })
 
+    // Hook: se generan cuotas pendientes → aviso de cobro (tras el commit, aislado)
+    try {
+      const pending = (result.payments as any[])
+        .filter((p) => p.status === 'pending')
+        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
+      if (pending) {
+        const { sendAccountEmail } = await import('@/lib/email-hooks')
+        await sendAccountEmail(
+          pending.clientId,
+          { amount: pending.amount, currency: pending.currency, dueDate: pending.dueDate, description: pending.description },
+          plan.name
+        )
+      }
+    } catch {}
+
     return NextResponse.json({
       message: 'Plan asignado exitosamente',
       client: result.client,
