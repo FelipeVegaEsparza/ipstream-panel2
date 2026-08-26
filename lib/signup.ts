@@ -7,6 +7,21 @@
 import { prisma } from '@/lib/prisma'
 import { sendAccountEmail } from './email-hooks'
 
+/** Aplica las cuotas de almacenamiento del plan a los streams del cliente. */
+export async function applyPlanQuotasToClient(
+  clientId: string,
+  plan: { radioStorageQuotaMB?: number | null; videoStorageQuotaMB?: number | null }
+) {
+  await prisma.radioStream.updateMany({
+    where: { clientId },
+    data: { storageQuotaMB: plan.radioStorageQuotaMB ?? null },
+  })
+  await prisma.videoStream.updateMany({
+    where: { clientId },
+    data: { storageQuotaMB: plan.videoStorageQuotaMB ?? null },
+  })
+}
+
 export async function createSignupSubscription(clientId: string, planId: string) {
   const plan = await prisma.plan.findUnique({ where: { id: planId } })
   if (!plan || !plan.isActive) {
@@ -43,6 +58,9 @@ export async function createSignupSubscription(clientId: string, planId: string)
       dueDate: endDate,
     },
   })
+
+  // Aplicar cuotas de almacenamiento del plan (restringe la biblioteca de inmediato)
+  await applyPlanQuotasToClient(clientId, plan)
 
   // Boleta automática (email) al cliente — aislada, nunca rompe el registro
   try {

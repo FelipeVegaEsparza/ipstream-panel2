@@ -51,7 +51,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, description, price, currency, interval, features, isActive } = body
+    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs } = body
 
     // Validaciones
     if (!name || !description || price === undefined || !interval) {
@@ -95,7 +95,10 @@ export async function PUT(
         currency: currency || 'CLP',
         interval,
         features: features || '[]',
-        isActive: isActive ?? true
+        isActive: isActive ?? true,
+        radioStorageQuotaMB: radioStorageQuotaMB ?? null,
+        videoStorageQuotaMB: videoStorageQuotaMB ?? null,
+        maxDjs: typeof maxDjs === 'number' ? maxDjs : 4,
       }
     })
 

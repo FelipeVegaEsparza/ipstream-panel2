@@ -331,6 +331,10 @@ model Plan {
   features    String   @db.Text // JSON array de características
   isActive    Boolean  @default(true)
   maxDjs      Int      @default(4) // Máximo de DJs simultáneos por radio. NULL no soportado.
+  // Cuotas de almacenamiento (MB) del plan; null = ilimitado.
+  // Se aplican a RadioStream.storageQuotaMB / VideoStream.storageQuotaMB al asignar el plan.
+  radioStorageQuotaMB Int?
+  videoStorageQuotaMB Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

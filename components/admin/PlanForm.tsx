@@ -20,6 +20,8 @@ interface Plan {
   interval: string
   features: string
   isActive: boolean
+  radioStorageQuotaMB: number | null
+  videoStorageQuotaMB: number | null
 }
 
 interface PlanFormProps {
@@ -35,7 +37,9 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     price: plan?.price || 0,
     currency: plan?.currency || 'CLP',
     interval: plan?.interval || 'monthly',
-    isActive: plan?.isActive ?? true
+    isActive: plan?.isActive ?? true,
+    radioStorageQuotaMB: plan?.radioStorageQuotaMB?.toString() || '',
+    videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
   })
 
   const [features, setFeatures] = useState<string[]>(
@@ -59,7 +63,9 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
         },
         body: JSON.stringify({
           ...formData,
-          features: JSON.stringify(features.filter(f => f.trim() !== ''))
+          features: JSON.stringify(features.filter(f => f.trim() !== '')),
+          radioStorageQuotaMB: formData.radioStorageQuotaMB === '' ? null : Number(formData.radioStorageQuotaMB),
+          videoStorageQuotaMB: formData.videoStorageQuotaMB === '' ? null : Number(formData.videoStorageQuotaMB),
         })
       })
 
@@ -178,11 +184,43 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Cuota de almacenamiento (vacío = ilimitado)
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Radio (MB)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={formData.radioStorageQuotaMB}
+                  onChange={(e) => setFormData({ ...formData, radioStorageQuotaMB: e.target.value })}
+                  placeholder="ej: 5000 (5 GB)"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">TV / Video (MB)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={formData.videoStorageQuotaMB}
+                  onChange={(e) => setFormData({ ...formData, videoStorageQuotaMB: e.target.value })}
+                  placeholder="ej: 20000 (20 GB)"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Se aplica automáticamente a la biblioteca del cliente al contratar este plan (o al asignarlo).
+            </p>
+          </div>
+
+          <div>
             <div className="flex justify-between items-center mb-3">
               <label className="block text-sm font-medium text-gray-300">
                 Características del Plan
-              </label>
-              <Button
+              </label>              <Button
                 type="button"
                 onClick={addFeature}
                 size="sm"

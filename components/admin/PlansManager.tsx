@@ -20,6 +20,8 @@ interface Plan {
   interval: string
   features: string
   isActive: boolean
+  radioStorageQuotaMB: number | null
+  videoStorageQuotaMB: number | null
   createdAt: Date
   _count: {
     clients: number
