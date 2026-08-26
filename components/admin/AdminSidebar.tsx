@@ -37,6 +37,7 @@ const navigation = [
   { name: 'Servidores de Streaming', href: '/admin/servers', icon: ServerStackIcon },
   { name: 'Monitor', href: '/admin/monitor', icon: SignalIcon },
   { name: 'Comunicaciones', href: '/admin/comunicaciones', icon: EnvelopeIcon },
+  { name: 'Clientes y Servidores', href: '/admin/clientes-servidores', icon: ServerStackIcon },
   { name: 'Tickets de soporte', href: '/admin/tickets', icon: LifebuoyIcon },
   { name: 'Plantillas Sitio', href: '/admin/templates', icon: PaintBrushIcon },
   { name: 'Noticias Genéricas', href: '/admin/news-global', icon: NewspaperIcon },
