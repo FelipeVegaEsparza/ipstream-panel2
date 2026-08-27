@@ -46,10 +46,14 @@ export async function readMetadata(filePath) {
   }
 }
 
-export async function fetchCoverFromMusicBrainz(artist, album) {
-  if (!artist || !album) return null
+export async function fetchCoverFromMusicBrainz(artist, album, title = null) {
+  if (!artist) return null
   try {
-    const searchUrl = `https://musicbrainz.org/ws/2/release/?query=artist:${encodeURIComponent(artist)}+release:${encodeURIComponent(album)}&fmt=json&limit=3`
+    // Si no hay álbum, buscar por artista + título del tema (single).
+    const queryParts = [`artist:${artist}`]
+    if (album) queryParts.push(`release:${album}`)
+    else if (title) queryParts.push(`recording:${title}`)
+    const searchUrl = `https://musicbrainz.org/ws/2/release/?query=${encodeURIComponent(queryParts.join('+'))}&fmt=json&limit=3`
     const searchRes = await fetch(searchUrl, {
       headers: { 'User-Agent': 'IPStreamPanel/1.0 (felipe@ipstream.cl)' },
     })
@@ -76,12 +80,17 @@ function parseFilename(filePath) {
   const base = filePath.split('/').pop() || ''
   const name = base.replace(/\.[^.]+$/, '')
 
-  let title = name
+  // uniqueFileName() agrega un prefijo de timestamp ("1700000000_") y
+  // reemplaza espacios por '_' (sanitize). Recuperamos un título legible:
+  // 1) quitar el prefijo de timestamp, 2) '_' -> espacio.
+  const cleaned = name.replace(/^\d+_/, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim() || name
+
+  let title = cleaned
   let artist = null
   let album = null
 
   for (const sep of FILENAME_SEPARATORS) {
-    const parts = name.split(sep)
+    const parts = cleaned.split(sep)
     if (parts.length >= 2) {
       artist = parts[0].trim()
       title = parts.slice(1).join(sep).trim()
@@ -89,7 +98,7 @@ function parseFilename(filePath) {
     }
   }
 
-  return { title: title || name, artist, album }
+  return { title: title || cleaned, artist, album }
 }
 
 export function sanitizeFileName(name) {

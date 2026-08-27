@@ -126,6 +126,7 @@ export const streamingClient = {
 
   // Library
   listLibrary: async (clientId: string) => request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/library`),
+  refreshCovers: async (clientId: string) => request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/library/covers/refresh`, { method: 'POST' }),
   uploadTrack: async (clientId: string, file: File) => {
     const form = new FormData()
     form.append('file', file)

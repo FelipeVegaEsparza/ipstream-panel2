@@ -397,4 +397,73 @@ export default async function libraryRoutes(app) {
     reply.header('Accept-Ranges', 'bytes')
     return reply.send(createReadStream(filePath))
   })
+
+  /**
+   * POST /api/streams/:clientId/library/covers/refresh
+   * Corrige títulos "feos" (con prefijo timestamp de uniqueFileName) y busca
+   * carátulas para los tracks que no tienen (carátula embebida re-leída o
+   * MusicBrainz por artista). No toca tracks con carátula.
+   */
+  app.post('/api/streams/:clientId/library/covers/refresh', async (request, reply) => {
+    const { clientId } = request.params
+
+    // Tracks sin carátula + los que tienen título tipo "1234_nombre_sanitizado"
+    const [rows] = await pool.query(
+      `SELECT id, title, artist, album, fileName, filePath FROM tracks
+       WHERE clientId = ? AND (coverUrl IS NULL OR coverUrl = '')`,
+      [clientId]
+    )
+
+    let coversFound = 0
+    let titlesFixed = 0
+
+    for (const t of rows) {
+      try {
+        // 1) Corregir título derivado del archivo sanitizado (prefijo timestamp)
+        const looksSanitized = /^\d+_/.test(t.title || '')
+        if (looksSanitized) {
+          const meta = await readMetadata(t.filePath)
+          if (meta.title && meta.title !== t.title) {
+            await pool.query(
+              `UPDATE tracks SET title = ?, artist = COALESCE(?, artist), album = COALESCE(?, album), updatedAt = NOW() WHERE id = ?`,
+              [meta.title, meta.artist, meta.album, t.id]
+            )
+            titlesFixed++
+            t.title = meta.title
+            t.artist = meta.artist || t.artist
+            t.album = meta.album || t.album
+          }
+        }
+
+        // 2) Carátula embebida (re-leer, por si el upload no la extrajo)
+        const meta = await readMetadata(t.filePath)
+        if (meta.coverBuffer) {
+          await saveCover(clientId, t.id, meta.coverBuffer)
+          await pool.query(
+            `UPDATE tracks SET coverUrl = ? WHERE id = ?`,
+            [`/api/dashboard/streaming/library/${t.id}/cover`, t.id]
+          )
+          coversFound++
+          continue
+        }
+
+        // 3) MusicBrainz por artista (+álbum o título)
+        if (t.artist) {
+          const mb = await fetchCoverFromMusicBrainz(t.artist, t.album, t.title)
+          if (mb) {
+            await saveCover(clientId, t.id, mb.buffer)
+            await pool.query(
+              `UPDATE tracks SET coverUrl = ? WHERE id = ?`,
+              [`/api/dashboard/streaming/library/${t.id}/cover`, t.id]
+            )
+            coversFound++
+          }
+        }
+      } catch (err) {
+        logger.warn({ err: err.message, trackId: t.id }, 'cover refresh: error por track')
+      }
+    }
+
+    return { ok: true, scanned: rows.length, coversFound, titlesFixed }
+  })
 }

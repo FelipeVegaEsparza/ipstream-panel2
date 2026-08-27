@@ -115,6 +115,8 @@ export default function LibraryPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [savingEdit, setSavingEdit] = useState(false)
   const [page, setPage] = useState(1)
+  const [refreshingCovers, setRefreshingCovers] = useState(false)
+  const [coverResult, setCoverResult] = useState('')
 
   const load = useCallback(async () => {
     try {
@@ -143,6 +145,27 @@ export default function LibraryPage() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  const refreshCovers = async () => {
+    setRefreshingCovers(true)
+    setCoverResult('')
+    try {
+      const res = await fetch('/api/dashboard/streaming/library/covers/refresh', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        setCoverResult(
+          `Carátulas encontradas: ${data.coversFound ?? 0} · Títulos corregidos: ${data.titlesFixed ?? 0} · Revisados: ${data.scanned ?? 0}`
+        )
+        await load()
+      } else {
+        setCoverResult(data.message || 'Error al buscar carátulas')
+      }
+    } catch {
+      setCoverResult('Error al buscar carátulas')
+    } finally {
+      setRefreshingCovers(false)
+    }
+  }
 
   const filteredTracks = selectedFolderId
     ? tracks.filter(t => selectedFolderId === '__none__' ? !t.folderId : t.folderId === selectedFolderId)
@@ -420,6 +443,19 @@ export default function LibraryPage() {
       )}
 
       <LibraryUploader onUploaded={load} />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={refreshCovers}
+          disabled={refreshingCovers}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          {refreshingCovers ? 'Buscando carátulas...' : '🎵 Buscar carátulas faltantes'}
+        </button>
+        {coverResult && (
+          <span className="text-xs text-gray-400">{coverResult}</span>
+        )}
+      </div>
 
       <div className="flex gap-6">
         {/* Sidebar */}
