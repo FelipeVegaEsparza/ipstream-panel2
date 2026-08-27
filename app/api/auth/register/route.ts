@@ -65,18 +65,28 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Auto-crear RadioStream + VideoStream para el nuevo cliente
+    // Servicios que incluye el plan elegido (si hay): radio, tv o ambos.
+    // Sin plan → ambos (comportamiento actual).
+    const planServices = body.planId
+      ? (await prisma.plan.findUnique({ where: { id: body.planId }, select: { services: true } }))?.services || 'both'
+      : 'both'
+
+    // Auto-crear streams según los servicios del plan
     let streamInfo = null
     if (user.client) {
-      try {
-        streamInfo = await createRadioStreamForClient(user.client.id)
-      } catch (err) {
-        console.error('Error creando RadioStream para nuevo cliente:', err)
+      if (planServices === 'radio' || planServices === 'both') {
+        try {
+          streamInfo = await createRadioStreamForClient(user.client.id)
+        } catch (err) {
+          console.error('Error creando RadioStream para nuevo cliente:', err)
+        }
       }
-      try {
-        await createVideoStreamForClient(user.client.id)
-      } catch (err) {
-        console.error('Error creando VideoStream para nuevo cliente:', err)
+      if (planServices === 'tv' || planServices === 'both') {
+        try {
+          await createVideoStreamForClient(user.client.id)
+        } catch (err) {
+          console.error('Error creando VideoStream para nuevo cliente:', err)
+        }
       }
     }
 

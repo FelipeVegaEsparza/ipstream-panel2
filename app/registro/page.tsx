@@ -24,6 +24,7 @@ export default async function RegistroPage({
       interval: p.interval,
       features,
       maxDjs: p.maxDjs,
+      services: p.services || 'both',
     }
   })
 

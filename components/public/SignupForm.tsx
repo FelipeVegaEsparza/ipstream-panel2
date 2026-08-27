@@ -12,7 +12,10 @@ export interface PublicPlan {
   interval: string
   features: string[]
   maxDjs: number
+  services: string
 }
+
+const SERVICES_LABEL: Record<string, string> = { radio: 'Solo Radio', tv: 'Solo TV', both: 'Radio + TV' }
 
 export function SignupForm({ plans, preselect }: { plans: PublicPlan[]; preselect?: string }) {
   const [planId, setPlanId] = useState<string>(
@@ -97,7 +100,11 @@ export function SignupForm({ plans, preselect }: { plans: PublicPlan[]; preselec
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-white">{p.name}</span>
-                {selected && <Check className="h-4 w-4 text-cyan-400" />}
+                <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
+                  selected ? 'bg-cyan-500/20 text-cyan-300' : 'bg-gray-700 text-gray-400'
+                }`}>
+                  {SERVICES_LABEL[p.services] || 'Radio + TV'}
+                </span>
               </div>
               <div className="text-2xl font-bold text-white">
                 {formatPrice(p)}

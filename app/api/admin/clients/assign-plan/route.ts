@@ -127,10 +127,11 @@ export async function POST(request: NextRequest) {
       return { client: updatedClient, subscription, payments }
     })
 
-    // Aplicar cuotas de almacenamiento del plan a los streams del cliente
+    // Aplicar cuotas de almacenamiento del plan + crear streams faltantes
     try {
-      const { applyPlanQuotasToClient } = await import('@/lib/signup')
+      const { applyPlanQuotasToClient, ensureStreamsForServices } = await import('@/lib/signup')
       await applyPlanQuotasToClient(clientId, plan)
+      await ensureStreamsForServices(clientId, plan.services || 'both')
     } catch {}
 
     // Hook: se generan cuotas pendientes → aviso de cobro (tras el commit, aislado)

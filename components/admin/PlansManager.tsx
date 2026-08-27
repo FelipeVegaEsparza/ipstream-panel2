@@ -20,6 +20,7 @@ interface Plan {
   interval: string
   features: string
   isActive: boolean
+  services: string
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
   createdAt: Date
@@ -116,6 +117,9 @@ export function PlansManager({ plans }: PlansManagerProps) {
                       className={plan.isActive ? "bg-green-600" : "bg-gray-600"}
                     >
                       {plan.isActive ? 'Activo' : 'Inactivo'}
+                    </Badge>
+                    <Badge variant="secondary" className="bg-cyan-600">
+                      {plan.services === 'radio' ? 'Solo Radio' : plan.services === 'tv' ? 'Solo TV' : 'Radio + TV'}
                     </Badge>
                   </CardTitle>
                   <p className="text-gray-400 text-sm mt-1">

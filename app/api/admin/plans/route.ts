@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs } = body
+    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services } = body
 
     // Validaciones
     if (!name || !description || price === undefined || !interval) {
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
         radioStorageQuotaMB: radioStorageQuotaMB ?? null,
         videoStorageQuotaMB: videoStorageQuotaMB ?? null,
         maxDjs: typeof maxDjs === 'number' ? maxDjs : 4,
+        services: ["radio", "tv", "both"].includes(services) ? services : "both",
       }
     })
 

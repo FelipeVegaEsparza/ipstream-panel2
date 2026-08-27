@@ -20,6 +20,7 @@ interface Plan {
   interval: string
   features: string
   isActive: boolean
+  services: string
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
 }
@@ -38,6 +39,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     currency: plan?.currency || 'CLP',
     interval: plan?.interval || 'monthly',
     isActive: plan?.isActive ?? true,
+    services: plan?.services || 'both',
     radioStorageQuotaMB: plan?.radioStorageQuotaMB?.toString() || '',
     videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
   })
@@ -181,6 +183,24 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               <option value="monthly">Mensual</option>
               <option value="yearly">Anual</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Servicios incluidos *
+            </label>
+            <select
+              value={formData.services}
+              onChange={(e) => setFormData({ ...formData, services: e.target.value })}
+              className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
+            >
+              <option value="both">Radio + TV</option>
+              <option value="radio">Solo Radio</option>
+              <option value="tv">Solo TV</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Determina qué servicios se crean al contratar este plan.
+            </p>
           </div>
 
           <div>
