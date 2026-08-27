@@ -207,8 +207,13 @@ while true; do
 done
 
 # === 11. Limpieza de imágenes viejas y caché ===
-echo "🧹 Limpieza — Eliminando imágenes y caché Docker no utilizados..."
-docker system prune -f 2>&1 | tail -1
+# Mantiene imágenes de los últimos 7 días (para rollback) y elimina el resto
+# (imágenes taggeadas de deploys anteriores + caché de build). Sin `-a` docker
+# system prune solo borra imágenes sin tag, por eso se acumulaba el disco.
+echo "🧹 Limpieza — Eliminando imágenes y caché Docker no utilizados (>7 días)..."
+docker image prune -af --filter "until=168h" 2>&1 | tail -1
+docker builder prune -af 2>&1 | tail -1
+df -h / | tail -1
 
 echo
 echo "=================================================="
