@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, menuHiddenKeys, defaultServerId } = body
+    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, menuHiddenKeys, defaultServerId, imageUrl } = body
 
     // Validaciones
     if (!name || !description || price === undefined || !interval) {
@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
         services: ["radio", "tv", "both"].includes(services) ? services : "both",
         menuHiddenKeys: Array.isArray(menuHiddenKeys) ? JSON.stringify(menuHiddenKeys) : null,
         defaultServerId: defaultServerId || null,
+        imageUrl: imageUrl || null,
       }
     })
 

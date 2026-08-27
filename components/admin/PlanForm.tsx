@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { X, Plus, Trash2 } from 'lucide-react'
 import { MENU_ITEMS, MENU_SECTIONS } from '@/lib/menu-items'
+import { ImageUpload } from '@/components/ui/ImageUpload'
 
 interface Plan {
   id: string
@@ -26,6 +27,7 @@ interface Plan {
   videoStorageQuotaMB: number | null
   menuHiddenKeys: string | null
   defaultServerId: string | null
+  imageUrl: string | null
 }
 
 interface PlanFormProps {
@@ -46,6 +48,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     radioStorageQuotaMB: plan?.radioStorageQuotaMB?.toString() || '',
     videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
     defaultServerId: plan?.defaultServerId || '',
+    imageUrl: plan?.imageUrl || '',
   })
 
   const [servers, setServers] = useState<{ id: string; name: string; type: string }[]>([])
@@ -193,6 +196,19 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               required
               className="bg-gray-700 border-gray-600 text-white"
               rows={3}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Imagen del plan (para la página de registro)
+            </label>
+            <ImageUpload
+              value={formData.imageUrl}
+              onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+              onRemove={() => setFormData({ ...formData, imageUrl: '' })}
+              label="Imagen del plan"
+              description="Sube una imagen (JPG, PNG - Máx. 5MB)"
             />
           </div>
 

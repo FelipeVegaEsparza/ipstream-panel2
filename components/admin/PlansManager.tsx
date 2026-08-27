@@ -25,6 +25,7 @@ interface Plan {
   videoStorageQuotaMB: number | null
   menuHiddenKeys: string | null
   defaultServerId: string | null
+  imageUrl: string | null
   createdAt: Date
   _count: {
     clients: number
@@ -109,6 +110,12 @@ export function PlansManager({ plans }: PlansManagerProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans.map((plan) => (
           <Card key={plan.id} className="bg-gray-800 border-gray-700">
+            {plan.imageUrl && (
+              <div className="h-28 overflow-hidden rounded-t-2xl bg-gray-900">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={plan.imageUrl} alt={plan.name} className="w-full h-full object-cover" />
+              </div>
+            )}
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
