@@ -87,10 +87,12 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        const error = await response.json()
-        showToast({ type: 'error', title: error.message || 'Error al guardar el plan' })
+        const error = await response.json().catch(() => ({}))
+        console.error('[PlanForm] save error', response.status, error)
+        showToast({ type: 'error', title: error.message || error.error || 'Error al guardar el plan' })
       }
     } catch (error) {
+      console.error('[PlanForm] save exception', error)
       showToast({ type: 'error', title: 'Error al guardar el plan' })
     } finally {
       setLoading(false)
