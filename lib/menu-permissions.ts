@@ -66,10 +66,21 @@ export async function getDisabledMenuItems(clientId: string): Promise<Set<MenuIt
     try {
       const client = await prisma.client.findUnique({
         where: { id: clientId },
-        select: { plan: { select: { services: true } } },
+        select: { plan: { select: { services: true, menuHiddenKeys: true } } },
       })
       const services = client?.plan?.services || 'both'
       for (const k of planHiddenKeys(services)) disabled.add(k)
+      // Ocultar items puntuales definidos en el plan
+      if (client?.plan?.menuHiddenKeys) {
+        try {
+          const arr = JSON.parse(client.plan.menuHiddenKeys)
+          if (Array.isArray(arr)) {
+            for (const k of arr) {
+              if (typeof k === 'string') disabled.add(k as MenuItemKey)
+            }
+          }
+        } catch {}
+      }
     } catch {}
 
     return disabled

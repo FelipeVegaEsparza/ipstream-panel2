@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit, Trash2, Users, DollarSign, CreditCard } from 'lucide-react'
+import { Plus, Edit, Trash2, Users, DollarSign, CreditCard, Layout } from 'lucide-react'
 import { PlanForm } from './PlanForm'
 
 interface Plan {
@@ -23,6 +23,7 @@ interface Plan {
   services: string
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
+  menuHiddenKeys: string | null
   createdAt: Date
   _count: {
     clients: number
@@ -155,6 +156,17 @@ export function PlansManager({ plans }: PlansManagerProps) {
                 <p className="text-gray-400 text-sm">
                   Facturación {plan.interval === 'monthly' ? 'mensual' : 'anual'}
                 </p>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-1 text-gray-400">
+                  <Layout className="h-4 w-4" />
+                  {(plan.menuHiddenKeys ? (() => {
+                    try { const arr = JSON.parse(plan.menuHiddenKeys); return Array.isArray(arr) ? arr.length : 0 } catch { return 0 }
+                  })() : 0) === 0
+                    ? 'Todas las secciones'
+                    : `${(() => { try { return JSON.parse(plan.menuHiddenKeys!).length } catch { return 0 } })()} secciones ocultas`}
+                </div>
               </div>
 
               <div className="flex justify-between text-sm">

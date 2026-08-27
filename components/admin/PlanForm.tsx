@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { X, Plus, Trash2 } from 'lucide-react'
+import { MENU_ITEMS, MENU_SECTIONS } from '@/lib/menu-items'
 
 interface Plan {
   id: string
@@ -23,6 +24,7 @@ interface Plan {
   services: string
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
+  menuHiddenKeys: string | null
 }
 
 interface PlanFormProps {
@@ -48,6 +50,16 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     plan ? JSON.parse(plan.features || '[]') : ['']
   )
 
+  // Secciones ocultas del plan (items del dashboard que NO incluye)
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => {
+    try {
+      const arr = JSON.parse(plan?.menuHiddenKeys || '[]')
+      return new Set<string>(Array.isArray(arr) ? arr.filter((x: unknown) => typeof x === 'string') : [])
+    } catch {
+      return new Set<string>()
+    }
+  })
+
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,6 +80,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           features: JSON.stringify(features.filter(f => f.trim() !== '')),
           radioStorageQuotaMB: formData.radioStorageQuotaMB === '' ? null : Number(formData.radioStorageQuotaMB),
           videoStorageQuotaMB: formData.videoStorageQuotaMB === '' ? null : Number(formData.videoStorageQuotaMB),
+          menuHiddenKeys: Array.from(hiddenKeys),
         })
       })
 
@@ -273,6 +286,52 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Secciones del dashboard incluidas en el plan
+            </label>
+            <p className="text-xs text-gray-500 mb-3">
+              Desmarcá las secciones que este plan NO incluye (para diferenciar precios). El resto se oculta
+              automáticamente para los clientes de este plan.
+            </p>
+            <div className="space-y-4">
+              {MENU_SECTIONS.map((section) => {
+                const items = MENU_ITEMS.filter((i) => i.section === section)
+                if (items.length === 0) return null
+                return (
+                  <div key={section} className="rounded-lg bg-gray-700/40 border border-gray-600 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-300 mb-2">{section}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {items.map((item) => {
+                        const checked = !hiddenKeys.has(item.key)
+                        const isServiceSection = section === 'Radio' || section === 'Televisión'
+                        return (
+                          <label
+                            key={item.key}
+                            className={`flex items-center gap-2 text-sm ${isServiceSection ? '' : 'text-gray-300'}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                const next = new Set(hiddenKeys)
+                                if (e.target.checked) next.delete(item.key)
+                                else next.add(item.key)
+                                setHiddenKeys(next)
+                              }}
+                              className="rounded border-gray-600 bg-gray-800"
+                            />
+                            <span className={checked ? 'text-gray-200' : 'text-gray-500 line-through'}>{item.name}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
 

@@ -51,7 +51,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services } = body
+    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, menuHiddenKeys } = body
 
     // Validaciones
     if (!name || !description || price === undefined || !interval) {
@@ -100,6 +100,7 @@ export async function PUT(
         videoStorageQuotaMB: videoStorageQuotaMB ?? null,
         maxDjs: typeof maxDjs === 'number' ? maxDjs : 4,
         services: ["radio", "tv", "both"].includes(services) ? services : "both",
+        menuHiddenKeys: Array.isArray(menuHiddenKeys) ? JSON.stringify(menuHiddenKeys) : null,
       }
     })
 
