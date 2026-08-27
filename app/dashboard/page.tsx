@@ -160,7 +160,7 @@ export default async function DashboardPage() {
 
       <NowPlayingTvDisplay />
 
-      <PlanServicesCard plan={clientInfo.plan as any} />
+      <PlanServicesCard plan={clientInfo?.plan as any} />
 
       <PaymentStatusCard
         nextPaymentDate={nextPaymentDate}
