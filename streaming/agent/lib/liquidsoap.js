@@ -235,6 +235,14 @@ export async function startStream(clientId) {
 // El directorio /var/log/liquidsoap es world-writable (chmod 777
 // desde deploy.sh) asi que liquidsoap puede escribir.
     const logFile = `${LIQUIDSOAP_LOG_PATH}/${rs.icecastMount}.log`
+    // Asegurar que el log exista y sea escribible por liquidsoap (uid 100),
+    // incluso si quedó con otro dueño/permisos (p.ej. 1001/644) de un
+    // arranque anterior. Sin esto, el redirect del arranque fallaría y
+    // liquidsoap moriría al instante.
+    await execp(
+      `docker exec -u root ${LIQUIDSOAP_CONTAINER} sh -c "touch '${logFile}' && chmod 666 '${logFile}'"`,
+      { timeout: 8000 }
+    ).catch(() => {})
     // nohup + & (background) + redireccion a archivo. Funciona
     // porque el archivo de log no tiene problemas de permisos.
     // umask 000: el redirect crea el log como 666 (world-writable) para que
