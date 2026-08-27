@@ -3,6 +3,10 @@ import { SignupForm, PublicPlan } from '@/components/public/SignupForm'
 
 export const dynamic = 'force-dynamic'
 
+export const metadata = {
+  title: 'Crear cuenta | IPStream - Tu Radio Online',
+}
+
 export default async function RegistroPage({
   searchParams,
 }: {
@@ -32,37 +36,59 @@ export default async function RegistroPage({
   })
 
   return (
-    <div className="min-h-screen bg-[#0b0f17] text-white">
-      <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
-        {/* Header */}
-        <header className="flex items-center justify-between mb-10">
-          <img src="/logo-ipstream.png" alt="IPStream" className="h-9 w-auto" />
-          <a href="https://ipstream.cl" className="text-sm text-gray-400 hover:text-white transition-colors">
-            ← Volver a ipstream.cl
+    <div className="min-h-screen bg-gray-50 text-gray-900" style={{ fontFamily: 'Outfit, ui-sans-serif, system-ui, sans-serif' }}>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-200">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <a href="https://ipstream.cl" className="flex items-center">
+            <img src="https://ipstream.cl/images/logos/logo.png" alt="IPStream" className="h-11 w-auto" />
           </a>
-        </header>
+          <nav className="flex items-center gap-5">
+            <a href="https://ipstream.cl/planes" className="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors hidden sm:inline">Planes</a>
+            <a href="https://ipstream.cl/caracteristicas" className="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors hidden sm:inline">Características</a>
+            <a
+              href="https://ipstream.cl/landing"
+              className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all"
+            >
+              Quiero Contratar
+            </a>
+          </nav>
+        </div>
+      </header>
 
-        {/* Título */}
-        <section className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white">Creá tu cuenta</h1>
-          <p className="mt-2 text-gray-400 max-w-xl">
-            Elegí un plan y empezá a transmitir tu radio y televisión. Sin permanencia, activación inmediata.
-          </p>
-        </section>
+      {/* Título */}
+      <section className="max-w-5xl mx-auto px-4 pt-10 pb-8 text-center">
+        <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-600 text-sm font-medium mb-4">
+          CREA TU CUENTA
+        </span>
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          Elegí tu plan y empezá a <span className="text-blue-600">transmitir</span>
+        </h1>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Sitio web profesional, reproductor, app PWA y panel de administración para tu radio o televisión.
+        </p>
+      </section>
 
-        {/* Dos columnas: planes + formulario */}
+      {/* Dos columnas */}
+      <div className="max-w-5xl mx-auto px-4 pb-14">
         <SignupForm plans={parsedPlans} preselect={searchParams.plan} />
+      </div>
 
-        {/* Footer */}
-        <footer className="mt-14 pt-6 border-t border-white/10 text-center text-xs text-gray-500 space-y-1.5">
-          <p>IPStream · Radio y Televisión por streaming</p>
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-white py-6">
+        <div className="max-w-5xl mx-auto px-4 text-center text-sm text-gray-500 space-y-1.5">
+          <p>© {new Date().getFullYear()} IPStream · Radio Online y Televisión por streaming</p>
           <p>
             Al crear tu cuenta aceptás nuestros{' '}
-            <a href="#" className="text-gray-400 hover:text-cyan-400">Términos y Condiciones</a> y{' '}
-            <a href="#" className="text-gray-400 hover:text-cyan-400">Política de Privacidad</a>.
+            <a href="#" className="text-blue-600 hover:underline">Términos y Condiciones</a> y{' '}
+            <a href="#" className="text-blue-600 hover:underline">Política de Privacidad</a>.
           </p>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   )
 }
