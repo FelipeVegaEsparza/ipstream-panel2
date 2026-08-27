@@ -40,8 +40,10 @@ echo "[entrypoint] Generando cliente Prisma..."
 npx prisma generate >/dev/null 2>&1 || true
 
 # --- 3. Sincronizar schema (db push) ---
+# --accept-data-loss: igual que deploy.sh. Sin él, agregar columnas/tablas
+# nuevas (aditivas) dispara el warning y el push falla en cada deploy.
 echo "[entrypoint] Sincronizando schema con la base de datos..."
-npx prisma db push --skip-generate || echo "[entrypoint] WARNING: prisma db push falló, continuando con migraciones manuales..."
+npx prisma db push --accept-data-loss --skip-generate || echo "[entrypoint] WARNING: prisma db push falló, continuando con migraciones manuales..."
 
 # --- 3b. Seed del servidor de streaming principal ---
 if [ -n "${STREAMING_AGENT_TOKEN:-}" ]; then
