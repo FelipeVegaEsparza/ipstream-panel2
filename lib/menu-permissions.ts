@@ -23,8 +23,30 @@ export async function getGloballyHiddenMenuItems(): Promise<Set<MenuItemKey>> {
 }
 
 /**
+ * Keys de menú que se ocultan automáticamente según los servicios del plan.
+ * - 'radio' → oculta toda la sección Televisión
+ * - 'tv'    → oculta toda la sección Radio
+ * - 'both'  → nada oculto por plan
+ */
+function planHiddenKeys(services: string): MenuItemKey[] {
+  const hideSection = services === 'radio' ? 'Televisión' : services === 'tv' ? 'Radio' : null
+  if (!hideSection) return []
+  const keys: MenuItemKey[] = []
+  for (const item of MENU_ITEMS) {
+    if (item.section === hideSection) {
+      keys.push(item.key)
+      if (item.children) {
+        for (const c of item.children) keys.push(c.key)
+      }
+    }
+  }
+  return keys
+}
+
+/**
  * Devuelve un Set con las keys de los items que están DESHABILITADOS
- * para el cliente, combinando el override global con el per-client.
+ * para el cliente, combinando el override global, el per-client y las
+ * secciones que su plan no incluye (radio/tv).
  * El global tiene prioridad absoluta.
  *
  * Fail-open: si la query falla, devuelve Set vacío para no romper el dashboard.
@@ -38,8 +60,19 @@ export async function getDisabledMenuItems(clientId: string): Promise<Set<MenuIt
         select: { itemKey: true },
       }),
     ])
-    const clientDisabled = new Set(clientOverrides.map((r) => r.itemKey as MenuItemKey))
-    return new Set<MenuItemKey>([...globalHidden, ...clientDisabled])
+    const disabled = new Set<MenuItemKey>([...globalHidden, ...clientOverrides.map((r) => r.itemKey as MenuItemKey)])
+
+    // Plan: ocultar secciones no incluidas
+    try {
+      const client = await prisma.client.findUnique({
+        where: { id: clientId },
+        select: { plan: { select: { services: true } } },
+      })
+      const services = client?.plan?.services || 'both'
+      for (const k of planHiddenKeys(services)) disabled.add(k)
+    } catch {}
+
+    return disabled
   } catch (error) {
     console.error('Error cargando permisos de menú:', error)
     return new Set()

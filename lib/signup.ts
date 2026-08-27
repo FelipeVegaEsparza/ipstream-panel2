@@ -57,6 +57,12 @@ export async function createSignupSubscription(clientId: string, planId: string)
     },
   })
 
+  // Vincular el plan al cliente (lo usa el menú y el dashboard)
+  await prisma.client.update({
+    where: { id: clientId },
+    data: { planId: plan.id },
+  })
+
   const monthLabel = endDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
   const description = `${plan.interval === 'yearly' ? 'Pago anual' : 'Pago mensual'} - ${monthLabel}`
 
