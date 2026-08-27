@@ -46,6 +46,8 @@ export async function readMetadata(filePath) {
   }
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
 export async function fetchCoverFromMusicBrainz(artist, album, title = null) {
   if (!artist) return null
   try {
@@ -53,25 +55,43 @@ export async function fetchCoverFromMusicBrainz(artist, album, title = null) {
     const queryParts = [`artist:${artist}`]
     if (album) queryParts.push(`release:${album}`)
     else if (title) queryParts.push(`recording:${title}`)
-    const searchUrl = `https://musicbrainz.org/ws/2/release/?query=${encodeURIComponent(queryParts.join('+'))}&fmt=json&limit=3`
-    const searchRes = await fetch(searchUrl, {
-      headers: { 'User-Agent': 'IPStreamPanel/1.0 (felipe@ipstream.cl)' },
-    })
-    if (!searchRes.ok) return null
-    const searchData = await searchRes.json()
-    if (!searchData.releases || searchData.releases.length === 0) return null
+    const searchUrl = `https://musicbrainz.org/ws/2/release/?query=${encodeURIComponent(queryParts.join('+'))}&fmt=json&limit=5`
 
-    const mbid = searchData.releases[0].id
-    const coverUrl = `https://coverartarchive.org/release/${mbid}/front`
-    const coverRes = await fetch(coverUrl, {
-      headers: { 'User-Agent': 'IPStreamPanel/1.0 (felipe@ipstream.cl)' },
-    })
-    if (!coverRes.ok) return null
+    let searchData = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const res = await fetch(searchUrl, {
+        headers: { 'User-Agent': 'IPStreamPanel/1.0 (felipe@ipstream.cl)' },
+      })
+      if (res.status === 429 || res.status >= 500) {
+        // MusicBrainz limita ~1 req/s: esperar y reintentar
+        await sleep(1500 * (attempt + 1))
+        continue
+      }
+      if (!res.ok) return null
+      searchData = await res.json()
+      break
+    }
+    if (!searchData || !searchData.releases || searchData.releases.length === 0) return null
 
-    const buffer = Buffer.from(await coverRes.arrayBuffer())
-    return { buffer, format: coverRes.headers.get('content-type') || 'image/jpeg' }
+    // Probar varias releases hasta encontrar una con carátula (Cover Art Archive
+    // puede tener la portada en la release-group pero no en una release puntual).
+    for (const release of searchData.releases.slice(0, 5)) {
+      try {
+        const coverRes = await fetch(`https://coverartarchive.org/release/${release.id}/front`, {
+          headers: { 'User-Agent': 'IPStreamPanel/1.0 (felipe@ipstream.cl)' },
+        })
+        if (coverRes.ok) {
+          const buffer = Buffer.from(await coverRes.arrayBuffer())
+          return { buffer, format: coverRes.headers.get('content-type') || 'image/jpeg' }
+        }
+        await sleep(500)
+      } catch (err) {
+        logger.warn({ err: err.message, release: release.id }, 'Error obteniendo cover de release')
+      }
+    }
+    return null
   } catch (err) {
-    logger.warn({ err: err.message, artist, album }, 'Error fetching cover from MusicBrainz')
+    logger.warn({ err: err.message, artist, album, title }, 'Error fetching cover from MusicBrainz')
     return null
   }
 }

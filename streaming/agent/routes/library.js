@@ -462,6 +462,8 @@ export default async function libraryRoutes(app) {
       } catch (err) {
         logger.warn({ err: err.message, trackId: t.id }, 'cover refresh: error por track')
       }
+      // MusicBrainz limita ~1 req/s: espaciar para no ser rate-limited
+      await new Promise((r) => setTimeout(r, 1200))
     }
 
     return { ok: true, scanned: rows.length, coversFound, titlesFixed }
