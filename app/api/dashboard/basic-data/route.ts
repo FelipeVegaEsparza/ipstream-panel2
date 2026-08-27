@@ -50,11 +50,14 @@ export async function GET(request: NextRequest) {
     const { getClientStreamUrls } = await import('@/lib/streaming-helpers')
     const { radioStreamingUrl, videoStreamingUrl } = await getClientStreamUrls(clientId)
 
-    return NextResponse.json({
-      basicData: basicData
-        ? { ...basicData, radioStreamingUrl, videoStreamingUrl }
-        : null,
-    })
+    // Aunque no exista BasicData (cliente nuevo), devolvemos un objeto con
+    // las URLs derivadas para que el form las muestre siempre.
+    const derived = { radioStreamingUrl, videoStreamingUrl }
+    const base = basicData
+      ? { ...basicData, ...derived }
+      : { projectName: '', projectDescription: '', logoUrl: null, coverUrl: null, ...derived }
+
+    return NextResponse.json({ basicData: base })
 
   } catch (error) {
     console.error('Error al obtener datos básicos:', error)
