@@ -23,16 +23,16 @@ export async function applyPlanQuotasToClient(
   })
 }
 
-/** Crea los streams que el plan incluye y el cliente aún no tiene. */
-export async function ensureStreamsForServices(clientId: string, services: string) {
+/** Crea los streams que el plan incluye y el cliente aún no tiene (en el server del plan). */
+export async function ensureStreamsForServices(clientId: string, services: string, serverId?: string | null) {
   const { createRadioStreamForClient, createVideoStreamForClient } = await import('./streaming-helpers')
   const rs = await prisma.radioStream.findUnique({ where: { clientId }, select: { id: true } })
   const vs = await prisma.videoStream.findUnique({ where: { clientId }, select: { id: true } })
   if ((services === 'radio' || services === 'both') && !rs) {
-    await createRadioStreamForClient(clientId)
+    await createRadioStreamForClient(clientId, 128, serverId || undefined)
   }
   if ((services === 'tv' || services === 'both') && !vs) {
-    await createVideoStreamForClient(clientId)
+    await createVideoStreamForClient(clientId, serverId || undefined)
   }
 }
 

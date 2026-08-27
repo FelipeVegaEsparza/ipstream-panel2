@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     try {
       const { applyPlanQuotasToClient, ensureStreamsForServices } = await import('@/lib/signup')
       await applyPlanQuotasToClient(clientId, plan)
-      await ensureStreamsForServices(clientId, plan.services || 'both')
+      await ensureStreamsForServices(clientId, plan.services || 'both', plan.defaultServerId)
     } catch {}
 
     // Hook: se generan cuotas pendientes → aviso de cobro (tras el commit, aislado)

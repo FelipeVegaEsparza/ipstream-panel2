@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { showToast } from '@/components/ui/toast'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +25,7 @@ interface Plan {
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
   menuHiddenKeys: string | null
+  defaultServerId: string | null
 }
 
 interface PlanFormProps {
@@ -44,7 +45,16 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     services: plan?.services || 'both',
     radioStorageQuotaMB: plan?.radioStorageQuotaMB?.toString() || '',
     videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
+    defaultServerId: plan?.defaultServerId || '',
   })
+
+  const [servers, setServers] = useState<{ id: string; name: string; type: string }[]>([])
+  useEffect(() => {
+    fetch('/api/admin/servers')
+      .then((r) => r.json())
+      .then((d) => setServers(d?.servers || []))
+      .catch(() => {})
+  }, [])
 
   const [features, setFeatures] = useState<string[]>(
     plan ? JSON.parse(plan.features || '[]') : ['']
@@ -215,6 +225,27 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
             </select>
             <p className="text-xs text-gray-500 mt-1">
               Determina qué servicios se crean al contratar este plan.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Servidor de streaming por defecto
+            </label>
+            <select
+              value={formData.defaultServerId}
+              onChange={(e) => setFormData({ ...formData, defaultServerId: e.target.value })}
+              className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
+            >
+              <option value="">Servidor principal (global)</option>
+              {servers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.type === 'radio' ? 'Radio' : s.type === 'tv' ? 'TV' : 'Radio+TV'})
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Los streams de los clientes que contraten este plan se crean en este servidor (ej. gratis → servidor A).
             </p>
           </div>
 

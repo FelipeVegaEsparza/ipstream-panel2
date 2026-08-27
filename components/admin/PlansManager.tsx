@@ -24,6 +24,7 @@ interface Plan {
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
   menuHiddenKeys: string | null
+  defaultServerId: string | null
   createdAt: Date
   _count: {
     clients: number

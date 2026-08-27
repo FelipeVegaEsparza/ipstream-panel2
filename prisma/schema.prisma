@@ -337,6 +337,9 @@ model Plan {
   // Se fusiona con services: services oculta la sección entera (Radio/TV) y
   // menuHiddenKeys permite ocultar items puntuales. null = todas incluidas.
   menuHiddenKeys String? @db.Text
+  // Servidor de streaming por defecto de este plan (los streams del cliente
+  // se crean ahí al contratarlo). null = servidor principal/global.
+  defaultServerId String?
   // Cuotas de almacenamiento (MB) del plan; null = ilimitado.
   // Se aplican a RadioStream.storageQuotaMB / VideoStream.storageQuotaMB al asignar el plan.
   radioStorageQuotaMB Int?
@@ -347,7 +350,9 @@ model Plan {
   // Relaciones
   clients       Client[]
   subscriptions Subscription[]
+  defaultServer StreamingServer? @relation("PlanDefaultServer", fields: [defaultServerId], references: [id], onDelete: SetNull)
 
+  @@index([defaultServerId])
   @@map("plans")
 }
 
@@ -949,6 +954,7 @@ model StreamingServer {
 
   radioStreams RadioStream[]
   videoStreams VideoStream[]
+  plans        Plan[] @relation("PlanDefaultServer")
 
   @@index([type])
   @@index([isActive])
