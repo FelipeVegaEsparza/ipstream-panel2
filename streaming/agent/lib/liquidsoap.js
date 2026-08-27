@@ -237,7 +237,10 @@ export async function startStream(clientId) {
     const logFile = `${LIQUIDSOAP_LOG_PATH}/${rs.icecastMount}.log`
     // nohup + & (background) + redireccion a archivo. Funciona
     // porque el archivo de log no tiene problemas de permisos.
-    const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} sh -c 'nohup ${LIQUIDSOAP_BIN} ${path} > ${logFile} 2>&1 &'`
+    // umask 000: el redirect crea el log como 666 (world-writable) para que
+    // liquidsoap (uid 100) pueda escribirlo SIEMPRE, aunque el archivo haya
+    // quedado con otro dueño (p.ej. 1001) de un arranque anterior.
+    const cmd = `docker exec -d ${LIQUIDSOAP_CONTAINER} sh -c 'umask 000; nohup ${LIQUIDSOAP_BIN} ${path} > ${logFile} 2>&1 &'`
     await execp(cmd, { timeout: 10000 })
 
     await new Promise((r) => setTimeout(r, 1500))
