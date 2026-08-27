@@ -354,22 +354,30 @@ export async function regenerateM3u(clientId) {
 
   const playlistId = activeRows[0].id
   const [entries] = await pool.query(
-    `SELECT t.fileName FROM playlist_entries pe
+    `SELECT t.fileName, t.title, t.artist, t.duration FROM playlist_entries pe
      JOIN tracks t ON t.id = pe.trackId
      WHERE pe.playlistId = ?
      ORDER BY pe.\`order\` ASC`,
     [playlistId]
   )
 
-  const lines = entries.map((e) => join(mp3Dir, e.fileName)).join('\n')
-  await writeFile(m3uPath, lines + (lines ? '\n' : ''), { mode: 0o644 })
+  // Incluir #EXTINF con el título/artista para que liquidsoap propague la
+  // metadata a Icecast (imprescindible cuando el MP3 no trae tags ID3).
+  const lines = ['#EXTM3U']
+  for (const e of entries) {
+    const label = e.artist ? `${e.artist} - ${e.title || ''}` : (e.title || '')
+    const dur = e.duration ? Math.round(e.duration) : -1
+    lines.push(`#EXTINF:${dur},${label}`)
+    lines.push(join(mp3Dir, e.fileName))
+  }
+  await writeFile(m3uPath, lines.join('\n') + '\n', { mode: 0o644 })
   logger.info({ clientId, m3uPath, trackCount: entries.length }, 'm3u regenerado')
   return { active: true, trackCount: entries.length }
 }
 
 export async function regenerateJinglesM3u(clientId) {
   const [rows] = await pool.query(
-    `SELECT fileName FROM jingles WHERE clientId = ? ORDER BY uploadedAt ASC`,
+    `SELECT fileName, title, artist, duration FROM jingles WHERE clientId = ? ORDER BY uploadedAt ASC`,
     [clientId]
   )
 
@@ -379,8 +387,14 @@ export async function regenerateJinglesM3u(clientId) {
   // Igual que en regenerateM3u: el dir padre puede no existir.
   await mkdir(dirname(m3uPath), { recursive: true })
 
-  const lines = rows.map((r) => join(jinglesDir, r.fileName)).join('\n')
-  await writeFile(m3uPath, lines + (lines ? '\n' : ''), { mode: 0o644 })
+  const lines = ['#EXTM3U']
+  for (const r of rows) {
+    const label = r.artist ? `${r.artist} - ${r.title || ''}` : (r.title || '')
+    const dur = r.duration ? Math.round(r.duration) : -1
+    lines.push(`#EXTINF:${dur},${label}`)
+    lines.push(join(jinglesDir, r.fileName))
+  }
+  await writeFile(m3uPath, lines.join('\n') + '\n', { mode: 0o644 })
   logger.info({ clientId, m3uPath, jingleCount: rows.length }, 'jingles.m3u regenerado')
   return { jingleCount: rows.length }
 }
