@@ -9,9 +9,45 @@
 import { logger } from './logger.js'
 import { pool } from './db.js'
 import { isProcessRunning } from './liquidsoap.js'
+import { decrypt, isEncrypted } from './encryption.js'
+import { config } from './config.js'
 
 const CHECK_INTERVAL_MS = 60_000
 let intervalHandle = null
+
+// serverId del servidor que corre ESTE agente. Se resuelve comparando el
+// STREAMING_AGENT_TOKEN local con el tokenEnc descifrado de streaming_servers.
+// Si no se puede resolver (p.ej. config legacy sin fila), queda null y el
+// supervisor solo revisa streams SIN serverId (comportamiento previo).
+let selfServerId = null
+let selfServerIdResolved = false
+
+async function resolveSelfServerId() {
+  if (selfServerIdResolved) return selfServerId
+  selfServerIdResolved = true
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, tokenEnc FROM streaming_servers WHERE isActive = 1`
+    )
+    for (const row of rows) {
+      if (row.tokenEnc && isEncrypted(row.tokenEnc)) {
+        try {
+          if (decrypt(row.tokenEnc) === config.agentToken) {
+            selfServerId = row.id
+            logger.info({ serverId: selfServerId }, 'Supervisor: serverId local resuelto')
+            return selfServerId
+          }
+        } catch {
+          // fila con token ilegible: ignorar
+        }
+      }
+    }
+    logger.warn('Supervisor: no se pudo resolver serverId local — supervisará streams sin serverId')
+  } catch (err) {
+    logger.error({ err: err.message }, 'Supervisor: error resolviendo serverId local')
+  }
+  return selfServerId
+}
 
 export function startStreamSupervisor() {
   if (intervalHandle) return
@@ -28,8 +64,16 @@ export function stopStreamSupervisor() {
 
 async function checkStreams() {
   try {
+    const selfId = await resolveSelfServerId()
+
+    // Solo supervisar streams de ESTE servidor (o legacy sin serverId si el
+    // agente no pudo resolverse). Evita que un nodo marque off streams que
+    // corren en otro servidor (multi-servidor).
     const [rows] = await pool.query(
-      `SELECT clientId, icecastMount, status FROM radio_streams WHERE liquidsoapRunning = 1`
+      `SELECT clientId, icecastMount, status FROM radio_streams WHERE liquidsoapRunning = 1 ${
+        selfId ? 'AND serverId = ?' : 'AND serverId IS NULL'
+      }`,
+      selfId ? [selfId] : []
     )
 
     for (const row of rows) {

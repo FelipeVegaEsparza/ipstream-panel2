@@ -215,6 +215,8 @@ async function runProvision(serverId: string): Promise<void> {
         `tar -xzf /tmp/ipstream-node.tar.gz -C /tmp/ipstream-src; ` +
         `D=$(ls -d /tmp/ipstream-src/*/ | head -1); ` +
         `mkdir -p ${NODE_DIR}; ` +
+        `mkdir -p ${NODE_DIR}/data/radio ${NODE_DIR}/data/logs/liquidsoap ${NODE_DIR}/data/scripts; ` +
+        `chmod -R u+rwX,g+rwX,o+rwX ${NODE_DIR}/data/logs/liquidsoap; ` +
         `rm -rf ${NODE_DIR}/streaming; cp -r "\${D}streaming" ${NODE_DIR}/; ` +
         `cp "\${D}docker-compose.streaming.yml" ${NODE_DIR}/ 2>/dev/null || true; ` +
         `echo LISTO; ls ${NODE_DIR}`
