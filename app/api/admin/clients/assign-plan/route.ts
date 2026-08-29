@@ -149,6 +149,12 @@ export async function POST(request: NextRequest) {
       }
     } catch {}
 
+    // Hook: correo de bienvenida al contratar el plan (además de la boleta, aislado)
+    try {
+      const { sendWelcomeEmail } = await import('@/lib/email-hooks')
+      await sendWelcomeEmail(clientId, plan.name)
+    } catch {}
+
     return NextResponse.json({
       message: 'Plan asignado exitosamente',
       client: result.client,

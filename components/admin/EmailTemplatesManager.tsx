@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { showToast } from '@/components/ui/toast'
-import { MailWarning, Save, Pencil, X, Plus } from 'lucide-react'
+import { MailWarning, Save, Pencil, X, Plus, Sparkles } from 'lucide-react'
 
 interface Template {
   id: string
@@ -165,12 +165,23 @@ export function EmailTemplatesManager() {
       )}
 
       <div className="space-y-3">
-        {templates.map((t) => (
-          <div key={t.id} className="rounded-xl border border-gray-700 bg-gray-800/60 p-4 flex items-start justify-between gap-4">
+        {[...templates]
+          .sort((a, b) => {
+            if (a.key === 'bienvenida') return -1
+            if (b.key === 'bienvenida') return 1
+            return a.key.localeCompare(b.key)
+          })
+          .map((t) => (
+          <div key={t.id} className={`rounded-xl border p-4 flex items-start justify-between gap-4 ${t.key === 'bienvenida' ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-gray-700 bg-gray-800/60'}`}>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-white">{t.name}</p>
                 <code className="text-xs text-gray-500">/{t.key}</code>
+                {t.key === 'bienvenida' && (
+                  <Badge className="bg-cyan-500/15 text-cyan-400">
+                    <Sparkles className="h-3 w-3 mr-1" /> Al contratar un plan
+                  </Badge>
+                )}
                 {t.isActive ? (
                   <Badge className="bg-green-500/15 text-green-400">Activa</Badge>
                 ) : (

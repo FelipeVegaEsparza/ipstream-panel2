@@ -5,7 +5,7 @@
 // y dispara la boleta por email al cliente (facturación manual).
 
 import { prisma } from '@/lib/prisma'
-import { sendAccountEmail } from './email-hooks'
+import { sendAccountEmail, sendWelcomeEmail } from './email-hooks'
 import { sendEmail } from './resend'
 
 /** Aplica las cuotas de almacenamiento del plan a los streams del cliente. */
@@ -89,6 +89,11 @@ export async function createSignupSubscription(clientId: string, planId: string)
       { amount: plan.price, currency: plan.currency, dueDate: endDate, description },
       plan.name
     )
+  } catch {}
+
+  // Correo de bienvenida al contratar el plan — aislado, además de la boleta
+  try {
+    await sendWelcomeEmail(clientId, plan.name)
   } catch {}
 
   return { subscription, payment }

@@ -57,6 +57,39 @@ export async function sendAccountEmail(
 }
 
 /**
+ * Envía el correo de bienvenida (template `bienvenida`) cuando un cliente
+ * contrata un plan. Se usa al registrarse/suscribirse y al asignarle un plan
+ * desde el admin, además de la boleta/cobro.
+ */
+export async function sendWelcomeEmail(
+  clientId: string,
+  planName?: string
+): Promise<{ ok: boolean; status: string; logId?: string }> {
+  try {
+    const ctx = await getClientEmailContext(clientId)
+    if (!ctx?.email) return { ok: false, status: 'skipped' }
+
+    return await sendTemplateEmail({
+      templateKey: 'bienvenida',
+      to: ctx.email,
+      clientId,
+      vars: {
+        nombre: ctx.name,
+        proyecto: ctx.projectName,
+        plan: planName || '',
+        monto: '',
+        moneda: '',
+        fecha: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
+        link: `${panelUrl()}/dashboard`,
+      },
+    })
+  } catch (err) {
+    console.error('[email-hooks] sendWelcomeEmail:', err)
+    return { ok: false, status: 'failed' }
+  }
+}
+
+/**
  * Envía la notificación de soporte (template `soporte`) cuando el admin
  * responde un ticket. Incluye la respuesta y un enlace al ticket.
  */
