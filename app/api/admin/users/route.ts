@@ -129,6 +129,16 @@ export async function POST(request: NextRequest) {
       console.error('Error creando VideoStream:', err)
     }
 
+    // Contenido por defecto del AutoDJ (playlist + tema) — aislado, nunca rompe la creación
+    if (streamInfo) {
+      try {
+        const { seedDefaultAutoDjContent } = await import('@/lib/streaming-seed')
+        await seedDefaultAutoDjContent(result.client.id)
+      } catch (err) {
+        console.error('Error sembrando contenido por defecto:', err)
+      }
+    }
+
     return NextResponse.json({
       message: 'Usuario creado exitosamente',
       user: {

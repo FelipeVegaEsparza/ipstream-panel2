@@ -108,6 +108,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Contenido por defecto del AutoDJ (playlist + tema) — aislado, nunca rompe el registro
+    if (user.client && streamInfo) {
+      try {
+        const { seedDefaultAutoDjContent } = await import('@/lib/streaming-seed')
+        await seedDefaultAutoDjContent(user.client.id)
+      } catch (err) {
+        console.error('Error sembrando contenido por defecto al registrarse:', err)
+      }
+    }
+
     // Notificar al admin del nuevo registro (email)
     try {
       const { notifyAdminNewSignup } = await import('@/lib/signup')

@@ -47,6 +47,7 @@ export default function AdminStreamingPage() {
   const [filter, setFilter] = useState('')
   const [showOnlyWith, setShowOnlyWith] = useState(false)
   const [creatingFor, setCreatingFor] = useState<string | null>(null)
+  const [togglingFor, setTogglingFor] = useState<string | null>(null)
 
   const load = async () => {
     try {
@@ -78,6 +79,29 @@ export default function AdminStreamingPage() {
       toast({ type: 'error', title: 'Error', description: err.message })
     } finally {
       setCreatingFor(null)
+    }
+  }
+
+  const toggleAutodj = async (clientId: string, action: 'start' | 'stop') => {
+    setTogglingFor(clientId)
+    try {
+      const res = await fetch(`/api/admin/streaming/${clientId}/autodj`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || data.error || 'Error')
+      toast({
+        type: 'success',
+        title: action === 'start' ? 'AutoDJ iniciado' : 'AutoDJ detenido',
+        description: 'Estado actualizado',
+      })
+      await load()
+    } catch (err: any) {
+      toast({ type: 'error', title: 'Error', description: err.message })
+    } finally {
+      setTogglingFor(null)
     }
   }
 
@@ -249,12 +273,29 @@ export default function AdminStreamingPage() {
                   </td>
                   <td className="p-3 text-right">
                     {c.hasRadioStream ? (
-                      <Link
-                        href={`/admin/streaming/${c.clientId}`}
-                        className="text-cyan-400 hover:text-cyan-300 text-xs"
-                      >
-                        Configurar →
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => toggleAutodj(c.clientId, c.status === 'autodj' || c.status === 'live' ? 'stop' : 'start')}
+                          disabled={togglingFor === c.clientId || c.enabled === false}
+                          className={`px-3 py-1.5 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs rounded ${
+                            c.status === 'autodj' || c.status === 'live'
+                              ? 'bg-red-600 hover:bg-red-700'
+                              : 'bg-green-600 hover:bg-green-700'
+                          }`}
+                        >
+                          {togglingFor === c.clientId
+                            ? '...'
+                            : c.status === 'autodj' || c.status === 'live'
+                              ? '⏹ Detener'
+                              : '▶ Iniciar'}
+                        </button>
+                        <Link
+                          href={`/admin/streaming/${c.clientId}`}
+                          className="text-cyan-400 hover:text-cyan-300 text-xs"
+                        >
+                          Configurar →
+                        </Link>
+                      </div>
                     ) : (
                       <button
                         onClick={() => createStream(c.clientId, c.clientName)}
