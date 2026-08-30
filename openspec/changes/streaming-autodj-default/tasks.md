@@ -30,3 +30,4 @@
 - [x] 6.1 Refactorizar `lib/node-provisioner.ts` para separar pasos reutilizables (código, config, stack) y agregar `startNodeUpdate(serverId)` que re-descarga el repo, copia `streaming`/compose, re-escribe `.env`/Caddyfile/override y levanta el stack con `--build` (estado `updating` → `done`).
 - [x] 6.2 Crear endpoint `POST /api/admin/servers/[id]/update` (solo ADMIN) que dispara la actualización y rechaza si ya hay un job en curso o no hay acceso SSH.
 - [x] 6.3 En `StreamingServersManager.tsx`, agregar botón "Actualizar nodo" (visible en nodos `done` con SSH), badge/estado "Actualizando" y polling mientras esté en curso.
+- [x] 6.4 El update fuerza `--force-recreate` para refrescar los bind mounts (el `rm -rf streaming` cambia el inode del dir de scripts y liquidsoap quedaría con `/etc/liquidsoap/scripts` vacío).
