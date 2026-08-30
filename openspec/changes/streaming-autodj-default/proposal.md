@@ -11,6 +11,7 @@ En `/admin/streaming` el admin solo puede ver el estado del AutoDJ de cada clien
   - De esta forma el AutoDJ siempre tiene algo que reproducir desde el inicio.
 - **Asset de música en el repo**: se agrega un MP3 generado programáticamente (archivo pequeño, ~30s) en el repo, usado como tema inicial de cada cliente nuevo.
 - **Solo clientes nuevos**: no se hace backfill a clientes existentes (fuera de alcance).
+- **Actualización de nodos provisionados**: el administrador puede actualizar el código (agente/scripts/compose) de un nodo de streaming ya provisionado desde `/admin/servers`, re-descargando el repo, re-escribiendo la config y levantando el stack con `--build`. Necesario para que los nodos reciban fixes de los agentes (p.ej. el streaming-status server-aware).
 
 ## Capabilities
 
@@ -20,7 +21,7 @@ En `/admin/streaming` el admin solo puede ver el estado del AutoDJ de cada clien
 
 ### Modified Capabilities
 
-- Ninguna: no existe spec previa de streaming de radio; el comportamiento nuevo queda dentro de la capacidad `streaming/autodj`.
+- `streaming-servers`: se agrega la actualización manual del código de nodos ya provisionados (re-deploy del streaming/agente vía SSH).
 
 ## Impact
 

@@ -24,3 +24,9 @@
 - [x] 5.1 Verificar en `/admin/streaming` que los botones Iniciar/Detener funcionan por cliente y que el estado se actualiza (y que un start cuando ya corre devuelve error claro).
 - [x] 5.2 Verificar que al crear un cliente nuevo con plan de radio, su biblioteca queda con el tema por defecto y una playlist activa ("Playlist por defecto").
 - [x] 5.3 Ejecutar lint/build (`npm run build` o `tsc --noEmit`) sin errores y revisar `openspec validate` del cambio.
+
+## 6. Actualización de nodos ya provisionados
+
+- [x] 6.1 Refactorizar `lib/node-provisioner.ts` para separar pasos reutilizables (código, config, stack) y agregar `startNodeUpdate(serverId)` que re-descarga el repo, copia `streaming`/compose, re-escribe `.env`/Caddyfile/override y levanta el stack con `--build` (estado `updating` → `done`).
+- [x] 6.2 Crear endpoint `POST /api/admin/servers/[id]/update` (solo ADMIN) que dispara la actualización y rechaza si ya hay un job en curso o no hay acceso SSH.
+- [x] 6.3 En `StreamingServersManager.tsx`, agregar botón "Actualizar nodo" (visible en nodos `done` con SSH), badge/estado "Actualizando" y polling mientras esté en curso.

@@ -50,7 +50,7 @@ export function StreamingServersManager() {
   const [showLog, setShowLog] = useState<Record<string, boolean>>({})
   const mountedRef = useRef(true)
 
-  const provisioningActive = servers.some((s) => s.provisionStatus === 'provisioning')
+  const provisioningActive = servers.some((s) => s.provisionStatus === 'provisioning' || s.provisionStatus === 'updating')
 
   const load = useCallback(async () => {
     try {
@@ -113,6 +113,22 @@ export function StreamingServersManager() {
       }
     } catch {
       showToast({ type: 'error', title: 'Error al reintentar' })
+    }
+  }
+
+  const updateNode = async (server: ServerRow) => {
+    if (!confirm(`¿Actualizar el código del nodo "${server.name}"?\n\nRe-descarga el streaming/agente del repo y levanta el stack con --build. Puede tardar varios minutos.`)) return
+    try {
+      const res = await fetch(`/api/admin/servers/${server.id}/update`, { method: 'POST' })
+      const d = await res.json().catch(() => ({}))
+      if (res.ok) {
+        showToast({ type: 'success', title: 'Actualización iniciada' })
+        await load()
+      } else {
+        showToast({ type: 'error', title: d?.message || 'Error al actualizar' })
+      }
+    } catch {
+      showToast({ type: 'error', title: 'Error al actualizar' })
     }
   }
 
@@ -261,6 +277,7 @@ export function StreamingServersManager() {
             const h = health[server.id]
             const online = h ? h.online : server.isHealthy
             const isProvisioningNow = server.provisionStatus === 'provisioning'
+            const isUpdatingNow = server.provisionStatus === 'updating'
             const isFailed = server.provisionStatus === 'failed'
             const Icon = TYPE_ICON[server.type] || Server
             const logOpen = showLog[server.id]
@@ -268,16 +285,16 @@ export function StreamingServersManager() {
             return (
               <Card
                 key={server.id}
-                className={`border ${isProvisioningNow ? 'border-blue-500/40' : isFailed ? 'border-red-500/30' : 'border-gray-700'}`}
+                className={`border ${isProvisioningNow ? 'border-blue-500/40' : isUpdatingNow ? 'border-amber-500/40' : isFailed ? 'border-red-500/30' : 'border-gray-700'}`}
               >
                 <CardContent className="p-5 space-y-4">
                   {/* Header */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                        isProvisioningNow ? 'bg-blue-500/15' : isFailed ? 'bg-red-500/15' : 'bg-cyan-500/15'
+                        isProvisioningNow ? 'bg-blue-500/15' : isUpdatingNow ? 'bg-amber-500/15' : isFailed ? 'bg-red-500/15' : 'bg-cyan-500/15'
                       }`}>
-                        <Icon className={`h-5 w-5 ${isProvisioningNow ? 'text-blue-400' : isFailed ? 'text-red-400' : 'text-cyan-400'}`} />
+                        <Icon className={`h-5 w-5 ${isProvisioningNow ? 'text-blue-400' : isUpdatingNow ? 'text-amber-400' : isFailed ? 'text-red-400' : 'text-cyan-400'}`} />
                       </div>
                       <div>
                         <p className="font-semibold text-white leading-tight">{server.name}</p>
@@ -287,12 +304,14 @@ export function StreamingServersManager() {
                     <div className="flex flex-col items-end gap-1">
                       {isProvisioningNow ? (
                         <Badge className="bg-blue-500/15 text-blue-400"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Provisionando</Badge>
+                      ) : isUpdatingNow ? (
+                        <Badge className="bg-amber-500/15 text-amber-400"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Actualizando</Badge>
                       ) : isFailed ? (
                         <Badge className="bg-red-500/15 text-red-400"><RotateCw className="h-3 w-3 mr-1" /> Falló</Badge>
                       ) : server.provisionStatus === 'done' ? (
                         <Badge className="bg-purple-500/15 text-purple-400"><Rocket className="h-3 w-3 mr-1" /> Nodo</Badge>
                       ) : null}
-                      {!isProvisioningNow && <StatusDot online={online} />}
+                      {!isProvisioningNow && !isUpdatingNow && <StatusDot online={online} />}
                     </div>
                   </div>
 
@@ -301,6 +320,13 @@ export function StreamingServersManager() {
                     <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg px-3 py-2.5">
                       <p className="text-sm text-blue-300 flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin shrink-0" /> {server.provisionStep || 'Provisionando...'}
+                      </p>
+                    </div>
+                  )}
+                  {isUpdatingNow && (
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2.5">
+                      <p className="text-sm text-amber-300 flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin shrink-0" /> {server.provisionStep || 'Actualizando...'}
                       </p>
                     </div>
                   )}
@@ -355,7 +381,7 @@ export function StreamingServersManager() {
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 pt-1 border-t border-gray-700/60">
-                    <Button size="sm" variant="outline" disabled={isProvisioningNow} onClick={() => openEdit(server)}>
+                    <Button size="sm" variant="outline" disabled={isProvisioningNow || isUpdatingNow} onClick={() => openEdit(server)}>
                       <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
                     </Button>
                     {isFailed && (
@@ -363,12 +389,17 @@ export function StreamingServersManager() {
                         <RotateCw className="h-3.5 w-3.5 mr-1" /> Reintentar
                       </Button>
                     )}
-                    {server.sshHost && !isProvisioningNow && (
+                    {server.provisionStatus === 'done' && server.sshHost && !isProvisioningNow && !isUpdatingNow && (
+                      <Button size="sm" variant="outline" className="text-green-400 border-green-500/30 hover:bg-green-500/10" onClick={() => updateNode(server)}>
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> Actualizar nodo
+                      </Button>
+                    )}
+                    {server.sshHost && !isProvisioningNow && !isUpdatingNow && (
                       <Button size="sm" variant="outline" className="text-amber-400 border-amber-500/30 hover:bg-amber-500/10" onClick={() => revokeSsh(server)}>
                         <KeyRound className="h-3.5 w-3.5 mr-1" /> Quitar SSH
                       </Button>
                     )}
-                    <Button size="sm" variant="outline" className="text-red-400 border-red-500/30 hover:bg-red-500/10" disabled={isProvisioningNow} onClick={() => handleDelete(server)}>
+                    <Button size="sm" variant="outline" className="text-red-400 border-red-500/30 hover:bg-red-500/10" disabled={isProvisioningNow || isUpdatingNow} onClick={() => handleDelete(server)}>
                       <Trash2 className="h-3.5 w-3.5 mr-1" /> Eliminar
                     </Button>
                   </div>

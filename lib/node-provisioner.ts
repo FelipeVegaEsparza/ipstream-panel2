@@ -4,6 +4,10 @@
 // El panel guarda la clave SSH (encriptada), genera el .env del nodo,
 // sube el código (streaming + compose) y levanta el stack por su cuenta.
 // El trabajo corre en segundo plano y reporta progreso a la DB.
+//
+// Además del provisioning inicial, soporta ACTUALIZAR un nodo ya
+// provisionado: re-descarga el código del repo, lo copia al nodo,
+// re-escribe .env/Caddyfile/override y levanta el stack con --build.
 
 import { prisma } from '@/lib/prisma'
 import { decrypt } from './encryption'
@@ -130,6 +134,123 @@ function radioOverrideYml(): string {
 `
 }
 
+/** Resuelve la config SSH de un servidor (clave o password). Devuelve null + mensaje si falla. */
+async function resolveSsh(server: {
+  sshHost: string
+  sshPort: number | null
+  sshUser: string | null
+  sshAuthType: string | null
+  sshKeyEnc: string | null
+  sshPasswordEnc: string | null
+}): Promise<{ ssh: SshConfig; error: string | null }> {
+  try {
+    let sshKey: string | null = null
+    let sshPassword: string | null = null
+    if (server.sshAuthType === 'key' && server.sshKeyEnc) sshKey = decrypt(server.sshKeyEnc)
+    else if (server.sshPasswordEnc) sshPassword = decrypt(server.sshPasswordEnc)
+    return {
+      ssh: {
+        host: server.sshHost,
+        port: server.sshPort,
+        username: server.sshUser,
+        privateKey: sshKey || undefined,
+        password: sshPassword || undefined,
+      },
+      error: null,
+    }
+  } catch {
+    return { ssh: {} as SshConfig, error: 'ssh_decrypt_failed' }
+  }
+}
+
+// =====================================================
+// Pasos compartidos (provision inicial y update)
+// =====================================================
+
+/** Descarga el repo y sube el tarball al nodo. */
+async function syncCodeTarball(serverId: string, ssh: SshConfig, label: string): Promise<void> {
+  const res = await fetch(REPO_TARBALL, { signal: AbortSignal.timeout(120000) })
+  if (!res.ok) throw new Error(`No se pudo descargar el código (${res.status})`)
+  const buf = Buffer.from(await res.arrayBuffer())
+  await sftpWrite(ssh, '/tmp/ipstream-node.tar.gz', buf)
+  await setProgress(serverId, label, `Código subido (${(buf.length / 1024).toFixed(0)} KB)`)
+}
+
+/** Extrae el código, copia streaming + compose y crea los data dirs con permisos. */
+async function extractNodeCode(serverId: string, ssh: SshConfig): Promise<void> {
+  const setup = await sshExec(
+    ssh,
+    `set -e; rm -rf /tmp/ipstream-src /tmp/ipstream-node-tmp; mkdir -p /tmp/ipstream-src; ` +
+    `tar -xzf /tmp/ipstream-node.tar.gz -C /tmp/ipstream-src; ` +
+    `D=$(ls -d /tmp/ipstream-src/*/ | head -1); ` +
+    `mkdir -p ${NODE_DIR}; ` +
+    `mkdir -p ${NODE_DIR}/data/radio ${NODE_DIR}/data/logs/liquidsoap ${NODE_DIR}/data/scripts; ` +
+    `chmod -R u+rwX,g+rwX,o+rwX ${NODE_DIR}/data/logs/liquidsoap; ` +
+    `rm -rf ${NODE_DIR}/streaming; cp -r "\${D}streaming" ${NODE_DIR}/; ` +
+    `cp "\${D}docker-compose.streaming.yml" ${NODE_DIR}/ 2>/dev/null || true; ` +
+    `echo LISTO; ls ${NODE_DIR}`
+  )
+  if (setup.code !== 0) throw new Error(`Fallo al preparar el nodo: ${setup.stderr.slice(-400)}`)
+  await setProgress(serverId, 'Preparando directorio', setup.stdout.trim().split('\n').slice(-3).join(' '))
+}
+
+/** Escribe .env + Caddyfile + override según el tipo de nodo. */
+async function writeNodeConfig(server: StreamingServerRow, ssh: SshConfig): Promise<void> {
+  const envContent = buildNodeEnv(server)
+  await sftpWrite(ssh, `${NODE_DIR}/.env`, Buffer.from(envContent, 'utf8'))
+  await sftpWrite(ssh, `${NODE_DIR}/Caddyfile`, Buffer.from(CADDYFILE, 'utf8'))
+  if (server.type === 'radio') {
+    await sftpWrite(ssh, `${NODE_DIR}/docker-compose.streaming.override.yml`, Buffer.from(radioOverrideYml(), 'utf8'))
+  }
+}
+
+/** Levanta el stack con --build y espera al agente en /health. */
+async function upAndHealth(serverId: string, ssh: SshConfig, type: string): Promise<void> {
+  const override = type === 'radio' ? ' -f docker-compose.streaming.override.yml' : ''
+  const up = await sshExec(
+    ssh,
+    `cd ${NODE_DIR} && docker compose -f docker-compose.streaming.yml${override} up -d --build`,
+    (l) => {
+      const t = l.trim()
+      if (t && !t.startsWith('#') && !t.includes('=>') && !t.includes('extracting') && !t.includes('waiting') && !t.includes('Downloading')) {
+        setProgress(serverId, 'Levantando el stack', t.slice(0, 180)).catch(() => {})
+      }
+    },
+  )
+  if (up.code !== 0) {
+    throw new Error(`Fallo al levantar el stack: ${up.stderr.slice(-400)}`)
+  }
+
+  let ok = false
+  for (let i = 0; i < 24; i++) {
+    const r = await sshExec(ssh, 'curl -fsS http://localhost:4000/health 2>/dev/null || echo down')
+    if (r.stdout.trim() !== 'down') {
+      ok = true
+      break
+    }
+    await new Promise((res) => setTimeout(res, 5000))
+  }
+  if (!ok) throw new Error('El agente no respondió en /health tras 120s')
+  await setProgress(serverId, 'Agente en línea', '✓ /health respondió correctamente')
+}
+
+type StreamingServerRow = {
+  id: string
+  publicHostname: string
+  sshHost: string
+  sshPort: number | null
+  sshUser: string | null
+  sshAuthType: string | null
+  sshKeyEnc: string | null
+  sshPasswordEnc: string | null
+  tokenEnc: string
+  type: string
+}
+
+// =====================================================
+// Provision inicial
+// =====================================================
+
 export async function startNodeProvisioning(serverId: string): Promise<void> {
   if (activeJobs.has(serverId)) return
   const job = runProvision(serverId).finally(() => activeJobs.delete(serverId))
@@ -145,22 +266,10 @@ async function runProvision(serverId: string): Promise<void> {
   }
   if (server.provisionStatus === 'done') return
 
-  let sshKey: string | null = null
-  let sshPassword: string | null = null
-  try {
-    if (server.sshAuthType === 'key' && server.sshKeyEnc) sshKey = decrypt(server.sshKeyEnc)
-    else if (server.sshPasswordEnc) sshPassword = decrypt(server.sshPasswordEnc)
-  } catch {
-    await setProgress(serverId, 'Error de credenciales', 'No se pudo descifrar la credencial SSH', 'ssh_decrypt_failed')
+  const { ssh, error } = await resolveSsh(server)
+  if (error) {
+    await setProgress(serverId, 'Error de credenciales', 'No se pudo descifrar la credencial SSH', error)
     return
-  }
-
-  const ssh: SshConfig = {
-    host: server.sshHost,
-    port: server.sshPort,
-    username: server.sshUser,
-    privateKey: sshKey || undefined,
-    password: sshPassword || undefined,
   }
 
   await prisma.streamingServer.update({
@@ -198,79 +307,17 @@ async function runProvision(serverId: string): Promise<void> {
       await setProgress(serverId, 'Docker OK', ver.stdout.trim() || 'docker disponible')
     })
 
-    // 2. Descargar repo y subir por SFTP
-    await step('Descargando código del panel', async () => {
-      const res = await fetch(REPO_TARBALL, { signal: AbortSignal.timeout(120000) })
-      if (!res.ok) throw new Error(`No se pudo descargar el código (${res.status})`)
-      const buf = Buffer.from(await res.arrayBuffer())
-      await sftpWrite(ssh, '/tmp/ipstream-node.tar.gz', buf)
-      await setProgress(serverId, 'Descargando código', `Código subido (${(buf.length / 1024).toFixed(0)} KB)`)
-    })
+    // 2. Código
+    await step('Descargando código del panel', () => syncCodeTarball(serverId, ssh, 'Descargando código'))
+    await step('Preparando directorio del nodo', () => extractNodeCode(serverId, ssh))
 
-    // 3. Extraer + copiar streaming y compose
-    await step('Preparando directorio del nodo', async () => {
-      const setup = await sshExec(
-        ssh,
-        `set -e; rm -rf /tmp/ipstream-src /tmp/ipstream-node-tmp; mkdir -p /tmp/ipstream-src; ` +
-        `tar -xzf /tmp/ipstream-node.tar.gz -C /tmp/ipstream-src; ` +
-        `D=$(ls -d /tmp/ipstream-src/*/ | head -1); ` +
-        `mkdir -p ${NODE_DIR}; ` +
-        `mkdir -p ${NODE_DIR}/data/radio ${NODE_DIR}/data/logs/liquidsoap ${NODE_DIR}/data/scripts; ` +
-        `chmod -R u+rwX,g+rwX,o+rwX ${NODE_DIR}/data/logs/liquidsoap; ` +
-        `rm -rf ${NODE_DIR}/streaming; cp -r "\${D}streaming" ${NODE_DIR}/; ` +
-        `cp "\${D}docker-compose.streaming.yml" ${NODE_DIR}/ 2>/dev/null || true; ` +
-        `echo LISTO; ls ${NODE_DIR}`
-      )
-      if (setup.code !== 0) throw new Error(`Fallo al preparar el nodo: ${setup.stderr.slice(-400)}`)
-      await setProgress(serverId, 'Preparando directorio', setup.stdout.trim().split('\n').slice(-3).join(' '))
-    })
+    // 3. Config
+    await step('Escribiendo configuración (.env)', () => writeNodeConfig(server, ssh))
 
-    // 4. Escribir .env + Caddyfile + override según tipo
-    await step('Escribiendo configuración (.env)', async () => {
-      const envContent = buildNodeEnv(server)
-      await sftpWrite(ssh, `${NODE_DIR}/.env`, Buffer.from(envContent, 'utf8'))
-      // Caddyfile (TLS https vía Caddy para el hostname público)
-      await sftpWrite(ssh, `${NODE_DIR}/Caddyfile`, Buffer.from(CADDYFILE, 'utf8'))
-      // Nodo solo radio: excluir SRS/video-encoder vía perfiles
-      if (server.type === 'radio') {
-        await sftpWrite(ssh, `${NODE_DIR}/docker-compose.streaming.override.yml`, Buffer.from(radioOverrideYml(), 'utf8'))
-      }
-    })
+    // 4. Levantar + health
+    await step('Levantando el stack de streaming', () => upAndHealth(serverId, ssh, server.type))
 
-    // 5. Levantar el stack
-    await step('Levantando el stack de streaming', async () => {
-      const override = server.type === 'radio' ? ' -f docker-compose.streaming.override.yml' : ''
-      const up = await sshExec(
-        ssh,
-        `cd ${NODE_DIR} && docker compose -f docker-compose.streaming.yml${override} up -d --build`,
-        (l) => {
-          const t = l.trim()
-          if (t && !t.startsWith('#') && !t.includes('=>') && !t.includes('extracting') && !t.includes('waiting') && !t.includes('Downloading')) {
-            setProgress(serverId, 'Levantando el stack', t.slice(0, 180)).catch(() => {})
-          }
-        },
-      )
-      if (up.code !== 0) {
-        throw new Error(`Fallo al levantar el stack: ${up.stderr.slice(-400)}`)
-      }
-    })
-
-    // 6. Health check del agente
-    await step('Esperando al agente', async () => {
-      let ok = false
-      for (let i = 0; i < 24; i++) {
-        const r = await sshExec(ssh, 'curl -fsS http://localhost:4000/health 2>/dev/null || echo down')
-        if (r.stdout.trim() !== 'down') {
-          ok = true
-          break
-        }
-        await new Promise((res) => setTimeout(res, 5000))
-      }
-      if (!ok) throw new Error('El agente no respondió en /health tras 120s')
-      await setProgress(serverId, 'Agente en línea', '✓ /health respondió correctamente')
-    })
-
-    // 7. Done
+    // 5. Done
     await prisma.streamingServer.update({
       where: { id: serverId },
       data: {
@@ -284,5 +331,73 @@ async function runProvision(serverId: string): Promise<void> {
   } catch (err) {
     const msg = (err as Error).message
     await setProgress(serverId, 'Provisioning falló', `✗ ${msg}`, msg)
+  }
+}
+
+// =====================================================
+// Update de un nodo ya provisionado
+// =====================================================
+
+export async function startNodeUpdate(serverId: string): Promise<void> {
+  if (activeJobs.has(serverId)) return
+  const job = runNodeUpdate(serverId).finally(() => activeJobs.delete(serverId))
+  activeJobs.set(serverId, job)
+}
+
+async function runNodeUpdate(serverId: string): Promise<void> {
+  const server = await prisma.streamingServer.findUnique({ where: { id: serverId } })
+  if (!server) return
+  if (!server.sshHost) {
+    await setProgress(serverId, 'Sin datos SSH', 'Error: el servidor no tiene host SSH configurado', 'ssh_host_missing')
+    return
+  }
+
+  const { ssh, error } = await resolveSsh(server)
+  if (error) {
+    await setProgress(serverId, 'Error de credenciales', 'No se pudo descifrar la credencial SSH', error)
+    return
+  }
+
+  await prisma.streamingServer.update({
+    where: { id: serverId },
+    data: {
+      provisionStatus: 'updating',
+      provisionStep: 'Conectando al servidor...',
+      provisionError: null,
+      provisionLog: [] as any,
+      provisionStartedAt: new Date(),
+    },
+  })
+
+  const step = async (label: string, fn: () => Promise<void>) => {
+    await setProgress(serverId, label, `▶ ${label}`)
+    await fn()
+  }
+
+  try {
+    // 1. Código nuevo
+    await step('Descargando código del panel', () => syncCodeTarball(serverId, ssh, 'Descargando código'))
+    await step('Preparando directorio del nodo', () => extractNodeCode(serverId, ssh))
+
+    // 2. Config (re-escribe .env por si cambió el token/hostname del panel)
+    await step('Escribiendo configuración (.env)', () => writeNodeConfig(server, ssh))
+
+    // 3. Levantar + health (reconstruye las imágenes con el código nuevo)
+    await step('Actualizando el stack de streaming', () => upAndHealth(serverId, ssh, server.type))
+
+    // 4. Done
+    await prisma.streamingServer.update({
+      where: { id: serverId },
+      data: {
+        provisionStatus: 'done',
+        provisionStep: 'Actualizado',
+        provisionError: null,
+        provisionedAt: new Date(),
+        isActive: true,
+      },
+    })
+  } catch (err) {
+    const msg = (err as Error).message
+    await setProgress(serverId, 'Actualización falló', `✗ ${msg}`, msg)
   }
 }
