@@ -10,6 +10,7 @@ import { pool } from '../lib/db.js'
 import { getMountStatus } from '../lib/icecast.js'
 import { execCmd, getEncoderStatus, getTranscoderStatus } from '../lib/video-encoder.js'
 import { isAnyDjActive } from '../lib/dj-state.js'
+import { resolveSelfServerId } from '../lib/self-server.js'
 import crypto from 'crypto'
 import fs from 'fs'
 
@@ -197,9 +198,19 @@ export default async function monitorRoutes(app) {
    */
   app.get('/api/admin/streaming-status', async (_request, reply) => {
     try {
+      const selfId = await resolveSelfServerId()
+
+      // Cada agente reporta SOLO sus streams (multi-servidor): si el agente
+      // se identificó, filtra por serverId; si no (legacy), trae los sin
+      // serverId. Evita que un nodo reporte live:false para streams ajenos.
+      const scope = selfId ? 'serverId = ?' : 'serverId IS NULL'
+      const params = selfId ? [selfId] : []
       const [radios, videos] = await Promise.all([
-        pool.query(`SELECT clientId, icecastMount, status FROM radio_streams WHERE icecastMount IS NOT NULL`),
-        pool.query(`SELECT clientId, status FROM video_streams`),
+        pool.query(
+          `SELECT clientId, icecastMount, status FROM radio_streams WHERE icecastMount IS NOT NULL AND ${scope}`,
+          params
+        ),
+        pool.query(`SELECT clientId, status FROM video_streams WHERE ${scope}`, params),
       ])
 
       // Oyentes en vivo de radio (Icecast)
