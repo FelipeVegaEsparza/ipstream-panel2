@@ -204,12 +204,12 @@ async function writeNodeConfig(server: StreamingServerRow, ssh: SshConfig): Prom
   }
 }
 
-/** Levanta el stack con --build y espera al agente en /health. */
-async function upAndHealth(serverId: string, ssh: SshConfig, type: string): Promise<void> {
+/** Levanta el stack con --build y espera al agente en /health. Si `forceRecreate`, fuerza recrear los contenedores. */
+async function upAndHealth(serverId: string, ssh: SshConfig, type: string, forceRecreate = false): Promise<void> {
   const override = type === 'radio' ? ' -f docker-compose.streaming.override.yml' : ''
   const up = await sshExec(
     ssh,
-    `cd ${NODE_DIR} && docker compose -f docker-compose.streaming.yml${override} up -d --build`,
+    `cd ${NODE_DIR} && docker compose -f docker-compose.streaming.yml${override} up -d --build${forceRecreate ? ' --force-recreate' : ''}`,
     (l) => {
       const t = l.trim()
       if (t && !t.startsWith('#') && !t.includes('=>') && !t.includes('extracting') && !t.includes('waiting') && !t.includes('Downloading')) {
@@ -382,8 +382,10 @@ async function runNodeUpdate(serverId: string): Promise<void> {
     // 2. Config (re-escribe .env por si cambió el token/hostname del panel)
     await step('Escribiendo configuración (.env)', () => writeNodeConfig(server, ssh))
 
-    // 3. Levantar + health (reconstruye las imágenes con el código nuevo)
-    await step('Actualizando el stack de streaming', () => upAndHealth(serverId, ssh, server.type))
+    // 3. Levantar + health (reconstruye las imágenes con el código nuevo y
+    //    fuerza recrear los contenedores: el rm -rf streaming del paso 2 cambia
+    //    el inode del dir de scripts, dejando el bind mount stale en liquidsoap)
+    await step('Actualizando el stack de streaming', () => upAndHealth(serverId, ssh, server.type, true))
 
     // 4. Done
     await prisma.streamingServer.update({
