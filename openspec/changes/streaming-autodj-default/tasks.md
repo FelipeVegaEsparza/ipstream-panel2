@@ -21,6 +21,6 @@
 
 ## 5. Verificación final
 
-- [ ] 5.1 Verificar en `/admin/streaming` que los botones Iniciar/Detener funcionan por cliente y que el estado se actualiza (y que un start cuando ya corre devuelve error claro).
-- [ ] 5.2 Verificar que al crear un cliente nuevo con plan de radio, su biblioteca queda con el tema por defecto y una playlist activa ("Playlist por defecto").
+- [x] 5.1 Verificar en `/admin/streaming` que los botones Iniciar/Detener funcionan por cliente y que el estado se actualiza (y que un start cuando ya corre devuelve error claro).
+- [x] 5.2 Verificar que al crear un cliente nuevo con plan de radio, su biblioteca queda con el tema por defecto y una playlist activa ("Playlist por defecto").
 - [x] 5.3 Ejecutar lint/build (`npm run build` o `tsc --noEmit`) sin errores y revisar `openspec validate` del cambio.
