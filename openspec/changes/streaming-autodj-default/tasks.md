@@ -31,3 +31,4 @@
 - [x] 6.2 Crear endpoint `POST /api/admin/servers/[id]/update` (solo ADMIN) que dispara la actualización y rechaza si ya hay un job en curso o no hay acceso SSH.
 - [x] 6.3 En `StreamingServersManager.tsx`, agregar botón "Actualizar nodo" (visible en nodos `done` con SSH), badge/estado "Actualizando" y polling mientras esté en curso.
 - [x] 6.4 El update fuerza `--force-recreate` para refrescar los bind mounts (el `rm -rf streaming` cambia el inode del dir de scripts y liquidsoap quedaría con `/etc/liquidsoap/scripts` vacío).
+- [x] 6.5 Auto-reinicio de streams tras actualizar un nodo: snapshot de los streams radio/TV activos (`autodj`/`live`) en ese servidor antes del update, y reinicio vía el agente después de levantar el stack (aislado, reporta fallos).

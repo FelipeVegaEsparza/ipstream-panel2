@@ -375,6 +375,16 @@ async function runNodeUpdate(serverId: string): Promise<void> {
   }
 
   try {
+    // 0. Snapshot de streams activos en ESTE servidor (para reiniciarlos tras el update)
+    const running = await snapshotRunningStreams(serverId)
+    if (running.radio.length + running.video.length > 0) {
+      await setProgress(
+        serverId,
+        'Streams activos detectados',
+        `Se reiniciarán tras el update: ${running.radio.length} radio, ${running.video.length} TV`
+      )
+    }
+
     // 1. Código nuevo
     await step('Descargando código del panel', () => syncCodeTarball(serverId, ssh, 'Descargando código'))
     await step('Preparando directorio del nodo', () => extractNodeCode(serverId, ssh))
@@ -387,7 +397,12 @@ async function runNodeUpdate(serverId: string): Promise<void> {
     //    el inode del dir de scripts, dejando el bind mount stale en liquidsoap)
     await step('Actualizando el stack de streaming', () => upAndHealth(serverId, ssh, server.type, true))
 
-    // 4. Done
+    // 4. Reiniciar los streams que estaban activos (el update los detuvo)
+    if (running.radio.length + running.video.length > 0) {
+      await step('Reiniciando streams activos', () => restartStreams(serverId, running))
+    }
+
+    // 5. Done
     await prisma.streamingServer.update({
       where: { id: serverId },
       data: {
@@ -402,4 +417,61 @@ async function runNodeUpdate(serverId: string): Promise<void> {
     const msg = (err as Error).message
     await setProgress(serverId, 'Actualización falló', `✗ ${msg}`, msg)
   }
+}
+
+// =====================================================
+// Auto-reinicio de streams tras actualizar un nodo
+// =====================================================
+
+interface RunningSnapshot {
+  radio: string[] // clientIds con radio activa (autodj/live)
+  video: string[] // clientIds con video activo (autodj/live)
+}
+
+/** Snapshot de los streams activos asignados a ESTE servidor. */
+async function snapshotRunningStreams(serverId: string): Promise<RunningSnapshot> {
+  const [radios, videos] = await Promise.all([
+    prisma.radioStream.findMany({
+      where: { serverId, status: { in: ['autodj', 'live'] } },
+      select: { clientId: true },
+    }),
+    prisma.videoStream.findMany({
+      where: { serverId, status: { in: ['autodj', 'live'] } },
+      select: { clientId: true },
+    }),
+  ])
+  return {
+    radio: radios.map((r) => r.clientId),
+    video: videos.map((v) => v.clientId),
+  }
+}
+
+/** Reinicia los streams del snapshot vía el agente correspondiente. Aislado: nunca lanza. */
+async function restartStreams(serverId: string, running: RunningSnapshot): Promise<void> {
+  const { streamingClient, videoClient } = await import('@/lib/streaming-client')
+  const failed: string[] = []
+
+  for (const clientId of running.radio) {
+    try {
+      await streamingClient.start(clientId)
+    } catch (err) {
+      failed.push(`radio:${clientId} (${(err as Error).message})`)
+    }
+  }
+  for (const clientId of running.video) {
+    try {
+      await videoClient.start(clientId)
+    } catch (err) {
+      failed.push(`tv:${clientId} (${(err as Error).message})`)
+    }
+  }
+
+  await setProgress(
+    serverId,
+    failed.length === 0 ? 'Streams reiniciados' : 'Algunos streams fallaron',
+    failed.length === 0
+      ? `✓ ${running.radio.length + running.video.length} streams reiniciados`
+      : `Reiniciados ${running.radio.length + running.video.length - failed.length}/${running.radio.length + running.video.length}. Fallaron: ${failed.join(', ').slice(0, 300)}`,
+    failed.length === running.radio.length + running.video.length ? 'streams_restart_all_failed' : null
+  )
 }
