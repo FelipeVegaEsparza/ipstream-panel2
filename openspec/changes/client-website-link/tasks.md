@@ -22,6 +22,6 @@
 
 ## 5. Verificación final
 
-- [ ] 5.1 Verificar en `/admin/users/[id]/edit` que el campo se guarda/carga y que una URL inválida se rechaza.
-- [ ] 5.2 Verificar en el dashboard del cliente que el botón "Ir a mi sitio Web" aparece solo con URL configurada y abre el sitio en pestaña nueva.
+- [x] 5.1 Verificar en `/admin/users/[id]/edit` que el campo se guarda/carga y que una URL inválida se rechaza.
+- [x] 5.2 Verificar en el dashboard del cliente que el botón "Ir a mi sitio Web" aparece solo con URL configurada y abre el sitio en pestaña nueva.
 - [x] 5.3 Ejecutar `tsc --noEmit` y revisar `openspec validate` del cambio.
