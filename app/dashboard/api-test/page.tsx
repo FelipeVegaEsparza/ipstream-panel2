@@ -23,145 +23,188 @@ export default function ApiTestPage() {
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
 
   const endpoints = [
+    // ===== Información general =====
     {
+      group: 'Información general',
       name: 'Toda la información',
       method: 'GET',
       url: `/api/public/${clientId}`,
       description: 'Obtiene todos los datos del cliente (incluye plantilla seleccionada)'
     },
     {
-      name: 'Streaming',
-      method: 'GET',
-      url: `/api/public/${clientId}/streaming`,
-      description: 'URL del stream, metadatos del tema en reproducción con carátula, oyentes en vivo y configuración de jingles'
-    },
-    {
+      group: 'Información general',
       name: 'Datos básicos',
       method: 'GET',
       url: `/api/public/${clientId}/basic-data`,
-      description: 'Información básica del proyecto'
+      description: 'Información básica del proyecto (nombre, descripción, logo, URLs de streaming)'
     },
     {
+      group: 'Información general',
       name: 'Redes sociales',
       method: 'GET',
       url: `/api/public/${clientId}/social-networks`,
       description: 'Enlaces a redes sociales'
     },
     {
+      group: 'Información general',
+      name: 'Streaming',
+      method: 'GET',
+      url: `/api/public/${clientId}/streaming`,
+      description: 'URL del stream, metadatos del tema en reproducción con carátula, oyentes en vivo y configuración de jingles'
+    },
+    {
+      group: 'Información general',
+      name: 'Streaming — estado en vivo',
+      method: 'GET',
+      url: `/api/public/${clientId}/streaming/status`,
+      description: 'Estado en vivo: mount, bitrate, oyentes actuales/pico, tema en reproducción y URLs de stream'
+    },
+
+    // ===== Contenido =====
+    {
+      group: 'Contenido',
       name: 'Programas',
       method: 'GET',
       url: `/api/public/${clientId}/programs`,
       description: 'Lista de programas de radio'
     },
     {
+      group: 'Contenido',
       name: 'Noticias',
       method: 'GET',
       url: `/api/public/${clientId}/news`,
-      description: 'Lista de noticias'
+      description: 'Lista paginada de noticias'
     },
     {
-      name: 'Videos',
-      method: 'GET',
-      url: `/api/public/${clientId}/videos`,
-      description: 'Ranking de videos'
-    },
-    {
-      name: 'Auspiciadores',
-      method: 'GET',
-      url: `/api/public/${clientId}/sponsors`,
-      description: 'Lista de sponsors'
-    },
-    {
-      name: 'Galerías',
-      method: 'GET',
-      url: `/api/public/${clientId}/galleries`,
-      description: 'Lista de galerías de imágenes'
-    },
-    {
-      name: 'Locutores',
-      method: 'GET',
-      url: `/api/public/${clientId}/announcers`,
-      description: 'Lista de locutores de la radio'
-    },
-    {
-      name: 'Encuestas',
-      method: 'GET',
-      url: `/api/public/${clientId}/polls`,
-      description: 'Encuestas activas para oyentes'
-    },
-    {
-      name: 'Eventos',
-      method: 'GET',
-      url: `/api/public/${clientId}/events`,
-      description: 'Eventos y transmisiones especiales'
-    },
-    {
-      name: 'Promociones',
-      method: 'GET',
-      url: `/api/public/${clientId}/promotions`,
-      description: 'Lista de promociones'
-    },
-    {
-      name: 'Podcasts',
-      method: 'GET',
-      url: `/api/public/${clientId}/podcasts`,
-      description: 'Lista de episodios de podcast (audio)'
-    },
-    {
-      name: 'Videocasts',
-      method: 'GET',
-      url: `/api/public/${clientId}/videocasts`,
-      description: 'Lista de episodios de videocast (video)'
-    },
-    {
+      group: 'Contenido',
       name: 'Noticia por Slug',
       method: 'GET',
       url: `/api/public/${clientId}/news/<slug>`,
       description: 'Obtener una noticia específica por su slug'
     },
     {
+      group: 'Contenido',
+      name: 'Videos',
+      method: 'GET',
+      url: `/api/public/${clientId}/videos`,
+      description: 'Ranking de videos'
+    },
+    {
+      group: 'Contenido',
+      name: 'Auspiciadores',
+      method: 'GET',
+      url: `/api/public/${clientId}/sponsors`,
+      description: 'Lista de sponsors'
+    },
+    {
+      group: 'Contenido',
+      name: 'Galerías',
+      method: 'GET',
+      url: `/api/public/${clientId}/galleries`,
+      description: 'Lista de galerías de imágenes'
+    },
+    {
+      group: 'Contenido',
+      name: 'Locutores',
+      method: 'GET',
+      url: `/api/public/${clientId}/announcers`,
+      description: 'Lista de locutores de la radio'
+    },
+    {
+      group: 'Contenido',
+      name: 'Eventos',
+      method: 'GET',
+      url: `/api/public/${clientId}/events`,
+      description: 'Eventos y transmisiones especiales'
+    },
+    {
+      group: 'Contenido',
+      name: 'Promociones',
+      method: 'GET',
+      url: `/api/public/${clientId}/promotions`,
+      description: 'Lista de promociones'
+    },
+
+    // ===== Multimedia =====
+    {
+      group: 'Multimedia',
+      name: 'Podcasts',
+      method: 'GET',
+      url: `/api/public/${clientId}/podcasts`,
+      description: 'Lista paginada de episodios de podcast (audio)'
+    },
+    {
+      group: 'Multimedia',
       name: 'Podcast por ID',
       method: 'GET',
       url: `/api/public/${clientId}/podcasts/<id>`,
       description: 'Obtener un episodio de audio específico'
     },
     {
+      group: 'Multimedia',
+      name: 'Videocasts',
+      method: 'GET',
+      url: `/api/public/${clientId}/videocasts`,
+      description: 'Lista paginada de episodios de videocast (video)'
+    },
+    {
+      group: 'Multimedia',
       name: 'Videocast por ID',
       method: 'GET',
       url: `/api/public/${clientId}/videocasts/<id>`,
       description: 'Obtener un episodio de video específico'
     },
+
+    // ===== Interacción =====
     {
+      group: 'Interacción',
+      name: 'Encuestas',
+      method: 'GET',
+      url: `/api/public/${clientId}/polls`,
+      description: 'Encuestas activas para oyentes'
+    },
+    {
+      group: 'Interacción',
       name: 'Votar en Encuesta',
       method: 'POST',
       url: `/api/public/${clientId}/polls/<pollId>/vote`,
       description: 'Registrar voto en una encuesta activa'
     },
     {
-      name: 'Registro PWA',
-      method: 'POST',
-      url: `/api/public/${clientId}/pwa/register`,
-      description: 'Registrar instalación de la PWA desde un dispositivo'
-    },
-    {
+      group: 'Interacción',
       name: 'Chat: Obtener mensajes (polling)',
       method: 'GET',
       url: `/api/public/${clientId}/chat/messages[?since=<iso>&limit=50]`,
       description: 'Lista mensajes del chat. Con `since` devuelve solo los nuevos (polling).'
     },
     {
+      group: 'Interacción',
       name: 'Chat: Enviar mensaje (oyente)',
       method: 'POST',
       url: `/api/public/${clientId}/chat/messages`,
       description: 'Body: { name, email, body }. Rate limit 5/min. Bans se aplican.'
     },
     {
+      group: 'Interacción',
       name: 'Chat: Oyentes activos',
       method: 'GET',
       url: `/api/public/${clientId}/chat/online`,
       description: 'Conteo y nombres recientes de usuarios activos en los últimos 10 min.'
+    },
+    {
+      group: 'Interacción',
+      name: 'Registro PWA',
+      method: 'POST',
+      url: `/api/public/${clientId}/pwa/register`,
+      description: 'Registrar instalación de la PWA desde un dispositivo'
     }
   ]
+
+  // Agrupar por categoría manteniendo el orden definido
+  const groupedEndpoints = endpoints.reduce<Record<string, typeof endpoints>>((acc, ep) => {
+    ;(acc[ep.group] ||= []).push(ep)
+    return acc
+  }, {})
 
   const generateApiGuide = () => {
     const base = baseUrl
@@ -1224,54 +1267,64 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
       </div>
 
       <div className="grid gap-6">
-        {endpoints.map((endpoint) => (
-          <div key={endpoint.url} className="card hover:scale-[1.02] transition-transform duration-200">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {endpoint.name}
-                </h3>
-                <p className="text-gray-400">
-                  {endpoint.description}
-                </p>
-              </div>
-              <div className="flex space-x-3 ml-4">
-                <a
-                  href={endpoint.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary text-sm flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  Abrir
-                </a>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${baseUrl}${endpoint.url}`)
-                    // Opcional: mostrar notificación de copiado
-                  }}
-                  className="btn-secondary text-sm flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copiar
-                </button>
-              </div>
+        {Object.entries(groupedEndpoints).map(([group, items]) => (
+          <div key={group}>
+            <div className="flex items-center gap-3 mb-3">
+              <h2 className="text-lg font-semibold text-white">{group}</h2>
+              <div className="h-px flex-1 bg-gradient-to-r from-gray-700/50 to-transparent" />
+              <span className="text-xs text-gray-500">{items.length} endpoints</span>
             </div>
-            <div className="bg-gray-700/30 p-4 rounded-lg border border-gray-600 flex items-center gap-3">
-              <span className={`text-xs font-bold px-2 py-1 rounded ${
-                endpoint.method === 'POST' 
-                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                  : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-              }`}>
-                {endpoint.method}
-              </span>
-              <code className="text-sm text-green-400 font-mono break-all">
-                {baseUrl}{endpoint.url}
-              </code>
+            <div className="grid gap-4 md:grid-cols-2">
+              {items.map((endpoint) => (
+                <div key={endpoint.url} className="card hover:scale-[1.02] transition-transform duration-200">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-white mb-1">
+                        {endpoint.name}
+                      </h3>
+                      <p className="text-xs text-gray-400">
+                        {endpoint.description}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2 ml-3">
+                      <a
+                        href={endpoint.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary text-xs flex items-center gap-1.5"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Abrir
+                      </a>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${baseUrl}${endpoint.url}`)
+                        }}
+                        className="btn-secondary text-xs flex items-center gap-1.5"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+                  <div className="bg-gray-700/30 p-3 rounded-lg border border-gray-600 flex items-center gap-3">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                      endpoint.method === 'POST'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                    }`}>
+                      {endpoint.method}
+                    </span>
+                    <code className="text-xs text-green-400 font-mono break-all">
+                      {baseUrl}{endpoint.url}
+                    </code>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
