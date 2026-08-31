@@ -21,6 +21,14 @@ export default async function ImpersonatePage() {
           updatedAt: true
         }
       },
+      plan: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          currency: true
+        }
+      },
       basicData: {
         select: {
           projectName: true,
