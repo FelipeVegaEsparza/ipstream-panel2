@@ -46,6 +46,7 @@ interface ServerHealthRow {
   online: boolean
   radioClients: number
   videoClients: number
+  accounts: number
   affectedClients: number
 }
 
@@ -216,7 +217,7 @@ export function MonitorClient() {
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
                         {s.server.type === 'radio' ? 'Radio' : s.server.type === 'tv' ? 'TV' : 'Radio+TV'} ·{' '}
-                        {s.radioClients} radios · {s.videoClients} TV
+                        {s.accounts} {s.accounts === 1 ? 'cuenta' : 'cuentas'} · {s.radioClients} radios · {s.videoClients} TV
                       </div>
                       {!s.online && s.server.isActive && (
                         <div className="text-xs text-red-400 mt-1">{s.affectedClients} clientes afectados</div>

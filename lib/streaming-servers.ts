@@ -149,6 +149,7 @@ export interface ServerHealthResult {
   online: boolean
   radioClients: number
   videoClients: number
+  accounts: number // clientes únicos con radio y/o TV en este servidor
   affectedClients: number
 }
 
@@ -181,6 +182,16 @@ export async function checkAllServers(): Promise<ServerHealthResult[]> {
       prisma.videoStream.count({ where: { serverId: s.id } }),
     ])
 
+    // Cuentas únicas (clientes distintos) con radio y/o TV en este servidor
+    const [radioAccountIds, videoAccountIds] = await Promise.all([
+      prisma.radioStream.findMany({ where: { serverId: s.id }, select: { clientId: true } }),
+      prisma.videoStream.findMany({ where: { serverId: s.id }, select: { clientId: true } }),
+    ])
+    const accountIds = new Set([
+      ...radioAccountIds.map((r) => r.clientId),
+      ...videoAccountIds.map((v) => v.clientId),
+    ])
+
     results.push({
       server: {
         id: server.id,
@@ -195,6 +206,7 @@ export async function checkAllServers(): Promise<ServerHealthResult[]> {
       online,
       radioClients,
       videoClients,
+      accounts: accountIds.size,
       affectedClients: radioClients + videoClients,
     })
   }
