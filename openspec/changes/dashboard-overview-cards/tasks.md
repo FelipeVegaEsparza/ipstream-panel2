@@ -23,6 +23,6 @@
 
 ## 5. Verificación final
 
-- [ ] 5.1 Verificar en el dashboard del cliente que las 3 cards aparecen antes de NowPlaying, que los oyentes de radio/TV se muestran, que el almacenamiento refleja el plan y que la card de plan es correcta.
-- [ ] 5.2 Verificar que la tarjeta "Mi Plan" ya no aparece en `/dashboard`.
-- [ ] 5.3 Ejecutar `tsc --noEmit`, `node --check` en los archivos del agente, y revisar `openspec validate` del cambio.
+- [x] 5.1 Verificar en el dashboard del cliente que las 3 cards aparecen antes de NowPlaying, que los oyentes de radio/TV se muestran, que el almacenamiento refleja el plan y que la card de plan es correcta.
+- [x] 5.2 Verificar que la tarjeta "Mi Plan" ya no aparece en `/dashboard`.
+- [x] 5.3 Ejecutar `tsc --noEmit`, `node --check` en los archivos del agente, y revisar `openspec validate` del cambio.
