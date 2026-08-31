@@ -22,7 +22,8 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
     include: {
       client: {
         include: {
-          plan: true
+          plan: true,
+          basicData: { select: { websiteUrl: true } },
         }
       }
     }
@@ -42,6 +43,7 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
       name: user.client.name,
       plan: user.client.plan?.name || 'Sin plan',
       phone: user.client.phone,
+      websiteUrl: user.client.basicData?.websiteUrl,
       oneSignalAppId: user.client.oneSignalAppId,
       oneSignalApiKey: user.client.oneSignalApiKey
     } : null

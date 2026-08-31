@@ -15,6 +15,7 @@ const createUserSchema = z.object({
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   clientName: z.string().min(1, 'El nombre del proyecto es requerido'),
   phone: z.string().optional().transform(val => val?.trim() || undefined),
+  websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
   radioServerId: z.string().optional().transform(val => val?.trim() || undefined),
@@ -31,6 +32,7 @@ const editUserSchema = z.object({
   ),
   clientName: z.string().min(1, 'El nombre del proyecto es requerido'),
   phone: z.string().optional().transform(val => val?.trim() || undefined),
+  websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
 })
@@ -47,6 +49,7 @@ interface UserFormProps {
       name: string
       plan: string
       phone?: string | null
+      websiteUrl?: string | null
       oneSignalAppId?: string | null
       oneSignalApiKey?: string | null
     } | null
@@ -79,6 +82,7 @@ export function UserForm({ initialData }: UserFormProps) {
       password: '',
       clientName: initialData?.client?.name || '',
       phone: initialData?.client?.phone || '',
+      websiteUrl: initialData?.client?.websiteUrl || '',
       oneSignalAppId: initialData?.client?.oneSignalAppId || '',
       oneSignalApiKey: initialData?.client?.oneSignalApiKey || '',
     },
@@ -210,6 +214,25 @@ export function UserForm({ initialData }: UserFormProps) {
             <p className="text-xs text-gray-400 mt-1">
               Formato: 56 9 XXXX XXXX (sin +). Se usa para enviar la cuenta del mes.
             </p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="websiteUrl" className="form-label">
+              Sitio web del cliente
+            </label>
+            <input
+              type="url"
+              id="websiteUrl"
+              className="form-input"
+              placeholder="https://midominio.cl"
+              {...register('websiteUrl')}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              URL del sitio web público del cliente. Se muestra el botón "Ir a mi sitio Web" en su dashboard.
+            </p>
+            {errors.websiteUrl && (
+              <p className="text-sm text-red-400">{errors.websiteUrl.message}</p>
+            )}
           </div>
         </div>
 

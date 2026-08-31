@@ -4,7 +4,7 @@ import { signOut } from 'next-auth/react'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Bars3Icon, SunIcon, MoonIcon, PlayCircleIcon, LifebuoyIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, SunIcon, MoonIcon, PlayCircleIcon, LifebuoyIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
 import { useImpersonationSession } from '@/lib/useImpersonationSession'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import { getTicketLastRead } from '@/lib/ticket-read-state'
@@ -15,9 +15,10 @@ interface HeaderProps {
     email: string
   }
   setSidebarOpen?: (open: boolean) => void
+  websiteUrl?: string | null
 }
 
-export function Header({ user, setSidebarOpen }: HeaderProps) {
+export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
   const { effectiveUser, isImpersonating } = useImpersonationSession()
   
   // Usar el usuario efectivo si hay impersonación activa
@@ -61,6 +62,22 @@ export function Header({ user, setSidebarOpen }: HeaderProps) {
       <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
         <div className="flex flex-1"></div>
         <div className="flex items-center gap-x-4 lg:gap-x-6">
+          {/* Ir a mi sitio Web */}
+          {websiteUrl && (
+            <>
+              <a
+                href={websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-cyan-300 hover:text-cyan-400 hover:bg-cyan-500/10 border border-cyan-500/30 transition-colors"
+              >
+                <GlobeAltIcon className="h-5 w-5" />
+                <span className="hidden sm:inline">Ir a mi sitio Web</span>
+              </a>
+              <div className="hidden sm:block w-px h-5 bg-gray-700" />
+            </>
+          )}
+
           {/* Quick nav */}
           <Link
             href="/dashboard/tutorials"

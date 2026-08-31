@@ -15,6 +15,7 @@ const updateUserSchema = z.object({
   ),
   clientName: z.string().min(1, 'El nombre del proyecto es requerido'),
   phone: z.string().optional().transform(val => val?.trim() || undefined),
+  websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
   plan: z.string().optional(),
@@ -163,6 +164,20 @@ export async function PUT(
             oneSignalApiKey
           }
         })
+
+        // Guardar la URL del sitio web del cliente en sus datos básicos (upsert aislado)
+        if (data.websiteUrl !== undefined) {
+          await tx.basicData.upsert({
+            where: { clientId: existingUser.client.id },
+            update: { websiteUrl: data.websiteUrl || null },
+            create: {
+              clientId: existingUser.client.id,
+              projectName: data.clientName,
+              projectDescription: '',
+              websiteUrl: data.websiteUrl || null,
+            },
+          })
+        }
       }
 
       return { user, client }

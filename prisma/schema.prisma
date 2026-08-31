@@ -92,6 +92,7 @@ model BasicData {
   projectDescription String   @db.Text
   logoUrl            String?
   coverUrl           String?
+  websiteUrl         String?  @db.VarChar(500)
   radioStreamingUrl  String?
   videoStreamingUrl  String?
   createdAt          DateTime @default(now())
@@ -322,31 +323,31 @@ model GalleryImage {
 
 // Modelos para sistema de pagos y planes
 model Plan {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String   @db.Text
-  price       Float
-  currency    String   @default("CLP")
-  imageUrl    String?  // imagen del plan (para la página de registro)
-  interval    String // "monthly" | "yearly"
-  features    String   @db.Text // JSON array de características
-  isActive    Boolean  @default(true)
-  maxDjs      Int      @default(4) // Máximo de DJs simultáneos por radio. NULL no soportado.
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  description         String   @db.Text
+  price               Float
+  currency            String   @default("CLP")
+  imageUrl            String? // imagen del plan (para la página de registro)
+  interval            String // "monthly" | "yearly"
+  features            String   @db.Text // JSON array de características
+  isActive            Boolean  @default(true)
+  maxDjs              Int      @default(4) // Máximo de DJs simultáneos por radio. NULL no soportado.
   // Servicios incluidos en el plan: "radio" | "tv" | "both"
-  services    String   @default("both")
+  services            String   @default("both")
   // Secciones del dashboard que el plan NO incluye (JSON array de MenuItemKey).
   // Se fusiona con services: services oculta la sección entera (Radio/TV) y
   // menuHiddenKeys permite ocultar items puntuales. null = todas incluidas.
-  menuHiddenKeys String? @db.Text
+  menuHiddenKeys      String?  @db.Text
   // Servidor de streaming por defecto de este plan (los streams del cliente
   // se crean ahí al contratarlo). null = servidor principal/global.
-  defaultServerId String?
+  defaultServerId     String?
   // Cuotas de almacenamiento (MB) del plan; null = ilimitado.
   // Se aplican a RadioStream.storageQuotaMB / VideoStream.storageQuotaMB al asignar el plan.
   radioStorageQuotaMB Int?
   videoStorageQuotaMB Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   // Relaciones
   clients       Client[]
@@ -682,10 +683,10 @@ model RadioStream {
   djs               RadioDj[]
   djSessions        DjSession[]
 
+  @@unique([serverId, liquidsoapTelnetPort])
   @@index([status])
   @@index([enabled])
   @@index([serverId])
-  @@unique([serverId, liquidsoapTelnetPort])
   @@map("radio_streams")
 }
 
@@ -927,35 +928,35 @@ model StreamStat {
 // Servidores de streaming — nodos (radio/tv) registrados en el panel
 // ================================================================
 model StreamingServer {
-  id             String   @id @default(cuid())
-  name           String // nombre identificativo (ej: "Radio VPS 1")
-  type           String   @default("both") // "radio" | "tv" | "both"
-  baseUrl        String // URL del agente (ej: http://agent:4000)
-  tokenEnc       String   @db.Text // token de autenticación encriptado (AES-256-GCM)
-  publicHostname String // hostname público para generar URLs de streaming
-  publicUrl      String? // URL base pública para oyentes (ej: https://stream.midominio.cl o http://ip:8000). Si es null se deriva del publicHostname
-  isActive       Boolean  @default(true)
-  isHealthy      Boolean  @default(true) // actualizado por health checks del panel
-  lastHealthAt   DateTime? // última vez que el health check tuvo éxito
+  id                 String    @id @default(cuid())
+  name               String // nombre identificativo (ej: "Radio VPS 1")
+  type               String    @default("both") // "radio" | "tv" | "both"
+  baseUrl            String // URL del agente (ej: http://agent:4000)
+  tokenEnc           String    @db.Text // token de autenticación encriptado (AES-256-GCM)
+  publicHostname     String // hostname público para generar URLs de streaming
+  publicUrl          String? // URL base pública para oyentes (ej: https://stream.midominio.cl o http://ip:8000). Si es null se deriva del publicHostname
+  isActive           Boolean   @default(true)
+  isHealthy          Boolean   @default(true) // actualizado por health checks del panel
+  lastHealthAt       DateTime? // última vez que el health check tuvo éxito
   // === Provisioning automático (SSH) ===
-  sshHost        String? // IP/hostname del nodo para SSH
-  sshPort        Int      @default(22)
-  sshUser        String   @default("root")
-  sshAuthType    String   @default("key") // "key" | "password"
-  sshKeyEnc      String?  @db.Text // clave privada encriptada (AES-256-GCM)
-  sshPasswordEnc String?  @db.Text // password encriptado (AES-256-GCM)
-  provisionStatus   String   @default("none") // "none" | "provisioning" | "done" | "failed"
-  provisionStep     String?
-  provisionError    String?  @db.Text
-  provisionLog      Json?
+  sshHost            String? // IP/hostname del nodo para SSH
+  sshPort            Int       @default(22)
+  sshUser            String    @default("root")
+  sshAuthType        String    @default("key") // "key" | "password"
+  sshKeyEnc          String?   @db.Text // clave privada encriptada (AES-256-GCM)
+  sshPasswordEnc     String?   @db.Text // password encriptado (AES-256-GCM)
+  provisionStatus    String    @default("none") // "none" | "provisioning" | "done" | "failed"
+  provisionStep      String?
+  provisionError     String?   @db.Text
+  provisionLog       Json?
   provisionStartedAt DateTime?
-  provisionedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  provisionedAt      DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   radioStreams RadioStream[]
   videoStreams VideoStream[]
-  plans        Plan[] @relation("PlanDefaultServer")
+  plans        Plan[]        @relation("PlanDefaultServer")
 
   @@index([type])
   @@index([isActive])
@@ -1105,21 +1106,21 @@ model EmailTemplate {
 // Historial de envíos con rastreo (entregado/abierto/clic vía webhook).
 // status: "sent" | "delivered" | "bounced" | "opened" | "clicked" | "failed" | "skipped" | "complained"
 model EmailLog {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   clientId    String?
   to          String // destinatario
   from        String // remitente usado
   subject     String
   templateKey String?
-  status      String   @default("sent")
+  status      String    @default("sent")
   resendId    String? // id devuelto por Resend (para webhook)
-  error       String?  @db.Text
+  error       String?   @db.Text
   openedAt    DateTime?
   clickedAt   DateTime?
   sentAt      DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
-  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  client   Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
   template EmailTemplate? @relation(fields: [templateKey], references: [key], onDelete: SetNull)
 
   @@index([clientId])

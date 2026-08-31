@@ -14,6 +14,7 @@ interface DashboardLayoutClientProps {
   }
   disabledItems?: MenuItemKey[]
   globalHiddenItems?: MenuItemKey[]
+  websiteUrl?: string | null
 }
 
 export function DashboardLayoutClient({
@@ -21,6 +22,7 @@ export function DashboardLayoutClient({
   user,
   disabledItems,
   globalHiddenItems,
+  websiteUrl,
 }: DashboardLayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const disabledSet = useMemo(
@@ -40,7 +42,7 @@ export function DashboardLayoutClient({
         disabledItems={disabledSet}
       />
       <div className="lg:pl-72">
-        <Header user={user} setSidebarOpen={setSidebarOpen} />
+        <Header user={user} setSidebarOpen={setSidebarOpen} websiteUrl={websiteUrl} />
         <GlobalMenuBanner globallyHidden={globalHidden} />
         <main className="py-6 md:py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-8">

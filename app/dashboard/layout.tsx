@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import { SessionProvider } from '@/components/providers/SessionProvider'
 import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { DashboardLayoutClient } from '@/components/dashboard/DashboardLayoutClient'
@@ -45,6 +46,16 @@ export default async function DashboardLayout({
     import('@/lib/menu-items').MenuItemKey
   >
 
+  // URL del sitio web público del cliente (para el botón "Ir a mi sitio Web" en el header)
+  let websiteUrl: string | null = null
+  if (effectiveClient) {
+    const basicData = await prisma.basicData.findUnique({
+      where: { clientId: effectiveClient.clientId },
+      select: { websiteUrl: true },
+    })
+    websiteUrl = basicData?.websiteUrl ?? null
+  }
+
   return (
     <SessionProvider session={session}>
       <ModalProvider>
@@ -54,6 +65,7 @@ export default async function DashboardLayout({
             user={session.user}
             disabledItems={disabledItems}
             globalHiddenItems={globalHiddenItems}
+            websiteUrl={websiteUrl}
           >
             {children}
           </DashboardLayoutClient>

@@ -6,6 +6,7 @@ export const basicDataSchema = z.object({
   projectDescription: z.string().min(1, 'La descripción es requerida'),
   logoUrl: z.string().optional(),
   coverUrl: z.string().optional(),
+  websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   radioStreamingUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   videoStreamingUrl: z.string().url('URL inválida').optional().or(z.literal('')),
 })
