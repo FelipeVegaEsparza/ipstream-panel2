@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { PaymentStatusCard } from '@/components/dashboard/PaymentStatusCard'
 import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDisplay'
 import { NowPlayingTvDisplay } from '@/components/dashboard/NowPlayingTvDisplay'
-import { PlanServicesCard } from '@/components/dashboard/PlanServicesCard'
+import { DashboardOverviewCards } from '@/components/dashboard/DashboardOverviewCards'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 
 export default async function DashboardPage() {
@@ -109,6 +109,16 @@ export default async function DashboardPage() {
     }
   }
 
+  // Almacenamiento usado vs. cuota, según los servicios que incluye el plan
+  const planServices = clientInfo?.plan?.services || 'both'
+  const hasRadio = planServices === 'radio' || planServices === 'both'
+  const hasTv = planServices === 'tv' || planServices === 'both'
+
+  const [usageRadio, usageVideo] = await Promise.all([
+    hasRadio ? import('@/lib/streaming-helpers').then((m) => m.getStorageUsage(effectiveClient.clientId)) : null,
+    hasTv ? import('@/lib/streaming-helpers').then((m) => m.getVideoStorageUsage(effectiveClient.clientId)) : null,
+  ])
+
   return (
     <div className="space-y-6">
       <div>
@@ -156,11 +166,15 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      <DashboardOverviewCards
+        plan={clientInfo?.plan as any}
+        usageRadio={usageRadio}
+        usageVideo={usageVideo}
+      />
+
       <NowPlayingDisplay />
 
       <NowPlayingTvDisplay />
-
-      <PlanServicesCard plan={clientInfo?.plan as any} />
 
       <PaymentStatusCard
         nextPaymentDate={nextPaymentDate}

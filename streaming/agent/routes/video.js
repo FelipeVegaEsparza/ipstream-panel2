@@ -14,6 +14,7 @@ import crypto from 'crypto'
 import fs from 'fs'
 import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, extractThumbnail, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus, resolvePlaylistEntries, normalizeVideo } from '../lib/video-encoder.js'
 import { startTracking, stopTracking, getTrackHistory, detectAndLogVideoTrack } from '../lib/track-history-video.js'
+import { countVideoViewers } from '../lib/video-viewers.js'
 
 // Estado en memoria: DJ conectados vía SRS
 const _djActive = new Map() // clientId -> { streamKey, connectedAt }
@@ -202,6 +203,16 @@ export default async function videoRoutes(fastify) {
     const streamKey = getStreamKey(clientId)
     const transcoder = getTranscoderStatus(clientId)
 
+    // Espectadores HLS en vivo (desde el access log de Caddy), para el
+    // resumen del dashboard del cliente. Aislado: si falla, viewers = 0.
+    let viewers = 0
+    try {
+      const all = await countVideoViewers()
+      viewers = all[streamKey] ?? 0
+    } catch {
+      viewers = 0
+    }
+
     return {
       id: vs.id,
       status: vs.status,
@@ -211,6 +222,7 @@ export default async function videoRoutes(fastify) {
       repeat: !!vs.repeat,
       storageQuotaMB: vs.storageQuotaMB,
       streamKey,
+      viewers,
       // El DJ (OBS) publica en el app 'dj'; el AutoDJ usa 'live'.
       rtmpUrl: `rtmp://localhost:1935/dj/${streamKey}`,
       // La Conexión Universal entra por SRS (puerto 1935) en el app 'relay',

@@ -11,6 +11,7 @@ import { getMountStatus } from '../lib/icecast.js'
 import { execCmd, getEncoderStatus, getTranscoderStatus } from '../lib/video-encoder.js'
 import { isAnyDjActive } from '../lib/dj-state.js'
 import { resolveSelfServerId } from '../lib/self-server.js'
+import { countVideoViewers } from '../lib/video-viewers.js'
 import crypto from 'crypto'
 import fs from 'fs'
 
@@ -122,58 +123,6 @@ async function readHostStats() {
   out.containers = parseInt((containers || '0').trim(), 10) || 0
 
   return out
-}
-
-/**
- * Cuenta espectadores de video (HLS) por streamKey.
- * Lee el access log de Caddy y cuenta las IPs únicas que pidieron el
- * manifiesto .m3u8 en la ventana reciente.
- * Retorna: { [streamKey]: n }
- */
-async function countVideoViewers(windowMs = 30000) {
-  const viewers = {}
-  try {
-    const log = await execCmd(
-      `docker exec ${CADDY_CONTAINER} sh -c "tail -c 2000000 ${CADDY_LOG} 2>/dev/null | grep m3u8 || true"`
-    ).catch(() => null)
-    if (!log) return viewers
-
-    const cutoff = Date.now() - windowMs
-    const lines = log.split('\n')
-
-    for (const line of lines) {
-      let entry
-      try {
-        entry = JSON.parse(line)
-      } catch {
-        continue
-      }
-      // Solo requests a manifiestos HLS
-      const uri = entry?.request?.uri || ''
-      const m = uri.match(/\/(live|dj)\/(tv_[a-f0-9]{12})\.m3u8/)
-      if (!m) continue
-
-      const streamKey = m[2]
-      // Filtro por ventana temporal usando el ts del log (unix seconds)
-      const ts = entry?.ts
-      if (typeof ts === 'number' && ts * 1000 < cutoff) continue
-
-      const ip = entry?.request?.remote_ip || entry?.request?.client_ip
-      if (!ip) continue
-
-      if (!viewers[streamKey]) viewers[streamKey] = new Set()
-      viewers[streamKey].add(ip)
-    }
-
-    const result = {}
-    for (const [key, ips] of Object.entries(viewers)) {
-      result[key] = ips.size
-    }
-    return result
-  } catch (err) {
-    logger.error({ err: err.message }, 'Error contando espectadores de video')
-    return {}
-  }
 }
 
 export default async function monitorRoutes(app) {
