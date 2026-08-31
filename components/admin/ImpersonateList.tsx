@@ -39,6 +39,18 @@ interface ImpersonateListProps {
   clients: Client[]
 }
 
+function PlanBadge({ name }: { name?: string | null }) {
+  if (!name) {
+    return <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400">Sin Plan</span>
+  }
+  const cls = name.toLowerCase().includes('pro')
+    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+    : name.toLowerCase().includes('premium')
+      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+      : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+  return <span className={`text-xs px-2 py-0.5 rounded-full ${cls}`}>{name}</span>
+}
+
 export function ImpersonateList({ clients }: ImpersonateListProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState<string | null>(null)
@@ -60,7 +72,7 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
 
       if (response.ok) {
         const data = await response.json()
-        
+
         // Redirigir al dashboard - la cookie se establece automáticamente
         window.location.href = data.redirectUrl || '/dashboard'
       } else {
@@ -130,113 +142,95 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
         </div>
       </div>
 
-      {/* Lista de clientes */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredClients.map((client) => {
-          const totalContent = client._count.programs + client._count.news + 
-            client._count.rankingVideos + client._count.sponsors + client._count.promotions
+      {/* Tabla de clientes */}
+      <div className="bg-gray-800/80 rounded-xl border border-gray-700 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-900/60 text-gray-400 uppercase text-xs">
+            <tr>
+              <th className="text-left p-3">Cliente</th>
+              <th className="text-left p-3">Email</th>
+              <th className="text-left p-3">Usuario</th>
+              <th className="text-left p-3">Plan</th>
+              <th className="text-center p-3">Contenido</th>
+              <th className="text-left p-3">Registrado</th>
+              <th className="text-left p-3">Última actividad</th>
+              <th className="text-right p-3">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredClients.map((client) => {
+              const totalContent = client._count.programs + client._count.news +
+                client._count.rankingVideos + client._count.sponsors + client._count.promotions
 
-          return (
-            <div key={client.id} className="card hover:scale-[1.02] transition-all duration-200 group">
-              <div className="space-y-4">
-                {/* Header con logo/avatar */}
-                <div className="flex items-center space-x-3">
-                  {client.basicData?.logoUrl ? (
-                    <img
-                      src={client.basicData.logoUrl}
-                      alt={client.basicData.projectName}
-                      className="w-12 h-12 object-contain rounded-lg bg-gray-700/30 p-1"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-semibold text-lg">
-                        {(client.basicData?.projectName || client.name).charAt(0).toUpperCase()}
+              return (
+                <tr key={client.id} className="border-t border-gray-700/50 hover:bg-gray-700/20">
+                  {/* Cliente con logo */}
+                  <td className="p-3">
+                    <div className="flex items-center gap-3">
+                      {client.basicData?.logoUrl ? (
+                        <img
+                          src={client.basicData.logoUrl}
+                          alt={client.basicData.projectName}
+                          className="w-9 h-9 object-contain rounded-lg bg-gray-700/30 p-0.5"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                          <span className="text-white font-semibold text-sm">
+                            {(client.basicData?.projectName || client.name).charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-white font-medium whitespace-nowrap">
+                        {client.basicData?.projectName || client.name}
                       </span>
                     </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white">
-                      {client.basicData?.projectName || client.name}
-                    </h3>
-                    <p className="text-sm text-gray-400">{client.user.email}</p>
-                  </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    client.plan?.name.toLowerCase().includes('pro') ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' :
-                    client.plan?.name.toLowerCase().includes('premium') ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                    'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                  }`}>
-                    {client.plan?.name || 'Sin Plan'}
-                  </span>
-                </div>
+                  </td>
 
-                {/* Información del usuario */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Usuario:</span>
-                    <span className="text-gray-300">{client.user.name || 'Sin nombre'}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Registrado:</span>
-                    <span className="text-gray-300">{formatDate(client.user.createdAt)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Última actividad:</span>
-                    <span className="text-gray-300">{formatDate(client.user.updatedAt)}</span>
-                  </div>
-                </div>
+                  <td className="p-3 text-gray-400 whitespace-nowrap">{client.user.email}</td>
+                  <td className="p-3 text-gray-300 whitespace-nowrap">{client.user.name || '—'}</td>
 
-                {/* Estadísticas de contenido */}
-                <div className="bg-gray-700/30 rounded-lg p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Contenido total:</span>
-                    <span className="text-sm font-medium text-white">{totalContent} elementos</span>
-                  </div>
-                  <div className="grid grid-cols-5 gap-2 text-xs text-gray-500">
-                    <div className="text-center">
-                      <div className="font-medium text-blue-400">{client._count.programs}</div>
-                      <div>Prog</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-green-400">{client._count.news}</div>
-                      <div>News</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-purple-400">{client._count.rankingVideos}</div>
-                      <div>Vids</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-yellow-400">{client._count.sponsors}</div>
-                      <div>Spons</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-pink-400">{client._count.promotions}</div>
-                      <div>Proms</div>
-                    </div>
-                  </div>
-                </div>
+                  <td className="p-3"><PlanBadge name={client.plan?.name} /></td>
 
-                {/* Botón de impersonación */}
-                <button
-                  onClick={() => handleImpersonate(client.id, client.basicData?.projectName || client.name)}
-                  disabled={loading === client.id}
-                  className="w-full btn-primary disabled:opacity-50 flex items-center justify-center gap-2 group-hover:scale-105 transition-transform"
-                >
-                  {loading === client.id ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Impersonando...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowPathRoundedSquareIcon className="h-5 w-5" />
-                      Entrar como Cliente
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )
-        })}
+                  {/* Contenido */}
+                  <td className="p-3">
+                    <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
+                      <span title="Programas"><span className="font-medium text-blue-400">{client._count.programs}</span> Prog</span>
+                      <span title="Noticias"><span className="font-medium text-green-400">{client._count.news}</span> News</span>
+                      <span title="Videos"><span className="font-medium text-purple-400">{client._count.rankingVideos}</span> Vids</span>
+                      <span title="Sponsors"><span className="font-medium text-yellow-400">{client._count.sponsors}</span> Spons</span>
+                      <span title="Promociones"><span className="font-medium text-pink-400">{client._count.promotions}</span> Proms</span>
+                    </div>
+                    <div className="text-center text-[10px] text-gray-600 mt-0.5">{totalContent} total</div>
+                  </td>
+
+                  <td className="p-3 text-gray-400 whitespace-nowrap">{formatDate(client.user.createdAt)}</td>
+                  <td className="p-3 text-gray-400 whitespace-nowrap">{formatDate(client.user.updatedAt)}</td>
+
+                  {/* Acción */}
+                  <td className="p-3 text-right whitespace-nowrap">
+                    <button
+                      onClick={() => handleImpersonate(client.id, client.basicData?.projectName || client.name)}
+                      disabled={loading === client.id}
+                      className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs rounded-lg flex items-center gap-1.5 ml-auto"
+                    >
+                      {loading === client.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></div>
+                          Impersonando...
+                        </>
+                      ) : (
+                        <>
+                          <ArrowPathRoundedSquareIcon className="h-4 w-4" />
+                          Entrar
+                        </>
+                      )}
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
 
       {filteredClients.length === 0 && searchTerm && (
