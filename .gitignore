@@ -25,6 +25,8 @@ backups/
 # Logs
 *.log
 logs/
+!app/api/admin/emails/logs/
+!app/admin/logs/
 credenciales.md
 
 # Next.js build
