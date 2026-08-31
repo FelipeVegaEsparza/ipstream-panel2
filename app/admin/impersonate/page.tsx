@@ -51,29 +51,6 @@ export default async function ImpersonatePage() {
         </p>
       </div>
 
-      {/* Advertencia de seguridad */}
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
-        <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0">
-            <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-lg font-medium text-amber-300 mb-2">
-              Importante - Uso Responsable
-            </h3>
-            <div className="text-amber-200/90 space-y-2 text-sm">
-              <p>• La impersonación se registra en los logs del sistema</p>
-              <p>• Solo usar para soporte técnico autorizado</p>
-              <p>• Se abrirá una nueva pestaña con el dashboard del cliente</p>
-              <p>• Tu sesión de administrador se mantiene intacta</p>
-              <p>• Siempre habrá un indicador visual de impersonación</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="stat-card bg-gradient-to-br from-blue-500/20 to-blue-600/20 border-blue-500/30">
