@@ -942,7 +942,36 @@ async function loadPlayer() {
 }
 ```
 
-### 3. Votación en encuestas (con localStorage)
+### 3. Parrilla "Ahora" y "Próximos" en el reproductor
+
+Mostrar la franja que suena ahora y las siguientes desde la parrilla horaria (radio o TV):
+
+```javascript
+// Radio
+const res = await fetch(`${API}/schedule/current`)
+const s = await res.json()
+// s.current → { playlistName, startTime, endTime, dayOfWeek } | null
+// s.upcoming → [ ... hasta 3 franjas siguientes ... ]
+// s.timezone → "America/Santiago"
+
+// TV (mismo formato)
+const tvRes = await fetch(`${API}/tv/schedule/current`)
+const tv = await tvRes.json()
+
+// Ejemplo: renderizar "Ahora" y "Próximos"
+function renderNowPlaying(s) {
+  if (s.current) {
+    render(`Ahora: ${s.current.playlistName} (${s.current.startTime} - ${s.current.endTime})`)
+  }
+  s.upcoming.forEach((slot, i) => {
+    render(`Próximo ${i + 1}: ${slot.playlistName} (${slot.startTime})`)
+  })
+}
+```
+
+> La franja vigente se resuelve en la **zona horaria del cliente** (`s.timezone`), no en la del visitante. Refrescar cada 15-30s para mantener "Ahora" actualizado.
+
+### 4. Votación en encuestas (con localStorage)
 
 ```javascript
 const pollsRes = await fetch(`${API}/polls`)
@@ -966,7 +995,7 @@ async function vote(pollId, optionId) {
 }
 ```
 
-### 4. Chat en vivo (polling)
+### 5. Chat en vivo (polling)
 
 ```javascript
 let serverTime = null
@@ -989,7 +1018,7 @@ async function sendMessage(name, email, body) {
 }
 ```
 
-### 5. Registro PWA (una sola vez)
+### 6. Registro PWA (una sola vez)
 
 ```javascript
 const KEY = 'ipstream_device_id'
