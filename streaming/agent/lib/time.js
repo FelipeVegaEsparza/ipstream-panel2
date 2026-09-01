@@ -64,3 +64,38 @@ export function isTimeInSlot(now, dayOfWeek, startTime, endTime, timeZone) {
   }
   return currentMinutes >= startMinutes && currentMinutes < endMinutes
 }
+
+/**
+ * Devuelve hasta `limit` franjas ordenadas por su próximo inicio cronológico
+ * respecto a `now` en la zona horaria del cliente. Cruza días de la semana y
+ * medianoche: cada franja se proyecta a su próxima ocurrencia (ciclo semanal
+ * de 7×1440 minutos) y se ordena por la distancia hasta ese inicio.
+ *
+ * @param {Array<{dayOfWeek: number, startTime: string, [k: string]: any}>} slots
+ * @param {Date} now
+ * @param {string} timeZone  zona IANA; inválida/vacía cae a UTC
+ * @param {number} [limit=3]
+ * @returns {Array} las primeras `limit` franjas sin mutar `slots`
+ */
+export function getNextSlots(slots, now, timeZone, limit = 3) {
+  if (!Array.isArray(slots) || slots.length === 0) return []
+
+  const { dayOfWeek: localDay, minutes: currentMinutes } = getLocalTimeInZone(now, timeZone)
+  const localWeekMin = localDay * 1440 + currentMinutes
+  const WEEK = 7 * 1440
+
+  const candidates = slots
+    .map((slot) => {
+      const [sh, sm] = String(slot.startTime).split(':').map(Number)
+      if (Number.isNaN(sh) || Number.isNaN(sm)) return null
+      const startMinutes = sh * 60 + sm
+      const slotWeekMin = slot.dayOfWeek * 1440 + startMinutes
+      let delta = (slotWeekMin - localWeekMin) % WEEK
+      if (delta < 0) delta += WEEK
+      return { slot, delta }
+    })
+    .filter(Boolean)
+
+  candidates.sort((a, b) => a.delta - b.delta)
+  return candidates.slice(0, limit).map((c) => c.slot)
+}

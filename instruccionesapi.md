@@ -36,6 +36,8 @@ Todos los endpoints GET son de solo lectura. Solo aceptan POST:
 | 3 | `/api/public/{clientId}/social-networks` | GET | Información general |
 | 4 | `/api/public/{clientId}/streaming` | GET | Streaming |
 | 5 | `/api/public/{clientId}/streaming/status` | GET | Streaming (en vivo) |
+| 5a | `/api/public/{clientId}/schedule/current` | GET | Streaming (parrilla vigente) |
+| 5b | `/api/public/{clientId}/tv/schedule/current` | GET | Streaming (parrilla TV) |
 | 6 | `/api/public/{clientId}/programs` | GET | Programas |
 | 7 | `/api/public/{clientId}/news` | GET | Noticias |
 | 8 | `/api/public/{clientId}/news/{slug}` | GET | Noticias |
@@ -307,6 +309,74 @@ GET {BASE}/api/public/{clientId}/streaming/status
 ```
 
 > Útil para un "mini reproductor" o un widget que solo muestre el estado y los oyentes.
+
+---
+
+## 5.1 Streaming — Parrilla horaria vigente (Radio)
+
+Devuelve la playlist que debería sonar **ahora** según la parrilla horaria, las **siguientes 3 franjas** y la zona horaria del cliente. Lo usa el reproductor para mostrar "Ahora" y "Próximos".
+
+```
+GET {BASE}/api/public/{clientId}/schedule/current
+```
+
+### Respuesta (200 OK)
+
+```json
+{
+  "current": {
+    "id": "cm7abc1234567890",
+    "playlistId": "cm7abc1234567890",
+    "playlistName": "El Mañanero",
+    "dayOfWeek": 2,
+    "startTime": "08:00",
+    "endTime": "10:00"
+  },
+  "upcoming": [
+    {
+      "id": "cm7abc1234567891",
+      "playlistId": "cm7abc1234567891",
+      "playlistName": "Mediodía en Vivo",
+      "dayOfWeek": 2,
+      "startTime": "12:00",
+      "endTime": "14:00"
+    }
+  ],
+  "timezone": "America/Santiago"
+}
+```
+
+### Campos
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `current` | `object \| null` | Franja vigente con `id`, `playlistId`, `playlistName`, `dayOfWeek` (0=Domingo..6=Sábado), `startTime`, `endTime` (`HH:mm`). `null` si no hay ninguna para este momento. |
+| `upcoming` | `array` | Hasta 3 franjas activas que comienzan después del momento actual, ordenadas cronológicamente (cruzando días y medianoche). La franja vigente no se repite aquí. |
+| `timezone` | `string` | Zona horaria del cliente (IANA, ej. `America/Santiago`). Sin configuración: `"UTC"`. |
+
+> **Zona horaria:** el cálculo de "ahora" y "siguientes" usa la zona del cliente, no la del visitante.
+> **Caché:** la respuesta incluye `Cache-Control: no-store` para reflejar cambios en vivo.
+
+### Errores
+
+```json
+// 404 — cliente inexistente
+{ "error": "Cliente no encontrado" }
+// 502 — agente de streaming no disponible
+{ "error": "Error del agente de streaming" }
+```
+
+---
+
+## 5.2 Streaming — Parrilla horaria vigente (TV)
+
+Equivalente al anterior pero para la parrilla de **video/televisión**.
+
+```
+GET {BASE}/api/public/{clientId}/tv/schedule/current
+```
+
+Misma forma de respuesta y errores que el endpoint de radio (sección 5.1).
 
 ---
 

@@ -5,7 +5,7 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { generatePlaylist, startEncoder, stopEncoder } from '../lib/video-encoder.js'
-import { isTimeInSlot } from '../lib/time.js'
+import { isTimeInSlot, getNextSlots } from '../lib/time.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -174,7 +174,8 @@ export default async function videoScheduleRoutes(app) {
   /**
    * GET /api/video/:clientId/schedule/current
    * Devuelve la playlist que debería estar al aire AHORA según la parrilla,
-   * o null si no hay ninguna franja activa para este momento.
+   * las siguientes franjas (hasta 3) y la zona horaria del cliente.
+   * `current` es null si no hay ninguna franja activa para este momento.
    */
   app.get('/api/video/:clientId/schedule/current', async (request, reply) => {
     const { clientId } = request.params
@@ -196,12 +197,20 @@ export default async function videoScheduleRoutes(app) {
     )
 
     const now = new Date()
+    let current = null
     for (const slot of rows) {
       if (isTimeInSlot(now, slot.dayOfWeek, slot.startTime, slot.endTime, timeZone)) {
-        return { current: slot }
+        current = slot
+        break
       }
     }
-    return { current: null }
+    const upcoming = getNextSlots(
+      current ? rows.filter((s) => s.id !== current.id) : rows,
+      now,
+      timeZone,
+      3
+    )
+    return { current, upcoming, timezone: timeZone }
   })
 }
 

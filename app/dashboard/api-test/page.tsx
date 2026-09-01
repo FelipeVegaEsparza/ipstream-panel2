@@ -59,6 +59,20 @@ export default function ApiTestPage() {
       url: `/api/public/${clientId}/streaming/status`,
       description: 'Estado en vivo: mount, bitrate, oyentes actuales/pico, tema en reproducción y URLs de stream'
     },
+    {
+      group: 'Información general',
+      name: 'Parrilla vigente (Radio)',
+      method: 'GET',
+      url: `/api/public/${clientId}/schedule/current`,
+      description: 'Franja que suena ahora + siguientes 3 de la parrilla horaria de radio'
+    },
+    {
+      group: 'Información general',
+      name: 'Parrilla vigente (TV)',
+      method: 'GET',
+      url: `/api/public/${clientId}/tv/schedule/current`,
+      description: 'Franja al aire ahora + siguientes 3 de la parrilla horaria de video/televisión'
+    },
 
     // ===== Contenido =====
     {
