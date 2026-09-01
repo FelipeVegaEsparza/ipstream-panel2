@@ -44,6 +44,23 @@ export async function GET(
     const currentTrack = nowPlaying?.currentTrack
     const nextTrack = nowPlaying?.nextTrack
 
+    // Las portadas guardadas por el agente apuntan a /api/dashboard/...
+    // (rutas autenticadas). Para el consumo público las reescribimos a la
+    // ruta pública equivalente, para que el reproductor del sitio del
+    // cliente pueda cargarlas sin sesión.
+    const publicCoverUrl = (coverUrl: string | null | undefined) => {
+      if (!coverUrl) return null
+      if (coverUrl.startsWith('/api/dashboard/streaming/library/')) {
+        const trackId = coverUrl.replace('/api/dashboard/streaming/library/', '').replace('/cover', '')
+        return `/api/public/${params.clientId}/streaming/library/${trackId}/cover`
+      }
+      if (coverUrl.startsWith('/api/dashboard/streaming/jingles/')) {
+        const jingleId = coverUrl.replace('/api/dashboard/streaming/jingles/', '').replace('/cover', '')
+        return `/api/public/${params.clientId}/streaming/jingles/${jingleId}/cover`
+      }
+      return coverUrl
+    }
+
     // Preferir icecast.title (real) sobre currentTrack (match por substring).
     // currentTrack puede matchear siempre el primer track si el substring
     // matchea contra titles largos. icecast.title es lo que liquidsoap
@@ -56,7 +73,7 @@ export async function GET(
           title: rawTitle || currentTrack.title,
           artist: currentTrack.artist,
           album: currentTrack.album,
-          coverUrl: currentTrack.coverUrl,
+          coverUrl: publicCoverUrl(currentTrack.coverUrl),
           duration: currentTrack.duration,
           isJingle: currentTrack.isJingle,
         }
@@ -90,7 +107,7 @@ export async function GET(
             title: nextTrack.title,
             artist: nextTrack.artist,
             album: nextTrack.album,
-            coverUrl: nextTrack.coverUrl,
+            coverUrl: publicCoverUrl(nextTrack.coverUrl),
             duration: nextTrack.duration,
             isJingle: nextTrack.isJingle,
           }
