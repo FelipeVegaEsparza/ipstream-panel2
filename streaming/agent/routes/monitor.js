@@ -118,11 +118,27 @@ async function readHostStats() {
     out.uptime = Math.round(secs)
   }
 
-  // Contenedores activos
-  const containers = await execCmd(`docker ps -q | wc -l`).catch(() => null)
-  out.containers = parseInt((containers || '0').trim(), 10) || 0
+  // Contenedores activos (cacheado: un docker exec por llamada infla el
+  // load del host cuando el monitor y los dashboards hacen polling).
+  const containers = await getContainerCount().catch(() => 0)
+  out.containers = containers
 
   return out
+}
+
+// Caché con TTL para docker ps -q | wc -l (evita arrancar runc por request).
+const CONTAINER_CACHE_TTL_MS = 10000
+let _containerCache = { at: 0, value: 0 }
+
+async function getContainerCount() {
+  const now = Date.now()
+  if (now - _containerCache.at < CONTAINER_CACHE_TTL_MS) {
+    return _containerCache.value
+  }
+  const raw = await execCmd(`docker ps -q | wc -l`).catch(() => null)
+  const value = parseInt((raw || '0').trim(), 10) || 0
+  _containerCache = { at: now, value }
+  return value
 }
 
 export default async function monitorRoutes(app) {

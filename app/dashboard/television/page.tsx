@@ -192,7 +192,7 @@ export default function TelevisionPage() {
 
   useEffect(() => {
     fetchStatus()
-    const interval = setInterval(fetchStatus, 5000)
+    const interval = setInterval(fetchStatus, 15000)
     return () => clearInterval(interval)
   }, [])
 

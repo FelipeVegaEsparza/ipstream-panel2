@@ -12,7 +12,26 @@ import { execCmd } from './video-encoder.js'
 const CADDY_CONTAINER = 'ipstream-caddy'
 const CADDY_LOG = '/data/access.log'
 
+// Caché con TTL para evitar un `docker exec` por cada request de status.
+// Leer el log de Caddy (2MB + grep) arranca runc/containerd por cada
+// llamada, y con el polling del dashboard (5s) y del monitor (10s) eso
+// infla el load del host. Una lectura cada CACHE_TTL_MS es suficiente
+// para el conteo de espectadores en la ventana reciente.
+const CACHE_TTL_MS = 10000
+let _cache = { at: 0, viewers: null }
+
 export async function countVideoViewers(windowMs = 30000) {
+  const now = Date.now()
+  if (_cache.viewers !== null && now - _cache.at < CACHE_TTL_MS) {
+    return _cache.viewers
+  }
+
+  const viewers = await readViewersFromLog(windowMs)
+  _cache = { at: now, viewers }
+  return viewers
+}
+
+async function readViewersFromLog(windowMs = 30000) {
   const viewers = {}
   try {
     const log = await execCmd(
