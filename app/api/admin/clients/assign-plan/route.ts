@@ -53,17 +53,12 @@ export async function POST(request: NextRequest) {
         data: { planId: planId }
       })
 
-      // Cancelar suscripción anterior si existe
-      await tx.subscription.updateMany({
-        where: { 
-          clientId: clientId,
-          status: 'active'
-        },
-        data: { 
-          status: 'cancelled',
-          cancelledAt: new Date(),
-          cancellationReason: 'Plan cambiado por administrador'
-        }
+      // Eliminar suscripción anterior si existe.
+      // Subscription.clientId es @unique, así que solo puede existir UNA fila
+      // por cliente: hay que borrarla (sus pagos se limpian con onDelete:
+      // Cascade) antes de crear la nueva, o el create falla con P2002.
+      await tx.subscription.deleteMany({
+        where: { clientId: clientId }
       })
 
       // Crear nueva suscripción con fecha de inicio personalizada o automática
