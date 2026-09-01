@@ -38,6 +38,8 @@ Todos los endpoints GET son de solo lectura. Solo aceptan POST:
 | 5 | `/api/public/{clientId}/streaming/status` | GET | Streaming (en vivo) |
 | 5a | `/api/public/{clientId}/schedule/current` | GET | Streaming (parrilla vigente) |
 | 5b | `/api/public/{clientId}/tv/schedule/current` | GET | Streaming (parrilla TV) |
+| 5c | `/api/public/{clientId}/streaming/library/{trackId}/cover` | GET | Streaming (portada de tema) |
+| 5d | `/api/public/{clientId}/streaming/jingles/{jingleId}/cover` | GET | Streaming (portada de jingle) |
 | 6 | `/api/public/{clientId}/programs` | GET | Programas |
 | 7 | `/api/public/{clientId}/news` | GET | Noticias |
 | 8 | `/api/public/{clientId}/news/{slug}` | GET | Noticias |
@@ -377,6 +379,42 @@ GET {BASE}/api/public/{clientId}/tv/schedule/current
 ```
 
 Misma forma de respuesta y errores que el endpoint de radio (sección 5.1).
+
+---
+
+## 5.3 Streaming — Portada de tema (Track Cover)
+
+Devuelve la portada (imagen) de un tema de la librería de radio. Es la URL que aparece en `currentTrack.coverUrl` / `nextTrack.coverUrl` del endpoint `/streaming` (ya viene reescrita a esta ruta pública).
+
+```
+GET {BASE}/api/public/{clientId}/streaming/library/{trackId}/cover
+```
+
+### Respuesta (200 OK)
+
+Binario de imagen (`image/jpeg`, `image/webp`, etc.) con `Cache-Control: public, max-age=86400`.
+
+> La URL es relativa al panel; el reproductor debe anteponer `BASE`. Ejemplo:
+> `https://panelipstream.cl/api/public/{clientId}/streaming/library/trk_2ad950a0/cover`
+
+### Errores
+
+```json
+// 404 — cliente o track sin portada
+// 502 — agente de streaming no disponible
+```
+
+---
+
+## 5.4 Streaming — Portada de jingle
+
+Devuelve la portada de un jingle de radio (misma mecánica que la de track).
+
+```
+GET {BASE}/api/public/{clientId}/streaming/jingles/{jingleId}/cover
+```
+
+Misma respuesta y errores que la sección 5.3.
 
 ---
 
