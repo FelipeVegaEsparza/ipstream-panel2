@@ -344,6 +344,30 @@ export default async function streamRoutes(app) {
   })
 
   /**
+   * POST /api/streams/:clientId/track-started
+   * Llamado por Liquidsoap (on_track del AutoDJ) cuando arranca un track.
+   * Guarda currentTrackStartedAt = NOW() para derivar elapsed en now-playing.
+   */
+  app.post('/api/streams/:clientId/track-started', async (request, reply) => {
+    const { clientId } = request.params
+    try {
+      const [rsRows] = await pool.query(
+        `SELECT id FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        [clientId]
+      )
+      if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+      await pool.query(
+        `UPDATE radio_streams SET currentTrackStartedAt = NOW(3), updatedAt = NOW() WHERE clientId = ?`,
+        [clientId]
+      )
+      return { ok: true }
+    } catch (err) {
+      logger.error({ err, clientId }, 'track-started: error')
+      return reply.code(500).send({ error: err.message })
+    }
+  })
+
+  /**
    * GET /api/streams/:clientId/harbor/status
    * Retorna el estado actual del harbor: puerto, DJs activos, slots configurados.
    */
@@ -559,6 +583,22 @@ export default async function streamRoutes(app) {
         position = { index: 1, total: entries.length }
       }
     }
+
+    // elapsed: segundos transcurridos del tema actual (AutoDJ).
+    // Liquidsoap notifica currentTrackStartedAt en cada on_track del autodj.
+    // Si hay un DJ en vivo (status live), el on_track no aplica y no hay una
+    // forma fiable de saber el inicio del tema → elapsed null.
+    let elapsed = null
+    if (rs.status !== 'live' && rs.currentTrackStartedAt && currentTrack) {
+      const startedMs = new Date(rs.currentTrackStartedAt).getTime()
+      if (!Number.isNaN(startedMs)) {
+        elapsed = Math.max(0, Math.floor((Date.now() - startedMs) / 1000))
+        if (currentTrack.duration) {
+          elapsed = Math.min(elapsed, currentTrack.duration)
+        }
+      }
+    }
+    if (currentTrack) currentTrack.elapsed = elapsed
 
     return {
       playlist: playlist ? { id: playlist.id, name: playlist.name, shuffle: !!playlist.shuffle, repeat: !!playlist.repeat, trackCount: playlist.trackCount } : null,

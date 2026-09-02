@@ -75,6 +75,7 @@ export async function GET(
           album: currentTrack.album,
           coverUrl: publicCoverUrl(currentTrack.coverUrl),
           duration: currentTrack.duration,
+          elapsed: typeof currentTrack.elapsed === 'number' ? currentTrack.elapsed : null,
           isJingle: currentTrack.isJingle,
         }
       : {
@@ -83,6 +84,7 @@ export async function GET(
           album: null,
           coverUrl: null,
           duration: null,
+          elapsed: null,
           isJingle: false,
         }
 

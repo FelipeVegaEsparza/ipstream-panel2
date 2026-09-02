@@ -18,7 +18,8 @@ export function buildAuthHook(expectedToken, harborSecret) {
     }
 
     // Harbor callbacks: validan su propio token secreto (usado por Liquidsoap)
-    if (url.includes('/harbor/connected') || url.includes('/harbor/disconnected')) {
+    if (url.includes('/harbor/connected') || url.includes('/harbor/disconnected') ||
+        url.includes('/track-started')) {
       const headerToken = request.headers['x-harbor-token']
       const queryToken = request.query?.token
       if (headerToken === harborSecret) {

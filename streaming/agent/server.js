@@ -464,6 +464,24 @@ try {
   logger.info({ err: err.message }, 'Columna timezone en clients (ya existía o ignorado)')
 }
 
+// Columna currentTrackStartedAt en radio_streams: la actualiza liquidsoap
+// (callback on_track → /track-started) cuando arranca cada track del AutoDJ.
+// Sirve para derivar elapsed = ahora - currentTrackStartedAt en now-playing.
+try {
+  const [startedCols] = await pool.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'radio_streams' AND COLUMN_NAME = 'currentTrackStartedAt'`
+  )
+  if (startedCols.length === 0) {
+    await pool.query(`ALTER TABLE radio_streams ADD COLUMN currentTrackStartedAt DATETIME(3) NULL`)
+    logger.info('Columna currentTrackStartedAt en radio_streams asegurada')
+  } else {
+    logger.info('Columna currentTrackStartedAt en radio_streams (ya existía)')
+  }
+} catch (err) {
+  logger.info({ err: err.message }, 'Columna currentTrackStartedAt en radio_streams (ya existía o ignorado)')
+}
+
 try {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS video_playlist_entries (

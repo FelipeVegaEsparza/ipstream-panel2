@@ -76,6 +76,13 @@ export function generateLiquidsoapScript({
     return `system("curl -s -H \\"X-Harbor-Token: ${safeCallbackToken}\\" -X POST '${url}' &>/dev/null &")`
   }
 
+  // Notifica al agente cada vez que el AutoDJ arranca un track (on_track).
+  // El agente guarda currentTrackStartedAt → elapsed en /now-playing.
+  function trackStartCmd() {
+    const url = `${agentBase}/api/streams/${safeClient}/track-started`
+    return `system("curl -s -H \\"X-Harbor-Token: ${safeCallbackToken}\\" -X POST '${url}' &>/dev/null &")`
+  }
+
   // DJs sorted by priority (1 = highest) within each role
   const ROLE_ORDER = { owner: 0, host: 1, guest: 2 }
   const activeDjs = [...djs]
@@ -186,6 +193,12 @@ autodj = ${sourceBlock}
 ${harborInputs}
 
 radio = fallback(track_sensitive=false, [${fallbackList}])
+${mode === 'playlist' ? `
+# Notificar al agente cada vez que el AutoDJ arranca un track, para
+# derivar elapsed (tiempo transcurrido del tema) en /now-playing.
+# Se aplica sobre autodj: cuando un DJ está en vivo, autodj no emite
+# y no se resetea el timestamp.
+autodj.on_track(fun (_) -> ${trackStartCmd()}, synchronous=false)` : ''}
 
 output.icecast(
   %mp3(bitrate=${bitrate}),
