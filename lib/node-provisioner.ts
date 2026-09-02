@@ -121,6 +121,17 @@ function buildNodeEnv(server: {
 const CADDYFILE = `# IPStream — Caddyfile para nodos de streaming
 {$SITE_DOMAIN} {
 \treverse_proxy icecast:8000
+
+\theader {
+\t\tAccess-Control-Allow-Origin "*"
+\t\tAccess-Control-Allow-Methods "GET, OPTIONS"
+\t\tAccess-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
+\t\tAccess-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
+\t\tCache-Control "no-cache, no-store, must-revalidate"
+\t\t-Server
+\t}
+
+\tencode zstd gzip
 }
 `
 

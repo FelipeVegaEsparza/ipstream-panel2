@@ -69,6 +69,16 @@ function generateIcecastXml(streams) {
         <port>${p(config.ice.port)}</port>
     </listen-socket>
 
+    <!-- CORS global: permite que los reproductores/sitios de los clientes
+         lean el stream con Web Audio (VU meter) y lo sirvan cross-origin.
+         Icecast 2.4 aplica estos headers a todas las respuestas. -->
+    <http-headers>
+        <header name="Access-Control-Allow-Origin" value="*" />
+        <header name="Access-Control-Allow-Headers" value="Origin, Accept, Icy-MetaData, Range" />
+        <header name="Access-Control-Allow-Methods" value="GET, OPTIONS" />
+        <header name="Access-Control-Expose-Headers" value="Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData" />
+    </http-headers>
+
     <!-- Mount por defecto -->
     <mount type="default">
         <public>1</public>

@@ -36,11 +36,25 @@
 
     # === HLS streaming (proxy a SRS) ===
     # AutoDJ se sirve en /live/* y el DJ en vivo en /dj/*
+    # CORS: los sitios de los clientes consumen el HLS cross-origin (Web
+    # Audio / video). Los .m3u8 y segmentos .ts se sirven desde acá.
     handle /live/* {
+        header {
+            Access-Control-Allow-Origin "*"
+            Access-Control-Allow-Methods "GET, OPTIONS, HEAD"
+            Access-Control-Allow-Headers "Range, Content-Type"
+            Access-Control-Expose-Headers "Content-Length, Content-Type"
+        }
         reverse_proxy srs:8080
     }
 
     handle /dj/* {
+        header {
+            Access-Control-Allow-Origin "*"
+            Access-Control-Allow-Methods "GET, OPTIONS, HEAD"
+            Access-Control-Allow-Headers "Range, Content-Type"
+            Access-Control-Expose-Headers "Content-Length, Content-Type"
+        }
         reverse_proxy srs:8080
     }
 
