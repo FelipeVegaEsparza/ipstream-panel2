@@ -13,6 +13,13 @@ interface BasicData {
   coverUrl?: string | null
   radioStreamingUrl?: string | null
   videoStreamingUrl?: string | null
+  location?: {
+    city: string
+    region?: string | null
+    country: string
+    latitude: number
+    longitude: number
+  } | null
 }
 
 export function BasicDataClient() {

@@ -53,11 +53,28 @@ export async function GET(request: NextRequest) {
     // Aunque no exista BasicData (cliente nuevo), devolvemos un objeto con
     // las URLs derivadas para que el form las muestre siempre.
     const derived = { radioStreamingUrl, videoStreamingUrl }
-    const base = basicData
+    const row = basicData
       ? { ...basicData, ...derived }
-      : { projectName: '', projectDescription: '', logoUrl: null, coverUrl: null, ...derived }
+      : {
+          projectName: '',
+          projectDescription: '',
+          logoUrl: null,
+          coverUrl: null,
+          city: null,
+          region: null,
+          country: null,
+          latitude: null,
+          longitude: null,
+          ...derived,
+        }
 
-    return NextResponse.json({ basicData: base })
+    // Ubicación con la misma forma anidada (`location`) que la API pública.
+    const { city, region, country, latitude, longitude, ...rest } = row
+    const location = city && country && latitude != null && longitude != null
+      ? { city, region: region ?? null, country, latitude, longitude }
+      : null
+
+    return NextResponse.json({ basicData: { ...rest, location } })
 
   } catch (error) {
     console.error('Error al obtener datos básicos:', error)

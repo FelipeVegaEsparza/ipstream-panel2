@@ -3,6 +3,14 @@ import { getClientStreamUrls } from '@/lib/streaming-helpers'
 
 export type ClientServices = 'radio' | 'tv' | 'both'
 
+export interface PublicBasicDataLocation {
+  city: string
+  region: string | null
+  country: string
+  latitude: number
+  longitude: number
+}
+
 export interface PublicBasicData {
   projectName: string | null
   projectDescription: string | null
@@ -13,6 +21,7 @@ export interface PublicBasicData {
   createdAt: Date | null
   updatedAt: Date | null
   services: ClientServices
+  location: PublicBasicDataLocation | null
 }
 
 /**
@@ -36,6 +45,11 @@ export async function getPublicBasicData(clientId: string): Promise<PublicBasicD
         projectDescription: true,
         logoUrl: true,
         coverUrl: true,
+        city: true,
+        region: true,
+        country: true,
+        latitude: true,
+        longitude: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -49,5 +63,11 @@ export async function getPublicBasicData(clientId: string): Promise<PublicBasicD
     ? client.plan.services
     : 'both'
 
-  return { ...basicData, radioStreamingUrl, videoStreamingUrl, services }
+  const { city, region, country, latitude, longitude, ...rest } = basicData
+  const location: PublicBasicDataLocation | null =
+    city && country && latitude != null && longitude != null
+      ? { city, region: region ?? null, country, latitude, longitude }
+      : null
+
+  return { ...rest, radioStreamingUrl, videoStreamingUrl, services, location }
 }

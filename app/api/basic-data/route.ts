@@ -81,14 +81,37 @@ async function handleBasicData(request: NextRequest) {
     const data = basicDataSchema.parse(sanitizedBody)
     console.log('🏠 Validated data keys:', Object.keys(data))
 
+    // Mapear location anidado → columnas. Reglas:
+    // - si el payload NO trae la key `location` → no se toca lo previo
+    // - si trae `location: null` → se limpia
+    // - si trae el objeto → se persiste
+    const hasLocation = Object.prototype.hasOwnProperty.call(data, 'location')
+    const prismaData: Record<string, unknown> = { ...data }
+    delete prismaData.location
+    if (hasLocation) {
+      if (data.location) {
+        prismaData.city = data.location.city
+        prismaData.region = data.location.region ?? null
+        prismaData.country = data.location.country
+        prismaData.latitude = data.location.latitude
+        prismaData.longitude = data.location.longitude
+      } else {
+        prismaData.city = null
+        prismaData.region = null
+        prismaData.country = null
+        prismaData.latitude = null
+        prismaData.longitude = null
+      }
+    }
+
     console.log('🏠 Updating basic data in database...')
     const basicData = await prisma.basicData.upsert({
       where: {
         clientId: effectiveClient.clientId,
       },
-      update: data,
+      update: prismaData,
       create: {
-        ...data,
+        ...prismaData,
         clientId: effectiveClient.clientId,
       } as Prisma.BasicDataUncheckedCreateInput
     })

@@ -1,6 +1,14 @@
 import { z } from 'zod'
 
 // Validación para datos básicos
+export const basicDataLocationSchema = z.object({
+  city: z.string().min(1, 'La ciudad es requerida'),
+  region: z.string().nullable().optional(),
+  country: z.string().length(2, 'El país debe ser un código ISO de 2 letras'),
+  latitude: z.number().min(-90).max(90, 'Latitud inválida'),
+  longitude: z.number().min(-180).max(180, 'Longitud inválida'),
+})
+
 export const basicDataSchema = z.object({
   projectName: z.string().min(1, 'El nombre del proyecto es requerido'),
   projectDescription: z.string().min(1, 'La descripción es requerida'),
@@ -9,6 +17,7 @@ export const basicDataSchema = z.object({
   websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   radioStreamingUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   videoStreamingUrl: z.string().url('URL inválida').optional().or(z.literal('')),
+  location: basicDataLocationSchema.nullable().optional(),
 })
 
 // Validación para redes sociales

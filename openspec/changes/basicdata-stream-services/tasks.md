@@ -6,10 +6,10 @@
 ## 2. Contrato `services` en la API pública (basic-data)
 
 - [x] 2.1 En `app/api/public/[clientId]/basic-data/route.ts`, resolver `services` del plan del cliente (default `both`, fail-open) e incluirlo en la respuesta JSON junto a las URLs derivadas. Verificar con `npx tsc --noEmit`.
-- [ ] 2.2 Verificar por API que `GET /api/public/{clientId}/basic-data` devuelve `services` correcto y URLs nulas/no-nulas según el plan (radio-only → `videoStreamingUrl: null`, `services: "radio"`; tv-only → `radioStreamingUrl: null`; both → ambas URLs).
+- [x] 2.2 Verificar por API que `GET /api/public/{clientId}/basic-data` devuelve `services` correcto y URLs nulas/no-nulas según el plan (radio-only → `videoStreamingUrl: null`, `services: "radio"`; tv-only → `radioStreamingUrl: null`; both → ambas URLs).
 
 ## 3. Verificación integral
 
-- [ ] 3.1 Confirmar con un cliente que pasó de plan `both` a `radio` (con `VideoStream` aún existente) que `basic-data` devuelve `videoStreamingUrl: null` (downgrade cubierto por el gate de plan).
-- [ ] 3.2 Confirmar que el dashboard del cliente (rutas que consumen `getClientStreamUrls`, p. ej. datos básicos del dashboard) no muestra TV en clientes solo-radio.
+- [x] 3.1 Confirmar con un cliente que pasó de plan `both` a `radio` (con `VideoStream` aún existente) que `basic-data` devuelve `videoStreamingUrl: null` (downgrade cubierto por el gate de plan).
+- [x] 3.2 Confirmar que el dashboard del cliente (rutas que consumen `getClientStreamUrls`, p. ej. datos básicos del dashboard) no muestra TV en clientes solo-radio.
 - [x] 3.3 Confirmar que ningún cambio toca streaming-agent/scripts y ejecutar `npm run build` en limpio antes de commitear.

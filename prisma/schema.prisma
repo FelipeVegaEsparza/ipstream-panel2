@@ -95,6 +95,11 @@ model BasicData {
   websiteUrl         String?  @db.VarChar(500)
   radioStreamingUrl  String?
   videoStreamingUrl  String?
+  city               String?
+  region             String?
+  country            String?
+  latitude           Float?
+  longitude          Float?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
