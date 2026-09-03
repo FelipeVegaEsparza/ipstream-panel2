@@ -89,20 +89,7 @@ export async function GET(
     }
 
     // Obtener todos los datos del cliente
-    const [basicData, socialNetworks, programs, news, videos, sponsors, promotions, galleries, announcers, polls, events, [podcasts, videocasts]] = await Promise.all([
-      prisma.basicData.findUnique({
-        where: { clientId },
-        select: {
-          projectName: true,
-          projectDescription: true,
-          logoUrl: true,
-          coverUrl: true,
-          radioStreamingUrl: true,
-          videoStreamingUrl: true,
-          createdAt: true,
-          updatedAt: true
-        }
-      }),
+    const [socialNetworks, programs, news, videos, sponsors, promotions, galleries, announcers, polls, events, [podcasts, videocasts]] = await Promise.all([
       prisma.socialNetworks.findUnique({
         where: { clientId },
         select: {
@@ -295,6 +282,11 @@ export async function GET(
       ...program,
       weekDays: typeof program.weekDays === 'string' ? JSON.parse(program.weekDays) : program.weekDays
     }))
+
+    // basicData con la misma serialización que /basic-data (URLs derivadas
+    // del plan + streams, nunca de la fila persistida).
+    const { getPublicBasicData } = await import('@/lib/public-basic-data')
+    const basicData = await getPublicBasicData(clientId)
 
     return createCorsResponse({
       client: {
