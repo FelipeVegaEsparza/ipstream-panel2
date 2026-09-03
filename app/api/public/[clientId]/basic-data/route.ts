@@ -16,12 +16,16 @@ export async function GET(
     // Verificar que el cliente existe
     const client = await prisma.client.findUnique({
       where: { id: clientId },
-      select: { id: true }
+      select: { id: true, plan: { select: { services: true } } }
     })
 
     if (!client) {
       return createCorsErrorResponse('Cliente no encontrado', 404)
     }
+
+    // Servicios incluidos en el plan del cliente (contrato para el reproductor).
+    // Fail-open: sin plan → both, igual que el panel.
+    const services = client.plan?.services || 'both'
 
     // Obtener datos básicos
     const basicData = await prisma.basicData.findUnique({
@@ -46,7 +50,7 @@ export async function GET(
     const { getClientStreamUrls } = await import('@/lib/streaming-helpers')
     const { radioStreamingUrl, videoStreamingUrl } = await getClientStreamUrls(clientId)
 
-    return createCorsResponse({ ...basicData, radioStreamingUrl, videoStreamingUrl })
+    return createCorsResponse({ ...basicData, radioStreamingUrl, videoStreamingUrl, services })
 
   } catch (error) {
     console.error('Error getting basic data:', error)

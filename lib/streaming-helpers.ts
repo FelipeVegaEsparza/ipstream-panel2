@@ -268,62 +268,82 @@ export async function getVideoPublicBase(clientId: string): Promise<string> {
 
 /**
  * URLs públicas de streaming de un cliente (radio + video), derivadas del
- * servidor asignado a cada servicio (configurado desde el admin).
+ * servidor asignado a cada servicio (configurado desde el admin) y acotadas
+ * a los servicios que el plan del cliente incluye.
  */
 export async function getClientStreamUrls(clientId: string): Promise<{ radioStreamingUrl: string | null; videoStreamingUrl: string | null }> {
-  const [radioBase, videoBase, radioStream] = await Promise.all([
+  const [radioBase, videoBase, radioStream, videoStream, client] = await Promise.all([
     getRadioPublicBaseUrl(clientId),
     getVideoPublicBase(clientId),
     prisma.radioStream.findUnique({ where: { clientId }, select: { icecastMount: true } }),
+    prisma.videoStream.findUnique({ where: { clientId }, select: { id: true } }),
+    prisma.client.findUnique({
+      where: { id: clientId },
+      select: { plan: { select: { services: true } } },
+    }),
   ])
 
-  const radioStreamingUrl = radioStream && radioBase
-    ? `${radioBase.replace(/\/+$/, '')}/${radioStream.icecastMount}`
-    : null
+  const services = client?.plan?.services || 'both'
 
-  const videoStreamingUrl = videoBase
-    ? `${videoBase.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
-    : null
+  const radioStreamingUrl =
+    services !== 'tv' && radioStream && radioBase
+      ? `${radioBase.replace(/\/+$/, '')}/${radioStream.icecastMount}`
+      : null
+
+  const videoStreamingUrl =
+    services !== 'radio' && videoStream && videoBase
+      ? `${videoBase.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
+      : null
 
   return { radioStreamingUrl, videoStreamingUrl }
 }
 
 /**
  * Reescribe BasicData.radioStreamingUrl / videoStreamingUrl según el
- * servidor asignado de cada servicio. Se usa al asignar/migrar un cliente.
+ * servidor asignado de cada servicio y los servicios incluidos en el plan.
+ * Se usa al asignar/migrar un cliente.
  */
 export async function rewriteClientPublicUrls(
   clientId: string,
   opts: { radioServerId?: string | null; videoServerId?: string | null } = {}
 ) {
-  const radioStream = await prisma.radioStream.findUnique({
-    where: { clientId },
-    select: { icecastMount: true },
-  })
+  const [radioStream, videoStream, client] = await Promise.all([
+    prisma.radioStream.findUnique({
+      where: { clientId },
+      select: { icecastMount: true },
+    }),
+    prisma.videoStream.findUnique({
+      where: { clientId },
+      select: { id: true },
+    }),
+    prisma.client.findUnique({
+      where: { id: clientId },
+      select: { name: true, plan: { select: { services: true } } },
+    }),
+  ])
   void opts
 
-  // Radio: base pública del servidor de radio asignado
+  const services = client?.plan?.services || 'both'
+  const clientName = client?.name || 'Cliente'
+
+  // Radio: base pública del servidor de radio asignado (solo si el plan incluye radio)
   const radioBase = await getRadioPublicBaseUrl(clientId)
-  let radioStreamingUrl: string | null = radioStream && radioBase
+  let radioStreamingUrl: string | null = services !== 'tv' && radioStream && radioBase
     ? `${radioBase.replace(/\/+$/, '')}/${radioStream.icecastMount}`
     : null
-  if (radioStreamingUrl === null && radioStream) {
+  if (radioStreamingUrl === null && services !== 'tv' && radioStream) {
     radioStreamingUrl = `${process.env.ICE_PUBLIC_URL || 'http://localhost:8000'}/${radioStream.icecastMount}`
   }
 
-  // Video: base pública del servidor de video asignado (HLS por /live/*)
+  // Video: base pública del servidor de video asignado (HLS por /live/*, solo si el plan incluye TV)
   const videoBase = await getVideoPublicBase(clientId)
-  let videoStreamingUrl: string | null = videoBase
+  let videoStreamingUrl: string | null = services !== 'radio' && videoStream && videoBase
     ? `${videoBase.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
     : null
-  if (videoStreamingUrl === null) {
+  if (videoStreamingUrl === null && services !== 'radio' && videoStream) {
     const host = process.env.RTMP_RELAY_PUBLIC_HOST || process.env.HARBOR_PUBLIC_HOSTNAME || 'localhost'
     videoStreamingUrl = getVideoHlsUrl(host, clientId)
   }
-
-  const clientName = (
-    await prisma.client.findUnique({ where: { id: clientId }, select: { name: true } })
-  )?.name || 'Cliente'
 
   await prisma.basicData.upsert({
     where: { clientId },
