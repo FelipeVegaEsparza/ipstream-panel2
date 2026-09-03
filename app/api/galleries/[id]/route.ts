@@ -46,9 +46,26 @@ export async function PUT(
     const body = await request.json()
     const data = gallerySchema.parse(body)
 
-    const gallery = await prisma.gallery.update({
-      where: { id: params.id },
-      data,
+    const { imageUrls, ...galleryData } = data
+
+    const gallery = await prisma.$transaction(async (tx) => {
+      await tx.galleryImage.deleteMany({ where: { galleryId: params.id } })
+
+      return tx.gallery.update({
+        where: { id: params.id },
+        data: {
+          ...galleryData,
+          images: {
+            create: imageUrls.map((imageUrl, index) => ({
+              imageUrl,
+              order: index,
+            })),
+          },
+        },
+        include: {
+          images: { orderBy: { order: 'asc' } },
+        },
+      })
     })
 
     return NextResponse.json(gallery)

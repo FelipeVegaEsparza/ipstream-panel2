@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
-import { Prisma } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { gallerySchema } from '@/lib/validations'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
@@ -34,11 +34,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = gallerySchema.parse(body)
 
+    const { imageUrls, ...galleryData } = data
+
     const gallery = await prisma.gallery.create({
       data: {
-        ...data,
+        ...galleryData,
         clientId: effectiveClient.clientId,
-      } as Prisma.GalleryUncheckedCreateInput
+        images: {
+          create: imageUrls.map((imageUrl, index) => ({
+            imageUrl,
+            order: index,
+          })),
+        },
+      } as Prisma.GalleryUncheckedCreateInput,
+      include: {
+        images: {
+          orderBy: { order: 'asc' },
+        },
+      },
     })
 
     return NextResponse.json(gallery)

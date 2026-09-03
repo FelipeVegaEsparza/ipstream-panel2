@@ -24,25 +24,41 @@ export function GalleryImageUpload({
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = async (file: File) => {
-    if (!file) return
+  const handleFileSelect = async (file: File): Promise<string | null> => {
+    if (!file) return null
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      return data.url
+    }
+
+    const error = await response.json().catch(() => ({}))
+    showToast({ type: 'error', title: error.error || 'Error al subir la imagen' })
+    return null
+  }
+
+  const processFiles = async (files: File[]) => {
+    if (files.length === 0 || uploading) return
 
     setUploading(true)
+    const base = [...images]
+    const uploaded: string[] = []
+
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        onChange([...images, data.url])
-      } else {
-        const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al subir la imagen' })
+      for (const file of files) {
+        const url = await handleFileSelect(file)
+        if (url) {
+          uploaded.push(url)
+          onChange([...base, ...uploaded])
+        }
       }
     } catch (error) {
       showToast({ type: 'error', title: 'Error al subir la imagen' })
@@ -54,7 +70,7 @@ export function GalleryImageUpload({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files) {
-      Array.from(files).forEach((file) => handleFileSelect(file))
+      processFiles(Array.from(files).filter((file) => file.type.startsWith('image/')))
     }
     e.target.value = ''
   }
@@ -64,11 +80,7 @@ export function GalleryImageUpload({
     setDragOver(false)
     const files = e.dataTransfer.files
     if (files) {
-      Array.from(files).forEach((file) => {
-        if (file.type.startsWith('image/')) {
-          handleFileSelect(file)
-        }
-      })
+      processFiles(Array.from(files).filter((file) => file.type.startsWith('image/')))
     }
   }
 
