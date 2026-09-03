@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     const event = await prisma.event.create({
       data: {
         ...data,
+        date: new Date(`${data.date}T12:00:00.000Z`),
         clientId: effectiveClient.clientId,
       } as Prisma.EventUncheckedCreateInput
     })

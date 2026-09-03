@@ -39,7 +39,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     const event = await prisma.event.update({
       where: { id: params.id },
-      data,
+      data: {
+        ...data,
+        date: new Date(`${data.date}T12:00:00.000Z`),
+      },
     })
 
     return NextResponse.json(event)
