@@ -223,7 +223,7 @@ jobs:
       # de dev; mejor detectar esto acá.
       - name: Validate .env secrets on VPS
         run: |
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+          ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=8 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "cd /opt/ipstream-panel && bash scripts/setup-prod.sh --check" || {
             echo "❌ El .env del VPS tiene secrets inseguros."
             echo "   Para solucionarlo desde el VPS:"
@@ -241,7 +241,11 @@ jobs:
           IMAGE_TAG: ${{ steps.tag.outputs.value }}
           GITHUB_REPOSITORY_OWNER: ${{ steps.owner.outputs.owner }}
         run: |
-          ssh -o StrictHostKeyChecking=accept-new ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+          # ServerAliveInterval: mantiene viva la sesión durante pasos largos
+          # sin salida (p. ej. docker prune al final del deploy.sh), que es
+          # cuando el canal SSH se caía con "client_loop: send disconnect".
+          ssh -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ServerAliveCountMax=20 \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "cd /opt/ipstream-panel && \
              IMAGE_TAG='${{ steps.tag.outputs.value }}' \
              GITHUB_REPOSITORY_OWNER='${{ steps.owner.outputs.owner }}' \
@@ -253,7 +257,7 @@ jobs:
       - name: Post-deploy health check
         run: |
           sleep 45
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /opt/ipstream-panel && ./deploy/scripts/health-check.sh" || {
+          ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=8 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /opt/ipstream-panel && ./deploy/scripts/health-check.sh" || {
             echo "⚠ Health check remoto falló. Verificar manualmente."
             echo "   Para debug:"
             echo "     ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"

@@ -211,8 +211,13 @@ done
 # (imágenes taggeadas de deploys anteriores + caché de build). Sin `-a` docker
 # system prune solo borra imágenes sin tag, por eso se acumulaba el disco.
 echo "🧹 Limpieza — Eliminando imágenes y caché Docker no utilizados (>7 días)..."
-docker image prune -af --filter "until=168h" 2>&1 | tail -1
-docker builder prune -af 2>&1 | tail -1
+# Sin `| tail -1`: la limpieza puede tardar minutos y, al no emitir salida
+# hasta el final, la sesión SSH quedaba inactiva y se cortaba ("Broken pipe").
+# Ahora el progreso fluye y mantiene vivo el canal.
+# `|| true`: la limpieza es best-effort; un fallo acá no debe marcar el deploy
+# como fallido (ya pasó el health check OK).
+docker image prune -af --filter "until=168h" 2>&1 || true
+docker builder prune -af 2>&1 || true
 df -h / | tail -1
 
 echo
