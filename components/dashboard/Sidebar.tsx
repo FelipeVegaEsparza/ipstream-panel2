@@ -54,6 +54,27 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
   const pathname = usePathname()
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(getInitialOpenSections)
   const [openChildren, setOpenChildren] = useState<Record<string, boolean>>(getInitialOpenChildren)
+  const [unreadContact, setUnreadContact] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    const check = async () => {
+      try {
+        const res = await fetch('/api/dashboard/contact-messages/unread-count', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) setUnreadContact(typeof data.count === 'number' ? data.count : 0)
+      } catch {
+        // Sin sesión o error: no mostrar badge
+      }
+    }
+    check()
+    const id = setInterval(check, 30000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
 
   useEffect(() => {
     try {
@@ -241,6 +262,11 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                 aria-hidden="true"
                               />
                               <span className="truncate">{item.name}</span>
+                              {item.key === 'contact-messages' && unreadContact > 0 && (
+                                <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
+                                  {unreadContact > 9 ? '9+' : unreadContact}
+                                </span>
+                              )}
                               {isActive && (
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-l-full"></div>
                               )}

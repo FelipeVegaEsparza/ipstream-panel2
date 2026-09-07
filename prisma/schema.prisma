@@ -64,6 +64,7 @@ model Client {
   supportTickets         SupportTicket[]
   chatMessages           ChatMessage[]
   chatBans               ChatBan[]
+  contactMessages        ContactMessage[]
   // Streaming — Audio (Radio)
   radioStream            RadioStream?
   tracks                 Track[]
@@ -622,6 +623,26 @@ model ChatBan {
   @@index([clientId, email])
   @@index([clientId, ipAddress])
   @@map("chat_bans")
+}
+
+// ContactMessage: consultas de contacto enviadas desde el sitio público del cliente.
+// status: "new" | "read" | "resolved"
+model ContactMessage {
+  id        String   @id @default(cuid())
+  clientId  String
+  name      String   @db.VarChar(120)
+  email     String   @db.VarChar(254)
+  phone     String   @db.VarChar(40)
+  message   String   @db.Text
+  status    String   @default("new") // "new" | "read" | "resolved"
+  ip        String?  @db.VarChar(45)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, createdAt])
+  @@map("contact_messages")
 }
 
 // Role values: "ADMIN" | "CLIENT"

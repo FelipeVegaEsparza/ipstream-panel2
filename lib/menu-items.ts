@@ -18,6 +18,7 @@ import {
   CalendarDaysIcon,
   UserCircleIcon,
   ChatBubbleLeftRightIcon,
+  EnvelopeIcon,
   RadioIcon,
   MusicalNoteIcon,
   LinkIcon,
@@ -46,6 +47,7 @@ export type MenuItemKey =
   | 'tutorials'
   | 'support'
   | 'chat'
+  | 'contact-messages'
   | 'streaming'
   | 'streaming-library'
   | 'streaming-playlists'
@@ -266,6 +268,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
     href: '/dashboard/chat',
     section: 'Interactivos',
     icon: ChatBubbleLeftRightIcon,
+  },
+  {
+    key: 'contact-messages',
+    name: 'Mensajes de contacto',
+    href: '/dashboard/contact-messages',
+    section: 'Interactivos',
+    icon: EnvelopeIcon,
   },
 
   {

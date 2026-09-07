@@ -207,6 +207,13 @@ export default function ApiTestPage() {
     },
     {
       group: 'Interacción',
+      name: 'Contacto: Enviar mensaje',
+      method: 'POST',
+      url: `/api/public/${clientId}/contact-messages`,
+      description: 'Body: { name, email, phone, message } (los 4 obligatorios). La consulta llega a "Mensajes de contacto" en tu dashboard. Rate limit 5/10 min por IP.'
+    },
+    {
+      group: 'Interacción',
       name: 'Registro PWA',
       method: 'POST',
       url: `/api/public/${clientId}/pwa/register`,
@@ -1227,7 +1234,7 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
 ### Consideraciones Generales
 
 - **Solo lectura:** Todos los endpoints GET son de solo lectura.
-- **POST:** Solo los endpoints \`/polls/[id]/vote\` y \`/pwa/register\` aceptan POST.
+- **POST:** Los endpoints \`/polls/[id]/vote\`, \`/chat/messages\`, \`/pwa/register\` y \`/contact-messages\` aceptan POST.
 - **CORS:** Habilitado para todos los orígenes (\`Access-Control-Allow-Origin: *\`).
 - **Paginación:** Los endpoints de \`news\`, \`podcasts\` y \`videocasts\` soportan paginación. Los demás devuelven todos los elementos.
 - **Fechas:** Siempre en formato ISO 8601.

@@ -241,6 +241,20 @@ export type ChatMessageInput = z.infer<typeof chatMessageSchema>
 export type ChatStaffMessageInput = z.infer<typeof chatStaffMessageSchema>
 export type ChatBanInput = z.infer<typeof chatBanSchema>
 
+// Validación para mensajes de contacto (formulario público del sitio)
+export const contactMessageSchema = z.object({
+  name: z.string().trim().min(1, 'El nombre es requerido').max(120, 'Máximo 120 caracteres'),
+  email: z.string().trim().toLowerCase().min(1, 'El email es requerido').email('Email inválido').max(254, 'Máximo 254 caracteres'),
+  phone: z.string().trim().min(1, 'El teléfono es requerido').max(40, 'Máximo 40 caracteres'),
+  message: z.string().trim().min(1, 'El mensaje es requerido').max(2000, 'Máximo 2000 caracteres'),
+})
+
+// Validación para el estado de un mensaje de contacto (panel)
+export const contactMessageStatusSchema = z.enum(['new', 'read', 'resolved'])
+
+export type ContactMessageInput = z.infer<typeof contactMessageSchema>
+export type ContactMessageStatus = z.infer<typeof contactMessageStatusSchema>
+
 export type EventInput = z.infer<typeof eventSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>

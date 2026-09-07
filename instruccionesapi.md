@@ -24,6 +24,7 @@ Todos los endpoints GET son de solo lectura. Solo aceptan POST:
 - `POST /polls/{pollId}/vote`
 - `POST /pwa/register`
 - `POST /chat/messages`
+- `POST /contact-messages`
 
 ---
 
@@ -59,6 +60,7 @@ Todos los endpoints GET son de solo lectura. Solo aceptan POST:
 | 22 | `/api/public/{clientId}/chat/messages` | POST | Chat |
 | 23 | `/api/public/{clientId}/chat/online` | GET | Chat |
 | 24 | `/api/public/{clientId}/pwa/register` | POST | PWA |
+| 25 | `/api/public/{clientId}/contact-messages` | POST | Mensajes de contacto |
 
 ---
 
@@ -950,6 +952,54 @@ POST {BASE}/api/public/{clientId}/pwa/register
 
 ---
 
+## 19. Enviar Mensaje de Contacto
+
+Envía una consulta desde el formulario de contacto del sitio. La consulta llega a la sección **"Mensajes de contacto"** del panel del cliente (`/dashboard/contact-messages`), donde el operador puede marcarla como leída/resuelta o eliminarla.
+
+```
+POST {BASE}/api/public/{clientId}/contact-messages
+```
+
+**Body:**
+
+```json
+{
+  "name": "Juan Pérez",
+  "email": "juan@mail.com",
+  "phone": "+56912345678",
+  "message": "Hola, me interesa auspiciar su radio."
+}
+```
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `name` | `string` | Sí | Nombre del remitente (máx. 120) |
+| `email` | `string` | Sí | Email válido del remitente (máx. 254) |
+| `phone` | `string` | Sí | Teléfono de contacto (máx. 40) |
+| `message` | `string` | Sí | Mensaje (máx. 2000) |
+
+**Respuesta (201 Created):**
+
+```json
+{
+  "id": "cm7abcdef1234567890",
+  "status": "new",
+  "createdAt": "2025-06-01T10:00:00.000Z"
+}
+```
+
+**Errores:**
+
+| Código | Motivo |
+|--------|--------|
+| `400` | Validación: falta un campo obligatorio, email inválido o algún campo excede su longitud máxima |
+| `404` | `clientId` no existe |
+| `429` | Rate limit: se superaron 5 envíos por IP en 10 minutos |
+
+> Los campos adicionales al contrato se ignoran. No hay asunto (`subject`): el formulario envía solo estos cuatro campos.
+
+---
+
 ## Guía de Implementación (para la IA del sitio web)
 
 ### Ejemplo base
@@ -1072,6 +1122,32 @@ if (!deviceId) {
   })
 }
 ```
+
+### 7. Formulario de contacto
+
+Enviar los 4 campos del formulario (`name`, `email`, `phone`, `message`). El mensaje llega a la sección "Mensajes de contacto" del panel de la radio.
+
+```javascript
+async function sendContact({ name, email, phone, message }) {
+  const res = await fetch(`${API}/contact-messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, phone, message })
+  })
+  if (res.status === 201) {
+    // OK: consulta enviada
+  } else if (res.status === 429) {
+    // Demasiados envíos desde esta IP, esperar unos minutos
+  } else {
+    // Error de validación (400) o cliente inexistente (404)
+    const err = await res.json().catch(() => null)
+  }
+}
+```
+
+- Los 4 campos son obligatorios y se validan en el servidor.
+- No se guarda ni se solicita asunto (`subject`).
+- Límite anti-spam: 5 envíos por IP cada 10 minutos (respuesta `429`).
 
 ### Manejo de imágenes
 
