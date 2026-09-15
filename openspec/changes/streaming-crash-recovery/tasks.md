@@ -14,7 +14,7 @@
 
 ## 3. Supervisión acotada al servidor propio
 
-- [x] 3.1 Filtrar por `serverId` (o `serverId IS NULL` legacy) la consulta de `streaming/agent/lib/dj-watcher.js`, usando `resolveSelfServerId()`; verificación: el agente principal deja de emitir `ECONNREFUSED` por streams asignados a otro nodo.
+- [x] 3.1 Filtrar por `serverId` (o `serverId IS NULL` legacy) las consultas de `streaming/agent/lib/dj-watcher.js` y `streaming/agent/lib/dj-state.js` (`rebuildAllDjState`), usando `resolveSelfServerId()`; verificación: el agente principal deja de emitir `ECONNREFUSED` por streams asignados a otro nodo.
 
 ## 4. Deploy y verificación en producción
 

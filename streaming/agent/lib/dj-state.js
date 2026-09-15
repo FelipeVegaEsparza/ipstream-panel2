@@ -8,6 +8,7 @@ import { pool } from './db.js'
 import { logger } from './logger.js'
 import { getRadioDjs } from './liquidsoap.js'
 import { isAnyHarborSourceConnected } from './liquidsoap-telnet.js'
+import { resolveSelfServerId } from './self-server.js'
 
 // Map<clientMount, Map<djMount, { connectedAt: number, slotName: string }>>
 const _djActive = new Map()
@@ -117,8 +118,12 @@ export async function rebuildDjState(clientId) {
  * Rebuild state for all running streams. Called on agent startup.
  */
 export async function rebuildAllDjState() {
+  const selfId = await resolveSelfServerId()
   const [rows] = await pool.query(
-    `SELECT clientId FROM radio_streams WHERE liquidsoapRunning = 1`
+    `SELECT clientId FROM radio_streams WHERE liquidsoapRunning = 1 ${
+      selfId ? 'AND serverId = ?' : 'AND serverId IS NULL'
+    }`,
+    selfId ? [selfId] : []
   )
   logger.info({ count: rows.length }, 'Reconstruyendo estado DJ para streams running')
   for (const row of rows) {
