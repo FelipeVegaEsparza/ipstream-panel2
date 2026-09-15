@@ -102,7 +102,9 @@ jobs:
       - name: Push Docker image to registry
         if: github.event_name == 'push'
         run: |
-          set -e
+          # pipefail: sin esto, `docker push | tee` siempre devuelve 0 (exit de
+          # tee) y el retry nunca se dispara aunque el push falle.
+          set -eo pipefail
           # Verificar autenticación antes de pushear
           echo "🔐 Verificación de auth GHCR:"
           docker info 2>&1 | grep -i "username\|registry" | head -5 || true
@@ -179,12 +181,33 @@ jobs:
       - name: Push video-encoder image to registry
         if: github.event_name == 'push'
         run: |
-          set -e
+          # pipefail + retry con backoff: GHCR aplica secondary rate limits
+          # cuando se pushean dos imágenes seguidas (panel + video-encoder).
+          set -eo pipefail
           OWNER='${{ steps.owner.outputs.owner }}'
           # Usamos SHA corto para matchear el tag local que produce el build.
           SHA=$(echo '${{ github.sha }}' | cut -c1-7)
-          docker push "ghcr.io/$OWNER/ipstream-video-encoder:$SHA"
-          docker push "ghcr.io/$OWNER/ipstream-video-encoder:latest"
+          for img in "ghcr.io/$OWNER/ipstream-video-encoder:$SHA" "ghcr.io/$OWNER/ipstream-video-encoder:latest"; do
+            echo "  → push $img"
+            attempt=1
+            max_attempts=5
+            while [ $attempt -le $max_attempts ]; do
+              if docker push "$img" 2>&1 | tee /tmp/push-ve.log; then
+                break
+              fi
+              attempt=$((attempt + 1))
+              if [ $attempt -le $max_attempts ]; then
+                delay=$((attempt * 30))
+                echo "  ⚠ Push falló. Reintento $attempt/$max_attempts en ${delay}s..."
+                sleep $delay
+              fi
+            done
+            if [ $attempt -gt $max_attempts ]; then
+              echo "❌ Push falló para: $img después de $max_attempts intentos"
+              tail -20 /tmp/push-ve.log
+              exit 1
+            fi
+          done
           echo "  ✓ Imagen video-encoder pusheada"
 
       # === 6. Configurar SSH ===
