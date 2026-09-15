@@ -674,6 +674,7 @@ model RadioStream {
   // Configuración de audio
   bitrate              Int       @default(128) // kbps
   autoStart            Boolean   @default(false) // iniciar AutoDJ al arrancar el agente
+  autoRestart          Boolean   @default(true) // recuperar AutoDJ si el proceso muere (false = parada intencional)
   // === Configuración administrativa (configurable desde /admin/streaming) ===
   enabled              Boolean   @default(true) // kill switch
   storageQuotaMB       Int? // cuota de AutoDJ library en MB (null = ilimitado)

@@ -13,6 +13,7 @@
 import { logger } from './logger.js'
 import { _djActive, isAnyDjActive, rebuildDjState } from './dj-state.js'
 import { pool } from './db.js'
+import { resolveSelfServerId } from './self-server.js'
 
 const CHECK_INTERVAL = 30_000
 let intervalHandle = null
@@ -31,9 +32,14 @@ export function stopDjWatcher() {
 }
 
 async function checkMounts() {
-  // Reconstruir estado desde Liquidsoap para streams running
+  const selfId = await resolveSelfServerId()
+  const scope = selfId ? 'serverId = ?' : 'serverId IS NULL'
+  const params = selfId ? [selfId] : []
+
+  // Reconstruir estado desde Liquidsoap para streams running (solo los propios).
   const [runningRows] = await pool.query(
-    `SELECT clientId, icecastMount, status FROM radio_streams WHERE liquidsoapRunning = 1`
+    `SELECT clientId, icecastMount, status FROM radio_streams WHERE liquidsoapRunning = 1 AND ${scope}`,
+    params
   )
 
   for (const row of runningRows) {
@@ -44,9 +50,11 @@ async function checkMounts() {
     }
   }
 
-  // Corregir inconsistencias entre _djActive y DB
+  // Corregir inconsistencias entre _djActive y DB (solo streams propios:
+  // _djActive es estado en memoria de ESTE agente).
   const [statusRows] = await pool.query(
-    `SELECT clientId, icecastMount, status FROM radio_streams WHERE status IN ('live', 'autodj')`
+    `SELECT clientId, icecastMount, status FROM radio_streams WHERE status IN ('live', 'autodj') AND ${scope}`,
+    params
   )
 
   for (const row of statusRows) {

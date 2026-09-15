@@ -266,6 +266,7 @@ export async function startStream(clientId) {
            liquidsoapPid = ?,
            liquidsoapStartedAt = NOW(),
            status = 'autodj',
+           autoRestart = 1,
            lastError = NULL,
            updatedAt = NOW()
        WHERE clientId = ?`,
@@ -298,7 +299,7 @@ export async function stopStream(clientId) {
   if (!status.running) {
     logger.info({ clientId, mount: rs.icecastMount }, 'Stream ya estaba detenido')
     await pool.query(
-      `UPDATE radio_streams SET liquidsoapRunning = 0, liquidsoapPid = NULL, status = 'off', updatedAt = NOW() WHERE clientId = ?`,
+      `UPDATE radio_streams SET liquidsoapRunning = 0, liquidsoapPid = NULL, status = 'off', autoRestart = 0, updatedAt = NOW() WHERE clientId = ?`,
       [clientId]
     )
     return { wasRunning: false }
@@ -311,7 +312,7 @@ export async function stopStream(clientId) {
   )
 
   await pool.query(
-    `UPDATE radio_streams SET liquidsoapRunning = 0, liquidsoapPid = NULL, status = 'off', updatedAt = NOW() WHERE clientId = ?`,
+    `UPDATE radio_streams SET liquidsoapRunning = 0, liquidsoapPid = NULL, status = 'off', autoRestart = 0, updatedAt = NOW() WHERE clientId = ?`,
     [clientId]
   )
 

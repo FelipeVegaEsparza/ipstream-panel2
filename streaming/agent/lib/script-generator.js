@@ -66,21 +66,29 @@ export function generateLiquidsoapScript({
   const agentHost = config.ice.host === 'localhost' ? 'localhost' : 'agent'
   const agentBase = `http://${agentHost}:4000`
   // El token de callback se inyecta como string literal en el .liq.
-  // No usamos getenv() porque Liquidsoap 2.4.5 no permite concatenar
-  // strings dentro de la expresión de system() de forma directa.
   // El archivo .liq solo es legible por el usuario liquidsoap/root.
   const safeCallbackToken = sanitizeForLiquidsoap(agentToken || '')
 
+  // Los callbacks usan http.post nativo dentro de thread.run en vez de
+  // system("curl ... &"). `system()`/process.run delega en Process_handler y
+  // disparaba Sys_error("Bad file descriptor") dentro de la cola Duppy de
+  // Liquidsoap 2.4.5, provocando PANIC y la muerte del proceso. http.post no
+  // usa subproceso; thread.run evita bloquear el clock y on_error contiene
+  // cualquier fallo de red (agente caído) sin tumbar Liquidsoap.
+  function agentCallback(url) {
+    return `thread.run(fun () -> ignore(http.post("${url}", headers=[("X-Harbor-Token", "${safeCallbackToken}")], timeout=3.0)), on_error=fun (_) -> ())`
+  }
+
   function harborCallbackCmd(action, djMount, slotName) {
     const url = `${agentBase}/api/streams/${safeClient}/harbor/${action}?dj=${encodeURIComponent(djMount)}&slot=${encodeURIComponent(slotName)}`
-    return `system("curl -s -H \\"X-Harbor-Token: ${safeCallbackToken}\\" -X POST '${url}' &>/dev/null &")`
+    return agentCallback(url)
   }
 
   // Notifica al agente cada vez que el AutoDJ arranca un track (on_track).
   // El agente guarda currentTrackStartedAt → elapsed en /now-playing.
   function trackStartCmd() {
     const url = `${agentBase}/api/streams/${safeClient}/track-started`
-    return `system("curl -s -H \\"X-Harbor-Token: ${safeCallbackToken}\\" -X POST '${url}' &>/dev/null &")`
+    return agentCallback(url)
   }
 
   // DJs sorted by priority (1 = highest) within each role

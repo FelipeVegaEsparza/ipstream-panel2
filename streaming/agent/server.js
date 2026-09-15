@@ -265,6 +265,15 @@ try {
   logger.info({ err: err.message }, 'Columna autoStart en radio_streams (ya existía o ignorado)')
 }
 
+// autoRestart: el supervisor reinicia el stream solo si murió por caída.
+// stopStream lo pone en 0 (parada intencional) y startStream/restartStream en 1.
+try {
+  await pool.query(`ALTER TABLE radio_streams ADD COLUMN IF NOT EXISTS autoRestart BOOLEAN NOT NULL DEFAULT true`)
+  logger.info('Columna autoRestart en radio_streams asegurada')
+} catch (err) {
+  logger.info({ err: err.message }, 'Columna autoRestart en radio_streams (ya existía o ignorado)')
+}
+
 try {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS radio_djs (
