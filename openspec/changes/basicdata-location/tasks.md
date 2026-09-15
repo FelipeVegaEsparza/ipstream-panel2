@@ -17,6 +17,6 @@
 ## 4. Exposición pública y verificación integral
 
 - [x] 4.1 Incluir `location` en `lib/public-basic-data.ts` (mismo objeto anidado que el GET dashboard; `null` si no hay ciudad). Verificar con `npx tsc --noEmit`.
-- [ ] 4.2 Verificar en API pública que un cliente con ciudad configurada devuelve el mismo `location` en `/api/public/{clientId}/basic-data` y en `/api/public/{clientId}`; y que un cliente sin configurar devuelve `location: null` en ambos.
-- [ ] 4.3 Configurar al menos una ciudad de otro continente (ej. Tokio, JP) en un cliente de prueba y confirmar guardado + exposición correcta (autocompletado global).
+- [x] 4.2 Verificar en API pública que un cliente con ciudad configurada devuelve el mismo `location` en `/api/public/{clientId}/basic-data` y en `/api/public/{clientId}`; y que un cliente sin configurar devuelve `location: null` en ambos.
+- [x] 4.3 Configurar al menos una ciudad de otro continente (ej. Tokio, JP) en un cliente de prueba y confirmar guardado + exposición correcta (autocompletado global).
 - [x] 4.4 Confirmar que ningún cambio toca streaming-agent/scripts y ejecutar `npm run build` en limpio antes de commitear.
