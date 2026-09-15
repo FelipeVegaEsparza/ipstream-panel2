@@ -19,5 +19,5 @@
 ## 4. Deploy y verificación en producción
 
 - [x] 4.1 Correr lint/typecheck/build del agente y del panel; verificación: comandos sin errores.
-- [ ] 4.2 Desplegar y pulsar **"Actualizar nodo"** en cada nodo de streaming remoto (el cambio toca `streaming-agent` y scripts de Liquidsoap); verificación: los nodos corren la versión nueva.
-- [ ] 4.3 Verificar en el nodo real que un stream caído se recupera solo (sin 404 prolongado) y que un stream detenido a mano no revive; verificación: `streaming_audit_logs` muestra el reinicio automático y el mount responde 200 tras la caída simulada.
+- [x] 4.2 Desplegar y pulsar **"Actualizar nodo"** en cada nodo de streaming remoto (el cambio toca `streaming-agent` y scripts de Liquidsoap); verificación: los nodos corren la versión nueva.
+- [x] 4.3 Verificar en el nodo real que un stream caído se recupera solo (sin 404 prolongado) y que un stream detenido a mano no revive; verificación: `streaming_audit_logs` muestra el reinicio automático y el mount responde 200 tras la caída simulada.
