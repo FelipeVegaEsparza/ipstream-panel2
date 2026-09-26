@@ -145,18 +145,15 @@ export default async function PlanPage({ params }: { params: { slug: string } })
                   <p className={s.note}>
                     IVA no incluido · Facturación {plan.interval === 'monthly' ? 'mensual' : 'anual'}, sin contratos de permanencia.
                   </p>
-
-                  {plan.demoUrl && (
-                    <div className={s.planActions}>
-                      <a className={s.btnGhost} href={plan.demoUrl} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink size={15} /> Ver ejemplo
-                      </a>
-                    </div>
-                  )}
                 </div>
               </div>
 
               <div className={s.formCol}>
+                {plan.demoUrl && (
+                  <a className={s.demoBtn} href={plan.demoUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink size={18} /> Ver ejemplo del plan
+                  </a>
+                )}
                 <SignupForm plans={[plan]} fixedPlanId={plan.id} theme="dark" />
               </div>
             </div>
