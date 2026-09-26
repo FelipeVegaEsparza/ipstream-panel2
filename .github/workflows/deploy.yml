@@ -3,6 +3,11 @@ name: Deploy to production
 on:
   push:
     branches: [main]
+    # Los commits que solo tocan artefactos de OpenSpec no necesitan deploy.
+    # Ojo: no usar `[skip ci]` en los commits, porque saltea TODO el push
+    # cuando es el commit cabeza (incluido un commit de código que venga antes).
+    paths-ignore:
+      - 'openspec/**'
   workflow_dispatch:
     inputs:
       image_tag:
@@ -40,8 +45,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       # === 3. Login a GitHub Container Registry ===
+      # Corre también en workflow_dispatch: sin login, el runner no puede
+      # hacer `docker pull` de la imagen privada para verificarla.
       - name: Login to GHCR
-        if: github.event_name == 'push'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
