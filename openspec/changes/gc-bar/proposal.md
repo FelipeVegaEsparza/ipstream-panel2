@@ -4,11 +4,11 @@ Hoy no existe una forma de que cada radio/TV publique una "Barra GC": una lista 
 
 ## What Changes
 
-- **Nueva sección "Barra GC" dentro del grupo Contenido** del dashboard, en `/dashboard/gc-bar`, donde el cliente agrega, edita, activa/desactiva, ordena y elimina mensajes/frases.
-- **Modelo nuevo `GcBarMessage`** (tabla `gc_bar_messages`): `clientId`, `text`, `active`, `order`, timestamps; relación con `Client`.
+- **Nueva sección "Barra GC" dentro del grupo Contenido** del dashboard, en `/dashboard/gc-bar`, donde el cliente agrega, edita, ordena y elimina mensajes/frases.
+- **Modelo nuevo `GcBarMessage`** (tabla `gc_bar_messages`): `clientId`, `text`, `order`, timestamps; relación con `Client`.
 - **CRUD de panel nuevo**: `GET/POST /api/gc-bar` y `GET/PUT/DELETE /api/gc-bar/[id]`, aislados por el cliente efectivo y con el guard de menú (`gc-bar`), siguiendo el patrón de `announcers`/`promotions`.
-- **Endpoint público nuevo**: `GET /api/public/{clientId}/gc-bar` (CORS `*`, sin auth) que devuelve los mensajes **activos** de ese cliente ordenados por `order` ascendente.
-- **Payload agregado**: se agrega la clave `gcBar` a `GET /api/public/{clientId}` con los mensajes activos, igual que el resto del contenido.
+- **Endpoint público nuevo**: `GET /api/public/{clientId}/gc-bar` (CORS `*`, sin auth) que devuelve los mensajes de ese cliente ordenados por `order` ascendente.
+- **Payload agregado**: se agrega la clave `gcBar` a `GET /api/public/{clientId}` con los mensajes, igual que el resto del contenido.
 - **Menú y permisos**: se agrega el ítem `gc-bar` al `MenuItemKey`, al grupo `Contenido` y a `MENU_ITEMS`, por lo que queda sujeto a los permisos de menú/plan existentes sin lógica extra.
 - **Documentación**: se actualiza `app/dashboard/api-test/page.tsx` (endpoint nuevo) e `instruccionesapi.md` (tabla de endpoints, payload agregado y ejemplo).
 

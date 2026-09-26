@@ -27,7 +27,6 @@ model GcBarMessage {
   id        String   @id @default(cuid())
   clientId  String
   text      String   @db.Text
-  active    Boolean  @default(true)
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -52,15 +51,13 @@ Se agrega `'gc-bar'` a `MenuItemKey` y un `MenuItemDef` en `section: 'Contenido'
 - Ambos con el bloque `MENU_GUARD_INJECTED` para `gc-bar` y `gcBarMessageSchema` de `lib/validations.ts` (`text` requerido, `active` booleano opcional, `order` entero opcional).
 
 ### 4. Endpoint público y payload agregado
-- `app/api/public/[clientId]/gc-bar/route.ts`: valida que el cliente exista (404 si no), consulta `gcBarMessage.findMany({ where: { clientId, active: true }, orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] })` y responde con `createCorsResponse`. `OPTIONS` con `handleCors`.
-- En `app/api/public/[clientId]/route.ts` se agrega la consulta al `Promise.all` y la clave `gcBar` en la respuesta.
-
-Filtro `active: true` también en el agregado para no exponer inactivos.
+- `app/api/public/[clientId]/gc-bar/route.ts`: valida que el cliente exista (404 si no), consulta `gcBarMessage.findMany({ where: { clientId }, orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] })` y responde con `createCorsResponse`. `OPTIONS` con `handleCors`.
+- En `app/api/public/[clientId]/route.ts` se agrega la consulta al `Promise.all` y la clave `gcBar` en la respuesta. Todos los mensajes se exponen (no hay filtro de estado).
 
 ### 5. UI: una sola página con manager en cliente
 `app/dashboard/gc-bar/page.tsx` (Server Component) aplica el guard de menú, obtiene los mensajes del cliente y los pasa a `components/dashboard/GcBarManager.tsx` ('use client'), que:
-- Lista los mensajes con su texto, orden y estado (badge activo/inactivo).
-- Permite crear/editar en un formulario inline (texto, activo, orden), eliminar con confirmación y alternar activo con un switch.
+- Lista los mensajes con su texto y orden.
+- Permite crear/editar en un formulario inline (texto, orden) y eliminar con confirmación.
 - Llama al CRUD `/api/gc-bar` y hace `router.refresh()` al terminar, con `showToast` para errores.
 
 Se prefiere una sola página con formulario inline (en lugar del patrón multi-página de `announcers`) por ser un recurso de un solo campo; menos navegación y menos archivos.
@@ -73,7 +70,6 @@ Se agrega el endpoint a la lista de `app/dashboard/api-test/page.tsx` y se docum
 ## Risks / Trade-offs
 
 - **Órdenes duplicados o vacíos**: varios mensajes pueden compartir `order`. Mitigación: desempate por `createdAt` ascendente; el formulario permite definir el número y el listado se muestra estable.
-- **Mensajes inactivos**: si un cliente espera verlos igual en el sitio, no aparecerán. Mitigación: documentado en el spec (los inactivos no se exponen).
 - **`order` como campo manual**: puede ser poco intuitivo para listas largas. Mitigación: valor por defecto 0 y orden claro; si crece, se puede agregar drag-and-drop en un cambio futuro.
 - **Migración en prod**: se aplica con `prisma db push` del entrypoint; al ser una tabla nueva no hay riesgo de pérdida de datos.
 

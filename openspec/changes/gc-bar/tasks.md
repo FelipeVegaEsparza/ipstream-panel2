@@ -2,12 +2,12 @@
 
 ## 1. Modelo y migración
 
-- [x] 1.1 Agregar el modelo `GcBarMessage` a `prisma/schema.prisma` (`clientId`, `text @db.Text`, `active`, `order`, timestamps, `@@index([clientId])`, `@@map("gc_bar_messages")`) y la relación `gcBarMessages GcBarMessage[]` en `Client`. Verificar que `npx prisma generate` corre sin errores.
+- [x] 1.1 Agregar el modelo `GcBarMessage` a `prisma/schema.prisma` (`clientId`, `text @db.Text`, `order`, timestamps, `@@index([clientId])`, `@@map("gc_bar_messages")`) y la relación `gcBarMessages GcBarMessage[]` en `Client`. Verificar que `npx prisma generate` corre sin errores.
 - [x] 1.2 Crear la migración SQL `prisma/migrations/20260926_gc_bar_messages/migration.sql` con el `CREATE TABLE` y el índice. Verificar que `npx prisma validate` pasa.
 
 ## 2. Validación
 
-- [x] 2.1 Agregar `gcBarMessageSchema` en `lib/validations.ts` (`text` string min 1, `active` boolean opcional, `order` entero opcional) y exportar su tipo. Verificar con `npx tsc --noEmit`.
+- [x] 2.1 Agregar `gcBarMessageSchema` en `lib/validations.ts` (`text` string min 1, `order` entero opcional) y exportar su tipo. Verificar con `npx tsc --noEmit`.
 
 ## 3. Menú
 
@@ -20,13 +20,13 @@
 
 ## 5. API pública
 
-- [x] 5.1 Crear `app/api/public/[clientId]/gc-bar/route.ts` con `OPTIONS` (CORS) y `GET` que devuelve solo mensajes activos ordenados por `order` asc y `createdAt` asc, con `404` si el cliente no existe. Verificar con `curl` que un cliente existente responde `200` y un `clientId` inexistente responde `404`.
-- [x] 5.2 Agregar la consulta de `gcBarMessage` activos al `Promise.all` de `app/api/public/[clientId]/route.ts` y la clave `gcBar` en la respuesta. Verificar que `GET /api/public/{clientId}` incluye `gcBar` con los activos.
+- [x] 5.1 Crear `app/api/public/[clientId]/gc-bar/route.ts` con `OPTIONS` (CORS) y `GET` que devuelve los mensajes ordenados por `order` asc y `createdAt` asc, con `404` si el cliente no existe. Verificar con `curl` que un cliente existente responde `200` y un `clientId` inexistente responde `404`.
+- [x] 5.2 Agregar la consulta de `gcBarMessage` al `Promise.all` de `app/api/public/[clientId]/route.ts` y la clave `gcBar` en la respuesta. Verificar que `GET /api/public/{clientId}` incluye `gcBar`.
 
 ## 6. UI del dashboard
 
 - [x] 6.1 Crear `app/dashboard/gc-bar/page.tsx` (Server Component) con el guard de menú `gc-bar`, que obtiene los mensajes del cliente y los pasa al manager. Verificar que la ruta redirige al dashboard si el ítem está deshabilitado.
-- [x] 6.2 Crear `components/dashboard/GcBarManager.tsx` ('use client') con listado (texto, orden, badge activo/inactivo), formulario inline para crear/editar (texto, activo, orden), toggle de activo y eliminar con confirmación, llamando a `/api/gc-bar` y refrescando la lista. Verificar manualmente crear, editar, activar/desactivar, reordenar y eliminar.
+- [x] 6.2 Crear `components/dashboard/GcBarManager.tsx` ('use client') con listado (texto, orden), formulario inline para crear/editar (texto, orden) y eliminar con confirmación, llamando a `/api/gc-bar` y refrescando la lista. Verificar manualmente crear, editar, reordenar y eliminar.
 
 ## 7. Documentación
 
@@ -35,5 +35,5 @@
 
 ## 8. Verificación de integración
 
-- [x] 8.1 Verificar el flujo completo: crear mensajes en `/dashboard/gc-bar`, confirmar que el endpoint público y `GET /api/public/{clientId}` devuelven solo los activos en el orden definido, y que un mensaje desactivado desaparece de la API.
+- [x] 8.1 Verificar el flujo completo: crear mensajes en `/dashboard/gc-bar`, confirmar que el endpoint público y `GET /api/public/{clientId}` devuelven los mensajes en el orden definido, y que al eliminar un mensaje desaparece de la API.
 - [x] 8.2 Ejecutar `npm run build` sin errores y `openspec validate gc-bar --strict`.
