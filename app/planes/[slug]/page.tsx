@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { planSlug, toPublicPlan } from '@/lib/plans'
 import { SignupForm, PublicPlan } from '@/components/public/SignupForm'
-import { Radio, MonitorPlay, HardDrive, Clapperboard, ArrowLeft } from 'lucide-react'
+import { Radio, MonitorPlay, HardDrive, Clapperboard } from 'lucide-react'
 import s from './plan.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -65,17 +65,6 @@ export default async function PlanPage({ params }: { params: { slug: string } })
           <a className={s.brand} href="https://ipstream.cl" aria-label="IPStream inicio">
             <img src="https://ipstream.cl/images/logos/logo.png" alt="IPStream" />
           </a>
-          <nav className={s.nav} aria-label="Navegación principal">
-            <a className={s.navLink} href="https://ipstream.cl/">Inicio</a>
-            <a className={`${s.navLink} ${s.navActive}`} href="https://ipstream.cl/planes">Planes</a>
-            <a className={s.navLink} href="https://ipstream.cl/caracteristicas">Características</a>
-            <a className={s.navLink} href="https://ipstream.cl/tutoriales">Tutoriales</a>
-            <a className={s.navLink} href="https://ipstream.cl/clientes">Clientes</a>
-          </nav>
-          <div className={s.actions}>
-            <a className={s.panelLink} href="https://panelipstream.cl/">Ingresar</a>
-            <a className={s.cta} href="mailto:contacto@ipstream.cl">Contactar</a>
-          </div>
         </div>
       </header>
 
@@ -87,13 +76,6 @@ export default async function PlanPage({ params }: { params: { slug: string } })
             <div className={s.heroGlow} />
           </div>
           <div className={s.container}>
-            <a
-              href="/registro"
-              className={s.eyebrow}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-            >
-              <ArrowLeft size={13} /> Todos los planes
-            </a>
             <h1 className={s.display}>{plan.name}</h1>
             {plan.description && <p className={s.lede}>{plan.description}</p>}
             <div className={s.badges}>
