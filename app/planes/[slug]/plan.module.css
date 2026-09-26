@@ -411,6 +411,11 @@
   gap: 1rem;
 }
 
+.formCol > div {
+  max-width: none;
+  margin-inline: 0;
+}
+
 .demoBtn {
   display: flex;
   align-items: center;
