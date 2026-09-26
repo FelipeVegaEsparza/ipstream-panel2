@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { planSlug, toPublicPlan } from '@/lib/plans'
 import { SignupForm, PublicPlan } from '@/components/public/SignupForm'
-import { Radio, MonitorPlay, HardDrive, Clapperboard } from 'lucide-react'
+import { Radio, MonitorPlay, HardDrive, Clapperboard, ExternalLink } from 'lucide-react'
 import s from './plan.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -145,6 +145,14 @@ export default async function PlanPage({ params }: { params: { slug: string } })
                   <p className={s.note}>
                     IVA no incluido · Facturación {plan.interval === 'monthly' ? 'mensual' : 'anual'}, sin contratos de permanencia.
                   </p>
+
+                  {plan.demoUrl && (
+                    <div className={s.planActions}>
+                      <a className={s.btnGhost} href={plan.demoUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink size={15} /> Ver ejemplo
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
 

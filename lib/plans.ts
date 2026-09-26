@@ -33,5 +33,6 @@ export function toPublicPlan(plan: Plan): PublicPlan {
     radioStorageQuotaMB: plan.radioStorageQuotaMB,
     videoStorageQuotaMB: plan.videoStorageQuotaMB,
     imageUrl: plan.imageUrl,
+    demoUrl: plan.demoUrl,
   }
 }

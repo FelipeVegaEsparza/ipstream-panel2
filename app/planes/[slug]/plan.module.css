@@ -405,6 +405,37 @@
   margin: 0;
 }
 
+.planActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 4px;
+  border: 1px solid var(--ipp-line);
+  background: transparent;
+  color: var(--ipp-text);
+  font-family: var(--ipp-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btnGhost:hover {
+  border-color: var(--ipp-signal);
+  color: var(--ipp-signal);
+}
+
 .storage {
   display: flex;
   flex-wrap: wrap;

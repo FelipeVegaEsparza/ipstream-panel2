@@ -51,7 +51,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, menuHiddenKeys, defaultServerId, imageUrl } = body
+    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, menuHiddenKeys, defaultServerId, imageUrl, demoUrl } = body
 
     // Validaciones
     if (!name || !description || price === undefined || !interval) {
@@ -103,6 +103,7 @@ export async function PUT(
         menuHiddenKeys: Array.isArray(menuHiddenKeys) ? JSON.stringify(menuHiddenKeys) : null,
         defaultServerId: defaultServerId || null,
         imageUrl: imageUrl || null,
+        demoUrl: typeof demoUrl === 'string' && demoUrl.trim() ? demoUrl.trim() : null,
       }
     })
 

@@ -335,6 +335,7 @@ model Plan {
   price               Float
   currency            String   @default("CLP")
   imageUrl            String? // imagen del plan (para la página de registro)
+  demoUrl             String? // link de ejemplo/demo del plan (se muestra en la página pública)
   interval            String // "monthly" | "yearly"
   features            String   @db.Text // JSON array de características
   isActive            Boolean  @default(true)

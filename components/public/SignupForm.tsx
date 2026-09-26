@@ -18,6 +18,7 @@ export interface PublicPlan {
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
   imageUrl: string | null
+  demoUrl?: string | null
 }
 
 const SERVICES_META: Record<string, { label: string; icon: any; chip: string }> = {

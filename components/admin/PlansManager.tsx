@@ -27,6 +27,7 @@ interface Plan {
   menuHiddenKeys: string | null
   defaultServerId: string | null
   imageUrl: string | null
+  demoUrl: string | null
   createdAt: Date
   _count: {
     clients: number

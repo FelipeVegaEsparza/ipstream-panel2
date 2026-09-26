@@ -28,6 +28,7 @@ interface Plan {
   menuHiddenKeys: string | null
   defaultServerId: string | null
   imageUrl: string | null
+  demoUrl: string | null
 }
 
 interface PlanFormProps {
@@ -49,6 +50,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
     defaultServerId: plan?.defaultServerId || '',
     imageUrl: plan?.imageUrl || '',
+    demoUrl: plan?.demoUrl || '',
   })
 
   const [servers, setServers] = useState<{ id: string; name: string; type: string }[]>([])
@@ -210,6 +212,22 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               label="Imagen del plan"
               description="Sube una imagen (JPG, PNG - Máx. 5MB)"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Link de ejemplo del plan
+            </label>
+            <Input
+              type="url"
+              value={formData.demoUrl}
+              onChange={(e) => setFormData({ ...formData, demoUrl: e.target.value })}
+              placeholder="https://demo.ipstream.cl/mi-radio"
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Se muestra como botón "Ver ejemplo" en la página pública del plan. Dejalo vacío si no aplica.
+            </p>
           </div>
 
           <div>
