@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Check, Radio, MonitorPlay, HardDrive, ArrowRight, CheckCircle2, User, Mail, Lock, ShieldCheck, Clapperboard } from 'lucide-react'
+import styles from './SignupForm.module.css'
 
 export interface PublicPlan {
   id: string
@@ -36,40 +37,40 @@ function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
     mb && mb > 0 ? `${mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'}` : '—'
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+    <div data-slot="card" className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
       <div className="flex gap-4">
         {plan.imageUrl ? (
-          <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+          <div data-slot="icon-wrap" className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={plan.imageUrl} alt={plan.name} className="w-full h-full object-cover" />
           </div>
         ) : (
-          <div className="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-            <ServiceIcon className="h-8 w-8 text-gray-400" />
+          <div data-slot="icon-wrap" className="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+            <ServiceIcon data-slot="icon" className="h-8 w-8 text-gray-400" />
           </div>
         )}
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xl font-bold text-gray-900">{plan.name}</h2>
-            <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium ${meta.chip}`}>
+            <h2 data-slot="heading" className="text-xl font-bold text-gray-900">{plan.name}</h2>
+            <span data-slot="chip" className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium ${meta.chip}`}>
               <ServiceIcon className="h-3 w-3" /> {meta.label}
             </span>
           </div>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-gray-900">{price}</span>
-            <span className="text-sm text-gray-500">/{plan.interval === 'monthly' ? 'mes' : 'año'}</span>
+            <span data-slot="summary-price" className="text-2xl font-bold text-gray-900">{price}</span>
+            <span data-slot="muted" className="text-sm text-gray-500">/{plan.interval === 'monthly' ? 'mes' : 'año'}</span>
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+      <div data-slot="muted" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
         {plan.services !== 'tv' && (
           <span className="inline-flex items-center gap-1">
-            <HardDrive className="h-3 w-3 text-blue-500" /> Radio: {fmtMB(plan.radioStorageQuotaMB)}
+            <HardDrive data-slot="icon" className="h-3 w-3 text-blue-500" /> Radio: {fmtMB(plan.radioStorageQuotaMB)}
           </span>
         )}
         {plan.services !== 'radio' && (
           <span className="inline-flex items-center gap-1">
-            <HardDrive className="h-3 w-3 text-purple-500" /> TV: {fmtMB(plan.videoStorageQuotaMB)}
+            <HardDrive data-slot="icon" className="h-3 w-3 text-purple-500" /> TV: {fmtMB(plan.videoStorageQuotaMB)}
           </span>
         )}
       </div>
@@ -77,7 +78,8 @@ function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
   )
 }
 
-export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPlan[]; preselect?: string; fixedPlanId?: string }) {
+export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: { plans: PublicPlan[]; preselect?: string; fixedPlanId?: string; theme?: 'light' | 'dark' }) {
+  const darkClass = theme === 'dark' ? styles.dark : ''
   const isFixed = Boolean(fixedPlanId)
   const fixedPlan = fixedPlanId ? plans.find((p) => p.id === fixedPlanId) || null : null
   const initial = fixedPlanId
@@ -132,20 +134,21 @@ export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPla
 
   if (done) {
     return (
-      <div className="max-w-md mx-auto text-center space-y-5 py-12">
-        <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+      <div className={`max-w-md mx-auto text-center space-y-5 py-12 ${darkClass}`}>
+        <div data-slot="done-icon" className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
           <CheckCircle2 className="h-8 w-8 text-green-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">¡Tu cuenta está lista!</h2>
-        <p className="text-gray-600">
+        <h2 data-slot="heading" className="text-2xl font-bold text-gray-900">¡Tu cuenta está lista!</h2>
+        <p data-slot="sub" className="text-gray-600">
           Te enviamos la boleta del mes por correo. Cuando se confirme el pago, tu plan queda activo y podés empezar a transmitir.
         </p>
         {selected && (
-          <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
-            Plan <span className="font-semibold text-blue-600">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
+          <div data-slot="summary" className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
+            Plan <span data-slot="accent" className="font-semibold text-blue-600">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
           </div>
         )}
         <Link
+          data-slot="submit"
           href="/auth/login"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg shadow-blue-600/20 transition-all"
         >
@@ -156,7 +159,7 @@ export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPla
   }
 
   return (
-    <div className={isFixed ? 'max-w-md mx-auto space-y-6' : 'grid grid-cols-1 lg:grid-cols-2 gap-10 items-start'}>
+    <div className={`${isFixed ? 'max-w-md mx-auto space-y-6' : 'grid grid-cols-1 lg:grid-cols-2 gap-10 items-start'} ${darkClass}`}>
       {/* ===== PLANES ===== */}
       {isFixed ? (
         fixedPlan ? <FixedPlanSummary plan={fixedPlan} /> : null
@@ -254,22 +257,23 @@ export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPla
 
       {/* ===== FORMULARIO ===== */}
       <div className={isFixed ? '' : 'lg:sticky lg:top-8'}>
-        <form onSubmit={submit} className="rounded-2xl border border-gray-200 bg-white p-7 shadow-lg space-y-5">
+        <form data-slot="card" onSubmit={submit} className="rounded-2xl border border-gray-200 bg-white p-7 shadow-lg space-y-5">
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Creá tu cuenta</h3>
+            <h3 data-slot="heading" className="text-xl font-bold text-gray-900">Creá tu cuenta</h3>
             {selected ? (
-              <p className="mt-1 text-sm text-gray-500">
-                Plan <span className="text-blue-600 font-medium">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
+              <p data-slot="sub" className="mt-1 text-sm text-gray-500">
+                Plan <span data-slot="accent" className="text-blue-600 font-medium">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
               </p>
             ) : (
-              <p className="mt-1 text-sm text-gray-500">Completá tus datos para comenzar</p>
+              <p data-slot="sub" className="mt-1 text-sm text-gray-500">Completá tus datos para comenzar</p>
             )}
           </div>
 
           <div className="space-y-3">
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <User data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
+                data-slot="input"
                 className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -278,8 +282,9 @@ export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPla
               />
             </div>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Mail data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
+                data-slot="input"
                 className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
                 type="email"
                 value={email}
@@ -289,8 +294,9 @@ export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPla
               />
             </div>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Lock data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
+                data-slot="input"
                 className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
                 type="password"
                 value={password}
@@ -302,9 +308,10 @@ export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPla
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+          {error && <p data-slot="error" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
 
           <button
+            data-slot="submit"
             type="submit"
             disabled={loading || plans.length === 0}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold shadow-lg shadow-blue-600/20 transition-all"
@@ -316,13 +323,13 @@ export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPla
             )}
           </button>
 
-          <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500">
+          <div data-slot="shield" className="flex items-center justify-center gap-1.5 text-xs text-gray-500">
             <ShieldCheck className="h-3.5 w-3.5 text-blue-600" /> Tus datos están protegidos.
           </div>
 
-          <p className="text-center text-sm text-gray-500">
+          <p data-slot="prompt" className="text-center text-sm text-gray-500">
             ¿Ya tenés cuenta?{' '}
-            <Link href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">Iniciá sesión</Link>
+            <Link data-slot="link" href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">Iniciá sesión</Link>
           </p>
         </form>
       </div>
