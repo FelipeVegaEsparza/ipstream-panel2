@@ -8,8 +8,9 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit, Trash2, Users, DollarSign, CreditCard, Layout } from 'lucide-react'
+import { Plus, Edit, Trash2, Users, DollarSign, CreditCard, Layout, Copy, Check } from 'lucide-react'
 import { PlanForm } from './PlanForm'
+import { planSlug } from '@/lib/plans'
 
 interface Plan {
   id: string
@@ -41,6 +42,22 @@ export function PlansManager({ plans }: PlansManagerProps) {
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const planPath = (plan: Plan) => `/planes/${planSlug(plan.name)}`
+
+  const copyPlanUrl = async (plan: Plan) => {
+    const path = planPath(plan)
+    const url = typeof window !== 'undefined' ? `${window.location.origin}${path}` : path
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedId(plan.id)
+      showToast({ type: 'success', title: 'URL copiada' })
+      setTimeout(() => setCopiedId((current) => (current === plan.id ? null : current)), 2000)
+    } catch {
+      showToast({ type: 'error', title: 'No se pudo copiar la URL' })
+    }
+  }
 
   const handleEdit = (plan: Plan) => {
     setEditingPlan(plan)
@@ -164,6 +181,35 @@ export function PlansManager({ plans }: PlansManagerProps) {
                 <p className="text-gray-400 text-sm">
                   Facturación {plan.interval === 'monthly' ? 'mensual' : 'anual'}
                 </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-gray-300">Página de contratación:</p>
+                <div className="flex items-center gap-2">
+                  <code
+                    className="flex-1 min-w-0 truncate rounded-md bg-gray-900 border border-gray-700 px-2 py-1.5 text-xs text-gray-300"
+                    title={planPath(plan)}
+                  >
+                    {planPath(plan)}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => copyPlanUrl(plan)}
+                    className="border-gray-600 hover:bg-gray-700 shrink-0"
+                    title="Copiar URL"
+                  >
+                    {copiedId === plan.id ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <a
+                  href={planPath(plan)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-blue-400 hover:underline"
+                >
+                  Abrir página
+                </a>
               </div>
 
               <div className="flex justify-between text-sm">
