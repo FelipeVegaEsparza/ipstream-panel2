@@ -66,6 +66,7 @@ export default withAuth(
         if (pathname.startsWith('/auth') ||
             pathname === '/' ||
             pathname.startsWith('/registro') ||
+            pathname.startsWith('/planes') ||
             pathname.startsWith('/api/public') ||
             pathname.startsWith('/api/uploads') ||
             pathname.startsWith('/api/auth') ||

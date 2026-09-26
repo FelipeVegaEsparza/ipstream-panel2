@@ -7,6 +7,7 @@ import { Check, Radio, MonitorPlay, HardDrive, ArrowRight, CheckCircle2, User, M
 export interface PublicPlan {
   id: string
   name: string
+  description?: string
   price: number
   currency: string
   interval: string
@@ -24,8 +25,64 @@ const SERVICES_META: Record<string, { label: string; icon: any; chip: string }> 
   both: { label: 'Radio + TV', icon: Clapperboard, chip: 'bg-indigo-100 text-indigo-700' },
 }
 
-export function SignupForm({ plans, preselect }: { plans: PublicPlan[]; preselect?: string }) {
-  const initial = plans.find((p) => p.name === preselect || p.id === preselect)?.id || plans[0]?.id || ''
+function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
+  const meta = SERVICES_META[plan.services] || SERVICES_META.both
+  const ServiceIcon = meta.icon
+  const price =
+    plan.currency === 'CLP'
+      ? `$${Math.round(plan.price).toLocaleString('es-CL')}`
+      : `${plan.currency} ${plan.price.toLocaleString('es-CL')}`
+  const fmtMB = (mb: number | null) =>
+    mb && mb > 0 ? `${mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'}` : '—'
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="flex gap-4">
+        {plan.imageUrl ? (
+          <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={plan.imageUrl} alt={plan.name} className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <div className="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+            <ServiceIcon className="h-8 w-8 text-gray-400" />
+          </div>
+        )}
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-xl font-bold text-gray-900">{plan.name}</h2>
+            <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium ${meta.chip}`}>
+              <ServiceIcon className="h-3 w-3" /> {meta.label}
+            </span>
+          </div>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-2xl font-bold text-gray-900">{price}</span>
+            <span className="text-sm text-gray-500">/{plan.interval === 'monthly' ? 'mes' : 'año'}</span>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+        {plan.services !== 'tv' && (
+          <span className="inline-flex items-center gap-1">
+            <HardDrive className="h-3 w-3 text-blue-500" /> Radio: {fmtMB(plan.radioStorageQuotaMB)}
+          </span>
+        )}
+        {plan.services !== 'radio' && (
+          <span className="inline-flex items-center gap-1">
+            <HardDrive className="h-3 w-3 text-purple-500" /> TV: {fmtMB(plan.videoStorageQuotaMB)}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export function SignupForm({ plans, preselect, fixedPlanId }: { plans: PublicPlan[]; preselect?: string; fixedPlanId?: string }) {
+  const isFixed = Boolean(fixedPlanId)
+  const fixedPlan = fixedPlanId ? plans.find((p) => p.id === fixedPlanId) || null : null
+  const initial = fixedPlanId
+    ? fixedPlan?.id || fixedPlanId
+    : plans.find((p) => p.name === preselect || p.id === preselect)?.id || plans[0]?.id || ''
   const [planId, setPlanId] = useState<string>(initial)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -99,8 +156,11 @@ export function SignupForm({ plans, preselect }: { plans: PublicPlan[]; preselec
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+    <div className={isFixed ? 'max-w-md mx-auto space-y-6' : 'grid grid-cols-1 lg:grid-cols-2 gap-10 items-start'}>
       {/* ===== PLANES ===== */}
+      {isFixed ? (
+        fixedPlan ? <FixedPlanSummary plan={fixedPlan} /> : null
+      ) : (
       <div className="space-y-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Elegí tu plan</h2>
@@ -190,9 +250,10 @@ export function SignupForm({ plans, preselect }: { plans: PublicPlan[]; preselec
           })
         )}
       </div>
+      )}
 
       {/* ===== FORMULARIO ===== */}
-      <div className="lg:sticky lg:top-8">
+      <div className={isFixed ? '' : 'lg:sticky lg:top-8'}>
         <form onSubmit={submit} className="rounded-2xl border border-gray-200 bg-white p-7 shadow-lg space-y-5">
           <div>
             <h3 className="text-xl font-bold text-gray-900">Creá tu cuenta</h3>
