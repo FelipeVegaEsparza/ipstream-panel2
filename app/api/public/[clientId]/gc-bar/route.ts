@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: { clientId
     }
 
     const messages = await prisma.gcBarMessage.findMany({
-      where: { clientId, active: true },
+      where: { clientId },
       select: {
         id: true,
         text: true,

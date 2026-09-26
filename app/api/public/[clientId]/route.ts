@@ -276,7 +276,7 @@ export async function GET(
         })
       ]),
       prisma.gcBarMessage.findMany({
-        where: { clientId, active: true },
+        where: { clientId },
         select: {
           id: true,
           text: true,

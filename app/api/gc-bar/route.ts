@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
     const createData: Prisma.GcBarMessageUncheckedCreateInput = {
       clientId: effectiveClient.clientId,
       text: data.text.trim(),
-      active: data.active ?? true,
       order: data.order ?? 0,
     }
 

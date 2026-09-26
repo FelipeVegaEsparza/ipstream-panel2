@@ -3,7 +3,6 @@ CREATE TABLE `gc_bar_messages` (
     `id` VARCHAR(191) NOT NULL,
     `clientId` VARCHAR(191) NOT NULL,
     `text` TEXT NOT NULL,
-    `active` BOOLEAN NOT NULL DEFAULT true,
     `order` INTEGER NOT NULL DEFAULT 0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,

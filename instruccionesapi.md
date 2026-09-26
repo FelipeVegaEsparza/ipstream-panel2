@@ -118,7 +118,7 @@ GET {BASE}/api/public/{clientId}
 | `polls` | `array` | Encuestas activas (ver §19) |
 | `events` | `array` | Eventos (ver §13) |
 | `promotions` | `array` | Promociones (ver §14) |
-| `gcBar` | `array` | Mensajes activos de la Barra GC (ver §13.1) |
+| `gcBar` | `array` | Mensajes de la Barra GC (ver §13.1) |
 | `podcasts` | `array` | Últimos 10 podcasts audio (ver §15) |
 | `videocasts` | `array` | Últimos 10 videocasts video (ver §17) |
 
@@ -701,7 +701,7 @@ GET {BASE}/api/public/{clientId}/promotions
 GET {BASE}/api/public/{clientId}/gc-bar
 ```
 
-Devuelve solo los mensajes **activos**, ordenados por `order` ascendente (con la fecha de creación como desempate).
+Devuelve los mensajes ordenados por `order` ascendente (con la fecha de creación como desempate).
 
 ### Respuesta (200 OK) — array
 

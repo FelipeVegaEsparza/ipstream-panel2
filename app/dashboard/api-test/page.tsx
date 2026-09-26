@@ -143,7 +143,7 @@ export default function ApiTestPage() {
       name: 'Barra GC',
       method: 'GET',
       url: `/api/public/${clientId}/gc-bar`,
-      description: 'Mensajes o frases activos de la Barra GC, ordenados'
+      description: 'Mensajes o frases de la Barra GC, ordenados'
     },
 
     // ===== Multimedia =====
@@ -304,7 +304,7 @@ GET ${base}/api/public/${cid}
 | \`polls\` | \`array\` | Encuestas activas |
 | \`events\` | \`array\` | Eventos |
 | \`promotions\` | \`array\` | Promociones |
-| \`gcBar\` | \`array\` | Mensajes activos de la Barra GC |
+| \`gcBar\` | \`array\` | Mensajes de la Barra GC |
 | \`podcasts\` | \`array\` | Últimos 10 podcasts (audio) |
 | \`videocasts\` | \`array\` | Últimos 10 videocasts (video) |
 

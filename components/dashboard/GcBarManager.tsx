@@ -8,7 +8,6 @@ import { PlusIcon, PencilIcon, TrashIcon, Bars3BottomLeftIcon } from '@heroicons
 interface GcBarMessage {
   id: string
   text: string
-  active: boolean
   order: number
   createdAt: Date | string
 }
@@ -22,7 +21,6 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [text, setText] = useState('')
   const [order, setOrder] = useState('0')
-  const [active, setActive] = useState(true)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
 
@@ -30,14 +28,12 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
     setEditingId(null)
     setText('')
     setOrder('0')
-    setActive(true)
   }
 
   const startEdit = (message: GcBarMessage) => {
     setEditingId(message.id)
     setText(message.text)
     setOrder(String(message.order))
-    setActive(message.active)
   }
 
   const submit = async (e: React.FormEvent) => {
@@ -48,7 +44,7 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
     }
     setSaving(true)
     try {
-      const payload = { text: text.trim(), active, order: Number(order) || 0 }
+      const payload = { text: text.trim(), order: Number(order) || 0 }
       const response = await fetch(editingId ? `/api/gc-bar/${editingId}` : '/api/gc-bar', {
         method: editingId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,27 +62,6 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
       showToast({ type: 'error', title: 'Error al guardar el mensaje' })
     } finally {
       setSaving(false)
-    }
-  }
-
-  const toggleActive = async (message: GcBarMessage) => {
-    setLoading(message.id)
-    try {
-      const response = await fetch(`/api/gc-bar/${message.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: message.text, active: !message.active, order: message.order }),
-      })
-      if (response.ok) {
-        showToast({ type: 'success', title: message.active ? 'Mensaje desactivado' : 'Mensaje activado' })
-        router.refresh()
-      } else {
-        showToast({ type: 'error', title: 'Error al actualizar el mensaje' })
-      }
-    } catch (error) {
-      showToast({ type: 'error', title: 'Error al actualizar el mensaje' })
-    } finally {
-      setLoading(null)
     }
   }
 
@@ -127,26 +102,15 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          <div>
-            <label className="block text-sm font-medium text-secondary mb-2">Orden</label>
-            <input
-              type="number"
-              className="form-input w-full"
-              value={order}
-              onChange={(e) => setOrder(e.target.value)}
-            />
-            <p className="text-xs text-muted mt-1">El número menor aparece primero en la barra.</p>
-          </div>
-          <label className="flex items-center gap-2 text-sm text-secondary md:mt-9">
-            <input
-              type="checkbox"
-              checked={active}
-              onChange={(e) => setActive(e.target.checked)}
-              className="rounded border-gray-600 bg-gray-700"
-            />
-            Activo (se expone en la API)
-          </label>
+        <div>
+          <label className="block text-sm font-medium text-secondary mb-2">Orden</label>
+          <input
+            type="number"
+            className="form-input w-full max-w-xs"
+            value={order}
+            onChange={(e) => setOrder(e.target.value)}
+          />
+          <p className="text-xs text-muted mt-1">El número menor aparece primero en la barra.</p>
         </div>
 
         <div className="flex gap-3">
@@ -176,23 +140,10 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
               className={`card flex items-start justify-between gap-4 ${editingId === message.id ? 'ring-1 ring-cyan-500' : ''}`}
             >
               <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-mono text-muted">#{message.order}</span>
-                  <span className={`badge ${message.active ? 'badge-success' : 'badge-secondary'}`}>
-                    {message.active ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
+                <span className="text-xs font-mono text-muted">#{message.order}</span>
                 <p className="text-primary whitespace-pre-wrap break-words">{message.text}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => toggleActive(message)}
-                  disabled={loading === message.id}
-                  className="btn-secondary text-xs"
-                >
-                  {message.active ? 'Desactivar' : 'Activar'}
-                </button>
                 <button
                   type="button"
                   onClick={() => startEdit(message)}

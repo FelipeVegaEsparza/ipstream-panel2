@@ -78,7 +78,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       where: { id: params.id },
       data: {
         text: data.text.trim(),
-        ...(data.active !== undefined ? { active: data.active } : {}),
         ...(data.order !== undefined ? { order: data.order } : {}),
       },
     })

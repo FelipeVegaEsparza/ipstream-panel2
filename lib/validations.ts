@@ -143,7 +143,6 @@ export type AnnouncerInput = z.infer<typeof announcerSchema>
 
 export const gcBarMessageSchema = z.object({
   text: z.string().min(1, 'El texto es requerido'),
-  active: z.boolean().optional(),
   order: z.number().int().optional(),
 })
 
