@@ -56,6 +56,7 @@ model Client {
   pushNotifications      PushNotification[]
   galleries              Gallery[]
   announcers             Announcer[]
+  gcBarMessages          GcBarMessage[]
   polls                  Poll[]
   events                 Event[]
   pwaInstalls            PwaInstall[]
@@ -262,6 +263,21 @@ model Announcer {
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@map("announcers")
+}
+
+model GcBarMessage {
+  id        String   @id @default(cuid())
+  clientId  String
+  text      String   @db.Text
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("gc_bar_messages")
 }
 
 model Poll {

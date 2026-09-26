@@ -138,6 +138,13 @@ export default function ApiTestPage() {
       url: `/api/public/${clientId}/promotions`,
       description: 'Lista de promociones'
     },
+    {
+      group: 'Contenido',
+      name: 'Barra GC',
+      method: 'GET',
+      url: `/api/public/${clientId}/gc-bar`,
+      description: 'Mensajes o frases activos de la Barra GC, ordenados'
+    },
 
     // ===== Multimedia =====
     {
@@ -273,6 +280,7 @@ GET ${base}/api/public/${cid}
   "polls": [ /* ver endpoint 10 */ ],
   "events": [ /* ver endpoint 11 */ ],
   "promotions": [ /* ver endpoint 12 */ ],
+  "gcBar": [ /* ver endpoint de Barra GC */ ],
   "podcasts": [ /* ver endpoint 13 */ ],
   "videocasts": [ /* ver endpoint 14 */ ]
 }
@@ -296,6 +304,7 @@ GET ${base}/api/public/${cid}
 | \`polls\` | \`array\` | Encuestas activas |
 | \`events\` | \`array\` | Eventos |
 | \`promotions\` | \`array\` | Promociones |
+| \`gcBar\` | \`array\` | Mensajes activos de la Barra GC |
 | \`podcasts\` | \`array\` | Últimos 10 podcasts (audio) |
 | \`videocasts\` | \`array\` | Últimos 10 videocasts (video) |
 

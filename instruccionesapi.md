@@ -50,6 +50,7 @@ Todos los endpoints GET son de solo lectura. Solo aceptan POST:
 | 12 | `/api/public/{clientId}/announcers` | GET | Locutores |
 | 13 | `/api/public/{clientId}/events` | GET | Eventos |
 | 14 | `/api/public/{clientId}/promotions` | GET | Promociones |
+| 14a | `/api/public/{clientId}/gc-bar` | GET | Barra GC |
 | 15 | `/api/public/{clientId}/podcasts` | GET | Podcasts |
 | 16 | `/api/public/{clientId}/podcasts/{id}` | GET | Podcasts |
 | 17 | `/api/public/{clientId}/videocasts` | GET | Videocasts |
@@ -93,6 +94,7 @@ GET {BASE}/api/public/{clientId}
   "polls": [ ],
   "events": [ ],
   "promotions": [ ],
+  "gcBar": [ ],
   "podcasts": [ ],
   "videocasts": [ ]
 }
@@ -116,6 +118,7 @@ GET {BASE}/api/public/{clientId}
 | `polls` | `array` | Encuestas activas (ver §19) |
 | `events` | `array` | Eventos (ver §13) |
 | `promotions` | `array` | Promociones (ver §14) |
+| `gcBar` | `array` | Mensajes activos de la Barra GC (ver §13.1) |
 | `podcasts` | `array` | Últimos 10 podcasts audio (ver §15) |
 | `videocasts` | `array` | Últimos 10 videocasts video (ver §17) |
 
@@ -688,6 +691,47 @@ GET {BASE}/api/public/{clientId}/promotions
     "updatedAt": "2025-06-01T10:00:00.000Z"
   }
 ]
+```
+
+---
+
+## 13.1 Barra GC
+
+```
+GET {BASE}/api/public/{clientId}/gc-bar
+```
+
+Devuelve solo los mensajes **activos**, ordenados por `order` ascendente (con la fecha de creación como desempate).
+
+### Respuesta (200 OK) — array
+
+```json
+[
+  {
+    "id": "cm7abcdef1234567890",
+    "text": "Escúchanos en vivo todos los días",
+    "order": 0,
+    "createdAt": "2025-06-01T10:00:00.000Z",
+    "updatedAt": "2025-06-01T10:00:00.000Z"
+  }
+]
+```
+
+### Campos
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | `string` | ID del mensaje |
+| `text` | `string` | Mensaje o frase |
+| `order` | `number` | Orden de aparición (menor primero) |
+| `createdAt` | `string` | Fecha de creación (ISO 8601) |
+| `updatedAt` | `string` | Última actualización (ISO 8601) |
+
+### Errores
+
+```json
+// 404
+{ "error": "Cliente no encontrado" }
 ```
 
 ---

@@ -23,6 +23,7 @@ import {
   MusicalNoteIcon,
   LinkIcon,
   QueueListIcon,
+  Bars3BottomLeftIcon,
 } from '@heroicons/react/24/outline'
 
 export type MenuItemKey =
@@ -37,6 +38,7 @@ export type MenuItemKey =
   | 'videos'
   | 'galleries'
   | 'announcers'
+  | 'gc-bar'
   | 'polls'
   | 'events'
   | 'promotions'
@@ -246,6 +248,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
     href: '/dashboard/announcers',
     section: 'Contenido',
     icon: UserCircleIcon,
+  },
+  {
+    key: 'gc-bar',
+    name: 'Barra GC',
+    href: '/dashboard/gc-bar',
+    section: 'Contenido',
+    icon: Bars3BottomLeftIcon,
   },
 
   {

@@ -141,6 +141,14 @@ export const announcerSchema = z.object({
 
 export type AnnouncerInput = z.infer<typeof announcerSchema>
 
+export const gcBarMessageSchema = z.object({
+  text: z.string().min(1, 'El texto es requerido'),
+  active: z.boolean().optional(),
+  order: z.number().int().optional(),
+})
+
+export type GcBarMessageInput = z.infer<typeof gcBarMessageSchema>
+
 export const pollSchema = z.object({
   title: z.string().min(1, 'El título de la encuesta es requerido'),
   options: z.array(z.string().min(1, 'Cada opción debe tener texto')).min(2, 'Agrega al menos 2 opciones'),

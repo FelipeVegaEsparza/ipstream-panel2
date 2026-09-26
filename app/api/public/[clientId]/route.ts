@@ -89,7 +89,7 @@ export async function GET(
     }
 
     // Obtener todos los datos del cliente
-    const [socialNetworks, programs, news, videos, sponsors, promotions, galleries, announcers, polls, events, [podcasts, videocasts]] = await Promise.all([
+    const [socialNetworks, programs, news, videos, sponsors, promotions, galleries, announcers, polls, events, [podcasts, videocasts], gcBar] = await Promise.all([
       prisma.socialNetworks.findUnique({
         where: { clientId },
         select: {
@@ -274,7 +274,18 @@ export async function GET(
           ],
           take: 10
         })
-      ])
+      ]),
+      prisma.gcBarMessage.findMany({
+        where: { clientId, active: true },
+        select: {
+          id: true,
+          text: true,
+          order: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+      })
     ])
 
     // Procesar weekDays para programs
@@ -307,7 +318,8 @@ export async function GET(
       polls,
       events,
       podcasts,
-      videocasts
+      videocasts,
+      gcBar
     })
 
   } catch (error) {
