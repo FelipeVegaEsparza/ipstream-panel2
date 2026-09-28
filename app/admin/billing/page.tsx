@@ -63,6 +63,7 @@ export default async function BillingPage() {
           status: c.subscription.status,
           startDate: c.subscription.startDate,
           endDate: c.subscription.endDate,
+          trialEndsAt: c.subscription.trialEndsAt,
         }
       : null,
     payments: c.subscription?.payments.map((p) => ({

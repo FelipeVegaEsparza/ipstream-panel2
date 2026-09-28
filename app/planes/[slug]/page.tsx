@@ -46,6 +46,9 @@ export default async function PlanPage({ params }: { params: { slug: string } })
   const ServiceIcon = meta.icon
   const isPopular = plan.id === popularId
 
+  const config = await prisma.appConfig.findFirst({ select: { trialDays: true } })
+  const trialDays = config?.trialDays ?? 7
+
   const formatPrice = (p: PublicPlan) =>
     p.currency === 'CLP' ? `$${Math.round(p.price).toLocaleString('es-CL')}` : `${p.currency} ${p.price.toLocaleString('es-CL')}`
   const fmtMB = (mb: number | null) =>
@@ -83,6 +86,7 @@ export default async function PlanPage({ params }: { params: { slug: string } })
                 <ServiceIcon size={12} /> {meta.label}
               </span>
               {isPopular && <span className={`${s.chip} ${s.chipPopular}`}>Más popular</span>}
+              {trialDays > 0 && <span className={s.chip}>{trialDays} días gratis</span>}
             </div>
           </div>
         </section>
@@ -154,7 +158,7 @@ export default async function PlanPage({ params }: { params: { slug: string } })
                     <ExternalLink size={18} /> Ver ejemplo del plan
                   </a>
                 )}
-                <SignupForm plans={[plan]} fixedPlanId={plan.id} theme="dark" />
+                <SignupForm plans={[plan]} fixedPlanId={plan.id} theme="dark" trialDays={trialDays} />
               </div>
             </div>
           </div>

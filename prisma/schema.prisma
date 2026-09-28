@@ -384,9 +384,10 @@ model Subscription {
   id                 String    @id @default(cuid())
   clientId           String    @unique
   planId             String
-  status             String // "active" | "cancelled" | "expired" | "pending"
+  status             String // "active" | "trialing" | "cancelled" | "expired" | "pending"
   startDate          DateTime
   endDate            DateTime
+  trialEndsAt        DateTime? // fin del período de prueba gratuita (null = sin prueba)
   cancelledAt        DateTime?
   cancellationReason String?
   createdAt          DateTime  @default(now())
@@ -469,6 +470,7 @@ model AppConfig {
   loginBackgroundImage String? // URL de la imagen de fondo del login (null = fondo animado por defecto)
   hiddenMenuItems      String? @db.Text // JSON array de MenuItemKey ocultos globalmente (override de per-client)
   adminNotifyEmail     String? // correo que recibe notificaciones del panel (nuevos registros, etc.)
+  trialDays            Int     @default(7) // duración (días) de la prueba gratuita del registro público
 
   @@map("app_config")
 }

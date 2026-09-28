@@ -17,7 +17,7 @@ export async function GET() {
       })
     }
 
-    return NextResponse.json({ enableGenericNews: config.enableGenericNews, adminNotifyEmail: config.adminNotifyEmail })
+    return NextResponse.json({ enableGenericNews: config.enableGenericNews, adminNotifyEmail: config.adminNotifyEmail, trialDays: config.trialDays })
   } catch (error) {
     console.error('Error getting app config:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
@@ -32,7 +32,17 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { enableGenericNews, adminNotifyEmail } = body
+    const { enableGenericNews, adminNotifyEmail, trialDays } = body
+
+    // Días de prueba: entero >= 0 (0 = sin prueba)
+    let trialDaysValue: number | undefined
+    if (trialDays !== undefined) {
+      const parsed = Number(trialDays)
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 365) {
+        return NextResponse.json({ error: 'trialDays debe ser un entero entre 0 y 365' }, { status: 400 })
+      }
+      trialDaysValue = parsed
+    }
 
     let config = await prisma.appConfig.findFirst()
     if (!config) {
@@ -40,6 +50,7 @@ export async function PUT(request: NextRequest) {
         data: {
           enableGenericNews: enableGenericNews ?? false,
           adminNotifyEmail: adminNotifyEmail ?? null,
+          ...(trialDaysValue !== undefined ? { trialDays: trialDaysValue } : {}),
         },
       })
     } else {
@@ -48,11 +59,12 @@ export async function PUT(request: NextRequest) {
         data: {
           ...(enableGenericNews !== undefined ? { enableGenericNews } : {}),
           ...(adminNotifyEmail !== undefined ? { adminNotifyEmail: adminNotifyEmail || null } : {}),
+          ...(trialDaysValue !== undefined ? { trialDays: trialDaysValue } : {}),
         },
       })
     }
 
-    return NextResponse.json({ enableGenericNews: config.enableGenericNews, adminNotifyEmail: config.adminNotifyEmail })
+    return NextResponse.json({ enableGenericNews: config.enableGenericNews, adminNotifyEmail: config.adminNotifyEmail, trialDays: config.trialDays })
   } catch (error) {
     console.error('Error updating app config:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

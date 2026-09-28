@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 
 export async function POST(
   _request: NextRequest,
@@ -28,7 +29,7 @@ export async function POST(
         throw new Error('Suscripción no encontrada')
       }
 
-      if (subscription.status === 'cancelled') {
+      if (subscription.status === SUBSCRIPTION_STATUS.CANCELLED) {
         throw new Error('No se puede renovar una suscripción cancelada')
       }
 
@@ -77,7 +78,7 @@ export async function POST(
 
       const updatedSubscription = await tx.subscription.update({
         where: { id: subscriptionId },
-        data: { endDate: newEndDate, status: 'active' },
+        data: { endDate: newEndDate, status: SUBSCRIPTION_STATUS.ACTIVE, trialEndsAt: null },
         include: { plan: true, client: { include: { user: true } } },
       })
 

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateSubscriptionPayments } from '@/lib/payment-generator'
+import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
         data: {
           clientId: clientId,
           planId: planId,
-          status: 'active',
+          status: SUBSCRIPTION_STATUS.ACTIVE,
           startDate: subscriptionStartDate,
           endDate: subscriptionEndDate,
         }

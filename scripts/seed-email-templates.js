@@ -45,7 +45,7 @@ const TEMPLATES = [
   {
     key: 'bienvenida',
     name: 'Bienvenida / Plan contratado',
-    description: 'Se envía al cliente al contratar un plan. Variables: {{nombre}}, {{proyecto}}, {{plan}}, {{monto}}, {{moneda}}, {{fecha}}, {{link}}.',
+    description: 'Se envía al cliente al contratar un plan. Variables: {{nombre}}, {{proyecto}}, {{plan}}, {{monto}}, {{moneda}}, {{fecha}}, {{prueba}}, {{link}}.',
     subject: '¡Bienvenido a {{proyecto}}, {{nombre}}!',
     htmlBody: `
 <div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
@@ -54,9 +54,10 @@ const TEMPLATES = [
     <p style="color:#6b7280;margin:0 0 16px">Hola ${'{{nombre}}'} 👋</p>
     <div style="${BOX_STYLE}">
       <p style="margin:0 0 12px;color:#374151">¡Tu plan <strong>${'{{plan}}'}</strong> ya está activo! Te damos la bienvenida y te compartimos los datos de tu contratación.</p>
+      <p style="margin:0 0 12px;color:#0891b2;font-weight:600">${'{{prueba}}'}</p>
       <table style="width:100%;font-size:14px">
         <tr><td style="padding:4px 0;color:#6b7280">Plan</td><td style="text-align:right;font-weight:600">${'{{plan}}'}</td></tr>
-        <tr><td style="padding:4px 0;color:#6b7280">Fecha</td><td style="text-align:right">${'{{fecha}}'}</td></tr>
+        <tr><td style="padding:4px 0;color:#6b7280">Fecha de cobro</td><td style="text-align:right">${'{{fecha}}'}</td></tr>
         <tr><td style="padding:8px 0;color:#6b7280">Total</td><td style="text-align:right;font-size:20px;font-weight:700;color:#0891b2">${'{{moneda}}'} ${'{{monto}}'}</td></tr>
       </table>
     </div>

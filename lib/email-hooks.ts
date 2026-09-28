@@ -60,10 +60,15 @@ export async function sendAccountEmail(
  * Envía el correo de bienvenida (template `bienvenida`) cuando un cliente
  * contrata un plan. Se usa al registrarse/suscribirse y al asignarle un plan
  * desde el admin, además de la boleta/cobro.
+ *
+ * Con `trial` (registro con prueba gratuita) el correo informa los días de
+ * prueba y la fecha/monto del primer cobro; sin `trial` mantiene el formato
+ * anterior (datos de la contratación).
  */
 export async function sendWelcomeEmail(
   clientId: string,
-  planName?: string
+  planName?: string,
+  trial?: { trialDays: number; chargeDate: Date; amount: number; currency: string } | null
 ): Promise<{ ok: boolean; status: string; logId?: string }> {
   try {
     const ctx = await getClientEmailContext(clientId)
@@ -77,9 +82,14 @@ export async function sendWelcomeEmail(
         nombre: ctx.name,
         proyecto: ctx.projectName,
         plan: planName || '',
-        monto: '',
-        moneda: '',
-        fecha: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
+        monto: trial ? formatCurrency(trial.amount, trial.currency) : '',
+        moneda: trial?.currency || '',
+        fecha: trial
+          ? formatDate(trial.chargeDate)
+          : new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
+        prueba: trial
+          ? `Disfrutá ${trial.trialDays} día${trial.trialDays === 1 ? '' : 's'} de prueba gratis. El primer cobro será el ${formatDate(trial.chargeDate)}.`
+          : '',
         link: `${panelUrl()}/dashboard`,
       },
     })

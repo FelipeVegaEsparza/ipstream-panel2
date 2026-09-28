@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client'
+import { SUBSCRIPTION_STATUS } from './subscription-status'
 
 type PrismaLike = PrismaClient | any
 type PaymentCreateData = Prisma.PaymentUncheckedCreateInput
@@ -167,7 +168,7 @@ export async function completePaymentAndGenerateNext(
 
     await tx.subscription.update({
       where: { id: currentPayment.subscriptionId },
-      data: { endDate: newEndDate, status: 'active' },
+      data: { endDate: newEndDate, status: SUBSCRIPTION_STATUS.ACTIVE, trialEndsAt: null },
     })
 
     const nextPayment = await tx.payment.create({
@@ -283,7 +284,7 @@ export async function createManualPayment(
 
     await tx.subscription.update({
       where: { id: subscriptionId },
-      data: { endDate: newEndDate, status: 'active' },
+      data: { endDate: newEndDate, status: SUBSCRIPTION_STATUS.ACTIVE, trialEndsAt: null },
     })
 
     const nextPayment = await tx.payment.create({

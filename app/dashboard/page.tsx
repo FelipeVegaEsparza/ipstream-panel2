@@ -6,6 +6,7 @@ import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDi
 import { NowPlayingTvDisplay } from '@/components/dashboard/NowPlayingTvDisplay'
 import { DashboardOverviewCards } from '@/components/dashboard/DashboardOverviewCards'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
     prisma.subscription.findFirst({
       where: { 
         clientId: effectiveClient.clientId,
-        status: 'ACTIVE'
+        status: { in: [SUBSCRIPTION_STATUS.ACTIVE, SUBSCRIPTION_STATUS.TRIALING] }
       },
       include: { plan: true },
       orderBy: { endDate: 'desc' }
@@ -70,7 +71,7 @@ export default async function DashboardPage() {
   ])
 
   // Calcular estado de pago
-  let paymentStatus: 'paid' | 'due-soon' | 'overdue' | 'no-plan' = 'no-plan'
+  let paymentStatus: 'paid' | 'due-soon' | 'overdue' | 'no-plan' | 'trial' = 'no-plan'
   let nextPaymentDate: Date | null = null
   let planName: string | null = null
   let planPrice: number | null = null
@@ -78,34 +79,46 @@ export default async function DashboardPage() {
   if (subscription && clientInfo?.plan) {
     planName = clientInfo.plan.name
     planPrice = clientInfo.plan.price
-    
-    // Buscar el próximo pago pendiente (el más cercano por dueDate)
-    const nextPendingPayment = await prisma.payment.findFirst({
-      where: {
-        clientId: effectiveClient.clientId,
-        subscriptionId: subscription.id,
-        status: 'pending'
-      },
-      orderBy: { dueDate: 'asc' } // El más cercano primero
-    })
 
-    if (nextPendingPayment) {
-      nextPaymentDate = nextPendingPayment.dueDate
-      
-      const now = new Date()
-      const daysUntilPayment = Math.ceil((nextPaymentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    const trialEnd = subscription.trialEndsAt ? new Date(subscription.trialEndsAt) : null
 
-      if (daysUntilPayment < 0) {
-        paymentStatus = 'overdue'
-      } else if (daysUntilPayment <= 7) {
-        paymentStatus = 'due-soon'
+    if (
+      subscription.status === SUBSCRIPTION_STATUS.TRIALING &&
+      trialEnd &&
+      trialEnd.getTime() > Date.now()
+    ) {
+      // Prueba gratuita vigente: el próximo hito es el fin de la prueba.
+      paymentStatus = 'trial'
+      nextPaymentDate = trialEnd
+    } else {
+      // Buscar el próximo pago pendiente (el más cercano por dueDate)
+      const nextPendingPayment = await prisma.payment.findFirst({
+        where: {
+          clientId: effectiveClient.clientId,
+          subscriptionId: subscription.id,
+          status: 'pending'
+        },
+        orderBy: { dueDate: 'asc' } // El más cercano primero
+      })
+
+      if (nextPendingPayment) {
+        nextPaymentDate = nextPendingPayment.dueDate
+
+        const now = new Date()
+        const daysUntilPayment = Math.ceil((nextPaymentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+        if (daysUntilPayment < 0) {
+          paymentStatus = 'overdue'
+        } else if (daysUntilPayment <= 7) {
+          paymentStatus = 'due-soon'
+        } else {
+          paymentStatus = 'paid'
+        }
       } else {
+        // Si no hay pagos pendientes, usar la fecha de fin de la suscripción
+        nextPaymentDate = subscription.endDate
         paymentStatus = 'paid'
       }
-    } else {
-      // Si no hay pagos pendientes, usar la fecha de fin de la suscripción
-      nextPaymentDate = subscription.endDate
-      paymentStatus = 'paid'
     }
   }
 

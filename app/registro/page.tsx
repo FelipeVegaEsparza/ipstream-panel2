@@ -13,6 +13,8 @@ export default async function RegistroPage({
   searchParams: { plan?: string }
 }) {
   const plans = await prisma.plan.findMany({ where: { isActive: true }, orderBy: { price: 'asc' } })
+  const config = await prisma.appConfig.findFirst({ select: { trialDays: true } })
+  const trialDays = config?.trialDays ?? 7
 
   const parsedPlans: PublicPlan[] = plans.map((p) => {
     let features: string[] = []
@@ -70,12 +72,17 @@ export default async function RegistroPage({
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Sitio web profesional, reproductor, app PWA y panel de administración para tu radio o televisión.
+          {trialDays > 0 && (
+            <span className="block mt-2 font-semibold text-cyan-600">
+              Empezá con {trialDays} días de prueba gratis.
+            </span>
+          )}
         </p>
       </section>
 
       {/* Dos columnas */}
       <div className="max-w-5xl mx-auto px-4 pb-14">
-        <SignupForm plans={parsedPlans} preselect={searchParams.plan} />
+        <SignupForm plans={parsedPlans} preselect={searchParams.plan} trialDays={trialDays} />
       </div>
 
       {/* Footer */}

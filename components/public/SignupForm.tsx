@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Check, Radio, MonitorPlay, HardDrive, ArrowRight, CheckCircle2, User, Mail, Lock, ShieldCheck, Clapperboard } from 'lucide-react'
+import { Check, Radio, MonitorPlay, HardDrive, ArrowRight, CheckCircle2, User, Mail, Lock, ShieldCheck, Clapperboard, Sparkles } from 'lucide-react'
 import styles from './SignupForm.module.css'
 
 export interface PublicPlan {
@@ -79,7 +79,7 @@ function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
   )
 }
 
-export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: { plans: PublicPlan[]; preselect?: string; fixedPlanId?: string; theme?: 'light' | 'dark' }) {
+export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', trialDays = 0 }: { plans: PublicPlan[]; preselect?: string; fixedPlanId?: string; theme?: 'light' | 'dark'; trialDays?: number }) {
   const darkClass = theme === 'dark' ? styles.dark : ''
   const isFixed = Boolean(fixedPlanId)
   const fixedPlan = fixedPlanId ? plans.find((p) => p.id === fixedPlanId) || null : null
@@ -134,6 +134,8 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
   }
 
   if (done) {
+    const chargeDate = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
+    const chargeLabel = chargeDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     return (
       <div className={`max-w-md mx-auto text-center space-y-5 py-12 ${darkClass}`}>
         <div data-slot="done-icon" className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
@@ -141,7 +143,9 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
         </div>
         <h2 data-slot="heading" className="text-2xl font-bold text-gray-900">¡Tu cuenta está lista!</h2>
         <p data-slot="sub" className="text-gray-600">
-          Te enviamos la boleta del mes por correo. Cuando se confirme el pago, tu plan queda activo y podés empezar a transmitir.
+          {trialDays > 0
+            ? `Empezaron tus ${trialDays} días de prueba gratis. Ya podés ingresar y transmitir; el primer cobro se realizará el ${chargeLabel}.`
+            : 'Te enviamos la boleta del mes por correo. Cuando se confirme el pago, tu plan queda activo y podés empezar a transmitir.'}
         </p>
         {selected && (
           <div data-slot="summary" className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
@@ -269,6 +273,13 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
               <p data-slot="sub" className="mt-1 text-sm text-gray-500">Completá tus datos para comenzar</p>
             )}
           </div>
+
+          {trialDays > 0 && (
+            <div data-slot="trial" className="flex items-center gap-2 rounded-xl bg-cyan-50 border border-cyan-200 px-3 py-2 text-sm text-cyan-800">
+              <Sparkles className="h-4 w-4 text-cyan-600" />
+              Incluye <strong>{trialDays} días de prueba gratis</strong>. Después pagás el plan que elijas.
+            </div>
+          )}
 
           <div className="space-y-3">
             <div className="relative">

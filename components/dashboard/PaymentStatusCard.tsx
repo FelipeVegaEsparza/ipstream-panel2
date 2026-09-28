@@ -1,13 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { CreditCardIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import { CreditCardIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon, SparklesIcon } from '@heroicons/react/24/outline'
 
 interface PaymentStatusCardProps {
   nextPaymentDate: Date | null
   planName: string | null
   planPrice: number | null
-  status: 'paid' | 'due-soon' | 'overdue' | 'no-plan'
+  status: 'paid' | 'due-soon' | 'overdue' | 'no-plan' | 'trial'
 }
 
 export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status }: PaymentStatusCardProps) {
@@ -42,6 +42,16 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
           textColor: 'text-red-400',
           iconColor: 'text-red-400',
           bgIcon: 'bg-red-500/20'
+        }
+      case 'trial':
+        return {
+          title: 'Prueba Gratis',
+          icon: SparklesIcon,
+          gradient: 'from-cyan-500/20 to-blue-600/20',
+          border: 'border-cyan-500/30',
+          textColor: 'text-cyan-400',
+          iconColor: 'text-cyan-400',
+          bgIcon: 'bg-cyan-500/20'
         }
       default:
         return {
@@ -117,7 +127,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
           {/* Next Payment Date */}
           {nextPaymentDate && (
             <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-              <span className="text-sm text-gray-300">Próximo Pago</span>
+              <span className="text-sm text-gray-300">{status === 'trial' ? 'Fin de prueba' : 'Próximo Pago'}</span>
               <span className="text-sm font-semibold text-white">
                 {formatDate(nextPaymentDate)}
               </span>
@@ -127,7 +137,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
           {/* Amount */}
           {planPrice && (
             <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-              <span className="text-sm text-gray-300">Monto</span>
+              <span className="text-sm text-gray-300">{status === 'trial' ? 'Cobro al finalizar' : 'Monto'}</span>
               <span className="text-sm font-semibold text-white">
                 {formatCurrency(planPrice)}
               </span>

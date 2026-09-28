@@ -1,4 +1,6 @@
-export type PaymentStatusLabel = 'overdue' | 'due_soon' | 'current' | 'no_plan' | 'no_subscription'
+import { SUBSCRIPTION_STATUS } from './subscription-status'
+
+export type PaymentStatusLabel = 'overdue' | 'due_soon' | 'current' | 'no_plan' | 'no_subscription' | 'trial'
 
 export interface ClientPayment {
   id: string
@@ -18,6 +20,7 @@ export interface ClientSubscriptionLite {
   status: string
   startDate: Date | string
   endDate: Date | string
+  trialEndsAt?: Date | string | null
 }
 
 export interface PaymentStatusResult {
@@ -78,6 +81,23 @@ export function getClientPaymentStatus(
     }
   }
 
+  // Prueba gratuita vigente: estado propio con los días restantes.
+  // Si la prueba ya venció, cae al cálculo normal (quedará "overdue" por el pago vencido).
+  if (subscription.status === SUBSCRIPTION_STATUS.TRIALING) {
+    const trialEnd = subscription.trialEndsAt ? toDate(subscription.trialEndsAt) : null
+    const daysLeft = trialEnd ? daysBetween(now, trialEnd) : null
+    if (trialEnd && daysLeft !== null && daysLeft >= 0) {
+      return {
+        status: 'trial',
+        label: 'trial',
+        color: 'bg-cyan-600',
+        daysUntilDue: daysLeft,
+        nextPayment: null,
+        lastPayment: null,
+      }
+    }
+  }
+
   const pendingPayments = payments
     .filter((p) => p.status === 'pending' || p.status === 'failed')
     .sort(sortByDueDateAsc)
@@ -113,6 +133,7 @@ export function getClientPaymentStatus(
     current: 'bg-green-600',
     no_plan: 'bg-gray-600',
     no_subscription: 'bg-gray-500',
+    trial: 'bg-cyan-600',
   }
 
   return {
@@ -134,4 +155,5 @@ export const STATUS_BADGES: Record<
   current: { text: 'Al día', color: 'bg-green-600', icon: 'check' },
   no_plan: { text: 'Sin plan', color: 'bg-gray-600', icon: 'minus' },
   no_subscription: { text: 'Sin suscripción', color: 'bg-gray-500', icon: 'minus' },
+  trial: { text: 'En prueba', color: 'bg-cyan-600', icon: 'clock' },
 }

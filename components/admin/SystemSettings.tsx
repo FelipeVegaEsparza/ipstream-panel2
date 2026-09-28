@@ -23,6 +23,7 @@ interface SystemSettingsProps {
 export function SystemSettings({ stats }: SystemSettingsProps) {
   const [enableGenericNews, setEnableGenericNews] = useState(false)
   const [adminNotifyEmail, setAdminNotifyEmail] = useState('')
+  const [trialDays, setTrialDays] = useState(7)
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
 
@@ -34,6 +35,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
           const data = await res.json()
           setEnableGenericNews(data.enableGenericNews)
           setAdminNotifyEmail(data.adminNotifyEmail || '')
+          if (typeof data.trialDays === 'number') setTrialDays(data.trialDays)
         }
       } catch (error) {
         console.error('Error fetching app config:', error)
@@ -57,7 +59,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
       const response = await fetch('/api/admin/app-config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enableGenericNews, adminNotifyEmail: adminNotifyEmail.trim() || null })
+        body: JSON.stringify({ enableGenericNews, adminNotifyEmail: adminNotifyEmail.trim() || null, trialDays })
       })
 
       if (response.ok) {
@@ -165,6 +167,23 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
             />
             <p className="text-sm text-gray-400 mt-1">
               Recibe avisos de nuevos registros de clientes y otras notificaciones del sistema.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-lg bg-gray-700/50">
+            <label className="block text-white font-medium mb-1">
+              Días de prueba gratuita
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={365}
+              value={trialDays}
+              onChange={(e) => setTrialDays(Number(e.target.value))}
+              className="w-full bg-gray-900 border border-gray-600 text-white rounded-md px-3 py-2 text-sm"
+            />
+            <p className="text-sm text-gray-400 mt-1">
+              Días de prueba que reciben los clientes al registrarse desde las páginas públicas. 0 desactiva la prueba.
             </p>
           </div>
 

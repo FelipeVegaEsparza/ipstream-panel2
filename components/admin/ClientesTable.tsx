@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, DollarSign, AlertTriangle, CheckCircle2, Clock, X } from 'lucide-react'
+import { Search, DollarSign, AlertTriangle, CheckCircle2, Clock, X, Sparkles } from 'lucide-react'
 import {
   getClientPaymentStatus,
   type ClientPayment,
@@ -23,7 +23,7 @@ export interface ClientesTableProps {
   plans: PlanOption[]
 }
 
-type StatusFilter = 'all' | 'overdue' | 'due_soon' | 'current' | 'no_plan'
+type StatusFilter = 'all' | 'overdue' | 'due_soon' | 'current' | 'no_plan' | 'trial'
 type IntervalFilter = 'all' | 'monthly' | 'yearly'
 
 export function ClientesTable({ clients, plans }: ClientesTableProps) {
@@ -50,6 +50,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
       dueSoon: enriched.filter((c) => c.statusResult.status === 'due_soon').length,
       current: enriched.filter((c) => c.statusResult.status === 'current').length,
       noPlan: enriched.filter((c) => c.statusResult.status === 'no_plan').length,
+      trial: enriched.filter((c) => c.statusResult.status === 'trial').length,
       monthly: withPlan.filter((c) => c.plan?.interval === 'monthly').length,
       yearly: withPlan.filter((c) => c.plan?.interval === 'yearly').length,
     }
@@ -65,6 +66,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
     if (filter === 'due_soon' && c.statusResult.status !== 'due_soon') return false
     if (filter === 'current' && c.statusResult.status !== 'current') return false
     if (filter === 'no_plan' && c.statusResult.status !== 'no_plan') return false
+    if (filter === 'trial' && c.statusResult.status !== 'trial') return false
     if (intervalFilter === 'monthly' && c.plan?.interval !== 'monthly') return false
     if (intervalFilter === 'yearly' && c.plan?.interval !== 'yearly') return false
     return true
@@ -162,8 +164,9 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard icon={AlertTriangle} color="red" label="Vencidos" value={stats.overdue} />
+        <StatCard icon={Sparkles} color="cyan" label="En prueba" value={stats.trial} />
         <StatCard icon={Clock} color="orange" label="Por vencer" value={stats.dueSoon} />
         <StatCard icon={CheckCircle2} color="green" label="Al día" value={stats.current} />
         <StatCard icon={X} color="gray" label="Sin plan" value={stats.noPlan} />
@@ -187,6 +190,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
             <span className="text-xs text-gray-400 uppercase tracking-wide mr-1">Estado:</span>
             {[
               { key: 'all' as const, label: 'Todos', count: enriched.length },
+              { key: 'trial' as const, label: 'En prueba', count: stats.trial },
               { key: 'overdue' as const, label: 'Vencidos', count: stats.overdue },
               { key: 'due_soon' as const, label: 'Por vencer', count: stats.dueSoon },
               { key: 'current' as const, label: 'Al día', count: stats.current },
@@ -294,7 +298,7 @@ function StatCard({
   value,
 }: {
   icon: typeof AlertTriangle
-  color: 'red' | 'orange' | 'green' | 'gray'
+  color: 'red' | 'orange' | 'green' | 'gray' | 'cyan'
   label: string
   value: number
 }) {
@@ -303,6 +307,7 @@ function StatCard({
     orange: 'border-orange-500/30 bg-orange-500/10 text-orange-400',
     green: 'border-green-500/30 bg-green-500/10 text-green-400',
     gray: 'border-gray-500/30 bg-gray-500/10 text-gray-400',
+    cyan: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
   }
   return (
     <div className={`p-4 rounded-xl border ${colors[color]}`}>

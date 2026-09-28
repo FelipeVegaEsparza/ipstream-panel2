@@ -5,7 +5,7 @@
 // Estas funciones resuelven el target (baseUrl + token descifrado) que
 // usa lib/streaming-client.ts para hablar con el agente correcto.
 
-import { prisma } from '@/lib/prisma'
+import { prisma, type PrismaDb } from '@/lib/prisma'
 import { decrypt } from './encryption'
 
 export interface StreamingServerTarget {
@@ -114,8 +114,8 @@ export async function resolveVideoServerTarget(clientId: string): Promise<Stream
 }
 
 /** ID del primer servidor activo en DB (para asignar streams nuevos), o null. */
-export async function getDefaultServerDbId(): Promise<string | null> {
-  const s = await prisma.streamingServer.findFirst({
+export async function getDefaultServerDbId(db: PrismaDb = prisma): Promise<string | null> {
+  const s = await db.streamingServer.findFirst({
     where: { isActive: true },
     orderBy: { createdAt: 'asc' },
     select: { id: true },

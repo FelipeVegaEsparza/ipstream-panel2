@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { jsPDF } from 'jspdf'
 import { PDF_COLORS, PDF_LAYOUT, PDF_FONTS, COMPANY } from '@/lib/pdf-styles'
 import { formatDate, formatCurrency } from '@/lib/billing-format'
+import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 import fs from 'fs'
 import path from 'path'
 
@@ -102,11 +103,11 @@ export async function generateAccountPdf(
   const amountText = formatCurrency(amount, currency)
   const statusLabel = !client.subscription
     ? 'Sin suscripción'
-    : client.subscription.status === 'active'
+    : client.subscription.status === SUBSCRIPTION_STATUS.ACTIVE
     ? 'Activa'
-    : client.subscription.status === 'cancelled'
+    : client.subscription.status === SUBSCRIPTION_STATUS.CANCELLED
     ? 'Cancelada'
-    : client.subscription.status === 'expired'
+    : client.subscription.status === SUBSCRIPTION_STATUS.EXPIRED
     ? 'Vencida'
     : 'Pendiente'
 

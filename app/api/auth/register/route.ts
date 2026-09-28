@@ -3,15 +3,29 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/validations'
 import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/streaming-helpers'
+import { createSignupSubscription } from '@/lib/signup'
 import { rateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
+/** El plan recibido no existe o no está activo. */
+class PlanUnavailableError extends Error {}
+
+/**
+ * Extrae la IP real del solicitante.
+ *
+ * `x-forwarded-for` puede traer valores añadidos por el cliente; el proxy de
+ * confianza (Caddy) agrega la IP real al final de la cadena, así que se toma
+ * el último valor y no el primero. Si no hay cabecera se usa `x-real-ip`.
+ */
 function getClientIp(request: NextRequest): string {
-  return (
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    'unknown'
-  )
+  const forwarded = request.headers.get('x-forwarded-for')
+  const lastHop = forwarded
+    ?.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .pop()
+
+  return lastHop || request.headers.get('x-real-ip') || 'unknown'
 }
 
 export async function POST(request: NextRequest) {
@@ -31,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, password } = registerSchema.parse(body)
+    const { name, email, password, planId } = registerSchema.parse(body)
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -45,75 +59,107 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hashear la contraseña
+    // Hashear la contraseña (fuera de la transacción: es costoso y no toca la DB)
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Crear usuario y cliente
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        client: {
-          create: {
-            name: name,
-          }
+    // Cuenta, cliente, streams, suscripción, pago y cuotas en una sola transacción.
+    // Nada de efectos externos (correos, agente de streaming) dentro de la transacción.
+    const result = await prisma.$transaction(async (tx) => {
+      // El plan elegido se valida dentro de la transacción: sin plan válido no se crea nada.
+      let plan = null
+      if (planId) {
+        plan = await tx.plan.findUnique({ where: { id: planId } })
+        if (!plan || !plan.isActive) {
+          throw new PlanUnavailableError()
         }
-      },
-      include: {
-        client: true
       }
-    })
 
-    // Plan elegido: servicios que incluye y servidor por defecto.
-    // Sin plan → ambos servicios en el servidor principal/global.
-    let planServices = 'both'
-    let planServerId: string | null = null
-    if (body.planId) {
-      const plan = await prisma.plan.findUnique({
-        where: { id: body.planId },
-        select: { services: true, defaultServerId: true },
-      })
-      planServices = plan?.services || 'both'
-      planServerId = plan?.defaultServerId || null
-    }
-
-    // Auto-crear streams según los servicios del plan (en su servidor por defecto)
-    let streamInfo = null
-    if (user.client) {
-      if (planServices === 'radio' || planServices === 'both') {
-        try {
-          streamInfo = await createRadioStreamForClient(user.client.id, 128, planServerId || undefined)
-        } catch (err) {
-          console.error('Error creando RadioStream para nuevo cliente:', err)
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          client: {
+            create: {
+              name: name,
+            }
+          }
+        },
+        include: {
+          client: true
         }
+      })
+
+      const client = user.client
+      if (!client) {
+        throw new Error('No se pudo crear el cliente del usuario')
+      }
+
+      const planServices = plan?.services || 'both'
+      const planServerId = plan?.defaultServerId || undefined
+
+      // Auto-crear streams según los servicios del plan (en su servidor por defecto)
+      let radioStream = null
+      if (planServices === 'radio' || planServices === 'both') {
+        radioStream = await createRadioStreamForClient(client.id, 128, planServerId, tx)
       }
       if (planServices === 'tv' || planServices === 'both') {
-        try {
-          await createVideoStreamForClient(user.client.id, planServerId || undefined)
-        } catch (err) {
-          console.error('Error creando VideoStream para nuevo cliente:', err)
-        }
+        await createVideoStreamForClient(client.id, planServerId, tx)
       }
-    }
 
-    // Si viene un plan elegido (registro desde /registro), crear suscripción + cuota
-    let planAssigned = null
-    if (body.planId && user.client) {
+      // Suscripción + cuota inicial + primer pago pendiente
+      let subscription = null
+      if (plan) {
+        subscription = await createSignupSubscription(tx, client.id, plan)
+      }
+
+      return { user, client, radioStream, subscription, plan }
+    }, { timeout: 15000 })
+
+    const clientId = result.client.id
+    const planName = result.plan?.name
+    const streamInfo = result.radioStream
+
+    // Correos (tras el commit, aislados: un fallo no revierte el registro).
+    // Durante la prueba no se envía cobro inmediato: sólo la bienvenida con la
+    // fecha de cobro; la boleta se envía al confirmarse el primer pago.
+    if (result.subscription && result.plan) {
       try {
-        const { createSignupSubscription } = await import('@/lib/signup')
-        planAssigned = await createSignupSubscription(user.client.id, body.planId)
+        const { sendAccountEmail, sendWelcomeEmail } = await import('@/lib/email-hooks')
+        const { payment, isTrial, trialDays } = result.subscription
+        if (!isTrial) {
+          await sendAccountEmail(
+            clientId,
+            {
+              amount: payment.amount,
+              currency: payment.currency,
+              dueDate: payment.dueDate,
+              description: payment.description,
+            },
+            result.plan.name
+          )
+        }
+        await sendWelcomeEmail(
+          clientId,
+          result.plan.name,
+          isTrial
+            ? { trialDays, chargeDate: payment.dueDate, amount: payment.amount, currency: payment.currency }
+            : null
+        )
       } catch (err) {
-        console.error('Error asignando plan al registrarse:', err)
+        console.error('Error enviando correos de registro:', err)
       }
     }
 
-    // Contenido por defecto del AutoDJ (playlist + tema) — aislado, nunca rompe el registro
-    if (user.client && streamInfo) {
+    // Contenido por defecto del AutoDJ (tras el commit, best-effort).
+    // El resultado se reporta al admin para reintentar si el nodo remoto falló.
+    let seed: { ok: boolean; error?: string } | null = null
+    if (result.radioStream) {
       try {
         const { seedDefaultAutoDjContent } = await import('@/lib/streaming-seed')
-        await seedDefaultAutoDjContent(user.client.id)
+        seed = await seedDefaultAutoDjContent(clientId)
       } catch (err) {
+        seed = { ok: false, error: (err as Error).message }
         console.error('Error sembrando contenido por defecto al registrarse:', err)
       }
     }
@@ -121,10 +167,7 @@ export async function POST(request: NextRequest) {
     // Notificar al admin del nuevo registro (email)
     try {
       const { notifyAdminNewSignup } = await import('@/lib/signup')
-      const planName = body.planId
-        ? (await prisma.plan.findUnique({ where: { id: body.planId }, select: { name: true } }))?.name
-        : undefined
-      await notifyAdminNewSignup({ name, email, planName })
+      await notifyAdminNewSignup({ name, email, planName, seed })
     } catch (err) {
       console.error('Error notificando registro al admin:', err)
     }
@@ -132,12 +175,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Usuario creado exitosamente',
       user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        role: result.user.role
       },
-      planAssigned: planAssigned ? { planId: body.planId } : null,
+      planAssigned: result.subscription ? { planId } : null,
       // Devolvemos info del stream para que la UI pueda mostrarlo
       stream: streamInfo ? {
         icecastMount: streamInfo.icecastMount,
@@ -147,6 +190,12 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error creating user:', error)
+    if (error instanceof PlanUnavailableError) {
+      return NextResponse.json(
+        { error: 'El plan seleccionado no está disponible' },
+        { status: 400 }
+      )
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
     }

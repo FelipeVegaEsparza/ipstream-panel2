@@ -1,3 +1,15 @@
+// =====================================================
+// Rate limit — contador en memoria
+// =====================================================
+// Alcance: el contador vive en el proceso del panel y se reinicia al
+// reiniciar/recrear el contenedor. Es correcto para el despliegue actual de
+// una sola instancia; si el panel pasa a multi-instancia habrá que migrar a
+// un store compartido (tabla en DB o Redis) para que el límite sea global.
+//
+// La identidad del solicitante (IP) la resuelve quien llama; la ruta de
+// registro usa el último salto de confianza de `x-forwarded-for` para que no
+// se pueda evadir el límite añadiendo valores a la cabecera.
+
 const rateMap = new Map<string, { count: number; resetAt: number }>()
 
 const MAX_ENTRIES = 10000

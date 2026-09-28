@@ -33,6 +33,7 @@ import { RegistrarPagoModal } from './RegistrarPagoModal'
 import { EditarFechaInicioModal } from './EditarFechaInicioModal'
 import { buildWhatsAppUrl, defaultAccountMessage, normalizeChileanPhone } from '@/lib/whatsapp'
 import { showToast } from '@/components/ui/toast'
+import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 import { Mail } from 'lucide-react'
 
 export interface ClienteRowData {
@@ -136,9 +137,9 @@ export function ClienteRow({
       : null
 
   const hasPhone = !!normalizeChileanPhone(client.phone)
-  const subscriptionActive = client.subscription?.status === 'active'
+  const subscriptionActive = client.subscription?.status === SUBSCRIPTION_STATUS.ACTIVE
   const subscriptionExpired =
-    client.subscription?.status === 'expired' || client.subscription?.status === 'cancelled'
+    client.subscription?.status === SUBSCRIPTION_STATUS.EXPIRED || client.subscription?.status === SUBSCRIPTION_STATUS.CANCELLED
   const hasPlan = !!client.plan
 
   return (

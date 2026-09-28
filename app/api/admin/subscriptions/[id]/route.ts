@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateSubscriptionPayments } from '@/lib/payment-generator'
+import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 
 export async function PATCH(
   request: NextRequest,
@@ -37,7 +38,7 @@ export async function PATCH(
         throw new Error('Suscripción no encontrada')
       }
 
-      if (subscription.status === 'cancelled') {
+      if (subscription.status === SUBSCRIPTION_STATUS.CANCELLED) {
         throw new Error('No se puede editar una suscripción cancelada')
       }
 

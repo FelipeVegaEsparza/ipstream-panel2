@@ -4,7 +4,7 @@
 // Se usa al crear un Client (en registro público o desde admin).
 // Genera icecastMount y passwords únicos, y los encripta.
 
-import { prisma } from '@/lib/prisma'
+import { prisma, type PrismaDb } from '@/lib/prisma'
 import { encrypt } from './encryption'
 import { getDefaultServerDbId } from './streaming-servers'
 import crypto from 'crypto'
@@ -16,9 +16,9 @@ import crypto from 'crypto'
  * @param serverId (opcional, default: primer servidor activo)
  * @returns {RadioStream}
  */
-export async function createRadioStreamForClient(clientId: string, bitrate = 128, serverId?: string) {
+export async function createRadioStreamForClient(clientId: string, bitrate = 128, serverId?: string, db: PrismaDb = prisma) {
   // Asignar servidor por defecto si no se indica
-  const assignedServerId = serverId ?? (await getDefaultServerDbId())
+  const assignedServerId = serverId ?? (await getDefaultServerDbId(db))
 
   // Generar identificadores únicos
   // icecastMount: nombre corto basado en hash del clientId
@@ -29,7 +29,7 @@ export async function createRadioStreamForClient(clientId: string, bitrate = 128
   const icecastMount = `radio_${mountSuffix}`
 
   // Buscar un puerto telnet libre (rango 12340-65535)
-  const existingPorts = await prisma.radioStream.findMany({
+  const existingPorts = await db.radioStream.findMany({
     select: { liquidsoapTelnetPort: true },
   })
   const usedPorts = new Set(existingPorts.map((r) => r.liquidsoapTelnetPort))
@@ -50,7 +50,7 @@ export async function createRadioStreamForClient(clientId: string, bitrate = 128
   const livePasswordEnc = encrypt(livePassword)
 
   // Crear en DB
-  const radioStream = await prisma.radioStream.create({
+  const radioStream = await db.radioStream.create({
     data: {
       clientId,
       serverId: assignedServerId,
@@ -120,9 +120,9 @@ export async function revealSourcePassword(clientId: string, requesterId: string
 // createVideoStreamForClient — helper para crear VideoStream
 // =====================================================
 
-export async function createVideoStreamForClient(clientId: string, serverId?: string) {
-  const assignedServerId = serverId ?? (await getDefaultServerDbId())
-  const videoStream = await prisma.videoStream.create({
+export async function createVideoStreamForClient(clientId: string, serverId?: string, db: PrismaDb = prisma) {
+  const assignedServerId = serverId ?? (await getDefaultServerDbId(db))
+  const videoStream = await db.videoStream.create({
     data: {
       clientId,
       serverId: assignedServerId,
