@@ -1195,6 +1195,32 @@ async function sendContact({ name, email, phone, message }) {
 - No se guarda ni se solicita asunto (`subject`).
 - Límite anti-spam: 5 envíos por IP cada 10 minutos (respuesta `429`).
 
+### 8. Color destacado del cliente (`accentColor`)
+
+Cada radio/TV puede definir un color de acento libre desde el panel. El sitio debe aplicarlo en runtime, sin recompilar, leyendo `accentColor` de la llamada principal (misma respuesta donde viene `selectedTemplate`).
+
+```javascript
+const { selectedTemplate, accentColor } = await fetch(`${API}`).then(r => r.json())
+
+// accentColor es "#rrggbb" (minúsculas) o null. Valida por si acaso.
+const accent = typeof accentColor === 'string' && /^#[0-9a-f]{6}$/i.test(accentColor)
+  ? accentColor.toLowerCase()
+  : null
+
+if (accent) {
+  document.documentElement.style.setProperty('--accent', accent)
+} else {
+  // null => usar el color propio de la plantilla seleccionada
+  document.documentElement.style.removeProperty('--accent')
+}
+```
+
+- **Formato:** `#rrggbb` en minúsculas, 6 dígitos hex. Nunca devuelve `""`.
+- **`null`:** usa el color por defecto de la plantilla (`selectedTemplate`); no es un error.
+- **Sin alpha:** si necesitas transparencias, derívalas en el frontend (p. ej. `rgba(...)`).
+- **No está en `/basic-data`:** solo en la raíz de `GET /api/public/{clientId}`.
+- **Contraste:** al ser color libre, elige el color de texto (claro/oscuro) según la luminancia del acento.
+
 ### Manejo de imágenes
 
 Todas las URLs de imágenes se sirven desde:
