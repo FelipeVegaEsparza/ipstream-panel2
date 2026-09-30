@@ -81,7 +81,7 @@ export function TemplateActivationModal({
                 type="color"
                 aria-label="Color destacado"
                 value={previewColor ?? '#000000'}
-                disabled={useTemplate || isSubmitting}
+                disabled={isSubmitting}
                 onChange={(e) => {
                   setHex(e.target.value)
                   setUseTemplate(false)
@@ -91,7 +91,7 @@ export function TemplateActivationModal({
               <input
                 type="text"
                 value={useTemplate ? '' : hex}
-                disabled={useTemplate || isSubmitting}
+                disabled={isSubmitting}
                 placeholder="#ff6b00"
                 onChange={(e) => {
                   setHex(e.target.value)
