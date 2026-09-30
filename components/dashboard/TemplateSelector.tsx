@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Check, Image as ImageIcon } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
+import { TemplateActivationModal } from '@/components/dashboard/TemplateActivationModal'
 
 interface Template {
   id: string
@@ -18,10 +19,13 @@ interface Template {
 interface TemplateSelectorProps {
   templates: Template[]
   currentTemplateId: string | null
+  currentAccentColor: string | null
 }
 
-export function TemplateSelector({ templates, currentTemplateId }: TemplateSelectorProps) {
+export function TemplateSelector({ templates, currentTemplateId, currentAccentColor }: TemplateSelectorProps) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(currentTemplateId)
+  const [accentColor, setAccentColor] = useState<string | null>(currentAccentColor)
+  const [activationTemplate, setActivationTemplate] = useState<Template | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Modal state
@@ -44,25 +48,42 @@ export function TemplateSelector({ templates, currentTemplateId }: TemplateSelec
     setModal({ ...modal, isOpen: false })
   }
 
-  const handleSelectTemplate = async (templateId: string) => {
+  const openActivation = (template: Template) => {
+    setActivationTemplate(template)
+  }
+
+  const closeActivation = () => {
+    if (isSubmitting) return
+    setActivationTemplate(null)
+  }
+
+  const handleConfirmActivation = async (newAccentColor: string | null) => {
+    if (!activationTemplate) return
     setIsSubmitting(true)
 
     try {
       const response = await fetch('/api/dashboard/templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ templateId })
+        body: JSON.stringify({
+          templateId: activationTemplate.id,
+          accentColor: newAccentColor
+        })
       })
 
       if (response.ok) {
-        showModalMessage('success', 'Plantilla seleccionada', 'La plantilla se aplicó correctamente a tu sitio web')
-        setSelectedTemplateId(templateId)
+        setSelectedTemplateId(activationTemplate.id)
+        setAccentColor(newAccentColor)
+        setActivationTemplate(null)
+        showModalMessage('success', 'Plantilla activada', 'La plantilla y el color destacado se aplicaron a tu sitio web')
       } else {
-        const error = await response.json()
-        showModalMessage('error', 'Error', error.error || 'Error al seleccionar la plantilla')
+        const error = await response.json().catch(() => ({}))
+        setActivationTemplate(null)
+        showModalMessage('error', 'Error', error.error || 'Error al activar la plantilla')
       }
-    } catch (error) {
-      showModalMessage('error', 'Error', 'Error al seleccionar la plantilla')
+    } catch {
+      setActivationTemplate(null)
+      showModalMessage('error', 'Error', 'Error al activar la plantilla')
     } finally {
       setIsSubmitting(false)
     }
@@ -77,6 +98,15 @@ export function TemplateSelector({ templates, currentTemplateId }: TemplateSelec
         type={modal.type}
         title={modal.title}
         message={modal.message}
+      />
+
+      <TemplateActivationModal
+        isOpen={activationTemplate !== null}
+        templateName={activationTemplate?.displayName ?? ''}
+        initialAccentColor={accentColor}
+        isSubmitting={isSubmitting}
+        onConfirm={handleConfirmActivation}
+        onClose={closeActivation}
       />
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">
@@ -163,8 +193,8 @@ export function TemplateSelector({ templates, currentTemplateId }: TemplateSelec
                 )}
 
                 <Button
-                  onClick={() => handleSelectTemplate(template.id)}
-                  disabled={isSubmitting || isSelected}
+                  onClick={() => openActivation(template)}
+                  disabled={isSubmitting}
                   className={`w-full ${
                     isSelected 
                       ? 'bg-cyan-600 hover:bg-cyan-700' 
@@ -174,7 +204,7 @@ export function TemplateSelector({ templates, currentTemplateId }: TemplateSelec
                   {isSelected ? (
                     <>
                       <Check className="h-4 w-4 mr-2" />
-                      Plantilla Actual
+                      Color destacado
                     </>
                   ) : (
                     'Seleccionar Plantilla'

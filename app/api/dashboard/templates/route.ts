@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { parseAccentColorInput } from '@/lib/accent-color'
 
 // GET - Obtener todas las plantillas activas
 export async function GET(request: NextRequest) {
@@ -70,6 +71,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Template ID es requerido' }, { status: 400 })
     }
 
+    // accentColor es opcional: si la clave no viene, el color guardado no se toca.
+    const hasAccentColor = Object.prototype.hasOwnProperty.call(body, 'accentColor')
+    let accentColor: string | null = null
+    if (hasAccentColor) {
+      const parsed = parseAccentColorInput(body.accentColor)
+      if (!parsed.ok) {
+        return NextResponse.json(
+          { error: 'El color destacado debe ser un hexadecimal #RRGGBB o null' },
+          { status: 400 }
+        )
+      }
+      accentColor = parsed.value
+    }
+
     // Verificar que la plantilla existe y está activa
     const template = await prisma.template.findUnique({
       where: { id: templateId }
@@ -83,10 +98,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Esta plantilla no está disponible' }, { status: 400 })
     }
 
-    // Actualizar el cliente con la plantilla seleccionada
+    // Actualizar el cliente con la plantilla seleccionada (y color si vino)
     const updatedClient = await prisma.client.update({
       where: { id: effectiveClient.clientId },
-      data: { templateId }
+      data: hasAccentColor
+        ? { templateId, accentColor }
+        : { templateId }
     })
 
     return NextResponse.json({

@@ -47,13 +47,14 @@ export default async function TemplatePage() {
   // Obtener plantilla actual del cliente
   const client = await prisma.client.findUnique({
     where: { id: effectiveClient.clientId },
-    select: { templateId: true }
+    select: { templateId: true, accentColor: true }
   })
 
   return (
     <TemplateSelector 
       templates={templates}
       currentTemplateId={client?.templateId || null}
+      currentAccentColor={client?.accentColor || null}
     />
   )
 }

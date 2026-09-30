@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { normalizeAccentColor } from '@/lib/accent-color'
 
 export async function OPTIONS() {
   return handleCors()
@@ -63,6 +64,7 @@ export async function GET(
         id: true, 
         name: true,
         templateId: true,
+        accentColor: true,
         oneSignalAppId: true,
         useGenericNews: true,
         genericCategories: {
@@ -305,6 +307,7 @@ export async function GET(
         name: client.name
       },
       selectedTemplate,
+      accentColor: normalizeAccentColor(client.accentColor),
       oneSignalAppId: client.oneSignalAppId || null,
       basicData,
       socialNetworks,

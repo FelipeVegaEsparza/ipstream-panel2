@@ -82,6 +82,7 @@ GET {BASE}/api/public/{clientId}
     "name": "Radio Ejemplo FM"
   },
   "selectedTemplate": "plantilla-moderna",
+  "accentColor": "#ff6b00",
   "oneSignalAppId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
   "basicData": { },
   "socialNetworks": { },
@@ -106,6 +107,7 @@ GET {BASE}/api/public/{clientId}
 |-------|------|-------------|
 | `client` | `{ id, name }` | ID y nombre del cliente |
 | `selectedTemplate` | `string \| null` | Nombre interno de la plantilla o `null` |
+| `accentColor` | `string \| null` | Color destacado libre en formato `#rrggbb` (minúsculas) o `null` si usa el color de la plantilla |
 | `oneSignalAppId` | `string \| null` | OneSignal App ID (push) o `null` |
 | `basicData` | `object \| null` | Datos básicos (ver §2) |
 | `socialNetworks` | `object \| null` | Redes sociales (ver §3) |
