@@ -1,0 +1,95 @@
+// =====================================================
+// Cola de normalización de video (TV)
+// =====================================================
+// Procesa en background la normalización + thumbnail de los videos subidos,
+// con concurrencia 1 por nodo (ffmpeg re-encode es CPU-intensivo).
+// Estados del track: pending -> processing -> ready | error.
+
+import { pool } from './db.js'
+import { logger } from './logger.js'
+import { normalizeVideo, extractThumbnail } from './video-encoder.js'
+
+const _queue = []
+let _running = false
+
+export function enqueueVideoNormalization(job) {
+  _queue.push(job)
+  logger.info({ trackId: job.trackId, clientId: job.clientId }, 'Normalización de video encolada')
+  if (!_running) _run()
+}
+
+async function _run() {
+  if (_running) return
+  _running = true
+  try {
+    while (_queue.length > 0) {
+      const job = _queue.shift()
+      try {
+        await _process(job)
+      } catch (err) {
+        logger.error({ err: err.message, trackId: job.trackId }, 'Error inesperado en job de normalización')
+      }
+    }
+  } finally {
+    _running = false
+  }
+}
+
+async function _process(job) {
+  const { trackId, clientId, filepath } = job
+
+  await pool.query(
+    `UPDATE video_tracks SET status = 'processing', processingError = NULL WHERE id = ?`,
+    [trackId]
+  )
+
+  try {
+    const normalized = await normalizeVideo(clientId, filepath)
+    const thumbnail = await extractThumbnail(clientId, filepath)
+
+    await pool.query(
+      `UPDATE video_tracks
+       SET status = 'ready', processingError = NULL, filesize = ?, duration = ?,
+           width = ?, height = ?, codec = ?, thumbnail = ?
+       WHERE id = ?`,
+      [
+        normalized.filesize ?? 0,
+        normalized.duration ?? 0,
+        normalized.width ?? null,
+        normalized.height ?? null,
+        normalized.codec ?? null,
+        thumbnail ?? null,
+        trackId,
+      ]
+    )
+    logger.info({ trackId, clientId }, 'Normalización de video lista')
+  } catch (err) {
+    const message = String(err.message || err).slice(0, 1000)
+    await pool.query(
+      `UPDATE video_tracks SET status = 'error', processingError = ? WHERE id = ?`,
+      [message, trackId]
+    )
+    logger.warn({ trackId, clientId, err: message }, 'Normalización de video falló')
+  }
+}
+
+/**
+ * Reencola tracks que quedaron en 'pending' o 'processing' por un reinicio del
+ * agente a mitad de la normalización, para que no queden colgados.
+ */
+export async function recoverVideoNormalizations() {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, clientId, filepath FROM video_tracks WHERE status IN ('pending', 'processing')`
+    )
+    for (const row of rows || []) {
+      _queue.push({ trackId: row.id, clientId: row.clientId, filepath: row.filepath })
+    }
+    if (rows && rows.length > 0) {
+      logger.info({ count: rows.length }, 'Reencolando normalizaciones pendientes')
+      if (!_running) _run()
+    }
+  } catch (err) {
+    logger.warn({ err: err.message }, 'No se pudieron recuperar normalizaciones pendientes')
+  }
+}

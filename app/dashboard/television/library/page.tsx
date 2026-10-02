@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/components/ui/toast'
+import { MediaUploader } from '@/components/dashboard/streaming/MediaUploader'
 
 interface VideoTrack {
   id: string
@@ -14,6 +15,8 @@ interface VideoTrack {
   width: number | null
   height: number | null
   codec: string | null
+  status: string | null
+  processingError: string | null
   folderId: string | null
   createdAt: string
 }
@@ -49,12 +52,10 @@ export default function TvLibraryPage() {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set())
-  const [isUploading, setIsUploading] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
   const [renamingName, setRenamingName] = useState('')
   const [search, setSearch] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
   const fetchAll = useCallback(async () => {
@@ -100,35 +101,6 @@ export default function TvLibraryPage() {
   const childFolders = (parentId: string) => folders.filter(f => f.parentId === parentId)
 
   const getTrackCount = (f: Folder) => f.trackCount ?? f._count?.videoTracks ?? 0
-
-  // Upload
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setIsUploading(true)
-    try {
-      const form = new FormData()
-      form.append('file', file)
-      if (currentFolderId) form.append('folderId', currentFolderId)
-
-      const res = await fetch('/api/dashboard/television/tracks/upload', {
-        method: 'POST',
-        body: form,
-      })
-      if (res.ok) {
-        toast({ type: 'success', title: 'Video subido' })
-        fetchAll()
-      } else {
-        const err = await res.json()
-        toast({ type: 'error', title: 'Error', description: err.message })
-      }
-    } catch (err) {
-      toast({ type: 'error', title: 'Error de subida' })
-    } finally {
-      setIsUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
 
   // Folder CRUD
   const createFolder = async () => {
@@ -326,27 +298,22 @@ export default function TvLibraryPage() {
         {/* Main content */}
         <div className="flex-1 space-y-4">
           {/* Upload + search */}
-          <div className="flex gap-3">
-            <input
-              type="file"
+          <div className="space-y-3">
+            <MediaUploader
               accept="video/*"
-              ref={fileInputRef}
-              onChange={handleUpload}
-              className="hidden"
+              endpoint="/api/dashboard/television/tracks/upload"
+              dropTitle="Arrastrá videos acá o hacé click para seleccionar"
+              hint="Los videos se normalizan en segundo plano al subir."
+              extraFields={() => (currentFolderId ? { folderId: currentFolderId } : {})}
+              statusUrl={(trackId) => `/api/dashboard/television/tracks/${trackId}/status`}
+              onUploaded={fetchAll}
             />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white rounded-lg text-sm transition-colors"
-            >
-              {isUploading ? 'Subiendo...' : '▶ Subir video'}
-            </button>
             <input
               type="text"
               placeholder="Buscar..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 text-sm outline-none focus:border-cyan-500"
+              className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 text-sm outline-none focus:border-cyan-500"
             />
           </div>
 
@@ -436,7 +403,18 @@ export default function TvLibraryPage() {
                           <div className="w-16 h-10 bg-gray-700 rounded flex items-center justify-center text-gray-500 text-xs">N/A</div>
                         )}
                       </td>
-                      <td className="p-3 text-white font-medium">{track.title}</td>
+                      <td className="p-3 text-white font-medium">
+                        {track.title}
+                        {track.status === 'processing' && (
+                          <span className="ml-2 text-xs text-cyan-400">procesando…</span>
+                        )}
+                        {track.status === 'pending' && (
+                          <span className="ml-2 text-xs text-gray-400">en cola</span>
+                        )}
+                        {track.status === 'error' && (
+                          <span className="ml-2 text-xs text-red-400" title={track.processingError || ''}>error</span>
+                        )}
+                      </td>
                       <td className="p-3 text-gray-400">{formatDuration(track.duration)}</td>
                       <td className="p-3 text-gray-400">
                         {track.width && track.height ? `${track.width}x${track.height}` : '-'}

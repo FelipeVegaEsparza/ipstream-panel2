@@ -64,6 +64,8 @@ services:
       # Streaming agent
       STREAMING_AGENT_URL: ${STREAMING_AGENT_URL:-http://agent:4000}
       STREAMING_AGENT_TOKEN: ${STREAMING_AGENT_TOKEN:-dev-agent-token-change-me-in-prod}
+      # Tamaño máximo de subida de video de TV (MB)
+      MAX_VIDEO_UPLOAD_MB: ${MAX_VIDEO_UPLOAD_MB:-2048}
       HARBOR_CALLBACK_SECRET: ${HARBOR_CALLBACK_SECRET:-dev-harbor-callback-token-change-me}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       ICE_PUBLIC_URL: ${ICE_PUBLIC_URL:-http://localhost:8000}
@@ -250,10 +252,15 @@ services:
       LIQUIDSOAP_HOST: ipstream-liquidsoap
       # Radio library
       RADIO_LIBRARY_PATH: /var/lib/radio
+      # Video TV: límite de subida y timeout de ffmpeg (0 = sin límite)
+      MAX_VIDEO_UPLOAD_MB: ${MAX_VIDEO_UPLOAD_MB:-2048}
+      FFMPEG_TIMEOUT_MS: ${FFMPEG_TIMEOUT_MS:-0}
     ports:
       - "127.0.0.1:4000:4000"   # accesible solo desde el host (para debug)
     volumes:
       - ./data/radio:/var/lib/radio
+      # Volumen de video compartido con video-encoder (streaming directo a disco)
+      - ./data/video:/var/lib/video
       # El agent usa /var/log/liquidsoap solo como STRING (LIQUIDSOAP_LOG_PATH
       # se inyecta en el .liq que corre dentro del contenedor liquidsoap).
       # No necesita montar el dir; eso era una referencia huérfana.

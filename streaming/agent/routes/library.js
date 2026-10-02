@@ -91,7 +91,7 @@ export default async function libraryRoutes(app) {
 
     let savedFileName = null
     try {
-      const data = await request.file()
+      const data = await request.file({ limits: { fileSize: MAX_FILE_SIZE }, throwFileSizeLimit: false })
       if (!data) {
         return reply.code(400).send({ error: 'no_file', message: 'Falta el campo "file"' })
       }
@@ -101,7 +101,7 @@ export default async function libraryRoutes(app) {
       }
 
       const buffer = await data.toBuffer()
-      if (buffer.length > MAX_FILE_SIZE) {
+      if (data.file.truncated || buffer.length > MAX_FILE_SIZE) {
         return reply.code(413).send({ error: 'file_too_large', message: `Máximo ${MAX_FILE_SIZE / 1024 / 1024} MB` })
       }
 
@@ -309,7 +309,7 @@ export default async function libraryRoutes(app) {
     }
 
     try {
-      const data = await request.file()
+      const data = await request.file({ limits: { fileSize: 2 * 1024 * 1024 }, throwFileSizeLimit: false })
       if (!data) {
         return reply.code(400).send({ error: 'no_file', message: 'Falta el campo "cover"' })
       }
@@ -320,7 +320,7 @@ export default async function libraryRoutes(app) {
       }
 
       const buffer = await data.toBuffer()
-      if (buffer.length > 2 * 1024 * 1024) {
+      if (data.file.truncated || buffer.length > 2 * 1024 * 1024) {
         return reply.code(413).send({ error: 'file_too_large', message: 'Máximo 2 MB' })
       }
 

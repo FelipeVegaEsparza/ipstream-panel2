@@ -29,16 +29,40 @@ import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
 import { rebuildAllDjState } from './lib/dj-state.js'
 import { autoStartStreams } from './lib/liquidsoap.js'
 import { autoStartVideoStreams, execCmd, ENCODER_CONTAINER } from './lib/video-encoder.js'
+import { recoverVideoNormalizations } from './lib/video-normalize-queue.js'
 import { startRetentionCron, stopRetentionCron } from './lib/retention.js'
 import { startStreamSupervisor, stopStreamSupervisor } from './lib/stream-supervisor.js'
 import { startHistoryCron, stopHistoryCron } from './lib/track-history.js'
+
+const MAX_VIDEO_UPLOAD_BYTES = config.video.maxUploadMb * 1024 * 1024
 
 const app = Fastify({
   logger,
   trustProxy: true,
   disableRequestLogging: false,
   ignoreTrailingSlash: true,   // auth-source pueda llegar con/sin trailing slash
-  bodyLimit: 50 * 1024 * 1024, // 50 MB
+  bodyLimit: MAX_VIDEO_UPLOAD_BYTES,
+})
+
+// Errores de multipart (archivo supera el límite): responder 413 con mensaje claro.
+app.setErrorHandler((err, _req, reply) => {
+  if (err.code === 'FST_REQ_FILE_TOO_LARGE' || err.code === 'FST_FILES_LIMIT') {
+    return reply.code(413).send({
+      statusCode: 413,
+      code: 'file_too_large',
+      error: 'Payload Too Large',
+      message: `El archivo supera el máximo permitido (${config.video.maxUploadMb} MB)`,
+    })
+  }
+  if (err.statusCode) {
+    return reply.code(err.statusCode).send({
+      statusCode: err.statusCode,
+      error: err.name || 'Error',
+      message: err.message,
+    })
+  }
+  logger.error({ err }, 'Unhandled request error')
+  return reply.code(500).send({ statusCode: 500, error: 'Internal Server Error', message: err.message })
 })
 
 // CORS: en producción solo orígenes explícitos; en dev se permite todo si no se configura.
@@ -69,9 +93,9 @@ app.addContentTypeParser(/^application\/x-www-form-urlencoded/, { parseAs: 'stri
   done(null, body)
 })
 
-// Multipart (para upload de MP3s)
+// Multipart (upload de MP3s y videos de TV)
 await app.register(multipart, {
-  limits: { fileSize: 50 * 1024 * 1024 },  // 50 MB
+  limits: { fileSize: MAX_VIDEO_UPLOAD_BYTES },
   attachFieldsToBuffer: false,
 })
 
@@ -405,6 +429,8 @@ try {
       width INT,
       height INT,
       codec VARCHAR(31),
+      status VARCHAR(20) NOT NULL DEFAULT 'ready',
+      processingError TEXT,
       folderId VARCHAR(191),
       createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
       INDEX idx_vt_client (clientId),
@@ -417,6 +443,27 @@ try {
   logger.info('Tabla video_tracks asegurada')
 } catch (err) {
   logger.error({ err: err.message }, 'Error creando tabla video_tracks')
+}
+
+// Migración idempotente: estado de procesamiento de video_tracks.
+// Soporta subidas grandes con normalización en background (pending → processing → ready/error).
+try {
+  const [cols] = await pool.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'video_tracks'
+       AND COLUMN_NAME IN ('status', 'processingError')`
+  )
+  const existing = new Set((cols || []).map((c) => c.COLUMN_NAME))
+  if (!existing.has('status')) {
+    await pool.query(`ALTER TABLE video_tracks ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ready' AFTER codec`)
+    logger.info('Columna video_tracks.status agregada')
+  }
+  if (!existing.has('processingError')) {
+    await pool.query(`ALTER TABLE video_tracks ADD COLUMN processingError TEXT NULL AFTER status`)
+    logger.info('Columna video_tracks.processingError agregada')
+  }
+} catch (err) {
+  logger.error({ err: err.message }, 'Error migrando columnas de estado en video_tracks')
 }
 
 try {
@@ -613,6 +660,9 @@ await app.register(migrationRoutes)
   startRetentionCron()
   startStreamSupervisor()
   startHistoryCron()
+
+  // Reencolar normalizaciones de video interrumpidas por un reinicio
+  await recoverVideoNormalizations()
 
 // Graceful shutdown
 const shutdown = async (signal) => {

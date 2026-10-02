@@ -44,7 +44,7 @@ function isSafeRelativePath(name) {
 export default async function migrationRoutes(app) {
   app.post('/api/migrate/:clientId/import', async (request, reply) => {
     const { clientId } = request.params
-    const data = await request.file()
+    const data = await request.file({ limits: { fileSize: 50 * 1024 * 1024 }, throwFileSizeLimit: false })
     if (!data) {
       return reply.code(400).send({ error: 'no_file' })
     }
@@ -58,6 +58,9 @@ export default async function migrationRoutes(app) {
     }
 
     const buffer = await data.toBuffer()
+    if (data.file.truncated) {
+      return reply.code(413).send({ error: 'file_too_large', message: 'Máximo 50 MB' })
+    }
 
     try {
       if (kind === 'radio-mp3') {

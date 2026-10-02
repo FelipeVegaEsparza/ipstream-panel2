@@ -81,4 +81,12 @@ export const config = {
   library: {
     path: required('RADIO_LIBRARY_PATH', '/var/lib/radio'),
   },
+
+  // Video (Televisión)
+  video: {
+    // Tamaño máximo de una subida de video de TV, en MB.
+    maxUploadMb: intEnv('MAX_VIDEO_UPLOAD_MB', 2048),
+    // Timeout de ffmpeg para normalizar video, en ms (0 = sin límite).
+    ffmpegTimeoutMs: intEnv('FFMPEG_TIMEOUT_MS', 0),
+  },
 }

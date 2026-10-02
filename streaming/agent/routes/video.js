@@ -10,11 +10,18 @@
 
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
+import { config } from '../lib/config.js'
 import crypto from 'crypto'
 import fs from 'fs'
-import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, extractThumbnail, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus, resolvePlaylistEntries, normalizeVideo } from '../lib/video-encoder.js'
+import path from 'path'
+import { pipeline } from 'stream/promises'
+import { enqueueVideoNormalization } from '../lib/video-normalize-queue.js'
+import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus, resolvePlaylistEntries } from '../lib/video-encoder.js'
 import { startTracking, stopTracking, getTrackHistory, detectAndLogVideoTrack } from '../lib/track-history-video.js'
 import { countVideoViewers } from '../lib/video-viewers.js'
+
+// Directorio de video compartido con el contenedor video-encoder.
+const VIDEO_DIR = '/var/lib/video'
 
 // Estado en memoria: DJ conectados vía SRS
 const _djActive = new Map() // clientId -> { streamKey, connectedAt }
@@ -350,6 +357,18 @@ export default async function videoRoutes(fastify) {
   // Subir un video
   fastify.post('/api/video/:clientId/tracks/upload', async (req, reply) => {
     const { clientId } = req.params
+    const maxBytes = config.video.maxUploadMb * 1024 * 1024
+
+    // Rechazo temprano por Content-Length (el margen cubre el framing multipart).
+    const contentLength = Number(req.headers['content-length'] || 0)
+    if (contentLength && contentLength > maxBytes + 1024 * 1024) {
+      return reply.code(413).send({
+        code: 413,
+        error: 'file_too_large',
+        message: `El archivo supera el máximo permitido (${config.video.maxUploadMb} MB)`,
+      })
+    }
+
     const data = await req.file()
 
     if (!data) {
@@ -363,43 +382,61 @@ export default async function videoRoutes(fastify) {
     const filename = `${Date.now()}_${safeFilename}`
     const filepath = `user_${clientId}/${filename}`
 
-    // Leer archivo a buffer y copiar al contenedor video-encoder
-    const buffer = await data.toBuffer()
-    const tmpFile = `/tmp/video_upload_${clientId}_${Date.now()}`
-    fs.writeFileSync(tmpFile, buffer)
+    // Stream directo a disco sobre el volumen compartido con video-encoder:
+    // sin buffering en memoria y sin docker cp.
+    const destDir = path.join(VIDEO_DIR, `user_${clientId}`)
+    const destPath = path.join(VIDEO_DIR, filepath)
+    await fs.promises.mkdir(destDir, { recursive: true })
 
-    const { exec } = await import('child_process')
-    const { promisify } = await import('util')
-    const execAsync = promisify(exec)
-
-    await execAsync(`docker exec ipstream-video-encoder mkdir -p '/var/lib/video/user_${clientId}'`)
-    await execAsync(`docker cp '${tmpFile}' 'ipstream-video-encoder:/var/lib/video/${filepath}'`)
-    fs.unlinkSync(tmpFile)
-
-    // Normalizar al formato canónico (1080p H.264/AAC 4500k) y obtener metadatos finales
-    let duration = 0, width = null, height = null, codec = null, filesize = buffer.length
+    let filesize = 0
     try {
-      const normalized = await normalizeVideo(clientId, filepath)
-      width = normalized.width
-      height = normalized.height
-      codec = normalized.codec
-      filesize = normalized.filesize
-      duration = normalized.duration
-    } catch (e) {
-      logger.warn({ err: e.message }, 'Error normalizando video, se conserva el original')
+      await pipeline(data.file, fs.createWriteStream(destPath))
+      // @fastify/multipart trunca en el límite sin lanzar error: sin este
+      // chequeo se aceptaría un archivo incompleto.
+      if (data.file.truncated) {
+        throw Object.assign(new Error('file too large'), { code: 'FST_REQ_FILE_TOO_LARGE' })
+      }
+      filesize = (await fs.promises.stat(destPath)).size
+    } catch (err) {
+      try { await fs.promises.unlink(destPath) } catch (_) {}
+      if (err.code === 'FST_REQ_FILE_TOO_LARGE' || /file too large/i.test(err.message || '')) {
+        return reply.code(413).send({
+          code: 413,
+          error: 'file_too_large',
+          message: `El archivo supera el máximo permitido (${config.video.maxUploadMb} MB)`,
+        })
+      }
+      logger.error({ err: err.message, clientId }, 'Error guardando video subido')
+      return reply.code(500).send({ code: 500, message: 'upload_failed' })
     }
 
-    const thumbnail = await extractThumbnail(clientId, filepath)
-
+    const folderId = data.fields?.folderId?.value ?? data.fields?.folderId ?? null
     const id = uuid()
     await pool.query(
-      `INSERT INTO video_tracks (id, clientId, videoStreamId, title, filename, filepath, filesize, duration, thumbnail, width, height, codec, folderId, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [id, clientId, videoStreamId, data.filename.replace(/\.[^/.]+$/, ''), filename, filepath, filesize, duration, thumbnail, width, height, codec, data.fields?.folderId || null]
+      `INSERT INTO video_tracks (id, clientId, videoStreamId, title, filename, filepath, filesize, duration, thumbnail, width, height, codec, status, folderId, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL, NULL, 'pending', ?, NOW())`,
+      [id, clientId, videoStreamId, data.filename.replace(/\.[^/.]+$/, ''), filename, filepath, filesize, folderId]
     )
+
+    // Normalización + thumbnail en background (concurrencia 1 por nodo).
+    enqueueVideoNormalization({ trackId: id, clientId, filepath })
 
     const [track] = await pool.query(`SELECT * FROM video_tracks WHERE id = ?`, [id])
     return { track: track[0] }
+  })
+
+  // Estado de procesamiento de un track (para la cola de subida de TV)
+  fastify.get('/api/video/:clientId/tracks/:trackId/status', async (req, reply) => {
+    const { clientId, trackId } = req.params
+    const [rows] = await pool.query(
+      `SELECT id, status, processingError FROM video_tracks WHERE id = ? AND clientId = ?`,
+      [trackId, clientId]
+    )
+    if (!rows || rows.length === 0) {
+      reply.code(404).send({ code: 404, message: 'Track not found' })
+      return
+    }
+    return rows[0]
   })
 
   // Eliminar track

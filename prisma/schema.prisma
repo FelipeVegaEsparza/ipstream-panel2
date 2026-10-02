@@ -1053,6 +1053,8 @@ model VideoTrack {
   width         Int?
   height        Int?
   codec         String?  @db.VarChar(31)
+  status        String   @default("ready") @db.VarChar(20)
+  processingError String? @db.Text
   folderId      String?
   createdAt     DateTime @default(now())
 

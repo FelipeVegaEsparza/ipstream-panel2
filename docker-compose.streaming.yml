@@ -161,11 +161,17 @@ services:
       LIQUIDSOAP_TELNET_BASE_PORT: 12340
       LIQUIDSOAP_HOST: ipstream-liquidsoap
       RADIO_LIBRARY_PATH: /var/lib/radio
+      # Límite de subida de video de TV (MB) y timeout de ffmpeg (ms, 0 = sin límite)
+      MAX_VIDEO_UPLOAD_MB: ${MAX_VIDEO_UPLOAD_MB:-2048}
+      FFMPEG_TIMEOUT_MS: ${FFMPEG_TIMEOUT_MS:-0}
     ports:
       # El panel central debe poder alcanzar este puerto (acotar por firewall a la IP del panel)
       - "4000:4000"
     volumes:
       - ./data/radio:/var/lib/radio
+      # Volumen de video compartido con video-encoder: el agente escribe las
+      # subidas directo (streaming a disco) sin docker cp.
+      - ./data/video:/var/lib/video
       - ./streaming/liquidsoap/scripts:/etc/liquidsoap/scripts
       - /var/run/docker.sock:/var/run/docker.sock
       - /proc:/host/proc:ro

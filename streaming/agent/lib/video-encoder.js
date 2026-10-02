@@ -15,6 +15,7 @@ import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
 import { pool } from './db.js'
+import { config } from './config.js'
 
 export const ENCODER_CONTAINER = 'ipstream-video-encoder'
 const VIDEO_DIR = '/var/lib/video'
@@ -35,9 +36,12 @@ const AUDIO_CHANNELS = 2
 // Los stream keys se mapean: clientId -> { streamKey, ffmpegProcess, startedAt }
 const _activeEncoders = new Map()
 
+// Timeout de ffmpeg configurable (0 = sin límite). Comandos rápidos usan 30s.
+const FFMPEG_TIMEOUT = config.video.ffmpegTimeoutMs
+
 export function execCmd(cmd, opts = {}) {
   return new Promise((resolve, reject) => {
-    exec(cmd, { ...opts, timeout: 30000 }, (err, stdout, stderr) => {
+    exec(cmd, { timeout: 30000, ...opts }, (err, stdout, stderr) => {
       if (err) reject(new Error(stderr || err.message))
       else resolve(stdout.trim())
     })
@@ -68,7 +72,7 @@ export async function resolvePlaylistEntries(clientId) {
     const [entries] = await pool.query(
       `SELECT vt.filepath, vt.codec, vt.width, vt.height FROM video_playlist_entries vpe
        JOIN video_tracks vt ON vt.id = vpe.trackId
-       WHERE vpe.clientId = ? AND vpe.playlistId = ?
+       WHERE vpe.clientId = ? AND vpe.playlistId = ? AND vt.status = 'ready'
        ORDER BY vpe.position ASC`,
       [clientId, activePlaylistId]
     )
@@ -78,7 +82,7 @@ export async function resolvePlaylistEntries(clientId) {
   const [entries] = await pool.query(
     `SELECT vt.filepath, vt.codec, vt.width, vt.height FROM video_playlist_entries vpe
      JOIN video_tracks vt ON vt.id = vpe.trackId
-     WHERE vpe.clientId = ? ORDER BY vpe.position ASC`,
+     WHERE vpe.clientId = ? AND vt.status = 'ready' ORDER BY vpe.position ASC`,
     [clientId]
   )
   return { activePlaylistId: null, entries: entries || [] }
@@ -377,7 +381,7 @@ export async function extractThumbnail(clientId, filepath) {
   try {
     await execCmd(`docker exec ${ENCODER_CONTAINER} mkdir -p '${thumbnailDir}'`)
 
-    await execCmd(`docker exec ${ENCODER_CONTAINER} ffmpeg -y -i '${inputPath}' -ss 00:00:05 -vframes 1 -q:v 2 '${thumbnailPath}'`)
+    await execCmd(`docker exec ${ENCODER_CONTAINER} ffmpeg -y -i '${inputPath}' -ss 00:00:05 -vframes 1 -q:v 2 '${thumbnailPath}'`, { timeout: FFMPEG_TIMEOUT })
     // Retornar ruta relativa
     return `/var/lib/video/thumbnails/${clientId}/${thumbnailFilename}`
   } catch (err) {
@@ -395,7 +399,8 @@ export async function extractThumbnail(clientId, filepath) {
  */
 async function probeVideo(filepath) {
   const stdout = await execCmd(
-    `docker exec ${ENCODER_CONTAINER} ffprobe -v quiet -print_format json -show_format -show_streams '${VIDEO_DIR}/${filepath}'`
+    `docker exec ${ENCODER_CONTAINER} ffprobe -v quiet -print_format json -show_format -show_streams '${VIDEO_DIR}/${filepath}'`,
+    { timeout: FFMPEG_TIMEOUT }
   )
   const info = JSON.parse(stdout)
   const vs = info.streams?.find(s => s.codec_type === 'video')
@@ -451,7 +456,7 @@ export async function normalizeVideo(clientId, filepath) {
         `-c:a aac -b:a ${AUDIO_BITRATE} -ar ${AUDIO_SAMPLE_RATE} -ac ${AUDIO_CHANNELS} '${tmpPath}'`
     }
 
-    await execCmd(`docker exec ${ENCODER_CONTAINER} sh -c "${cmd}"`)
+    await execCmd(`docker exec ${ENCODER_CONTAINER} sh -c "${cmd}"`, { timeout: FFMPEG_TIMEOUT })
 
     // Reemplazar el archivo original por el normalizado
     await execCmd(`docker exec ${ENCODER_CONTAINER} mv '${tmpPath}' '${containerPath}'`)

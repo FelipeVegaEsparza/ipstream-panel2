@@ -3,6 +3,12 @@ import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth
 import { resolveVideoServerTarget, StreamingServerTarget } from '@/lib/streaming-servers'
 import { getVideoPublicHost, getVideoPublicBase } from '@/lib/streaming-helpers'
 
+// Tamaño máximo de subida de video de TV (MB). Debe coincidir con el agente.
+const MAX_VIDEO_UPLOAD_MB = parseInt(process.env.MAX_VIDEO_UPLOAD_MB || '2048', 10)
+const MAX_VIDEO_UPLOAD_BYTES = MAX_VIDEO_UPLOAD_MB * 1024 * 1024
+// Margen para el framing multipart (boundaries + headers de campos).
+const MULTIPART_OVERHEAD_BYTES = 1024 * 1024
+
 const PATH_MAP: Record<string, (clientId: string) => string> = {
   'status': (id) => `/api/video/${id}/status`,
   'connection': (id) => `/api/video/dj-status/${id}`,
@@ -118,8 +124,18 @@ async function handleRequest(req: NextRequest, { params }: { params: { params: s
     let headersOut: Record<string, string> = {}
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       if (contentType.includes('multipart/form-data')) {
-        body = await req.blob()
+        // Rechazo temprano por tamaño antes de transmitir al agente.
+        const contentLength = Number(req.headers.get('content-length') || 0)
+        if (contentLength && contentLength > MAX_VIDEO_UPLOAD_BYTES + MULTIPART_OVERHEAD_BYTES) {
+          return NextResponse.json({
+            error: 'file_too_large',
+            message: `El archivo supera el máximo permitido (${MAX_VIDEO_UPLOAD_MB} MB)`,
+          }, { status: 413 })
+        }
+        // Streaming: pasar el cuerpo tal cual, sin cargarlo en memoria.
+        if (contentLength) headersOut['Content-Length'] = String(contentLength)
         headersOut['Content-Type'] = contentType
+        body = req.body
       } else {
         const text = await req.text()
         body = text || undefined
