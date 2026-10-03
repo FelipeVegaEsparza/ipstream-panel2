@@ -300,7 +300,7 @@ async function applyVideoScheduleForClient(clientId) {
 
   // Regenerar el playlist.txt con las entries de la playlist activa y reiniciar el encoder
   const [entries] = await pool.query(
-    `SELECT vt.filepath FROM video_playlist_entries vpe
+    `SELECT vt.filepath, vt.codec, vt.width, vt.height FROM video_playlist_entries vpe
      JOIN video_tracks vt ON vt.id = vpe.trackId
      WHERE vpe.clientId = ? AND vpe.playlistId = ?
      ORDER BY vpe.position ASC`,
@@ -312,7 +312,7 @@ async function applyVideoScheduleForClient(clientId) {
     return
   }
 
-  await generatePlaylist(clientId, entries.map(e => ({ filepath: e.filepath })))
+  await generatePlaylist(clientId, entries)
 
   await stopEncoder(clientId)
   await startEncoder(clientId, getStreamKey(clientId))

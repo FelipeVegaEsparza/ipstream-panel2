@@ -256,7 +256,9 @@ export default async function videoRoutes(fastify) {
       return
     }
 
-    await generatePlaylist(clientId, entries.map(e => ({ filepath: e.filepath })))
+    // Pasar las entries completas (filepath + codec/width/height) para que
+    // ensureCanonicalEntries evite re-normalizar videos ya canónicos.
+    await generatePlaylist(clientId, entries)
 
     const streamKey = getStreamKey(clientId)
     const result = await startEncoder(clientId, streamKey)

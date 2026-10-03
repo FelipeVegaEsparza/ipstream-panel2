@@ -519,7 +519,7 @@ export async function autoStartVideoStreams() {
       continue
     }
 
-    await generatePlaylist(vs.clientId, entries.map(e => ({ filepath: e.filepath })))
+    await generatePlaylist(vs.clientId, entries)
 
     const existing = _activeEncoders.get(vs.clientId)
     if (existing && existing.status === 'running') {
