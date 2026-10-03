@@ -115,8 +115,9 @@ services:
       # y sean fáciles de respaldar/migrar. El agent corre como uid 1001,
       # así que el deploy.sh hace chown antes de levantar containers.
       - ./data/radio:/var/lib/radio
-      # Volumen de video compartido con video-encoder (streaming directo a disco)
-      - ./data/video:/var/lib/video
+      # Mismo volumen nombrado que video-encoder (streaming directo a disco).
+      # En prod el encoder usa `video_library`, NO el bind ./data/video del base.
+      - video_library:/var/lib/video
       # Bind-mount para que liquidsoap pueda escribir sus logs con su uid (100:101).
       # Antes era named volume "liquidsoap_logs" propiedad de otro uid → permission denied.
       - ./data/logs/liquidsoap:/var/log/liquidsoap
