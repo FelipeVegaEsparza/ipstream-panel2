@@ -33,14 +33,14 @@ COPY lib ./lib
 COPY routes ./routes
 
 # Creamos directorios que vamos a montar
-RUN mkdir -p /var/lib/radio /var/log/liquidsoap /etc/liquidsoap/scripts
+RUN mkdir -p /var/lib/radio /var/lib/video /var/log/liquidsoap /etc/liquidsoap/scripts
 
 # Usuario no-root. En producción, el socket de Docker del host debe tener
 # el grupo `docker` con gid 999 o montarse con permisos para este usuario.
 RUN groupadd --system --gid 1001 nodejs \
     && groupadd --system --gid 999 docker 2>/dev/null || true \
     && useradd --system --uid 1001 --gid nodejs --groups docker streamagent \
-    && chown -R streamagent:nodejs /app /var/lib/radio /var/log/liquidsoap /etc/liquidsoap/scripts
+    && chown -R streamagent:nodejs /app /var/lib/radio /var/lib/video /var/log/liquidsoap /etc/liquidsoap/scripts
 
 # Entrypoint: ajusta permisos, acceso al socket Docker y corre como no-root.
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

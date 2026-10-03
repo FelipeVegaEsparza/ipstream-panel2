@@ -25,6 +25,13 @@ fi
 # aquí nos aseguramos de que el usuario del contenedor pueda escribir.
 chown -R "$USER_NAME:$USER_GROUP" /app /var/lib/radio /var/log/liquidsoap /etc/liquidsoap/scripts 2>/dev/null || true
 
+# Volumen de video compartido con video-encoder: el agente escribe las subidas
+# directo a disco, así que necesita crear `user_<clientId>/` y archivos dentro.
+# No hacemos chown -R (la videoteca puede ser enorme): alcanza con el dir raíz
+# y los subdirs user_*, ya que los archivos que crea ffmpeg (root) son legibles.
+chown "$USER_NAME:$USER_GROUP" /var/lib/video 2>/dev/null || true
+find /var/lib/video -maxdepth 1 -mindepth 1 -type d -name 'user_*' -exec chown "$USER_NAME:$USER_GROUP" {} + 2>/dev/null || true
+
 # Permitir acceso al socket Docker: detectar el GID del socket montado
 # y crear un grupo con ese GID para el usuario del agente.
 if [ -S /var/run/docker.sock ]; then

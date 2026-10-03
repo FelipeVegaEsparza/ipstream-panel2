@@ -143,7 +143,7 @@ docker exec ipstream-db mysql -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_D
 # escribibles para otros (o+rwX). Esto es aceptable porque los containers
 # son parte de un sistema privado detrás de Caddy.
 echo "🔐  6b/9 — Ajustando permisos de volúmenes bind-mount..."
-mkdir -p ./data/radio ./data/logs/liquidsoap ./data/scripts
+mkdir -p ./data/radio ./data/video ./data/logs/liquidsoap ./data/scripts
 # Seed inicial de ./data/scripts con los scripts del repo, si está vacío.
 # En deploys posteriores, el agent ya habrá escrito los .liq sobre este dir.
 if [[ -z "$(ls -A ./data/scripts 2>/dev/null)" ]]; then
@@ -155,6 +155,14 @@ fi
 chown -R 1001:1001 ./data/radio 2>/dev/null || true
 chmod -R u+rwX,g+rwX,o+rX ./data/radio 2>/dev/null || true
 echo "  ✓ ./data/radio → 1001:1001 + world-readable"
+
+# Video (TV): el agent (uid 1001) escribe las subidas directo en ./data/video
+# (antes se copiaban con docker cp dentro del contenedor root). No hacemos
+# chown -R por el tamaño de la videoteca: raíz + subdirs user_* alcanzan.
+chown 1001:1001 ./data/video 2>/dev/null || true
+find ./data/video -maxdepth 1 -mindepth 1 -type d -name 'user_*' -exec chown 1001:1001 {} + 2>/dev/null || true
+chmod u+rwX,g+rwX,o+rX ./data/video 2>/dev/null || true
+echo "  ✓ ./data/video → 1001:1001"
 
 # Scripts runtime: agent los escribe (uid 1001), liquidsoap los lee (ro, uid 100).
 chown -R 1001:1001 ./data/scripts 2>/dev/null || true
