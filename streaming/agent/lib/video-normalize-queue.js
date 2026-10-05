@@ -12,6 +12,10 @@ import { normalizeVideo, extractThumbnail } from './video-encoder.js'
 const _queue = []
 let _running = false
 
+// Debe coincidir con el canónico de video-encoder.js.
+const VIDEO_MAX_WIDTH = 1920
+const VIDEO_MAX_HEIGHT = 1080
+
 export function enqueueVideoNormalization(job) {
   _queue.push(job)
   logger.info({ trackId: job.trackId, clientId: job.clientId }, 'Normalización de video encolada')
@@ -71,6 +75,32 @@ async function _process(job) {
     )
     logger.warn({ trackId, clientId, err: message }, 'Normalización de video falló')
   }
+}
+
+/**
+ * Excluye del aire (marca `pending`) y re-encola los tracks `ready` que no
+ * cumplen el canónico estricto por sus metadatos (resolución/códec). Se llama
+ * antes de resolver la playlist de emisión para sanear catálogo legado.
+ */
+export async function requeueNonConformantTracks(clientId) {
+  const [rows] = await pool.query(
+    `SELECT id, filepath FROM video_tracks
+     WHERE clientId = ? AND status = 'ready'
+       AND (codec IS NULL OR codec <> 'h264' OR width IS NULL OR height IS NULL
+            OR width <> ? OR height <> ?)`,
+    [clientId, VIDEO_MAX_WIDTH, VIDEO_MAX_HEIGHT]
+  )
+  for (const row of rows || []) {
+    await pool.query(
+      `UPDATE video_tracks SET status = 'pending', processingError = NULL WHERE id = ?`,
+      [row.id]
+    )
+    enqueueVideoNormalization({ trackId: row.id, clientId, filepath: row.filepath })
+  }
+  if (rows && rows.length > 0) {
+    logger.info({ clientId, count: rows.length }, 'Reencolando tracks no conformes')
+  }
+  return rows?.length || 0
 }
 
 /**

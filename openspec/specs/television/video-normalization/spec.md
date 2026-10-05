@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Normaliza los videos de Televisión a un formato canónico (1080p H.264/AAC, 4500k) al momento de subirlos y hace que el AutoDJ los reproduzca por remux (`-c:v copy`), reduciendo el costo de CPU por stream de ~3.2 cores a ≈0.
+Normaliza los videos de Televisión a un formato canónico estricto y uniforme (1920×1080 con padding, H.264 main@4.0 yuv420p 30 fps CFR, keyframe cada 2 s, AAC 128k 44.1k, 4500k) al subirlos, para que el AutoDJ los concatene por copy sin cortes y con segmentación HLS estable.
 
 ## Requirements
 

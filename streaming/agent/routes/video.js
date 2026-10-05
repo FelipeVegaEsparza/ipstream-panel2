@@ -15,7 +15,7 @@ import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import { pipeline } from 'stream/promises'
-import { enqueueVideoNormalization } from '../lib/video-normalize-queue.js'
+import { enqueueVideoNormalization, requeueNonConformantTracks } from '../lib/video-normalize-queue.js'
 import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus, resolvePlaylistEntries } from '../lib/video-encoder.js'
 import { startTracking, stopTracking, getTrackHistory, detectAndLogVideoTrack } from '../lib/track-history-video.js'
 import { countVideoViewers } from '../lib/video-viewers.js'
@@ -247,6 +247,9 @@ export default async function videoRoutes(fastify) {
     const { clientId } = req.params
 
     await ensureVideoStream(clientId)
+
+    // Excluir del aire y re-encolar tracks que no cumplen el canónico estricto.
+    await requeueNonConformantTracks(clientId)
 
     // Obtener entries de la playlist activa (o todas si no hay activa)
     const { entries } = await resolvePlaylistEntries(clientId)

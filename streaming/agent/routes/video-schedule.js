@@ -298,11 +298,20 @@ async function applyVideoScheduleForClient(clientId) {
   await pool.query('UPDATE video_playlists SET isActive = 0 WHERE clientId = ? AND isActive = 1', [clientId])
   await pool.query('UPDATE video_playlists SET isActive = 1 WHERE id = ?', [scheduledPlaylistId])
 
+  // Excluir del aire y re-encolar tracks que no cumplen el canónico estricto.
+  try {
+    const { requeueNonConformantTracks } = await import('../lib/video-normalize-queue.js')
+    await requeueNonConformantTracks(clientId)
+  } catch (err) {
+    logger.warn({ err: err.message, clientId }, 'No se pudo reencolar tracks no conformes')
+  }
+
   // Regenerar el playlist.txt con las entries de la playlist activa y reiniciar el encoder
   const [entries] = await pool.query(
-    `SELECT vt.filepath, vt.codec, vt.width, vt.height FROM video_playlist_entries vpe
+    `SELECT vt.filepath, vt.codec, vt.width, vt.height, vt.duration FROM video_playlist_entries vpe
      JOIN video_tracks vt ON vt.id = vpe.trackId
-     WHERE vpe.clientId = ? AND vpe.playlistId = ?
+     WHERE vpe.clientId = ? AND vpe.playlistId = ? AND vt.status = 'ready'
+       AND vt.codec = 'h264' AND vt.width = 1920 AND vt.height = 1080
      ORDER BY vpe.position ASC`,
     [clientId, scheduledPlaylistId]
   )

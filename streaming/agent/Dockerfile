@@ -31,6 +31,7 @@ COPY package.json ./
 COPY server.js ./
 COPY lib ./lib
 COPY routes ./routes
+COPY scripts ./scripts
 
 # Creamos directorios que vamos a montar
 RUN mkdir -p /var/lib/radio /var/lib/video /var/log/liquidsoap /etc/liquidsoap/scripts

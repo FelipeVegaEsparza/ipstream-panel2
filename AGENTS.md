@@ -20,3 +20,13 @@
 - Envs nuevas, aplican al panel y al agente: `MAX_VIDEO_UPLOAD_MB` (MB, default 2048) y `FFMPEG_TIMEOUT_MS` (ms, `0` = sin límite).
 - El agente ahora comparte el volumen `./data/video` con `video-encoder` (escribe las subidas directo a disco).
 - Tocar `streaming/agent/*` y `docker-compose.streaming.yml`: **recordar pulsar "Actualizar nodo"** en los nodos remotos tras el deploy.
+
+## Estabilidad del AutoDJ de TV (HLS)
+
+- Todos los videos se re-encodean SIEMPRE a un canónico estricto y uniforme: 1920×1080 con padding, H.264 main@4.0 yuv420p, 30 fps CFR, keyframe cada 2 s, AAC 128k 44.1k estéreo (se agrega silencio si el origen no tiene audio). No se usa remux.
+- El AutoDJ emite por `-c:v copy` con la playlist en formato `ffconcat` con `duration` por archivo y timestamps estabilizados (`+genpts+discardcorrupt`, `avoid_negative_ts`, `flvflags no_duration_filesize`). SRS segmenta a 2 s (`hls_fragment 2`, `hls_window 12`).
+- El catálogo legado se sanea: al iniciar el AutoDJ los tracks no conformes se excluyen y se re-encolan. Para re-normalizar todo el catálogo de una vez:
+  `docker exec ipstream-streaming-agent node scripts/renormalize-videos.js [clientId] [--all]`
+- Para verificar conformidad (resolución/fps/SAR/códec/audio/keyframes):
+  `docker exec ipstream-streaming-agent node scripts/check-conformity.js [clientId]`
+- Tocar `streaming/agent/*` o `streaming/srs/*`: **recordar pulsar "Actualizar nodo"** en los nodos remotos tras el deploy.
