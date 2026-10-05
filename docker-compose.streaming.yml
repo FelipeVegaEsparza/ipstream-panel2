@@ -161,9 +161,12 @@ services:
       LIQUIDSOAP_TELNET_BASE_PORT: 12340
       LIQUIDSOAP_HOST: ipstream-liquidsoap
       RADIO_LIBRARY_PATH: /var/lib/radio
-      # Límite de subida de video de TV (MB) y timeout de ffmpeg (ms, 0 = sin límite)
+      # Límite de subida de video de TV (MB), timeout de ffmpeg (ms, 0 = sin
+      # límite) y preset/hilos del re-encode de normalización.
       MAX_VIDEO_UPLOAD_MB: ${MAX_VIDEO_UPLOAD_MB:-2048}
       FFMPEG_TIMEOUT_MS: ${FFMPEG_TIMEOUT_MS:-0}
+      FFMPEG_PRESET: ${FFMPEG_PRESET:-ultrafast}
+      FFMPEG_THREADS: ${FFMPEG_THREADS:-0}
     ports:
       # El panel central debe poder alcanzar este puerto (acotar por firewall a la IP del panel)
       - "4000:4000"

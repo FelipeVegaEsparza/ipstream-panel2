@@ -88,5 +88,10 @@ export const config = {
     maxUploadMb: intEnv('MAX_VIDEO_UPLOAD_MB', 2048),
     // Timeout de ffmpeg para normalizar video, en ms (0 = sin límite).
     ffmpegTimeoutMs: intEnv('FFMPEG_TIMEOUT_MS', 0),
+    // Preset de x264 para normalizar. ultrafast/veryfast reducen mucho la CPU
+    // a costa de algo de calidad a igual bitrate.
+    preset: required('FFMPEG_PRESET', 'ultrafast'),
+    // Hilos por job de normalización (0 = auto).
+    threads: intEnv('FFMPEG_THREADS', 0),
   },
 }

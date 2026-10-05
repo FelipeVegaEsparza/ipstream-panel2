@@ -252,9 +252,12 @@ services:
       LIQUIDSOAP_HOST: ipstream-liquidsoap
       # Radio library
       RADIO_LIBRARY_PATH: /var/lib/radio
-      # Video TV: límite de subida y timeout de ffmpeg (0 = sin límite)
+      # Video TV: límite de subida, timeout de ffmpeg (0 = sin límite) y
+      # preset/hilos del re-encode (ultrafast/veryfast bajan mucho la CPU).
       MAX_VIDEO_UPLOAD_MB: ${MAX_VIDEO_UPLOAD_MB:-2048}
       FFMPEG_TIMEOUT_MS: ${FFMPEG_TIMEOUT_MS:-0}
+      FFMPEG_PRESET: ${FFMPEG_PRESET:-ultrafast}
+      FFMPEG_THREADS: ${FFMPEG_THREADS:-0}
     ports:
       - "127.0.0.1:4000:4000"   # accesible solo desde el host (para debug)
     volumes:

@@ -5,9 +5,12 @@
 // con concurrencia 1 por nodo (ffmpeg re-encode es CPU-intensivo).
 // Estados del track: pending -> processing -> ready | error.
 
+import fs from 'fs'
+import path from 'path'
 import { pool } from './db.js'
 import { logger } from './logger.js'
 import { normalizeVideo, extractThumbnail } from './video-encoder.js'
+import { checkConformity } from './video-conformity.js'
 
 const _queue = []
 let _running = false
@@ -48,6 +51,35 @@ async function _process(job) {
   )
 
   try {
+    // Fast-path: si el archivo ya cumple el canónico estricto (resolución, fps,
+    // SAR, códec, audio y keyframes regulares), NO se re-encodea. Así las
+    // re-subidas y los videos ya compatibles quedan listos al instante.
+    const conf = await checkConformity(filepath)
+    if (conf.ok) {
+      const thumbnail = await extractThumbnail(clientId, filepath)
+      const m = conf.meta
+      let filesize = 0
+      try { filesize = fs.statSync(path.join('/var/lib/video', filepath)).size } catch (_) {}
+      await pool.query(
+        `UPDATE video_tracks
+         SET status = 'ready', processingError = NULL, filesize = ?, duration = ?,
+             width = ?, height = ?, codec = ?, thumbnail = ?
+         WHERE id = ?`,
+        [
+          filesize,
+          m.duration ?? 0,
+          m.width ?? null,
+          m.height ?? null,
+          m.codec ?? null,
+          thumbnail ?? null,
+          trackId,
+        ]
+      )
+      logger.info({ trackId, clientId }, 'Video ya canónico: sin re-encode')
+      return
+    }
+
+    logger.info({ trackId, clientId, reason: conf.reason }, 'Normalizando video (re-encode)')
     const normalized = await normalizeVideo(clientId, filepath)
     const thumbnail = await extractThumbnail(clientId, filepath)
 

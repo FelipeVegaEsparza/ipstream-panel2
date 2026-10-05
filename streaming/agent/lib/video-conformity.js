@@ -37,16 +37,18 @@ export async function maxKeyframeInterval(filepath) {
  */
 export async function checkConformity(filepath) {
   const meta = await probeVideo(filepath)
-  const kfMax = await maxKeyframeInterval(filepath)
 
+  // Si los metadatos ya fallan, no hace falta escanear keyframes (evita decodificar).
   if (!isCanonical(meta)) {
     return {
       ok: false,
       meta,
-      kfMax,
+      kfMax: null,
       reason: `metadatos: ${meta.width}x${meta.height} ${meta.codec}/${meta.pixFmt} ${meta.fps} sar=${meta.sar} audio=${meta.audioCodec}/${meta.audioSampleRate}/${meta.audioChannels}`,
     }
   }
+
+  const kfMax = await maxKeyframeInterval(filepath)
   if (kfMax > MAX_KEYFRAME_INTERVAL) {
     return { ok: false, meta, kfMax, reason: `keyframe cada ${kfMax.toFixed(2)}s > ${MAX_KEYFRAME_INTERVAL}s` }
   }

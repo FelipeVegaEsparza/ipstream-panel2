@@ -449,7 +449,8 @@ export async function normalizeVideo(clientId, filepath) {
     // estables. El remux no puede garantizar keyframes ni uniformidad.
     const vf = `scale=${VIDEO_MAX_WIDTH}:${VIDEO_MAX_HEIGHT}:force_original_aspect_ratio=decrease,` +
       `pad=${VIDEO_MAX_WIDTH}:${VIDEO_MAX_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black,fps=${VIDEO_FPS}`
-    const vcodec = `-c:v libx264 -preset fast -b:v ${VIDEO_BITRATE} -maxrate 5000k -bufsize 9000k ` +
+    const vcodec = `-c:v libx264 -preset ${config.video.preset} -threads ${config.video.threads} ` +
+      `-b:v ${VIDEO_BITRATE} -maxrate 5000k -bufsize 9000k ` +
       `-pix_fmt yuv420p -profile:v main -level:v 4.0 -g ${VIDEO_GOP} -keyint_min ${VIDEO_GOP} -sc_threshold 0 -fps_mode cfr`
     const acodec = `-c:a aac -b:a ${AUDIO_BITRATE} -ar ${AUDIO_SAMPLE_RATE} -ac ${AUDIO_CHANNELS}`
 

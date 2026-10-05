@@ -107,9 +107,12 @@ services:
       LIQUIDSOAP_TELNET_BASE_PORT: 12340
       LIQUIDSOAP_HOST: ipstream-liquidsoap
       RADIO_LIBRARY_PATH: /var/lib/radio
-      # Video TV: límite de subida y timeout de ffmpeg (0 = sin límite)
+      # Video TV: límite de subida, timeout de ffmpeg (0 = sin límite) y
+      # preset/hilos del re-encode (ultrafast/veryfast bajan mucho la CPU).
       MAX_VIDEO_UPLOAD_MB: ${MAX_VIDEO_UPLOAD_MB:-2048}
       FFMPEG_TIMEOUT_MS: ${FFMPEG_TIMEOUT_MS:-0}
+      FFMPEG_PRESET: ${FFMPEG_PRESET:-ultrafast}
+      FFMPEG_THREADS: ${FFMPEG_THREADS:-0}
     volumes:
       # Bind-mount al host para que los MP3 y covers persistan entre deploys
       # y sean fáciles de respaldar/migrar. El agent corre como uid 1001,
