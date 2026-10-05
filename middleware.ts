@@ -73,7 +73,8 @@ export default withAuth(
             pathname.startsWith('/api/cron') ||
             pathname.startsWith('/api/webhook') ||
             pathname.startsWith('/api/health') ||
-            pathname.startsWith('/tv')) {
+            pathname.startsWith('/tv') ||
+            pathname.startsWith('/vod')) {
           return true
         }
 
