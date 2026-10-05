@@ -9,8 +9,10 @@ import fs from 'fs'
 import path from 'path'
 import { pool } from './db.js'
 import { logger } from './logger.js'
-import { normalizeVideo, extractThumbnail } from './video-encoder.js'
+import { normalizeVideo, extractThumbnail, probeVideo } from './video-encoder.js'
 import { checkConformity } from './video-conformity.js'
+import { packageVideo } from './video-packager.js'
+import { config } from './config.js'
 
 const _queue = []
 let _running = false
@@ -51,6 +53,24 @@ async function _process(job) {
   )
 
   try {
+    // Modo VOD2Live: empaquetar a HLS (native res) en vez de uniformar a 1080p.
+    if (config.video.playout === 'stitch') {
+      const { hlsPath } = await packageVideo(clientId, trackId, filepath)
+      const thumbnail = await extractThumbnail(clientId, filepath)
+      const m = await probeVideo(filepath)
+      let filesize = 0
+      try { filesize = fs.statSync(path.join('/var/lib/video', filepath)).size } catch (_) {}
+      await pool.query(
+        `UPDATE video_tracks
+         SET status = 'ready', processingError = NULL, hlsPath = ?, filesize = ?, duration = ?,
+             width = ?, height = ?, codec = ?, thumbnail = ?
+         WHERE id = ?`,
+        [hlsPath, filesize, m.duration ?? 0, m.width ?? null, m.height ?? null, m.codec ?? null, thumbnail ?? null, trackId]
+      )
+      logger.info({ trackId, clientId, hlsPath }, 'Video empaquetado (VOD2Live)')
+      return
+    }
+
     // Fast-path: si el archivo ya cumple el canónico estricto (resolución, fps,
     // SAR, códec, audio y keyframes regulares), NO se re-encodea. Así las
     // re-subidas y los videos ya compatibles quedan listos al instante.

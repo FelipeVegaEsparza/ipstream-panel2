@@ -248,6 +248,13 @@ export default async function videoRoutes(fastify) {
 
     await ensureVideoStream(clientId)
 
+    // Modo VOD2Live: no hay proceso ffmpeg; el stitcher sirve el canal.
+    if (config.video.playout === 'stitch') {
+      await pool.query(`UPDATE video_streams SET status = 'autodj' WHERE clientId = ?`, [clientId])
+      logger.info({ clientId }, 'AutoDJ iniciado (VOD2Live)')
+      return { status: 'started', startedAt: new Date().toISOString() }
+    }
+
     // Excluir del aire y re-encolar tracks que no cumplen el canónico estricto.
     await requeueNonConformantTracks(clientId)
 
@@ -280,6 +287,10 @@ export default async function videoRoutes(fastify) {
   // Detener AutoDJ
   fastify.post('/api/video/:clientId/stop', async (req, reply) => {
     const { clientId } = req.params
+    if (config.video.playout === 'stitch') {
+      await pool.query(`UPDATE video_streams SET status = 'off' WHERE clientId = ?`, [clientId])
+      return { status: 'stopped' }
+    }
     const result = await stopEncoder(clientId)
     stopTracking(clientId)
     await pool.query(`UPDATE video_streams SET status = 'off' WHERE clientId = ?`, [clientId])

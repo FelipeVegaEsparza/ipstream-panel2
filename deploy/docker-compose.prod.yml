@@ -113,6 +113,7 @@ services:
       FFMPEG_TIMEOUT_MS: ${FFMPEG_TIMEOUT_MS:-0}
       FFMPEG_PRESET: ${FFMPEG_PRESET:-ultrafast}
       FFMPEG_THREADS: ${FFMPEG_THREADS:-0}
+      TV_PLAYOUT: ${TV_PLAYOUT:-stitch}
     volumes:
       # Bind-mount al host para que los MP3 y covers persistan entre deploys
       # y sean fáciles de respaldar/migrar. El agent corre como uid 1001,

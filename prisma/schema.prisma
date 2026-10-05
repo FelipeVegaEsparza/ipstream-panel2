@@ -1047,6 +1047,7 @@ model VideoTrack {
   title         String   @db.VarChar(191)
   filename      String   @db.VarChar(255)
   filepath      String   @db.VarChar(512)
+  hlsPath       String?  @db.VarChar(512)
   filesize      BigInt   @default(0)
   duration      Float    @default(0)
   thumbnail     String?  @db.VarChar(255)

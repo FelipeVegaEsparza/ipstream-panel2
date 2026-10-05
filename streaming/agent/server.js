@@ -22,6 +22,7 @@ import folderRoutes from './routes/folders.js'
 import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import monitorRoutes from './routes/monitor.js'
 import videoRoutes from './routes/video.js'
+import playoutRoutes from './routes/playout.js'
 import videoScheduleRoutes, { startVideoScheduleCron } from './routes/video-schedule.js'
 import migrationRoutes from './routes/migration.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
@@ -423,6 +424,7 @@ try {
       title VARCHAR(191) NOT NULL,
       filename VARCHAR(255) NOT NULL,
       filepath VARCHAR(512) NOT NULL,
+      hlsPath VARCHAR(512),
       filesize BIGINT NOT NULL DEFAULT 0,
       duration DOUBLE NOT NULL DEFAULT 0,
       thumbnail VARCHAR(255),
@@ -451,7 +453,7 @@ try {
   const [cols] = await pool.query(
     `SELECT COLUMN_NAME FROM information_schema.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'video_tracks'
-       AND COLUMN_NAME IN ('status', 'processingError')`
+       AND COLUMN_NAME IN ('status', 'processingError', 'hlsPath')`
   )
   const existing = new Set((cols || []).map((c) => c.COLUMN_NAME))
   if (!existing.has('status')) {
@@ -461,6 +463,10 @@ try {
   if (!existing.has('processingError')) {
     await pool.query(`ALTER TABLE video_tracks ADD COLUMN processingError TEXT NULL AFTER status`)
     logger.info('Columna video_tracks.processingError agregada')
+  }
+  if (!existing.has('hlsPath')) {
+    await pool.query(`ALTER TABLE video_tracks ADD COLUMN hlsPath VARCHAR(512) NULL AFTER filepath`)
+    logger.info('Columna video_tracks.hlsPath agregada')
   }
 } catch (err) {
   logger.error({ err: err.message }, 'Error migrando columnas de estado en video_tracks')
@@ -632,6 +638,7 @@ try {
 // Rutas
 await app.register(streamRoutes)
 await app.register(videoRoutes)
+await app.register(playoutRoutes)
 await app.register(videoScheduleRoutes)
 await app.register(websocketRoutes)
 await app.register(libraryRoutes)

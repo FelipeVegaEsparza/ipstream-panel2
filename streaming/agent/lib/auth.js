@@ -13,7 +13,8 @@ export function buildAuthHook(expectedToken, harborSecret) {
     if (url === '/health' || url === '/healthz' ||
         url === '/api/streams/auth-source' ||
         url === '/api/video/hooks/on-publish' ||
-        url === '/api/video/hooks/on-unpublish') {
+        url === '/api/video/hooks/on-unpublish' ||
+        url.startsWith('/api/video/playout/')) {
       return
     }
 

@@ -5,6 +5,7 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { generatePlaylist, startEncoder, stopEncoder } from '../lib/video-encoder.js'
+import { config } from '../lib/config.js'
 import { isTimeInSlot, getNextSlots } from '../lib/time.js'
 import crypto from 'crypto'
 
@@ -297,6 +298,13 @@ async function applyVideoScheduleForClient(clientId) {
   // Desactivar la playlist anterior y activar la nueva
   await pool.query('UPDATE video_playlists SET isActive = 0 WHERE clientId = ? AND isActive = 1', [clientId])
   await pool.query('UPDATE video_playlists SET isActive = 1 WHERE id = ?', [scheduledPlaylistId])
+
+  // Modo VOD2Live: el stitcher lee la playlist activa en vivo; no hay ffmpeg.
+  if (config.video.playout === 'stitch') {
+    await pool.query(`UPDATE video_streams SET status = 'autodj' WHERE clientId = ?`, [clientId])
+    logger.info({ clientId, playlistId: scheduledPlaylistId }, 'Playlist TV activa cambiada (VOD2Live)')
+    return
+  }
 
   // Excluir del aire y re-encolar tracks que no cumplen el canónico estricto.
   try {

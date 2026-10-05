@@ -93,5 +93,9 @@ export const config = {
     preset: required('FFMPEG_PRESET', 'ultrafast'),
     // Hilos por job de normalización (0 = auto).
     threads: intEnv('FFMPEG_THREADS', 0),
+    // Modo de playout de TV:
+    //   'stitch' = VOD2Live (empaqueta HLS por asset + manifiesto vivo; sin concat)
+    //   'concat' = legacy (concat -c copy a RTMP/SRS, requiere formato uniforme)
+    playout: required('TV_PLAYOUT', 'stitch'),
   },
 }

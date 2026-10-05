@@ -258,6 +258,7 @@ services:
       FFMPEG_TIMEOUT_MS: ${FFMPEG_TIMEOUT_MS:-0}
       FFMPEG_PRESET: ${FFMPEG_PRESET:-ultrafast}
       FFMPEG_THREADS: ${FFMPEG_THREADS:-0}
+      TV_PLAYOUT: ${TV_PLAYOUT:-stitch}
     ports:
       - "127.0.0.1:4000:4000"   # accesible solo desde el host (para debug)
     volumes:

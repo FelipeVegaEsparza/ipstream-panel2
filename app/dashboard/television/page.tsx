@@ -29,12 +29,13 @@ export default function TelevisionPage() {
   // Base pública del servidor de video asignado al cliente (viene en el status).
   // Si no llega (fallback), se usa NEXT_PUBLIC_STREAM_PUBLIC_URL o la relativa del panel.
   const publicBase = videoStatus?.publicBase || process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
-  // El DJ en vivo se sirve desde el app 'dj'; el AutoDJ desde 'live'.
-  const hlsApp = videoStatus?.status === 'live' ? 'dj' : 'live'
+  // El DJ en vivo se sirve desde SRS (app 'dj'); el AutoDJ desde el stitcher
+  // VOD2Live (app 'vod', servido por el panel).
+  const hlsApp = videoStatus?.status === 'live' ? 'dj' : 'vod'
   const hlsUrl = videoStatus?.streamKey
-    ? publicBase
-      ? `${publicBase.replace(/\/$/, '')}/${hlsApp}/${videoStatus.streamKey}.m3u8`
-      : `/${hlsApp}/${videoStatus.streamKey}.m3u8`
+    ? hlsApp === 'dj'
+      ? (publicBase ? `${publicBase.replace(/\/$/, '')}/dj/${videoStatus.streamKey}.m3u8` : `/dj/${videoStatus.streamKey}.m3u8`)
+      : `/vod/${videoStatus.streamKey}/live.m3u8`
     : null
   // Link completo para mostrar/copiar: si la URL es relativa, la volvemos
   // absoluta con el dominio actual del navegador.
@@ -76,19 +77,22 @@ export default function TelevisionPage() {
 
     let hls: Hls | null = null
     let disposed = false
-    let currentApp: 'live' | 'dj' | null = null
+    let currentApp: 'vod' | 'dj' | null = null
     let lastHealthyAt = 0
     let backoff = 0
     let retryTimer: ReturnType<typeof setTimeout> | null = null
     const MAX_BACKOFF = 5000
     const HEALTHY_TIMEOUT = 20000
 
-    const manifestUrl = (app: 'live' | 'dj') => {
+    const manifestUrl = (app: 'vod' | 'dj') => {
       const key = videoStatusRef.current?.streamKey
       if (!key) return null
-      return publicBase
-        ? `${publicBase.replace(/\/$/, '')}/${app}/${key}.m3u8`
-        : `/${app}/${key}.m3u8`
+      if (app === 'dj') {
+        return publicBase
+          ? `${publicBase.replace(/\/$/, '')}/dj/${key}.m3u8`
+          : `/dj/${key}.m3u8`
+      }
+      return `/vod/${key}/live.m3u8`
     }
 
     const probe = async (url: string | null): Promise<boolean> => {
@@ -103,10 +107,10 @@ export default function TelevisionPage() {
       }
     }
 
-    const desiredApp = (): 'live' | 'dj' =>
-      videoStatusRef.current?.status === 'live' ? 'dj' : 'live'
+    const desiredApp = (): 'vod' | 'dj' =>
+      videoStatusRef.current?.status === 'live' ? 'dj' : 'vod'
 
-    const start = (app: 'live' | 'dj') => {
+    const start = (app: 'vod' | 'dj') => {
       if (disposed || !videoRef.current) return
       if (retryTimer) {
         clearTimeout(retryTimer)
@@ -158,7 +162,7 @@ export default function TelevisionPage() {
         if (selfLive) {
           start(currentApp)
         } else {
-          const other: 'live' | 'dj' = currentApp === 'live' ? 'dj' : 'live'
+          const other: 'vod' | 'dj' = currentApp === 'vod' ? 'dj' : 'vod'
           const otherLive = await probe(manifestUrl(other))
           if (otherLive) start(other)
         }

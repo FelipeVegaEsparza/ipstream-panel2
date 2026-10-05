@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: { key: string
   }
 
   return NextResponse.json(
-    { app: match.status === 'live' ? 'dj' : 'live' },
+    { app: match.status === 'live' ? 'dj' : 'vod' },
     { headers: { 'Cache-Control': 'no-store' } }
   )
 }

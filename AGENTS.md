@@ -21,6 +21,16 @@
 - El agente ahora comparte el volumen `./data/video` con `video-encoder` (escribe las subidas directo a disco).
 - Tocar `streaming/agent/*` y `docker-compose.streaming.yml`: **recordar pulsar "Actualizar nodo"** en los nodos remotos tras el deploy.
 
+## Playout de TV: VOD2Live (stitching) — modo por defecto
+
+- `TV_PLAYOUT=stitch` (default): el AutoDJ se sirve como un **manifiesto HLS vivo** (`/api/video/playout/<key>/live.m3u8` en el agente, expuesto público por el panel en `/vod/<key>/live.m3u8`). No hay proceso ffmpeg de AutoDJ.
+- Cada video se **empaqueta a HLS** al subir (resolución NATIVA, segmentos `.ts`, sin upscale ni uniformar). `hlsPath` en `video_tracks`.
+- El **stitcher** (`lib/channel-stitcher.js`) arma la ventana viva encadenando assets con `EXT-X-DISCONTINUITY`. Acepta assets heterogéneos (720p/1080p, 25/30fps).
+- El **DJ en vivo** sigue por SRS (`/dj/<key>.m3u8`); el player cambia según el estado.
+- Reempaquetar catálogo: `docker exec ipstream-streaming-agent node scripts/package-videos.js [clientId] [--force]`.
+- `TV_PLAYOUT=concat` restaura el modo legacy (concat `-c copy` a RTMP, requiere formato uniforme).
+- Tocar `streaming/agent/*`: **"Actualizar nodo"** en los remotos.
+
 ## Estabilidad del AutoDJ de TV (HLS)
 
 - Los videos se llevan a un canónico estricto y uniforme: 1920×1080 con padding, H.264 main@4.0 yuv420p, 30 fps CFR, keyframe cada 2 s, AAC 128k 44.1k estéreo (se agrega silencio si el origen no tiene audio).

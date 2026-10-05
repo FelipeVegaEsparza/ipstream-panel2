@@ -240,6 +240,23 @@ export async function getVideoPublicHost(clientId: string): Promise<string> {
  *   → usa el origin del panel (NEXTAUTH_URL), ej: https://panelipstream.cl
  * - Nodo: si tiene publicUrl (TLS/nginx propio), se usa; si no, http://<host>:8080 (SRS directo).
  */
+/** Origin del panel (para URLs públicas estables servidas por el panel). */
+export function getPanelOrigin(): string {
+  try {
+    return new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000').origin
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * URL pública estable del canal de TV: /tv/<key>.m3u8 en el panel. Redirige al
+ * app que esté al aire (DJ en vivo por SRS, o AutoDJ por el stitcher VOD2Live).
+ */
+export function getVideoStableUrl(clientId: string): string {
+  return `${getPanelOrigin()}/tv/${getVideoStreamKey(clientId)}.m3u8`
+}
+
 export async function getVideoPublicBase(clientId: string): Promise<string> {
   const vs = await prisma.videoStream.findUnique({
     where: { clientId },
@@ -291,8 +308,8 @@ export async function getClientStreamUrls(clientId: string): Promise<{ radioStre
       : null
 
   const videoStreamingUrl =
-    services !== 'radio' && videoStream && videoBase
-      ? `${videoBase.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
+    services !== 'radio' && videoStream
+      ? getVideoStableUrl(clientId)
       : null
 
   return { radioStreamingUrl, videoStreamingUrl }
@@ -337,8 +354,8 @@ export async function rewriteClientPublicUrls(
 
   // Video: base pública del servidor de video asignado (HLS por /live/*, solo si el plan incluye TV)
   const videoBase = await getVideoPublicBase(clientId)
-  let videoStreamingUrl: string | null = services !== 'radio' && videoStream && videoBase
-    ? `${videoBase.replace(/\/+$/, '')}/live/${getVideoStreamKey(clientId)}.m3u8`
+  let videoStreamingUrl: string | null = services !== 'radio' && videoStream
+    ? getVideoStableUrl(clientId)
     : null
   if (videoStreamingUrl === null && services !== 'radio' && videoStream) {
     const host = process.env.RTMP_RELAY_PUBLIC_HOST || process.env.HARBOR_PUBLIC_HOSTNAME || 'localhost'

@@ -500,6 +500,11 @@ export async function normalizeVideo(clientId, filepath) {
  * Análogo a autoStartStreams de liquidsoap.js.
  */
 export async function autoStartVideoStreams() {
+  // Modo VOD2Live: no se lanza ffmpeg de AutoDJ; el stitcher sirve el canal.
+  if (config.video.playout === 'stitch') {
+    console.log('[video-encoder] VOD2Live activo: sin auto-start de ffmpeg (stitcher)')
+    return
+  }
   console.log('[video-encoder] Auto-starting video streams...')
 
   // Limpiar transcodificadores stale de ejecuciones previas: el estado en

@@ -66,7 +66,8 @@ function playerHtml(streamKey: string): string {
   }
 
   function manifestUrl(app) {
-    return '/' + app + '/' + key + '.m3u8';
+    if (app === 'dj') return '/dj/' + key + '.m3u8';
+    return '/vod/' + key + '/live.m3u8';
   }
 
   function probe(url) {
@@ -120,7 +121,7 @@ function playerHtml(streamKey: string): string {
   function getDesiredApp() {
     return fetch('/tv/' + key + '/app', { cache: 'no-store' })
       .then(function (r) { return r.json(); })
-      .then(function (d) { return d && (d.app === 'dj' ? 'dj' : 'live'); })
+      .then(function (d) { return d && (d.app === 'dj' ? 'dj' : 'vod'); })
       .catch(function () { return null; });
   }
 
@@ -137,7 +138,7 @@ function playerHtml(streamKey: string): string {
             if (selfLive) {
               start(currentApp);
             } else {
-              var other = currentApp === 'live' ? 'dj' : 'live';
+              var other = currentApp === 'vod' ? 'dj' : 'vod';
               probe(manifestUrl(other)).then(function (otherLive) {
                 if (otherLive) start(other);
               });
@@ -173,11 +174,13 @@ export async function GET(_req: NextRequest, { params }: { params: { key: string
   }
 
   if (isPlaylist) {
-    const app = match.status === 'live' ? 'dj' : 'live'
+    if (match.status === 'off') return new NextResponse('Not Found', { status: 404 })
+    const app = match.status === 'live' ? 'dj' : 'vod'
     // Location relativo: el cliente lo resuelve contra su propio origen
     // (req.url del server, detrás de Caddy, es localhost:3000 y rompería la URL).
+    const loc = app === 'dj' ? `/dj/${streamKey}.m3u8` : `/vod/${streamKey}/live.m3u8`
     const res = new NextResponse(null, { status: 302 })
-    res.headers.set('Location', `/${app}/${streamKey}.m3u8`)
+    res.headers.set('Location', loc)
     res.headers.set('Cache-Control', 'no-store')
     return res
   }
