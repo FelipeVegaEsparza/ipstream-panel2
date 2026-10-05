@@ -9,11 +9,15 @@ import fs from 'fs'
 import path from 'path'
 import { pool } from './db.js'
 import { logger } from './logger.js'
-import { extractThumbnail, VIDEO_MAX_WIDTH, VIDEO_MAX_HEIGHT } from './video-encoder.js'
-import { processVideoFile } from './video-conformity.js'
+import { normalizeVideo, extractThumbnail } from './video-encoder.js'
+import { checkConformity } from './video-conformity.js'
 
 const _queue = []
 let _running = false
+
+// Debe coincidir con el canónico de video-encoder.js.
+const VIDEO_MAX_WIDTH = 1920
+const VIDEO_MAX_HEIGHT = 1080
 
 export function enqueueVideoNormalization(job) {
   _queue.push(job)
@@ -47,11 +51,37 @@ async function _process(job) {
   )
 
   try {
-    // Decisión: sin cambios / remux de audio / re-encode (ver video-conformity).
-    const { changed, meta } = await processVideoFile(clientId, filepath)
+    // Fast-path: si el archivo ya cumple el canónico estricto (resolución, fps,
+    // SAR, códec, audio y keyframes regulares), NO se re-encodea. Así las
+    // re-subidas y los videos ya compatibles quedan listos al instante.
+    const conf = await checkConformity(filepath)
+    if (conf.ok) {
+      const thumbnail = await extractThumbnail(clientId, filepath)
+      const m = conf.meta
+      let filesize = 0
+      try { filesize = fs.statSync(path.join('/var/lib/video', filepath)).size } catch (_) {}
+      await pool.query(
+        `UPDATE video_tracks
+         SET status = 'ready', processingError = NULL, filesize = ?, duration = ?,
+             width = ?, height = ?, codec = ?, thumbnail = ?
+         WHERE id = ?`,
+        [
+          filesize,
+          m.duration ?? 0,
+          m.width ?? null,
+          m.height ?? null,
+          m.codec ?? null,
+          thumbnail ?? null,
+          trackId,
+        ]
+      )
+      logger.info({ trackId, clientId }, 'Video ya canónico: sin re-encode')
+      return
+    }
+
+    logger.info({ trackId, clientId, reason: conf.reason }, 'Normalizando video (re-encode)')
+    const normalized = await normalizeVideo(clientId, filepath)
     const thumbnail = await extractThumbnail(clientId, filepath)
-    let filesize = 0
-    try { filesize = fs.statSync(path.join('/var/lib/video', filepath)).size } catch (_) {}
 
     await pool.query(
       `UPDATE video_tracks
@@ -59,16 +89,16 @@ async function _process(job) {
            width = ?, height = ?, codec = ?, thumbnail = ?
        WHERE id = ?`,
       [
-        meta.filesize ?? filesize,
-        meta.duration ?? 0,
-        meta.width ?? null,
-        meta.height ?? null,
-        meta.codec ?? null,
+        normalized.filesize ?? 0,
+        normalized.duration ?? 0,
+        normalized.width ?? null,
+        normalized.height ?? null,
+        normalized.codec ?? null,
         thumbnail ?? null,
         trackId,
       ]
     )
-    logger.info({ trackId, clientId, changed }, changed ? 'Video procesado' : 'Video ya compatible: sin re-encode')
+    logger.info({ trackId, clientId }, 'Normalización de video lista')
   } catch (err) {
     const message = String(err.message || err).slice(0, 1000)
     await pool.query(
@@ -80,16 +110,16 @@ async function _process(job) {
 }
 
 /**
- * Excluye del aire (marca `pending`) y re-encola los tracks `ready` cuyos
- * metadatos no son compatibles (códec no H.264 o resolución mayor a 1080p).
- * Los keyframes no se pueden verificar desde la DB (eso lo hace el job).
+ * Excluye del aire (marca `pending`) y re-encola los tracks `ready` que no
+ * cumplen el canónico estricto por sus metadatos (resolución/códec). Se llama
+ * antes de resolver la playlist de emisión para sanear catálogo legado.
  */
 export async function requeueNonConformantTracks(clientId) {
   const [rows] = await pool.query(
     `SELECT id, filepath FROM video_tracks
      WHERE clientId = ? AND status = 'ready'
        AND (codec IS NULL OR codec <> 'h264' OR width IS NULL OR height IS NULL
-            OR width > ? OR height > ?)`,
+            OR width <> ? OR height <> ?)`,
     [clientId, VIDEO_MAX_WIDTH, VIDEO_MAX_HEIGHT]
   )
   for (const row of rows || []) {
