@@ -23,9 +23,9 @@
 
 ## Estabilidad del AutoDJ de TV (HLS)
 
-- Los videos se llevan a un canónico estricto y uniforme: 1920×1080 con padding, H.264 main@4.0 yuv420p, 30 fps CFR, keyframe cada 2 s, AAC 128k 44.1k estéreo (se agrega silencio si el origen no tiene audio).
-- **Fast-path**: si el archivo ya cumple el canónico (resolución/fps/SAR/audio/keyframes), NO se re-encodea (queda `ready` al instante). Solo se re-encodea lo que no cumple.
-- El re-encode usa `FFMPEG_PRESET` (default `ultrafast`) y `FFMPEG_THREADS` (default `0` = auto) para bajar la CPU. En servidores con más margen se puede subir a `veryfast`/`fast` para mejor calidad.
+- **Resolución nativa, sin upscale**: un 1080p queda 1080p; solo se baja a 1080p lo que sea mayor (4K). Nunca se escala hacia arriba.
+- **Sin re-encode si el video ya sirve**: H.264 yuv420p, SAR 1:1, ≤1080p y keyframes ≤2.5 s → se copia tal cual (`-c:v copy`, CPU≈0). Si el audio no es AAC 44.1k estéreo, se hace **remux solo de audio** (barato). Solo se re-encodea el video si el códec/pixfmt/SAR/keyframes no sirven (con `FFMPEG_PRESET`, default `ultrafast`, y `FFMPEG_THREADS`).
+- Con esto, contenido H.264/AAC normal entra con **CPU casi cero**; el re-encode queda solo para formatos incompatibles.
 - El AutoDJ emite por `-c:v copy` con la playlist en formato `ffconcat` con `duration` por archivo y timestamps estabilizados (`+genpts+discardcorrupt`, `avoid_negative_ts`, `flvflags no_duration_filesize`). SRS segmenta a 2 s (`hls_fragment 2`, `hls_window 12`).
 - El catálogo legado se sanea: al iniciar el AutoDJ los tracks no conformes se excluyen y se re-encolan. Para re-normalizar todo el catálogo de una vez:
   `docker exec ipstream-streaming-agent node scripts/renormalize-videos.js [clientId] [--all]`

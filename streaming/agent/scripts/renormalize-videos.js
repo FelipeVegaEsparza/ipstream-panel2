@@ -8,7 +8,7 @@
 
 import { pool } from '../lib/db.js'
 import { normalizeVideo, extractThumbnail } from '../lib/video-encoder.js'
-import { checkConformity } from '../lib/video-conformity.js'
+import { checkConformity, processVideoFile } from '../lib/video-conformity.js'
 
 async function main() {
   const args = process.argv.slice(2)
@@ -31,19 +31,24 @@ async function main() {
 
   for (const t of tracks) {
     try {
-      if (!all) {
-        const { ok, reason } = await checkConformity(t.filepath)
-        if (ok) {
+      await pool.query(`UPDATE video_tracks SET status = 'processing', processingError = NULL WHERE id = ?`, [t.id])
+
+      let result
+      if (all) {
+        console.log(`→ ${t.filename} [${t.clientId}] re-encode forzado (--all)...`)
+        result = { changed: true, meta: await normalizeVideo(t.clientId, t.filepath) }
+      } else {
+        const conf = await checkConformity(t.filepath)
+        if (conf.videoOk && conf.audioOk) {
           skipped++
+          await pool.query(`UPDATE video_tracks SET status = 'ready' WHERE id = ?`, [t.id])
           continue
         }
-        console.log(`→ ${t.filename} [${t.clientId}] no conforme (${reason}); re-normalizando...`)
-      } else {
-        console.log(`→ ${t.filename} [${t.clientId}] re-normalizando (--all)...`)
+        console.log(`→ ${t.filename} [${t.clientId}] ${conf.videoOk ? 'remux de audio' : 're-encode'} (${conf.reason})...`)
+        result = await processVideoFile(t.clientId, t.filepath)
       }
 
-      await pool.query(`UPDATE video_tracks SET status = 'processing', processingError = NULL WHERE id = ?`, [t.id])
-      const normalized = await normalizeVideo(t.clientId, t.filepath)
+      const meta = result.meta
       const thumbnail = await extractThumbnail(t.clientId, t.filepath)
       await pool.query(
         `UPDATE video_tracks
@@ -51,17 +56,17 @@ async function main() {
              width = ?, height = ?, codec = ?, thumbnail = ?
          WHERE id = ?`,
         [
-          normalized.filesize ?? 0,
-          normalized.duration ?? 0,
-          normalized.width ?? null,
-          normalized.height ?? null,
-          normalized.codec ?? null,
+          meta.filesize ?? 0,
+          meta.duration ?? 0,
+          meta.width ?? null,
+          meta.height ?? null,
+          meta.codec ?? null,
           thumbnail ?? null,
           t.id,
         ]
       )
       done++
-      console.log(`  ✓ ${t.filename} -> ${normalized.width}x${normalized.height} ${normalized.codec}`)
+      console.log(`  ✓ ${t.filename} -> ${meta.width}x${meta.height} ${meta.codec}`)
     } catch (err) {
       failed++
       const message = String(err.message || err).slice(0, 1000)

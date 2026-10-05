@@ -311,7 +311,7 @@ async function applyVideoScheduleForClient(clientId) {
     `SELECT vt.filepath, vt.codec, vt.width, vt.height, vt.duration FROM video_playlist_entries vpe
      JOIN video_tracks vt ON vt.id = vpe.trackId
      WHERE vpe.clientId = ? AND vpe.playlistId = ? AND vt.status = 'ready'
-       AND vt.codec = 'h264' AND vt.width = 1920 AND vt.height = 1080
+       AND vt.codec = 'h264' AND vt.width <= 1920 AND vt.height <= 1080
      ORDER BY vpe.position ASC`,
     [clientId, scheduledPlaylistId]
   )

@@ -23,10 +23,11 @@ async function main() {
   let bad = 0
   for (const t of tracks) {
     try {
-      const { ok, reason } = await checkConformity(t.filepath)
-      if (!ok) {
+      const { videoOk, audioOk, reason } = await checkConformity(t.filepath)
+      if (!(videoOk && audioOk)) {
         bad++
-        console.log(`✗ ${t.filename} [${t.clientId}] — ${reason}`)
+        const detail = [!videoOk ? 'video' : null, !audioOk ? 'audio' : null].filter(Boolean).join('+')
+        console.log(`✗ ${t.filename} [${t.clientId}] — (${detail}) ${reason}`)
       }
     } catch (err) {
       bad++

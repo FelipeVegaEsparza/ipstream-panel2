@@ -1,10 +1,23 @@
 // =====================================================
-// Conformidad del canónico de video de TV
+// Conformidad y procesamiento de video de TV
 // =====================================================
-// Utilidades compartidas para verificar que un video cumple el canónico
-// estricto (resolución, fps, SAR, códec, pixfmt, audio y keyframes regulares).
+// Decide cómo llevar un archivo a un estado reproducible por el AutoDJ:
+//  - Si el video YA es compatible y el audio también → sin cambios.
+//  - Si el video es compatible pero el audio no → remux de audio (barato).
+//  - Si el video no es compatible (códec/pixfmt/SAR/resolución o keyframes
+//    irregulares) → re-encode (sin upscale) con keyframes cada 2s.
 
-import { execCmd, ENCODER_CONTAINER, isCanonical, probeVideo } from './video-encoder.js'
+import {
+  execCmd,
+  ENCODER_CONTAINER,
+  probeVideo,
+  normalizeVideo,
+  remuxAudio,
+  VIDEO_MAX_WIDTH,
+  VIDEO_MAX_HEIGHT,
+  AUDIO_SAMPLE_RATE,
+  AUDIO_CHANNELS,
+} from './video-encoder.js'
 
 const VIDEO_DIR = '/var/lib/video'
 
@@ -32,25 +45,64 @@ export async function maxKeyframeInterval(filepath) {
 }
 
 /**
- * Verifica la conformidad estricta de un archivo: metadatos del canónico +
- * intervalo de keyframes. Retorna { ok, meta, kfMax, reason }.
+ * El video se puede copiar (sin re-encode) si es H.264 yuv420p, SAR 1:1 y no
+ * supera 1920×1080. La resolución nativa se mantiene (no se upscalea).
+ */
+export function isVideoCompatible(meta) {
+  const sarOk = meta.sar === null || meta.sar === '1:1' || meta.sar === '1/1'
+  return meta.codec === 'h264' &&
+    meta.pixFmt === 'yuv420p' &&
+    sarOk &&
+    (meta.width || 0) > 0 && (meta.height || 0) > 0 &&
+    meta.width <= VIDEO_MAX_WIDTH &&
+    meta.height <= VIDEO_MAX_HEIGHT
+}
+
+/** El audio es compatible si ya es AAC estéreo 44.1 kHz. */
+export function isAudioCompatible(meta) {
+  return meta.audioCodec === 'aac' &&
+    meta.audioSampleRate === AUDIO_SAMPLE_RATE &&
+    meta.audioChannels === AUDIO_CHANNELS
+}
+
+/**
+ * Verifica el archivo y devuelve { videoOk, audioOk, kfMax, meta, reason }.
+ * `videoOk` incluye los keyframes (si están muy espaciados, no sirve copy).
  */
 export async function checkConformity(filepath) {
   const meta = await probeVideo(filepath)
 
-  // Si los metadatos ya fallan, no hace falta escanear keyframes (evita decodificar).
-  if (!isCanonical(meta)) {
+  if (!isVideoCompatible(meta)) {
     return {
-      ok: false,
+      videoOk: false,
+      audioOk: false,
       meta,
       kfMax: null,
-      reason: `metadatos: ${meta.width}x${meta.height} ${meta.codec}/${meta.pixFmt} ${meta.fps} sar=${meta.sar} audio=${meta.audioCodec}/${meta.audioSampleRate}/${meta.audioChannels}`,
+      reason: `video: ${meta.width}x${meta.height} ${meta.codec}/${meta.pixFmt} sar=${meta.sar}`,
     }
   }
 
   const kfMax = await maxKeyframeInterval(filepath)
   if (kfMax > MAX_KEYFRAME_INTERVAL) {
-    return { ok: false, meta, kfMax, reason: `keyframe cada ${kfMax.toFixed(2)}s > ${MAX_KEYFRAME_INTERVAL}s` }
+    return { videoOk: false, audioOk: false, meta, kfMax, reason: `keyframe cada ${kfMax.toFixed(2)}s > ${MAX_KEYFRAME_INTERVAL}s` }
   }
-  return { ok: true, meta, kfMax, reason: null }
+
+  const audioOk = isAudioCompatible(meta)
+  return {
+    videoOk: true,
+    audioOk,
+    meta,
+    kfMax,
+    reason: audioOk ? null : `audio: ${meta.audioCodec}/${meta.audioSampleRate}/${meta.audioChannels}`,
+  }
+}
+
+/**
+ * Procesa un archivo según su conformidad y devuelve { changed, meta }.
+ */
+export async function processVideoFile(clientId, filepath) {
+  const conf = await checkConformity(filepath)
+  if (conf.videoOk && conf.audioOk) return { changed: false, meta: conf.meta }
+  if (conf.videoOk) return { changed: true, meta: await remuxAudio(clientId, filepath) }
+  return { changed: true, meta: await normalizeVideo(clientId, filepath) }
 }

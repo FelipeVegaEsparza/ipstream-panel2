@@ -28,13 +28,13 @@ const PROCESS_LOG_DIR = '/var/log/video-encoder'
 // puede concatenarlos con -c:v copy sin discontinuidades y SRS segmenta HLS
 // alineado a keyframes.
 const VIDEO_BITRATE = '4500k'
-const VIDEO_MAX_WIDTH = 1920
-const VIDEO_MAX_HEIGHT = 1080
+export const VIDEO_MAX_WIDTH = 1920
+export const VIDEO_MAX_HEIGHT = 1080
 const VIDEO_FPS = 30
 const VIDEO_GOP = 60 // keyframe cada 2s a 30fps
 const AUDIO_BITRATE = '128k'
-const AUDIO_SAMPLE_RATE = 44100
-const AUDIO_CHANNELS = 2
+export const AUDIO_SAMPLE_RATE = 44100
+export const AUDIO_CHANNELS = 2
 
 // Los stream keys se mapean: clientId -> { streamKey, ffmpegProcess, startedAt }
 const _activeEncoders = new Map()
@@ -79,7 +79,7 @@ export async function resolvePlaylistEntries(clientId) {
       `SELECT vt.filepath, vt.codec, vt.width, vt.height, vt.duration FROM video_playlist_entries vpe
        JOIN video_tracks vt ON vt.id = vpe.trackId
        WHERE vpe.clientId = ? AND vpe.playlistId = ? AND vt.status = 'ready'
-         AND vt.codec = 'h264' AND vt.width = ? AND vt.height = ?
+         AND vt.codec = 'h264' AND vt.width <= ? AND vt.height <= ?
        ORDER BY vpe.position ASC`,
       [clientId, activePlaylistId, VIDEO_MAX_WIDTH, VIDEO_MAX_HEIGHT]
     )
@@ -90,7 +90,7 @@ export async function resolvePlaylistEntries(clientId) {
     `SELECT vt.filepath, vt.codec, vt.width, vt.height, vt.duration FROM video_playlist_entries vpe
      JOIN video_tracks vt ON vt.id = vpe.trackId
      WHERE vpe.clientId = ? AND vt.status = 'ready'
-       AND vt.codec = 'h264' AND vt.width = ? AND vt.height = ?
+       AND vt.codec = 'h264' AND vt.width <= ? AND vt.height <= ?
      ORDER BY vpe.position ASC`,
     [clientId, VIDEO_MAX_WIDTH, VIDEO_MAX_HEIGHT]
   )
@@ -444,11 +444,15 @@ export async function normalizeVideo(clientId, filepath) {
   try {
     const meta = await probeVideo(filepath)
 
-    // Re-encode SIEMPRE al canónico estricto (uniforme). Resolución fija con
-    // letterbox, 30fps CFR y keyframe cada 2s para que el concat + HLS sean
-    // estables. El remux no puede garantizar keyframes ni uniformidad.
-    const vf = `scale=${VIDEO_MAX_WIDTH}:${VIDEO_MAX_HEIGHT}:force_original_aspect_ratio=decrease,` +
-      `pad=${VIDEO_MAX_WIDTH}:${VIDEO_MAX_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black,fps=${VIDEO_FPS}`
+    // Re-encode SIN upscale: conserva la resolución nativa y solo baja a
+    // 1920×1080 si el origen es mayor. Fuerza 30fps CFR y keyframe cada 2s
+    // (el remux no puede agregar keyframes). `evenScale` garantiza dimensiones
+    // pares para yuv420p.
+    const evenScale = `scale=trunc(iw/2)*2:trunc(ih/2)*2`
+    const needsDownscale = (meta.width || 0) > VIDEO_MAX_WIDTH || (meta.height || 0) > VIDEO_MAX_HEIGHT
+    const vf = needsDownscale
+      ? `scale=${VIDEO_MAX_WIDTH}:${VIDEO_MAX_HEIGHT}:force_original_aspect_ratio=decrease,${evenScale},fps=${VIDEO_FPS}`
+      : `${evenScale},fps=${VIDEO_FPS}`
     const vcodec = `-c:v libx264 -preset ${config.video.preset} -threads ${config.video.threads} ` +
       `-b:v ${VIDEO_BITRATE} -maxrate 5000k -bufsize 9000k ` +
       `-pix_fmt yuv420p -profile:v main -level:v 4.0 -g ${VIDEO_GOP} -keyint_min ${VIDEO_GOP} -sc_threshold 0 -fps_mode cfr`
@@ -486,6 +490,49 @@ export async function normalizeVideo(clientId, filepath) {
     }
   } catch (err) {
     console.error(`[video-encoder] Error normalizing video ${filepath}:`, err.message)
+    try { await execCmd(`docker exec ${ENCODER_CONTAINER} rm -f '${tmpPath}' || true`) } catch (_) {}
+    throw err
+  }
+}
+
+/**
+ * Normaliza SOLO el audio (video por copy). Se usa cuando el video ya es
+ * compatible (H.264 yuv420p, resolución OK, keyframes OK) pero el audio no
+ * (otro codec/sample rate/canales). Es mucho más barato que re-encodear video.
+ */
+export async function remuxAudio(clientId, filepath) {
+  const containerPath = `${VIDEO_DIR}/${filepath}`
+  const tmpPath = `${VIDEO_DIR}/normalize_tmp_${Date.now()}.mp4`
+  const acodec = `-c:a aac -b:a ${AUDIO_BITRATE} -ar ${AUDIO_SAMPLE_RATE} -ac ${AUDIO_CHANNELS}`
+
+  try {
+    const meta = await probeVideo(filepath)
+    let cmd
+    if (meta.audioCodec) {
+      cmd = `ffmpeg -y -i '${containerPath}' -c:v copy ${acodec} ` +
+        `-avoid_negative_ts make_zero -movflags +faststart '${tmpPath}'`
+    } else {
+      cmd = `ffmpeg -y -i '${containerPath}' -f lavfi -i anullsrc=r=${AUDIO_SAMPLE_RATE}:cl=stereo ` +
+        `-map 0:v:0 -map 1:a:0 -c:v copy ${acodec} -shortest ` +
+        `-avoid_negative_ts make_zero -movflags +faststart '${tmpPath}'`
+    }
+
+    await execCmd(`docker exec ${ENCODER_CONTAINER} sh -c "${cmd}"`, { timeout: FFMPEG_TIMEOUT })
+    await execCmd(`docker exec ${ENCODER_CONTAINER} mv '${tmpPath}' '${containerPath}'`)
+
+    const final = await probeVideo(filepath)
+    const sizeOut = await execCmd(`docker exec ${ENCODER_CONTAINER} stat -c%s '${containerPath}'`).catch(() => '0')
+    console.log(`[video-encoder] Audio remux ${clientId}/${filepath} -> ${final.audioCodec}/${final.audioSampleRate}`)
+
+    return {
+      width: final.width,
+      height: final.height,
+      codec: final.codec,
+      filesize: Number(sizeOut) || 0,
+      duration: final.duration,
+    }
+  } catch (err) {
+    console.error(`[video-encoder] Error remuxing audio ${filepath}:`, err.message)
     try { await execCmd(`docker exec ${ENCODER_CONTAINER} rm -f '${tmpPath}' || true`) } catch (_) {}
     throw err
   }
