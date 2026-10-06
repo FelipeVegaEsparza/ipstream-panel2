@@ -2,8 +2,9 @@
 // Video Packager (VOD2Live)
 // =====================================================
 // Empaqueta un video a HLS (segmentos MPEG-TS + playlist VOD) a resolución
-// NATIVA, sin upscale. Si el archivo ya es H.264/yuv420p con keyframes
-// regulares, se segmenta por copy (CPU≈0). Si no, se transcode una vez.
+// NATIVA, sin upscale. Si el archivo ya es H.264/yuv420p a 30fps, con keyframes
+// regulares y bitrate dentro del tope del canónico, se segmenta por copy
+// (CPU≈0). Si no, se transcode una vez.
 // El resultado se consume con el channel-stitcher para armar el canal vivo.
 
 import {
@@ -16,6 +17,17 @@ const VIDEO_DIR = '/var/lib/video'
 const MAX_KEYFRAME_INTERVAL = 2.5
 const PACKAGE_SECONDS = 2
 const GOP = 60
+const CANONICAL_FPS = 30
+// No copiar si el origen ya viene por encima del tope del canónico (4500k):
+// si se copia, el HLS hereda ese bitrate y el espectador vuelve a sufrir cortes.
+const MAX_SOURCE_BITRATE = 5000 * 1000
+
+function fpsNumber(fps) {
+  if (!fps) return null
+  const [n, d] = String(fps).split('/').map(Number)
+  if (!d) return null
+  return n / d
+}
 
 async function maxKeyframeInterval(filepath) {
   const out = await execCmd(
@@ -45,8 +57,11 @@ export async function packageVideo(clientId, trackId, filepath) {
   const meta = await probeVideo(filepath)
   const h264 = meta.codec === 'h264' && meta.pixFmt === 'yuv420p'
   const sarOk = meta.sar === null || meta.sar === '1:1' || meta.sar === '1/1'
+  const fps = fpsNumber(meta.fps)
+  const fpsOk = fps !== null && Math.abs(fps - CANONICAL_FPS) < 0.1
+  const bitrateOk = !meta.bitRate || meta.bitRate <= MAX_SOURCE_BITRATE
   let kfOk = false
-  if (h264 && sarOk) {
+  if (h264 && sarOk && fpsOk && bitrateOk) {
     const kf = await maxKeyframeInterval(filepath)
     kfOk = kf <= MAX_KEYFRAME_INTERVAL
   }
@@ -57,7 +72,7 @@ export async function packageVideo(clientId, trackId, filepath) {
     `-hls_segment_filename '${absDir}/seg_%05d.ts'`
 
   let cmd
-  if (h264 && sarOk && kfOk) {
+  if (h264 && sarOk && fpsOk && bitrateOk && kfOk) {
     // Segmentar sin re-encode (copy video). Audio se normaliza a AAC 44.1k.
     if (hasAudio) {
       cmd = `ffmpeg -y -i '${src}' -c:v copy -c:a aac -b:a 128k -ar 44100 -ac 2 ${segArgs} '${outPlaylist}'`

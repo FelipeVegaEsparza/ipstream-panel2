@@ -396,6 +396,7 @@ export async function probeVideo(filepath) {
     pixFmt: vs?.pix_fmt || null,
     fps: vs?.r_frame_rate || null,
     sar: vs?.sample_aspect_ratio || null,
+    bitRate: info.format?.bit_rate ? parseInt(info.format.bit_rate, 10) : (vs?.bit_rate ? parseInt(vs.bit_rate, 10) : null),
     audioCodec: as?.codec_name || null,
     audioSampleRate: as?.sample_rate ? parseInt(as.sample_rate, 10) : null,
     audioChannels: as?.channels ?? null,
