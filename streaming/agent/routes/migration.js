@@ -51,8 +51,10 @@ export default async function migrationRoutes(app) {
     if (!data) {
       return reply.code(400).send({ error: 'no_file' })
     }
-    const kind = data.fields?.kind
-    const name = data.fields?.name
+    // @fastify/multipart expone los campos como objeto ({ value, ... }); en
+    // algunas versiones/config ya llega el string pelado. Soportamos ambos.
+    const kind = data.fields?.kind?.value ?? data.fields?.kind
+    const name = data.fields?.name?.value ?? data.fields?.name
     if (!kind || !name) {
       return reply.code(400).send({ error: 'missing_kind_or_name' })
     }
