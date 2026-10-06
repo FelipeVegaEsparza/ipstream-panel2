@@ -90,9 +90,14 @@ export const config = {
     ffmpegTimeoutMs: intEnv('FFMPEG_TIMEOUT_MS', 0),
     // Preset de x264 para normalizar. ultrafast/veryfast reducen mucho la CPU
     // a costa de algo de calidad a igual bitrate.
-    preset: required('FFMPEG_PRESET', 'ultrafast'),
+    preset: required('FFMPEG_PRESET', 'veryfast'),
     // Hilos por job de normalización (0 = auto).
     threads: intEnv('FFMPEG_THREADS', 0),
+    // Bitrate del H.264 de TV, en kbps. Target + maxrate + bufsize (x264).
+    // 2500k entra cómodo en conexiones hogareñas; subilo si querés más calidad.
+    bitrateKbps: intEnv('TV_VIDEO_BITRATE', 2500),
+    maxrateKbps: intEnv('TV_VIDEO_MAXRATE', 2800),
+    bufsizeKbps: intEnv('TV_VIDEO_BUFSIZE', 5000),
     // Modo de playout de TV:
     //   'stitch' = VOD2Live (empaqueta HLS por asset + manifiesto vivo; sin concat)
     //   'concat' = legacy (concat -c copy a RTMP/SRS, requiere formato uniforme)

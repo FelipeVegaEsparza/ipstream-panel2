@@ -12,15 +12,16 @@ import {
   ENCODER_CONTAINER,
   probeVideo,
 } from './video-encoder.js'
+import { config } from './config.js'
 
 const VIDEO_DIR = '/var/lib/video'
 const MAX_KEYFRAME_INTERVAL = 2.5
 const PACKAGE_SECONDS = 2
 const GOP = 60
 const CANONICAL_FPS = 30
-// No copiar si el origen ya viene por encima del tope del canónico (4500k):
-// si se copia, el HLS hereda ese bitrate y el espectador vuelve a sufrir cortes.
-const MAX_SOURCE_BITRATE = 5000 * 1000
+// No copiar si el origen ya viene por encima del maxrate del canónico: si se
+// copia, el HLS hereda ese bitrate y el espectador vuelve a sufrir cortes.
+const MAX_SOURCE_BITRATE = config.video.maxrateKbps * 1000
 
 function fpsNumber(fps) {
   if (!fps) return null
@@ -87,12 +88,11 @@ export async function packageVideo(clientId, trackId, filepath) {
     const vf = needsDown
       ? `scale=1920:1080:force_original_aspect_ratio=decrease,${evenScale},fps=30`
       : `${evenScale},fps=30`
-    // Tope de bitrate canónico (mismo que video-encoder.normalizeVideo). Sin
-    // -b:v/-maxrate, libx264 usa CRF 23 por defecto y con ultrafast infla el
-    // HLS a ~10-13 Mbps (varios GB por video), imposible de sostener por el
-    // espectador y causa de cortes aunque el VPS esté ocioso.
-    const vcodec = `-c:v libx264 -preset ultrafast -threads 0 -g ${GOP} -keyint_min ${GOP} -sc_threshold 0 ` +
-      `-b:v 4500k -maxrate 5000k -bufsize 9000k -profile:v main -level:v 4.0 -pix_fmt yuv420p -fps_mode cfr`
+    // Tope de bitrate canónico (configurable por env). Sin -b:v/-maxrate,
+    // libx264 usa CRF 23 por defecto y con presets rápidos infla el HLS.
+    const vcodec = `-c:v libx264 -preset ${config.video.preset} -threads ${config.video.threads} -g ${GOP} -keyint_min ${GOP} -sc_threshold 0 ` +
+      `-b:v ${config.video.bitrateKbps}k -maxrate ${config.video.maxrateKbps}k -bufsize ${config.video.bufsizeKbps}k ` +
+      `-profile:v main -level:v 4.0 -pix_fmt yuv420p -fps_mode cfr`
     const acodec = `-c:a aac -b:a 128k -ar 44100 -ac 2`
     if (hasAudio) {
       cmd = `ffmpeg -y -i '${src}' -vf '${vf}' ${vcodec} ${acodec} ${segArgs} '${outPlaylist}'`

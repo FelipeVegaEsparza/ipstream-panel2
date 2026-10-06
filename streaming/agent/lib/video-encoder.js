@@ -22,12 +22,8 @@ const VIDEO_DIR = '/var/lib/video'
 const PLAYLIST_DIR = '/var/lib/video/playlists'
 const PROCESS_LOG_DIR = '/var/log/video-encoder'
 
-// Formato canónico de los videos de TV: 1080p H.264/AAC 4500k, uniforme.
-// Al re-encodear TODOS los videos a este formato (resolución fija con padding,
-// fps CFR, keyframe cada 2s, perfil main@4.0 y audio AAC uniforme), el AutoDJ
-// puede concatenarlos con -c:v copy sin discontinuidades y SRS segmenta HLS
-// alineado a keyframes.
-const VIDEO_BITRATE = '4500k'
+// Formato canónico de los videos de TV: 1080p H.264/AAC 30fps, bitrate
+// configurable por env (TV_VIDEO_BITRATE, default 2500k).
 const VIDEO_MAX_WIDTH = 1920
 const VIDEO_MAX_HEIGHT = 1080
 const VIDEO_FPS = 30
@@ -451,7 +447,7 @@ export async function normalizeVideo(clientId, filepath) {
     const vf = `scale=${VIDEO_MAX_WIDTH}:${VIDEO_MAX_HEIGHT}:force_original_aspect_ratio=decrease,` +
       `pad=${VIDEO_MAX_WIDTH}:${VIDEO_MAX_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black,fps=${VIDEO_FPS}`
     const vcodec = `-c:v libx264 -preset ${config.video.preset} -threads ${config.video.threads} ` +
-      `-b:v ${VIDEO_BITRATE} -maxrate 5000k -bufsize 9000k ` +
+      `-b:v ${config.video.bitrateKbps}k -maxrate ${config.video.maxrateKbps}k -bufsize ${config.video.bufsizeKbps}k ` +
       `-pix_fmt yuv420p -profile:v main -level:v 4.0 -g ${VIDEO_GOP} -keyint_min ${VIDEO_GOP} -sc_threshold 0 -fps_mode cfr`
     const acodec = `-c:a aac -b:a ${AUDIO_BITRATE} -ar ${AUDIO_SAMPLE_RATE} -ac ${AUDIO_CHANNELS}`
 
