@@ -127,6 +127,9 @@ export default function TelevisionPage() {
         enableWorker: true,
         lowLatencyMode: false,
         backBufferLength: 30,
+        liveSyncDurationCount: 4,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
       })
       hlsRef.current = hls
       hls.on(Hls.Events.MANIFEST_PARSED, () => {

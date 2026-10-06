@@ -73,7 +73,7 @@ export default async function playoutRoutes(app) {
     const cycle = await getCycle(match.clientId)
     const base = `/api/video/playout/${streamKey}/seg`
     const body = buildLiveManifest(cycle, ANCHOR_MS, Date.now(), {
-      windowSize: 6,
+      windowSize: 10,
       segmentUrl: (trackId, file) => `${base}/${trackId}/${file.replace(/^.*\//, '')}`,
     })
     reply

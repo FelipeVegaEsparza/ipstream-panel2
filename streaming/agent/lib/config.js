@@ -94,10 +94,10 @@ export const config = {
     // Hilos por job de normalización (0 = auto).
     threads: intEnv('FFMPEG_THREADS', 0),
     // Bitrate del H.264 de TV, en kbps. Target + maxrate + bufsize (x264).
-    // 2500k entra cómodo en conexiones hogareñas; subilo si querés más calidad.
-    bitrateKbps: intEnv('TV_VIDEO_BITRATE', 2500),
-    maxrateKbps: intEnv('TV_VIDEO_MAXRATE', 2800),
-    bufsizeKbps: intEnv('TV_VIDEO_BUFSIZE', 5000),
+    // 1500k entra cómodo en conexiones hogareñas; subilo si querés más calidad.
+    bitrateKbps: intEnv('TV_VIDEO_BITRATE', 1500),
+    maxrateKbps: intEnv('TV_VIDEO_MAXRATE', 1700),
+    bufsizeKbps: intEnv('TV_VIDEO_BUFSIZE', 3000),
     // Modo de playout de TV:
     //   'stitch' = VOD2Live (empaqueta HLS por asset + manifiesto vivo; sin concat)
     //   'concat' = legacy (concat -c copy a RTMP/SRS, requiere formato uniforme)

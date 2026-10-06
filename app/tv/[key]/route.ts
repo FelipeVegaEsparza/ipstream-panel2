@@ -88,7 +88,7 @@ function playerHtml(streamKey: string, base: string): string {
     var url = manifestUrl(app);
     setState('Cargando…');
     if (window.Hls && Hls.isSupported()) {
-      hls = new Hls({ lowLatencyMode: false, backBufferLength: 30 });
+      hls = new Hls({ lowLatencyMode: false, backBufferLength: 30, liveSyncDurationCount: 4, maxBufferLength: 30, maxMaxBufferLength: 60 });
       hls.on(Hls.Events.MANIFEST_PARSED, function () {
         lastHealthyAt = Date.now();
         backoff = 0;

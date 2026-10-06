@@ -259,9 +259,9 @@ services:
       FFMPEG_PRESET: ${FFMPEG_PRESET:-veryfast}
       FFMPEG_THREADS: ${FFMPEG_THREADS:-0}
       # Bitrate del H.264 de TV (kbps): target/maxrate/bufsize.
-      TV_VIDEO_BITRATE: ${TV_VIDEO_BITRATE:-2500}
-      TV_VIDEO_MAXRATE: ${TV_VIDEO_MAXRATE:-2800}
-      TV_VIDEO_BUFSIZE: ${TV_VIDEO_BUFSIZE:-5000}
+      TV_VIDEO_BITRATE: ${TV_VIDEO_BITRATE:-1500}
+      TV_VIDEO_MAXRATE: ${TV_VIDEO_MAXRATE:-1700}
+      TV_VIDEO_BUFSIZE: ${TV_VIDEO_BUFSIZE:-3000}
       TV_PLAYOUT: ${TV_PLAYOUT:-stitch}
     ports:
       - "127.0.0.1:4000:4000"   # accesible solo desde el host (para debug)
