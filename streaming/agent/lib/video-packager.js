@@ -72,7 +72,12 @@ export async function packageVideo(clientId, trackId, filepath) {
     const vf = needsDown
       ? `scale=1920:1080:force_original_aspect_ratio=decrease,${evenScale},fps=30`
       : `${evenScale},fps=30`
-    const vcodec = `-c:v libx264 -preset ultrafast -threads 0 -g ${GOP} -keyint_min ${GOP} -sc_threshold 0 -pix_fmt yuv420p -fps_mode cfr`
+    // Tope de bitrate canónico (mismo que video-encoder.normalizeVideo). Sin
+    // -b:v/-maxrate, libx264 usa CRF 23 por defecto y con ultrafast infla el
+    // HLS a ~10-13 Mbps (varios GB por video), imposible de sostener por el
+    // espectador y causa de cortes aunque el VPS esté ocioso.
+    const vcodec = `-c:v libx264 -preset ultrafast -threads 0 -g ${GOP} -keyint_min ${GOP} -sc_threshold 0 ` +
+      `-b:v 4500k -maxrate 5000k -bufsize 9000k -profile:v main -level:v 4.0 -pix_fmt yuv420p -fps_mode cfr`
     const acodec = `-c:a aac -b:a 128k -ar 44100 -ac 2`
     if (hasAudio) {
       cmd = `ffmpeg -y -i '${src}' -vf '${vf}' ${vcodec} ${acodec} ${segArgs} '${outPlaylist}'`
