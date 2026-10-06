@@ -262,7 +262,7 @@ export default async function migrationRoutes(app) {
    * Recibe un tar crudo (application/x-tar) y lo extrae en el volumen de video.
    * Streaming sin buffer; complementa a GET .../hls.
    */
-  app.post('/api/migrate/:clientId/video-hls', async (request, reply) => {
+  app.post('/api/migrate/:clientId/video-hls', { bodyLimit: 20 * 1024 * 1024 * 1024 }, async (request, reply) => {
     const { clientId } = request.params
     const name = String(request.query?.name || '')
     if (!name.startsWith('hls/') || !isSafeRelativePath(name)) {
