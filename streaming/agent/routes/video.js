@@ -472,6 +472,8 @@ export default async function videoRoutes(fastify) {
 
     try {
       await execAsync(`docker exec ipstream-video-encoder rm -f '/var/lib/video/${track.filepath}' || true`)
+      // El HLS empaquetado también se borra: es lo que realmente ocupa disco.
+      await execAsync(`docker exec ipstream-video-encoder rm -rf '/var/lib/video/hls/${clientId}/${trackId}' || true`)
       if (track.thumbnail) {
         await execAsync(`docker exec ipstream-video-encoder rm -f '${track.thumbnail}' || true`)
       }

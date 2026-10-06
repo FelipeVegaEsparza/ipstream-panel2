@@ -12,7 +12,7 @@ import { rewriteClientPublicUrls } from '@/lib/streaming-helpers'
 import { streamingClient, videoClient } from '@/lib/streaming-client'
 
 interface MigrateFile {
-  kind: 'radio-mp3' | 'radio-jingle' | 'radio-cover' | 'video-file' | 'video-thumbnail'
+  kind: 'radio-mp3' | 'radio-jingle' | 'radio-cover' | 'video-file' | 'video-hls' | 'video-thumbnail'
   name: string
   sourcePath: string // path absoluto en el agente origen para leer el archivo
 }
@@ -54,6 +54,37 @@ async function importFile(baseUrl: string, token: string, clientId: string, file
   }
 }
 
+// Migra un directorio HLS (tar) del origen al destino en streaming, sin
+// bufferear en memoria (una hora de video = GBs y miles de segmentos).
+async function transferHls(
+  source: { baseUrl: string; token: string },
+  target: { baseUrl: string; token: string },
+  clientId: string,
+  file: MigrateFile
+) {
+  const srcRes = await fetch(`${source.baseUrl}${file.sourcePath}`, {
+    headers: { Authorization: `Bearer ${source.token}` },
+  })
+  if (!srcRes.ok || !srcRes.body) {
+    throw new MigrationError(`No se pudo leer el HLS origen (${srcRes.status}): ${file.name}`, 502)
+  }
+  const res = await fetch(
+    `${target.baseUrl}/api/migrate/${encodeURIComponent(clientId)}/video-hls?name=${encodeURIComponent(file.name)}`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${target.token}`, 'Content-Type': 'application/x-tar' },
+      body: srcRes.body,
+      // Node fetch requiere duplex:'half' para cuerpos en streaming.
+      duplex: 'half',
+      signal: AbortSignal.timeout(3600000),
+    } as RequestInit,
+  )
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new MigrationError(`Fallo la copia del HLS ${file.name} al destino (${res.status}): ${text}`, 502)
+  }
+}
+
 async function verifyTargetFiles(baseUrl: string, token: string, clientId: string, expected: MigrateFile[]) {
   const res = await fetch(`${baseUrl}/api/migrate/${encodeURIComponent(clientId)}/files`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -68,6 +99,7 @@ async function verifyTargetFiles(baseUrl: string, token: string, clientId: strin
     else if (f.kind === 'radio-jingle') present = (data.radioJingles || []).includes(f.name)
     else if (f.kind === 'radio-cover') present = (data.radioCovers || []).includes(f.name)
     else if (f.kind === 'video-file') present = (data.videoFiles || []).includes(f.name.split('/').pop())
+    else if (f.kind === 'video-hls') present = (data.videoHls || []).includes(f.name.split('/').pop())
     else if (f.kind === 'video-thumbnail') present = (data.videoThumbs || []).includes(f.name)
     if (!present) {
       throw new MigrationError(`Verificación fallida: falta ${f.name} en el destino`, 502)
@@ -172,8 +204,12 @@ async function migrateService(
   let copied = 0
   try {
     for (const f of files) {
-      const blob = await readFileAsBlob(sourceTarget.baseUrl, sourceTarget.token, f.sourcePath)
-      await importFile(target.baseUrl, target.token, clientId, f, blob)
+      if (f.kind === 'video-hls') {
+        await transferHls(sourceTarget, target, clientId, f)
+      } else {
+        const blob = await readFileAsBlob(sourceTarget.baseUrl, sourceTarget.token, f.sourcePath)
+        await importFile(target.baseUrl, target.token, clientId, f, blob)
+      }
       copied++
     }
 
@@ -249,14 +285,24 @@ async function collectFiles(clientId: string, service: MigrationService): Promis
   } else {
     const tracks = await prisma.videoTrack.findMany({
       where: { clientId },
-      select: { id: true, filepath: true, thumbnail: true },
+      select: { id: true, filepath: true, hlsPath: true, thumbnail: true },
     })
     for (const t of tracks) {
-      files.push({
-        kind: 'video-file',
-        name: t.filepath,
-        sourcePath: `/api/migrate/${encodeURIComponent(clientId)}/video-track/${encodeURIComponent(t.id)}/raw`,
-      })
+      if (t.hlsPath) {
+        // Modo VOD2Live: migrar el HLS empaquetado.
+        files.push({
+          kind: 'video-hls',
+          name: t.hlsPath,
+          sourcePath: `/api/migrate/${encodeURIComponent(clientId)}/video-track/${encodeURIComponent(t.id)}/hls`,
+        })
+      } else {
+        // Modo concat legado: migrar el archivo fuente.
+        files.push({
+          kind: 'video-file',
+          name: t.filepath,
+          sourcePath: `/api/migrate/${encodeURIComponent(clientId)}/video-track/${encodeURIComponent(t.id)}/raw`,
+        })
+      }
       if (t.thumbnail) {
         const thumbName = t.thumbnail.split('/').pop() || `${t.id}.jpg`
         files.push({

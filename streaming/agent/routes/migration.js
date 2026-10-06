@@ -7,7 +7,7 @@
 import { writeFile, unlink, mkdir, readdir } from 'fs/promises'
 import { writeFileSync, unlinkSync, existsSync } from 'fs'
 import { join, basename } from 'path'
-import { exec } from 'child_process'
+import { exec, spawn } from 'child_process'
 import { tmpdir } from 'os'
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
@@ -42,6 +42,9 @@ function isSafeRelativePath(name) {
  * kind: 'radio-mp3' | 'radio-jingle' | 'radio-cover' | 'video-file' | 'video-thumbnail'
  */
 export default async function migrationRoutes(app) {
+  // Body crudo (tar) para migrar el HLS de un track sin buffer en memoria.
+  app.addContentTypeParser('application/x-tar', (request, payload, done) => done(null, payload))
+
   app.post('/api/migrate/:clientId/import', async (request, reply) => {
     const { clientId } = request.params
     const data = await request.file({ limits: { fileSize: 50 * 1024 * 1024 }, throwFileSizeLimit: false })
@@ -138,6 +141,10 @@ export default async function migrationRoutes(app) {
           } else if (kind === 'video-file') {
             await execCmd(`docker exec ${ENCODER_CONTAINER} rm -f '${VIDEO_DIR}/${name}' || true`)
             removed++
+          } else if (kind === 'video-hls') {
+            // name = "hls/<clientId>/<trackId>"
+            await execCmd(`docker exec ${ENCODER_CONTAINER} rm -rf '${VIDEO_DIR}/${name}' || true`)
+            removed++
           } else if (kind === 'video-thumbnail') {
             await execCmd(`docker exec ${ENCODER_CONTAINER} rm -f '${VIDEO_DIR}/thumbnails/${clientId}/${name}' || true`)
             removed++
@@ -172,11 +179,14 @@ export default async function migrationRoutes(app) {
 
     let videoFiles = []
     let videoThumbs = []
+    let videoHls = []
     try {
       const out = await execCmd(`docker exec ${ENCODER_CONTAINER} sh -c 'ls ${VIDEO_DIR}/user_${clientId} 2>/dev/null || echo ""'`)
       videoFiles = out.split('\n').map((s) => s.trim()).filter(Boolean)
       const tOut = await execCmd(`docker exec ${ENCODER_CONTAINER} sh -c 'ls ${VIDEO_DIR}/thumbnails/${clientId} 2>/dev/null || echo ""'`)
       videoThumbs = tOut.split('\n').map((s) => s.trim()).filter(Boolean)
+      const hOut = await execCmd(`docker exec ${ENCODER_CONTAINER} sh -c 'ls ${VIDEO_DIR}/hls/${clientId} 2>/dev/null || echo ""'`)
+      videoHls = hOut.split('\n').map((s) => s.trim()).filter(Boolean)
     } catch {}
 
     return {
@@ -186,6 +196,7 @@ export default async function migrationRoutes(app) {
       radioCovers,
       videoFiles,
       videoThumbs,
+      videoHls,
     }
   })
 
@@ -214,6 +225,78 @@ export default async function migrationRoutes(app) {
     } catch (err) {
       logger.error({ err, clientId, trackId }, 'video raw read failed')
       return reply.code(404).send({ error: 'file_not_found' })
+    }
+  })
+
+  /**
+   * GET /api/migrate/:clientId/video-track/:trackId/hls — sirve el HLS
+   * empaquetado (tar) del track, para copiarlo entre servidores. Lee hlsPath
+   * desde la DB. En modo VOD2Live el HLS es lo único que se necesita.
+   */
+  app.get('/api/migrate/:clientId/video-track/:trackId/hls', async (request, reply) => {
+    const { clientId, trackId } = request.params
+    const [rows] = await pool.query(
+      `SELECT hlsPath FROM video_tracks WHERE id = ? AND clientId = ?`,
+      [trackId, clientId]
+    )
+    const hlsPath = rows[0]?.hlsPath
+    if (!hlsPath || !isSafeRelativePath(hlsPath)) {
+      return reply.code(404).send({ error: 'not_found' })
+    }
+    try {
+      await execCmd(`docker exec ${ENCODER_CONTAINER} test -d '${VIDEO_DIR}/${hlsPath}'`)
+    } catch {
+      return reply.code(404).send({ error: 'hls_not_found' })
+    }
+    const child = spawn('docker', ['exec', ENCODER_CONTAINER, 'tar', '-C', VIDEO_DIR, '-cf', '-', hlsPath])
+    child.on('error', (err) => logger.error({ err: err.message, clientId, trackId }, 'hls tar spawn failed'))
+    child.stderr.on('data', (d) => logger.warn({ clientId, trackId, stderr: d.toString().trim() }, 'hls tar stderr'))
+    // Si el cliente corta la descarga, no dejar el tar huérfano.
+    reply.raw.on('close', () => { try { child.kill('SIGKILL') } catch (_) {} })
+    reply.header('Content-Type', 'application/x-tar')
+    return reply.send(child.stdout)
+  })
+
+  /**
+   * POST /api/migrate/:clientId/video-hls?name=hls/<clientId>/<trackId>
+   * Recibe un tar crudo (application/x-tar) y lo extrae en el volumen de video.
+   * Streaming sin buffer; complementa a GET .../hls.
+   */
+  app.post('/api/migrate/:clientId/video-hls', async (request, reply) => {
+    const { clientId } = request.params
+    const name = String(request.query?.name || '')
+    if (!name.startsWith('hls/') || !isSafeRelativePath(name)) {
+      return reply.code(400).send({ error: 'invalid_name' })
+    }
+    const destDir = name.split('/').slice(0, -1).join('/')
+    try {
+      await execCmd(`docker exec ${ENCODER_CONTAINER} mkdir -p '${VIDEO_DIR}/${destDir}'`)
+    } catch (err) {
+      return reply.code(500).send({ error: 'mkdir_failed', message: err.message })
+    }
+
+    const stream = request.body
+    const child = spawn('docker', ['exec', '-i', ENCODER_CONTAINER, 'tar', '-C', VIDEO_DIR, '-xf', '-'])
+    let stderr = ''
+    child.stderr.on('data', (d) => { stderr += d.toString() })
+    child.stdin.on('error', () => {}) // EPIPE si tar termina antes
+
+    try {
+      await new Promise((resolve, reject) => {
+        child.on('error', reject)
+        child.on('close', (code) => (code === 0 ? resolve() : reject(new Error(stderr || `tar exit ${code}`))))
+        if (!stream || typeof stream.pipe !== 'function') {
+          reject(new Error('body vacío o no es stream'))
+          return
+        }
+        stream.on('error', reject)
+        stream.pipe(child.stdin)
+      })
+      return { ok: true, name }
+    } catch (err) {
+      try { child.kill('SIGKILL') } catch (_) {}
+      logger.error({ err: err.message, clientId, name }, 'video-hls import failed')
+      return reply.code(500).send({ error: 'import_failed', message: err.message })
     }
   })
 }

@@ -21,6 +21,32 @@ let _running = false
 const VIDEO_MAX_WIDTH = 1920
 const VIDEO_MAX_HEIGHT = 1080
 
+// Tamaño en bytes de un directorio (recursivo), para registrar el peso real
+// del HLS en vez del archivo fuente (que se elimina tras empaquetar).
+function dirSizeBytes(absDir) {
+  let total = 0
+  try {
+    for (const e of fs.readdirSync(absDir, { withFileTypes: true })) {
+      const p = path.join(absDir, e.name)
+      if (e.isFile()) total += fs.statSync(p).size
+      else if (e.isDirectory()) total += dirSizeBytes(p)
+    }
+  } catch (_) {}
+  return total
+}
+
+// Elimina el archivo fuente original una vez empaquetado a HLS. El playout de
+// VOD2Live solo consume el HLS, así que no hace falta conservar el original.
+async function removeSourceFile(filepath) {
+  const abs = path.join('/var/lib/video', filepath)
+  try {
+    await fs.promises.unlink(abs)
+    logger.info({ filepath }, 'Original eliminado tras empaquetar (VOD2Live)')
+  } catch (err) {
+    logger.warn({ err: err.message, filepath }, 'No se pudo eliminar el original tras empaquetar')
+  }
+}
+
 export function enqueueVideoNormalization(job) {
   _queue.push(job)
   logger.info({ trackId: job.trackId, clientId: job.clientId }, 'Normalización de video encolada')
@@ -58,8 +84,9 @@ async function _process(job) {
       const { hlsPath } = await packageVideo(clientId, trackId, filepath)
       const thumbnail = await extractThumbnail(clientId, filepath)
       const m = await probeVideo(filepath)
-      let filesize = 0
-      try { filesize = fs.statSync(path.join('/var/lib/video', filepath)).size } catch (_) {}
+      // Peso real en disco = HLS (el fuente se borra abajo), así la cuota
+      // de almacenamiento refleja lo que realmente ocupa el cliente.
+      const filesize = dirSizeBytes(path.join('/var/lib/video', hlsPath))
       await pool.query(
         `UPDATE video_tracks
          SET status = 'ready', processingError = NULL, hlsPath = ?, filesize = ?, duration = ?,
@@ -67,6 +94,7 @@ async function _process(job) {
          WHERE id = ?`,
         [hlsPath, filesize, m.duration ?? 0, m.width ?? null, m.height ?? null, m.codec ?? null, thumbnail ?? null, trackId]
       )
+      await removeSourceFile(filepath)
       logger.info({ trackId, clientId, hlsPath }, 'Video empaquetado (VOD2Live)')
       return
     }
