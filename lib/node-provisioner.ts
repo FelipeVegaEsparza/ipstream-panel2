@@ -127,6 +127,9 @@ const CADDYFILE = `# IPStream — Caddyfile para nodos de streaming
 \t\turi replace /vod/ /api/video/playout/
 \t\treverse_proxy agent:4000
 \t}
+\thandle /tv/* {
+\t\treverse_proxy agent:4000
+\t}
 \thandle /api/video/playout/* {
 \t\treverse_proxy agent:4000
 \t}

@@ -12,6 +12,10 @@
 		uri replace /vod/ /api/video/playout/
 		reverse_proxy agent:4000
 	}
+	# TV: cara pública estable (/tv/<key> reproductor + /tv/<key>.m3u8 redirect)
+	handle /tv/* {
+		reverse_proxy agent:4000
+	}
 	# TV: segmentos del stitcher (el manifiesto usa rutas /api/video/playout/*)
 	handle /api/video/playout/* {
 		reverse_proxy agent:4000

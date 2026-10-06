@@ -250,11 +250,14 @@ export function getPanelOrigin(): string {
 }
 
 /**
- * URL pública estable del canal de TV: /tv/<key>.m3u8 en el panel. Redirige al
- * app que esté al aire (DJ en vivo por SRS, o AutoDJ por el stitcher VOD2Live).
+ * URL pública estable del canal de TV: /tv/<key>.m3u8 en el servidor asignado.
+ * En el servidor principal la sirve el panel; en un nodo, su Caddy/agente.
+ * Redirige al app que esté al aire (DJ en vivo por SRS, o AutoDJ VOD2Live).
  */
-export function getVideoStableUrl(clientId: string): string {
-  return `${getPanelOrigin()}/tv/${getVideoStreamKey(clientId)}.m3u8`
+export async function getVideoStableUrl(clientId: string): Promise<string> {
+  const base = await getVideoPublicBase(clientId)
+  const root = (base || getPanelOrigin()).replace(/\/+$/, '')
+  return `${root}/tv/${getVideoStreamKey(clientId)}.m3u8`
 }
 
 export async function getVideoPublicBase(clientId: string): Promise<string> {
@@ -314,7 +317,7 @@ export async function getClientStreamUrls(clientId: string): Promise<{ radioStre
 
   const videoStreamingUrl =
     services !== 'radio' && videoStream
-      ? getVideoStableUrl(clientId)
+      ? await getVideoStableUrl(clientId)
       : null
 
   return { radioStreamingUrl, videoStreamingUrl }
@@ -360,7 +363,7 @@ export async function rewriteClientPublicUrls(
   // Video: base pública del servidor de video asignado (HLS por /live/*, solo si el plan incluye TV)
   const videoBase = await getVideoPublicBase(clientId)
   let videoStreamingUrl: string | null = services !== 'radio' && videoStream
-    ? getVideoStableUrl(clientId)
+    ? await getVideoStableUrl(clientId)
     : null
   if (videoStreamingUrl === null && services !== 'radio' && videoStream) {
     const host = process.env.RTMP_RELAY_PUBLIC_HOST || process.env.HARBOR_PUBLIC_HOSTNAME || 'localhost'

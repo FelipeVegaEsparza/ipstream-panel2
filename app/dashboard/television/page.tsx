@@ -47,18 +47,16 @@ export default function TelevisionPage() {
         ? `${window.location.origin}${hlsUrl}`
         : hlsUrl
     : null
+  // Base del servidor asignado (nodo o panel) para las URLs de transmisión.
+  const nodeBase = (publicBase || (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/+$/, '')
   // URL estable: /tv/<streamKey>.m3u8 siempre muestra lo que esté al aire
-  // (AutoDJ o OBS), redirige según el estado.
-  const stableUrl = videoStatus?.streamKey
-    ? typeof window !== 'undefined'
-      ? `${window.location.origin}/tv/${videoStatus.streamKey}.m3u8`
-      : null
+  // (AutoDJ o OBS), servida por el servidor asignado.
+  const stableUrl = videoStatus?.streamKey && nodeBase
+    ? `${nodeBase}/tv/${videoStatus.streamKey}.m3u8`
     : null
   // URL del reproductor público: /tv/<streamKey> abre una página con player
-  const playerUrl = videoStatus?.streamKey
-    ? typeof window !== 'undefined'
-      ? `${window.location.origin}/tv/${videoStatus.streamKey}`
-      : null
+  const playerUrl = videoStatus?.streamKey && nodeBase
+    ? `${nodeBase}/tv/${videoStatus.streamKey}`
     : null
 
   useEffect(() => {

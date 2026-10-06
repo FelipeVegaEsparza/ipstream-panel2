@@ -23,6 +23,7 @@ import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import monitorRoutes from './routes/monitor.js'
 import videoRoutes from './routes/video.js'
 import playoutRoutes from './routes/playout.js'
+import tvRoutes from './routes/tv.js'
 import videoScheduleRoutes, { startVideoScheduleCron } from './routes/video-schedule.js'
 import migrationRoutes from './routes/migration.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
@@ -639,6 +640,7 @@ try {
 await app.register(streamRoutes)
 await app.register(videoRoutes)
 await app.register(playoutRoutes)
+await app.register(tvRoutes)
 await app.register(videoScheduleRoutes)
 await app.register(websocketRoutes)
 await app.register(libraryRoutes)
