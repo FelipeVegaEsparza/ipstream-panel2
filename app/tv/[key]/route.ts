@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
+import { getVideoPublicBase } from '@/lib/streaming-helpers'
 
 // Stream key derivado igual que en el agente: tv_ + sha256(clientId).slice(0,12)
 function getStreamKey(clientId: string): string {
@@ -8,7 +9,7 @@ function getStreamKey(clientId: string): string {
 }
 
 // Player público embebido con hls.js, apuntando a la URL estable /tv/<key>.m3u8
-function playerHtml(streamKey: string): string {
+function playerHtml(streamKey: string, base: string): string {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -38,6 +39,7 @@ function playerHtml(streamKey: string): string {
   var overlay = document.getElementById('ov');
   var ovt = document.getElementById('ovt');
   var key = ${JSON.stringify(streamKey)};
+  var mediaBase = ${JSON.stringify(base)};
   var src = '/tv/' + key + '.m3u8';
   var stateEl = document.querySelector('.state');
   if (window.location.origin.indexOf('localhost') === -1) {
@@ -66,8 +68,8 @@ function playerHtml(streamKey: string): string {
   }
 
   function manifestUrl(app) {
-    if (app === 'dj') return '/dj/' + key + '.m3u8';
-    return '/vod/' + key + '/live.m3u8';
+    if (app === 'dj') return mediaBase + '/dj/' + key + '.m3u8';
+    return mediaBase + '/vod/' + key + '/live.m3u8';
   }
 
   function probe(url) {
@@ -176,16 +178,20 @@ export async function GET(_req: NextRequest, { params }: { params: { key: string
   if (isPlaylist) {
     if (match.status === 'off') return new NextResponse('Not Found', { status: 404 })
     const app = match.status === 'live' ? 'dj' : 'vod'
-    // Location relativo: el cliente lo resuelve contra su propio origen
-    // (req.url del server, detrás de Caddy, es localhost:3000 y rompería la URL).
-    const loc = app === 'dj' ? `/dj/${streamKey}.m3u8` : `/vod/${streamKey}/live.m3u8`
+    // Con nodo dedicado, redirigimos absoluto al Caddy del nodo (los medios
+    // salen directo del nodo, no por el panel). Si no hay base, Location
+    // relativo: el cliente lo resuelve contra su propio origen.
+    const base = await getVideoPublicBase(match.clientId)
+    const suffix = app === 'dj' ? `/dj/${streamKey}.m3u8` : `/vod/${streamKey}/live.m3u8`
+    const loc = base ? `${base.replace(/\/$/, '')}${suffix}` : suffix
     const res = new NextResponse(null, { status: 302 })
     res.headers.set('Location', loc)
     res.headers.set('Cache-Control', 'no-store')
     return res
   }
 
-  return new NextResponse(playerHtml(streamKey), {
+  const base = await getVideoPublicBase(match.clientId)
+  return new NextResponse(playerHtml(streamKey, base), {
     headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
   })
 }

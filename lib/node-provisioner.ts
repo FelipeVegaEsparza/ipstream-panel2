@@ -119,19 +119,38 @@ function buildNodeEnv(server: {
 }
 
 const CADDYFILE = `# IPStream — Caddyfile para nodos de streaming
+# Termina TLS (Let's Encrypt automático) para el hostname público del nodo.
+# Enruta /vod y /api/video/playout al agente (TV), /dj y /live a SRS (TV), y
+# el resto a icecast (radio).
 {$SITE_DOMAIN} {
-\treverse_proxy icecast:8000
-
-\theader {
-\t\tAccess-Control-Allow-Origin "*"
-\t\tAccess-Control-Allow-Methods "GET, OPTIONS"
-\t\tAccess-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
-\t\tAccess-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
-\t\tCache-Control "no-cache, no-store, must-revalidate"
-\t\t-Server
+\thandle /vod/* {
+\t\turi replace /vod/ /api/video/playout/
+\t\treverse_proxy agent:4000
+\t}
+\thandle /api/video/playout/* {
+\t\treverse_proxy agent:4000
+\t}
+\thandle /dj/* {
+\t\treverse_proxy srs:8080
+\t}
+\thandle /live/* {
+\t\treverse_proxy srs:8080
 \t}
 
-\tencode zstd gzip
+\thandle {
+\t\treverse_proxy icecast:8000
+
+\t\theader {
+\t\t\tAccess-Control-Allow-Origin "*"
+\t\t\tAccess-Control-Allow-Methods "GET, OPTIONS"
+\t\t\tAccess-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
+\t\t\tAccess-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
+\t\t\tCache-Control "no-cache, no-store, must-revalidate"
+\t\t\t-Server
+\t\t}
+
+\t\tencode zstd gzip
+\t}
 }
 `
 

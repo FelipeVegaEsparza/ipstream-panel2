@@ -1,19 +1,44 @@
 # IPStream — Caddyfile para nodos de streaming
-# Termina TLS (Let's Encrypt automático) para el hostname público del nodo
-# y proxea a icecast:8000. El provisioning lo escribe en /opt/ipstream-node/Caddyfile.
+# Termina TLS (Let's Encrypt automático) para el hostname público del nodo.
+# Enruta:
+#   /vod/*               → stitcher VOD2Live (agente)   [TV AutoDJ]
+#   /api/video/playout/* → agente (segmentos del stitcher)
+#   /dj/*, /live/*       → SRS (TV en vivo / HLS)
+#   resto                → icecast (radio)
+# El provisioning lo escribe en /opt/ipstream-node/Caddyfile.
 {$SITE_DOMAIN} {
-	reverse_proxy icecast:8000
-
-	header {
-		Access-Control-Allow-Origin "*"
-		Access-Control-Allow-Methods "GET, OPTIONS"
-		Access-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
-		Access-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
-		Cache-Control "no-cache, no-store, must-revalidate"
-		-Server
+	# TV: manifiesto vivo del AutoDJ (stitcher) → agente
+	handle /vod/* {
+		uri replace /vod/ /api/video/playout/
+		reverse_proxy agent:4000
+	}
+	# TV: segmentos del stitcher (el manifiesto usa rutas /api/video/playout/*)
+	handle /api/video/playout/* {
+		reverse_proxy agent:4000
+	}
+	# TV: DJ en vivo y HLS de SRS
+	handle /dj/* {
+		reverse_proxy srs:8080
+	}
+	handle /live/* {
+		reverse_proxy srs:8080
 	}
 
-	# Streaming pasa por HTTPS y se desfasa en chunks.
-	# Importante: NO comprimir (rompe el streaming)
-	encode zstd gzip
+	# Radio (y resto)
+	handle {
+		reverse_proxy icecast:8000
+
+		header {
+			Access-Control-Allow-Origin "*"
+			Access-Control-Allow-Methods "GET, OPTIONS"
+			Access-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
+			Access-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
+			Cache-Control "no-cache, no-store, must-revalidate"
+			-Server
+		}
+
+		# Streaming pasa por HTTPS y se desfasa en chunks.
+		# Importante: NO comprimir (rompe el streaming)
+		encode zstd gzip
+	}
 }

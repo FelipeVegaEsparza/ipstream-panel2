@@ -30,12 +30,13 @@ export default function TelevisionPage() {
   // Si no llega (fallback), se usa NEXT_PUBLIC_STREAM_PUBLIC_URL o la relativa del panel.
   const publicBase = videoStatus?.publicBase || process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
   // El DJ en vivo se sirve desde SRS (app 'dj'); el AutoDJ desde el stitcher
-  // VOD2Live (app 'vod', servido por el panel).
+  // VOD2Live. Ambos cuelgan de la base pública del servidor asignado: en el
+  // servidor principal la sirve el panel; en un nodo, la sirve su Caddy.
   const hlsApp = videoStatus?.status === 'live' ? 'dj' : 'vod'
   const hlsUrl = videoStatus?.streamKey
     ? hlsApp === 'dj'
       ? (publicBase ? `${publicBase.replace(/\/$/, '')}/dj/${videoStatus.streamKey}.m3u8` : `/dj/${videoStatus.streamKey}.m3u8`)
-      : `/vod/${videoStatus.streamKey}/live.m3u8`
+      : (publicBase ? `${publicBase.replace(/\/$/, '')}/vod/${videoStatus.streamKey}/live.m3u8` : `/vod/${videoStatus.streamKey}/live.m3u8`)
     : null
   // Link completo para mostrar/copiar: si la URL es relativa, la volvemos
   // absoluta con el dominio actual del navegador.
@@ -87,12 +88,11 @@ export default function TelevisionPage() {
     const manifestUrl = (app: 'vod' | 'dj') => {
       const key = videoStatusRef.current?.streamKey
       if (!key) return null
+      const base = publicBase ? publicBase.replace(/\/$/, '') : ''
       if (app === 'dj') {
-        return publicBase
-          ? `${publicBase.replace(/\/$/, '')}/dj/${key}.m3u8`
-          : `/dj/${key}.m3u8`
+        return base ? `${base}/dj/${key}.m3u8` : `/dj/${key}.m3u8`
       }
-      return `/vod/${key}/live.m3u8`
+      return base ? `${base}/vod/${key}/live.m3u8` : `/vod/${key}/live.m3u8`
     }
 
     const probe = async (url: string | null): Promise<boolean> => {

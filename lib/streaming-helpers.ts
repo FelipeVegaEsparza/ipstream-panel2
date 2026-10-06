@@ -278,8 +278,13 @@ export async function getVideoPublicBase(clientId: string): Promise<string> {
       return ''
     }
   }
-  if (target?.publicUrl) return target.publicUrl.replace(/\/+$/, '')
-  if (target) return `http://${target.publicHostname}:8080`
+  // Nodo: Caddy del nodo termina TLS y encamina /vod (stitcher), /dj y /live
+  // (SRS) al servicio correspondiente. El panel ya no queda en el data path.
+  if (target?.publicUrl) {
+    const u = target.publicUrl.replace(/\/+$/, '')
+    return /^https?:\/\//.test(u) ? u : `https://${u}`
+  }
+  if (target) return `https://${target.publicHostname}`
   return process.env.NEXT_PUBLIC_STREAM_PUBLIC_URL || ''
 }
 
