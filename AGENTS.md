@@ -34,6 +34,7 @@
 - Al re-encodear/reemplazar un track, los segmentos mantienen su nombre → **purgar caché de Cloudflare** de esas URLs.
 - `TV_PLAYOUT=concat` restaura el modo legacy (concat `-c copy` a RTMP, requiere formato uniforme).
 - Tocar `streaming/agent/*`: **"Actualizar nodo"** en los remotos.
+- Tests del stitcher/ABR: `cd streaming/agent && npm test` (node --test).
 
 ## Estabilidad del AutoDJ de TV (HLS)
 
