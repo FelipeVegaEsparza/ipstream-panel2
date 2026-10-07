@@ -171,6 +171,7 @@ services:
       TV_VIDEO_BITRATE: ${TV_VIDEO_BITRATE:-1500}
       TV_VIDEO_MAXRATE: ${TV_VIDEO_MAXRATE:-1700}
       TV_VIDEO_BUFSIZE: ${TV_VIDEO_BUFSIZE:-3000}
+      TV_VIDEO_LADDER: ${TV_VIDEO_LADDER:-1080p:2000,720p:1000}
       TV_PLAYOUT: ${TV_PLAYOUT:-stitch}
     ports:
       # El panel central debe poder alcanzar este puerto (acotar por firewall a la IP del panel)

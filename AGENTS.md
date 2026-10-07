@@ -24,10 +24,14 @@
 ## Playout de TV: VOD2Live (stitching) — modo por defecto
 
 - `TV_PLAYOUT=stitch` (default): el AutoDJ se sirve como un **manifiesto HLS vivo** (`/api/video/playout/<key>/live.m3u8` en el agente, expuesto público por el panel en `/vod/<key>/live.m3u8`). No hay proceso ffmpeg de AutoDJ.
-- Cada video se **empaqueta a HLS** al subir (resolución NATIVA, segmentos `.ts`, sin upscale ni uniformar). `hlsPath` en `video_tracks`.
-- El **stitcher** (`lib/channel-stitcher.js`) arma la ventana viva encadenando assets con `EXT-X-DISCONTINUITY`. Acepta assets heterogéneos (720p/1080p, 25/30fps).
+- **ABR (ladder)**: cada video se empaqueta a HLS en varias rendiciones (`TV_VIDEO_LADDER`, default `1080p:2000,720p:1000`), en `hls/<clientId>/<trackId>/<rendition>/`. `video_tracks.renditions` (JSON) lista las variantes; `hlsPath` es el directorio del track.
+  - El canal expone un **master** en `/vod/<key>/live.m3u8` (y `/api/video/playout/<key>/live.m3u8`), con manifiestos vivos por rendición en `live/<rendition>.m3u8`. Los segmentos usan `/seg/<rendition>/<trackId>/<file>`.
+  - El player (hls.js) hace **ABR automático**; no hay selector manual.
+  - **Intersección:** el master solo lista rendiciones presentes en TODOS los tracks del ciclo. Si hay tracks legados (single-rendition), el canal colapsa a una sola rendición (sin ABR) hasta re-empaquetar todo el ciclo.
+- El **stitcher** (`lib/channel-stitcher.js`) arma la ventana viva encadenando assets con `EXT-X-DISCONTINUITY`. Los segmentos se mapean **por índice** entre rendiciones (alineados por GOP), para que el cambio de calidad no salte de posición.
 - El **DJ en vivo** sigue por SRS (`/dj/<key>.m3u8`); el player cambia según el estado.
 - Reempaquetar catálogo: `docker exec ipstream-streaming-agent node scripts/package-videos.js [clientId] [--force]`.
+- Al re-encodear/reemplazar un track, los segmentos mantienen su nombre → **purgar caché de Cloudflare** de esas URLs.
 - `TV_PLAYOUT=concat` restaura el modo legacy (concat `-c copy` a RTMP, requiere formato uniforme).
 - Tocar `streaming/agent/*`: **"Actualizar nodo"** en los remotos.
 

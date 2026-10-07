@@ -25,10 +25,14 @@ async function main() {
   for (const t of tracks) {
     const t0 = Date.now()
     try {
-      const { hlsPath } = await packageVideo(t.clientId, t.id, t.filepath)
-      await pool.query(`UPDATE video_tracks SET hlsPath = ? WHERE id = ?`, [hlsPath, t.id])
+      const { hlsPath, renditions } = await packageVideo(t.clientId, t.id, t.filepath)
+      await pool.query(`UPDATE video_tracks SET hlsPath = ?, renditions = ? WHERE id = ?`, [
+        hlsPath,
+        JSON.stringify(renditions || []),
+        t.id,
+      ])
       done++
-      console.log(`  ✓ ${t.filename} -> ${hlsPath} (${((Date.now() - t0) / 1000).toFixed(1)}s)`)
+      console.log(`  ✓ ${t.filename} -> ${hlsPath} [${(renditions || []).map((r) => r.name).join('+')}] (${((Date.now() - t0) / 1000).toFixed(1)}s)`)
     } catch (err) {
       failed++
       console.error(`  ✗ ${t.filename}: ${err.message}`)

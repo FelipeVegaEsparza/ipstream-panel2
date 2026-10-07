@@ -79,23 +79,23 @@ async function _process(job) {
   )
 
   try {
-    // Modo VOD2Live: empaquetar a HLS (native res) en vez de uniformar a 1080p.
+    // Modo VOD2Live: empaquetar a HLS (ladder ABR) en vez de uniformar a 1080p.
     if (config.video.playout === 'stitch') {
-      const { hlsPath } = await packageVideo(clientId, trackId, filepath)
+      const { hlsPath, renditions } = await packageVideo(clientId, trackId, filepath)
       const thumbnail = await extractThumbnail(clientId, filepath)
       const m = await probeVideo(filepath)
-      // Peso real en disco = HLS (el fuente se borra abajo), así la cuota
-      // de almacenamiento refleja lo que realmente ocupa el cliente.
+      // Peso real en disco = HLS completo (todas las rendiciones); el fuente se
+      // borra abajo, así la cuota refleja lo que realmente ocupa el cliente.
       const filesize = dirSizeBytes(path.join('/var/lib/video', hlsPath))
       await pool.query(
         `UPDATE video_tracks
-         SET status = 'ready', processingError = NULL, hlsPath = ?, filesize = ?, duration = ?,
+         SET status = 'ready', processingError = NULL, hlsPath = ?, renditions = ?, filesize = ?, duration = ?,
              width = ?, height = ?, codec = ?, thumbnail = ?
          WHERE id = ?`,
-        [hlsPath, filesize, m.duration ?? 0, m.width ?? null, m.height ?? null, m.codec ?? null, thumbnail ?? null, trackId]
+        [hlsPath, JSON.stringify(renditions || []), filesize, m.duration ?? 0, m.width ?? null, m.height ?? null, m.codec ?? null, thumbnail ?? null, trackId]
       )
       await removeSourceFile(filepath)
-      logger.info({ trackId, clientId, hlsPath }, 'Video empaquetado (VOD2Live)')
+      logger.info({ trackId, clientId, hlsPath, renditions }, 'Video empaquetado (VOD2Live ABR)')
       return
     }
 

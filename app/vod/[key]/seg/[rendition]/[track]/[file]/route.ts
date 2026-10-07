@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { resolveVideoServerTarget } from '@/lib/streaming-servers'
 
 // =====================================================
-// /vod/<streamKey>/seg/<trackId>/<file> — segmentos .ts del stitcher
+// /vod/<streamKey>/seg/<rendition>/<trackId>/<file> — segmentos .ts (ABR)
 // Público (sin auth), gateado por streamKey. Proxea el binario del agente.
 // =====================================================
 
@@ -14,12 +14,16 @@ function getStreamKey(clientId: string): string {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { key: string; track: string; file: string } },
+  { params }: { params: { key: string; rendition: string; track: string; file: string } },
 ) {
   const streamKey = params.key || ''
-  const { track, file } = params
+  const { rendition, track, file } = params
   if (!/^tv_[a-f0-9]{12}$/.test(streamKey)) return new NextResponse('Not Found', { status: 404 })
-  if (!/^[a-zA-Z0-9-]+$/.test(track) || !/^[a-zA-Z0-9._-]+$/.test(file)) {
+  if (
+    !/^[a-zA-Z0-9-]+$/.test(rendition) ||
+    !/^[a-zA-Z0-9-]+$/.test(track) ||
+    !/^[a-zA-Z0-9._-]+$/.test(file)
+  ) {
     return new NextResponse('Bad Request', { status: 400 })
   }
 
@@ -33,7 +37,7 @@ export async function GET(
   let res: Response
   try {
     res = await fetch(
-      `${target.baseUrl}/api/video/playout/${streamKey}/seg/${encodeURIComponent(track)}/${encodeURIComponent(file)}`,
+      `${target.baseUrl}/api/video/playout/${streamKey}/seg/${encodeURIComponent(rendition)}/${encodeURIComponent(track)}/${encodeURIComponent(file)}`,
       { headers: { Authorization: `Bearer ${target.token}` } },
     )
   } catch {

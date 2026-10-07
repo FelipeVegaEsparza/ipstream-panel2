@@ -31,6 +31,36 @@ function listEnv(name, fallback) {
   return v.split(',').map((s) => s.trim()).filter(Boolean)
 }
 
+// Dimensiones conocidas para cada nombre de rendición del ladder ABR.
+const LADDER_DIMS = {
+  '1080p': [1920, 1080],
+  '720p': [1280, 720],
+  '480p': [854, 480],
+  '360p': [640, 360],
+}
+
+// Parsea TV_VIDEO_LADDER ("1080p:2000,720p:1000") a un array ordenado de mayor
+// a menor resolución: [{ name, bitrateKbps, width, height }].
+function parseLadder(str) {
+  const out = String(str)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const [name, kbps] = part.split(':')
+      const dims = LADDER_DIMS[name] || LADDER_DIMS['1080p']
+      const bitrateKbps = parseInt(kbps, 10)
+      return {
+        name,
+        bitrateKbps: Number.isNaN(bitrateKbps) ? 1500 : bitrateKbps,
+        width: dims[0],
+        height: dims[1],
+      }
+    })
+  out.sort((a, b) => b.height - a.height)
+  return out
+}
+
 export const config = {
   port: intEnv('PORT', 4000),
   host: required('HOST', '0.0.0.0'),
@@ -98,6 +128,9 @@ export const config = {
     bitrateKbps: intEnv('TV_VIDEO_BITRATE', 1500),
     maxrateKbps: intEnv('TV_VIDEO_MAXRATE', 1700),
     bufsizeKbps: intEnv('TV_VIDEO_BUFSIZE', 3000),
+    // Ladder ABR (VOD2Live): rendiciones a empaquetar por video. Formato
+    // "nombre:bitrateKbps" separado por comas, mayor→menor resolución.
+    ladder: parseLadder(required('TV_VIDEO_LADDER', '1080p:2000,720p:1000')),
     // Modo de playout de TV:
     //   'stitch' = VOD2Live (empaqueta HLS por asset + manifiesto vivo; sin concat)
     //   'concat' = legacy (concat -c copy a RTMP/SRS, requiere formato uniforme)

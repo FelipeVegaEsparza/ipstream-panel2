@@ -133,3 +133,21 @@ export function buildLiveManifest(cycle, anchorMs, nowMs, opts = {}) {
   lines.push('')
   return lines.join('\n')
 }
+
+/**
+ * Genera un master playlist (ABR) que lista las variantes del canal.
+ * @param {Array<{name,width,height,bitrateKbps}>} renditions
+ * @param {object} opts { variantUrl(name)->string }
+ */
+export function buildMasterManifest(renditions, opts = {}) {
+  const variantUrl = opts.variantUrl || ((name) => `live/${name}.m3u8`)
+  const lines = ['#EXTM3U', '#EXT-X-VERSION:3']
+  for (const r of renditions) {
+    const bw = Math.round((r.bitrateKbps || 1000) * 1000)
+    const res = r.width && r.height ? `,RESOLUTION=${r.width}x${r.height}` : ''
+    lines.push(`#EXT-X-STREAM-INF:BANDWIDTH=${bw}${res}`)
+    lines.push(variantUrl(r.name))
+  }
+  lines.push('')
+  return lines.join('\n')
+}

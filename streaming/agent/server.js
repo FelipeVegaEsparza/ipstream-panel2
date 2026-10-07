@@ -473,6 +473,20 @@ try {
   logger.error({ err: err.message }, 'Error migrando columnas de estado en video_tracks')
 }
 
+// Columna renditions (JSON): ladder ABR por track. Null = single-rendition legado.
+try {
+  const [cols] = await pool.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'video_tracks' AND COLUMN_NAME = 'renditions'`
+  )
+  if (cols.length === 0) {
+    await pool.query(`ALTER TABLE video_tracks ADD COLUMN renditions JSON NULL AFTER hlsPath`)
+    logger.info('Columna video_tracks.renditions agregada')
+  }
+} catch (err) {
+  logger.error({ err: err.message }, 'Error migrando columna renditions en video_tracks')
+}
+
 try {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS video_playlists (
