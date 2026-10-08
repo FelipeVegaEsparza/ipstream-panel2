@@ -44,3 +44,7 @@ streaming/liquidsoap/scripts/*.liq
 pwa/node_modules/
 pwa/dist/
 pwa/.vite/
+
+# Bundle único de la PWA servido por el panel y caché de iconos por cliente
+public/client-site/
+public/client-icons/

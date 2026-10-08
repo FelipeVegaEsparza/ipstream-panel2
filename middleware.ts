@@ -2,10 +2,27 @@ import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
 import { verifyImpersonationToken } from '@/lib/impersonation'
 
+// Caddy marca los hosts de clientes con `x-tenant-site: 1` (la decisión de host
+// vs panel la toma Caddy: el middleware corre en edge y no puede consultar la DB).
+function isTenantSite(req: { headers: Headers }): boolean {
+  return req.headers.get('x-tenant-site') === '1'
+}
+
 export default withAuth(
   async function middleware(req) {
     const token = req.nextauth.token
     const { pathname } = req.nextUrl
+
+    // Sitios de clientes (bundle único de la PWA). Todo lo que no sea /api o
+    // /_next se enruta al tenant handler; las llamadas a /api pasan directo.
+    if (isTenantSite(req)) {
+      if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) {
+        return NextResponse.next()
+      }
+      const url = req.nextUrl.clone()
+      url.pathname = `/api/tenant${pathname === '/' ? '' : pathname}`
+      return NextResponse.rewrite(url)
+    }
 
     // Verificar acceso a rutas de admin
     if (pathname.startsWith('/admin')) {
@@ -60,6 +77,9 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
+        // Los sitios de clientes son públicos.
+        if (isTenantSite(req)) return true
+
         const { pathname } = req.nextUrl
 
         // Permitir acceso a rutas públicas

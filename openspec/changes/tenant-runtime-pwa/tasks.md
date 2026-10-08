@@ -9,12 +9,12 @@
 
 ## 2. Fase B — Shell dinámico por host (panel + bundle único)
 
-- [ ] 2.1 Construir `pwa/dist` y publicarlo en el runtime del panel (mount/volumen) y servir sus assets estáticos (`/assets/*`, `/sw.js`, `/offline.html`); verificar que un asset responde con caché desde un dominio de cliente.
-- [ ] 2.2 Servir `manifest.webmanifest` dinámico por host (nombre, short_name, theme, iconos); verificar en un dominio de cliente.
-- [ ] 2.3 Servir `index.html` con OG/Twitter del cliente inyectados en server; verificar `<title>`/`og:image` correctos y degradación sin imagen.
-- [ ] 2.4 Servir iconos por host (`favicon.png`, `icon-192/512`, `maskable`, `apple-touch-icon`) con fallback a los compartidos; verificar con y sin iconos.
-- [ ] 2.5 Fallback de SPA para rutas internas (p. ej. `/noticias/123`) y página informativa para host sin cliente; verificar ambos.
-- [ ] 2.6 Detección de host de cliente vs host del panel en `middleware.ts`; verificar que el panel y `stream.*` no se ven afectados.
+- [x] 2.1 Construir `pwa/dist` y publicarlo en el runtime del panel (mount/volumen) y servir sus assets estáticos (`/assets/*`, `/sw.js`, `/offline.html`); verificar que un asset responde con caché desde un dominio de cliente.
+- [x] 2.2 Servir `manifest.webmanifest` dinámico por host (nombre, short_name, theme, iconos); verificar en un dominio de cliente.
+- [x] 2.3 Servir `index.html` con OG/Twitter del cliente inyectados en server; verificar `<title>`/`og:image` correctos y degradación sin imagen.
+- [x] 2.4 Servir iconos por host (`favicon.png`, `icon-192/512`, `maskable`, `apple-touch-icon`) con fallback a los compartidos; verificar con y sin iconos.
+- [x] 2.5 Fallback de SPA para rutas internas (p. ej. `/noticias/123`) y página informativa para host sin cliente; verificar ambos.
+- [x] 2.6 Detección de host de cliente vs host del panel en `middleware.ts`; verificar que el panel y `stream.*` no se ven afectados.
 
 ## 3. Fase C — Tenant runtime en la PWA
 

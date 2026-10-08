@@ -97,6 +97,10 @@ data/
 # PWA (app hermana con sus propias dependencias — no va en la imagen del panel)
 pwa/
 
+# Bundle único de la PWA y cache de iconos: se montan como volumen, no van en la imagen
+public/client-site/
+public/client-icons/
+
 # Local env
 .env
 .env.*

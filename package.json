@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "build:client-site": "node scripts/build-client-site.mjs",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",

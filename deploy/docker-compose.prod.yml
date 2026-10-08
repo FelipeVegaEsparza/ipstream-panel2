@@ -45,6 +45,10 @@ services:
       RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
     volumes:
       - app_uploads:/app/public/uploads
+      # Bundle único de la PWA y caché de iconos por cliente. El deploy publica
+      # el bundle en ./data/client-site (ver scripts/build-client-site.mjs).
+      - ./data/client-site:/app/public/client-site
+      - ./data/client-icons:/app/public/client-icons
       # No bind-mount schema.prisma en producción — la imagen ya lo trae
     networks:
       - ipstream-net
