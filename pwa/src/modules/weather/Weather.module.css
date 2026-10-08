@@ -1,0 +1,48 @@
+.weather {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: var(--tpl-text, #ffffff);
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.weatherIcon {
+  display: inline-flex;
+  color: #ffd66b;
+}
+
+.temp {
+  font-weight: 800;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.city {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: capitalize;
+}
+
+.pin {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cond {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+@media (max-width: 640px) {
+  .cond {
+    display: none;
+  }
+}

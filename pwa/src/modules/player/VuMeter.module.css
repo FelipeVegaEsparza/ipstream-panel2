@@ -1,0 +1,17 @@
+.vu {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.vu span {
+  flex: 1 1 0;
+  min-width: 2px;
+  height: 100%;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(180deg, #ffffff, rgba(255, 255, 255, 0.35));
+  transform-origin: bottom;
+  will-change: transform;
+}

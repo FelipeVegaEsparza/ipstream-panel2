@@ -1,0 +1,31 @@
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.line {
+  display: block;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--content-skeleton-bg, rgba(128, 128, 128, 0.18));
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.line:nth-child(2) {
+  width: 85%;
+}
+
+.line:nth-child(3) {
+  width: 60%;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}

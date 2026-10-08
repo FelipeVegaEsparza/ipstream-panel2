@@ -1,0 +1,377 @@
+.page {
+  /* Sistema de tarjetas "Blue": portada con noticia destacada */
+  --grid-min: 240px;
+  --grid-gap: 16px;
+  --card-radius: 16px;
+  --card-border-w: 1px;
+  --card-bg: rgba(255, 255, 255, 0.07);
+  --card-bg-img: linear-gradient(160deg, rgba(125, 211, 252, 0.1), rgba(255, 255, 255, 0.02) 45%);
+  --card-border: rgba(125, 211, 252, 0.22);
+  --card-border-hover: rgba(125, 211, 252, 0.6);
+  --card-shadow: 0 10px 26px rgba(2, 10, 30, 0.35);
+  --card-shadow-hover: 0 18px 42px rgba(2, 10, 30, 0.55);
+  --card-lift: -4px;
+  --card-accent: var(--brand-accent, #38bdf8);
+  --card-accent-h: 2px;
+
+  --section-title-color: #7dd3fc;
+  --section-title-size: 0.78rem;
+  --section-title-weight: 800;
+  --section-title-transform: uppercase;
+  --section-title-spacing: 0.2em;
+  --section-rule-w: 44px;
+  --section-rule-h: 3px;
+  --section-rule-c: linear-gradient(90deg, var(--brand-accent, #38bdf8), #6366f1);
+  --section-gap: 44px;
+  --section-bar-w: calc(4px * var(--brand-accent-on, 0));
+  --section-bar-h: 1.05em;
+  --section-bar-gap: calc(10px * var(--brand-accent-on, 0));
+  --section-bar-radius: 2px;
+  --section-bar-c: var(--brand-accent, transparent);
+
+  --color-bg: #060e22;
+  --color-surface: #0d2247;
+  --color-surface-alt: #12305f;
+  --color-text: #eef6ff;
+  --color-text-muted: #9db8dd;
+  --color-primary: var(--brand-accent, #38bdf8);
+  --color-primary-hover: var(--brand-accent-hover, #0ea5e9);
+  --color-border: rgba(125, 211, 252, 0.22);
+  --content-card-bg: rgba(255, 255, 255, 0.07);
+  --content-card-border: rgba(125, 211, 252, 0.2);
+  --content-text: #f2f8ff;
+  --content-muted: #a9c2e4;
+  --content-accent: #7dd3fc;
+  --content-skeleton-bg: rgba(255, 255, 255, 0.12);
+
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(var(--player-height) + var(--space-3));
+  background:
+    radial-gradient(1100px 560px at 88% -12%, rgba(var(--brand-accent-rgb, 56, 189, 248), 0.3), transparent 62%),
+    radial-gradient(900px 520px at -12% 34%, rgba(99, 102, 241, 0.24), transparent 55%),
+    linear-gradient(165deg, #0a2a63 0%, #081b3f 52%, #050d22 100%);
+  color: var(--color-text);
+  scroll-behavior: smooth;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(125, 211, 252, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7), transparent 70%);
+}
+
+/* ---------- Menú superior: logo + secciones del sitio ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background: rgba(6, 14, 34, 0.82);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.brandGroup {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logo {
+  max-height: 48px;
+  max-width: 210px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 16px rgba(56, 189, 248, 0.25));
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+.navLink {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 999px;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.navLink:hover {
+  color: #fff;
+  background: rgba(125, 211, 252, 0.14);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.socials {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--color-border);
+  transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+.socialLink:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  color: #04101f;
+}
+
+.main {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-5) var(--space-6);
+}
+
+.gcBar {
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.footer {
+  position: relative;
+  padding: var(--space-4) var(--space-5);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 820px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    padding-bottom: var(--space-1);
+  }
+
+  .socials {
+    display: none;
+  }
+}
+
+/* ----- Botón hamburguesa y menú lateral (pantallas pequeñas) ----- */
+.menuBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text);
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.menuBtn:hover {
+  border-color: var(--color-primary);
+  background: rgba(125, 211, 252, 0.14);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(2, 8, 26, 0.6);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.scrimOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 70;
+  width: min(320px, 86vw);
+  display: flex;
+  flex-direction: column;
+  background: #081a3c;
+  border-right: 1px solid rgba(125, 211, 252, 0.25);
+  box-shadow: 20px 0 50px rgba(2, 8, 26, 0.6);
+  transform: translateX(-102%);
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.drawerOpen {
+  transform: translateX(0);
+}
+
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid rgba(125, 211, 252, 0.2);
+}
+
+.drawerLogo {
+  height: 34px;
+  max-width: 150px;
+  width: auto;
+  object-fit: contain;
+}
+
+.drawerTitle {
+  margin-right: auto;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.drawerClose {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.drawerClose:hover {
+  color: var(--color-text);
+}
+
+.drawerList {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-3);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawerLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.drawerLink svg {
+  color: #7dd3fc;
+}
+
+.drawerLink:hover {
+  color: #fff;
+  background: rgba(125, 211, 252, 0.14);
+}
+
+@media (max-width: 820px) {
+  .nav {
+    display: none;
+  }
+
+  .menuBtn {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 821px) {
+  .scrim,
+  .drawer {
+    display: none;
+  }
+}
+
+/* ----- Pie del menú lateral: redes e instalar ----- */
+.drawerFoot {
+  border-top: 1px solid rgba(125, 211, 252, 0.2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.drawerSocials {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}

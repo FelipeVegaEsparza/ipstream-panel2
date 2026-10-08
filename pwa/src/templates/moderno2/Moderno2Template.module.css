@@ -1,0 +1,478 @@
+/* Template `moderno2` (estilo radioladeliciosa).
+   Las familias se definen en ./fonts.css (self-hosted). */
+
+.page {
+  --template-display-font: 'Bebas Neue', sans-serif;
+  --primary-font: 'Montserrat', sans-serif;
+  --secondary-font: 'Montserrat', sans-serif;
+
+  --template-bg: #0d0d0f;
+  --template-surface: #141416;
+  --template-text: #f5f5f5;
+  --template-muted: rgba(255, 255, 255, 0.6);
+  --template-primary: var(--brand-accent, #ff6b00);
+  --template-primary-soft: var(--brand-accent, #ff9500);
+  --template-border: rgba(var(--brand-accent-rgb, 255, 140, 0), 0.16);
+
+  --section-bg-text-color: #cbd5e1;
+  --section-highlight-color: var(--template-primary-soft);
+  --section-title-color: #ffffff;
+  --section-title-weight: 800;
+  --section-title-transform: uppercase;
+  --section-gap: 5rem;
+
+  --content-card-bg: #17171a;
+  --content-card-border: rgba(255, 255, 255, 0.08);
+  --content-text: #f5f5f5;
+  --content-muted: rgba(255, 255, 255, 0.6);
+  --content-accent: var(--brand-accent, #ff9500);
+  --content-skeleton-bg: rgba(255, 255, 255, 0.08);
+
+  --container-width: 1200px;
+  --container-padding: 1rem;
+  --nav-height: 120px;
+
+  /* Reproductor inferior con la misma forma que el menú (pastilla flotante). */
+  --page-max-width: calc(var(--container-width) - 2 * var(--container-padding));
+  --bar-inset-x: 1rem;
+  --bar-radius: 0.75rem;
+  --player-inset: 1rem;
+
+  position: relative;
+  min-height: 100svh;
+  font-family: var(--primary-font);
+  color: var(--template-text);
+  background:
+    radial-gradient(900px 420px at 50% -10%, var(--brand-accent-soft, transparent), transparent 60%),
+    var(--template-bg);
+  padding-bottom: calc(var(--player-height, 72px) + 2rem);
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+@media (min-width: 992px) {
+  .page {
+    --container-padding: 1.5rem;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero                                                                */
+/* ------------------------------------------------------------------ */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--template-border);
+}
+
+.heroBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.heroBgImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(28px) saturate(1.1);
+  transform: scale(1.15);
+  opacity: 0.5;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(var(--brand-accent-rgb, 255, 107, 0), 0.18) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(13, 13, 15, 0.55) 0%, rgba(13, 13, 15, 0.96) 100%);
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  padding-top: 2rem;
+  padding-bottom: 4.5rem;
+}
+
+/* Barra de navegación: pastilla redondeada, centrada y pegada al scroll.
+   La GC bar va dentro, como parte de la misma pastilla. */
+.navBar {
+  position: sticky;
+  top: 1rem;
+  z-index: 50;
+  width: calc(100% - 2rem);
+  max-width: calc(var(--container-width) - 2 * var(--container-padding));
+  margin: 1.5rem auto 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(13, 13, 15, 0.72);
+  border: 1px solid var(--template-border);
+}
+
+.navBar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(1rem);
+}
+
+.navInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 56px;
+  padding: 0.75rem 1.5rem;
+}
+
+/* La GC bar ocupa el ancho de la pastilla y cierra sus esquinas inferiores. */
+.gcBar {
+  border-top: 1px solid var(--template-border);
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.logo {
+  height: 44px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.nav {
+  flex: 1;
+}
+
+.navList {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--template-display-font);
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  color: var(--template-text);
+  white-space: nowrap;
+}
+
+.navLink {
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--template-primary-soft);
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: none;
+}
+
+.socials {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--template-text);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.socialLink:hover {
+  background: var(--template-primary);
+  color: #fff;
+}
+
+.menuBtn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--template-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--template-text);
+  font-size: 1.2rem;
+}
+
+.heroBody {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  align-items: center;
+  gap: 2.5rem;
+  margin-top: 3.5rem;
+}
+
+.heroCover {
+  width: 360px;
+  height: 360px;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6);
+  background: var(--template-surface);
+}
+
+.heroCoverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroInfo {
+  min-width: 0;
+}
+
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 0), 0.16);
+  border: 1px solid var(--template-border);
+  color: var(--template-primary-soft);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.onDot,
+.offDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.onDot {
+  background: #ff3b30;
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.8);
+}
+
+.offDot {
+  background: #6b7280;
+}
+
+.song {
+  margin: 0.8rem 0 0.3rem;
+  font-family: var(--template-display-font);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  line-height: 1;
+  color: #fff;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artist {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--template-muted);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.8rem;
+}
+
+.playBtn,
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.9rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+}
+
+.playBtn {
+  background: linear-gradient(135deg, var(--template-primary), var(--template-primary-soft));
+  color: #fff;
+}
+
+.playBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--template-border);
+  color: var(--template-text);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.content {
+  padding: 1.5rem 0 3rem;
+}
+
+.footer {
+  border-top: 1px solid var(--template-border);
+  padding: 1.5rem 0;
+  background: var(--template-surface);
+}
+
+.footerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.footerText {
+  font-size: 0.85rem;
+  color: var(--template-muted);
+}
+
+.footerText strong {
+  color: var(--template-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* Titulares "display": palabra gigante de fondo + texto resaltado.    */
+/* El atributo data-bg-text lo emite la UI compartida `Section`.       */
+/* ------------------------------------------------------------------ */
+
+.page [data-bg-text] {
+  position: relative;
+  z-index: 1;
+}
+
+.page [data-bg-text]::before {
+  content: attr(data-bg-text);
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: -1;
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0;
+  background: none;
+  border-radius: 0;
+  font-size: clamp(1.5rem, 10vw, 6rem);
+  font-weight: 900;
+  line-height: 0.85;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  opacity: 0.25;
+  color: var(--section-bg-text-color, #cbd5e1);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 991px) {
+  .navList {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: min(80vw, 320px);
+    max-height: calc(100dvh - var(--nav-height));
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    margin: 0;
+    background: var(--template-bg);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 60;
+    overflow-y: auto;
+  }
+
+  .navListOpen {
+    transform: translateX(0);
+  }
+
+  .navLink {
+    display: block;
+    padding: 0.6rem 0;
+    font-size: 1.6rem;
+  }
+
+  .menuBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .page {
+    --section-gap: 3.5rem;
+  }
+
+  .heroBody {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .heroInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .heroActions {
+    justify-content: center;
+  }
+
+  .heroCover {
+    width: 220px;
+    height: 220px;
+  }
+
+  .topActions .socials {
+    display: none;
+  }
+}

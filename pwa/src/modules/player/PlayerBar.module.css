@@ -1,0 +1,229 @@
+.bar {
+  position: fixed;
+  left: var(--bar-inset-x, 0);
+  right: var(--bar-inset-x, 0);
+  bottom: var(--player-inset, 0);
+  z-index: 40;
+  max-width: var(--page-max-width, none);
+  margin: 0 auto;
+  border-radius: var(--bar-radius, 0);
+  overflow: hidden;
+  background: var(--color-surface);
+  border-top: 1px solid var(--brand-accent-soft, var(--color-border));
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--page-max-width, 1320px);
+  margin: 0 auto;
+  padding: 0 var(--page-pad-x, clamp(var(--space-4), 4vw, var(--space-6)));
+}
+
+/* VU meter de fondo del reproductor (opcional por template). */
+.vuBg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  opacity: 0.16;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(var(--space-3), 2.4vw, var(--space-5));
+  min-height: var(--player-height);
+  padding: var(--space-2) 0;
+}
+
+/* Bloque izquierdo: tema en reproducción */
+.current {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  justify-self: start;
+}
+
+.cover,
+.coverPlaceholder {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.coverPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.statusDotOn {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+  animation: statusPulse 1.7s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.statusText {
+  color: var(--color-text);
+}
+
+.statusMeta {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  font-weight: 700;
+  font-size: 0.98rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Botón de play/pausa centrado */
+.playButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--brand-accent, var(--color-primary));
+  color: var(--brand-accent-contrast, #fff);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  justify-self: center;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.playButton:hover:not(:disabled) {
+  background: var(--brand-accent-hover, var(--color-primary-hover));
+  transform: scale(1.05);
+}
+
+.playButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Bloque derecho: próximo tema */
+.next {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  max-width: 260px;
+  justify-self: end;
+  text-align: right;
+}
+
+.nextLabel {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.nextTitle {
+  font-weight: 600;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nextArtist {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* En pantallas reducidas: tema a la izquierda y play a la derecha */
+@media (max-width: 860px) {
+  .content {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .next {
+    display: none;
+  }
+
+  .content > :last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .cover,
+  .coverPlaceholder {
+    width: 44px;
+    height: 44px;
+  }
+
+  .playButton {
+    width: 42px;
+    height: 42px;
+  }
+
+  .statusMeta {
+    display: none;
+  }
+}

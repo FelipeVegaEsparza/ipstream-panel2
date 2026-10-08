@@ -1,0 +1,23 @@
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--content-card-border, #e5e3de);
+  background: var(--content-card-bg, #ffffff);
+  color: var(--content-text, inherit);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.link:hover {
+  opacity: 0.8;
+  transform: translateY(-2px);
+}

@@ -1,0 +1,47 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.formCol {
+  min-width: 0;
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.cover {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--content-card-border, rgba(255, 255, 255, 0.08));
+  background: var(--content-skeleton-bg, rgba(255, 255, 255, 0.08));
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupLabel {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--content-muted, rgba(255, 255, 255, 0.6));
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+}

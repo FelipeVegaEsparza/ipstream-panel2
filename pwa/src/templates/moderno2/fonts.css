@@ -1,0 +1,19 @@
+/* Tipografías self-hosted del template `moderno2`.
+   Se sirven desde /fonts (public/) y el service worker las precachea
+   (woff2 está en injectManifest.globPatterns), por lo que funcionan offline. */
+
+@font-face {
+  font-family: 'Bebas Neue';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/bebas-neue-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/montserrat-latin-wght-normal.woff2') format('woff2-variations');
+}

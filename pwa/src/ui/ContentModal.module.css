@@ -1,0 +1,57 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(5, 5, 10, 0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  overflow-y: auto;
+}
+
+.modal {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90svh;
+  overflow-y: auto;
+  background: var(--content-card-bg, #ffffff);
+  color: var(--content-text, #17171c);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--content-card-bg, #ffffff);
+  border-bottom: 1px solid var(--content-card-border, #e6e8ec);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--content-text, #17171c);
+}
+
+.close {
+  border: none;
+  background: transparent;
+  color: var(--content-muted, #5f6672);
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.body {
+  padding: var(--space-5);
+}

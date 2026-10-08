@@ -1,0 +1,54 @@
+.full,
+.thin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bar-bg, var(--tpl-skeleton, var(--color-border, rgba(128, 128, 128, 0.18))));
+  overflow: hidden;
+}
+
+.thin .bar {
+  height: 3px;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand-accent, var(--bar-fill, var(--color-primary, #6366f1)));
+  transition: width 0.3s linear;
+}
+
+/* Estado "en vivo" sin duración conocida: barra activa animada */
+.fillLive {
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--brand-accent, var(--color-primary, #6366f1)) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: liveSlide 1.6s linear infinite;
+}
+
+@keyframes liveSlide {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+.times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--tpl-muted, #9ca3af);
+  font-variant-numeric: tabular-nums;
+}

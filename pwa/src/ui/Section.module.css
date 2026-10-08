@@ -1,0 +1,44 @@
+.section {
+  margin: var(--section-gap, var(--space-6)) 0;
+}
+
+.sectionFlush {
+  margin: 0;
+}
+
+.title {
+  position: relative;
+  font-family: var(--section-title-font, inherit);
+  font-size: var(--section-title-size, 1.1rem);
+  font-weight: var(--section-title-weight, 700);
+  text-transform: var(--section-title-transform, uppercase);
+  letter-spacing: var(--section-title-spacing, 0.05em);
+  color: var(--section-title-color, var(--content-muted, #6b6761));
+  margin: 0 0 var(--space-4);
+}
+
+.title::before {
+  content: '';
+  display: inline-block;
+  width: var(--section-bar-w, 0);
+  height: var(--section-bar-h, 1.05em);
+  margin-right: var(--section-bar-gap, 0);
+  border-radius: var(--section-bar-radius, 2px);
+  background: var(--section-bar-c, transparent);
+  vertical-align: -0.12em;
+}
+
+.title::after {
+  content: '';
+  display: block;
+  width: var(--section-rule-w, 0);
+  max-width: 100%;
+  height: var(--section-rule-h, 3px);
+  margin-top: var(--section-rule-gap, 8px);
+  border-radius: 2px;
+  background: var(--section-rule-c, transparent);
+}
+
+.highlight {
+  color: var(--section-highlight-color, var(--color-primary, #6366f1));
+}

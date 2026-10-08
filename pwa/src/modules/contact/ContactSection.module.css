@@ -1,0 +1,128 @@
+.intro {
+  color: var(--content-muted, #6b6761);
+  font-size: 0.95rem;
+  margin: 0 0 var(--space-4);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.brandCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.brandLogo {
+  max-width: 180px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.brandDesc {
+  margin: 0;
+  color: var(--content-muted, #6b6761);
+  line-height: 1.6;
+}
+
+.formCol {
+  min-width: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 640px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--content-muted, #6b6761);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-3);
+  font: inherit;
+  color: var(--content-text, inherit);
+  background: var(--content-card-bg, #ffffff);
+  border: 1px solid var(--content-card-border, #e6e8ec);
+  border-radius: var(--radius-sm);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--content-accent, #1c1b1a);
+  box-shadow: 0 0 0 3px var(--content-accent-soft, rgba(28, 27, 26, 0.12));
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--content-muted, #6b6761);
+  opacity: 0.7;
+}
+
+.submit {
+  align-self: flex-start;
+  padding: var(--space-3) var(--space-5);
+  font: inherit;
+  font-weight: 600;
+  color: var(--brand-accent-contrast, var(--content-accent-text, #ffffff));
+  background: var(--content-accent, #1c1b1a);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.submit:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.statusOk,
+.statusError {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.statusOk {
+  color: #16a34a;
+}
+
+.statusError {
+  color: #dc2626;
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+}

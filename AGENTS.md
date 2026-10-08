@@ -6,6 +6,18 @@
 - El usuario tiene acceso SSH al VPS de producción; se puede usar para tareas de deploy, pruebas y diagnóstico.
 - Flujo habitual: commit + push a `main` → GitHub Actions despliega automáticamente en el VPS.
 
+## App PWA hermana (`pwa/`)
+
+- La app PWA de clientes (React 19 + Vite 8 + vite-plugin-pwa, react-router-dom, react-query, hls.js, Vitest, oxlint) vive en `pwa/`, copiada desde su repo original.
+- **Dependencias aisladas: NO se usa npm workspaces.** `pwa/` tiene su propio `package.json` y su `node_modules` (gitignored). No agregar `"workspaces"` al `package.json` raíz: el panel usa React 18 y la PWA React 19, y el hoisting rompería el panel y el `npm ci` del Dockerfile.
+- **4 reglas de aislamiento** (el panel debe seguir compilando/deployando igual):
+  1. `tsconfig.json` raíz: `pwa` en `exclude`.
+  2. `.dockerignore`: `pwa/` excluido del contexto de build.
+  3. `.gitignore`: `pwa/node_modules/`, `pwa/dist/`, `pwa/.vite/`.
+  4. `.github/workflows/deploy.yml`: `pwa/**` en `paths-ignore` (un cambio solo de PWA no deploya el panel).
+- Build/dev de la PWA: `cd pwa && npm install && npm run build` (o `npm run dev`). Tests: `npm run test`.
+- El servido del bundle, la resolución de tenant por dominio y el aprovisionamiento de dominios por cliente quedan para cambios futuros.
+
 ## Streaming / Nodos remotos
 
 - El deploy de GitHub Actions solo actualiza el panel y el agente del VPS principal.

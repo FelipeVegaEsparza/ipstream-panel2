@@ -1,0 +1,35 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card-bg, var(--content-card-bg, #ffffff));
+  background-image: var(--card-bg-img, none);
+  border: var(--card-border-w, 1px) solid
+    var(--card-border, var(--content-card-border, #e5e3de));
+  border-radius: var(--card-radius, var(--radius-md));
+  box-shadow: var(--card-shadow, 0 1px 2px rgba(0, 0, 0, 0.05));
+  overflow: hidden;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    background-color 220ms ease;
+}
+
+/* Acento inferior opcional: cada template lo activa con --card-accent-h */
+.card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--card-accent-h, 0);
+  background: var(--card-accent, transparent);
+  pointer-events: none;
+}
+
+.card:hover {
+  transform: translateY(var(--card-lift, 0));
+  box-shadow: var(--card-shadow-hover, var(--card-shadow, none));
+  border-color: var(--card-border-hover, var(--card-border, transparent));
+}

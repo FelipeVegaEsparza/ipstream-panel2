@@ -1,0 +1,64 @@
+.player {
+  position: relative;
+  width: 100%;
+}
+
+/* Reproductor grande y centrado para el hero de los templates. */
+.hero {
+  max-width: 1040px;
+  margin-inline: auto;
+}
+
+.video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: block;
+  border-radius: var(--radius-md);
+  background: #000;
+}
+
+.soundBtn {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0b0b12;
+  background: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.soundBtn:hover {
+  transform: scale(1.03);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.errorText {
+  margin: 0;
+  color: var(--content-muted, #6b6761);
+  font-size: 0.9rem;
+}
+
+.retry {
+  border: 1px solid var(--content-card-border, rgba(128, 128, 128, 0.4));
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font: inherit;
+  cursor: pointer;
+}

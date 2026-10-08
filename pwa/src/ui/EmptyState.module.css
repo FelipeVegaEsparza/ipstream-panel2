@@ -1,0 +1,5 @@
+.empty {
+  color: var(--content-muted, #6b6761);
+  font-size: 0.95rem;
+  margin: 0;
+}

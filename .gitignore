@@ -37,3 +37,10 @@ tsconfig.tsbuildinfo
 # En dev están en el repo (bind-mount al host); en prod están en ./data/scripts.
 # No commitear los generados en runtime.
 streaming/liquidsoap/scripts/*.liq
+
+# =====================================================
+# PWA (app hermana en pwa/, dependencias aisladas del panel)
+# =====================================================
+pwa/node_modules/
+pwa/dist/
+pwa/.vite/

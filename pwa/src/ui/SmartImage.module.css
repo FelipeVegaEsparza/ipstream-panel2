@@ -1,0 +1,21 @@
+.wrap {
+  position: relative;
+  display: block;
+}
+
+.incoming {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.shown {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .incoming {
+    transition: none;
+  }
+}

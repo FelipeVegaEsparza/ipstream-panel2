@@ -94,6 +94,9 @@ streaming/README.md
 # Audio de prueba (no va en producción)
 data/
 
+# PWA (app hermana con sus propias dependencias — no va en la imagen del panel)
+pwa/
+
 # Local env
 .env
 .env.*

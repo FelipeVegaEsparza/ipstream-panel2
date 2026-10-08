@@ -1,0 +1,132 @@
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.online {
+  font-size: 0.85rem;
+  color: var(--content-muted, #6b6761);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.listener,
+.admin {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--content-card-bg, #ffffff);
+  border: 1px solid var(--content-card-border, #e5e3de);
+}
+
+.admin {
+  border-left: 3px solid var(--content-accent, #1c1b1a);
+}
+
+.msgName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--content-accent, #1c1b1a);
+}
+
+.msgBody {
+  font-size: 0.95rem;
+  color: var(--content-text, inherit);
+  word-break: break-word;
+}
+
+.msgTime {
+  align-self: flex-end;
+  font-size: 0.7rem;
+  color: var(--content-muted, #6b6761);
+}
+
+.empty {
+  color: var(--content-muted, #6b6761);
+  font-size: 0.9rem;
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fields {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.input {
+  flex: 1;
+  min-width: 160px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--content-card-border, #e5e3de);
+  background: var(--content-card-bg, #ffffff);
+  color: var(--content-text, inherit);
+  font-family: inherit;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+
+.textarea {
+  flex: 1;
+  resize: vertical;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--content-card-border, #e5e3de);
+  background: var(--content-card-bg, #ffffff);
+  color: var(--content-text, inherit);
+  font-family: inherit;
+}
+
+.send {
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--content-accent, #1c1b1a);
+  color: var(--content-card-bg, #ffffff);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 150ms ease;
+}
+
+.send:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #d64545;
+  font-size: 0.85rem;
+  margin: 0;
+}

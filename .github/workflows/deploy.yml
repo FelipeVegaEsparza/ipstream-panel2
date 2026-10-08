@@ -8,6 +8,9 @@ on:
     # cuando es el commit cabeza (incluido un commit de código que venga antes).
     paths-ignore:
       - 'openspec/**'
+      # La app PWA hermana (pwa/) no forma parte de la imagen del panel;
+      # sus cambios no deben disparar un rebuild/deploy del panel.
+      - 'pwa/**'
   workflow_dispatch:
     inputs:
       image_tag:
