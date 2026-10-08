@@ -14,6 +14,18 @@
 # =====================================================
 
 # ============================================================
+# Opciones globales
+# ============================================================
+# TLS on-demand para los sitios de clientes (dominios no listados abajo).
+# `ask` autoriza la emisión de certificados solo para dominios registrados y
+# activos en el panel. Caddy consulta el endpoint con ?domain=<host>.
+{
+	on_demand_tls {
+		ask http://app:3000/api/domains/ask
+	}
+}
+
+# ============================================================
 # Panel principal: panelipstream.cl
 # ============================================================
 {$STREAM_DOMAIN:panelipstream.cl} {
@@ -127,7 +139,6 @@ http://stream.{$STREAM_DOMAIN:panelipstream.cl} {
 :443 {
     tls {
         on_demand
-        ask http://app:3000/api/domains/ask?domain={domain}
     }
 
     header X-Tenant-Site "1"
