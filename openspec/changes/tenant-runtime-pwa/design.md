@@ -42,10 +42,12 @@ host de cliente →
 - **Alternativa considerada — edge/Cloudflare Pages**: válida a futuro; se descarta por ahora para no sumar otro proveedor de deploy.
 
 ### 2. Detección de "host de cliente" vs host del panel
-`middleware.ts` ya distingue rutas. Se agrega: si el `Host` entrante corresponde a un `ClientDomain` activo (y no al host del panel ni a `stream`), las rutas `/`, manifest e iconos se enrutan al **shell de tenant**. El resto del panel sigue igual.
+Caddy marca los hosts de clientes con el header `x-tenant-site: 1` (decisión de host en la capa de routing). `middleware.ts` consume ese header: si está presente, reescribe las rutas que no son `/api/*` ni `/_next/*` a `/api/tenant/<path>`, que es el shell de tenant. El resto del panel sigue igual.
 
-- **Por qué en el panel**: ya tiene Prisma y la tabla de dominios; una sola fuente de verdad.
-- La resolución se cachea en memoria con TTL corto (p. ej. 60 s) para no golpear la DB en cada request.
+- **Por qué Caddy marca y no el middleware resuelve el host**: el middleware de Next 14 corre en Edge y no puede consultar la DB ni confiar en `process.env` de runtime (se inlinea en build). El header es determinista y no depende de la resolución de host en el edge.
+- **Por qué el panel sirve el shell**: ya tiene Prisma y la tabla de dominios; una sola fuente de verdad.
+- **Riesgo aceptado**: el header lo setea Caddy; un cliente podría spoofearlo, pero el peor caso es recibir el shell de tenant con el `Host` propio (que resuelve a "no configurado"). A futuro se puede firmar el header.
+- La resolución host → cliente se cachea en memoria con TTL corto (60 s) para no golpear la DB en cada request.
 
 ### 3. Modelo `ClientDomain` y resolución
 ```
