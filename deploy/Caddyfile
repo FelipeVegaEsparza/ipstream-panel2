@@ -141,9 +141,11 @@ http://stream.{$STREAM_DOMAIN:panelipstream.cl} {
         on_demand
     }
 
-    header X-Tenant-Site "1"
-
-    reverse_proxy app:3000
+    reverse_proxy app:3000 {
+        # Header de REQUEST al upstream (el `header` de site es de respuesta):
+        # hace que el middleware del panel enrute a /api/tenant.
+        header_up X-Tenant-Site "1"
+    }
 
     log {
         output file /data/sites-access.log {
