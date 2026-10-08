@@ -1,33 +1,32 @@
 // =====================================================
 // DNS provider — provisión de subdominios y verificación de dominios custom
 // =====================================================
-// Subdominios de plataforma (<label>.<CLIENT_SITES_DOMAIN>): se crean vía API
-// de Cloudflare si hay token; si no, se asume un wildcard DNS a nivel infra y
-// se verifica resolviendo una etiqueta aleatoria.
-// Dominios custom: los configura el cliente (CNAME a CLIENT_SITES_TARGET); acá
-// solo se verifica.
+// La configuración (dominio base, target, IP y token de Cloudflare) sale de
+// app_config (dashboard) con fallback a env, vía getClientSitesConfig().
+// Subdominios: si hay wildcard *.dominio, no hace falta registro por host.
+// Custom: los configura el cliente (CNAME al target); acá solo se verifica.
 
 import { promises as dns } from 'dns'
-import { CLIENT_SITES_DOMAIN } from '@/lib/client-domains'
+import { getClientSitesConfig, type ClientSitesConfig } from '@/lib/client-sites-config'
 
 const CF_API = 'https://api.cloudflare.com/client/v4'
-const CF_TOKEN = process.env.CLOUDFLARE_API_TOKEN || ''
 
-export const CLIENT_SITES_TARGET = (process.env.CLIENT_SITES_TARGET || '')
-  .trim()
-  .toLowerCase()
-  .replace(/\.+$/, '')
-export const CLIENT_SITES_IP = (process.env.CLIENT_SITES_IP || '').trim()
-
-export function dnsProviderConfigured(): boolean {
-  return Boolean(CF_TOKEN && CLIENT_SITES_DOMAIN && (CLIENT_SITES_TARGET || CLIENT_SITES_IP))
+interface CfRecord {
+  id: string
+  type: string
+  name: string
+  content: string
 }
 
-async function cf<T>(path: string, init: RequestInit = {}): Promise<T> {
+function providerConfigured(cfg: ClientSitesConfig): boolean {
+  return Boolean(cfg.cloudflareToken && cfg.domain && (cfg.target || cfg.ip))
+}
+
+async function cf<T>(token: string, path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${CF_API}${path}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${CF_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       ...(init.headers || {}),
     },
@@ -38,25 +37,37 @@ async function cf<T>(path: string, init: RequestInit = {}): Promise<T> {
     errors?: Array<{ message?: string }>
   }
   if (!res.ok || body.success === false) {
-    const msg = body.errors?.map((e) => e.message).filter(Boolean).join('; ') || `Cloudflare ${res.status}`
+    const msg =
+      body.errors?.map((e) => e.message).filter(Boolean).join('; ') || `Cloudflare ${res.status}`
     throw new Error(msg)
   }
   return body.result as T
 }
 
-async function cfZoneId(): Promise<string> {
-  const zones = await cf<Array<{ id: string }>>(
-    `/zones?name=${encodeURIComponent(CLIENT_SITES_DOMAIN)}&status=active&per_page=1`
+async function cfZoneId(cfg: ClientSitesConfig): Promise<string> {
+  const direct = await cf<Array<{ id: string; name: string }>>(
+    cfg.cloudflareToken,
+    `/zones?name=${encodeURIComponent(cfg.domain)}&status=active&per_page=1`
   )
-  const zone = zones?.[0]
-  if (!zone?.id) throw new Error(`No se encontró la zona ${CLIENT_SITES_DOMAIN} en Cloudflare`)
-  return zone.id
+  if (direct?.[0]?.id) return direct[0].id
+
+  // El dominio de sitios puede ser un subdominio de la zona (p. ej.
+  // sitios.ipstream.cl con zona ipstream.cl): buscamos la zona que sea sufijo.
+  const all = await cf<Array<{ id: string; name: string }>>(
+    cfg.cloudflareToken,
+    '/zones?status=active&per_page=50'
+  )
+  const match = (all || [])
+    .filter((z) => cfg.domain === z.name || cfg.domain.endsWith(`.${z.name}`))
+    .sort((a, b) => b.name.length - a.name.length)[0]
+  if (!match) throw new Error(`No se encontró la zona de ${cfg.domain} en Cloudflare`)
+  return match.id
 }
 
-/** Verifica si existe un wildcard DNS para el dominio base (sin Cloudflare). */
-async function wildcardCovers(hostname: string): Promise<boolean> {
-  if (!CLIENT_SITES_DOMAIN || !hostname.endsWith(`.${CLIENT_SITES_DOMAIN}`)) return false
-  const probe = `ipstream-wc-check-${Date.now().toString(36)}.${CLIENT_SITES_DOMAIN}`
+/** Verifica si existe un wildcard DNS para el dominio base. */
+async function wildcardCovers(hostname: string, domain: string): Promise<boolean> {
+  if (!domain || !hostname.endsWith(`.${domain}`)) return false
+  const probe = `ipstream-wc-check-${Date.now().toString(36)}.${domain}`
   try {
     const [a, cname] = await Promise.allSettled([dns.resolve4(probe), dns.resolveCname(probe)])
     return a.status === 'fulfilled' || cname.status === 'fulfilled'
@@ -66,47 +77,54 @@ async function wildcardCovers(hostname: string): Promise<boolean> {
 }
 
 /**
- * Asegura el registro DNS de un subdominio de plataforma. Idempotente: si ya
- * existe (registro exacto o wildcard), no duplica.
+ * Asegura el registro DNS de un subdominio de plataforma. Si un wildcard ya lo
+ * cubre, no crea nada. Idempotente.
  */
 export async function ensureSubdomainRecord(hostname: string): Promise<void> {
-  if (!CLIENT_SITES_DOMAIN || !hostname.endsWith(`.${CLIENT_SITES_DOMAIN}`)) {
-    throw new Error(`El subdominio ${hostname} no pertenece a ${CLIENT_SITES_DOMAIN}`)
+  const cfg = await getClientSitesConfig()
+
+  if (!cfg.domain || !hostname.endsWith(`.${cfg.domain}`)) {
+    throw new Error(`El subdominio ${hostname} no pertenece a ${cfg.domain || '(sin dominio base configurado)'}`)
   }
 
-  if (!dnsProviderConfigured()) {
-    if (await wildcardCovers(hostname)) return
+  if (await wildcardCovers(hostname, cfg.domain)) return
+
+  if (!providerConfigured(cfg)) {
     throw new Error(
-      'DNS no configurado: definí CLOUDFLARE_API_TOKEN o un wildcard DNS ' +
-        `*.${CLIENT_SITES_DOMAIN} que apunte a la plataforma`
+      'DNS no configurado: configurá el token de Cloudflare en Ajustes, o un ' +
+        `wildcard *.${cfg.domain} que apunte a la plataforma`
     )
   }
 
-  const zoneId = await cfZoneId()
-  const existing = await cf<Array<{ id: string }>>(
+  const zoneId = await cfZoneId(cfg)
+  const existing = await cf<CfRecord[]>(
+    cfg.cloudflareToken,
     `/zones/${zoneId}/dns_records?name=${encodeURIComponent(hostname)}`
   )
   if (existing?.length) return
 
-  const record = CLIENT_SITES_TARGET
-    ? { type: 'CNAME', name: hostname, content: CLIENT_SITES_TARGET, proxied: false, ttl: 1 }
-    : { type: 'A', name: hostname, content: CLIENT_SITES_IP, proxied: false, ttl: 1 }
+  const record = cfg.target
+    ? { type: 'CNAME', name: hostname, content: cfg.target, proxied: false, ttl: 1 }
+    : { type: 'A', name: hostname, content: cfg.ip, proxied: false, ttl: 1 }
 
-  await cf(`/zones/${zoneId}/dns_records`, { method: 'POST', body: JSON.stringify(record) })
+  await cf(cfg.cloudflareToken, `/zones/${zoneId}/dns_records`, {
+    method: 'POST',
+    body: JSON.stringify(record),
+  })
 }
 
 /**
- * Verifica que un dominio custom apunte a la plataforma: por CNAME a
- * CLIENT_SITES_TARGET, o por A (apex con flattening) a la misma IP que ese
- * target.
+ * Verifica que un dominio custom apunte a la plataforma: por CNAME al target, o
+ * por A (apex con flattening) a la misma IP que ese target.
  */
 export async function verifyCustomDomain(hostname: string): Promise<boolean> {
-  if (!CLIENT_SITES_TARGET) return false
+  const cfg = await getClientSitesConfig()
+  if (!cfg.target) return false
   const host = hostname.toLowerCase().replace(/\.+$/, '')
 
   try {
     const cnames = await dns.resolveCname(host)
-    if (cnames.some((c) => c.toLowerCase().replace(/\.+$/, '') === CLIENT_SITES_TARGET)) return true
+    if (cnames.some((c) => c.toLowerCase().replace(/\.+$/, '') === cfg.target)) return true
   } catch {
     // sin CNAME: se prueba A más abajo
   }
@@ -114,7 +132,7 @@ export async function verifyCustomDomain(hostname: string): Promise<boolean> {
   try {
     const [hostIps, targetIps] = await Promise.all([
       dns.resolve4(host),
-      dns.resolve4(CLIENT_SITES_TARGET),
+      dns.resolve4(cfg.target),
     ])
     if (hostIps.length && hostIps.some((ip) => targetIps.includes(ip))) return true
   } catch {
@@ -122,4 +140,54 @@ export async function verifyCustomDomain(hostname: string): Promise<boolean> {
   }
 
   return false
+}
+
+export interface EnsureBaseDnsResult {
+  domain: string
+  type: string
+  name: string
+  content: string
+  created: boolean
+}
+
+/**
+ * Asegura el DNS base: el wildcard `*.dominio` apuntando a la plataforma (A a
+ * la IP, o CNAME al target). Idempotente. Se dispara desde Ajustes.
+ */
+export async function ensureBaseDns(): Promise<EnsureBaseDnsResult> {
+  const cfg = await getClientSitesConfig()
+
+  if (!cfg.cloudflareToken) throw new Error('Falta el token de Cloudflare')
+  if (!cfg.domain) throw new Error('Falta el dominio base de los sitios')
+  if (!cfg.ip && !cfg.target) throw new Error('Falta la IP de la plataforma (o un target CNAME)')
+
+  // Sin IP usamos CNAME al target; pero si el target cae dentro del propio
+  // wildcard, se produce un loop. En ese caso exigimos la IP (registro A).
+  if (!cfg.ip && (cfg.target === cfg.domain || cfg.target.endsWith(`.${cfg.domain}`))) {
+    throw new Error(
+      `El target ${cfg.target} cae dentro del wildcard *.${cfg.domain} (loop de CNAME). ` +
+        'Configurá la IP de la plataforma para crear un registro A.'
+    )
+  }
+
+  const zoneId = await cfZoneId(cfg)
+  const name = `*.${cfg.domain}`
+
+  const existing = await cf<CfRecord[]>(
+    cfg.cloudflareToken,
+    `/zones/${zoneId}/dns_records?name=${encodeURIComponent(name)}`
+  )
+  if (existing?.length) {
+    return { domain: cfg.domain, type: existing[0].type, name, content: existing[0].content, created: false }
+  }
+
+  const record = cfg.ip
+    ? { type: 'A', name, content: cfg.ip, proxied: false, ttl: 1 }
+    : { type: 'CNAME', name, content: cfg.target, proxied: false, ttl: 1 }
+
+  await cf(cfg.cloudflareToken, `/zones/${zoneId}/dns_records`, {
+    method: 'POST',
+    body: JSON.stringify(record),
+  })
+  return { domain: cfg.domain, type: record.type, name, content: record.content, created: true }
 }

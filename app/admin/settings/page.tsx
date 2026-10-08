@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SystemSettings } from '@/components/admin/SystemSettings'
 import { LoginBackgroundSettings } from '@/components/admin/LoginBackgroundSettings'
+import { ClientSitesSettings } from '@/components/admin/ClientSitesSettings'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getLoginBackground } from '@/lib/login-background'
 
@@ -40,9 +41,12 @@ export default async function SettingsPage() {
       </div>
 
       <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-800 border-gray-700">
+        <TabsList className="grid w-full grid-cols-3 bg-gray-800 border-gray-700">
           <TabsTrigger value="system" className="data-[state=active]:bg-blue-600">
             Sistema
+          </TabsTrigger>
+          <TabsTrigger value="sites" className="data-[state=active]:bg-blue-600">
+            Sitios
           </TabsTrigger>
           <TabsTrigger value="login" className="data-[state=active]:bg-blue-600">
             Login
@@ -51,6 +55,10 @@ export default async function SettingsPage() {
 
         <TabsContent value="system" className="space-y-6">
           <SystemSettings stats={systemStats} />
+        </TabsContent>
+
+        <TabsContent value="sites" className="space-y-6">
+          <ClientSitesSettings />
         </TabsContent>
 
         <TabsContent value="login" className="space-y-6">

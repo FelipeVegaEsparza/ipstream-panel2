@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
-import { CLIENT_SITES_DOMAIN, normalizeHost, clearClientDomainCache } from '@/lib/client-domains'
+import { normalizeHost, clearClientDomainCache } from '@/lib/client-domains'
+import { getClientSitesConfig } from '@/lib/client-sites-config'
 
 const HOST_PATTERN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/
 
@@ -67,15 +68,16 @@ export async function POST(
     )
   }
 
+  const baseDomain = (await getClientSitesConfig()).domain
   let hostname = normalizeHost(parsed.data.hostname)
-  // Subdominio abreviado: "radio-x" → "radio-x.<CLIENT_SITES_DOMAIN>".
+  // Subdominio abreviado: "radio-x" → "radio-x.<dominio base>".
   if (
     hostname &&
     parsed.data.kind === 'subdomain' &&
     !hostname.includes('.') &&
-    CLIENT_SITES_DOMAIN
+    baseDomain
   ) {
-    hostname = `${hostname}.${CLIENT_SITES_DOMAIN}`
+    hostname = `${hostname}.${baseDomain}`
   }
   if (!hostname || !HOST_PATTERN.test(hostname)) {
     return NextResponse.json({ error: 'Dominio inválido' }, { status: 400 })

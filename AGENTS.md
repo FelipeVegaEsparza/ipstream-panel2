@@ -24,7 +24,7 @@
 - **Tenant por dominio**: tabla `client_domains` (se gestiona en `/admin/users/[id]/edit` → "Dominios del sitio"). `GET /api/public/resolve-domain?host=` mapea host → cliente (caché 60s). El shell dinámico (`index.html` con OG, `manifest.webmanifest`, iconos) lo sirve `/api/tenant/*`.
 - **Routing**: Caddy manda los hosts de clientes a un bloque catch-all `:443` con header `X-Tenant-Site: 1`; el middleware de Next reescribe a `/api/tenant/*`. TLS on-demand acotado por `GET /api/domains/ask` (autoriza solo dominios `active`).
 - **PWA**: resuelve el tenant en runtime por host (el `clientId` horneado queda como fallback de dev); templates lazy con fallback al default.
-- Envs: `CLIENT_SITES_DOMAIN`, `CLIENT_SITES_TARGET`, `CLIENT_SITES_IP`, `CLOUDFLARE_API_TOKEN`, `CLIENT_SITE_DIR`.
+- **Configuración de plataforma desde el dashboard**: `/admin/settings` → pestaña **Sitios** (dominio base, target CNAME, IP, token de Cloudflare) con botón **"Asegurar DNS base"** (crea el wildcard `*.dominio`). Se guarda en `app_config`; si un campo está vacío, se usa la env como fallback. Envs: `CLIENT_SITES_DOMAIN`, `CLIENT_SITES_TARGET`, `CLIENT_SITES_IP`, `CLOUDFLARE_API_TOKEN`, `CLIENT_SITE_DIR`.
 - **Deploy**: el panel se deploya con GitHub Actions (push a `main`). El bundle de la PWA se publica con el workflow `deploy-site-bundle.yml` (se dispara con cambios en `pwa/**`) hacia `./data/client-site` del VPS.
 - Un cambio que toca solo `pwa/**` **no** deploya el panel, pero **sí** republica el bundle (workflow aparte). Un cambio en el shell (`lib/client-site.ts`, `lib/client-icons.ts`, `app/api/tenant/*`, `middleware.ts`, `deploy/Caddyfile`) sí deploya el panel.
 

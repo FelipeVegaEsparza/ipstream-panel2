@@ -6,13 +6,7 @@
 // búsqueda en `client_domains`, con un cache corto para no golpear la DB.
 
 import { prisma, type PrismaDb } from '@/lib/prisma'
-
-/** Dominio base de los subdominios de la plataforma (p. ej. panelipstream.cl). */
-export const CLIENT_SITES_DOMAIN = (process.env.CLIENT_SITES_DOMAIN || '')
-  .trim()
-  .toLowerCase()
-  .replace(/^\.+/, '')
-  .replace(/\.+$/, '')
+import { getClientSitesConfig } from '@/lib/client-sites-config'
 
 export interface ResolvedClientDomain {
   clientId: string
@@ -84,9 +78,10 @@ export async function resolveClientByHost(
   })
 
   // Subdominio de plataforma: permite registrar solo la etiqueta (p. ej. "radio-x")
-  // y resolverla desde "radio-x.<CLIENT_SITES_DOMAIN>".
-  if (!row && CLIENT_SITES_DOMAIN && host.endsWith(`.${CLIENT_SITES_DOMAIN}`)) {
-    const label = host.slice(0, host.length - CLIENT_SITES_DOMAIN.length - 1)
+  // y resolverla desde "radio-x.<dominio base>".
+  const base = (await getClientSitesConfig()).domain
+  if (!row && base && host.endsWith(`.${base}`)) {
+    const label = host.slice(0, host.length - base.length - 1)
     if (label && !label.includes('.')) {
       row = await db.clientDomain.findFirst({
         where: { hostname: label, status: 'active' },

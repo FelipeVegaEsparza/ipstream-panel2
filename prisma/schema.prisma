@@ -495,6 +495,12 @@ model AppConfig {
   adminNotifyEmail     String? // correo que recibe notificaciones del panel (nuevos registros, etc.)
   trialDays            Int     @default(7) // duración (días) de la prueba gratuita del registro público
 
+  // Sitios de clientes (bundle único de la PWA + dominios). null = usar env.
+  clientSitesDomain    String? // dominio base de subdominios (p. ej. ipstream.cl)
+  clientSitesTarget    String? // destino del CNAME para dominios custom y subdominios
+  clientSitesIp        String? // IP para el wildcard A de subdominios
+  cloudflareApiTokenEnc String? @db.Text // token de Cloudflare (encriptado AES-256-GCM)
+
   @@map("app_config")
 }
 
