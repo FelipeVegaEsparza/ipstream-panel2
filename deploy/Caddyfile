@@ -132,7 +132,7 @@ http://stream.{$STREAM_DOMAIN:panelipstream.cl} {
 # Sitios de clientes (bundle único de la PWA)
 # ============================================================
 # Catch-all: cualquier host que no matchee los bloques de arriba (subdominios
-# de plataforma tipo <cliente>.panelipstream.cl y dominios custom) se sirve
+# de plataforma tipo <cliente>.ipstream.cl y dominios custom) se sirve
 # como sitio de cliente. El header X-Tenant-Site hace que el middleware del
 # panel enrute al shell dinámico. TLS on-demand acotado por el endpoint `ask`:
 # solo se emiten certificados para dominios registrados y activos.
