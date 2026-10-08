@@ -31,6 +31,6 @@
 
 ## 5. Fase E — Retiro y documentación
 
-- [ ] 5.1 Deprecar `build-client.mjs`/`new-client.mjs` como flujo de producción (dejarlos para dev/marca) y documentarlo en `pwa/docs`.
-- [ ] 5.2 Actualizar `AGENTS.md` y docs de deploy con el modelo de bundle único + dominios; verificar que el texto coincide con lo implementado.
-- [ ] 5.3 Verificación end-to-end: un cliente accesible por su dominio, servido por el bundle único, con branding/OG/manifest correctos y sin deploy por cliente.
+- [x] 5.1 Deprecar `build-client.mjs`/`new-client.mjs` como flujo de producción (dejarlos para dev/marca) y documentarlo en `pwa/docs`.
+- [x] 5.2 Actualizar `AGENTS.md` y docs de deploy con el modelo de bundle único + dominios; verificar que el texto coincide con lo implementado.
+- [x] 5.3 Verificación end-to-end: un cliente accesible por su dominio, servido por el bundle único, con branding/OG/manifest correctos y sin deploy por cliente.

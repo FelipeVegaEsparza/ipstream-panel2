@@ -1,3 +1,13 @@
+> **⚠️ Modelo actual: bundle único servido por dominio.**
+>
+> Ya **no** se despliega un build por cliente. Para dar de alta un cliente se
+> registra su dominio en el panel (`/admin/users/<id>/edit` → "Dominios del
+> sitio") y se activa con "Proveer"; el sitio se sirve desde el bundle único.
+> Este documento describe el flujo anterior (build por cliente) y se conserva
+> como referencia para desarrollo y assets de marca.
+
+---
+
 # Desplegar un cliente nuevo (Radio / TV)
 
 Guía paso a paso para agregar un cliente de IPStream Panel a esta plataforma

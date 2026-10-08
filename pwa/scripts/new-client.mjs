@@ -2,6 +2,9 @@
 /**
  * Crea la configuración de un cliente nuevo y valida el build.
  *
+ * ⚠️ DEPRECADO para producción: el alta de un cliente ahora se hace en el panel
+ * (dominios del sitio). Se conserva para desarrollo y assets de marca.
+ *
  * Uso: node scripts/new-client.mjs <nombre> <clientId> [nombre-amigable]
  *
  * Genera clients/<nombre>/client.json y ejecuta el build de ese cliente

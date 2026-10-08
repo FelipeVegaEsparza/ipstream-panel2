@@ -1,0 +1,64 @@
+name: Deploy client site bundle
+
+# El bundle único de la PWA se publica aparte del panel: un cambio en pwa/**
+# NO redeploya el panel (.github/workflows/deploy.yml lo ignora vía paths-ignore)
+# pero SÍ debe republicar el bundle que sirve el panel en ./data/client-site.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pwa/**'
+      - '.github/workflows/deploy-site-bundle.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-bundle-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build PWA (bundle único)
+        working-directory: pwa
+        run: |
+          npm ci
+          npm run build
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Add VPS to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Publish bundle to VPS
+        run: |
+          ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=10 \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "mkdir -p /opt/ipstream-panel/data/client-site"
+          rsync -az --delete --chmod=D755,F644 \
+            -e "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=10" \
+            pwa/dist/ \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/ipstream-panel/data/client-site/
+
+      - name: Notify
+        if: success()
+        run: echo "✅ Bundle de sitios de clientes publicado"

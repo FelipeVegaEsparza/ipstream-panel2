@@ -2,6 +2,10 @@
 /**
  * Build de un cliente específico.
  *
+ * ⚠️ DEPRECADO para producción: el sitio se sirve como bundle único resuelto
+ * por dominio (cambio tenant-runtime-pwa). Se conserva para desarrollo y para
+ * preparar assets de marca por cliente.
+ *
  * Uso: node scripts/build-client.mjs <nombre-del-cliente>
  *
  * Lee clients/<nombre>/client.json, inyecta el clientId (y nombre) en el

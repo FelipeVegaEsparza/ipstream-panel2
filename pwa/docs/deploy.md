@@ -1,3 +1,19 @@
+> **⚠️ Modelo actual: bundle único servido por dominio (reemplaza al "Modelo C").**
+>
+> Desde el cambio `tenant-runtime-pwa`, la PWA se construye **una sola vez**
+> (`npm run build` → un único `dist/`) y la sirve el panel para todos los
+> clientes. El tenant se resuelve **por dominio** (tabla `client_domains` del
+> panel + `resolve-domain`) y el branding (Open Graph, manifest, iconos) se
+> genera en runtime por host. **Ya no se despliega un build por cliente.**
+>
+> El flujo `build-client.mjs` / `new-client.mjs` / `clients/` queda **solo para
+> desarrollo y para preparar assets de marca**. La operación real vive en el
+> repo del panel (ver su `AGENTS.md` y `deploy/`).
+>
+> Esta sección describe el modelo anterior y se conserva como referencia.
+
+---
+
 # Despliegue por cliente (Modelo C)
 
 Un solo repo contiene el core y la configuración de cada radio. Cada cliente se
