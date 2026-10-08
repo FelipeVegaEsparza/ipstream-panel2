@@ -1,13 +1,15 @@
 import {
   createContext,
   use,
+  useEffect,
   useState,
   type ReactNode
 } from 'react'
 import {
   getBakedClientId,
   getBakedClientName,
-  getPublicApiBase
+  getPublicApiBase,
+  resolveTenantByHost
 } from './tenant'
 
 export type TenantStatus = 'resolving' | 'ready' | 'notFound'
@@ -17,17 +19,21 @@ export type TenantState =
   | { status: 'ready'; clientId: string; name: string | null; baseUrl: string }
   | { status: 'notFound'; clientId: null; name: null; baseUrl: null }
 
-function resolveTenant(): TenantState {
-  const clientId = getBakedClientId()
-  if (!clientId) {
-    return { status: 'notFound', clientId: null, name: null, baseUrl: null }
-  }
-  return {
-    status: 'ready',
-    clientId,
-    name: getBakedClientName(),
-    baseUrl: getPublicApiBase(clientId)
-  }
+const RESOLVING: TenantState = { status: 'resolving', clientId: null, name: null, baseUrl: null }
+const NOT_FOUND: TenantState = { status: 'notFound', clientId: null, name: null, baseUrl: null }
+
+function readyState(clientId: string, name: string | null): TenantState {
+  return { status: 'ready', clientId, name, baseUrl: getPublicApiBase(clientId) }
+}
+
+/**
+ * Estado inicial del tenant. Si el build trae un `clientId` horneado (dev o
+ * build por cliente), se usa de inmediato; si no (bundle único de cliente), se
+ * resuelve por host de forma asíncrona en el efecto.
+ */
+function initialTenantState(): TenantState {
+  const baked = getBakedClientId()
+  return baked ? readyState(baked, getBakedClientName()) : RESOLVING
 }
 
 interface TenantContextValue {
@@ -41,7 +47,19 @@ interface TenantProviderProps {
 }
 
 export function TenantProvider({ children }: TenantProviderProps) {
-  const [tenant] = useState<TenantState>(resolveTenant)
+  const [tenant, setTenant] = useState<TenantState>(initialTenantState)
+
+  useEffect(() => {
+    if (getBakedClientId()) return // ya resuelto por build
+    let active = true
+    void resolveTenantByHost(window.location.hostname).then((resolved) => {
+      if (!active) return
+      setTenant(resolved ? readyState(resolved.clientId, resolved.name) : NOT_FOUND)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   return (
     <TenantContext value={{ tenant }}>{children}</TenantContext>

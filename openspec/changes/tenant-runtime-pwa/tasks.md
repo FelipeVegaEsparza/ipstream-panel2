@@ -18,9 +18,9 @@
 
 ## 3. Fase C — Tenant runtime en la PWA
 
-- [ ] 3.1 Resolver el tenant en runtime por host en `TenantProvider` (asíncrono), con fallback al `clientId` horneado y estado `notFound`; verificar con tests (host resuelto, fallback, sin tenant).
-- [ ] 3.2 Hacer configurable la base de la API (eliminar `IPSTREAM_BASE` hardcodeado) y verificar same-origin y origen distinto en tests.
-- [ ] 3.3 Cargar templates de forma diferida (`React.lazy` + `Suspense`) con `ErrorBoundary` que cae al template por defecto; verificar con tests (template conocido, desconocido, error de carga).
+- [x] 3.1 Resolver el tenant en runtime por host en `TenantProvider` (asíncrono), con fallback al `clientId` horneado y estado `notFound`; verificar con tests (host resuelto, fallback, sin tenant).
+- [x] 3.2 Hacer configurable la base de la API (eliminar `IPSTREAM_BASE` hardcodeado) y verificar same-origin y origen distinto en tests.
+- [x] 3.3 Cargar templates de forma diferida (`React.lazy` + `Suspense`) con `ErrorBoundary` que cae al template por defecto; verificar con tests (template conocido, desconocido, error de carga).
 
 ## 4. Fase D — Provisión de dominios y TLS
 

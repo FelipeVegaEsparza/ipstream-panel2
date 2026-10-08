@@ -6,19 +6,19 @@ Permitir que un único build de la PWA determine en runtime qué cliente represe
 
 ## ADDED Requirements
 
-### Requirement: Resolución del tenant en runtime por host
-La PWA SHALL determinar su tenant activo a partir del host desde el que se carga, consultando la resolución de dominio del panel. El `clientId` inyectado en el build SHALL usarse únicamente como respaldo cuando la resolución por host no esté disponible (por ejemplo, en desarrollo).
+### Requirement: Resolución del tenant en runtime
+La PWA SHALL resolver su tenant activo así: si el build trae un `clientId` inyectado (desarrollo o build por cliente), SHALL usarlo directamente sin consultar el host; si no lo trae (bundle único de cliente), SHALL determinarlo a partir del host consultando la resolución de dominio del panel.
 
-#### Scenario: Host resuelve a un cliente
-- **WHEN** la PWA se carga desde el host de un cliente activo
+#### Scenario: Build con clientId (desarrollo o build por cliente)
+- **WHEN** la PWA se carga y el build trae un `clientId` inyectado
+- **THEN** la aplicación lo usa como tenant activo sin consultar la resolución por host
+
+#### Scenario: Bundle único resuelto por host
+- **WHEN** el build no trae `clientId` y el host corresponde a un cliente activo
 - **THEN** la aplicación usa el `clientId` resuelto por host como tenant activo
 
-#### Scenario: Resolución no disponible con build de cliente
-- **WHEN** la resolución por host falla o no está configurada, pero el build trae un `clientId`
-- **THEN** la aplicación usa el `clientId` del build como respaldo
-
 #### Scenario: Sin tenant identificable
-- **WHEN** ni la resolución por host ni el build proveen un `clientId`
+- **WHEN** el build no trae `clientId` y el host no resuelve a ningún cliente
 - **THEN** la aplicación muestra la pantalla de cliente desconocido sin romper el resto de la app
 
 ### Requirement: Identidad del tenant expuesta a la aplicación

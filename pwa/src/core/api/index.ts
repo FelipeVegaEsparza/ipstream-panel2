@@ -1,4 +1,4 @@
-import { getPublicApiBase, IPSTREAM_BASE } from '@/core/config/tenant'
+import { getPublicApiBase, getApiOrigin } from '@/core/config/tenant'
 import type {
   Announcer,
   BasicData,
@@ -69,7 +69,7 @@ export function buildImageUrl(
 ): string | null {
   if (!path) return null
   if (/^([a-z][a-z0-9+.-]*:)/i.test(path)) return path
-  return `${IPSTREAM_BASE}${path}`
+  return `${getApiOrigin()}${path}`
 }
 
 const AUTH_GATED_PREFIX = '/api/dashboard/'

@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { Suspense } from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -44,7 +45,9 @@ function renderTemplate(templateId: string, data: FullClientData = clientData) {
       <TenantProvider>
         <PlayerProvider>
           <MemoryRouter>
-            <Template clientData={data} isLoading={false} />
+            <Suspense fallback={null}>
+              <Template clientData={data} isLoading={false} />
+            </Suspense>
           </MemoryRouter>
         </PlayerProvider>
       </TenantProvider>
@@ -58,9 +61,13 @@ describe('templates nuevos', () => {
     for (const template of NEW_TEMPLATES) {
       const { unmount } = renderTemplate(template.id)
       if (template.label) {
-        expect(screen.getByText(template.label)).toBeInTheDocument()
+        expect(
+          await screen.findByText(template.label, undefined, { timeout: 5000 })
+        ).toBeInTheDocument()
       }
-      expect((await screen.findAllByText('Radio Test')).length).toBeGreaterThan(0)
+      expect(
+        (await screen.findAllByText('Radio Test', undefined, { timeout: 5000 })).length
+      ).toBeGreaterThan(0)
       expect(screen.getAllByText('Mensaje GC').length).toBeGreaterThan(0)
       unmount()
     }
@@ -77,7 +84,7 @@ describe('templates nuevos', () => {
     ).toBeNull()
   })
 
-  it('cada template renderiza el video en modo solo TV', () => {
+  it('cada template renderiza el video en modo solo TV', async () => {
     baked.clientId = 'cmtest'
     const tvData = {
       basicData: {
@@ -90,7 +97,7 @@ describe('templates nuevos', () => {
 
     for (const template of NEW_TEMPLATES) {
       const { container, unmount } = renderTemplate(template.id, tvData)
-      expect(container.querySelector('video')).not.toBeNull()
+      await waitFor(() => expect(container.querySelector('video')).not.toBeNull(), { timeout: 5000 })
       unmount()
     }
   })
