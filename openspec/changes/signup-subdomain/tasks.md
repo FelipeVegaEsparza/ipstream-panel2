@@ -23,8 +23,8 @@
 ## 5. Email de bienvenida
 
 - [x] 5.1 Agregar la variable `sitio` a `sendWelcomeEmail` y el placeholder `{{sitio}}` a la plantilla `bienvenida` (seed); verificar el render.
-- [ ] 5.2 Actualizar la plantilla `bienvenida` de producción con `{{sitio}}` (admin/seed) y verificar un envío real.
+- [x] 5.2 Actualizar la plantilla `bienvenida` de producción con `{{sitio}}` (admin/seed) y verificar un envío real.
 
 ## 6. Verificación end-to-end
 
-- [ ] 6.1 Registro real con un nombre de radio → cuenta creada + subdominio `active` + sitio sirviendo el nombre + email con la URL; limpiar el cliente de prueba.
+- [x] 6.1 Registro real con un nombre de radio → cuenta creada + subdominio `active` + sitio sirviendo el nombre + email con la URL; limpiar el cliente de prueba.
