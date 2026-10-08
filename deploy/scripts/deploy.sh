@@ -178,6 +178,22 @@ chown -R 100:101 ./data/logs/liquidsoap 2>/dev/null || true
 chmod -R u+rwX,g+rwX,o+rwX ./data/logs/liquidsoap 2>/dev/null || true
 echo "  ✓ ./data/logs/liquidsoap → 100:101 (g+w o+w)"
 
+# Sitios de clientes: el bundle lo publica el workflow del bundle como el
+# usuario deploy, y el app (uid 1001) lo lee. Si Docker creó el dir como root
+# (bind-mount inexistente), recreatearlo como deploy para poder escribir.
+mkdir -p ./data/client-site
+if [ ! -w ./data/client-site ]; then
+  echo "  ♻️  ./data/client-site era de otro usuario; recreando como $(id -un)"
+  rm -rf ./data/client-site 2>/dev/null || true
+  mkdir -p ./data/client-site
+fi
+chmod -R u+rwX,g+rX,o+rX ./data/client-site 2>/dev/null || true
+# El cache de iconos por cliente lo escribe el app (uid 1001).
+mkdir -p ./data/client-icons
+chown -R 1001:1001 ./data/client-icons 2>/dev/null || true
+chmod -R u+rwX,g+rwX,o+rX ./data/client-icons 2>/dev/null || true
+echo "  ✓ ./data/client-site (deploy) y ./data/client-icons (1001)"
+
 # === 8. Prisma db push ANTES de levantar containers ===
 # El agente arranca crons (stats/history/retention) que consultan tablas
 # (radio_streams, tracks, playlists, play_history). Si lo levantamos antes
