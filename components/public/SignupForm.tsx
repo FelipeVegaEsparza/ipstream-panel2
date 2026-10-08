@@ -141,19 +141,19 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!planId) {
-      setError('Elegí un plan')
+      setError('Elige un plan')
       return
     }
     if (!radioName.trim()) {
-      setError('Ingresá el nombre de la radio')
+      setError('Ingresa el nombre de la radio')
       return
     }
     if (slugStatus === 'taken') {
-      setError('Ese nombre de radio ya está en uso. Elegí otro.')
+      setError('Ese nombre de radio ya está en uso. Elige otro.')
       return
     }
     if (slugStatus === 'reserved') {
-      setError('Ese nombre de radio está reservado. Elegí otro.')
+      setError('Ese nombre de radio está reservado. Elige otro.')
       return
     }
     setLoading(true)
@@ -189,8 +189,8 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
         <h2 data-slot="heading" className="text-2xl font-bold text-gray-900">¡Tu cuenta está lista!</h2>
         <p data-slot="sub" className="text-gray-600">
           {trialDays > 0
-            ? `Empezaron tus ${trialDays} días de prueba gratis. Ya podés ingresar y transmitir; el primer cobro se realizará el ${chargeLabel}.`
-            : 'Te enviamos la boleta del mes por correo. Cuando se confirme el pago, tu plan queda activo y podés empezar a transmitir.'}
+            ? `Empezaron tus ${trialDays} días de prueba gratis. Ya puedes ingresar y transmitir; el primer cobro se realizará el ${chargeLabel}.`
+            : 'Te enviamos la boleta del mes por correo. Cuando se confirme el pago, tu plan queda activo y puedes empezar a transmitir.'}
         </p>
         {selected && (
           <div data-slot="summary" className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
@@ -224,8 +224,8 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
       ) : (
       <div className="space-y-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Elegí tu plan</h2>
-          <p className="text-gray-500 mt-1">Precios simples, sin permanencia. Cambiá de plan cuando quieras.</p>
+          <h2 className="text-2xl font-bold text-gray-900">Elige tu plan</h2>
+          <p className="text-gray-500 mt-1">Precios simples, sin permanencia. Cambia de plan cuando quieras.</p>
         </div>
 
         {plans.length === 0 ? (
@@ -317,13 +317,13 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
       <div className={isFixed ? '' : 'lg:sticky lg:top-8'}>
         <form data-slot="card" onSubmit={submit} className="rounded-2xl border border-gray-200 bg-white p-7 shadow-lg space-y-5">
           <div>
-            <h3 data-slot="heading" className="text-xl font-bold text-gray-900">Creá tu cuenta</h3>
+            <h3 data-slot="heading" className="text-xl font-bold text-gray-900">Crea tu cuenta</h3>
             {selected ? (
               <p data-slot="sub" className="mt-1 text-sm text-gray-500">
                 Plan <span data-slot="accent" className="text-blue-600 font-medium">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
               </p>
             ) : (
-              <p data-slot="sub" className="mt-1 text-sm text-gray-500">Completá tus datos para comenzar</p>
+              <p data-slot="sub" className="mt-1 text-sm text-gray-500">Completa tus datos para comenzar</p>
             )}
           </div>
 
@@ -365,7 +365,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
                 )}
                 {slugStatus === 'taken' && <span className="text-red-600">✗ {siteHost || 'Ese nombre'} ya está en uso</span>}
                 {slugStatus === 'reserved' && <span className="text-red-600">✗ Ese nombre está reservado</span>}
-                {slugStatus === 'invalid' && <span className="text-gray-400">Escribí al menos 2 letras</span>}
+                {slugStatus === 'invalid' && <span className="text-gray-400">Escribe al menos 2 letras</span>}
               </p>
             )}
             <div className="relative">
@@ -415,8 +415,8 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
           </div>
 
           <p data-slot="prompt" className="text-center text-sm text-gray-500">
-            ¿Ya tenés cuenta?{' '}
-            <Link data-slot="link" href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">Iniciá sesión</Link>
+            ¿Ya tienes cuenta?{' '}
+            <Link data-slot="link" href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">Inicia sesión</Link>
           </p>
         </form>
       </div>

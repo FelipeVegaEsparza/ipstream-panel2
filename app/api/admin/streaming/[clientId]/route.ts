@@ -103,7 +103,7 @@ export async function PATCH(
       if (data.storageQuotaMB * 1024 * 1024 < usage.totalBytes) {
         return NextResponse.json({
           error: 'quota_below_usage',
-          message: `No podés bajar la cuota a ${data.storageQuotaMB} MB: el cliente ya usa ${usage.totalMB} MB`,
+          message: `No puedes bajar la cuota a ${data.storageQuotaMB} MB: el cliente ya usa ${usage.totalMB} MB`,
         }, { status: 400 })
       }
     }

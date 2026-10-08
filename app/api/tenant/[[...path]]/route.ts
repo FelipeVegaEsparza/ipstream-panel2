@@ -29,7 +29,7 @@ function fileResponse(buf: Buffer, contentType: string, immutable: boolean) {
 /**
  * Shell del sitio de cliente (bundle único de la PWA).
  *
- * Caddy enruta los hosts de clientes acá (o el middleware reescribe). Según el
+ * Caddy enruta los hosts de clientes aquí (o el middleware reescribe). Según el
  * path sirve: iconos del cliente, manifest dinámico, assets del bundle o el
  * index con Open Graph del cliente resuelto por host.
  */

@@ -67,7 +67,7 @@ export default function TvConnectionPage() {
       <div>
         <h1 className="text-3xl font-bold text-white">Conexión OBS</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Usá estos datos para conectar OBS Studio a tu canal de Televisión
+          Usa estos datos para conectar OBS Studio a tu canal de Televisión
         </p>
       </div>
 
@@ -136,8 +136,8 @@ export default function TvConnectionPage() {
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Usá esta URL en OBS como Servidor y tu Stream Key en "Clave de stream". Configurá un encoder
-              H.264 estándar (x264, NVENC, QuickSync o AMF) y desactivá "Enhanced streaming" (HEVC/AV1): esos
+              Usa esta URL en OBS como Servidor y tu Stream Key en "Clave de stream". Configura un encoder
+              H.264 estándar (x264, NVENC, QuickSync o AMF) y desactiva "Enhanced streaming" (HEVC/AV1): esos
               códecs no se soportan y el video se ve en negro. Con un key incorrecto la conexión es rechazada.
             </p>
           </div>

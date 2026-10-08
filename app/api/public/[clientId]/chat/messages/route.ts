@@ -113,13 +113,13 @@ export async function POST(
     const rlIdentifier = `chat:${clientId}:${ipAddress || 'noip'}:${email}`
     const rl = rateLimit({ maxRequests: 5, windowMs: 60_000, identifier: rlIdentifier })
     if (!rl.allowed) {
-      return createCorsErrorResponse('Demasiados mensajes. Esperá un momento.', 429)
+      return createCorsErrorResponse('Demasiados mensajes. Espera un momento.', 429)
     }
 
     // Verificar ban
     const banned = await isBanned(clientId, { email, ipAddress })
     if (banned) {
-      return createCorsErrorResponse('No podés escribir en este chat', 403)
+      return createCorsErrorResponse('No puedes escribir en este chat', 403)
     }
 
     const created = await prisma.chatMessage.create({

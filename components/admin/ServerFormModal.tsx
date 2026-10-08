@@ -49,7 +49,7 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
 
   const handleSubmit = async () => {
     if (!name.trim() || !baseUrl.trim() || !publicHostname.trim()) {
-      setError('Completá nombre, URL del agente y hostname público')
+      setError('Completa nombre, URL del agente y hostname público')
       return
     }
     if (!editing && !token.trim()) {
@@ -108,7 +108,7 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
             <div>
               <h3 className="text-xl font-bold text-white">{editing ? 'Editar servidor' : 'Agregar servidor (manual)'}</h3>
               <p className="text-sm text-gray-400 mt-0.5">
-                {editing ? `Editando: ${editing.name}` : 'Registrá un nodo de streaming ya configurado'}
+                {editing ? `Editando: ${editing.name}` : 'Registra un nodo de streaming ya configurado'}
               </p>
             </div>
           </div>

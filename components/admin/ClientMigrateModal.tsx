@@ -66,11 +66,11 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
 
   const run = async () => {
     if (!targetServerId) {
-      setError('Elegí un servidor destino')
+      setError('Elige un servidor destino')
       return
     }
     if (services.length === 0) {
-      setError('Elegí al menos un servicio (radio y/o TV)')
+      setError('Elige al menos un servicio (radio y/o TV)')
       return
     }
     if (!confirm('La migración detiene el stream en el origen y lo inicia en el destino. ¿Continuar?')) return

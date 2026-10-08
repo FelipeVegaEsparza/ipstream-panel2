@@ -44,15 +44,15 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
   const handleSubmit = async () => {
     const f = form
     if (!f.name.trim() || !f.publicHostname.trim() || !f.sshHost.trim()) {
-      setError('Completá nombre, hostname público y host SSH')
+      setError('Completa nombre, hostname público y host SSH')
       return
     }
     if (f.sshAuthType === 'key' && !f.sshPrivateKey.trim()) {
-      setError('Pegá la clave privada SSH')
+      setError('Pega la clave privada SSH')
       return
     }
     if (f.sshAuthType === 'password' && !f.sshPassword.trim()) {
-      setError('Ingresá el password SSH')
+      setError('Ingresa el password SSH')
       return
     }
     setSaving(true)
@@ -115,7 +115,7 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
             <Rocket className="h-4 w-4 mt-0.5 shrink-0" />
             <span>
               Se instalará Docker, se subirá el código, se escribirá el .env y se levantará el stack.
-              La clave SSH se guarda encriptada. Después podés quitarla desde este panel.
+              La clave SSH se guarda encriptada. Después puedes quitarla desde este panel.
             </span>
           </div>
 

@@ -164,7 +164,7 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
                       {lastMessage ? (
                         <span className="text-xs">
                           <span className="text-gray-500">
-                            {lastMessage.authorType === 'admin' ? 'Vos' : 'Cliente'}:
+                            {lastMessage.authorType === 'admin' ? 'Tú' : 'Cliente'}:
                           </span>{' '}
                           {lastMessage.body}
                         </span>

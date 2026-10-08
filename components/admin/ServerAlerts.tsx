@@ -58,7 +58,7 @@ export function ServerAlerts() {
               ))}
             </ul>
             <p className="mt-1 text-xs text-red-200/70">
-              El panel no migra clientes automáticamente. Revisá{' '}
+              El panel no migra clientes automáticamente. Revisa{' '}
               <Link href="/admin/servers" className="underline underline-offset-2 hover:text-white">
                 Servidores de Streaming
               </Link>{' '}

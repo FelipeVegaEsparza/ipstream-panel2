@@ -129,7 +129,7 @@ export default function AdminStreamingPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Streaming</h1>
           <p className="mt-1 text-sm text-gray-400">
-            Configurá opciones de streaming y AutoDJ para cada cliente.
+            Configura opciones de streaming y AutoDJ para cada cliente.
           </p>
         </div>
         <button

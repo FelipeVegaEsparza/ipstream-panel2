@@ -56,7 +56,7 @@ export function EmailComposer() {
 
   const doSend = async (test: boolean) => {
     if (!test && recipientType !== 'all' && selected.length === 0) {
-      showToast({ type: 'error', title: 'Elegí al menos un destinatario' })
+      showToast({ type: 'error', title: 'Elige al menos un destinatario' })
       return
     }
     if (!templateKey && !subject.trim()) {

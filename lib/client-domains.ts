@@ -2,7 +2,7 @@
 // Client domains — registro y resolución host → cliente
 // =====================================================
 // Un mismo bundle de la PWA sirve a todos los clientes; el tenant se resuelve
-// por el host desde el que se carga. Acá vive la normalización de host y la
+// por el host desde el que se carga. Aquí vive la normalización de host y la
 // búsqueda en `client_domains`, con un cache corto para no golpear la DB.
 
 import { prisma, type PrismaDb } from '@/lib/prisma'

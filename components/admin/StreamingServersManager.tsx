@@ -244,7 +244,7 @@ export function StreamingServersManager() {
             </div>
           </div>
           <p className="text-xs text-gray-500">
-            Consejo: usá WireGuard/VPN para el tráfico privado (panel ↔ nodo ↔ MySQL) y exponé solo lo público (8000, 1935, 8080).
+            Consejo: usa WireGuard/VPN para el tráfico privado (panel ↔ nodo ↔ MySQL) y exponé solo lo público (8000, 1935, 8080).
           </p>
         </CardContent>
       </Card>

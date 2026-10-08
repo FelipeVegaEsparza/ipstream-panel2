@@ -12,7 +12,7 @@ export default function ComunicacionesPage() {
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Comunicaciones</h1>
         <p className="text-gray-400">
-          Enviá correos a los clientes (boletas, avisos, soporte), editá plantillas y seguí el rastreo de cada envío.
+          Envía correos a los clientes (boletas, avisos, soporte), edita plantillas y seguí el rastreo de cada envío.
         </p>
       </div>
 

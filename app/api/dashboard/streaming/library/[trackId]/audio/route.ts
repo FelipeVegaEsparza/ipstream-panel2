@@ -36,7 +36,7 @@ export async function GET(_request: NextRequest, { params }: { params: { trackId
           status: agentRes.status,
           detail,
           message: agentRes.status === 404
-            ? 'El archivo no está disponible en el servidor de streaming. Reintentá subirlo.'
+            ? 'El archivo no está disponible en el servidor de streaming. Reintenta subirlo.'
             : 'El servidor de streaming no respondió correctamente.',
         }),
         { status: agentRes.status === 404 ? 404 : 502, headers: { 'Content-Type': 'application/json' } }

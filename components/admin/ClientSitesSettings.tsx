@@ -122,7 +122,7 @@ export function ClientSitesSettings() {
               className={input}
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              placeholder={tokenSet ? '•••••••• (ya configurado — dejá vacío para conservarlo)' : 'cfat_…'}
+              placeholder={tokenSet ? '•••••••• (ya configurado — deja vacío para conservarlo)' : 'cfat_…'}
               autoComplete="off"
             />
           </div>

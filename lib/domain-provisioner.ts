@@ -65,7 +65,7 @@ async function runProvisioning(domainId: string): Promise<void> {
           where: { id: domainId },
           data: {
             provisionStatus: 'pending_verification',
-            provisionError: 'El dominio todavía no apunta a la plataforma (revisá el CNAME)',
+            provisionError: 'El dominio todavía no apunta a la plataforma (revisa el CNAME)',
           },
         })
         await setProgress(domainId, 'pending_verification', '✗ Verificación de DNS incompleta')

@@ -27,7 +27,7 @@ const TEMPLATES = [
     <h2 style="margin:0 0 4px">${'{{proyecto}}'}</h2>
     <p style="color:#6b7280;margin:0 0 16px">Hola ${'{{nombre}}'} 👋</p>
     <div style="${BOX_STYLE}">
-      <p style="margin:0 0 12px;color:#374151">Te compartimos la cuenta del mes. Podés pagar desde tu panel o transferir y avisarnos.</p>
+      <p style="margin:0 0 12px;color:#374151">Te compartimos la cuenta del mes. Puedes pagar desde tu panel o transferir y avisarnos.</p>
       <table style="width:100%;font-size:14px">
         <tr><td style="padding:4px 0;color:#6b7280">Plan</td><td style="text-align:right;font-weight:600">${'{{plan}}'}</td></tr>
         <tr><td style="padding:4px 0;color:#6b7280">Periodo</td><td style="text-align:right">${'{{descripcion}}'}</td></tr>
@@ -61,7 +61,7 @@ const TEMPLATES = [
         <tr><td style="padding:8px 0;color:#6b7280">Total</td><td style="text-align:right;font-size:20px;font-weight:700;color:#0891b2">${'{{moneda}}'} ${'{{monto}}'}</td></tr>
       </table>
     </div>
-    <p style="color:#374151;margin:0 0 8px">Ingresá a tu panel para configurar tu espacio y empezar a transmitir:</p>
+    <p style="color:#374151;margin:0 0 8px">Ingresa a tu panel para configurar tu espacio y empezar a transmitir:</p>
     <div style="text-align:center">
       <a href="${'{{link}}'}" style="${BTN_STYLE}">Ir a mi panel</a>
     </div>

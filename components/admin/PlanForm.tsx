@@ -226,7 +226,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               className="bg-gray-700 border-gray-600 text-white"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Se muestra como botón "Ver ejemplo" en la página pública del plan. Dejalo vacío si no aplica.
+              Se muestra como botón "Ver ejemplo" en la página pública del plan. Déjalo vacío si no aplica.
             </p>
           </div>
 

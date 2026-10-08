@@ -17,7 +17,7 @@ export default async function FirstStepsPage() {
   const effective = await getEffectiveClient()
 
   if (!session?.user || !effective) {
-    return <div className="text-center py-12 text-gray-400">Iniciá sesión para ver esta sección.</div>
+    return <div className="text-center py-12 text-gray-400">Inicia sesión para ver esta sección.</div>
   }
 
   const [progress, intro] = await Promise.all([

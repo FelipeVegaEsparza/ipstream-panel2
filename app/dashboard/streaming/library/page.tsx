@@ -396,7 +396,7 @@ export default function LibraryPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Biblioteca</h1>
           <p className="mt-1 text-sm text-gray-400">
-            Subí tus MP3s para usar en las playlists de AutoDJ.
+            Sube tus MP3s para usar en las playlists de AutoDJ.
           </p>
         </div>
       </div>
@@ -568,7 +568,7 @@ export default function LibraryPage() {
 
             {filteredTracks.length === 0 && !loading ? (
               <div className="p-12 text-center text-gray-500">
-                {selectedFolderId ? 'Esta carpeta está vacía.' : 'No hay tracks todavía. Subí tu primer MP3.'}
+                {selectedFolderId ? 'Esta carpeta está vacía.' : 'No hay tracks todavía. Sube tu primer MP3.'}
               </div>
             ) : (
               <table className="w-full text-sm">

@@ -249,7 +249,7 @@ export function notConfiguredHtml(host: string): string {
     <div class="box">
       <h1>Sitio no configurado</h1>
       <p>No hay un cliente asociado al dominio <code>${escapeHtml(host)}</code>.</p>
-      <p>Si sos el administrador, registrá este dominio en el panel.</p>
+      <p>Si eres el administrador, registra este dominio en el panel.</p>
     </div>
   </body>
 </html>`

@@ -278,7 +278,7 @@ export default function TvPlaylistsPage() {
       <div>
         <h1 className="text-3xl font-bold text-white">Programación</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Creá y editá las playlists de video para tu canal de Televisión. Los videos se agregan desde la Videoteca o con el buscador.
+          Crea y edita las playlists de video para tu canal de Televisión. Los videos se agregan desde la Videoteca o con el buscador.
         </p>
       </div>
 
@@ -330,7 +330,7 @@ export default function TvPlaylistsPage() {
         <div className="flex-1">
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl overflow-hidden">
             {!selectedPlaylistId ? (
-              <div className="p-6 text-center text-gray-500">Seleccioná o creá una playlist</div>
+              <div className="p-6 text-center text-gray-500">Selecciona o crea una playlist</div>
             ) : loadingEntries ? (
               <div className="p-6 text-center text-gray-500">Cargando...</div>
             ) : (
@@ -452,7 +452,7 @@ export default function TvPlaylistsPage() {
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {selectableTracks.length === 0 ? (
                 <div className="text-gray-500 text-sm py-8 text-center">
-                  {tracks.length === 0 ? 'No hay videos. Subí videos primero en la Videoteca.' : 'Sin resultados.'}
+                  {tracks.length === 0 ? 'No hay videos. Sube videos primero en la Videoteca.' : 'Sin resultados.'}
                 </div>
               ) : (
                 selectableTracks.map(t => {

@@ -26,7 +26,7 @@ ENV_EXAMPLE=".env.example"
 
 if [[ ! -f $ENV_FILE ]]; then
   echo "❌ No se encontró .env en $PROJECT_DIR"
-  echo "   Copiá .env.example a .env primero:"
+  echo "   Copia .env.example a .env primero:"
   echo "     cp .env.example .env"
   exit 1
 fi
@@ -202,6 +202,6 @@ done
 echo ""
 echo "✅ .env actualizado. Backup en $BACKUP_FILE"
 echo ""
-echo "⚠ RECORDATORIO: si cambiaste ENCRYPTION_KEY, tenés que rotar"
+echo "⚠ RECORDATORIO: si cambiaste ENCRYPTION_KEY, tienes que rotar"
 echo "  los passwords encriptados en la DB con:"
 echo "    docker exec -i ipstream-app node - < scripts/rotate-stream-passwords.js"

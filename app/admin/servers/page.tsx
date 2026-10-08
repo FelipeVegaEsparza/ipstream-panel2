@@ -18,7 +18,7 @@ export default async function ServersPage() {
           Servidores de Streaming
         </h1>
         <p className="text-gray-400">
-          Registrá los nodos de radio y TV. Cada cliente se asigna a un servidor por servicio;
+          Registra los nodos de radio y TV. Cada cliente se asigna a un servidor por servicio;
           el panel nunca migra clientes automáticamente.
         </p>
       </div>

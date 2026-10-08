@@ -505,7 +505,7 @@ export default function PlaylistEditorPage() {
               <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {filteredLibrary.length === 0 ? (
                   <div className="text-gray-500 text-sm py-8 text-center">
-                    {library.length === 0 ? 'Biblioteca vacía. Subí MP3s primero.' : 'Sin resultados.'}
+                    {library.length === 0 ? 'Biblioteca vacía. Sube MP3s primero.' : 'Sin resultados.'}
                   </div>
                 ) : (
                   filteredLibrary.map((t) => {

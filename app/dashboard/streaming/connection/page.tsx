@@ -259,7 +259,7 @@ export default function ConnectionPage() {
         <p className="mt-1 text-xs text-gray-400">
           {djConnected
             ? `${connectedSlots.length > 1 ? `${connectedSlots.length} DJs conectados` : 'DJ conectado'}. El AutoDJ se reanudará automáticamente al desconectarse todos.`
-            : 'No hay DJ conectado. Configurá tu encoder con los datos de abajo.'}
+            : 'No hay DJ conectado. Configura tu encoder con los datos de abajo.'}
         </p>
       </div>
 
@@ -303,7 +303,7 @@ export default function ConnectionPage() {
 
         {djSlots.length === 0 ? (
           <div className="text-center text-gray-500 py-8 text-sm">
-            No hay DJs configurados. Creá el primer slot para que puedan transmitir en vivo.
+            No hay DJs configurados. Crea el primer slot para que puedan transmitir en vivo.
           </div>
         ) : (
           <div className="space-y-3">
@@ -453,7 +453,7 @@ export default function ConnectionPage() {
       <div className="bg-gray-800 rounded-lg p-6 space-y-3">
         <h2 className="text-lg font-semibold text-white">Configuración en BUTT (ejemplo)</h2>
         <ol className="text-sm text-gray-300 space-y-2 list-decimal pl-5">
-          <li>Abrí BUTT → Settings → Stream</li>
+          <li>Abre BUTT → Settings → Stream</li>
           <li>Server type: <code className="text-cyan-400">Icecast 2</code></li>
           <li>Address: <code className="text-cyan-400">{harborHost}</code></li>
           <li>Port: <code className="text-cyan-400">{harborPort}</code></li>
@@ -497,7 +497,7 @@ export default function ConnectionPage() {
               <p className="text-xs text-gray-500 mt-1">
                 {editId
                   ? 'El mount no se puede cambiar al editar.'
-                  : `Elegí un número entre 1 y ${planMaxDjs}. El próximo libre se sugiere automáticamente.`}
+                  : `Elige un número entre 1 y ${planMaxDjs}. El próximo libre se sugiere automáticamente.`}
               </p>
             </div>
 

@@ -70,7 +70,7 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Escribí un mensaje para los oyentes…"
+          placeholder="Escribe un mensaje para los oyentes…"
           rows={2}
           maxLength={500}
           className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm resize-none focus:border-cyan-500 focus:outline-none"

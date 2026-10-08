@@ -24,7 +24,7 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
     e.preventDefault()
     if (submitting) return
     if (!email.trim() && !ipAddress.trim()) {
-      onError('Ingresá al menos un email o una IP')
+      onError('Ingresa al menos un email o una IP')
       return
     }
     setSubmitting(true)

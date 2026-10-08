@@ -37,7 +37,7 @@ export function SupportView({ initialTickets }: SupportViewProps) {
             Soporte
           </h1>
           <p className="text-sm text-gray-400 mt-1">
-            Abrí un ticket y te responderemos a la brevedad
+            Abre un ticket y te responderemos a la brevedad
           </p>
         </div>
         <button

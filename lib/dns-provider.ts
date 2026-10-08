@@ -4,7 +4,7 @@
 // La configuración (dominio base, target, IP y token de Cloudflare) sale de
 // app_config (dashboard) con fallback a env, vía getClientSitesConfig().
 // Subdominios: si hay wildcard *.dominio, no hace falta registro por host.
-// Custom: los configura el cliente (CNAME al target); acá solo se verifica.
+// Custom: los configura el cliente (CNAME al target); aquí solo se verifica.
 
 import { promises as dns } from 'dns'
 import { getClientSitesConfig, type ClientSitesConfig } from '@/lib/client-sites-config'
@@ -91,7 +91,7 @@ export async function ensureSubdomainRecord(hostname: string): Promise<void> {
 
   if (!providerConfigured(cfg)) {
     throw new Error(
-      'DNS no configurado: configurá el token de Cloudflare en Ajustes, o un ' +
+      'DNS no configurado: configura el token de Cloudflare en Ajustes, o un ' +
         `wildcard *.${cfg.domain} que apunte a la plataforma`
     )
   }
@@ -166,7 +166,7 @@ export async function ensureBaseDns(): Promise<EnsureBaseDnsResult> {
   if (!cfg.ip && (cfg.target === cfg.domain || cfg.target.endsWith(`.${cfg.domain}`))) {
     throw new Error(
       `El target ${cfg.target} cae dentro del wildcard *.${cfg.domain} (loop de CNAME). ` +
-        'Configurá la IP de la plataforma para crear un registro A.'
+        'Configura la IP de la plataforma para crear un registro A.'
     )
   }
 

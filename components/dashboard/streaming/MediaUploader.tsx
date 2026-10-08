@@ -269,7 +269,7 @@ export function MediaUploader({
           {isProcessing ? '⏳' : '⬆️'}
         </div>
         <div className="text-white font-medium text-sm">
-          {dropTitle || 'Arrastrá archivos acá o hacé click para seleccionar'}
+          {dropTitle || 'Arrastra archivos aquí o haz clic para seleccionar'}
         </div>
         {hint && <div className="text-xs text-gray-400 mt-1">{hint}</div>}
       </div>

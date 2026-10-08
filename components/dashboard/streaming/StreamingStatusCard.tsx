@@ -143,7 +143,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
           </div>
           {isRunning && (
             <p className="text-xs text-green-400">
-              ✓ Stream activo. Hacé click en "Escuchar stream" para abrirlo en una nueva pestaña.
+              ✓ Stream activo. Haz clic en "Escuchar stream" para abrirlo en una nueva pestaña.
             </p>
           )}
         </div>

@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         const slug = slugifyRadioName(radioName)
         const slugErr = slugError(slug)
         if (slugErr === 'reserved') {
-          throw new SubdomainUnavailableError('Ese nombre está reservado. Elegí otro.')
+          throw new SubdomainUnavailableError('Ese nombre está reservado. Elige otro.')
         }
         if (slugErr) {
           throw new SubdomainUnavailableError('El nombre de la radio no es válido para un sitio.')
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         const hostname = buildSiteHost(slug, sitesConfig.domain)
         const taken = await tx.clientDomain.findUnique({ where: { hostname }, select: { id: true } })
         if (taken) {
-          throw new SubdomainUnavailableError('Ese nombre ya está en uso. Elegí otro.')
+          throw new SubdomainUnavailableError('Ese nombre ya está en uso. Elige otro.')
         }
         clientDomain = await tx.clientDomain.create({
           data: { clientId: client.id, hostname, kind: 'subdomain', status: 'active', isPrimary: true },
@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
     }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return NextResponse.json(
-        { error: 'Ese nombre ya está en uso. Elegí otro.' },
+        { error: 'Ese nombre ya está en uso. Elige otro.' },
         { status: 409 }
       )
     }

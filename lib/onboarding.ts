@@ -60,14 +60,14 @@ export async function getOnboarding(
     {
       key: 'brand',
       title: 'Personalizá tu marca',
-      description: 'Subí tu logo y completá los datos del proyecto.',
+      description: 'Sube tu logo y completa los datos del proyecto.',
       href: '/dashboard/basic-data',
       actionLabel: 'Completar',
       done: Boolean(basic?.logoUrl),
     },
     {
       key: 'programs',
-      title: 'Creá tu primer programa',
+      title: 'Crea tu primer programa',
       description: 'Armá la parrilla con horarios y días.',
       href: '/dashboard/programs',
       actionLabel: 'Crear programa',
@@ -79,7 +79,7 @@ export async function getOnboarding(
     steps.push(
       {
         key: 'radio-library',
-        title: 'Subí tu música',
+        title: 'Sube tu música',
         description: 'Cargá canciones a tu biblioteca (MP3).',
         href: '/dashboard/streaming/library',
         actionLabel: 'Subir música',
@@ -87,8 +87,8 @@ export async function getOnboarding(
       },
       {
         key: 'radio-autodj',
-        title: 'Iniciá tu AutoDJ',
-        description: 'Poné tu radio al aire con las playlists.',
+        title: 'Inicia tu AutoDJ',
+        description: 'Pon tu radio al aire con las playlists.',
         href: '/dashboard/streaming',
         actionLabel: 'Iniciar radio',
         done: radio?.status === 'autodj' || radio?.status === 'live',
@@ -100,7 +100,7 @@ export async function getOnboarding(
     steps.push(
       {
         key: 'tv-library',
-        title: 'Subí tus videos',
+        title: 'Sube tus videos',
         description: 'Cargá videos a tu videoteca.',
         href: '/dashboard/television/library',
         actionLabel: 'Subir videos',
@@ -108,8 +108,8 @@ export async function getOnboarding(
       },
       {
         key: 'tv-autodj',
-        title: 'Poné tu TV al aire',
-        description: 'Iniciá la emisión automática de TV.',
+        title: 'Pon tu TV al aire',
+        description: 'Inicia la emisión automática de TV.',
         href: '/dashboard/television',
         actionLabel: 'Iniciar TV',
         done: video?.status === 'autodj' || video?.status === 'live',
@@ -128,7 +128,7 @@ export async function getOnboarding(
     },
     {
       key: 'site',
-      title: 'Compartí tu sitio',
+      title: 'Comparte tu sitio',
       description: 'Tu sitio ya está online; compartilo con tus oyentes.',
       href: '/dashboard',
       actionLabel: 'Ver mi sitio',

@@ -68,13 +68,13 @@ export default async function RegistroPage({
           CREA TU CUENTA
         </span>
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          Elegí tu plan y empezá a <span className="text-blue-600">transmitir</span>
+          Elige tu plan y empieza a <span className="text-blue-600">transmitir</span>
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Sitio web profesional, reproductor, app PWA y panel de administración para tu radio o televisión.
           {trialDays > 0 && (
             <span className="block mt-2 font-semibold text-cyan-600">
-              Empezá con {trialDays} días de prueba gratis.
+              Empieza con {trialDays} días de prueba gratis.
             </span>
           )}
         </p>

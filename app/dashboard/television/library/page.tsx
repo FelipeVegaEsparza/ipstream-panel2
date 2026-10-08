@@ -197,7 +197,7 @@ export default function TvLibraryPage() {
       <div>
         <h1 className="text-3xl font-bold text-white">Videoteca</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Subí y gestioná tus videos para Televisión
+          Sube y gestioná tus videos para Televisión
         </p>
       </div>
 
@@ -302,7 +302,7 @@ export default function TvLibraryPage() {
             <MediaUploader
               accept="video/*"
               endpoint="/api/dashboard/television/tracks/upload"
-              dropTitle="Arrastrá videos acá o hacé click para seleccionar"
+              dropTitle="Arrastra videos aquí o haz clic para seleccionar"
               hint="Los videos se normalizan en segundo plano al subir."
               extraFields={() => (currentFolderId ? { folderId: currentFolderId } : {})}
               statusUrl={(trackId) => `/api/dashboard/television/tracks/${trackId}/status`}
@@ -359,7 +359,7 @@ export default function TvLibraryPage() {
             {loading ? (
               <div className="p-6 text-center text-gray-500">Cargando...</div>
             ) : tracks.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">No hay videos. Subí tu primer video.</div>
+              <div className="p-6 text-center text-gray-500">No hay videos. Sube tu primer video.</div>
             ) : (
               <table className="w-full">
                 <thead>

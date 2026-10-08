@@ -204,7 +204,7 @@ export default function JinglesPage() {
       <div>
         <h1 className="text-3xl font-bold text-white">Jingles</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Subí cuñas publicitarias que se intercalarán automáticamente en la reproducción.
+          Sube cuñas publicitarias que se intercalarán automáticamente en la reproducción.
         </p>
       </div>
 
@@ -290,7 +290,7 @@ export default function JinglesPage() {
         </div>
         {jingles.length === 0 && !loading ? (
           <div className="p-12 text-center text-gray-500">
-            No hay jingles todavía. Subí tu primer MP3 publicitario.
+            No hay jingles todavía. Sube tu primer MP3 publicitario.
           </div>
         ) : (
           <table className="w-full text-sm">

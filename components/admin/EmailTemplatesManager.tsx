@@ -56,7 +56,7 @@ export function EmailTemplatesManager() {
 
   const save = async () => {
     if (!form.key || !form.name || !form.subject || !form.htmlBody) {
-      showToast({ type: 'error', title: 'Completá key, nombre, asunto y cuerpo' })
+      showToast({ type: 'error', title: 'Completa key, nombre, asunto y cuerpo' })
       return
     }
     setSaving(true)
@@ -207,7 +207,7 @@ export function EmailTemplatesManager() {
             </div>
           </div>
         ))}
-        {templates.length === 0 && <p className="text-sm text-gray-500">No hay plantillas. Creá una nueva.</p>}
+        {templates.length === 0 && <p className="text-sm text-gray-500">No hay plantillas. Crea una nueva.</p>}
       </div>
     </div>
   )

@@ -76,7 +76,7 @@ export default function StreamingPage() {
           {isRunning && (
             <p className="text-xs text-green-400/80 mt-2.5 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              Stream activo — compartí esta URL para que te escuchen
+              Stream activo — comparte esta URL para que te escuchen
             </p>
           )}
         </div>

@@ -164,7 +164,7 @@ export default function PlaylistsPage() {
           <div className="col-span-2 text-center text-gray-500 py-12">Cargando...</div>
         ) : playlists.length === 0 ? (
           <div className="col-span-2 text-center text-gray-500 py-12">
-            No hay playlists todavía. Creá la primera.
+            No hay playlists todavía. Crea la primera.
           </div>
         ) : (
           playlists.map((p) => (
