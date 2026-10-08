@@ -15,6 +15,16 @@ IPStream Panel. Es parte del repo del panel; ver el `AGENTS.md` de la raíz.
 - En el panel: `npm run build:client-site` construye la PWA y publica el bundle
   en `CLIENT_SITE_DIR` (default `public/client-site`).
 
+## Publicación del bundle
+
+- Workflow: `.github/workflows/deploy-site-bundle.yml` (se dispara con cambios
+  en `pwa/**`). Construye la PWA y sincroniza `pwa/dist/` a
+  `/opt/ipstream-panel/data/client-site/` del VPS.
+- Si el workflow falla con `Permission denied` escribiendo en
+  `data/client-site`, correr un deploy del panel: `deploy.sh` ajusta los
+  permisos de `data/client-site` (rw para el usuario deploy) con un container
+  root.
+
 ## Documentos
 
 - `deploy.md` — modelo anterior (build por cliente) — **histórico**.
