@@ -115,3 +115,29 @@ stream.{$STREAM_DOMAIN:panelipstream.cl} {
 http://stream.{$STREAM_DOMAIN:panelipstream.cl} {
     redir https://stream.{$STREAM_DOMAIN:panelipstream.cl}{uri} permanent
 }
+
+# ============================================================
+# Sitios de clientes (bundle único de la PWA)
+# ============================================================
+# Catch-all: cualquier host que no matchee los bloques de arriba (subdominios
+# de plataforma tipo <cliente>.panelipstream.cl y dominios custom) se sirve
+# como sitio de cliente. El header X-Tenant-Site hace que el middleware del
+# panel enrute al shell dinámico. TLS on-demand acotado por el endpoint `ask`:
+# solo se emiten certificados para dominios registrados y activos.
+:443 {
+    tls {
+        on_demand
+        ask http://app:3000/api/domains/ask?domain={domain}
+    }
+
+    header X-Tenant-Site "1"
+
+    reverse_proxy app:3000
+
+    log {
+        output file /data/sites-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}

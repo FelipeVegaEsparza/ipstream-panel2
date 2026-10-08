@@ -4,11 +4,16 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { clearClientDomainCache } from '@/lib/client-domains'
+import { startDomainProvisioning, startDomainVerification } from '@/lib/domain-provisioner'
 
 const patchSchema = z.object({
   status: z.enum(['pending', 'active', 'error']).optional(),
   isPrimary: z.boolean().optional(),
   kind: z.enum(['subdomain', 'custom']).optional(),
+})
+
+const actionSchema = z.object({
+  action: z.enum(['provision', 'verify']),
 })
 
 async function requireAdmin() {
@@ -68,6 +73,31 @@ export async function PATCH(
 
   clearClientDomainCache(domain.hostname)
   return NextResponse.json({ domain: updated })
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string; domainId: string } }
+) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+  const domain = await findDomainForUser(params.id, params.domainId)
+  if (!domain) {
+    return NextResponse.json({ error: 'Dominio no encontrado' }, { status: 404 })
+  }
+
+  const parsed = actionSchema.safeParse(await request.json().catch(() => ({})))
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
+  }
+
+  if (parsed.data.action === 'provision') {
+    startDomainProvisioning(domain.id)
+  } else {
+    startDomainVerification(domain.id)
+  }
+  return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(

@@ -9,6 +9,8 @@ interface ClientDomain {
   status: 'pending' | 'active' | 'error'
   isPrimary: boolean
   verifyToken: string | null
+  provisionStatus?: string | null
+  provisionError?: string | null
 }
 
 interface DomainManagerProps {
@@ -91,6 +93,26 @@ export function DomainManager({ userId }: DomainManagerProps) {
     }
   }
 
+  async function runProvision(domainId: string) {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/domains/${domainId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'provision' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al provisionar el dominio')
+      // El job corre en background: recargamos en unos segundos para ver el estado.
+      setTimeout(() => void load(), 2500)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function remove(domainId: string) {
     if (!confirm('¿Eliminar este dominio?')) return
     setBusy(true)
@@ -145,9 +167,21 @@ export function DomainManager({ userId }: DomainManagerProps) {
                     {d.status}
                   </span>
                   <span>{d.kind}</span>
+                  {d.provisionStatus && <span>· {d.provisionStatus}</span>}
                 </div>
+                {d.provisionError && (
+                  <p className="mt-1 text-xs text-red-400">{d.provisionError}</p>
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => runProvision(d.id)}
+                  className="text-xs rounded border border-cyan-500/40 px-2 py-1 text-cyan-400 hover:bg-cyan-500/10 disabled:opacity-50"
+                >
+                  Proveer
+                </button>
                 {!d.isPrimary && (
                   <button
                     type="button"

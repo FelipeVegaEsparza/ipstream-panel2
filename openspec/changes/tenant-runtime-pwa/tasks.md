@@ -24,10 +24,10 @@
 
 ## 4. Fase D — Provisión de dominios y TLS
 
-- [ ] 4.1 Abstracción de proveedor DNS (Cloudflare) con env (`CLOUDFLARE_API_TOKEN`, `CLIENT_SITES_DOMAIN`, `CLIENT_SITES_TARGET`); verificar creación de registro con un dominio de prueba.
-- [ ] 4.2 Job en background de provisión de subdominio (patrón `node-provisioner.ts`) con `provisionStatus`/`provisionLog`; verificar éxito, reintento y falla legible.
-- [ ] 4.3 Verificación de dominio custom por CNAME con reintento y transición a `active`; verificar caso correcto y ausente.
-- [ ] 4.4 Endpoint `ask` de TLS + configuración de Caddy on-demand; verificar que autoriza dominios `active` y rechaza los demás.
+- [x] 4.1 Abstracción de proveedor DNS (Cloudflare) con env (`CLOUDFLARE_API_TOKEN`, `CLIENT_SITES_DOMAIN`, `CLIENT_SITES_TARGET`); verificar creación de registro con un dominio de prueba.
+- [x] 4.2 Job en background de provisión de subdominio (patrón `node-provisioner.ts`) con `provisionStatus`/`provisionLog`; verificar éxito, reintento y falla legible.
+- [x] 4.3 Verificación de dominio custom por CNAME con reintento y transición a `active`; verificar caso correcto y ausente.
+- [x] 4.4 Endpoint `ask` de TLS + configuración de Caddy on-demand; verificar que autoriza dominios `active` y rechaza los demás.
 
 ## 5. Fase E — Retiro y documentación
 

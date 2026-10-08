@@ -16,7 +16,12 @@ export default withAuth(
     // Sitios de clientes (bundle único de la PWA). Todo lo que no sea /api o
     // /_next se enruta al tenant handler; las llamadas a /api pasan directo.
     if (isTenantSite(req)) {
-      if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) {
+      if (
+        pathname.startsWith('/api/') ||
+        pathname.startsWith('/_next/') ||
+        pathname.startsWith('/live/') ||
+        pathname.startsWith('/dj/')
+      ) {
         return NextResponse.next()
       }
       const url = req.nextUrl.clone()
@@ -88,6 +93,7 @@ export default withAuth(
             pathname.startsWith('/registro') ||
             pathname.startsWith('/planes') ||
             pathname.startsWith('/api/public') ||
+            pathname.startsWith('/api/domains') ||
             pathname.startsWith('/api/uploads') ||
             pathname.startsWith('/api/auth') ||
             pathname.startsWith('/api/cron') ||
