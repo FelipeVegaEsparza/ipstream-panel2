@@ -84,8 +84,30 @@ model Client {
   videoPlaylistEntries   VideoPlaylistEntry[]
   videoPlaylistSchedules VideoPlaylistSchedule[]
   emailLogs              EmailLog[]
+  clientDomains          ClientDomain[]
 
   @@map("clients")
+}
+
+model ClientDomain {
+  id              String    @id @default(cuid())
+  clientId        String
+  hostname        String    @unique
+  kind            String    @default("subdomain") // "subdomain" | "custom"
+  status          String    @default("pending") // "pending" | "active" | "error"
+  isPrimary       Boolean   @default(false)
+  verifyToken     String?
+  provisionStatus String?
+  provisionLog    Json?
+  provisionError  String?
+  provisionedAt   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("client_domains")
 }
 
 model BasicData {

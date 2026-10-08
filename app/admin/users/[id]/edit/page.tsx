@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { UserForm } from '@/components/admin/UserForm'
+import { DomainManager } from '@/components/admin/DomainManager'
 
 interface EditUserPageProps {
   params: {
@@ -63,6 +64,8 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
       <div className="card max-w-2xl">
         <UserForm initialData={formData} />
       </div>
+
+      {user.client && <DomainManager userId={user.id} />}
     </div>
   )
 }
