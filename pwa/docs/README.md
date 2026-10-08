@@ -1,32 +1,27 @@
-# React + TypeScript + Vite
+# Documentación — PWA de clientes
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+App PWA multi-tenant (React 19 + Vite 8) que consumen las radios/TV de
+IPStream Panel. Es parte del repo del panel; ver el `AGENTS.md` de la raíz.
 
-Currently, two official plugins are available:
+## Modelo actual: bundle único servido por dominio
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- La PWA se construye **una sola vez** (`npm run build`) y la sirve el panel
+  para todos los clientes. El tenant se resuelve **por dominio** (tabla
+  `client_domains` del panel + `resolve-domain`) y el branding (Open Graph,
+  manifest, iconos) lo genera el panel por host.
+- El bundle se publica en el VPS con el workflow `deploy-site-bundle.yml`
+  (`pwa/**` en `paths`), que sincroniza `pwa/dist/` a
+  `/opt/ipstream-panel/data/client-site/`.
+- En el panel: `npm run build:client-site` construye la PWA y publica el bundle
+  en `CLIENT_SITE_DIR` (default `public/client-site`).
 
-## React Compiler
+## Documentos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+- `deploy.md` — modelo anterior (build por cliente) — **histórico**.
+- `nuevocliente.md` — alta de cliente anterior — **histórico** (ahora se hace
+  en el panel: dominios del sitio).
+- `iconos-por-cliente.md` — iconos por cliente (histórico; ahora el panel los
+  genera desde el logo del cliente).
+- `compartir-enlaces.md`, `splash-carga.md`, `color-destacado.md`,
+  `clima.md`, `instalacion-pwa.md` — comportamiento de la app.
+- `instruccionesapi.md` — contrato de la API pública del panel.
