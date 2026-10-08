@@ -18,4 +18,4 @@
 - [x] 3.1 Ejecutar `npm run build` y `npm run lint` en la raíz y verificar que el panel compila y lintea exactamente como antes (sin archivos de `pwa/` en la salida).
 - [x] 3.2 Construir la imagen Docker del panel (`docker build -t ipstream-panel-test .`) y verificar que el build termine OK y que el contexto/imagen no incluya `pwa/`.
 - [x] 3.3 Documentar en `AGENTS.md` la existencia de `pwa/`, su independencia de dependencias (sin workspaces) y las 4 reglas de aislamiento, con verificación de que el texto coincide con lo implementado.
-- [ ] 3.4 Push a `main` y verificar en GitHub Actions que el deploy del panel corre igual que siempre; comprobar además que un commit que solo toca `pwa/**` no dispara el deploy del panel.
+- [x] 3.4 Push a `main` y verificar en GitHub Actions que el deploy del panel corre igual que siempre; comprobar además que un commit que solo toca `pwa/**` no dispara el deploy del panel.
