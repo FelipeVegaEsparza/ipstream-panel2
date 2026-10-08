@@ -24,10 +24,12 @@ import {
   LinkIcon,
   QueueListIcon,
   Bars3BottomLeftIcon,
+  RocketLaunchIcon,
 } from '@heroicons/react/24/outline'
 
 export type MenuItemKey =
   | 'dashboard'
+  | 'onboarding'
   | 'basic-data'
   | 'social-networks'
   | 'template'
@@ -89,6 +91,14 @@ export const MENU_ITEMS: MenuItemDef[] = [
     href: '/dashboard',
   section: 'General',
   icon: HomeIcon,
+  alwaysEnabled: true,
+},
+{
+  key: 'onboarding',
+  name: 'Primeros pasos',
+  href: '/dashboard/primeros-pasos',
+  section: 'General',
+  icon: RocketLaunchIcon,
   alwaysEnabled: true,
 },
 {

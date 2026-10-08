@@ -55,6 +55,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(getInitialOpenSections)
   const [openChildren, setOpenChildren] = useState<Record<string, boolean>>(getInitialOpenChildren)
   const [unreadContact, setUnreadContact] = useState(0)
+  const [onboardingPending, setOnboardingPending] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -73,6 +74,24 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
     return () => {
       cancelled = true
       clearInterval(id)
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const check = async () => {
+      try {
+        const res = await fetch('/api/dashboard/onboarding', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) setOnboardingPending(typeof data.pending === 'number' ? data.pending : 0)
+      } catch {
+        // Sin sesión o error: no mostrar badge
+      }
+    }
+    check()
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -265,6 +284,11 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                               {item.key === 'contact-messages' && unreadContact > 0 && (
                                 <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
                                   {unreadContact > 9 ? '9+' : unreadContact}
+                                </span>
+                              )}
+                              {item.key === 'onboarding' && onboardingPending > 0 && (
+                                <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-cyan-500 text-[10px] font-bold text-white leading-none">
+                                  {onboardingPending > 9 ? '9+' : onboardingPending}
                                 </span>
                               )}
                               {isActive && (

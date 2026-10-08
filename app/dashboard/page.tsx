@@ -6,6 +6,9 @@ import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDi
 import { NowPlayingTvDisplay } from '@/components/dashboard/NowPlayingTvDisplay'
 import { DashboardOverviewCards } from '@/components/dashboard/DashboardOverviewCards'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { getOnboarding } from '@/lib/onboarding'
+import { OnboardingDismiss } from '@/components/dashboard/OnboardingDismiss'
+import { RocketLaunchIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 
 export default async function DashboardPage() {
@@ -132,6 +135,8 @@ export default async function DashboardPage() {
     hasTv ? import('@/lib/streaming-helpers').then((m) => m.getVideoStorageUsage(effectiveClient.clientId)) : null,
   ])
 
+  const onboarding = await getOnboarding(effectiveClient.clientId)
+
   return (
     <div className="space-y-6">
       <div>
@@ -152,6 +157,37 @@ export default async function DashboardPage() {
         </p>
 
       </div>
+
+      {!onboarding.allDone && !onboarding.dismissed && (
+        <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-5">
+          <div className="flex items-start gap-4">
+            <div className="shrink-0 mt-0.5">
+              <RocketLaunchIcon className="h-6 w-6 text-cyan-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold text-white">Primeros pasos</h3>
+                <OnboardingDismiss />
+              </div>
+              <p className="text-sm text-gray-300 mt-1">
+                Te faltan {onboarding.pending} de {onboarding.total} pasos para dejar todo listo.
+              </p>
+              <div className="mt-3 h-1.5 w-full max-w-sm rounded-full bg-gray-800 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                  style={{ width: `${Math.round((onboarding.completed / onboarding.total) * 100)}%` }}
+                />
+              </div>
+              <a
+                href="/dashboard/primeros-pasos"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-2 text-sm font-medium text-white transition-colors"
+              >
+                Continuar <ArrowRightIcon className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!basicData && (
         <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-xl p-6 backdrop-blur-sm">

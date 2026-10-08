@@ -32,6 +32,7 @@ model Client {
   planId          String?
   templateId      String?
   accentColor     String? // Color destacado del sitio (#RRGGBB, minúsculas) o null
+  onboardingDismissedAt DateTime? // Si está seteado, el cliente ocultó el empujón de "Primeros pasos"
   oneSignalAppId  String? // OneSignal App ID
   oneSignalApiKey String?  @db.Text // OneSignal REST API Key (encriptada)
   useGenericNews  Boolean  @default(false)
