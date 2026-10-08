@@ -112,6 +112,10 @@ export const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   planId: z.string().optional().transform((v) => v?.trim() || undefined),
+  radioName: z
+    .string()
+    .min(2, 'Ingresá el nombre de la radio (mínimo 2 caracteres)')
+    .max(60, 'El nombre de la radio es demasiado largo'),
 })
 
 export type BasicDataInput = z.infer<typeof basicDataSchema>

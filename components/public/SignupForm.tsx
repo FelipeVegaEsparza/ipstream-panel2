@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Check, Radio, MonitorPlay, HardDrive, ArrowRight, CheckCircle2, User, Mail, Lock, ShieldCheck, Clapperboard, Sparkles } from 'lucide-react'
 import styles from './SignupForm.module.css'
@@ -93,6 +93,38 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const [radioName, setRadioName] = useState('')
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'reserved' | 'invalid' | 'unconfigured'>('idle')
+  const [siteHost, setSiteHost] = useState('')
+  const [createdSiteUrl, setCreatedSiteUrl] = useState<string | null>(null)
+
+  // Chequeo de disponibilidad del subdominio (debounce).
+  useEffect(() => {
+    const n = radioName.trim()
+    if (!n) {
+      setSlugStatus('idle')
+      setSiteHost('')
+      return
+    }
+    setSlugStatus('checking')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/public/check-subdomain?name=${encodeURIComponent(n)}`)
+        const d = await res.json().catch(() => ({}))
+        if (d?.hostname) setSiteHost(d.hostname)
+        if (d?.available) setSlugStatus('available')
+        else setSlugStatus(
+          d?.reason === 'reserved' ? 'reserved'
+            : d?.reason === 'unconfigured' ? 'unconfigured'
+              : d?.reason === 'invalid' || d?.reason === 'short' || d?.reason === 'empty' ? 'invalid'
+                : 'taken'
+        )
+      } catch {
+        setSlugStatus('idle')
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [radioName])
 
   const selected = plans.find((p) => p.id === planId) || null
   const formatPrice = (p: PublicPlan) =>
@@ -112,19 +144,32 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
       setError('Elegí un plan')
       return
     }
+    if (!radioName.trim()) {
+      setError('Ingresá el nombre de la radio')
+      return
+    }
+    if (slugStatus === 'taken') {
+      setError('Ese nombre de radio ya está en uso. Elegí otro.')
+      return
+    }
+    if (slugStatus === 'reserved') {
+      setError('Ese nombre de radio está reservado. Elegí otro.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, planId }),
+        body: JSON.stringify({ name, email, password, planId, radioName }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(data?.error || 'Error al registrarte. Intentá de nuevo.')
         return
       }
+      setCreatedSiteUrl(data?.siteUrl || null)
       setDone(true)
     } catch {
       setError('Error al registrarte. Intentá de nuevo.')
@@ -150,6 +195,14 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
         {selected && (
           <div data-slot="summary" className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
             Plan <span data-slot="accent" className="font-semibold text-blue-600">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
+          </div>
+        )}
+        {createdSiteUrl && (
+          <div data-slot="site" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            Tu sitio ya está online:{' '}
+            <a href={createdSiteUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline">
+              {createdSiteUrl.replace('https://', '')}
+            </a>
           </div>
         )}
         <Link
@@ -293,6 +346,28 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
                 required
               />
             </div>
+            <div className="relative">
+              <Radio data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                data-slot="input"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+                value={radioName}
+                onChange={(e) => setRadioName(e.target.value)}
+                placeholder="Nombre de la radio"
+                required
+              />
+            </div>
+            {radioName.trim() && (
+              <p className="text-xs px-1 -mt-1">
+                {slugStatus === 'checking' && <span className="text-gray-400">Verificando disponibilidad…</span>}
+                {slugStatus === 'available' && (
+                  <span className="text-green-600">✓ Disponible: <strong>{siteHost}</strong></span>
+                )}
+                {slugStatus === 'taken' && <span className="text-red-600">✗ {siteHost || 'Ese nombre'} ya está en uso</span>}
+                {slugStatus === 'reserved' && <span className="text-red-600">✗ Ese nombre está reservado</span>}
+                {slugStatus === 'invalid' && <span className="text-gray-400">Escribí al menos 2 letras</span>}
+              </p>
+            )}
             <div className="relative">
               <Mail data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input

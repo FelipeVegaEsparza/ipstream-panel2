@@ -45,7 +45,7 @@ const TEMPLATES = [
   {
     key: 'bienvenida',
     name: 'Bienvenida / Plan contratado',
-    description: 'Se envía al cliente al contratar un plan. Variables: {{nombre}}, {{proyecto}}, {{plan}}, {{monto}}, {{moneda}}, {{fecha}}, {{prueba}}, {{link}}.',
+    description: 'Se envía al cliente al contratar un plan. Variables: {{nombre}}, {{proyecto}}, {{plan}}, {{monto}}, {{moneda}}, {{fecha}}, {{prueba}}, {{link}}, {{sitio}}.',
     subject: '¡Bienvenido a {{proyecto}}, {{nombre}}!',
     htmlBody: `
 <div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
@@ -64,6 +64,10 @@ const TEMPLATES = [
     <p style="color:#374151;margin:0 0 8px">Ingresá a tu panel para configurar tu espacio y empezar a transmitir:</p>
     <div style="text-align:center">
       <a href="${'{{link}}'}" style="${BTN_STYLE}">Ir a mi panel</a>
+    </div>
+    <p style="color:#374151;margin:16px 0 8px">Tu sitio ya está online:</p>
+    <div style="text-align:center">
+      <a href="${'{{sitio}}'}" style="${BTN_STYLE}">Ver mi sitio</a>
     </div>
     ${FOOTER}
   </div>

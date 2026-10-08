@@ -68,7 +68,8 @@ export async function sendAccountEmail(
 export async function sendWelcomeEmail(
   clientId: string,
   planName?: string,
-  trial?: { trialDays: number; chargeDate: Date; amount: number; currency: string } | null
+  trial?: { trialDays: number; chargeDate: Date; amount: number; currency: string } | null,
+  siteUrl?: string | null
 ): Promise<{ ok: boolean; status: string; logId?: string }> {
   try {
     const ctx = await getClientEmailContext(clientId)
@@ -91,6 +92,7 @@ export async function sendWelcomeEmail(
           ? `Disfrutá ${trial.trialDays} día${trial.trialDays === 1 ? '' : 's'} de prueba gratis. El primer cobro será el ${formatDate(trial.chargeDate)}.`
           : '',
         link: `${panelUrl()}/dashboard`,
+        sitio: siteUrl || '',
       },
     })
   } catch (err) {

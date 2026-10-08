@@ -5,10 +5,16 @@ import { registerSchema } from '@/lib/validations'
 import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/streaming-helpers'
 import { createSignupSubscription } from '@/lib/signup'
 import { rateLimit } from '@/lib/rate-limit'
+import { getClientSitesConfig } from '@/lib/client-sites-config'
+import { slugifyRadioName, slugError, buildSiteHost } from '@/lib/domain-slug'
+import { Prisma } from '@prisma/client'
 import { z } from 'zod'
 
 /** El plan recibido no existe o no está activo. */
 class PlanUnavailableError extends Error {}
+
+/** El nombre de radio no sirve como subdominio (inválido, reservado o tomado). */
+class SubdomainUnavailableError extends Error {}
 
 /**
  * Extrae la IP real del solicitante.
@@ -45,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, password, planId } = registerSchema.parse(body)
+    const { name, email, password, planId, radioName } = registerSchema.parse(body)
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -61,6 +67,9 @@ export async function POST(request: NextRequest) {
 
     // Hashear la contraseña (fuera de la transacción: es costoso y no toca la DB)
     const hashedPassword = await bcrypt.hash(password, 12)
+
+    // Config de sitios (dominio base) para el subdominio del cliente.
+    const sitesConfig = await getClientSitesConfig()
 
     // Cuenta, cliente, streams, suscripción, pago y cuotas en una sola transacción.
     // Nada de efectos externos (correos, agente de streaming) dentro de la transacción.
@@ -95,6 +104,32 @@ export async function POST(request: NextRequest) {
         throw new Error('No se pudo crear el cliente del usuario')
       }
 
+      // Subdominio del sitio a partir del nombre de la radio (atómico con la cuenta).
+      let clientDomain = null
+      if (sitesConfig.domain) {
+        const slug = slugifyRadioName(radioName)
+        const slugErr = slugError(slug)
+        if (slugErr === 'reserved') {
+          throw new SubdomainUnavailableError('Ese nombre está reservado. Elegí otro.')
+        }
+        if (slugErr) {
+          throw new SubdomainUnavailableError('El nombre de la radio no es válido para un sitio.')
+        }
+        const hostname = buildSiteHost(slug, sitesConfig.domain)
+        const taken = await tx.clientDomain.findUnique({ where: { hostname }, select: { id: true } })
+        if (taken) {
+          throw new SubdomainUnavailableError('Ese nombre ya está en uso. Elegí otro.')
+        }
+        clientDomain = await tx.clientDomain.create({
+          data: { clientId: client.id, hostname, kind: 'subdomain', status: 'active', isPrimary: true },
+        })
+        await tx.basicData.upsert({
+          where: { clientId: client.id },
+          update: { projectName: radioName },
+          create: { clientId: client.id, projectName: radioName, projectDescription: '' },
+        })
+      }
+
       const planServices = plan?.services || 'both'
       const planServerId = plan?.defaultServerId || undefined
 
@@ -113,12 +148,23 @@ export async function POST(request: NextRequest) {
         subscription = await createSignupSubscription(tx, client.id, plan)
       }
 
-      return { user, client, radioStream, subscription, plan }
+      return { user, client, radioStream, subscription, plan, clientDomain }
     }, { timeout: 15000 })
 
     const clientId = result.client.id
     const planName = result.plan?.name
     const streamInfo = result.radioStream
+    const siteUrl = result.clientDomain ? `https://${result.clientDomain.hostname}` : null
+
+    // Provisión best-effort del subdominio (idempotente; con el wildcard queda active).
+    if (result.clientDomain) {
+      try {
+        const { startDomainProvisioning } = await import('@/lib/domain-provisioner')
+        startDomainProvisioning(result.clientDomain.id)
+      } catch (err) {
+        console.error('Error iniciando provisión del subdominio:', err)
+      }
+    }
 
     // Correos (tras el commit, aislados: un fallo no revierte el registro).
     // Durante la prueba no se envía cobro inmediato: sólo la bienvenida con la
@@ -144,7 +190,8 @@ export async function POST(request: NextRequest) {
           result.plan.name,
           isTrial
             ? { trialDays, chargeDate: payment.dueDate, amount: payment.amount, currency: payment.currency }
-            : null
+            : null,
+          siteUrl
         )
       } catch (err) {
         console.error('Error enviando correos de registro:', err)
@@ -181,6 +228,7 @@ export async function POST(request: NextRequest) {
         role: result.user.role
       },
       planAssigned: result.subscription ? { planId } : null,
+      siteUrl,
       // Devolvemos info del stream para que la UI pueda mostrarlo
       stream: streamInfo ? {
         icecastMount: streamInfo.icecastMount,
@@ -194,6 +242,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'El plan seleccionado no está disponible' },
         { status: 400 }
+      )
+    }
+    if (error instanceof SubdomainUnavailableError) {
+      return NextResponse.json({ error: error.message }, { status: 409 })
+    }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'Ese nombre ya está en uso. Elegí otro.' },
+        { status: 409 }
       )
     }
     if (error instanceof z.ZodError) {
