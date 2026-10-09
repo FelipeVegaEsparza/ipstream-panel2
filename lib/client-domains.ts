@@ -94,3 +94,19 @@ export async function resolveClientByHost(
   cache.set(host, { value, at: Date.now() })
   return value
 }
+
+/**
+ * URL del sitio público del cliente: el dominio primario activo (o el primero
+ * activo). Null si el cliente no tiene dominios registrados.
+ */
+export async function resolveClientSiteUrl(
+  clientId: string,
+  db: PrismaDb = prisma
+): Promise<string | null> {
+  const domain = await db.clientDomain.findFirst({
+    where: { clientId, status: 'active' },
+    orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+    select: { hostname: true },
+  })
+  return domain ? `https://${domain.hostname}` : null
+}

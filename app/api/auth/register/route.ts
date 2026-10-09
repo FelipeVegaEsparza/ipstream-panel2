@@ -125,8 +125,8 @@ export async function POST(request: NextRequest) {
         })
         await tx.basicData.upsert({
           where: { clientId: client.id },
-          update: { projectName: radioName },
-          create: { clientId: client.id, projectName: radioName, projectDescription: '' },
+          update: { projectName: radioName, websiteUrl: `https://${hostname}` },
+          create: { clientId: client.id, projectName: radioName, projectDescription: '', websiteUrl: `https://${hostname}` },
         })
       }
 

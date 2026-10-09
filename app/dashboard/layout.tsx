@@ -7,6 +7,7 @@ import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { DashboardLayoutClient } from '@/components/dashboard/DashboardLayoutClient'
 import { ModalProvider } from '@/components/ui/modal'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { resolveClientSiteUrl } from '@/lib/client-domains'
 import { getDisabledMenuItems, getGloballyHiddenMenuItems } from '@/lib/menu-permissions'
 
 // getServerSession() lee cookies (next-auth), lo que impide que Next.js
@@ -46,14 +47,19 @@ export default async function DashboardLayout({
     import('@/lib/menu-items').MenuItemKey
   >
 
-  // URL del sitio web público del cliente (para el botón "Ir a mi sitio Web" en el header)
+  // URL del sitio web público del cliente (para el botón "Ir a mi sitio Web" en el header).
+  // Se deriva del dominio primario del cliente (creado al registrarse o por el admin);
+  // si no hay dominio registrado, se usa el `websiteUrl` que cargue el admin.
   let websiteUrl: string | null = null
   if (effectiveClient) {
-    const basicData = await prisma.basicData.findUnique({
-      where: { clientId: effectiveClient.clientId },
-      select: { websiteUrl: true },
-    })
-    websiteUrl = basicData?.websiteUrl ?? null
+    const [basicData, domainUrl] = await Promise.all([
+      prisma.basicData.findUnique({
+        where: { clientId: effectiveClient.clientId },
+        select: { websiteUrl: true },
+      }),
+      resolveClientSiteUrl(effectiveClient.clientId),
+    ])
+    websiteUrl = domainUrl ?? basicData?.websiteUrl ?? null
   }
 
   return (
