@@ -39,6 +39,6 @@
 
 ## 7. Limpieza y verificación final
 
-- [ ] 7.1 Eliminar clases/efectos muertos (`gradient-bg`, `glass-effect`, gradientes no usados) y confirmar con búsqueda que no quedan referencias.
-- [ ] 7.2 Documentar los tokens y las reglas de estilo en `AGENTS.md` (o `docs/`); verificar que el texto coincide con lo implementado.
-- [ ] 7.3 Verificación integral: `npm run build` sin errores, `npx tsc --noEmit` limpio, y checklist funcional completo (auth, dashboard, streaming, TV, onboarding, dominios, planes, emails) en tema oscuro y claro.
+- [x] 7.1 Eliminar clases/efectos muertos (`gradient-bg`, `glass-effect`, gradientes no usados) y confirmar con búsqueda que no quedan referencias.
+- [x] 7.2 Documentar los tokens y las reglas de estilo en `AGENTS.md` (o `docs/`); verificar que el texto coincide con lo implementado.
+- [x] 7.3 Verificación integral: `npm run build` sin errores, `npx tsc --noEmit` limpio, y checklist funcional completo (auth, dashboard, streaming, TV, onboarding, dominios, planes, emails) en tema oscuro y claro.

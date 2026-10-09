@@ -6,6 +6,21 @@
 - El usuario tiene acceso SSH al VPS de producción; se puede usar para tareas de deploy, pruebas y diagnóstico.
 - Flujo habitual: commit + push a `main` → GitHub Actions despliega automáticamente en el VPS.
 
+## Diseño / UI (sistema de marca)
+
+- **Tokens centrales** en `app/globals.css` + `tailwind.config.js`. El look se cambia ahí, no por componente.
+  - Marca: paleta `brand` en Tailwind (`bg-brand`, `text-brand`, `border-brand`, con opacidad) y variables `--brand-500` (#28B4F0), `--brand-700` (#0050B4), `--brand-300` (#64F0F0), `--brand-grad`.
+  - Superficies: `bg-background` / `bg-card` / `bg-secondary`; bordes `border-border`; texto `text-foreground` / `text-muted-foreground`. Cambian según el tema (`data-theme`).
+  - Radios `rounded-xl/2xl`; profundidad con bordes finos + `shadow-soft` (plana); verde `--success-500` solo para estado "en vivo".
+- **Reglas al tocar UI**:
+  1. Usar tokens (`bg-card`, `border-border`, `text-muted-foreground`, `brand`) en vez de colores crudos (`bg-gray-*`, `text-cyan-*`, `blue-*`).
+  2. Evitar gradientes ruidosos, glassmorphism, `hover:scale` y sombras grandes (se quitaron a propósito).
+  3. `text-white` solo sobre fondos de color (marca/estado); sobre superficies usar `text-foreground`.
+  4. Reestilizar es **solo** `className`/CSS: no tocar props, handlers, rutas ni lógica.
+- **Tema claro**: los tokens tienen variante `[data-theme="light"]`; mantener ambos temas.
+- **Sitio público** (`registro`, `planes`, `auth`) es un diseño claro aparte: usa los acentos de marca pero conserva sus neutros claros.
+- Referencia visual del refresh: maquetas en `/tmp/opencode/mockups`.
+
 ## App PWA hermana (`pwa/`)
 
 - La app PWA de clientes (React 19 + Vite 8 + vite-plugin-pwa, react-router-dom, react-query, hls.js, Vitest, oxlint) vive en `pwa/`, copiada desde su repo original.
