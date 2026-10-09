@@ -146,7 +146,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
     item.children?.some((c) => isChildActive(c)) ?? false
 
   const renderNavContent = (onLinkClick?: () => void) => (
-    <div className="flex min-h-0 grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4 shadow-2xl border-r border-gray-700">
+    <div className="flex min-h-0 grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4 border-r border-border">
       <div className="sticky top-0 z-10 flex h-20 shrink-0 items-center justify-center gradient-bg -mx-6 px-6">
         <img
           src="/logo-ipstream.png"
@@ -162,7 +162,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
               <li key={section.name}>
                 <button
                   onClick={() => toggleSection(section.name)}
-                  className="flex w-full items-center justify-between px-1 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
+                  className="flex w-full items-center justify-between px-1 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {section.name}
                   <ChevronDownIcon
@@ -210,12 +210,12 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                     />
                                     <span className="truncate flex-1">{item.name}</span>
                                     {isActive && (
-                                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-l-full"></div>
+                                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-grad rounded-l-full"></div>
                                     )}
                                   </Link>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); toggleChildren(item.key) }}
-                                  className="flex items-center justify-center w-8 h-8 mr-1 rounded hover:bg-gray-700/50 transition-colors"
+                                  className="flex items-center justify-center w-8 h-8 mr-1 rounded hover:bg-secondary/50 transition-colors"
                                   title={isChildGroupOpen ? 'Contraer' : 'Expandir'}
                                 >
                                   <ChevronDownIcon
@@ -254,7 +254,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                           />
                                           <span className="truncate text-sm">{child.name}</span>
                                           {childActive && (
-                                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-l-full"></div>
+                                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-grad rounded-l-full"></div>
                                           )}
                                         </Link>
                                       </li>
@@ -292,7 +292,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                 </span>
                               )}
                               {isActive && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-l-full"></div>
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-grad rounded-l-full"></div>
                               )}
                             </Link>
                           )}

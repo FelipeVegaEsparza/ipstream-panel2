@@ -28,23 +28,23 @@ export default async function DashboardPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-white mb-2">
+        <h3 className="text-lg font-medium text-foreground mb-2">
           Error: No se encontró información del cliente
         </h3>
-        <p className="text-gray-400 mb-4">
+        <p className="text-muted-foreground mb-4">
           No se pudo determinar el cliente para mostrar esta página
         </p>
         {session.user.role === 'ADMIN' ? (
           <a
             href="/admin"
-            className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-brand-grad hover:brightness-[1.07] text-white text-sm font-medium rounded-lg transition-colors"
           >
             Ir al Dashboard
           </a>
         ) : (
           <a
             href="/auth/login"
-            className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-brand-grad hover:brightness-[1.07] text-white text-sm font-medium rounded-lg transition-colors"
           >
             Iniciar Sesión
           </a>
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Dashboard
           {effectiveClient.isImpersonating && (
             <span className="ml-3 px-3 py-1 text-sm bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">
@@ -148,9 +148,9 @@ export default async function DashboardPage() {
             </span>
           )}
         </h1>
-        <p className="text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           {effectiveClient.isImpersonating && clientInfo ? (
-            <>Viendo como: <strong className="text-white">{clientInfo.name}</strong> ({clientInfo.user.email})</>
+            <>Viendo como: <strong className="text-foreground">{clientInfo.name}</strong> ({clientInfo.user.email})</>
           ) : (
             'Bienvenido a IPStream Panel'
           )}
@@ -159,28 +159,28 @@ export default async function DashboardPage() {
       </div>
 
       {!onboarding.allDone && !onboarding.dismissed && (
-        <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-5">
+        <div className="rounded-xl border border-[color:var(--brand-500)]/30 bg-[color:var(--brand-soft)] p-5">
           <div className="flex items-start gap-4">
             <div className="shrink-0 mt-0.5">
-              <RocketLaunchIcon className="h-6 w-6 text-cyan-400" />
+              <RocketLaunchIcon className="h-6 w-6 text-[color:var(--brand-500)]" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-white">Primeros pasos</h3>
+                <h3 className="text-sm font-semibold text-foreground">Primeros pasos</h3>
                 <OnboardingDismiss />
               </div>
-              <p className="text-sm text-gray-300 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Te faltan {onboarding.pending} de {onboarding.total} pasos para dejar todo listo.
               </p>
-              <div className="mt-3 h-1.5 w-full max-w-sm rounded-full bg-gray-800 overflow-hidden">
+              <div className="mt-3 h-1.5 w-full max-w-sm rounded-full bg-secondary overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                  className="h-full rounded-full bg-brand-grad"
                   style={{ width: `${Math.round((onboarding.completed / onboarding.total) * 100)}%` }}
                 />
               </div>
               <a
                 href="/dashboard/primeros-pasos"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-2 text-sm font-medium text-white transition-colors"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-grad hover:brightness-[1.07] px-3 py-2 text-sm font-medium text-white transition-colors"
               >
                 Continuar <ArrowRightIcon className="h-4 w-4" />
               </a>

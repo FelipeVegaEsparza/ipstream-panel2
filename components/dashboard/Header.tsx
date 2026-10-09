@@ -20,7 +20,7 @@ interface HeaderProps {
 
 export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
   const { effectiveUser, isImpersonating } = useImpersonationSession()
-  
+
   // Usar el usuario efectivo si hay impersonación activa
   const displayUser = effectiveUser || user
   const { theme, toggle } = useTheme()
@@ -48,11 +48,11 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
   }, [])
 
   return (
-    <div className="sticky top-0 z-40 flex h-20 shrink-0 items-center gap-x-4 border-b border-gray-700/50 bg-gray-800/80 backdrop-blur-md px-4 shadow-xl sm:gap-x-6 sm:px-6 lg:px-8">
+    <div className="sticky top-0 z-40 flex h-20 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 backdrop-blur-md px-4 sm:gap-x-6 sm:px-6 lg:px-8">
       {/* Mobile menu button */}
       <button
         type="button"
-        className="-m-2.5 p-2.5 text-gray-400 lg:hidden hover:text-white transition-colors"
+        className="-m-2.5 p-2.5 text-muted-foreground lg:hidden hover:text-foreground transition-colors"
         onClick={() => setSidebarOpen?.(true)}
       >
         <span className="sr-only">Abrir sidebar</span>
@@ -69,27 +69,27 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
                 href={websiteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-cyan-300 hover:text-cyan-400 hover:bg-cyan-500/10 border border-cyan-500/30 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[color:var(--brand-500)] hover:bg-[color:var(--brand-soft)] border border-[color:var(--brand-500)]/30 transition-colors"
               >
                 <GlobeAltIcon className="h-5 w-5" />
                 <span className="hidden sm:inline">Ir a mi sitio Web</span>
               </a>
-              <div className="hidden sm:block w-px h-5 bg-gray-700" />
+              <div className="hidden sm:block w-px h-5 bg-border" />
             </>
           )}
 
           {/* Quick nav */}
           <Link
             href="/dashboard/tutorials"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-700/50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-[color:var(--brand-500)] hover:bg-secondary/50 transition-colors"
           >
             <PlayCircleIcon className="h-5 w-5" />
             <span className="hidden sm:inline">Tutoriales</span>
           </Link>
-          <div className="hidden sm:block w-px h-5 bg-gray-700" />
+          <div className="hidden sm:block w-px h-5 bg-border" />
           <Link
             href="/dashboard/support"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-700/50 transition-colors relative"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-[color:var(--brand-500)] hover:bg-secondary/50 transition-colors relative"
           >
             <LifebuoyIcon className="h-5 w-5" />
             <span className="hidden sm:inline">Soporte</span>
@@ -99,12 +99,12 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
               </span>
             )}
           </Link>
-          <div className="w-px h-5 bg-gray-700" />
+          <div className="w-px h-5 bg-border" />
 
           {/* Theme toggle */}
           <button
             onClick={toggle}
-            className="p-2 rounded-xl text-gray-400 hover:text-cyan-400 hover:bg-gray-700/50 transition-colors"
+            className="p-2 rounded-xl text-muted-foreground hover:text-[color:var(--brand-500)] hover:bg-secondary/50 transition-colors"
             title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
           >
             {theme === 'dark' ? (
@@ -116,20 +116,20 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
 
           {/* Profile dropdown */}
           <Menu as="div" className="relative">
-            <Menu.Button className="flex items-center p-2 rounded-xl hover:bg-gray-700/50 transition-colors">
+            <Menu.Button className="flex items-center p-2 rounded-xl hover:bg-secondary/50 transition-colors">
               <span className="sr-only">Abrir menú de usuario</span>
               <div className="flex items-center space-x-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  isImpersonating 
-                    ? 'bg-gradient-to-br from-amber-500 to-orange-600' 
-                    : 'bg-gradient-to-br from-cyan-500 to-blue-600'
+                  isImpersonating
+                    ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+                    : 'bg-brand-grad'
                 }`}>
                   <span className="text-white font-semibold text-sm">
                     {(displayUser.name || displayUser.email).charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <span className="hidden lg:flex lg:items-center">
-                  <span className="text-sm font-semibold leading-6 text-gray-100">
+                  <span className="text-sm font-semibold leading-6 text-foreground">
                     {displayUser.name || displayUser.email}
                   </span>
                   {isImpersonating && (
@@ -149,12 +149,12 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
               leaveFrom="transform opacity-100 scale-100"
               leaveTo="transform opacity-0 scale-95"
             >
-              <Menu.Items className="absolute right-0 z-10 mt-2.5 w-48 origin-top-right rounded-xl bg-gray-800 py-2 shadow-2xl ring-1 ring-gray-700 focus:outline-none border border-gray-700">
-                <div className="px-4 py-3 border-b border-gray-700">
-                  <p className="text-sm text-gray-300">
+              <Menu.Items className="absolute right-0 z-10 mt-2.5 w-48 origin-top-right rounded-xl bg-popover py-2 shadow-soft ring-1 ring-border focus:outline-none border border-border">
+                <div className="px-4 py-3 border-b border-border">
+                  <p className="text-sm text-muted-foreground">
                     {isImpersonating ? 'Impersonando como' : 'Conectado como'}
                   </p>
-                  <p className="text-sm font-medium text-gray-100 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {displayUser.name || displayUser.email}
                   </p>
                   {isImpersonating && (
@@ -168,8 +168,8 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
                     <button
                       onClick={() => signOut()}
                       className={`${
-                        active ? 'bg-gray-700' : ''
-                      } flex w-full items-center px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors`}
+                        active ? 'bg-secondary' : ''
+                      } flex w-full items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors`}
                     >
                       <svg className="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

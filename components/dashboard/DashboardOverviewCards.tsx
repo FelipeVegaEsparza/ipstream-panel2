@@ -96,34 +96,34 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Oyentes en vivo */}
-      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-gray-700/50 p-5">
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center gap-2 mb-3">
-          <Headphones className="h-4 w-4 text-cyan-400" />
-          <h3 className="font-semibold text-white">Oyentes en vivo</h3>
+          <Headphones className="h-4 w-4 text-[color:var(--brand-500)]" />
+          <h3 className="font-semibold text-foreground">Oyentes en vivo</h3>
         </div>
         <div className="flex items-end gap-6">
           <div>
-            <div className="text-2xl font-bold text-white">{radioListeners}</div>
-            <div className="text-xs text-gray-400">Radio</div>
+            <div className="text-2xl font-bold text-foreground">{radioListeners}</div>
+            <div className="text-xs text-muted-foreground">Radio</div>
           </div>
           {hasTv && (
             <div>
-              <div className="text-2xl font-bold text-white">{tvViewers}</div>
-              <div className="text-xs text-gray-400">TV</div>
+              <div className="text-2xl font-bold text-foreground">{tvViewers}</div>
+              <div className="text-xs text-muted-foreground">TV</div>
             </div>
           )}
         </div>
-        {!hasRadio && !hasTv && <p className="text-xs text-gray-500 mt-1">Tu plan no incluye streaming</p>}
+        {!hasRadio && !hasTv && <p className="text-xs text-muted-foreground mt-1">Tu plan no incluye streaming</p>}
       </div>
 
       {/* Almacenamiento */}
-      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-gray-700/50 p-5">
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center gap-2 mb-3">
-          <HardDrive className="h-4 w-4 text-cyan-400" />
-          <h3 className="font-semibold text-white">Almacenamiento</h3>
+          <HardDrive className="h-4 w-4 text-[color:var(--brand-500)]" />
+          <h3 className="font-semibold text-foreground">Almacenamiento</h3>
         </div>
         {storageItems.length === 0 ? (
-          <p className="text-xs text-gray-500">Tu plan no incluye almacenamiento</p>
+          <p className="text-xs text-muted-foreground">Tu plan no incluye almacenamiento</p>
         ) : (
           <div className="space-y-3">
             {storageItems.map((item) => {
@@ -133,15 +133,15 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
               return (
                 <div key={item.label}>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-400">{item.label}</span>
-                    <span className="text-white font-medium">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className="text-foreground font-medium">
                       {fmtMB(usedMB)} / {fmtMB(quotaMB)}
                     </span>
                   </div>
                   {quotaMB !== null && pct !== null && (
-                    <div className="mt-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="mt-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                       <div
-                        className={`h-full ${item.used?.exceeded ? 'bg-red-500' : pct > 80 ? 'bg-yellow-500' : 'bg-cyan-500'}`}
+                        className={`h-full ${item.used?.exceeded ? 'bg-red-500' : pct > 80 ? 'bg-yellow-500' : 'bg-[color:var(--brand-500)]'}`}
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
@@ -154,26 +154,26 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
       </div>
 
       {/* Plan contratado */}
-      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-2xl border border-gray-700/50 p-5">
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center gap-2 mb-3">
-          <Crown className="h-4 w-4 text-cyan-400" />
-          <h3 className="font-semibold text-white">Mi Plan</h3>
+          <Crown className="h-4 w-4 text-[color:var(--brand-500)]" />
+          <h3 className="font-semibold text-foreground">Mi Plan</h3>
         </div>
         {plan ? (
           <>
-            <div className="text-2xl font-bold text-white">{plan.name}</div>
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-2xl font-bold text-foreground">{plan.name}</div>
+            <div className="text-xs text-muted-foreground mt-1">
               {plan.interval === 'monthly' ? 'Mensual' : 'Anual'}
               {planLabel ? ` · ${planLabel}` : ''}
             </div>
-            <div className="text-sm text-cyan-300 font-semibold mt-2">
+            <div className="text-sm text-[color:var(--brand-500)] font-semibold mt-2">
               {fmtCurrency(plan.price, plan.currency)}
             </div>
           </>
         ) : (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Sin plan asignado.{' '}
-            <span className="text-cyan-400">Contactá al soporte para activar tu plan.</span>
+            <span className="text-[color:var(--brand-500)]">Contacta al soporte para activar tu plan.</span>
           </p>
         )}
       </div>
