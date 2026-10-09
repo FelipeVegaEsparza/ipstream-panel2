@@ -137,7 +137,7 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
                 <label className="form-label">Hostname público (oyentes)</label>
                 <input className="form-input" value={form.publicHostname} onChange={(e) => set('publicHostname', e.target.value)} placeholder="radio1.midominio.cl" />
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div className="form-group col-span-2">
                   <label className="form-label">Host SSH (IP)</label>
                   <input className="form-input" value={form.sshHost} onChange={(e) => set('sshHost', e.target.value)} placeholder="1.2.3.4" />

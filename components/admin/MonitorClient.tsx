@@ -342,7 +342,7 @@ export function MonitorClient() {
             </div>
 
             {/* ====== TABLA CLIENTES ====== */}
-            <div className="bg-card rounded-lg overflow-hidden">
+            <div className="bg-card rounded-lg overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-background/50 text-muted-foreground uppercase text-xs">
                   <tr>

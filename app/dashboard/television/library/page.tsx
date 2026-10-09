@@ -355,7 +355,7 @@ export default function TvLibraryPage() {
           )}
 
           {/* Tracks table */}
-          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl overflow-hidden">
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl overflow-x-auto">
             {loading ? (
               <div className="p-6 text-center text-muted-foreground">Cargando...</div>
             ) : tracks.length === 0 ? (

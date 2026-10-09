@@ -106,7 +106,7 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
           </p>
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-background/40 text-left text-muted-foreground border-b border-border">
               <tr>

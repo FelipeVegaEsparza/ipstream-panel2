@@ -192,7 +192,7 @@ export default function AdminStreamingPage() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-card rounded-lg overflow-hidden">
+      <div className="bg-card rounded-lg overflow-x-auto">
         {loading ? (
           <div className="p-12 text-center text-muted-foreground">Cargando...</div>
         ) : filtered.length === 0 ? (
