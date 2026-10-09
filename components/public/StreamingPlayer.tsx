@@ -37,7 +37,7 @@ interface Props {
 }
 
 const COLORS = {
-  cyan: 'bg-cyan-600 hover:bg-cyan-700',
+  cyan: 'bg-brand hover:bg-cyan-700',
   red: 'bg-red-600 hover:bg-red-700',
   green: 'bg-green-600 hover:bg-green-700',
   purple: 'bg-purple-600 hover:bg-purple-700',

@@ -22,9 +22,9 @@ export interface PublicPlan {
 }
 
 const SERVICES_META: Record<string, { label: string; icon: any; chip: string }> = {
-  radio: { label: 'Radio', icon: Radio, chip: 'bg-blue-100 text-blue-700' },
+  radio: { label: 'Radio', icon: Radio, chip: 'bg-blue-100 text-brand' },
   tv: { label: 'TV', icon: MonitorPlay, chip: 'bg-purple-100 text-purple-700' },
-  both: { label: 'Radio + TV', icon: Clapperboard, chip: 'bg-indigo-100 text-indigo-700' },
+  both: { label: 'Radio + TV', icon: Clapperboard, chip: 'bg-indigo-100 text-brand' },
 }
 
 function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
@@ -66,7 +66,7 @@ function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
       <div data-slot="muted" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
         {plan.services !== 'tv' && (
           <span className="inline-flex items-center gap-1">
-            <HardDrive data-slot="icon" className="h-3 w-3 text-blue-500" /> Radio: {fmtMB(plan.radioStorageQuotaMB)}
+            <HardDrive data-slot="icon" className="h-3 w-3 text-brand" /> Radio: {fmtMB(plan.radioStorageQuotaMB)}
           </span>
         )}
         {plan.services !== 'radio' && (
@@ -194,7 +194,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
         </p>
         {selected && (
           <div data-slot="summary" className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
-            Plan <span data-slot="accent" className="font-semibold text-blue-600">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
+            Plan <span data-slot="accent" className="font-semibold text-brand">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
           </div>
         )}
         {createdSiteUrl && (
@@ -208,7 +208,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
         <Link
           data-slot="submit"
           href="/auth/login"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg shadow-blue-600/20 transition-all"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand hover:bg-brand text-white font-medium shadow-lg shadow-blue-600/20 transition-all"
         >
           Iniciar sesión <ArrowRight className="h-4 w-4" />
         </Link>
@@ -243,7 +243,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
                 onClick={() => setPlanId(p.id)}
                 className={`w-full text-left flex gap-5 rounded-2xl border p-5 transition-all ${
                   isSelected
-                    ? 'border-blue-600 ring-2 ring-blue-600/20 bg-blue-50/40 shadow-md'
+                    ? 'border-brand ring-2 ring-blue-600/20 bg-blue-50/40 shadow-md'
                     : 'border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-gray-300'
                 }`}
               >
@@ -279,7 +279,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
                   <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
                     {p.services !== 'tv' && (
                       <span className="inline-flex items-center gap-1">
-                        <HardDrive className="h-3 w-3 text-blue-500" /> Radio: {fmtMB(p.radioStorageQuotaMB)}
+                        <HardDrive className="h-3 w-3 text-brand" /> Radio: {fmtMB(p.radioStorageQuotaMB)}
                       </span>
                     )}
                     {p.services !== 'radio' && (
@@ -293,7 +293,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
                     <ul className="mt-2.5 space-y-1">
                       {p.features.slice(0, 4).map((f, i) => (
                         <li key={i} className="flex items-start gap-1.5 text-sm text-gray-600">
-                          <Check className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                          <Check className="h-4 w-4 text-brand mt-0.5 shrink-0" />
                           <span>{f}</span>
                         </li>
                       ))}
@@ -302,8 +302,8 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
                 </div>
 
                 <div className="shrink-0 self-center">
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-blue-600' : 'border-gray-300'}`}>
-                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-brand' : 'border-gray-300'}`}>
+                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-brand" />}
                   </div>
                 </div>
               </button>
@@ -320,7 +320,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
             <h3 data-slot="heading" className="text-xl font-bold text-gray-900">Crea tu cuenta</h3>
             {selected ? (
               <p data-slot="sub" className="mt-1 text-sm text-gray-500">
-                Plan <span data-slot="accent" className="text-blue-600 font-medium">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
+                Plan <span data-slot="accent" className="text-brand font-medium">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
               </p>
             ) : (
               <p data-slot="sub" className="mt-1 text-sm text-gray-500">Completa tus datos para comenzar</p>
@@ -328,8 +328,8 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
           </div>
 
           {trialDays > 0 && (
-            <div data-slot="trial" className="flex items-center gap-2 rounded-xl bg-cyan-50 border border-cyan-200 px-3 py-2 text-sm text-cyan-800">
-              <Sparkles className="h-4 w-4 text-cyan-600" />
+            <div data-slot="trial" className="flex items-center gap-2 rounded-xl bg-cyan-50 border border-cyan-200 px-3 py-2 text-sm text-brand">
+              <Sparkles className="h-4 w-4 text-brand" />
               Incluye <strong>{trialDays} días de prueba gratis</strong>. Después pagas el plan que elijas.
             </div>
           )}
@@ -339,7 +339,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
               <User data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 data-slot="input"
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-brand focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nombre completo"
@@ -350,7 +350,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
               <Radio data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 data-slot="input"
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-brand focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
                 value={radioName}
                 onChange={(e) => setRadioName(e.target.value)}
                 placeholder="Nombre de la radio"
@@ -372,7 +372,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
               <Mail data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 data-slot="input"
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-brand focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -384,7 +384,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
               <Lock data-slot="icon" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 data-slot="input"
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 text-gray-900 pl-9 pr-3 py-2.5 text-sm placeholder-gray-400 focus:border-brand focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -401,7 +401,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
             data-slot="submit"
             type="submit"
             disabled={loading || plans.length === 0}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold shadow-lg shadow-blue-600/20 transition-all"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand hover:bg-brand disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold shadow-lg shadow-blue-600/20 transition-all"
           >
             {loading ? 'Creando cuenta...' : (
               <>
@@ -411,12 +411,12 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
           </button>
 
           <div data-slot="shield" className="flex items-center justify-center gap-1.5 text-xs text-gray-500">
-            <ShieldCheck className="h-3.5 w-3.5 text-blue-600" /> Tus datos están protegidos.
+            <ShieldCheck className="h-3.5 w-3.5 text-brand" /> Tus datos están protegidos.
           </div>
 
           <p data-slot="prompt" className="text-center text-sm text-gray-500">
             ¿Ya tienes cuenta?{' '}
-            <Link data-slot="link" href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">Inicia sesión</Link>
+            <Link data-slot="link" href="/auth/login" className="text-brand hover:text-brand font-medium hover:underline">Inicia sesión</Link>
           </p>
         </form>
       </div>

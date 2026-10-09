@@ -50,11 +50,11 @@ export default async function RegistroPage({
             <img src="https://ipstream.cl/images/logos/logo.png" alt="IPStream" className="h-11 w-auto" />
           </a>
           <nav className="flex items-center gap-5">
-            <a href="https://ipstream.cl/planes" className="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors hidden sm:inline">Planes</a>
-            <a href="https://ipstream.cl/caracteristicas" className="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors hidden sm:inline">Características</a>
+            <a href="https://ipstream.cl/planes" className="text-sm text-gray-600 hover:text-brand font-medium transition-colors hidden sm:inline">Planes</a>
+            <a href="https://ipstream.cl/caracteristicas" className="text-sm text-gray-600 hover:text-brand font-medium transition-colors hidden sm:inline">Características</a>
             <a
               href="https://ipstream.cl/landing"
-              className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all"
+              className="inline-flex items-center bg-brand hover:bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg transition-all"
             >
               Quiero Contratar
             </a>
@@ -64,16 +64,16 @@ export default async function RegistroPage({
 
       {/* Título */}
       <section className="max-w-5xl mx-auto px-4 pt-10 pb-8 text-center">
-        <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-600 text-sm font-medium mb-4">
+        <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-brand text-sm font-medium mb-4">
           CREA TU CUENTA
         </span>
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          Elige tu plan y empieza a <span className="text-blue-600">transmitir</span>
+          Elige tu plan y empieza a <span className="text-brand">transmitir</span>
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Sitio web profesional, reproductor, app PWA y panel de administración para tu radio o televisión.
           {trialDays > 0 && (
-            <span className="block mt-2 font-semibold text-cyan-600">
+            <span className="block mt-2 font-semibold text-brand">
               Empieza con {trialDays} días de prueba gratis.
             </span>
           )}
@@ -91,8 +91,8 @@ export default async function RegistroPage({
           <p>© {new Date().getFullYear()} IPStream · Radio Online y Televisión por streaming</p>
           <p>
             Al crear tu cuenta aceptas nuestros{' '}
-            <a href="#" className="text-blue-600 hover:underline">Términos y Condiciones</a> y{' '}
-            <a href="#" className="text-blue-600 hover:underline">Política de Privacidad</a>.
+            <a href="#" className="text-brand hover:underline">Términos y Condiciones</a> y{' '}
+            <a href="#" className="text-brand hover:underline">Política de Privacidad</a>.
           </p>
         </div>
       </footer>

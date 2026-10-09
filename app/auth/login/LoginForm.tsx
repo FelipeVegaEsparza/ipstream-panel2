@@ -65,8 +65,8 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
         ) : (
           <>
             {/* Gradient Orbs */}
-            <div className="absolute top-0 -left-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-            <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-brand rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-brand rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
             <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
 
             {/* Grid Pattern */}
@@ -90,7 +90,7 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
         <div className="card backdrop-blur-xl bg-gray-800/80 border-2 border-gray-700/50 shadow-2xl">
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-cyan-500 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+              <div className="absolute inset-0 bg-brand rounded-full blur-2xl opacity-30 animate-pulse"></div>
               <img
                 src="/logo-ipstream.png"
                 alt="IPStream Panel"
@@ -98,7 +98,7 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
               />
             </div>
           </div>
-          <h2 className="text-center text-3xl font-bold text-white mb-2 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+          <h2 className="text-center text-3xl font-bold text-white mb-2 bg-gradient-to-r from-cyan-400 to-brand bg-clip-text text-transparent">
             Iniciar Sesión
           </h2>
           <p className="text-center text-sm text-gray-400 mb-8">
@@ -155,7 +155,7 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
                 <span className="relative z-10">
                   {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-brand opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </button>
             </div>
           </form>
