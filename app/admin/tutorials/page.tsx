@@ -25,8 +25,8 @@ export default async function TutorialsAdminPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Tutoriales</h1>
-        <p className="text-gray-400 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Tutoriales</h1>
+        <p className="text-muted-foreground mt-1">
           Gestiona los videos tutoriales que ven tus clientes
         </p>
       </div>

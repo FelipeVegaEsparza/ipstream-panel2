@@ -144,11 +144,11 @@ export function ClienteRow({
 
   return (
     <>
-      <tr className="border-b border-gray-700 hover:bg-gray-800/40">
+      <tr className="border-b border-border hover:bg-card/40">
         <td className="px-4 py-3">
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-white font-medium">{client.name}</p>
+              <p className="text-foreground font-medium">{client.name}</p>
               {(client.disabledMenuCount ?? 0) > 0 && (
                 <a
                   href={`/admin/users/${client.id}/menu`}
@@ -159,29 +159,29 @@ export function ClienteRow({
                 </a>
               )}
             </div>
-            <p className="text-xs text-gray-400">{client.email}</p>
+            <p className="text-xs text-muted-foreground">{client.email}</p>
           </div>
         </td>
         <td className="px-4 py-3">
           {client.plan ? (
             <div>
-              <p className="text-white text-sm font-medium">{client.plan.name}</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-foreground text-sm font-medium">{client.plan.name}</p>
+              <p className="text-xs text-muted-foreground">
                 {formatCurrency(client.plan.price, client.plan.currency)}/
                 {client.plan.interval === 'monthly' ? 'mes' : 'año'}
               </p>
             </div>
           ) : (
-            <span className="text-sm text-gray-500">—</span>
+            <span className="text-sm text-muted-foreground">—</span>
           )}
         </td>
         <td className="px-4 py-3">
-          <Badge className={`${badge.color} text-white flex items-center gap-1 w-fit`}>
+          <Badge className={`${badge.color} text-foreground flex items-center gap-1 w-fit`}>
             {BadgeIcon && <BadgeIcon className="h-3 w-3" />}
             {badge.text}
           </Badge>
           {status.daysUntilDue !== null && status.status !== 'no_plan' && status.status !== 'no_subscription' && (
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {status.daysUntilDue < 0
                 ? `Hace ${Math.abs(status.daysUntilDue)} días`
                 : status.daysUntilDue === 0
@@ -192,20 +192,20 @@ export function ClienteRow({
         </td>
         <td className="px-4 py-3">
           {status.nextPayment ? (
-            <p className="text-sm text-white">{formatDate(status.nextPayment.dueDate)}</p>
+            <p className="text-sm text-foreground">{formatDate(status.nextPayment.dueDate)}</p>
           ) : client.subscription ? (
-            <p className="text-sm text-gray-400">{formatDate(client.subscription.endDate)}</p>
+            <p className="text-sm text-muted-foreground">{formatDate(client.subscription.endDate)}</p>
           ) : (
-            <span className="text-sm text-gray-500">—</span>
+            <span className="text-sm text-muted-foreground">—</span>
           )}
         </td>
         <td className="px-4 py-3">
           {status.lastPayment ? (
-            <p className="text-sm text-white">
+            <p className="text-sm text-foreground">
               {formatDate(status.lastPayment.paidAt ?? status.lastPayment.createdAt)}
             </p>
           ) : (
-            <span className="text-sm text-gray-500">—</span>
+            <span className="text-sm text-muted-foreground">—</span>
           )}
         </td>
         <td className="px-4 py-3">
@@ -223,7 +223,7 @@ export function ClienteRow({
                       target="_blank"
                       rel="noopener noreferrer"
                       title="Abrir conversación de WhatsApp"
-                      className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium bg-[#25D366] hover:bg-[#1da851] text-white transition-colors"
+                      className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium bg-[#25D366] hover:bg-[#1da851] text-foreground transition-colors"
                     >
                       <MessageCircle className="h-3 w-3 mr-1" />
                       WhatsApp
@@ -243,7 +243,7 @@ export function ClienteRow({
               <Button
                 size="sm"
                 onClick={() => onAsignarPlan(client)}
-                className="bg-cyan-600 hover:bg-cyan-700 h-8 text-xs"
+                className="bg-brand hover:bg-brand h-8 text-xs"
               >
                 Asignar plan
               </Button>
@@ -255,7 +255,7 @@ export function ClienteRow({
                   size="sm"
                   variant="ghost"
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
                   title="Más acciones"
                   aria-label="Más acciones"
                 >
@@ -263,15 +263,15 @@ export function ClienteRow({
                 </Button>
 
                 {menuOpen && (
-                  <div className="absolute right-0 mt-1 w-52 rounded-lg border border-gray-700 bg-gray-800 shadow-xl z-20 py-1 text-sm">
+                  <div className="absolute right-0 mt-1 w-52 rounded-lg border border-border bg-card shadow-xl z-20 py-1 text-sm">
                     <button
                       onClick={() => {
                         setMenuOpen(false)
                         setShowEditarFecha(true)
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                     >
-                      <CalendarClock className="h-4 w-4 text-cyan-400" />
+                      <CalendarClock className="h-4 w-4 text-brand" />
                       Editar fecha de inicio
                     </button>
                     <button
@@ -279,9 +279,9 @@ export function ClienteRow({
                         setMenuOpen(false)
                         onAsignarPlan(client)
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                     >
-                      <Pencil className="h-4 w-4 text-gray-400" />
+                      <Pencil className="h-4 w-4 text-muted-foreground" />
                       Cambiar plan
                     </button>
                     <button
@@ -292,9 +292,9 @@ export function ClienteRow({
                           '_blank'
                         )
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                     >
-                      <FileText className="h-4 w-4 text-cyan-400" />
+                      <FileText className="h-4 w-4 text-brand" />
                       Generar boleta de pago
                     </button>
                     <button
@@ -303,9 +303,9 @@ export function ClienteRow({
                         enviarBoleta()
                       }}
                       disabled={sendingBoleta}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white flex items-center gap-2 disabled:opacity-50"
+                      className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2 disabled:opacity-50"
                     >
-                      <Mail className="h-4 w-4 text-cyan-400" />
+                      <Mail className="h-4 w-4 text-brand" />
                       {sendingBoleta ? 'Enviando...' : 'Enviar boleta por correo'}
                     </button>
                     {subscriptionActive && (
@@ -314,9 +314,9 @@ export function ClienteRow({
                           setMenuOpen(false)
                           onCancelar(client)
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                       >
-                        <X className="h-4 w-4 text-gray-400" />
+                        <X className="h-4 w-4 text-muted-foreground" />
                         Cancelar suscripción
                       </button>
                     )}
@@ -326,9 +326,9 @@ export function ClienteRow({
                           setMenuOpen(false)
                           onRenovar(client)
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                       >
-                        <RefreshCw className="h-4 w-4 text-blue-400" />
+                        <RefreshCw className="h-4 w-4 text-brand" />
                         Renovar
                       </button>
                     )}
@@ -337,12 +337,12 @@ export function ClienteRow({
                         setMenuOpen(false)
                         setExpanded((v) => !v)
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                     >
-                      <History className="h-4 w-4 text-gray-400" />
+                      <History className="h-4 w-4 text-muted-foreground" />
                       {expanded ? 'Ocultar historial' : `Ver historial (${client.payments.length})`}
                     </button>
-                    <div className="my-1 border-t border-gray-700" />
+                    <div className="my-1 border-t border-border" />
                     <button
                       onClick={() => {
                         setMenuOpen(false)
@@ -362,15 +362,15 @@ export function ClienteRow({
       </tr>
 
       {expanded && (
-        <tr className="bg-gray-900/40">
+        <tr className="bg-background/40">
           <td colSpan={6} className="px-4 py-4">
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-cyan-400" />
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-brand" />
                 Historial de pagos
               </h4>
               {sortedPayments.length === 0 ? (
-                <p className="text-sm text-gray-400">No hay pagos registrados.</p>
+                <p className="text-sm text-muted-foreground">No hay pagos registrados.</p>
               ) : (
                 <div className="space-y-2">
                   {sortedPayments.map((p) => {
@@ -379,11 +379,11 @@ export function ClienteRow({
                     return (
                       <div
                         key={p.id}
-                        className="flex items-center justify-between gap-3 p-3 rounded-lg bg-gray-800/60 border border-gray-700"
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg bg-card/60 border border-border"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-white font-medium">
+                            <span className="text-foreground font-medium">
                               {formatCurrency(p.amount, p.currency)}
                             </span>
                             <Badge
@@ -393,11 +393,11 @@ export function ClienteRow({
                                   : p.status === 'failed'
                                   ? 'bg-red-600'
                                   : p.status === 'refunded'
-                                  ? 'bg-gray-600'
+                                  ? 'bg-secondary'
                                   : isOverdue
                                   ? 'bg-red-600'
                                   : 'bg-yellow-600'
-                              } text-white`}
+                              } text-foreground`}
                             >
                               {p.status === 'completed'
                                 ? 'Pagado'
@@ -409,11 +409,11 @@ export function ClienteRow({
                                 ? 'Vencido'
                                 : 'Pendiente'}
                             </Badge>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-muted-foreground">
                               {PAYMENT_METHOD_LABELS[p.paymentMethod] ?? p.paymentMethod}
                             </span>
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               Vence: {formatDate(p.dueDate)}
@@ -426,7 +426,7 @@ export function ClienteRow({
                             )}
                           </div>
                           {p.description && (
-                            <p className="text-xs text-gray-500 mt-1 truncate">{p.description}</p>
+                            <p className="text-xs text-muted-foreground mt-1 truncate">{p.description}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -435,7 +435,7 @@ export function ClienteRow({
                               size="sm"
                               variant="outline"
                               onClick={() => window.open(p.receiptUrl!, '_blank')}
-                              className="border-cyan-600 text-cyan-400 hover:bg-cyan-600 hover:text-white h-8 text-xs"
+                              className="border-brand text-brand hover:bg-brand hover:text-white h-8 text-xs"
                             >
                               <Eye className="h-3 w-3 mr-1" />
                               Comprobante

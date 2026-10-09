@@ -29,8 +29,8 @@ export function LogsStats({ stats }: LogsStatsProps) {
       title: 'Total Logs',
       value: stats.totalLogs,
       icon: FileText,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/10'
+      color: 'text-brand',
+      bgColor: 'bg-brand/10'
     },
     {
       title: 'Errores',
@@ -64,8 +64,8 @@ export function LogsStats({ stats }: LogsStatsProps) {
       title: 'Usuarios Únicos',
       value: stats.uniqueUsers,
       icon: Users,
-      color: 'text-cyan-400',
-      bgColor: 'bg-cyan-500/10'
+      color: 'text-brand',
+      bgColor: 'bg-brand/10'
     },
     {
       title: 'IPs Únicas',
@@ -81,9 +81,9 @@ export function LogsStats({ stats }: LogsStatsProps) {
       {statsData.map((stat, index) => {
         const Icon = stat.icon
         return (
-          <Card key={index} className="bg-gray-800 border-gray-700">
+          <Card key={index} className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
               </CardTitle>
               <div className={`p-2 rounded-lg ${stat.bgColor}`}>
@@ -91,7 +91,7 @@ export function LogsStats({ stats }: LogsStatsProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
+              <div className="text-2xl font-bold text-foreground">
                 {stat.value.toLocaleString()}
               </div>
             </CardContent>

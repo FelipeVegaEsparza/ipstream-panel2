@@ -10,11 +10,11 @@ interface AdminStatsProps {
 }
 
 const colorVariants = {
-  'bg-blue-500': {
-    gradient: 'from-blue-500/20 to-blue-600/20',
-    border: 'border-blue-500/30',
-    text: 'text-blue-400',
-    icon: 'text-blue-400'
+  'bg-brand': {
+    gradient: 'from-brand/20 to-brand/20',
+    border: 'border-brand/30',
+    text: 'text-brand',
+    icon: 'text-brand'
   },
   'bg-green-500': {
     gradient: 'from-green-500/20 to-green-600/20',
@@ -111,7 +111,7 @@ export function AdminStats({ stats }: AdminStatsProps) {
                 <dt className={`truncate text-sm font-medium ${variant.text} mb-2`}>
                   {stat.name}
                 </dt>
-                <dd className="text-2xl font-bold tracking-tight text-white">
+                <dd className="text-2xl font-bold tracking-tight text-foreground">
                   {stat.value.toLocaleString()}
                 </dd>
               </div>

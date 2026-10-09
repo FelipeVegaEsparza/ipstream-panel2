@@ -59,10 +59,10 @@ export function EditarFechaInicioModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 max-w-md w-full">
+      <div className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-md w-full">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
           aria-label="Cerrar"
         >
           <X className="h-5 w-5" />
@@ -70,29 +70,29 @@ export function EditarFechaInicioModal({
 
         <div className="p-6 space-y-5">
           <div>
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-cyan-400" />
+            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-brand" />
               Editar fecha de inicio
             </h3>
-            <p className="text-sm text-gray-400 mt-1">
-              Cliente: <span className="text-white font-medium">{clientName}</span>
+            <p className="text-sm text-muted-foreground mt-1">
+              Cliente: <span className="text-foreground font-medium">{clientName}</span>
             </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-gray-700/40 border border-gray-600">
-            <p className="text-xs text-gray-400">Fecha de inicio actual</p>
-            <p className="text-white font-medium">{formatDate(currentStartDate)}</p>
+          <div className="p-3 rounded-lg bg-secondary/40 border border-border">
+            <p className="text-xs text-muted-foreground">Fecha de inicio actual</p>
+            <p className="text-foreground font-medium">{formatDate(currentStartDate)}</p>
           </div>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Nueva fecha de inicio *</label>
+            <label className="text-sm text-muted-foreground block mb-1">Nueva fecha de inicio *</label>
             <Input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-secondary border-border text-foreground"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Se regenerarán todos los pagos mensuales desde esta fecha. El primer mes quedará
               marcado como pagado automáticamente.
             </p>
@@ -117,7 +117,7 @@ export function EditarFechaInicioModal({
               type="button"
               onClick={onClose}
               variant="outline"
-              className="flex-1 border-gray-600 hover:bg-gray-700"
+              className="flex-1 border-border hover:bg-secondary"
               disabled={loading}
             >
               Cancelar
@@ -125,7 +125,7 @@ export function EditarFechaInicioModal({
             <Button
               type="button"
               onClick={handleSubmit}
-              className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+              className="flex-1 bg-brand hover:bg-brand"
               disabled={loading}
             >
               {loading ? 'Actualizando...' : 'Actualizar fecha'}

@@ -363,14 +363,14 @@ export function GlobalNewsManager() {
       minute: '2-digit',
     }).format(new Date(date))
 
-  if (loading) return <p className="text-gray-400">Cargando noticias globales...</p>
+  if (loading) return <p className="text-muted-foreground">Cargando noticias globales...</p>
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white">Noticias Genéricas</h2>
-          <p className="text-sm text-gray-400">
+          <h2 className="text-xl font-bold text-foreground">Noticias Genéricas</h2>
+          <p className="text-sm text-muted-foreground">
             {publishedPagination.total} publicadas · {draftsPagination.total} borradores
           </p>
         </div>
@@ -390,7 +390,7 @@ export function GlobalNewsManager() {
                 setEditingId(null)
                 setForm({ categoryId: '', name: '', slug: '', shortText: '', longText: '', imageUrl: '' })
               }}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-brand hover:bg-brand"
             >
               <PlusIcon className="h-4 w-4 mr-2" /> Nueva Noticia
             </Button>
@@ -402,7 +402,7 @@ export function GlobalNewsManager() {
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className="bg-gray-700 border border-gray-600 text-white rounded-lg px-3 py-2 text-sm"
+          className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 text-sm"
         >
           <option value="">Todas las categorías</option>
           {categories.map((cat) => (
@@ -414,7 +414,7 @@ export function GlobalNewsManager() {
             type="button"
             variant="outline"
             onClick={() => setFilterCategory('')}
-            className="border-gray-600 hover:bg-gray-700"
+            className="border-border hover:bg-secondary"
           >
             <XMarkIcon className="h-4 w-4 mr-1" /> Limpiar filtro
           </Button>
@@ -422,17 +422,17 @@ export function GlobalNewsManager() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-gray-800 border border-gray-700 rounded-lg p-6 space-y-4">
-          <h3 className="text-lg font-medium text-white">
+        <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <h3 className="text-lg font-medium text-foreground">
             {editingId ? 'Editar Noticia Genérica' : 'Nueva Noticia Genérica'}
           </h3>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Categoría</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">Categoría</label>
             <select
               value={form.categoryId}
               onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-              className="bg-gray-700 border border-gray-600 text-white rounded-lg px-3 py-2 w-full"
+              className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 w-full"
               required
             >
               <option value="">Seleccionar categoría...</option>
@@ -444,20 +444,20 @@ export function GlobalNewsManager() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Título</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Título</label>
               <Input
                 value={form.name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-secondary border-border text-foreground"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Slug</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Slug</label>
               <Input
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-secondary border-border text-foreground"
                 required
               />
             </div>
@@ -474,34 +474,34 @@ export function GlobalNewsManager() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Texto Corto</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">Texto Corto</label>
             <textarea
               value={form.shortText}
               onChange={(e) => setForm({ ...form, shortText: e.target.value })}
-              className="bg-gray-700 border border-gray-600 text-white rounded-lg px-3 py-2 w-full min-h-[80px]"
+              className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 w-full min-h-[80px]"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Texto Largo</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">Texto Largo</label>
             <textarea
               value={form.longText}
               onChange={(e) => setForm({ ...form, longText: e.target.value })}
-              className="bg-gray-700 border border-gray-600 text-white rounded-lg px-3 py-2 w-full min-h-[150px]"
+              className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 w-full min-h-[150px]"
               required
             />
           </div>
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" disabled={saving} className="bg-brand hover:bg-brand">
               {saving ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear'}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => { setShowForm(false); setEditingId(null) }}
-              className="border-gray-600 hover:bg-gray-700"
+              className="border-border hover:bg-secondary"
             >
               Cancelar
             </Button>
@@ -511,20 +511,20 @@ export function GlobalNewsManager() {
 
       {showGenerateModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <SparklesIcon className="h-5 w-5 text-purple-400" />
                   Generar borradores con IA
                 </h3>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   DeepSeek generará borradores en español, inspirados en titulares actuales de GNews. Si GNews no responde, no se creará ningún borrador.
                 </p>
               </div>
               <button
                 onClick={() => { setShowGenerateModal(false); setGenerateError(null); setGenerateResult(null) }}
-                className="text-gray-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
                 disabled={generating}
               >
                 <XMarkIcon className="h-5 w-5" />
@@ -533,16 +533,16 @@ export function GlobalNewsManager() {
 
             {generateResult ? (
               <div className="space-y-3">
-                <div className="p-4 rounded-lg bg-gray-700/50 border border-gray-600">
-                  <p className="text-white font-medium">
+                <div className="p-4 rounded-lg bg-secondary/50 border border-border">
+                  <p className="text-foreground font-medium">
                     {generateResult.totalCreated} borrador(es) creado(s)
                   </p>
                   {generateResult.newsContext && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Contexto: {generateResult.newsContext.count} titulares de {generateResult.newsContext.source === 'gnews' ? 'GNews' : generateResult.newsContext.source} · {formatContextDate(generateResult.newsContext.firstPublishedAt)} – {formatContextDate(generateResult.newsContext.lastPublishedAt)}
                     </p>
                   )}
-                  <ul className="text-sm text-gray-300 mt-2 space-y-1">
+                  <ul className="text-sm text-muted-foreground mt-2 space-y-1">
                     {generateResult.byCategory.map((r) => (
                       <li key={r.categoryId} className="flex items-center gap-2">
                         {r.created > 0 ? (
@@ -550,7 +550,7 @@ export function GlobalNewsManager() {
                         ) : (
                           <XMarkIcon className="h-4 w-4 text-red-400" />
                         )}
-                        <span className="text-gray-400">{r.categoryName}:</span>
+                        <span className="text-muted-foreground">{r.categoryName}:</span>
                         <span>
                           {r.created}/{r.requested} borradores
                         </span>
@@ -561,7 +561,7 @@ export function GlobalNewsManager() {
                 <div className="flex justify-end gap-2">
                   <Button
                     onClick={() => { setShowGenerateModal(false); setGenerateResult(null) }}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-brand hover:bg-brand"
                   >
                     Ir a revisar borradores
                   </Button>
@@ -573,9 +573,9 @@ export function GlobalNewsManager() {
                   <div className="flex items-start gap-2">
                     <XMarkIcon className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-white font-medium">No se pudo generar</p>
+                      <p className="text-foreground font-medium">No se pudo generar</p>
                       <p className="text-sm text-red-300 mt-1">{generateError}</p>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         No se creó ningún borrador. Verifica la conexión con GNews e inténtalo de nuevo.
                       </p>
                     </div>
@@ -585,7 +585,7 @@ export function GlobalNewsManager() {
                   <Button
                     onClick={() => setGenerateError(null)}
                     variant="outline"
-                    className="border-gray-600 hover:bg-gray-700"
+                    className="border-border hover:bg-secondary"
                   >
                     Volver
                   </Button>
@@ -601,30 +601,30 @@ export function GlobalNewsManager() {
                   <>
                     <div className="mb-4">
                       <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-300">
+                        <label className="text-sm font-medium text-muted-foreground">
                           Categorías a procesar
                         </label>
                         <div className="flex gap-2 text-xs">
                           <button
                             type="button"
                             onClick={() => setSelectedCategoryIds(categoriesWithCount.map((c) => c.id))}
-                            className="text-cyan-400 hover:underline"
+                            className="text-brand hover:underline"
                           >
                             Todas
                           </button>
-                          <span className="text-gray-600">·</span>
+                          <span className="text-muted-foreground">·</span>
                           <button
                             type="button"
                             onClick={() => setSelectedCategoryIds([])}
-                            className="text-cyan-400 hover:underline"
+                            className="text-brand hover:underline"
                           >
                             Ninguna
                           </button>
                         </div>
                       </div>
-                      <div className="space-y-1 max-h-48 overflow-y-auto bg-gray-700/30 rounded p-2">
+                      <div className="space-y-1 max-h-48 overflow-y-auto bg-secondary/30 rounded p-2">
                         {categoriesWithCount.map((cat) => (
-                          <label key={cat.id} className="flex flex-col gap-0.5 p-1.5 hover:bg-gray-700/50 rounded cursor-pointer">
+                          <label key={cat.id} className="flex flex-col gap-0.5 p-1.5 hover:bg-secondary/50 rounded cursor-pointer">
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2 min-w-0">
                                 <input
@@ -637,9 +637,9 @@ export function GlobalNewsManager() {
                                       setSelectedCategoryIds((p) => p.filter((x) => x !== cat.id))
                                     }
                                   }}
-                                  className="rounded border-gray-500 text-purple-500 bg-gray-700 focus:ring-purple-500 flex-shrink-0"
+                                  className="rounded border-border text-purple-500 bg-secondary focus:ring-purple-500 flex-shrink-0"
                                 />
-                                <span className="text-sm text-gray-200 truncate">{cat.name}</span>
+                                <span className="text-sm text-foreground truncate">{cat.name}</span>
                               </div>
                               <div className="flex gap-1 flex-shrink-0">
                                 {cat.newsCount === 0 && (
@@ -655,7 +655,7 @@ export function GlobalNewsManager() {
                               </div>
                             </div>
                             {cat.description && (
-                              <p className="text-xs text-gray-400 italic ml-6 line-clamp-2">
+                              <p className="text-xs text-muted-foreground italic ml-6 line-clamp-2">
                                 {cat.description}
                               </p>
                             )}
@@ -665,7 +665,7 @@ export function GlobalNewsManager() {
                     </div>
 
                     <div className="mb-4">
-                      <label className="text-sm font-medium text-gray-300 block mb-2">
+                      <label className="text-sm font-medium text-muted-foreground block mb-2">
                         Noticias por categoría: <span className="text-purple-400 font-bold">{countPerCategory}</span>
                       </label>
                       <input
@@ -676,7 +676,7 @@ export function GlobalNewsManager() {
                         onChange={(e) => setCountPerCategory(Number(e.target.value))}
                         className="w-full"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Total estimado: {selectedCategoryIds.length * countPerCategory} borradores · se basarán en titulares actuales de GNews en español
                       </p>
                     </div>
@@ -686,7 +686,7 @@ export function GlobalNewsManager() {
                         type="button"
                         variant="outline"
                         onClick={() => { setShowGenerateModal(false); setGenerateError(null); setGenerateResult(null) }}
-                        className="border-gray-600 hover:bg-gray-700"
+                        className="border-border hover:bg-secondary"
                         disabled={generating}
                       >
                         Cancelar
@@ -719,14 +719,14 @@ export function GlobalNewsManager() {
       )}
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'published' | 'drafts')}>
-        <TabsList className="bg-gray-800 border border-gray-700">
-          <TabsTrigger value="published" className="data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-400">
+        <TabsList className="bg-card border border-border">
+          <TabsTrigger value="published" className="data-[state=active]:bg-secondary data-[state=active]:text-foreground text-muted-foreground">
             Publicadas
-            <span className="ml-2 text-xs bg-gray-700 px-1.5 py-0.5 rounded">
+            <span className="ml-2 text-xs bg-secondary px-1.5 py-0.5 rounded">
               {publishedPagination.total}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="drafts" className="data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-400">
+          <TabsTrigger value="drafts" className="data-[state=active]:bg-secondary data-[state=active]:text-foreground text-muted-foreground">
             Borradores
             {draftsPagination.total > 0 && (
               <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">
@@ -738,10 +738,10 @@ export function GlobalNewsManager() {
 
         <TabsContent value="published" className="mt-4 space-y-3">
           {published.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No hay noticias publicadas</p>
+            <p className="text-muted-foreground text-center py-8">No hay noticias publicadas</p>
           ) : (
             published.map((item) => (
-              <div key={item.id} className="flex gap-4 p-4 rounded-lg bg-gray-800 border border-gray-700">
+              <div key={item.id} className="flex gap-4 p-4 rounded-lg bg-card border border-border">
                 {item.imageUrl && (
                   <div className="flex-shrink-0">
                     <Image
@@ -756,36 +756,36 @@ export function GlobalNewsManager() {
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="text-white font-medium">{item.name}</h4>
+                      <h4 className="text-foreground font-medium">{item.name}</h4>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge className="bg-purple-600/20 text-purple-400 border-purple-500/30 text-xs">
                           {item.category.name}
                         </Badge>
                         {item.source === 'ai' && (
-                          <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">
+                          <Badge className="bg-brand/20 text-brand border-brand/30 text-xs">
                             IA
                           </Badge>
                         )}
                         {item.imageSource && (
-                          <Badge className="bg-gray-700/50 text-gray-400 border-gray-600 text-xs">
+                          <Badge className="bg-secondary/50 text-muted-foreground border-border text-xs">
                             Fuente: {item.imageSource}
                           </Badge>
                         )}
-                        <span className="text-xs text-gray-500">{formatDate(item.createdAt)}</span>
+                        <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
                       </div>
-                      <p className="text-sm text-gray-400 mt-2 line-clamp-2">{item.shortText}</p>
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{item.shortText}</p>
                     </div>
                     <div className="flex gap-2 ml-4">
                       <button
                         onClick={() => handleEdit(item)}
-                        className="p-2 text-gray-400 hover:text-cyan-400 transition-colors"
+                        className="p-2 text-muted-foreground hover:text-brand transition-colors"
                         title="Editar"
                       >
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                        className="p-2 text-muted-foreground hover:text-red-400 transition-colors"
                         title="Eliminar"
                       >
                         <TrashIcon className="h-4 w-4" />
@@ -800,16 +800,16 @@ export function GlobalNewsManager() {
 
         <TabsContent value="drafts" className="mt-4 space-y-4">
           {drafts.length === 0 ? (
-            <div className="text-center py-10 text-gray-400">
-              <SparklesIcon className="h-10 w-10 mx-auto text-gray-600 mb-2" />
+            <div className="text-center py-10 text-muted-foreground">
+              <SparklesIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
               <p>No hay borradores pendientes.</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Usa &quot;Generar con IA&quot; para crear borradores con DeepSeek.
               </p>
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -821,9 +821,9 @@ export function GlobalNewsManager() {
                       if (e.target.checked) setSelectedDraftIds(drafts.map((d) => d.id))
                       else setSelectedDraftIds([])
                     }}
-                    className="rounded border-gray-500 text-cyan-500 bg-gray-700 focus:ring-cyan-500"
+                    className="rounded border-border text-brand bg-secondary focus:ring-brand"
                   />
-                  <span className="text-sm text-gray-300">
+                  <span className="text-sm text-muted-foreground">
                     {selectedDraftIds.length > 0
                       ? `${selectedDraftIds.length} seleccionado(s)`
                       : 'Seleccionar todos'}
@@ -854,7 +854,7 @@ export function GlobalNewsManager() {
               {Array.from(draftsByRun.entries()).map(([runId, items]) => (
                 <div key={runId} className="space-y-2">
                   <div className="flex items-center justify-between px-2">
-                    <h4 className="text-sm font-semibold text-gray-300">
+                    <h4 className="text-sm font-semibold text-muted-foreground">
                       {runId === '__manual__'
                         ? 'Borradores manuales'
                         : `Lote IA · ${items.length} borrador(es)`}
@@ -887,14 +887,14 @@ export function GlobalNewsManager() {
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex gap-4 p-4 rounded-lg bg-gray-800 border border-yellow-500/20"
+                      className="flex gap-4 p-4 rounded-lg bg-card border border-yellow-500/20"
                     >
                       <div className="flex items-start pt-1">
                         <input
                           type="checkbox"
                           checked={selectedDraftIds.includes(item.id)}
                           onChange={() => toggleDraftSelection(item.id)}
-                          className="rounded border-gray-500 text-cyan-500 bg-gray-700 focus:ring-cyan-500"
+                          className="rounded border-border text-brand bg-secondary focus:ring-brand"
                         />
                       </div>
                       {item.imageUrl ? (
@@ -908,14 +908,14 @@ export function GlobalNewsManager() {
                           />
                         </div>
                       ) : (
-                        <div className="flex-shrink-0 w-24 h-16 rounded bg-gray-700/50 border border-dashed border-gray-600 flex items-center justify-center text-xs text-gray-500">
+                        <div className="flex-shrink-0 w-24 h-16 rounded bg-secondary/50 border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground">
                           sin imagen
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-white font-medium truncate">{item.name}</h4>
+                            <h4 className="text-foreground font-medium truncate">{item.name}</h4>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                               <Badge className="bg-purple-600/20 text-purple-400 border-purple-500/30 text-xs">
                                 {item.category.name}
@@ -924,37 +924,37 @@ export function GlobalNewsManager() {
                                 borrador
                               </Badge>
                               {item.source === 'ai' && (
-                                <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">
+                                <Badge className="bg-brand/20 text-brand border-brand/30 text-xs">
                                   IA
                                 </Badge>
                               )}
                               {item.imageSource && (
-                                <Badge className="bg-gray-700/50 text-gray-400 border-gray-600 text-xs">
+                                <Badge className="bg-secondary/50 text-muted-foreground border-border text-xs">
                                   Fuente: {item.imageSource}
                                 </Badge>
                               )}
-                              <span className="text-xs text-gray-500">{formatDate(item.createdAt)}</span>
+                              <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
                             </div>
-                            <p className="text-sm text-gray-400 mt-2 line-clamp-2">{item.shortText}</p>
+                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{item.shortText}</p>
                           </div>
                           <div className="flex gap-1 flex-shrink-0">
                             <button
                               onClick={() => handleApprove(item.id)}
-                              className="p-2 text-gray-400 hover:text-green-400 transition-colors"
+                              className="p-2 text-muted-foreground hover:text-green-400 transition-colors"
                               title="Aprobar y publicar"
                             >
                               <CheckIcon className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleEdit(item)}
-                              className="p-2 text-gray-400 hover:text-cyan-400 transition-colors"
+                              className="p-2 text-muted-foreground hover:text-brand transition-colors"
                               title="Editar (puedes añadir imagen)"
                             >
                               <PencilIcon className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDelete(item.id)}
-                              className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                              className="p-2 text-muted-foreground hover:text-red-400 transition-colors"
                               title="Eliminar borrador"
                             >
                               <TrashIcon className="h-4 w-4" />

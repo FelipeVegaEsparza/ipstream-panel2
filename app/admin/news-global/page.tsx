@@ -12,10 +12,10 @@ export default async function GlobalNewsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Noticias Genéricas
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Gestiona las noticias globales que se mostrarán a los clientes que activen esta opción
         </p>
       </div>

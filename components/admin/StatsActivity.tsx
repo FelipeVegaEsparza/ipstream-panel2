@@ -42,16 +42,16 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
       case 'ADMIN':
         return 'bg-red-500/20 text-red-400 border-red-500/30'
       case 'CLIENT':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+        return 'bg-brand/20 text-brand border-brand/30'
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+        return 'bg-secondary/20 text-muted-foreground border-border/30'
     }
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <Activity className="h-5 w-5 text-green-400" />
           Actividad Reciente
         </CardTitle>
@@ -60,15 +60,15 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
         <div className="space-y-4">
           {recentActivity.length > 0 ? (
             recentActivity.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 rounded-lg bg-gray-700/50 hover:bg-gray-700/70 transition-colors">
+              <div key={user.id} className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
                 <div className="flex items-center space-x-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-blue-600">
-                    <User className="h-5 w-5 text-white" />
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-brand">
+                    <User className="h-5 w-5 text-foreground" />
                   </div>
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="text-white font-medium">
+                      <p className="text-foreground font-medium">
                         {user.name || 'Usuario sin nombre'}
                       </p>
                       <Badge 
@@ -79,12 +79,12 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
                       </Badge>
                     </div>
                     
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       {user.email}
                     </p>
                     
                     {user.client && (
-                      <p className="text-gray-500 text-xs mt-1">
+                      <p className="text-muted-foreground text-xs mt-1">
                         Cliente: {user.client.name}
                       </p>
                     )}
@@ -92,7 +92,7 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
                 </div>
                 
                 <div className="text-right">
-                  <div className="flex items-center gap-1 text-gray-400 text-sm">
+                  <div className="flex items-center gap-1 text-muted-foreground text-sm">
                     <Clock className="h-4 w-4" />
                     {formatTimeAgo(new Date(user.updatedAt))}
                   </div>
@@ -101,8 +101,8 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
             ))
           ) : (
             <div className="text-center py-8">
-              <Activity className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No hay actividad reciente</p>
+              <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No hay actividad reciente</p>
             </div>
           )}
         </div>

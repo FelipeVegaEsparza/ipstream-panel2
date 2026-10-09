@@ -32,23 +32,23 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Configuración del Sistema
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Gestiona las configuraciones globales y ajustes del sistema
         </p>
       </div>
 
       <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-gray-800 border-gray-700">
-          <TabsTrigger value="system" className="data-[state=active]:bg-blue-600">
+        <TabsList className="grid w-full grid-cols-3 bg-card border-border">
+          <TabsTrigger value="system" className="data-[state=active]:bg-brand">
             Sistema
           </TabsTrigger>
-          <TabsTrigger value="sites" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger value="sites" className="data-[state=active]:bg-brand">
             Sitios
           </TabsTrigger>
-          <TabsTrigger value="login" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger value="login" className="data-[state=active]:bg-brand">
             Login
           </TabsTrigger>
         </TabsList>

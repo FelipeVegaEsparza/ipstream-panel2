@@ -54,15 +54,15 @@ export function LogsViewer({ logs }: LogsViewerProps) {
     const levelConfig = {
       ERROR: { color: 'bg-red-600', icon: XCircle },
       WARN: { color: 'bg-orange-600', icon: AlertTriangle },
-      INFO: { color: 'bg-blue-600', icon: Info },
-      DEBUG: { color: 'bg-gray-600', icon: FileText }
+      INFO: { color: 'bg-brand', icon: Info },
+      DEBUG: { color: 'bg-secondary', icon: FileText }
     }
 
     const config = levelConfig[level as keyof typeof levelConfig] || levelConfig.INFO
     const Icon = config.icon
 
     return (
-      <Badge className={`${config.color} text-white flex items-center gap-1`}>
+      <Badge className={`${config.color} text-foreground flex items-center gap-1`}>
         <Icon className="h-3 w-3" />
         {level}
       </Badge>
@@ -74,15 +74,15 @@ export function LogsViewer({ logs }: LogsViewerProps) {
       AUTH: 'bg-green-600',
       SECURITY: 'bg-red-600',
       BILLING: 'bg-purple-600',
-      CONTENT: 'bg-blue-600',
-      SYSTEM: 'bg-gray-600',
+      CONTENT: 'bg-brand',
+      SYSTEM: 'bg-secondary',
       API: 'bg-orange-600'
     }
 
-    const color = categoryColors[category as keyof typeof categoryColors] || 'bg-gray-600'
+    const color = categoryColors[category as keyof typeof categoryColors] || 'bg-secondary'
 
     return (
-      <Badge className={`${color} text-white`}>
+      <Badge className={`${color} text-foreground`}>
         {category}
       </Badge>
     )
@@ -119,14 +119,14 @@ export function LogsViewer({ logs }: LogsViewerProps) {
   const currentLogs = logs.slice(startIndex, endIndex)
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white flex items-center justify-between">
+        <CardTitle className="text-foreground flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Logs del Sistema
           </div>
-          <Badge variant="secondary" className="bg-gray-600 text-white">
+          <Badge variant="secondary" className="bg-secondary text-foreground">
             {logs.length} entradas
           </Badge>
         </CardTitle>
@@ -134,24 +134,24 @@ export function LogsViewer({ logs }: LogsViewerProps) {
       <CardContent>
         <div className="space-y-3">
           {currentLogs.map((log) => (
-            <div key={log.id} className="border border-gray-600 rounded-lg bg-gray-700/50">
+            <div key={log.id} className="border border-border rounded-lg bg-secondary/50">
               <div className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-3 flex-wrap">
                       {getLevelBadge(log.level)}
                       {getCategoryBadge(log.category)}
-                      <div className="flex items-center gap-1 text-sm text-gray-400">
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
                         {formatTimestamp(log.timestamp)}
                       </div>
                     </div>
                     
-                    <p className="text-white font-medium">
+                    <p className="text-foreground font-medium">
                       {log.message}
                     </p>
                     
-                    <div className="flex items-center gap-4 text-sm text-gray-400 flex-wrap">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                       {log.userEmail && (
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4" />
@@ -177,7 +177,7 @@ export function LogsViewer({ logs }: LogsViewerProps) {
                     size="sm"
                     variant="outline"
                     onClick={() => toggleExpanded(log.id)}
-                    className="border-gray-600 hover:bg-gray-700"
+                    className="border-border hover:bg-secondary"
                   >
                     {expandedLogs.has(log.id) ? (
                       <ChevronUp className="h-4 w-4" />
@@ -189,40 +189,40 @@ export function LogsViewer({ logs }: LogsViewerProps) {
               </div>
               
               {expandedLogs.has(log.id) && (
-                <div className="border-t border-gray-600 p-4 bg-gray-800/50">
-                  <h4 className="text-white font-medium mb-3">Detalles Técnicos</h4>
+                <div className="border-t border-border p-4 bg-card/50">
+                  <h4 className="text-foreground font-medium mb-3">Detalles Técnicos</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-400 mb-1">ID del Log:</p>
-                      <p className="text-white font-mono">{log.id}</p>
+                      <p className="text-muted-foreground mb-1">ID del Log:</p>
+                      <p className="text-foreground font-mono">{log.id}</p>
                     </div>
                     
                     {log.userId && (
                       <div>
-                        <p className="text-gray-400 mb-1">ID del Usuario:</p>
-                        <p className="text-white font-mono">{log.userId}</p>
+                        <p className="text-muted-foreground mb-1">ID del Usuario:</p>
+                        <p className="text-foreground font-mono">{log.userId}</p>
                       </div>
                     )}
                     
                     {log.ip && (
                       <div>
-                        <p className="text-gray-400 mb-1">Dirección IP:</p>
-                        <p className="text-white font-mono">{log.ip}</p>
+                        <p className="text-muted-foreground mb-1">Dirección IP:</p>
+                        <p className="text-foreground font-mono">{log.ip}</p>
                       </div>
                     )}
                     
                     {log.userAgent && (
                       <div className="md:col-span-2">
-                        <p className="text-gray-400 mb-1">User Agent:</p>
-                        <p className="text-white font-mono text-xs break-all">{log.userAgent}</p>
+                        <p className="text-muted-foreground mb-1">User Agent:</p>
+                        <p className="text-foreground font-mono text-xs break-all">{log.userAgent}</p>
                       </div>
                     )}
                   </div>
                   
                   {log.metadata && Object.keys(log.metadata).length > 0 && (
                     <div className="mt-4">
-                      <p className="text-gray-400 mb-2">Metadata:</p>
-                      <pre className="bg-gray-900 p-3 rounded text-xs text-green-400 overflow-x-auto">
+                      <p className="text-muted-foreground mb-2">Metadata:</p>
+                      <pre className="bg-background p-3 rounded text-xs text-green-400 overflow-x-auto">
                         {JSON.stringify(log.metadata, null, 2)}
                       </pre>
                     </div>
@@ -235,11 +235,11 @@ export function LogsViewer({ logs }: LogsViewerProps) {
         
         {logs.length === 0 && (
           <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               No hay logs disponibles
             </h3>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Los logs aparecerán aquí cuando haya actividad en el sistema
             </p>
           </div>
@@ -247,8 +247,8 @@ export function LogsViewer({ logs }: LogsViewerProps) {
         
         {/* Paginación */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-600">
-            <p className="text-sm text-gray-400">
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground">
               Mostrando {startIndex + 1} a {Math.min(endIndex, logs.length)} de {logs.length} entradas
             </p>
             
@@ -258,7 +258,7 @@ export function LogsViewer({ logs }: LogsViewerProps) {
                 variant="outline"
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="border-gray-600 hover:bg-gray-700"
+                className="border-border hover:bg-secondary"
               >
                 Anterior
               </Button>
@@ -272,7 +272,7 @@ export function LogsViewer({ logs }: LogsViewerProps) {
                       size="sm"
                       variant={currentPage === page ? "default" : "outline"}
                       onClick={() => setCurrentPage(page)}
-                      className={currentPage === page ? "bg-blue-600" : "border-gray-600 hover:bg-gray-700"}
+                      className={currentPage === page ? "bg-brand" : "border-border hover:bg-secondary"}
                     >
                       {page}
                     </Button>
@@ -285,7 +285,7 @@ export function LogsViewer({ logs }: LogsViewerProps) {
                 variant="outline"
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="border-gray-600 hover:bg-gray-700"
+                className="border-border hover:bg-secondary"
               >
                 Siguiente
               </Button>

@@ -54,18 +54,18 @@ export default async function ClientMenuPage({ params }: MenuPageProps) {
       <div>
         <Link
           href={`/admin/users/${user.id}`}
-          className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors mb-4"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand transition-colors mb-4"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           Volver a {client.name}
         </Link>
         <div className="flex items-center gap-3">
-          <Cog6ToothIcon className="h-8 w-8 text-cyan-400" />
+          <Cog6ToothIcon className="h-8 w-8 text-brand" />
           <div>
-            <h1 className="text-3xl font-bold text-white">Menú visible</h1>
-            <p className="text-gray-400">
+            <h1 className="text-3xl font-bold text-foreground">Menú visible</h1>
+            <p className="text-muted-foreground">
               Configura qué secciones del panel puede ver{' '}
-              <span className="text-white font-medium">{client.name}</span>
+              <span className="text-foreground font-medium">{client.name}</span>
               {' '}({user.email})
             </p>
           </div>

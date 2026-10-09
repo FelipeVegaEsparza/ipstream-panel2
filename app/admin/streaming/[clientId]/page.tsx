@@ -157,7 +157,7 @@ export default function AdminStreamingConfigPage() {
   }
 
   if (loading || !data) {
-    return <div className="text-gray-400">Cargando...</div>
+    return <div className="text-muted-foreground">Cargando...</div>
   }
 
   const { client, radioStream, usage } = data
@@ -165,57 +165,57 @@ export default function AdminStreamingConfigPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/admin/streaming" className="text-sm text-cyan-400 hover:text-cyan-300">
+        <Link href="/admin/streaming" className="text-sm text-brand hover:text-brand">
           ← Volver a Streaming
         </Link>
-        <h1 className="text-3xl font-bold text-white mt-1">{client.name}</h1>
-        <p className="text-sm text-gray-400">{client.email}</p>
+        <h1 className="text-3xl font-bold text-foreground mt-1">{client.name}</h1>
+        <p className="text-sm text-muted-foreground">{client.email}</p>
       </div>
 
       {/* Status card */}
-      <div className="bg-gray-800 rounded-lg p-5">
+      <div className="bg-card rounded-lg p-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <div className="text-xs text-gray-400 uppercase">Estado</div>
+            <div className="text-xs text-muted-foreground uppercase">Estado</div>
             <div className="text-lg font-semibold mt-1">
               {radioStream.status === 'autodj' ? <span className="text-green-400">▶ AutoDJ</span> :
                radioStream.status === 'live' ? <span className="text-red-400">🔴 EN VIVO</span> :
-               <span className="text-gray-400">⏸ OFF</span>}
+               <span className="text-muted-foreground">⏸ OFF</span>}
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 uppercase">Mount</div>
-            <div className="text-sm font-mono text-cyan-400 mt-1">/{radioStream.icecastMount}</div>
+            <div className="text-xs text-muted-foreground uppercase">Mount</div>
+            <div className="text-sm font-mono text-brand mt-1">/{radioStream.icecastMount}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 uppercase">Oyentes</div>
-            <div className="text-lg font-semibold text-white mt-1">{radioStream.listenerCount}</div>
+            <div className="text-xs text-muted-foreground uppercase">Oyentes</div>
+            <div className="text-lg font-semibold text-foreground mt-1">{radioStream.listenerCount}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 uppercase">Bitrate</div>
-            <div className="text-lg font-semibold text-white mt-1">{radioStream.bitrate} kbps</div>
+            <div className="text-xs text-muted-foreground uppercase">Bitrate</div>
+            <div className="text-lg font-semibold text-foreground mt-1">{radioStream.bitrate} kbps</div>
           </div>
         </div>
       </div>
 
       {/* Storage usage */}
-      <div className="bg-gray-800 rounded-lg p-5">
-        <h2 className="text-lg font-semibold text-white mb-3">Storage AutoDJ</h2>
+      <div className="bg-card rounded-lg p-5">
+        <h2 className="text-lg font-semibold text-foreground mb-3">Storage AutoDJ</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <div className="text-xs text-gray-400 uppercase">Usado</div>
-            <div className="text-2xl font-bold text-white mt-1">{fmtMB(usage.totalMB)}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{usage.totalGB} GB · {usage.trackCount} tracks</div>
+            <div className="text-xs text-muted-foreground uppercase">Usado</div>
+            <div className="text-2xl font-bold text-foreground mt-1">{fmtMB(usage.totalMB)}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{usage.totalGB} GB · {usage.trackCount} tracks</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 uppercase">Cuota</div>
-            <div className="text-2xl font-bold text-white mt-1">{fmtMB(usage.quotaMB)}</div>
+            <div className="text-xs text-muted-foreground uppercase">Cuota</div>
+            <div className="text-2xl font-bold text-foreground mt-1">{fmtMB(usage.quotaMB)}</div>
             {usage.percentUsed !== null && (
-              <div className="text-xs text-gray-500 mt-0.5">{usage.percentUsed}% usado</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{usage.percentUsed}% usado</div>
             )}
           </div>
           <div>
-            <div className="text-xs text-gray-400 uppercase">Restante</div>
+            <div className="text-xs text-muted-foreground uppercase">Restante</div>
             <div className={`text-2xl font-bold mt-1 ${
               usage.exceeded ? 'text-red-400' :
               usage.remainingMB !== null && usage.remainingMB < 100 ? 'text-yellow-400' :
@@ -230,11 +230,11 @@ export default function AdminStreamingConfigPage() {
         </div>
         {usage.percentUsed !== null && (
           <div className="mt-4">
-            <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-3 bg-secondary rounded-full overflow-hidden">
               <div
                 className={`h-full transition-all ${
                   usage.exceeded ? 'bg-red-500' :
-                  usage.percentUsed > 80 ? 'bg-yellow-500' : 'bg-cyan-500'
+                  usage.percentUsed > 80 ? 'bg-yellow-500' : 'bg-brand'
                 }`}
                 style={{ width: `${Math.min(100, usage.percentUsed || 0)}%` }}
               />
@@ -244,11 +244,11 @@ export default function AdminStreamingConfigPage() {
       </div>
 
       {/* Config form */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Configuración</h2>
+      <div className="bg-card rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Configuración</h2>
 
         {/* Enabled kill switch */}
-        <div className="flex items-center gap-3 pb-3 border-b border-gray-700">
+        <div className="flex items-center gap-3 pb-3 border-b border-border">
           <input
             type="checkbox"
             id="enabled"
@@ -256,16 +256,16 @@ export default function AdminStreamingConfigPage() {
             onChange={(e) => setEnabled(e.target.checked)}
             className="rounded"
           />
-          <label htmlFor="enabled" className="text-white">
+          <label htmlFor="enabled" className="text-foreground">
             Streaming habilitado
-            <span className="block text-xs text-gray-500">
+            <span className="block text-xs text-muted-foreground">
               Si está deshabilitado, el cliente no puede hacer start/stop ni subir tracks.
             </span>
           </label>
         </div>
 
         {/* Auto-start toggle */}
-        <div className="flex items-center gap-3 pb-3 border-b border-gray-700">
+        <div className="flex items-center gap-3 pb-3 border-b border-border">
           <input
             type="checkbox"
             id="autoStart"
@@ -273,9 +273,9 @@ export default function AdminStreamingConfigPage() {
             onChange={(e) => setAutoStart(e.target.checked)}
             className="rounded"
           />
-          <label htmlFor="autoStart" className="text-white">
+          <label htmlFor="autoStart" className="text-foreground">
             Auto-start al reiniciar
-            <span className="block text-xs text-gray-500">
+            <span className="block text-xs text-muted-foreground">
               Inicia automáticamente el AutoDJ cuando el servidor se reinicie.
             </span>
           </label>
@@ -283,11 +283,11 @@ export default function AdminStreamingConfigPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-white">Bitrate (kbps)</label>
+            <label className="text-sm text-foreground">Bitrate (kbps)</label>
             <select
               value={bitrate}
               onChange={(e) => setBitrate(Number(e.target.value))}
-              className="w-full mt-1 bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+              className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
             >
               <option value={64}>64 kbps (baja calidad)</option>
               <option value={96}>96 kbps</option>
@@ -298,54 +298,54 @@ export default function AdminStreamingConfigPage() {
             </select>
           </div>
           <div>
-            <label className="text-sm text-white">Storage quota (MB) — AutoDJ</label>
+            <label className="text-sm text-foreground">Storage quota (MB) — AutoDJ</label>
             <input
               type="number"
               min="0"
               value={storageQuotaMB}
               onChange={(e) => setStorageQuotaMB(e.target.value)}
               placeholder="Vacío = ilimitado"
-              className="w-full mt-1 bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+              className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Espacio máximo para biblioteca MP3. 0 o vacío = ilimitado.
               Mínimo recomendado: 500 MB.
             </p>
           </div>
           <div>
-            <label className="text-sm text-white">Max oyentes simultáneos</label>
+            <label className="text-sm text-foreground">Max oyentes simultáneos</label>
             <input
               type="number"
               min="0"
               value={maxListeners}
               onChange={(e) => setMaxListeners(e.target.value)}
               placeholder="Vacío = ilimitado"
-              className="w-full mt-1 bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+              className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
             />
-            <p className="text-xs text-gray-500 mt-1">Cap en Icecast. 0 o vacío = ilimitado.</p>
+            <p className="text-xs text-muted-foreground mt-1">Cap en Icecast. 0 o vacío = ilimitado.</p>
           </div>
           <div>
-            <label className="text-sm text-white">Max tracks por playlist</label>
+            <label className="text-sm text-foreground">Max tracks por playlist</label>
             <input
               type="number"
               min="1"
               value={maxTracksPerPlaylist}
               onChange={(e) => setMaxTracksPerPlaylist(e.target.value)}
               placeholder="Vacío = ilimitado"
-              className="w-full mt-1 bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+              className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
             />
-            <p className="text-xs text-gray-500 mt-1">Límite al agregar tracks a una playlist. 0 o vacío = ilimitado.</p>
+            <p className="text-xs text-muted-foreground mt-1">Límite al agregar tracks a una playlist. 0 o vacío = ilimitado.</p>
           </div>
         </div>
 
         <div>
-          <label className="text-sm text-white">Notas internas</label>
+          <label className="text-sm text-foreground">Notas internas</label>
           <textarea
             value={adminNotes}
             onChange={(e) => setAdminNotes(e.target.value)}
             rows={3}
             placeholder="Notas para el equipo de admin..."
-            className="w-full mt-1 bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+            className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
           />
         </div>
 
@@ -353,21 +353,21 @@ export default function AdminStreamingConfigPage() {
           <button
             onClick={save}
             disabled={saving}
-            className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white rounded"
+            className="px-6 py-2 bg-brand hover:bg-brand disabled:bg-secondary text-white rounded"
           >
             {saving ? 'Guardando...' : 'Guardar configuración'}
           </button>
           <button
             onClick={() => setMigrateOpen(true)}
             disabled={saving}
-            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded"
+            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-secondary text-white rounded"
           >
             ⇄ Migrar a otro servidor
           </button>
           <button
             onClick={load}
             disabled={saving}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white rounded"
+            className="px-6 py-2 bg-secondary hover:bg-secondary disabled:bg-secondary text-foreground rounded"
           >
             Cancelar
           </button>
@@ -375,32 +375,32 @@ export default function AdminStreamingConfigPage() {
       </div>
 
       {/* Passwords (solo admin) */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-white">Credenciales (auditado)</h2>
-        <p className="text-sm text-gray-400">
-          Cada reveal queda registrado en <code className="text-cyan-400">streaming_audit_logs</code>.
+      <div className="bg-card rounded-lg p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Credenciales (auditado)</h2>
+        <p className="text-sm text-muted-foreground">
+          Cada reveal queda registrado en <code className="text-brand">streaming_audit_logs</code>.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-white">Source password (AutoDJ)</label>
+            <label className="text-sm text-foreground">Source password (AutoDJ)</label>
             <div className="flex gap-2 mt-1">
               <input
                 type="text"
                 readOnly
                 value={revealedPwd.source || '••••••••'}
-                className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2 rounded border border-gray-700 font-mono text-sm"
+                className="flex-1 bg-background text-brand px-3 py-2 rounded border border-border font-mono text-sm"
               />
               <button
                 onClick={() => reveal('source')}
                 disabled={revealing === 'source'}
-                className="px-3 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-600 text-white rounded text-sm"
+                className="px-3 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-secondary text-white rounded text-sm"
               >
                 {revealing === 'source' ? '...' : '👁 Revelar'}
               </button>
               {revealedPwd.source && (
                 <button
                   onClick={() => navigator.clipboard.writeText(revealedPwd.source!)}
-                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
+                  className="px-3 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm"
                 >
                   Copiar
                 </button>
@@ -408,25 +408,25 @@ export default function AdminStreamingConfigPage() {
             </div>
           </div>
           <div>
-            <label className="text-sm text-white">Live password (DJ en vivo)</label>
+            <label className="text-sm text-foreground">Live password (DJ en vivo)</label>
             <div className="flex gap-2 mt-1">
               <input
                 type="text"
                 readOnly
                 value={revealedPwd.live || '••••••••'}
-                className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2 rounded border border-gray-700 font-mono text-sm"
+                className="flex-1 bg-background text-brand px-3 py-2 rounded border border-border font-mono text-sm"
               />
               <button
                 onClick={() => reveal('live')}
                 disabled={revealing === 'live'}
-                className="px-3 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-600 text-white rounded text-sm"
+                className="px-3 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-secondary text-white rounded text-sm"
               >
                 {revealing === 'live' ? '...' : '👁 Revelar'}
               </button>
               {revealedPwd.live && (
                 <button
                   onClick={() => navigator.clipboard.writeText(revealedPwd.live!)}
-                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
+                  className="px-3 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm"
                 >
                   Copiar
                 </button>
@@ -437,10 +437,10 @@ export default function AdminStreamingConfigPage() {
       </div>
 
       {/* Audit log mini-view */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-white mb-3">Auditoría reciente</h2>
-        <p className="text-xs text-gray-500">
-          Ver todos los logs en <Link href="/admin/logs" className="text-cyan-400 hover:text-cyan-300">Logs de Actividad</Link>
+      <div className="bg-card rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-foreground mb-3">Auditoría reciente</h2>
+        <p className="text-xs text-muted-foreground">
+          Ver todos los logs en <Link href="/admin/logs" className="text-brand hover:text-brand">Logs de Actividad</Link>
         </p>
       </div>
 

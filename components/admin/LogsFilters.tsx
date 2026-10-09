@@ -78,9 +78,9 @@ export function LogsFilters() {
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <Filter className="h-5 w-5" />
           Filtros
         </CardTitle>
@@ -88,29 +88,29 @@ export function LogsFilters() {
       <CardContent className="space-y-4">
         {/* Búsqueda */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             Buscar
           </label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               placeholder="Buscar en logs..."
-              className="bg-gray-700 border-gray-600 text-white pl-10"
+              className="bg-secondary border-border text-foreground pl-10"
             />
           </div>
         </div>
 
         {/* Nivel de Log */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             Nivel
           </label>
           <select
             value={filters.level}
             onChange={(e) => handleFilterChange('level', e.target.value)}
-            className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
+            className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
           >
             <option value="all">Todos los niveles</option>
             <option value="ERROR">Error</option>
@@ -122,13 +122,13 @@ export function LogsFilters() {
 
         {/* Categoría */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             Categoría
           </label>
           <select
             value={filters.category}
             onChange={(e) => handleFilterChange('category', e.target.value)}
-            className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
+            className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
           >
             <option value="all">Todas las categorías</option>
             <option value="AUTH">Autenticación</option>
@@ -142,64 +142,64 @@ export function LogsFilters() {
 
         {/* Rango de Fechas */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             Fecha Desde
           </label>
           <Input
             type="datetime-local"
             value={filters.dateFrom}
             onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-            className="bg-gray-700 border-gray-600 text-white"
+            className="bg-secondary border-border text-foreground"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             Fecha Hasta
           </label>
           <Input
             type="datetime-local"
             value={filters.dateTo}
             onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-            className="bg-gray-700 border-gray-600 text-white"
+            className="bg-secondary border-border text-foreground"
           />
         </div>
 
         {/* Usuario ID */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             Usuario ID
           </label>
           <Input
             value={filters.userId}
             onChange={(e) => handleFilterChange('userId', e.target.value)}
             placeholder="ID del usuario"
-            className="bg-gray-700 border-gray-600 text-white"
+            className="bg-secondary border-border text-foreground"
           />
         </div>
 
         {/* IP Address */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             Dirección IP
           </label>
           <Input
             value={filters.ip}
             onChange={(e) => handleFilterChange('ip', e.target.value)}
             placeholder="192.168.1.1"
-            className="bg-gray-700 border-gray-600 text-white"
+            className="bg-secondary border-border text-foreground"
           />
         </div>
 
         {/* Filtros Activos */}
         {activeFilters.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Filtros Activos
             </label>
             <div className="flex flex-wrap gap-2">
               {activeFilters.map((filter) => (
-                <Badge key={filter} variant="secondary" className="bg-blue-600 text-white">
+                <Badge key={filter} variant="secondary" className="bg-brand text-white">
                   {filter}
                 </Badge>
               ))}
@@ -211,7 +211,7 @@ export function LogsFilters() {
         <div className="space-y-2 pt-4">
           <Button
             onClick={() => router.refresh()}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full bg-brand hover:bg-brand"
           >
             <Search className="h-4 w-4 mr-2" />
             Aplicar Filtros
@@ -220,7 +220,7 @@ export function LogsFilters() {
           <Button
             onClick={clearAllFilters}
             variant="outline"
-            className="w-full border-gray-600 hover:bg-gray-700"
+            className="w-full border-border hover:bg-secondary"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Limpiar Filtros

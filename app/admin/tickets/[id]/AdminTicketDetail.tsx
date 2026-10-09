@@ -110,12 +110,12 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
       <div className="flex items-center gap-3">
         <Link
           href="/admin/tickets"
-          className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-white truncate">{ticket.subject}</h1>
+          <h1 className="text-xl font-bold text-foreground truncate">{ticket.subject}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded border ${statusConf.color}`}>
               {statusConf.label}
@@ -129,7 +129,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
           value={ticket.status}
           onChange={(e) => updateStatus(e.target.value as 'open' | 'in_progress' | 'closed')}
           disabled={updatingStatus}
-          className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white disabled:opacity-50"
+          className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground disabled:opacity-50"
         >
           <option value="open">Abierto</option>
           <option value="in_progress">En progreso</option>
@@ -138,7 +138,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3 bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
+        <div className="lg:col-span-3 bg-card border border-border rounded-2xl overflow-hidden">
           <div className="p-4 max-h-[60vh] overflow-y-auto space-y-4">
             {ticket.messages.map((m) => (
               <MessageBubble key={m.id} message={m} />
@@ -147,21 +147,21 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
           </div>
 
           {isClosed ? (
-            <div className="p-4 border-t border-gray-700 bg-gray-900/40">
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-700/30 text-sm text-gray-300">
-                <LifeBuoy className="h-4 w-4 mt-0.5 text-cyan-400 flex-shrink-0" />
+            <div className="p-4 border-t border-border bg-background/40">
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-secondary/30 text-sm text-muted-foreground">
+                <LifeBuoy className="h-4 w-4 mt-0.5 text-brand flex-shrink-0" />
                 <p>Este ticket está cerrado. Para responder, reabriéndalo desde el selector de estado.</p>
               </div>
             </div>
           ) : (
-            <div className="p-4 border-t border-gray-700 bg-gray-900/40 space-y-3">
+            <div className="p-4 border-t border-border bg-background/40 space-y-3">
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Escribe tu respuesta al cliente..."
                 rows={3}
                 maxLength={5000}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 resize-none focus:outline-none focus:border-cyan-500"
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground placeholder-gray-500 resize-none focus:outline-none focus:border-brand"
               />
 
               <AttachmentUploader
@@ -171,14 +171,14 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
                 onChange={setPending}
               />
 
-              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={notifyByEmail}
                   onChange={(e) => setNotifyByEmail(e.target.checked)}
                   className="accent-cyan-500"
                 />
-                <Mail className="h-4 w-4 text-cyan-400" /> Avisar al cliente por correo
+                <Mail className="h-4 w-4 text-brand" /> Avisar al cliente por correo
               </label>
 
               {error && (
@@ -192,7 +192,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
                 <button
                   onClick={handleSend}
                   disabled={sending || body.trim().length === 0}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand disabled:opacity-50 transition-colors"
                 >
                   <Send className="h-4 w-4" />
                   {sending ? 'Enviando...' : 'Enviar respuesta'}
@@ -202,50 +202,50 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
           )}
         </div>
 
-        <div className="bg-gray-800 border border-gray-700 rounded-2xl p-4 space-y-3 h-fit">
-          <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+        <div className="bg-card border border-border rounded-2xl p-4 space-y-3 h-fit">
+          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             Cliente
           </h3>
-          <div className="flex items-center gap-2 text-white font-medium">
-            <User className="h-4 w-4 text-gray-400" />
+          <div className="flex items-center gap-2 text-foreground font-medium">
+            <User className="h-4 w-4 text-muted-foreground" />
             <Link
               href={`/admin/users/${ticket.client.id}`}
-              className="hover:text-cyan-300 transition-colors truncate"
+              className="hover:text-brand transition-colors truncate"
             >
               {ticket.client.name}
             </Link>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Mail className="h-4 w-4 flex-shrink-0" />
             <a
               href={`mailto:${ticket.client.user.email}`}
-              className="hover:text-cyan-300 transition-colors truncate"
+              className="hover:text-brand transition-colors truncate"
             >
               {ticket.client.user.email}
             </a>
           </div>
           {ticket.client.phone && (
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Phone className="h-4 w-4 flex-shrink-0" />
               <a
                 href={`https://wa.me/${ticket.client.phone.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-cyan-300 transition-colors"
+                className="hover:text-brand transition-colors"
               >
                 {ticket.client.phone}
               </a>
             </div>
           )}
           {ticket.client.plan && (
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CreditCard className="h-4 w-4 flex-shrink-0" />
               <span>Plan: {ticket.client.plan.name}</span>
             </div>
           )}
           <Link
             href={`/admin/users/${ticket.client.id}`}
-            className="block text-center mt-2 px-3 py-2 rounded-lg bg-gray-700 text-sm text-white hover:bg-gray-600 transition-colors"
+            className="block text-center mt-2 px-3 py-2 rounded-lg bg-secondary text-sm text-foreground hover:bg-secondary transition-colors"
           >
             Ver perfil completo
           </Link>

@@ -43,8 +43,8 @@ export function StatsModules({
       name: 'Programas',
       count: programs,
       icon: Tv,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/10'
+      color: 'text-brand',
+      bgColor: 'bg-brand/10'
     },
     {
       name: 'Noticias',
@@ -79,9 +79,9 @@ export function StatsModules({
   return (
     <div className="space-y-6">
       {/* Resumen de Módulos */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Award className="h-5 w-5 text-yellow-400" />
             Contenido por Módulo
           </CardTitle>
@@ -91,16 +91,16 @@ export function StatsModules({
             {modules.map((module, index) => {
               const Icon = module.icon
               return (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-700/50">
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                   <div className="flex items-center space-x-3">
                     <div className={`p-2 rounded-lg ${module.bgColor}`}>
                       <Icon className={`h-4 w-4 ${module.color}`} />
                     </div>
-                    <span className="text-gray-300 font-medium">
+                    <span className="text-muted-foreground font-medium">
                       {module.name}
                     </span>
                   </div>
-                  <Badge variant="secondary" className="bg-gray-600 text-white">
+                  <Badge variant="secondary" className="bg-secondary text-foreground">
                     {module.count}
                   </Badge>
                 </div>
@@ -111,9 +111,9 @@ export function StatsModules({
       </Card>
 
       {/* Top Clientes */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Crown className="h-5 w-5 text-yellow-400" />
             Top Clientes Activos
           </CardTitle>
@@ -122,25 +122,25 @@ export function StatsModules({
           <div className="space-y-3">
             {topClients.length > 0 ? (
               topClients.map((client, index) => (
-                <div key={client.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-700/50">
+                <div key={client.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                   <div className="flex items-center space-x-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-bold">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-brand to-purple-600 text-white text-sm font-bold">
                       {index + 1}
                     </div>
                     <div>
-                      <p className="text-white font-medium">
+                      <p className="text-foreground font-medium">
                         {client.name}
                       </p>
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-muted-foreground text-sm">
                         {client.user.email}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-bold">
+                    <p className="text-foreground font-bold">
                       {client.totalContent}
                     </p>
-                    <p className="text-gray-400 text-xs">
+                    <p className="text-muted-foreground text-xs">
                       contenidos
                     </p>
                   </div>
@@ -148,7 +148,7 @@ export function StatsModules({
               ))
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-400">No hay clientes con contenido aún</p>
+                <p className="text-muted-foreground">No hay clientes con contenido aún</p>
               </div>
             )}
           </div>

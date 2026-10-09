@@ -59,7 +59,7 @@ export function ServerAlerts() {
             </ul>
             <p className="mt-1 text-xs text-red-200/70">
               El panel no migra clientes automáticamente. Revisa{' '}
-              <Link href="/admin/servers" className="underline underline-offset-2 hover:text-white">
+              <Link href="/admin/servers" className="underline underline-offset-2 hover:text-foreground">
                 Servidores de Streaming
               </Link>{' '}
               para migrarlos manualmente.
@@ -69,7 +69,7 @@ export function ServerAlerts() {
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          className="text-red-300 hover:text-white shrink-0"
+          className="text-red-300 hover:text-foreground shrink-0"
           aria-label="Cerrar alerta"
         >
           <X className="h-4 w-4" />

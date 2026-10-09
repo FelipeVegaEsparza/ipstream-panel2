@@ -26,7 +26,7 @@ export default async function AdminLayout({
 
   return (
     <SessionProvider session={session}>
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-background">
         <AdminLayoutClient user={session.user}>
           {children}
         </AdminLayoutClient>

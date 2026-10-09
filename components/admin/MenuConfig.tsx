@@ -100,15 +100,15 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-lg bg-gray-700/40 border border-gray-600">
+      <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-lg bg-secondary/40 border border-border">
         <div>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Items visibles:{' '}
-            <span className="text-white font-bold text-base">{enabledCount}</span>
+            <span className="text-foreground font-bold text-base">{enabledCount}</span>
             {' / '}
-            <span className="text-gray-300">{total}</span>
+            <span className="text-muted-foreground">{total}</span>
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Los cambios se aplican al cliente en su próxima navegación
           </p>
         </div>
@@ -117,7 +117,7 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
             size="sm"
             variant="outline"
             onClick={() => setAll(true)}
-            className="border-gray-600 hover:bg-gray-700 text-gray-300"
+            className="border-border hover:bg-secondary text-muted-foreground"
           >
             <Check className="h-3 w-3 mr-1" />
             Activar todo
@@ -126,7 +126,7 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
             size="sm"
             variant="outline"
             onClick={() => setAll(false)}
-            className="border-gray-600 hover:bg-gray-700 text-gray-300"
+            className="border-border hover:bg-secondary text-muted-foreground"
           >
             <X className="h-3 w-3 mr-1" />
             Desactivar todo
@@ -140,14 +140,14 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
         return (
           <div
             key={section.name}
-            className="rounded-lg border border-gray-700 bg-gray-800/40 overflow-hidden"
+            className="rounded-lg border border-border bg-card/40 overflow-hidden"
           >
-            <div className="flex items-center justify-between p-4 bg-gray-700/30">
+            <div className="flex items-center justify-between p-4 bg-secondary/30">
               <div>
-                <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
                   {section.name}
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {sectionEnabled} de {sectionTotal} activos
                 </p>
               </div>
@@ -155,22 +155,22 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
                 <button
                   type="button"
                   onClick={() => setAllInSection(section.name, true)}
-                  className="text-xs text-cyan-400 hover:text-cyan-300 px-2 py-1"
+                  className="text-xs text-brand hover:text-brand px-2 py-1"
                 >
                   Activar
                 </button>
-                <span className="text-gray-600">·</span>
+                <span className="text-muted-foreground">·</span>
                 <button
                   type="button"
                   onClick={() => setAllInSection(section.name, false)}
-                  className="text-xs text-gray-400 hover:text-gray-300 px-2 py-1"
+                  className="text-xs text-muted-foreground hover:text-muted-foreground px-2 py-1"
                 >
                   Desactivar
                 </button>
               </div>
             </div>
 
-            <div className="divide-y divide-gray-700">
+            <div className="divide-y divide-border">
               {section.items.map((item) => {
                 const enabled = items[item.key] ?? true
                 const locked = !!item.alwaysEnabled
@@ -178,19 +178,19 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
                   <div key={item.key}>
                     <label
                       className={`flex items-center justify-between p-4 ${
-                        locked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-700/30'
+                        locked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-secondary/30'
                       } transition-colors`}
                     >
                       <div className="flex items-center gap-3">
-                        <item.icon className="h-5 w-5 text-gray-400" />
+                        <item.icon className="h-5 w-5 text-muted-foreground" />
                         <div>
-                          <p className="text-white font-medium">{item.name}</p>
-                          <p className="text-xs text-gray-500">{item.href}</p>
+                          <p className="text-foreground font-medium">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">{item.href}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         {locked && (
-                          <span className="text-xs text-gray-500 uppercase tracking-wide">Siempre</span>
+                          <span className="text-xs text-muted-foreground uppercase tracking-wide">Siempre</span>
                         )}
                         <button
                           type="button"
@@ -199,7 +199,7 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
                           disabled={locked}
                           onClick={() => !locked && toggle(item.key, !enabled)}
                           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            enabled ? 'bg-cyan-600' : 'bg-gray-600'
+                            enabled ? 'bg-brand' : 'bg-secondary'
                           } ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -209,19 +209,19 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
                       </div>
                     </label>
                     {item.children && item.children.length > 0 && (
-                      <div className="border-t border-gray-700/50">
+                      <div className="border-t border-border/50">
                         {item.children.map((child) => {
                           const childEnabled = items[child.key] ?? true
                           return (
                             <label
                               key={child.key}
-                              className="flex items-center justify-between py-3 pl-14 pr-4 cursor-pointer hover:bg-gray-700/30 transition-colors"
+                              className="flex items-center justify-between py-3 pl-14 pr-4 cursor-pointer hover:bg-secondary/30 transition-colors"
                             >
                               <div className="flex items-center gap-3">
-                                <child.icon className="h-4 w-4 text-gray-500" />
+                                <child.icon className="h-4 w-4 text-muted-foreground" />
                                 <div>
-                                  <p className="text-gray-200 text-sm">{child.name}</p>
-                                  <p className="text-xs text-gray-500">{child.href}</p>
+                                  <p className="text-foreground text-sm">{child.name}</p>
+                                  <p className="text-xs text-muted-foreground">{child.href}</p>
                                 </div>
                               </div>
                               <button
@@ -230,7 +230,7 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
                                 aria-checked={childEnabled}
                                 onClick={() => toggle(child.key, !childEnabled)}
                                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                  childEnabled ? 'bg-cyan-600' : 'bg-gray-600'
+                                  childEnabled ? 'bg-brand' : 'bg-secondary'
                                 } cursor-pointer`}
                               >
                                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -266,7 +266,7 @@ export function MenuConfig({ clientId, initialItems }: MenuConfigProps) {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="bg-cyan-600 hover:bg-cyan-700"
+          className="bg-brand hover:bg-brand"
         >
           <Save className="h-4 w-4 mr-2" />
           {saving ? 'Guardando...' : 'Guardar cambios'}

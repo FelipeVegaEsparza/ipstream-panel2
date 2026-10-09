@@ -21,9 +21,9 @@ export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
   return (
     <>
       {/* Gráfico de Usuarios por Día */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white">Nuevos Usuarios (Últimos 30 días)</CardTitle>
+          <CardTitle className="text-foreground">Nuevos Usuarios (Últimos 30 días)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-80">
@@ -62,9 +62,9 @@ export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
       </Card>
 
       {/* Gráfico de Contenido por Tipo */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white">Distribución de Contenido</CardTitle>
+          <CardTitle className="text-foreground">Distribución de Contenido</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-80">
@@ -104,7 +104,7 @@ export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-sm text-gray-300">
+                <span className="text-sm text-muted-foreground">
                   {item.name}: {item.value}
                 </span>
               </div>

@@ -82,41 +82,41 @@ export function ClientSitesSettings() {
   }
 
   const input =
-    'w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-cyan-500 focus:outline-none'
+    'w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-gray-600 focus:border-brand focus:outline-none'
 
   return (
     <div className="card max-w-2xl space-y-4">
       <div>
-        <h2 className="text-xl font-semibold text-white">Sitios de clientes</h2>
-        <p className="text-sm text-gray-400 mt-1">
+        <h2 className="text-xl font-semibold text-foreground">Sitios de clientes</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           Dominios por los que se sirve el sitio (bundle único) de cada cliente. El
           wildcard DNS base hace que los subdominios resuelvan a la plataforma.
         </p>
       </div>
 
       {loadingCfg ? (
-        <p className="text-sm text-gray-400">Cargando…</p>
+        <p className="text-sm text-muted-foreground">Cargando…</p>
       ) : (
         <>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Dominio base de los sitios</label>
+            <label className="block text-xs text-muted-foreground mb-1">Dominio base de los sitios</label>
             <input className={input} value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="ipstream.cl" />
-            <p className="text-[11px] text-gray-500 mt-1">Los clientes se sirven como <code>&lt;cliente&gt;.{domain || 'ipstream.cl'}</code>.</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Los clientes se sirven como <code>&lt;cliente&gt;.{domain || 'ipstream.cl'}</code>.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Target CNAME (dominios propios)</label>
+              <label className="block text-xs text-muted-foreground mb-1">Target CNAME (dominios propios)</label>
               <input className={input} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="clientes.ipstream.cl" />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">IP de la plataforma (wildcard A)</label>
+              <label className="block text-xs text-muted-foreground mb-1">IP de la plataforma (wildcard A)</label>
               <input className={input} value={ip} onChange={(e) => setIp(e.target.value)} placeholder="1.2.3.4" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Token de Cloudflare (Zone:DNS:Edit)</label>
+            <label className="block text-xs text-muted-foreground mb-1">Token de Cloudflare (Zone:DNS:Edit)</label>
             <input
               type="password"
               className={input}
@@ -132,7 +132,7 @@ export function ClientSitesSettings() {
               type="button"
               onClick={save}
               disabled={loading}
-              className="rounded bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500 disabled:opacity-50"
+              className="rounded bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand disabled:opacity-50"
             >
               Guardar
             </button>
@@ -140,13 +140,13 @@ export function ClientSitesSettings() {
               type="button"
               onClick={ensureDns}
               disabled={ensuring}
-              className="rounded border border-gray-600 px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+              className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-card disabled:opacity-50"
             >
               {ensuring ? 'Asegurando…' : 'Asegurar DNS base (wildcard)'}
             </button>
           </div>
 
-          <p className="text-[11px] text-gray-500">
+          <p className="text-[11px] text-muted-foreground">
             &quot;Asegurar DNS base&quot; crea (idempotente) el registro <code>*.{domain || 'ipstream.cl'}</code>{' '}
             apuntando a la IP de la plataforma. Requiere el token de Cloudflare y la IP.
           </p>

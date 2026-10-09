@@ -152,16 +152,16 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-card border-border">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-white">
+        <CardTitle className="text-foreground">
           {plan ? 'Editar Plan' : 'Nuevo Plan'}
         </CardTitle>
         <Button
           variant="outline"
           size="sm"
           onClick={onClose}
-          className="border-gray-600 hover:bg-gray-700"
+          className="border-border hover:bg-secondary"
         >
           <X className="h-4 w-4" />
         </Button>
@@ -171,7 +171,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Nombre del Plan *
               </label>
               <Input
@@ -179,12 +179,12 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Ej: Plan Básico"
                 required
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-secondary border-border text-foreground"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Precio *
               </label>
               <div className="flex gap-2">
@@ -196,12 +196,12 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                   onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                   placeholder="0.00"
                   required
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-secondary border-border text-foreground"
                 />
                 <select
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  className="bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
+                  className="bg-secondary border border-border text-foreground rounded-md px-3 py-2"
                 >
                   <option value="CLP">CLP (Peso Chileno)</option>
                   <option value="USD">USD (Dólar)</option>
@@ -211,7 +211,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Descripción *
             </label>
             <Textarea
@@ -219,13 +219,13 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Describe las características principales del plan"
               required
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-secondary border-border text-foreground"
               rows={3}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Imagen del plan (para la página de registro)
             </label>
             <ImageUpload
@@ -238,7 +238,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Link de ejemplo del plan
             </label>
             <Input
@@ -246,21 +246,21 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               value={formData.demoUrl}
               onChange={(e) => setFormData({ ...formData, demoUrl: e.target.value })}
               placeholder="https://demo.ipstream.cl/mi-radio"
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-secondary border-border text-foreground"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Se muestra como botón "Ver ejemplo" en la página pública del plan. Déjalo vacío si no aplica.
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Intervalo de Facturación *
             </label>
             <select
               value={formData.interval}
               onChange={(e) => setFormData({ ...formData, interval: e.target.value })}
-              className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
+              className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
             >
               <option value="monthly">Mensual</option>
               <option value="yearly">Anual</option>
@@ -268,43 +268,43 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Servicios incluidos *
             </label>
             <select
               value={formData.services}
               onChange={(e) => setFormData({ ...formData, services: e.target.value })}
-              className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
+              className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
             >
               <option value="both">Radio + TV</option>
               <option value="radio">Solo Radio</option>
               <option value="tv">Solo TV</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Determina qué servicios se crean al contratar este plan.
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Tareas de &quot;Primeros pasos&quot;
             </label>
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs text-muted-foreground mb-2">
               Elige qué tareas ve el cliente en su onboarding. Las de Radio/TV solo se muestran si el plan incluye ese servicio.
             </p>
-            <div className="space-y-2 rounded-md border border-gray-700 bg-gray-800/40 p-3">
+            <div className="space-y-2 rounded-md border border-border bg-card/40 p-3">
               {ONBOARDING_STEP_DEFS.map((s) => (
                 <label key={s.key} className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedSteps.has(s.key)}
                     onChange={() => toggleStep(s.key)}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-600 bg-gray-700 text-cyan-500"
+                    className="mt-0.5 h-4 w-4 rounded border-border bg-secondary text-brand"
                   />
-                  <span className="text-sm text-gray-300">
+                  <span className="text-sm text-muted-foreground">
                     {s.title}
                     {s.service !== 'common' && (
-                      <span className="ml-2 text-[10px] uppercase tracking-wide rounded bg-gray-700 px-1.5 py-0.5 text-gray-300">
+                      <span className="ml-2 text-[10px] uppercase tracking-wide rounded bg-secondary px-1.5 py-0.5 text-muted-foreground">
                         {s.service === 'radio' ? 'Radio' : 'TV'}
                       </span>
                     )}
@@ -315,13 +315,13 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Servidor de streaming por defecto
             </label>
             <select
               value={formData.defaultServerId}
               onChange={(e) => setFormData({ ...formData, defaultServerId: e.target.value })}
-              className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
+              className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
             >
               <option value="">Servidor principal (global)</option>
               {servers.map((s) => (
@@ -330,53 +330,53 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Los streams de los clientes que contraten este plan se crean en este servidor (ej. gratis → servidor A).
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Cuota de almacenamiento (vacío = ilimitado)
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Radio (MB)</label>
+                <label className="block text-xs text-muted-foreground mb-1">Radio (MB)</label>
                 <Input
                   type="number"
                   min="0"
                   value={formData.radioStorageQuotaMB}
                   onChange={(e) => setFormData({ ...formData, radioStorageQuotaMB: e.target.value })}
                   placeholder="ej: 5000 (5 GB)"
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-secondary border-border text-foreground"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">TV / Video (MB)</label>
+                <label className="block text-xs text-muted-foreground mb-1">TV / Video (MB)</label>
                 <Input
                   type="number"
                   min="0"
                   value={formData.videoStorageQuotaMB}
                   onChange={(e) => setFormData({ ...formData, videoStorageQuotaMB: e.target.value })}
                   placeholder="ej: 20000 (20 GB)"
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-secondary border-border text-foreground"
                 />
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               Se aplica automáticamente a la biblioteca del cliente al contratar este plan (o al asignarlo).
             </p>
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-3">
-              <label className="block text-sm font-medium text-gray-300">
+              <label className="block text-sm font-medium text-muted-foreground">
                 Características del Plan
               </label>              <Button
                 type="button"
                 onClick={addFeature}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-brand hover:bg-brand"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Agregar
@@ -390,7 +390,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                     value={feature}
                     onChange={(e) => updateFeature(index, e.target.value)}
                     placeholder="Ej: Hasta 10 programas"
-                    className="bg-gray-700 border-gray-600 text-white"
+                    className="bg-secondary border-border text-foreground"
                   />
                   {features.length > 1 && (
                     <Button
@@ -409,10 +409,10 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Secciones del dashboard incluidas en el plan
             </label>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Desmarcá las secciones que este plan NO incluye (para diferenciar precios). El resto se oculta
               automáticamente para los clientes de este plan.
             </p>
@@ -421,8 +421,8 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 const items = MENU_ITEMS.filter((i) => i.section === section)
                 if (items.length === 0) return null
                 return (
-                  <div key={section} className="rounded-lg bg-gray-700/40 border border-gray-600 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-300 mb-2">{section}</p>
+                  <div key={section} className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{section}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {items.map((item) => {
                         const checked = !hiddenKeys.has(item.key)
@@ -430,7 +430,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                         return (
                           <label
                             key={item.key}
-                            className={`flex items-center gap-2 text-sm ${isServiceSection ? '' : 'text-gray-300'}`}
+                            className={`flex items-center gap-2 text-sm ${isServiceSection ? '' : 'text-muted-foreground'}`}
                           >
                             <input
                               type="checkbox"
@@ -441,9 +441,9 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                                 else next.add(item.key)
                                 setHiddenKeys(next)
                               }}
-                              className="rounded border-gray-600 bg-gray-800"
+                              className="rounded border-border bg-card"
                             />
-                            <span className={checked ? 'text-gray-200' : 'text-gray-500 line-through'}>{item.name}</span>
+                            <span className={checked ? 'text-foreground' : 'text-muted-foreground line-through'}>{item.name}</span>
                           </label>
                         )
                       })}
@@ -460,9 +460,9 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               id="isActive"
               checked={formData.isActive}
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="rounded border-gray-600 bg-gray-700"
+              className="rounded border-border bg-secondary"
             />
-            <label htmlFor="isActive" className="text-sm text-gray-300">
+            <label htmlFor="isActive" className="text-sm text-muted-foreground">
               Plan activo (disponible para nuevas suscripciones)
             </label>
           </div>
@@ -471,7 +471,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 flex-1"
+              className="bg-brand hover:bg-brand flex-1"
             >
               {loading ? 'Guardando...' : (plan ? 'Actualizar Plan' : 'Crear Plan')}
             </Button>
@@ -479,7 +479,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               type="button"
               onClick={onClose}
               variant="outline"
-              className="border-gray-600 hover:bg-gray-700"
+              className="border-border hover:bg-secondary"
             >
               Cancelar
             </Button>

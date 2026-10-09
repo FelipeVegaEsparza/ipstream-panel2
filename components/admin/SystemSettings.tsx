@@ -75,19 +75,19 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
   }
 
   const systemInfo = [
-    { label: 'Total Usuarios', value: stats.totalUsers, icon: Users, color: 'text-blue-400' },
+    { label: 'Total Usuarios', value: stats.totalUsers, icon: Users, color: 'text-brand' },
     { label: 'Total Clientes', value: stats.totalClients, icon: Users, color: 'text-green-400' },
     { label: 'Total Contenido', value: stats.totalContent, icon: FileText, color: 'text-purple-400' },
-    { label: 'Tiempo Activo', value: formatUptime(stats.uptime), icon: Clock, color: 'text-cyan-400' },
+    { label: 'Tiempo Activo', value: formatUptime(stats.uptime), icon: Clock, color: 'text-brand' },
     { label: 'Node.js', value: stats.nodeVersion, icon: Server, color: 'text-pink-400' }
   ]
 
   if (initialLoading) {
     return (
       <div className="space-y-6">
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
-            <p className="text-gray-400">Cargando configuración...</p>
+            <p className="text-muted-foreground">Cargando configuración...</p>
           </CardContent>
         </Card>
       </div>
@@ -97,9 +97,9 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
   return (
     <div className="space-y-6">
       {/* Información del Sistema */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Server className="h-5 w-5" />
             Información del Sistema
           </CardTitle>
@@ -109,11 +109,11 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
             {systemInfo.map((info, index) => {
               const Icon = info.icon
               return (
-                <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-700/50">
+                <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
                   <Icon className={`h-5 w-5 ${info.color}`} />
                   <div>
-                    <p className="text-sm text-gray-400">{info.label}</p>
-                    <p className="text-white font-medium">{info.value}</p>
+                    <p className="text-sm text-muted-foreground">{info.label}</p>
+                    <p className="text-foreground font-medium">{info.value}</p>
                   </div>
                 </div>
               )
@@ -123,21 +123,21 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
       </Card>
 
       {/* Configuración General */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Newspaper className="h-5 w-5" />
             Configuración General
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-gray-700/50">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
             <div>
-              <p className="text-white font-medium flex items-center gap-2">
+              <p className="text-foreground font-medium flex items-center gap-2">
                 <Newspaper className="h-4 w-4" />
                 Noticias Genéricas
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Habilita la opción para que los clientes usen noticias globales del sistema
               </p>
             </div>
@@ -146,16 +146,16 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
                 type="checkbox"
                 checked={enableGenericNews}
                 onChange={(e) => setEnableGenericNews(e.target.checked)}
-                className="rounded border-gray-600 bg-gray-700"
+                className="rounded border-border bg-secondary"
               />
-              <Badge className={enableGenericNews ? "bg-green-600" : "bg-gray-600"}>
+              <Badge className={enableGenericNews ? "bg-green-600" : "bg-secondary"}>
                 {enableGenericNews ? 'Activado' : 'Desactivado'}
               </Badge>
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-gray-700/50">
-            <label className="block text-white font-medium mb-1">
+          <div className="p-3 rounded-lg bg-secondary/50">
+            <label className="block text-foreground font-medium mb-1">
               Email de notificaciones del panel
             </label>
             <input
@@ -163,15 +163,15 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
               value={adminNotifyEmail}
               onChange={(e) => setAdminNotifyEmail(e.target.value)}
               placeholder="felipevegaesparza@gmail.com"
-              className="w-full bg-gray-900 border border-gray-600 text-white rounded-md px-3 py-2 text-sm"
+              className="w-full bg-background border border-border text-foreground rounded-md px-3 py-2 text-sm"
             />
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Recibe avisos de nuevos registros de clientes y otras notificaciones del sistema.
             </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-gray-700/50">
-            <label className="block text-white font-medium mb-1">
+          <div className="p-3 rounded-lg bg-secondary/50">
+            <label className="block text-foreground font-medium mb-1">
               Días de prueba gratuita
             </label>
             <input
@@ -180,9 +180,9 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
               max={365}
               value={trialDays}
               onChange={(e) => setTrialDays(Number(e.target.value))}
-              className="w-full bg-gray-900 border border-gray-600 text-white rounded-md px-3 py-2 text-sm"
+              className="w-full bg-background border border-border text-foreground rounded-md px-3 py-2 text-sm"
             />
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Días de prueba que reciben los clientes al registrarse desde las páginas públicas. 0 desactiva la prueba.
             </p>
           </div>
@@ -191,7 +191,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-brand hover:bg-brand"
             >
               <Save className="h-4 w-4 mr-2" />
               {loading ? 'Guardando...' : 'Guardar Configuración'}

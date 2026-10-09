@@ -42,11 +42,11 @@ export default async function AdminTicketsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-          <LifeBuoy className="h-7 w-7 text-cyan-400" />
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+          <LifeBuoy className="h-7 w-7 text-brand" />
           Tickets de soporte
         </h1>
-        <p className="text-gray-400 mt-1">
+        <p className="text-muted-foreground mt-1">
           Gestiona los tickets de soporte de todos tus clientes
         </p>
       </div>

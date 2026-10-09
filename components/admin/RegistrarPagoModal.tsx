@@ -94,10 +94,10 @@ export function RegistrarPagoModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 max-w-lg w-full">
+      <div className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-lg w-full">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
           aria-label="Cerrar"
         >
           <X className="h-5 w-5" />
@@ -105,48 +105,48 @@ export function RegistrarPagoModal({
 
         <div className="p-6 space-y-5">
           <div>
-            <h3 className="text-xl font-bold text-white">Registrar pago</h3>
-            <p className="text-sm text-gray-400 mt-1">
+            <h3 className="text-xl font-bold text-foreground">Registrar pago</h3>
+            <p className="text-sm text-muted-foreground mt-1">
               Marca como pagado el ciclo actual y genera el siguiente.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-gray-700/40 border border-gray-600">
+          <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <p className="text-xs text-gray-400">Cliente</p>
-              <p className="text-white font-medium">{clientName}</p>
+              <p className="text-xs text-muted-foreground">Cliente</p>
+              <p className="text-foreground font-medium">{clientName}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Plan</p>
-              <p className="text-white font-medium">{planName}</p>
+              <p className="text-xs text-muted-foreground">Plan</p>
+              <p className="text-foreground font-medium">{planName}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Monto</p>
-              <p className="text-cyan-400 font-bold text-lg">{formatCurrency(amount, currency)}</p>
+              <p className="text-xs text-muted-foreground">Monto</p>
+              <p className="text-brand font-bold text-lg">{formatCurrency(amount, currency)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Fecha del pago</p>
-              <p className="text-white font-medium">{formatDate(paidAt)}</p>
+              <p className="text-xs text-muted-foreground">Fecha del pago</p>
+              <p className="text-foreground font-medium">{formatDate(paidAt)}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-300 block mb-1">Fecha del pago *</label>
+              <label className="text-sm text-muted-foreground block mb-1">Fecha del pago *</label>
               <Input
                 type="date"
                 value={paidAt}
                 onChange={(e) => setPaidAt(e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-secondary border-border text-foreground"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-300 block mb-1">Método de pago</label>
+              <label className="text-sm text-muted-foreground block mb-1">Método de pago</label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
               >
                 {PAYMENT_METHODS.map((m) => (
                   <option key={m.value} value={m.value}>
@@ -158,35 +158,35 @@ export function RegistrarPagoModal({
           </div>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Descripción (opcional)</label>
+            <label className="text-sm text-muted-foreground block mb-1">Descripción (opcional)</label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ej: Pago del mes de julio"
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-secondary border-border text-foreground"
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Comprobante (opcional)</label>
+            <label className="text-sm text-muted-foreground block mb-1">Comprobante (opcional)</label>
             {!receipt ? (
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-24 border-2 border-dashed border-gray-600 rounded-lg hover:border-cyan-500 transition-colors flex flex-col items-center justify-center"
+                className="w-full h-24 border-2 border-dashed border-border rounded-lg hover:border-brand transition-colors flex flex-col items-center justify-center"
               >
-                <Upload className="h-6 w-6 text-gray-400 mb-1" />
-                <span className="text-sm text-gray-400">Subir imagen o PDF (máx 10MB)</span>
+                <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                <span className="text-sm text-muted-foreground">Subir imagen o PDF (máx 10MB)</span>
               </button>
             ) : (
-              <div className="border border-gray-600 rounded-lg p-3 flex items-center justify-between">
+              <div className="border border-border rounded-lg p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {preview ? (
-                    <ImageIcon className="h-5 w-5 text-cyan-400" />
+                    <ImageIcon className="h-5 w-5 text-brand" />
                   ) : (
                     <FileText className="h-5 w-5 text-red-400" />
                   )}
-                  <span className="text-sm text-white truncate max-w-[240px]">{receipt.name}</span>
+                  <span className="text-sm text-foreground truncate max-w-[240px]">{receipt.name}</span>
                 </div>
                 <button
                   onClick={() => {
@@ -222,7 +222,7 @@ export function RegistrarPagoModal({
               type="button"
               onClick={onClose}
               variant="outline"
-              className="flex-1 border-gray-600 hover:bg-gray-700"
+              className="flex-1 border-border hover:bg-secondary"
               disabled={loading}
             >
               Cancelar

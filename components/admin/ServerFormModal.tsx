@@ -91,10 +91,10 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 max-w-lg w-full animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-lg w-full animate-in fade-in zoom-in duration-200">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
           aria-label="Cerrar"
         >
           <X className="h-5 w-5" />
@@ -102,12 +102,12 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
 
         <div className="p-6 space-y-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-cyan-500/15 flex items-center justify-center">
-              {editing ? <Pencil className="h-5 w-5 text-cyan-400" /> : <Plus className="h-5 w-5 text-cyan-400" />}
+            <div className="w-10 h-10 rounded-full bg-brand/15 flex items-center justify-center">
+              {editing ? <Pencil className="h-5 w-5 text-brand" /> : <Plus className="h-5 w-5 text-brand" />}
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">{editing ? 'Editar servidor' : 'Agregar servidor (manual)'}</h3>
-              <p className="text-sm text-gray-400 mt-0.5">
+              <h3 className="text-xl font-bold text-foreground">{editing ? 'Editar servidor' : 'Agregar servidor (manual)'}</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">
                 {editing ? `Editando: ${editing.name}` : 'Registra un nodo de streaming ya configurado'}
               </p>
             </div>
@@ -137,23 +137,23 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
               <div className="form-group">
                 <label className="form-label">Hostname público</label>
                 <input className="form-input" value={publicHostname} onChange={(e) => setPublicHostname(e.target.value)} placeholder="stream1.example.com" />
-                <p className="text-xs text-gray-400 mt-1">Lo usan los oyentes/espectadores para conectarse</p>
+                <p className="text-xs text-muted-foreground mt-1">Lo usan los oyentes/espectadores para conectarse</p>
               </div>
 
               <div className="form-group">
                 <label className="form-label">
-                  URL pública para oyentes <span className="text-gray-500">(opcional)</span>
+                  URL pública para oyentes <span className="text-muted-foreground">(opcional)</span>
                 </label>
                 <input className="form-input" value={publicUrl} onChange={(e) => setPublicUrl(e.target.value)} placeholder="https://stream.midominio.cl" />
-                <p className="text-xs text-gray-400 mt-1">
-                  Base que verán los oyentes. Ej: <code className="text-cyan-400">https://stream.midominio.cl</code> (vía Caddy con TLS)
-                  o <code className="text-cyan-400">http://ip:8000</code> (icecast directo). Vacío = se deriva del hostname.
+                <p className="text-xs text-muted-foreground mt-1">
+                  Base que verán los oyentes. Ej: <code className="text-brand">https://stream.midominio.cl</code> (vía Caddy con TLS)
+                  o <code className="text-brand">http://ip:8000</code> (icecast directo). Vacío = se deriva del hostname.
                 </p>
               </div>
 
               <div className="form-group">
                 <label className="form-label">
-                  Token del agente {editing && <span className="text-gray-500">(vacío = no cambiar)</span>}
+                  Token del agente {editing && <span className="text-muted-foreground">(vacío = no cambiar)</span>}
                 </label>
                 <input className="form-input" type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="token del STREAMING_AGENT_TOKEN" />
               </div>

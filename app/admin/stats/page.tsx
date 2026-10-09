@@ -154,10 +154,10 @@ export default async function StatsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Estadísticas Globales
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Métricas y análisis completo del sistema
         </p>
       </div>

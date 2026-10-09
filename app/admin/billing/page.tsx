@@ -94,18 +94,18 @@ export default async function BillingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Planes y Pagos</h1>
-        <p className="text-gray-400 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Planes y Pagos</h1>
+        <p className="text-muted-foreground mt-1">
           Gestiona los planes que ofreces y los pagos de tus clientes.
         </p>
       </div>
 
       <Tabs defaultValue="clientes" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2 bg-gray-800 border border-gray-700">
-          <TabsTrigger value="clientes" className="data-[state=active]:bg-blue-600">
+        <TabsList className="grid w-full max-w-md grid-cols-2 bg-card border border-border">
+          <TabsTrigger value="clientes" className="data-[state=active]:bg-brand">
             Clientes y pagos
           </TabsTrigger>
-          <TabsTrigger value="planes" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger value="planes" className="data-[state=active]:bg-brand">
             Planes
           </TabsTrigger>
         </TabsList>

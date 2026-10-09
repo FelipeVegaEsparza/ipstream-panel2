@@ -28,10 +28,10 @@ export default async function AboutPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Acerca del Sistema
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Información técnica, licencias y soporte del IPStream Panel
         </p>
       </div>

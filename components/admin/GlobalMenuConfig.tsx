@@ -92,21 +92,21 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
       {MENU_SECTIONS.map((section) => {
         const items = MENU_ITEMS.filter((i) => i.section === section)
         return (
-          <div key={section} className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
+          <div key={section} className="bg-card/40 border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm uppercase tracking-wide text-gray-400">{section}</h3>
+              <h3 className="text-sm uppercase tracking-wide text-muted-foreground">{section}</h3>
               <div className="flex gap-1">
                 <button
                   type="button"
                   onClick={() => setAllInSection(section, true)}
-                  className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-200 hover:bg-red-600/30 hover:text-red-200 transition-colors"
+                  className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-red-600/30 hover:text-red-200 transition-colors"
                 >
                   Ocultar todos
                 </button>
                 <button
                   type="button"
                   onClick={() => setAllInSection(section, false)}
-                  className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-200 hover:bg-green-600/30 hover:text-green-200 transition-colors"
+                  className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-green-600/30 hover:text-green-200 transition-colors"
                 >
                   Mostrar todos
                 </button>
@@ -118,11 +118,11 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
                 const isHidden = hidden.has(item.key)
                 return (
                   <li key={item.key}>
-                    <div className="flex items-center justify-between p-2.5 rounded hover:bg-gray-700/30">
+                    <div className="flex items-center justify-between p-2.5 rounded hover:bg-secondary/30">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-white text-sm">{item.name}</span>
+                        <span className="text-foreground text-sm">{item.name}</span>
                         {isLocked && (
-                          <span className="text-xs text-gray-500 flex items-center gap-1" title="Siempre visible">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1" title="Siempre visible">
                             <Lock className="h-3 w-3" /> siempre visible
                           </span>
                         )}
@@ -133,7 +133,7 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
                         disabled={isLocked}
                         aria-pressed={isHidden}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
-                          isHidden ? 'bg-red-600' : 'bg-gray-600'
+                          isHidden ? 'bg-red-600' : 'bg-secondary'
                         } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
                       >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -142,17 +142,17 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
                       </button>
                     </div>
                     {item.children && item.children.length > 0 && (
-                      <div className="ml-6 space-y-0.5 border-l border-gray-700 pl-3">
+                      <div className="ml-6 space-y-0.5 border-l border-border pl-3">
                         {item.children.map((child) => {
                           const childHidden = hidden.has(child.key)
                           return (
-                            <div key={child.key} className="flex items-center justify-between p-2 rounded hover:bg-gray-700/20">
-                              <span className="text-gray-300 text-sm">{child.name}</span>
+                            <div key={child.key} className="flex items-center justify-between p-2 rounded hover:bg-secondary/20">
+                              <span className="text-muted-foreground text-sm">{child.name}</span>
                               <button
                                 type="button"
                                 onClick={() => toggle(child.key)}
                                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
-                                  childHidden ? 'bg-red-600' : 'bg-gray-600'
+                                  childHidden ? 'bg-red-600' : 'bg-secondary'
                                 } cursor-pointer hover:opacity-80`}
                               >
                                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${

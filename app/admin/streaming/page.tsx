@@ -127,14 +127,14 @@ export default function AdminStreamingPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Streaming</h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <h1 className="text-3xl font-bold text-foreground">Streaming</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Configura opciones de streaming y AutoDJ para cada cliente.
           </p>
         </div>
         <button
           onClick={load}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+          className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded-lg"
         >
           ↻ Refrescar
         </button>
@@ -142,33 +142,33 @@ export default function AdminStreamingPage() {
 
       {/* Stats globales */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-xs text-gray-400 uppercase">Clientes</div>
-          <div className="text-2xl font-bold text-white mt-1">{stats.total}</div>
+        <div className="bg-card rounded-lg p-4">
+          <div className="text-xs text-muted-foreground uppercase">Clientes</div>
+          <div className="text-2xl font-bold text-foreground mt-1">{stats.total}</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-xs text-gray-400 uppercase">Con Stream</div>
-          <div className="text-2xl font-bold text-cyan-400 mt-1">{stats.withStream}</div>
+        <div className="bg-card rounded-lg p-4">
+          <div className="text-xs text-muted-foreground uppercase">Con Stream</div>
+          <div className="text-2xl font-bold text-brand mt-1">{stats.withStream}</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-xs text-gray-400 uppercase">Sin Stream</div>
-          <div className={`text-2xl font-bold mt-1 ${stats.withoutStream > 0 ? 'text-yellow-400' : 'text-gray-500'}`}>
+        <div className="bg-card rounded-lg p-4">
+          <div className="text-xs text-muted-foreground uppercase">Sin Stream</div>
+          <div className={`text-2xl font-bold mt-1 ${stats.withoutStream > 0 ? 'text-yellow-400' : 'text-muted-foreground'}`}>
             {stats.withoutStream}
           </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-xs text-gray-400 uppercase">Activos</div>
+        <div className="bg-card rounded-lg p-4">
+          <div className="text-xs text-muted-foreground uppercase">Activos</div>
           <div className="text-2xl font-bold text-green-400 mt-1">{stats.active}</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-xs text-gray-400 uppercase">Excedidos</div>
-          <div className={`text-2xl font-bold mt-1 ${stats.exceeded > 0 ? 'text-red-400' : 'text-white'}`}>
+        <div className="bg-card rounded-lg p-4">
+          <div className="text-xs text-muted-foreground uppercase">Excedidos</div>
+          <div className={`text-2xl font-bold mt-1 ${stats.exceeded > 0 ? 'text-red-400' : 'text-foreground'}`}>
             {stats.exceeded}
           </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-xs text-gray-400 uppercase">Storage total</div>
-          <div className="text-2xl font-bold text-white mt-1">{fmtMB(Math.round(stats.totalStorageMB))}</div>
+        <div className="bg-card rounded-lg p-4">
+          <div className="text-xs text-muted-foreground uppercase">Storage total</div>
+          <div className="text-2xl font-bold text-foreground mt-1">{fmtMB(Math.round(stats.totalStorageMB))}</div>
         </div>
       </div>
 
@@ -178,9 +178,9 @@ export default function AdminStreamingPage() {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="🔍 Buscar por nombre, email o mount..."
-          className="flex-1 bg-gray-800 text-white px-3 py-2 rounded border border-gray-700"
+          className="flex-1 bg-card text-foreground px-3 py-2 rounded border border-border"
         />
-        <label className="flex items-center gap-2 text-white">
+        <label className="flex items-center gap-2 text-foreground">
           <input
             type="checkbox"
             checked={showOnlyWith}
@@ -192,14 +192,14 @@ export default function AdminStreamingPage() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
+      <div className="bg-card rounded-lg overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-gray-500">Cargando...</div>
+          <div className="p-12 text-center text-muted-foreground">Cargando...</div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">Sin resultados</div>
+          <div className="p-12 text-center text-muted-foreground">Sin resultados</div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
+            <thead className="bg-background/50 text-muted-foreground uppercase text-xs">
               <tr>
                 <th className="text-left p-3">Cliente</th>
                 <th className="text-left p-3">Mount</th>
@@ -212,12 +212,12 @@ export default function AdminStreamingPage() {
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <tr key={c.clientId} className="border-t border-gray-700/50 hover:bg-gray-700/30">
+                <tr key={c.clientId} className="border-t border-border/50 hover:bg-secondary/30">
                   <td className="p-3">
-                    <div className="text-white font-medium">{c.clientName}</div>
-                    <div className="text-xs text-gray-500">{c.email}</div>
+                    <div className="text-foreground font-medium">{c.clientName}</div>
+                    <div className="text-xs text-muted-foreground">{c.email}</div>
                   </td>
-                  <td className="p-3 font-mono text-xs text-cyan-400">
+                  <td className="p-3 font-mono text-xs text-brand">
                     {c.hasRadioStream ? `/${c.icecastMount}` : '—'}
                   </td>
                   <td className="p-3">
@@ -227,7 +227,7 @@ export default function AdminStreamingPage() {
                           <span className={`text-xs px-2 py-0.5 rounded inline-block w-fit ${
                             c.status === 'autodj' ? 'bg-green-900 text-green-300' :
                             c.status === 'live' ? 'bg-red-900 text-red-300 animate-pulse' :
-                            'bg-gray-700 text-gray-400'
+                            'bg-secondary text-muted-foreground'
                           }`}>
                             {c.status === 'autodj' ? '▶ AutoDJ' : c.status === 'live' ? '🔴 EN VIVO' : '⏸ OFF'}
                           </span>
@@ -238,7 +238,7 @@ export default function AdminStreamingPage() {
                         )}
                       </div>
                     ) : (
-                      <span className="text-gray-500 text-xs">Sin RadioStream</span>
+                      <span className="text-muted-foreground text-xs">Sin RadioStream</span>
                     )}
                   </td>
                   <td className="p-3 text-right">
@@ -247,16 +247,16 @@ export default function AdminStreamingPage() {
                         <div className={`text-sm font-medium ${
                           c.usage.exceeded ? 'text-red-400' :
                           c.usage.percentUsed !== null && c.usage.percentUsed > 80 ? 'text-yellow-400' :
-                          'text-white'
+                          'text-foreground'
                         }`}>
                           {fmtMB(c.usage.totalMB)} / {fmtMB(c.usage.quotaMB)}
                         </div>
                         {c.usage.percentUsed !== null && (
-                          <div className="w-24 h-1.5 bg-gray-700 rounded-full mt-1 ml-auto overflow-hidden">
+                          <div className="w-24 h-1.5 bg-secondary rounded-full mt-1 ml-auto overflow-hidden">
                             <div
                               className={`h-full ${
                                 c.usage.exceeded ? 'bg-red-500' :
-                                c.usage.percentUsed > 80 ? 'bg-yellow-500' : 'bg-cyan-500'
+                                c.usage.percentUsed > 80 ? 'bg-yellow-500' : 'bg-brand'
                               }`}
                               style={{ width: `${Math.min(100, c.usage.percentUsed)}%` }}
                             />
@@ -265,10 +265,10 @@ export default function AdminStreamingPage() {
                       </div>
                     ) : '—'}
                   </td>
-                  <td className="p-3 text-right text-white">
+                  <td className="p-3 text-right text-foreground">
                     {c.usage?.trackCount ?? 0}
                   </td>
-                  <td className="p-3 text-right text-white">
+                  <td className="p-3 text-right text-foreground">
                     {c.listenerCount ?? 0}
                   </td>
                   <td className="p-3 text-right">
@@ -277,7 +277,7 @@ export default function AdminStreamingPage() {
                         <button
                           onClick={() => toggleAutodj(c.clientId, c.status === 'autodj' || c.status === 'live' ? 'stop' : 'start')}
                           disabled={togglingFor === c.clientId || c.enabled === false}
-                          className={`px-3 py-1.5 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs rounded ${
+                          className={`px-3 py-1.5 disabled:bg-secondary disabled:text-muted-foreground text-foreground text-xs rounded ${
                             c.status === 'autodj' || c.status === 'live'
                               ? 'bg-red-600 hover:bg-red-700'
                               : 'bg-green-600 hover:bg-green-700'
@@ -291,7 +291,7 @@ export default function AdminStreamingPage() {
                         </button>
                         <Link
                           href={`/admin/streaming/${c.clientId}`}
-                          className="text-cyan-400 hover:text-cyan-300 text-xs"
+                          className="text-brand hover:text-brand text-xs"
                         >
                           Configurar →
                         </Link>
@@ -300,7 +300,7 @@ export default function AdminStreamingPage() {
                       <button
                         onClick={() => createStream(c.clientId, c.clientName)}
                         disabled={creatingFor === c.clientId}
-                        className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white text-xs rounded"
+                        className="px-3 py-1.5 bg-brand hover:bg-brand disabled:bg-secondary text-white text-xs rounded"
                       >
                         {creatingFor === c.clientId ? '...' : '+ Crear stream'}
                       </button>

@@ -140,22 +140,22 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <ImageIcon className="h-5 w-5 text-cyan-400" />
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <ImageIcon className="h-5 w-5 text-brand" />
           Fondo de pantalla del login
         </h3>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Configura la imagen que verán los usuarios al iniciar sesión.
           Si no defines ninguna, se mostrará el fondo animado predeterminado.
         </p>
       </div>
 
-      <div className="flex gap-2 p-1 bg-gray-700/40 rounded-lg w-fit">
+      <div className="flex gap-2 p-1 bg-secondary/40 rounded-lg w-fit">
         <button
           type="button"
           onClick={() => setMode('upload')}
           className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-2 transition-colors ${
-            mode === 'upload' ? 'bg-cyan-600 text-white' : 'text-gray-300 hover:text-white'
+            mode === 'upload' ? 'bg-brand text-white' : 'text-muted-foreground hover:text-white'
           }`}
         >
           <Upload className="h-4 w-4" />
@@ -165,7 +165,7 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
           type="button"
           onClick={() => setMode('url')}
           className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-2 transition-colors ${
-            mode === 'url' ? 'bg-cyan-600 text-white' : 'text-gray-300 hover:text-white'
+            mode === 'url' ? 'bg-brand text-white' : 'text-muted-foreground hover:text-white'
           }`}
         >
           <LinkIcon className="h-4 w-4" />
@@ -189,23 +189,23 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
             onClick={() => !uploading && fileInputRef.current?.click()}
             className={`relative rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
               dragOver
-                ? 'border-cyan-500 bg-cyan-500/10'
-                : 'border-gray-600 bg-gray-800/40 hover:border-gray-500 hover:bg-gray-800/60'
+                ? 'border-brand bg-brand/10'
+                : 'border-border bg-card/40 hover:border-border hover:bg-card/60'
             } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
           >
             {uploading ? (
               <div className="flex flex-col items-center gap-2">
-                <Loader2 className="h-10 w-10 text-cyan-400 animate-spin" />
-                <p className="text-white font-medium">Subiendo y procesando...</p>
-                <p className="text-xs text-gray-400">Se optimizará automáticamente a WebP</p>
+                <Loader2 className="h-10 w-10 text-brand animate-spin" />
+                <p className="text-foreground font-medium">Subiendo y procesando...</p>
+                <p className="text-xs text-muted-foreground">Se optimizará automáticamente a WebP</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
-                <Upload className="h-10 w-10 text-gray-400" />
-                <p className="text-white font-medium">
+                <Upload className="h-10 w-10 text-muted-foreground" />
+                <p className="text-foreground font-medium">
                   Arrastra una imagen aquí o haz click para seleccionar
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   JPG, PNG o WebP · máximo 10 MB · se redimensiona a 1920px
                 </p>
               </div>
@@ -214,15 +214,15 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
         </div>
       ) : (
         <div>
-          <label className="text-sm text-gray-300 block mb-2">URL de la imagen</label>
+          <label className="text-sm text-muted-foreground block mb-2">URL de la imagen</label>
           <input
             type="url"
             value={url}
             onChange={(e) => handleUrlChange(e.target.value)}
             placeholder="https://ejemplo.com/fondo.jpg"
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+            className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground placeholder-gray-500 focus:outline-none focus:border-brand"
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Pega la URL pública de una imagen. Se recomienda al menos 1920×1080.
           </p>
           <div className="flex justify-end mt-3">
@@ -230,7 +230,7 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
               type="button"
               onClick={handleSaveUrl}
               disabled={saving || !url.trim()}
-              className="bg-cyan-600 hover:bg-cyan-700"
+              className="bg-brand hover:bg-brand"
             >
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Guardando...' : 'Guardar URL'}
@@ -240,22 +240,22 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
       )}
 
       {preview ? (
-        <div className="rounded-xl border border-gray-700 overflow-hidden">
-          <div className="aspect-video relative bg-gray-900">
+        <div className="rounded-xl border border-border overflow-hidden">
+          <div className="aspect-video relative bg-background">
             <img src={preview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl px-6 py-4 border border-gray-600">
-                <p className="text-white text-sm font-medium">Vista previa del login</p>
-                <p className="text-gray-300 text-xs">El formulario se ve sobre tu imagen</p>
+              <div className="bg-card/80 backdrop-blur-sm rounded-xl px-6 py-4 border border-border">
+                <p className="text-foreground text-sm font-medium">Vista previa del login</p>
+                <p className="text-muted-foreground text-xs">El formulario se ve sobre tu imagen</p>
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-gray-600 p-8 text-center bg-gray-800/40">
-          <ImageIcon className="h-10 w-10 text-gray-500 mx-auto mb-2" />
-          <p className="text-gray-400 text-sm">Sin imagen personalizada</p>
-          <p className="text-gray-500 text-xs">Se mostrará el fondo animado predeterminado</p>
+        <div className="rounded-xl border border-dashed border-border p-8 text-center bg-card/40">
+          <ImageIcon className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+          <p className="text-muted-foreground text-sm">Sin imagen personalizada</p>
+          <p className="text-muted-foreground text-xs">Se mostrará el fondo animado predeterminado</p>
         </div>
       )}
 
@@ -277,7 +277,7 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
           onClick={handleReset}
           disabled={saving || !currentImage}
           variant="outline"
-          className="border-gray-600 hover:bg-gray-700"
+          className="border-border hover:bg-secondary"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           Restaurar predeterminado

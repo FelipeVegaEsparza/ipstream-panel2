@@ -51,27 +51,27 @@ export default async function ImpersonatePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Impersonar Cliente
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Entra como cualquier cliente para brindar soporte técnico
         </p>
       </div>
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="stat-card bg-gradient-to-br from-blue-500/20 to-blue-600/20 border-blue-500/30">
+        <div className="stat-card bg-gradient-to-br from-brand/20 to-brand/20 border-brand/30">
           <div className="flex items-center justify-between">
             <div>
-              <dt className="text-sm font-medium text-blue-400 mb-2">
+              <dt className="text-sm font-medium text-brand mb-2">
                 Total Clientes
               </dt>
-              <dd className="text-2xl font-bold text-white">
+              <dd className="text-2xl font-bold text-foreground">
                 {clients.length}
               </dd>
             </div>
-            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
             </svg>
           </div>
@@ -83,7 +83,7 @@ export default async function ImpersonatePage() {
               <dt className="text-sm font-medium text-green-400 mb-2">
                 Con Contenido
               </dt>
-              <dd className="text-2xl font-bold text-white">
+              <dd className="text-2xl font-bold text-foreground">
                 {clients.filter(c => {
                   const count = c._count
                   return count.programs > 0 || count.news > 0 || count.rankingVideos > 0
@@ -102,7 +102,7 @@ export default async function ImpersonatePage() {
               <dt className="text-sm font-medium text-purple-400 mb-2">
                 Activos Hoy
               </dt>
-              <dd className="text-2xl font-bold text-white">
+              <dd className="text-2xl font-bold text-foreground">
                 {clients.filter(c => {
                   const today = new Date()
                   const clientDate = new Date(c.user.updatedAt)
@@ -116,17 +116,17 @@ export default async function ImpersonatePage() {
           </div>
         </div>
 
-        <div className="stat-card bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border-cyan-500/30">
+        <div className="stat-card bg-gradient-to-br from-brand/20 to-brand/20 border-brand/30">
           <div className="flex items-center justify-between">
             <div>
-              <dt className="text-sm font-medium text-cyan-400 mb-2">
+              <dt className="text-sm font-medium text-brand mb-2">
                 Con Logo
               </dt>
-              <dd className="text-2xl font-bold text-white">
+              <dd className="text-2xl font-bold text-foreground">
                 {clients.filter(c => c.basicData?.logoUrl).length}
               </dd>
             </div>
-            <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>

@@ -105,34 +105,34 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-xl border border-gray-700 bg-gray-900 p-6 shadow-2xl">
+      <div className="relative w-full max-w-lg rounded-xl border border-border bg-background p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <ArrowRightLeft className="h-5 w-5 text-cyan-400" /> Migrar {clientName}
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <ArrowRightLeft className="h-5 w-5 text-brand" /> Migrar {clientName}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {!options ? (
-          <div className="text-gray-400 py-6 text-center">{error || 'Cargando...'}</div>
+          <div className="text-muted-foreground py-6 text-center">{error || 'Cargando...'}</div>
         ) : !options.canMigrate ? (
-          <div className="text-gray-400 py-6 text-center">
+          <div className="text-muted-foreground py-6 text-center">
             Este cliente no tiene streams de radio ni de TV para migrar.
           </div>
         ) : (
           <div className="space-y-5">
-            <div className="text-sm text-gray-400">
-              Servidor actual de radio: <span className="text-cyan-400">{serverName(options.radioServerId)}</span>
+            <div className="text-sm text-muted-foreground">
+              Servidor actual de radio: <span className="text-brand">{serverName(options.radioServerId)}</span>
               <br />
-              Servidor actual de TV: <span className="text-cyan-400">{serverName(options.videoServerId)}</span>
+              Servidor actual de TV: <span className="text-brand">{serverName(options.videoServerId)}</span>
             </div>
 
             <div>
-              <p className="text-sm text-white font-medium mb-2">Servicios a migrar</p>
+              <p className="text-sm text-foreground font-medium mb-2">Servicios a migrar</p>
               <div className="flex gap-4">
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={services.includes('radio')}
@@ -140,9 +140,9 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
                     onChange={() => toggleService('radio')}
                     className="rounded"
                   />
-                  <Radio className="h-4 w-4 text-cyan-400" /> Radio {!options.hasRadio && '(no tiene)'}
+                  <Radio className="h-4 w-4 text-brand" /> Radio {!options.hasRadio && '(no tiene)'}
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={services.includes('video')}
@@ -150,13 +150,13 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
                     onChange={() => toggleService('video')}
                     className="rounded"
                   />
-                  <MonitorPlay className="h-4 w-4 text-cyan-400" /> TV {!options.hasVideo && '(no tiene)'}
+                  <MonitorPlay className="h-4 w-4 text-brand" /> TV {!options.hasVideo && '(no tiene)'}
                 </label>
               </div>
             </div>
 
             <div>
-              <p className="text-sm text-white font-medium mb-2">Servidor destino</p>
+              <p className="text-sm text-foreground font-medium mb-2">Servidor destino</p>
               <select
                 value={targetServerId}
                 onChange={(e) => setTargetServerId(e.target.value)}
@@ -180,16 +180,16 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
             </div>
 
             {error && <p className="text-sm text-red-400">{error}</p>}
-            {progress && <p className="text-sm text-cyan-300">{progress}...</p>}
+            {progress && <p className="text-sm text-brand">{progress}...</p>}
 
             <div className="flex justify-end gap-3 pt-2">
-              <button onClick={onClose} disabled={running} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm">
+              <button onClick={onClose} disabled={running} className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm">
                 Cancelar
               </button>
               <button
                 onClick={run}
                 disabled={running}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white rounded text-sm"
+                className="px-4 py-2 bg-brand hover:bg-brand disabled:bg-secondary text-white rounded text-sm"
               >
                 {running ? 'Migrando...' : 'Migrar'}
               </button>

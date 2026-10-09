@@ -121,16 +121,16 @@ export function EmailTemplatesManager() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-400">{VARIABLE_HINT}</p>
+        <p className="text-sm text-muted-foreground">{VARIABLE_HINT}</p>
         <Button size="sm" onClick={startCreate}>
           <Plus className="h-4 w-4 mr-1" /> Nueva plantilla
         </Button>
       </div>
 
       {(creating || editing) && (
-        <div className="rounded-xl border border-cyan-500/30 bg-gray-800/60 p-5 space-y-4">
+        <div className="rounded-xl border border-brand/30 bg-card/60 p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-white">{creating ? 'Nueva plantilla' : `Editar: ${editing?.name}`}</h3>
+            <h3 className="font-semibold text-foreground">{creating ? 'Nueva plantilla' : `Editar: ${editing?.name}`}</h3>
             <Button variant="ghost" size="sm" onClick={reset}><X className="h-4 w-4" /></Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -151,7 +151,7 @@ export function EmailTemplatesManager() {
             <label className="form-label">Cuerpo HTML (con {"{{variables}}"})</label>
             <textarea className="form-textarea h-52 font-mono text-xs" value={form.htmlBody || ''} onChange={(e) => setForm({ ...form, htmlBody: e.target.value })} />
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
             <input type="checkbox" checked={!!form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="accent-cyan-500" />
             Activa (se usa en envíos automáticos)
           </label>
@@ -172,24 +172,24 @@ export function EmailTemplatesManager() {
             return a.key.localeCompare(b.key)
           })
           .map((t) => (
-          <div key={t.id} className={`rounded-xl border p-4 flex items-start justify-between gap-4 ${t.key === 'bienvenida' ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-gray-700 bg-gray-800/60'}`}>
+          <div key={t.id} className={`rounded-xl border p-4 flex items-start justify-between gap-4 ${t.key === 'bienvenida' ? 'border-brand/40 bg-brand/5' : 'border-border bg-card/60'}`}>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-white">{t.name}</p>
-                <code className="text-xs text-gray-500">/{t.key}</code>
+                <p className="font-semibold text-foreground">{t.name}</p>
+                <code className="text-xs text-muted-foreground">/{t.key}</code>
                 {t.key === 'bienvenida' && (
-                  <Badge className="bg-cyan-500/15 text-cyan-400">
+                  <Badge className="bg-brand/15 text-brand">
                     <Sparkles className="h-3 w-3 mr-1" /> Al contratar un plan
                   </Badge>
                 )}
                 {t.isActive ? (
                   <Badge className="bg-green-500/15 text-green-400">Activa</Badge>
                 ) : (
-                  <Badge className="bg-gray-600/30 text-gray-400">Desactivada</Badge>
+                  <Badge className="bg-secondary/30 text-muted-foreground">Desactivada</Badge>
                 )}
               </div>
-              <p className="text-sm text-gray-300 mt-1 truncate">Asunto: {t.subject}</p>
-              {t.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{t.description}</p>}
+              <p className="text-sm text-muted-foreground mt-1 truncate">Asunto: {t.subject}</p>
+              {t.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>}
             </div>
             <div className="flex gap-2 shrink-0">
               <Button size="sm" variant="outline" onClick={() => test(t)} disabled={testing === t.key}>
@@ -207,7 +207,7 @@ export function EmailTemplatesManager() {
             </div>
           </div>
         ))}
-        {templates.length === 0 && <p className="text-sm text-gray-500">No hay plantillas. Crea una nueva.</p>}
+        {templates.length === 0 && <p className="text-sm text-muted-foreground">No hay plantillas. Crea una nueva.</p>}
       </div>
     </div>
   )

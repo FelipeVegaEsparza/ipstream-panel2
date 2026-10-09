@@ -27,9 +27,9 @@ export default async function GlobalMenuPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Menú Global</h1>
-        <p className="text-sm text-gray-400 mt-1">
-          Los items que ocultes aquí no se mostrarán en el menú de <strong className="text-gray-200">ningún cliente</strong>,
+        <h1 className="text-2xl font-bold text-foreground">Menú Global</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Los items que ocultes aquí no se mostrarán en el menú de <strong className="text-foreground">ningún cliente</strong>,
           sin importar su configuración individual. El override es absoluto.
         </p>
       </div>

@@ -98,62 +98,62 @@ export function NewsCategoriesManager() {
     }
   }
 
-  if (loading) return <p className="text-gray-400">Cargando categorías...</p>
+  if (loading) return <p className="text-muted-foreground">Cargando categorías...</p>
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-white">Categorías de Noticias Genéricas</h2>
-          <p className="text-sm text-gray-400">Crea y gestiona las categorías disponibles</p>
+          <h2 className="text-xl font-bold text-foreground">Categorías de Noticias Genéricas</h2>
+          <p className="text-sm text-muted-foreground">Crea y gestiona las categorías disponibles</p>
         </div>
         {!showForm && (
           <Button onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: '', slug: '', description: '' }) }}
-            className="bg-blue-600 hover:bg-blue-700">
+            className="bg-brand hover:bg-brand">
             <PlusIcon className="h-4 w-4 mr-2" /> Nueva Categoría
           </Button>
         )}
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-gray-800 border border-gray-700 rounded-lg p-6 space-y-4">
-          <h3 className="text-lg font-medium text-white">
+        <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <h3 className="text-lg font-medium text-foreground">
             {editingId ? 'Editar Categoría' : 'Nueva Categoría'}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Nombre</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Nombre</label>
               <Input
                 value={form.name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-secondary border-border text-foreground"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Slug</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Slug</label>
               <Input
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-secondary border-border text-foreground"
                 required
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Descripción (opcional)</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">Descripción (opcional)</label>
             <Input
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-secondary border-border text-foreground"
             />
           </div>
           <div className="flex gap-3">
-            <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" disabled={saving} className="bg-brand hover:bg-brand">
               {saving ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear'}
             </Button>
             <Button type="button" variant="outline" onClick={() => { setShowForm(false); setEditingId(null) }}
-              className="border-gray-600 hover:bg-gray-700">
+              className="border-border hover:bg-secondary">
               Cancelar
             </Button>
           </div>
@@ -162,25 +162,25 @@ export function NewsCategoriesManager() {
 
       <div className="space-y-3">
         {categories.length === 0 ? (
-          <p className="text-gray-400 text-center py-8">No hay categorías creadas</p>
+          <p className="text-muted-foreground text-center py-8">No hay categorías creadas</p>
         ) : (
           categories.map((cat) => (
-            <div key={cat.id} className="flex items-center justify-between p-4 rounded-lg bg-gray-800 border border-gray-700">
+            <div key={cat.id} className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
               <div>
-                <h4 className="text-white font-medium">{cat.name}</h4>
+                <h4 className="text-foreground font-medium">{cat.name}</h4>
                 <div className="flex items-center gap-3 mt-1">
-                  <code className="text-xs text-cyan-400 bg-gray-700 px-2 py-0.5 rounded">/{cat.slug}</code>
-                  {cat.description && <span className="text-sm text-gray-400">{cat.description}</span>}
-                  <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30">
+                  <code className="text-xs text-brand bg-secondary px-2 py-0.5 rounded">/{cat.slug}</code>
+                  {cat.description && <span className="text-sm text-muted-foreground">{cat.description}</span>}
+                  <Badge className="bg-brand/20 text-brand border-brand/30">
                     {cat._count?.news || 0} noticias
                   </Badge>
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleEdit(cat)} className="p-2 text-gray-400 hover:text-cyan-400 transition-colors">
+                <button onClick={() => handleEdit(cat)} className="p-2 text-muted-foreground hover:text-brand transition-colors">
                   <PencilIcon className="h-4 w-4" />
                 </button>
-                <button onClick={() => handleDelete(cat.id)} className="p-2 text-gray-400 hover:text-red-400 transition-colors">
+                <button onClick={() => handleDelete(cat.id)} className="p-2 text-muted-foreground hover:text-red-400 transition-colors">
                   <TrashIcon className="h-4 w-4" />
                 </button>
               </div>

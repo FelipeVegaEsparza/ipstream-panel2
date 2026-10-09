@@ -178,8 +178,8 @@ export function UserForm({ initialData }: UserFormProps) {
         )}
       </div>
 
-      <div className="border-t border-gray-700 pt-6">
-        <h3 className="text-lg font-medium text-white mb-4">
+      <div className="border-t border-border pt-6">
+        <h3 className="text-lg font-medium text-foreground mb-4">
           Información del Proyecto
         </h3>
         
@@ -211,7 +211,7 @@ export function UserForm({ initialData }: UserFormProps) {
               placeholder="56912345678"
               {...register('phone')}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Formato: 56 9 XXXX XXXX (sin +). Se usa para enviar la cuenta del mes.
             </p>
           </div>
@@ -227,7 +227,7 @@ export function UserForm({ initialData }: UserFormProps) {
               placeholder="https://midominio.cl"
               {...register('websiteUrl')}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               URL del sitio web público del cliente. Se muestra el botón "Ir a mi sitio Web" en su dashboard.
             </p>
             {errors.websiteUrl && (
@@ -240,10 +240,10 @@ export function UserForm({ initialData }: UserFormProps) {
           <label className="form-label">
             Plan
           </label>
-          <div className="form-input bg-gray-700 text-gray-400 cursor-not-allowed">
+          <div className="form-input bg-secondary text-muted-foreground cursor-not-allowed">
             Se asignará después de crear el usuario
           </div>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Los planes se gestionan desde el módulo de facturación
           </p>
         </div>
@@ -262,7 +262,7 @@ export function UserForm({ initialData }: UserFormProps) {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Servidor donde se hospedará la radio de este cliente
               </p>
             </div>
@@ -279,7 +279,7 @@ export function UserForm({ initialData }: UserFormProps) {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Servidor donde se hospedará la televisión de este cliente
               </p>
             </div>
@@ -287,14 +287,14 @@ export function UserForm({ initialData }: UserFormProps) {
         )}
       </div>
 
-      <div className="border-t border-gray-700 pt-6">
-        <h3 className="text-lg font-medium text-white mb-4 flex items-center">
+      <div className="border-t border-border pt-6">
+        <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
           <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
           Configuración OneSignal (Notificaciones Push)
         </h3>
-        <p className="text-sm text-gray-400 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Configura las credenciales de OneSignal para habilitar notificaciones push en la PWA del cliente
         </p>
         
@@ -310,7 +310,7 @@ export function UserForm({ initialData }: UserFormProps) {
               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
               {...register('oneSignalAppId')}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               ID de la aplicación en OneSignal (formato UUID). Ejemplo: 12345678-1234-1234-1234-123456789012
             </p>
           </div>
@@ -330,7 +330,7 @@ export function UserForm({ initialData }: UserFormProps) {
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-muted-foreground"
                 onClick={(e) => {
                   const input = (e.target as HTMLElement).parentElement?.querySelector('input')
                   if (input) {
@@ -344,7 +344,7 @@ export function UserForm({ initialData }: UserFormProps) {
                 </svg>
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Clave de API REST para enviar notificaciones. Se almacena encriptada.
             </p>
           </div>
@@ -370,16 +370,16 @@ export function UserForm({ initialData }: UserFormProps) {
         </div>
       </div>
 
-      <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+      <div className="bg-brand/10 border border-brand/30 rounded-xl p-4">
         <div className="flex items-start space-x-3">
-          <svg className="w-5 h-5 text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-brand mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <h4 className="text-sm font-medium text-blue-300 mb-1">
+            <h4 className="text-sm font-medium text-brand mb-1">
               Información importante
             </h4>
-            <p className="text-sm text-blue-200/80">
+            <p className="text-sm text-brand/80">
               {initialData 
                 ? 'Al actualizar este usuario, los cambios se aplicarán inmediatamente. Si cambias la contraseña, el usuario deberá usar la nueva para iniciar sesión.'
                 : 'Se creará automáticamente una cuenta de cliente asociada al usuario. El usuario podrá iniciar sesión inmediatamente con las credenciales proporcionadas.'
@@ -389,7 +389,7 @@ export function UserForm({ initialData }: UserFormProps) {
         </div>
       </div>
 
-      <div className="flex justify-end space-x-3 pt-6 border-t border-gray-700">
+      <div className="flex justify-end space-x-3 pt-6 border-t border-border">
         <button
           type="button"
           onClick={() => router.back()}

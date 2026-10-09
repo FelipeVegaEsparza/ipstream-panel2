@@ -22,10 +22,10 @@ export default async function TemplatesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Plantillas de Sitio
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Gestiona las plantillas disponibles para los sitios web de tus clientes
         </p>
       </div>

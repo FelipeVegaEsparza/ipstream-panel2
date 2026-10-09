@@ -37,10 +37,10 @@ export default async function UsersPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Gestión de Usuarios
           </h1>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Administra todos los clientes del sistema
           </p>
         </div>
@@ -55,17 +55,17 @@ export default async function UsersPage() {
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="stat-card bg-gradient-to-br from-blue-500/20 to-blue-600/20 border-blue-500/30">
+        <div className="stat-card bg-gradient-to-br from-brand/20 to-brand/20 border-brand/30">
           <div className="flex items-center justify-between">
             <div>
-              <dt className="text-sm font-medium text-blue-400 mb-2">
+              <dt className="text-sm font-medium text-brand mb-2">
                 Total Clientes
               </dt>
-              <dd className="text-2xl font-bold text-white">
+              <dd className="text-2xl font-bold text-foreground">
                 {users.length}
               </dd>
             </div>
-            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
             </svg>
           </div>
@@ -77,7 +77,7 @@ export default async function UsersPage() {
               <dt className="text-sm font-medium text-green-400 mb-2">
                 Activos Hoy
               </dt>
-              <dd className="text-2xl font-bold text-white">
+              <dd className="text-2xl font-bold text-foreground">
                 {users.filter(u => {
                   const today = new Date()
                   const userDate = new Date(u.updatedAt)
@@ -97,7 +97,7 @@ export default async function UsersPage() {
               <dt className="text-sm font-medium text-purple-400 mb-2">
                 Nuevos (7 días)
               </dt>
-              <dd className="text-2xl font-bold text-white">
+              <dd className="text-2xl font-bold text-foreground">
                 {users.filter(u => {
                   const weekAgo = new Date()
                   weekAgo.setDate(weekAgo.getDate() - 7)
@@ -117,7 +117,7 @@ export default async function UsersPage() {
               <dt className="text-sm font-medium text-amber-400 mb-2">
                 Con Contenido
               </dt>
-              <dd className="text-2xl font-bold text-white">
+              <dd className="text-2xl font-bold text-foreground">
                 {users.filter(u => {
                   const count = u.client?._count
                   return count && (count.programs > 0 || count.news > 0 || count.rankingVideos > 0)

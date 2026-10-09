@@ -84,7 +84,7 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
 
   return (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4 shadow-2xl border-r border-gray-700">
+    <div className="flex grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4 shadow-2xl border-r border-border">
       <div className="flex h-20 shrink-0 items-center justify-center">
         <img
           src="/logo-ipstream.png"
@@ -107,7 +107,7 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         <ul role="list" className="flex flex-1 flex-col gap-y-6">
           {navigationGroups.map((group) => (
             <li key={group.label}>
-              <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+              <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 {group.label}
               </p>
               <ul role="list" className="space-y-1">
@@ -124,13 +124,13 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
                       >
                         <item.icon
                           className={`h-6 w-6 shrink-0 transition-colors ${
-                            isActive ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
+                            isActive ? 'text-brand' : 'text-muted-foreground group-hover:text-brand'
                           }`}
                           aria-hidden="true"
                         />
                         <span className="truncate">{item.name}</span>
                         {isActive && (
-                          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-l-full"></div>
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-brand to-brand rounded-l-full"></div>
                         )}
                       </Link>
                     </li>
@@ -144,8 +144,8 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
       
       {/* Footer del sidebar */}
       <div className="glass-effect rounded-xl p-4 text-center">
-        <p className="text-xs text-gray-400">{APP_NAME} Admin</p>
-        <p className="text-xs text-gray-500">v{APP_VERSION}</p>
+        <p className="text-xs text-muted-foreground">{APP_NAME} Admin</p>
+        <p className="text-xs text-muted-foreground">v{APP_VERSION}</p>
       </div>
     </div>
   )
@@ -166,7 +166,7 @@ export function AdminSidebar({ sidebarOpen = false, setSidebarOpen }: AdminSideb
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-gray-900/80" />
+            <div className="fixed inset-0 bg-background/80" />
           </Transition.Child>
 
           <div className="fixed inset-0 flex">
@@ -196,7 +196,7 @@ export function AdminSidebar({ sidebarOpen = false, setSidebarOpen }: AdminSideb
                       onClick={() => setSidebarOpen?.(false)}
                     >
                       <span className="sr-only">Cerrar sidebar</span>
-                      <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
+                      <XMarkIcon className="h-6 w-6 text-foreground" aria-hidden="true" />
                     </button>
                   </div>
                 </Transition.Child>

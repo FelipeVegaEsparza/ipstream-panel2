@@ -102,13 +102,13 @@ export function PlansManager({ plans }: PlansManagerProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Gestión de Planes</h2>
+        <h2 className="text-2xl font-bold text-foreground">Gestión de Planes</h2>
         <Button 
           onClick={() => {
             setEditingPlan(null)
             setShowForm(true)
           }}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-brand hover:bg-brand"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Plan
@@ -127,9 +127,9 @@ export function PlansManager({ plans }: PlansManagerProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans.map((plan) => (
-          <Card key={plan.id} className="bg-gray-800 border-gray-700">
+          <Card key={plan.id} className="bg-card border-border">
             {plan.imageUrl && (
-              <div className="h-28 overflow-hidden rounded-t-2xl bg-gray-900">
+              <div className="h-28 overflow-hidden rounded-t-2xl bg-background">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={plan.imageUrl} alt={plan.name} className="w-full h-full object-cover" />
               </div>
@@ -137,19 +137,19 @@ export function PlansManager({ plans }: PlansManagerProps) {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-white flex items-center gap-2">
+                  <CardTitle className="text-foreground flex items-center gap-2">
                     {plan.name}
                     <Badge 
                       variant={plan.isActive ? "default" : "secondary"}
-                      className={plan.isActive ? "bg-green-600" : "bg-gray-600"}
+                      className={plan.isActive ? "bg-green-600" : "bg-secondary"}
                     >
                       {plan.isActive ? 'Activo' : 'Inactivo'}
                     </Badge>
-                    <Badge variant="secondary" className="bg-cyan-600">
+                    <Badge variant="secondary" className="bg-brand">
                       {plan.services === 'radio' ? 'Solo Radio' : plan.services === 'tv' ? 'Solo TV' : 'Radio + TV'}
                     </Badge>
                   </CardTitle>
-                  <p className="text-gray-400 text-sm mt-1">
+                  <p className="text-muted-foreground text-sm mt-1">
                     {plan.description}
                   </p>
                 </div>
@@ -158,7 +158,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
                     size="sm"
                     variant="outline"
                     onClick={() => handleEdit(plan)}
-                    className="border-gray-600 hover:bg-gray-700"
+                    className="border-border hover:bg-secondary"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -176,19 +176,19 @@ export function PlansManager({ plans }: PlansManagerProps) {
             
             <CardContent className="space-y-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-white">
+                <div className="text-3xl font-bold text-foreground">
                   {formatPrice(plan.price, plan.currency, plan.interval)}
                 </div>
-                <p className="text-gray-400 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Facturación {plan.interval === 'monthly' ? 'mensual' : 'anual'}
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <p className="text-sm font-medium text-gray-300">Página de contratación:</p>
+                <p className="text-sm font-medium text-muted-foreground">Página de contratación:</p>
                 <div className="flex items-center gap-2">
                   <code
-                    className="flex-1 min-w-0 truncate rounded-md bg-gray-900 border border-gray-700 px-2 py-1.5 text-xs text-gray-300"
+                    className="flex-1 min-w-0 truncate rounded-md bg-background border border-border px-2 py-1.5 text-xs text-muted-foreground"
                     title={planPath(plan)}
                   >
                     {planPath(plan)}
@@ -197,7 +197,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
                     size="sm"
                     variant="outline"
                     onClick={() => copyPlanUrl(plan)}
-                    className="border-gray-600 hover:bg-gray-700 shrink-0"
+                    className="border-border hover:bg-secondary shrink-0"
                     title="Copiar URL"
                   >
                     {copiedId === plan.id ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
@@ -207,14 +207,14 @@ export function PlansManager({ plans }: PlansManagerProps) {
                   href={planPath(plan)}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-blue-400 hover:underline"
+                  className="text-xs text-brand hover:underline"
                 >
                   Abrir página
                 </a>
               </div>
 
               <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-1 text-gray-400">
+                <div className="flex items-center gap-1 text-muted-foreground">
                   <Layout className="h-4 w-4" />
                   {(plan.menuHiddenKeys ? (() => {
                     try { const arr = JSON.parse(plan.menuHiddenKeys); return Array.isArray(arr) ? arr.length : 0 } catch { return 0 }
@@ -225,27 +225,27 @@ export function PlansManager({ plans }: PlansManagerProps) {
               </div>
 
               <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-1 text-gray-400">
+                <div className="flex items-center gap-1 text-muted-foreground">
                   <Users className="h-4 w-4" />
                   {plan._count.clients} clientes
                 </div>
-                <div className="flex items-center gap-1 text-gray-400">
+                <div className="flex items-center gap-1 text-muted-foreground">
                   <DollarSign className="h-4 w-4" />
                   {plan._count.subscriptions} suscripciones
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-300">Características:</p>
+                <p className="text-sm font-medium text-muted-foreground">Características:</p>
                 <ul className="space-y-1">
                   {parseFeatures(plan.features).slice(0, 3).map((feature: string, index: number) => (
-                    <li key={index} className="text-sm text-gray-400 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                    <li key={index} className="text-sm text-muted-foreground flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-brand rounded-full" />
                       {feature}
                     </li>
                   ))}
                   {parseFeatures(plan.features).length > 3 && (
-                    <li className="text-sm text-gray-500">
+                    <li className="text-sm text-muted-foreground">
                       +{parseFeatures(plan.features).length - 3} más...
                     </li>
                   )}
@@ -258,16 +258,16 @@ export function PlansManager({ plans }: PlansManagerProps) {
 
       {plans.length === 0 && (
         <div className="text-center py-12">
-          <CreditCard className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">
+          <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
             No hay planes creados
           </h3>
-          <p className="text-gray-400 mb-4">
+          <p className="text-muted-foreground mb-4">
             Crea tu primer plan para empezar a gestionar suscripciones
           </p>
           <Button 
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-brand hover:bg-brand"
           >
             <Plus className="h-4 w-4 mr-2" />
             Crear Primer Plan

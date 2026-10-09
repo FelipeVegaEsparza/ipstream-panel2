@@ -54,7 +54,7 @@ export function SystemInfo({ info }: SystemInfoProps) {
   const getEnvironmentBadge = (env: string) => {
     const envConfig = {
       production: { color: 'bg-green-600', text: 'Producción' },
-      development: { color: 'bg-blue-600', text: 'Desarrollo' },
+      development: { color: 'bg-brand', text: 'Desarrollo' },
       staging: { color: 'bg-orange-600', text: 'Staging' },
       test: { color: 'bg-purple-600', text: 'Pruebas' }
     }
@@ -62,7 +62,7 @@ export function SystemInfo({ info }: SystemInfoProps) {
     const config = envConfig[env as keyof typeof envConfig] || envConfig.development
 
     return (
-      <Badge className={`${config.color} text-white`}>
+      <Badge className={`${config.color} text-foreground`}>
         {config.text}
       </Badge>
     )
@@ -73,7 +73,7 @@ export function SystemInfo({ info }: SystemInfoProps) {
       label: 'Versión del Sistema',
       value: `v${info.version}`,
       icon: Code,
-      color: 'text-blue-400'
+      color: 'text-brand'
     },
     {
       label: 'Fecha de Compilación',
@@ -97,7 +97,7 @@ export function SystemInfo({ info }: SystemInfoProps) {
       label: 'Plataforma',
       value: `${info.platform} (${info.architecture})`,
       icon: Cpu,
-      color: 'text-cyan-400'
+      color: 'text-brand'
     },
     {
       label: 'Tiempo Activo',
@@ -133,9 +133,9 @@ export function SystemInfo({ info }: SystemInfoProps) {
   return (
     <div className="space-y-6">
       {/* Información General */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Server className="h-5 w-5" />
             Información del Sistema
           </CardTitle>
@@ -145,12 +145,12 @@ export function SystemInfo({ info }: SystemInfoProps) {
             {systemSpecs.map((spec, index) => {
               const Icon = spec.icon
               return (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-700/50">
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                   <div className="flex items-center gap-3">
                     <Icon className={`h-5 w-5 ${spec.color}`} />
-                    <span className="text-gray-300 font-medium">{spec.label}</span>
+                    <span className="text-muted-foreground font-medium">{spec.label}</span>
                   </div>
-                  <div className="text-white">
+                  <div className="text-foreground">
                     {typeof spec.value === 'string' ? spec.value : spec.value}
                   </div>
                 </div>
@@ -161,9 +161,9 @@ export function SystemInfo({ info }: SystemInfoProps) {
       </Card>
 
       {/* Uso de Memoria */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <MemoryStick className="h-5 w-5" />
             Uso de Memoria
           </CardTitle>
@@ -171,12 +171,12 @@ export function SystemInfo({ info }: SystemInfoProps) {
         <CardContent>
           <div className="space-y-4">
             {memoryStats.map((stat, index) => (
-              <div key={index} className="p-3 rounded-lg bg-gray-700/50">
+              <div key={index} className="p-3 rounded-lg bg-secondary/50">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-white font-medium">{stat.label}</span>
-                  <span className="text-blue-400 font-bold">{stat.value}</span>
+                  <span className="text-foreground font-medium">{stat.label}</span>
+                  <span className="text-brand font-bold">{stat.value}</span>
                 </div>
-                <p className="text-sm text-gray-400">{stat.description}</p>
+                <p className="text-sm text-muted-foreground">{stat.description}</p>
               </div>
             ))}
           </div>
@@ -184,21 +184,21 @@ export function SystemInfo({ info }: SystemInfoProps) {
       </Card>
 
       {/* Uso de CPU */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Cpu className="h-5 w-5" />
             Uso de CPU
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-700/50">
-              <span className="text-gray-300">Tiempo de Usuario</span>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+              <span className="text-muted-foreground">Tiempo de Usuario</span>
               <span className="text-green-400 font-bold">{(info.cpuUsage.user / 1000).toFixed(2)}ms</span>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-700/50">
-              <span className="text-gray-300">Tiempo de Sistema</span>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+              <span className="text-muted-foreground">Tiempo de Sistema</span>
               <span className="text-orange-400 font-bold">{(info.cpuUsage.system / 1000).toFixed(2)}ms</span>
             </div>
           </div>

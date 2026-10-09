@@ -61,23 +61,23 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
         />
       </div>
 
-      <div className="flex flex-wrap gap-3 items-center bg-gray-800 border border-gray-700 rounded-lg p-3">
+      <div className="flex flex-wrap gap-3 items-center bg-card border border-border rounded-lg p-3">
         <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-          <Search className="h-4 w-4 text-gray-400" />
+          <Search className="h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por asunto, cliente o email..."
-            className="bg-transparent text-white placeholder-gray-500 outline-none flex-1 text-sm"
+            className="bg-transparent text-foreground placeholder-gray-500 outline-none flex-1 text-sm"
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-gray-400" />
+          <Filter className="h-4 w-4 text-muted-foreground" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white"
+            className="bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground"
           >
             <option value="all">Todos los estados</option>
             <option value="open">Abiertos</option>
@@ -87,7 +87,7 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white"
+            className="bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground"
           >
             <option value="all">Todas las prioridades</option>
             <option value="urgent">Urgente</option>
@@ -99,16 +99,16 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 bg-gray-800/40 rounded-xl border border-dashed border-gray-700">
-          <LifeBuoy className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-400">
+        <div className="text-center py-12 bg-card/40 rounded-xl border border-dashed border-border">
+          <LifeBuoy className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">
             {tickets.length === 0 ? 'No hay tickets aún.' : 'No hay tickets que coincidan con los filtros.'}
           </p>
         </div>
       ) : (
-        <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-900/40 text-left text-gray-400 border-b border-gray-700">
+            <thead className="bg-background/40 text-left text-muted-foreground border-b border-border">
               <tr>
                 <th className="px-4 py-3 font-medium">Cliente</th>
                 <th className="px-4 py-3 font-medium">Asunto</th>
@@ -118,7 +118,7 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
                 <th className="px-4 py-3 font-medium">Actualizado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700">
+            <tbody className="divide-y divide-border">
               {filtered.map((t) => {
                 const statusConf = TICKET_STATUS[t.status as TicketStatus]
                 const priorityConf = TICKET_PRIORITY[t.priority as TicketPriority]
@@ -129,16 +129,16 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
                   <tr
                     key={t.id}
                     onClick={() => router.push(`/admin/tickets/${t.id}`)}
-                    className="hover:bg-gray-700/30 cursor-pointer"
+                    className="hover:bg-secondary/30 cursor-pointer"
                   >
                     <td className="px-4 py-3">
-                      <p className="text-white font-medium">{t.client.name}</p>
-                      <p className="text-xs text-gray-400">{t.client.user.email}</p>
+                      <p className="text-foreground font-medium">{t.client.name}</p>
+                      <p className="text-xs text-muted-foreground">{t.client.user.email}</p>
                     </td>
-                    <td className="px-4 py-3 text-white max-w-md truncate">
+                    <td className="px-4 py-3 text-foreground max-w-md truncate">
                       {t.subject}
                       {t._count.messages > 1 && (
-                        <span className="text-xs text-gray-500 ml-2">
+                        <span className="text-xs text-muted-foreground ml-2">
                           ({t._count.messages})
                         </span>
                       )}
@@ -160,19 +160,19 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
                         {priorityConf.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-400 max-w-xs truncate">
+                    <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
                       {lastMessage ? (
                         <span className="text-xs">
-                          <span className="text-gray-500">
+                          <span className="text-muted-foreground">
                             {lastMessage.authorType === 'admin' ? 'Tú' : 'Cliente'}:
                           </span>{' '}
                           {lastMessage.body}
                         </span>
                       ) : (
-                        <span className="text-gray-600">—</span>
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                       {formatDistanceToNow(updatedAt, { addSuffix: true, locale: es })}
                     </td>
                   </tr>
@@ -200,7 +200,7 @@ function StatCard({
   const colors = {
     green: 'border-green-500/30 bg-green-500/10 text-green-300',
     orange: 'border-orange-500/30 bg-orange-500/10 text-orange-300',
-    gray: 'border-gray-600/30 bg-gray-500/10 text-gray-300',
+    gray: 'border-border/30 bg-secondary/10 text-muted-foreground',
     red: 'border-red-500/30 bg-red-500/10 text-red-300',
   }
   return (

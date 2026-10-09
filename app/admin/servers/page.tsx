@@ -14,10 +14,10 @@ export default async function ServersPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Servidores de Streaming
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Registra los nodos de radio y TV. Cada cliente se asigna a un servidor por servicio;
           el panel nunca migra clientes automáticamente.
         </p>

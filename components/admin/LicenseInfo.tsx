@@ -77,7 +77,7 @@ export function LicenseInfo() {
     const Icon = config.icon
 
     return (
-      <Badge className={`${config.color} text-white flex items-center gap-1`}>
+      <Badge className={`${config.color} text-foreground flex items-center gap-1`}>
         <Icon className="h-3 w-3" />
         {status}
       </Badge>
@@ -86,16 +86,16 @@ export function LicenseInfo() {
 
   const getLicenseBadge = (license: string) => {
     const licenseColors = {
-      'MIT License': 'bg-blue-600',
+      'MIT License': 'bg-brand',
       'Apache 2.0': 'bg-purple-600',
       'ISC License': 'bg-green-600',
       'GPL v3': 'bg-orange-600'
     }
 
-    const color = licenseColors[license as keyof typeof licenseColors] || 'bg-gray-600'
+    const color = licenseColors[license as keyof typeof licenseColors] || 'bg-secondary'
 
     return (
-      <Badge className={`${color} text-white`}>
+      <Badge className={`${color} text-foreground`}>
         {license}
       </Badge>
     )
@@ -124,9 +124,9 @@ export function LicenseInfo() {
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-card border-border">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <Shield className="h-5 w-5" />
           Información de Licencias
         </CardTitle>
@@ -134,7 +134,7 @@ export function LicenseInfo() {
           onClick={generateLicenseReport}
           size="sm"
           variant="outline"
-          className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+          className="border-brand text-brand hover:bg-brand hover:text-white"
         >
           <Download className="h-4 w-4 mr-2" />
           Generar Reporte
@@ -143,16 +143,16 @@ export function LicenseInfo() {
       <CardContent>
         <div className="space-y-4">
           {licenses.map((license, index) => (
-            <div key={index} className="p-4 rounded-lg bg-gray-700/50 border border-gray-600">
+            <div key={index} className="p-4 rounded-lg bg-secondary/50 border border-border">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h4 className="text-white font-semibold">{license.name}</h4>
-                    <Badge variant="outline" className="border-gray-500 text-gray-300">
+                    <h4 className="text-foreground font-semibold">{license.name}</h4>
+                    <Badge variant="outline" className="border-border text-muted-foreground">
                       v{license.version}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-400 mb-2">
+                  <p className="text-sm text-muted-foreground mb-2">
                     {license.description}
                   </p>
                 </div>
@@ -163,7 +163,7 @@ export function LicenseInfo() {
               </div>
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <FileText className="h-4 w-4" />
                   <span>Licencia: {license.license}</span>
                 </div>
@@ -171,7 +171,7 @@ export function LicenseInfo() {
                   size="sm"
                   variant="outline"
                   onClick={() => window.open(license.url, '_blank')}
-                  className="border-gray-600 hover:bg-gray-700"
+                  className="border-border hover:bg-secondary"
                 >
                   <ExternalLink className="h-4 w-4 mr-1" />
                   Ver Licencia
@@ -182,12 +182,12 @@ export function LicenseInfo() {
         </div>
 
         {/* Resumen de Licencias */}
-        <div className="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+        <div className="mt-6 p-4 rounded-lg bg-brand/10 border border-brand/30">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="h-5 w-5 text-blue-400" />
-            <h4 className="text-white font-semibold">Resumen de Cumplimiento</h4>
+            <Shield className="h-5 w-5 text-brand" />
+            <h4 className="text-foreground font-semibold">Resumen de Cumplimiento</h4>
           </div>
-          <p className="text-sm text-gray-300 mb-3">
+          <p className="text-sm text-muted-foreground mb-3">
             Todas las dependencias utilizadas en este proyecto cumplen con licencias de código abierto compatibles. 
             El sistema está en pleno cumplimiento con las obligaciones de licencia.
           </p>
@@ -196,7 +196,7 @@ export function LicenseInfo() {
               <CheckCircle className="h-4 w-4" />
               <span>{licenses.filter(l => l.status === 'Activa').length} Licencias Activas</span>
             </div>
-            <div className="flex items-center gap-1 text-blue-400">
+            <div className="flex items-center gap-1 text-brand">
               <FileText className="h-4 w-4" />
               <span>{licenses.length} Total de Componentes</span>
             </div>

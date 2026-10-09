@@ -61,7 +61,7 @@ export function ChangelogInfo() {
   const getVersionBadge = (type: string) => {
     const typeConfig = {
       release: { color: 'bg-green-600', text: 'Release' },
-      beta: { color: 'bg-blue-600', text: 'Beta' },
+      beta: { color: 'bg-brand', text: 'Beta' },
       alpha: { color: 'bg-orange-600', text: 'Alpha' },
       hotfix: { color: 'bg-red-600', text: 'Hotfix' }
     }
@@ -69,7 +69,7 @@ export function ChangelogInfo() {
     const config = typeConfig[type as keyof typeof typeConfig] || typeConfig.release
 
     return (
-      <Badge className={`${config.color} text-white`}>
+      <Badge className={`${config.color} text-foreground`}>
         {config.text}
       </Badge>
     )
@@ -79,7 +79,7 @@ export function ChangelogInfo() {
     const iconConfig = {
       feature: { icon: Plus, color: 'text-green-400' },
       fix: { icon: Bug, color: 'text-red-400' },
-      improvement: { icon: Wrench, color: 'text-blue-400' },
+      improvement: { icon: Wrench, color: 'text-brand' },
       security: { icon: Shield, color: 'text-purple-400' }
     }
 
@@ -101,9 +101,9 @@ export function ChangelogInfo() {
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <GitBranch className="h-5 w-5" />
           Historial de Cambios
         </CardTitle>
@@ -114,39 +114,39 @@ export function ChangelogInfo() {
             <div key={index} className="relative">
               {/* Línea de tiempo */}
               {index < changelog.length - 1 && (
-                <div className="absolute left-6 top-12 bottom-0 w-px bg-gray-600" />
+                <div className="absolute left-6 top-12 bottom-0 w-px bg-secondary" />
               )}
               
               <div className="flex items-start gap-4">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-brand text-white">
                   <Tag className="h-6 w-6" />
                 </div>
                 
                 <div className="flex-1 pb-6">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-bold text-white">v{release.version}</h3>
+                    <h3 className="text-xl font-bold text-foreground">v{release.version}</h3>
                     {getVersionBadge(release.type)}
-                    <div className="flex items-center gap-1 text-sm text-gray-400">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       {release.date}
                     </div>
                   </div>
                   
-                  <h4 className="text-lg font-semibold text-gray-300 mb-4">
+                  <h4 className="text-lg font-semibold text-muted-foreground mb-4">
                     {release.title}
                   </h4>
                   
                   <div className="space-y-2">
                     {release.changes.map((change, changeIndex) => (
-                      <div key={changeIndex} className="flex items-start gap-3 p-2 rounded-lg bg-gray-700/30">
+                      <div key={changeIndex} className="flex items-start gap-3 p-2 rounded-lg bg-secondary/30">
                         {getChangeIcon(change.type)}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-gray-400">
+                            <span className="text-sm font-medium text-muted-foreground">
                               {getChangeTypeText(change.type)}
                             </span>
                           </div>
-                          <p className="text-white">{change.text}</p>
+                          <p className="text-foreground">{change.text}</p>
                         </div>
                       </div>
                     ))}
@@ -158,12 +158,12 @@ export function ChangelogInfo() {
         </div>
         
         {/* Información adicional */}
-        <div className="mt-8 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+        <div className="mt-8 p-4 rounded-lg bg-brand/10 border border-brand/30">
           <div className="flex items-center gap-2 mb-2">
-            <GitBranch className="h-5 w-5 text-blue-400" />
-            <h4 className="text-white font-semibold">Próximas Actualizaciones</h4>
+            <GitBranch className="h-5 w-5 text-brand" />
+            <h4 className="text-foreground font-semibold">Próximas Actualizaciones</h4>
           </div>
-          <p className="text-sm text-gray-300 mb-3">
+          <p className="text-sm text-muted-foreground mb-3">
             Estamos trabajando constantemente en nuevas funcionalidades y mejoras. 
             Mantente al día con las últimas actualizaciones.
           </p>
@@ -172,7 +172,7 @@ export function ChangelogInfo() {
               <Plus className="h-4 w-4" />
               <span>Nuevas funcionalidades en desarrollo</span>
             </div>
-            <div className="flex items-center gap-1 text-blue-400">
+            <div className="flex items-center gap-1 text-brand">
               <Wrench className="h-4 w-4" />
               <span>Mejoras continuas de rendimiento</span>
             </div>

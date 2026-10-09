@@ -172,22 +172,22 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
         <StatCard icon={X} color="gray" label="Sin plan" value={stats.noPlan} />
       </div>
 
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-3 space-y-0">
-          <CardTitle className="text-white">Clientes y pagos</CardTitle>
+          <CardTitle className="text-foreground">Clientes y pagos</CardTitle>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar cliente o email..."
-              className="bg-gray-700 border-gray-600 text-white pl-10 w-full md:w-64"
+              className="bg-secondary border-border text-foreground pl-10 w-full md:w-64"
             />
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap items-center mb-2">
-            <span className="text-xs text-gray-400 uppercase tracking-wide mr-1">Estado:</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wide mr-1">Estado:</span>
             {[
               { key: 'all' as const, label: 'Todos', count: enriched.length },
               { key: 'trial' as const, label: 'En prueba', count: stats.trial },
@@ -203,8 +203,8 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
                 onClick={() => setFilter(f.key)}
                 className={
                   filter === f.key
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'border-gray-600 hover:bg-gray-700 text-gray-300'
+                    ? 'bg-brand hover:bg-brand'
+                    : 'border-border hover:bg-secondary text-muted-foreground'
                 }
               >
                 {f.label} ({f.count})
@@ -213,7 +213,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
           </div>
 
           <div className="flex gap-2 flex-wrap items-center mb-4">
-            <span className="text-xs text-gray-400 uppercase tracking-wide mr-1">Plan:</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wide mr-1">Plan:</span>
             {[
               { key: 'all' as const, label: 'Todos', count: enriched.length },
               { key: 'monthly' as const, label: 'Mensuales', count: stats.monthly },
@@ -226,8 +226,8 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
                 onClick={() => setIntervalFilter(f.key)}
                 className={
                   intervalFilter === f.key
-                    ? 'bg-cyan-600 hover:bg-cyan-700'
-                    : 'border-gray-600 hover:bg-gray-700 text-gray-300'
+                    ? 'bg-brand hover:bg-brand'
+                    : 'border-border hover:bg-secondary text-muted-foreground'
                 }
               >
                 {f.label} ({f.count})
@@ -236,7 +236,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
           </div>
 
           {filtered.length === 0 ? (
-            <p className="text-center text-gray-400 py-12">
+            <p className="text-center text-muted-foreground py-12">
               {clients.length === 0
                 ? 'No hay clientes registrados todavía.'
                 : 'Ningún cliente coincide con los filtros.'}
@@ -245,7 +245,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                  <tr className="text-left text-muted-foreground border-b border-border">
                     <th className="px-4 py-2 font-medium">Cliente</th>
                     <th className="px-4 py-2 font-medium">Plan</th>
                     <th className="px-4 py-2 font-medium">Estado</th>
@@ -306,8 +306,8 @@ function StatCard({
     red: 'border-red-500/30 bg-red-500/10 text-red-400',
     orange: 'border-orange-500/30 bg-orange-500/10 text-orange-400',
     green: 'border-green-500/30 bg-green-500/10 text-green-400',
-    gray: 'border-gray-500/30 bg-gray-500/10 text-gray-400',
-    cyan: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
+    gray: 'border-border/30 bg-secondary/10 text-muted-foreground',
+    cyan: 'border-brand/30 bg-brand/10 text-brand',
   }
   return (
     <div className={`p-4 rounded-xl border ${colors[color]}`}>

@@ -25,7 +25,7 @@ export function SupportInfo() {
       responseTime: '24 horas',
       availability: '24/7',
       icon: Mail,
-      color: 'text-blue-400',
+      color: 'text-brand',
       action: () => window.open('mailto:soporte@ipstream.com', '_blank')
     },
     {
@@ -66,7 +66,7 @@ export function SupportInfo() {
       description: 'Guía completa para desarrolladores',
       url: 'https://docs.ipstream.com/api',
       icon: FileText,
-      color: 'text-blue-400'
+      color: 'text-brand'
     },
     {
       title: 'Tutoriales en Video',
@@ -95,29 +95,29 @@ export function SupportInfo() {
     if (availability === '24/7') {
       return <Badge className="bg-green-600 text-white">24/7</Badge>
     } else {
-      return <Badge className="bg-blue-600 text-white">{availability}</Badge>
+      return <Badge className="bg-brand text-white">{availability}</Badge>
     }
   }
 
   const getResponseTimeBadge = (time: string) => {
     const colors = {
       'Inmediato': 'bg-green-600',
-      '5 minutos': 'bg-blue-600',
+      '5 minutos': 'bg-brand',
       '24 horas': 'bg-orange-600',
       'Autoservicio': 'bg-purple-600'
     }
 
-    const color = colors[time as keyof typeof colors] || 'bg-gray-600'
+    const color = colors[time as keyof typeof colors] || 'bg-secondary'
 
-    return <Badge className={`${color} text-white`}>{time}</Badge>
+    return <Badge className={`${color} text-foreground`}>{time}</Badge>
   }
 
   return (
     <div className="space-y-6">
       {/* Canales de Soporte */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Headphones className="h-5 w-5" />
             Canales de Soporte
           </CardTitle>
@@ -127,29 +127,29 @@ export function SupportInfo() {
             {supportChannels.map((channel, index) => {
               const Icon = channel.icon
               return (
-                <div key={index} className="p-4 rounded-lg bg-gray-700/50 border border-gray-600">
+                <div key={index} className="p-4 rounded-lg bg-secondary/50 border border-border">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1">
                       <Icon className={`h-6 w-6 ${channel.color} mt-1`} />
                       <div className="flex-1">
-                        <h4 className="text-white font-semibold mb-1">{channel.name}</h4>
-                        <p className="text-sm text-gray-400 mb-3">{channel.description}</p>
+                        <h4 className="text-foreground font-semibold mb-1">{channel.name}</h4>
+                        <p className="text-sm text-muted-foreground mb-3">{channel.description}</p>
                         
                         <div className="flex items-center gap-4 text-sm mb-3">
-                          <div className="flex items-center gap-1 text-gray-300">
+                          <div className="flex items-center gap-1 text-muted-foreground">
                             <span className="font-medium">Contacto:</span>
-                            <span className="text-blue-400">{channel.contact}</span>
+                            <span className="text-brand">{channel.contact}</span>
                           </div>
                         </div>
                         
                         <div className="flex items-center gap-3 flex-wrap">
                           <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-400">Respuesta:</span>
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Respuesta:</span>
                             {getResponseTimeBadge(channel.responseTime)}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-400">Disponibilidad:</span>
+                            <span className="text-sm text-muted-foreground">Disponibilidad:</span>
                             {getAvailabilityBadge(channel.availability)}
                           </div>
                         </div>
@@ -159,7 +159,7 @@ export function SupportInfo() {
                     <Button
                       onClick={channel.action}
                       size="sm"
-                      className="bg-blue-600 hover:bg-blue-700"
+                      className="bg-brand hover:bg-brand"
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Contactar
@@ -173,9 +173,9 @@ export function SupportInfo() {
       </Card>
 
       {/* Recursos Adicionales */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Book className="h-5 w-5" />
             Recursos Adicionales
           </CardTitle>
@@ -185,12 +185,12 @@ export function SupportInfo() {
             {resources.map((resource, index) => {
               const Icon = resource.icon
               return (
-                <div key={index} className="p-4 rounded-lg bg-gray-700/50 border border-gray-600">
+                <div key={index} className="p-4 rounded-lg bg-secondary/50 border border-border">
                   <div className="flex items-start gap-3 mb-3">
                     <Icon className={`h-5 w-5 ${resource.color} mt-1`} />
                     <div className="flex-1">
-                      <h4 className="text-white font-semibold mb-1">{resource.title}</h4>
-                      <p className="text-sm text-gray-400">{resource.description}</p>
+                      <h4 className="text-foreground font-semibold mb-1">{resource.title}</h4>
+                      <p className="text-sm text-muted-foreground">{resource.description}</p>
                     </div>
                   </div>
                   
@@ -198,7 +198,7 @@ export function SupportInfo() {
                     onClick={() => window.open(resource.url, '_blank')}
                     size="sm"
                     variant="outline"
-                    className="w-full border-gray-600 hover:bg-gray-700"
+                    className="w-full border-border hover:bg-secondary"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Acceder
@@ -213,26 +213,26 @@ export function SupportInfo() {
       {/* Información de Contacto de Emergencia */}
       <Card className="bg-red-500/10 border-red-500/30">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Phone className="h-5 w-5 text-red-400" />
             Contacto de Emergencia
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <p className="text-gray-300">
+            <p className="text-muted-foreground">
               Para problemas críticos que afecten la operación del sistema fuera del horario laboral:
             </p>
             
             <div className="flex items-center gap-4 p-3 rounded-lg bg-red-500/20">
               <Phone className="h-5 w-5 text-red-400" />
               <div>
-                <p className="text-white font-semibold">Línea de Emergencia 24/7</p>
+                <p className="text-foreground font-semibold">Línea de Emergencia 24/7</p>
                 <p className="text-red-400 font-mono">+1 (555) 911-HELP</p>
               </div>
             </div>
             
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               * Solo para emergencias críticas que afecten la disponibilidad del servicio
             </p>
           </div>

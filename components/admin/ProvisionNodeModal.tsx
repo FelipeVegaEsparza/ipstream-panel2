@@ -91,10 +91,10 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
           aria-label="Cerrar"
         >
           <X className="h-5 w-5" />
@@ -106,12 +106,12 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
               <Rocket className="h-5 w-5 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Provisionar nodo de streaming</h3>
-              <p className="text-sm text-gray-400 mt-0.5">El panel configura el VPS nuevo automáticamente por SSH</p>
+              <h3 className="text-xl font-bold text-foreground">Provisionar nodo de streaming</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">El panel configura el VPS nuevo automáticamente por SSH</p>
             </div>
           </div>
 
-          <div className="flex items-start gap-2 text-xs text-cyan-300/90 bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3">
+          <div className="flex items-start gap-2 text-xs text-brand/90 bg-brand/10 border border-brand/30 rounded-lg p-3">
             <Rocket className="h-4 w-4 mt-0.5 shrink-0" />
             <span>
               Se instalará Docker, se subirá el código, se escribirá el .env y se levantará el stack.
@@ -163,7 +163,7 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
             {form.sshAuthType === 'key' ? (
               <div className="form-group">
                 <label className="form-label flex items-center gap-1">
-                  <KeyRound className="h-3.5 w-3.5 text-gray-400" /> Clave privada SSH
+                  <KeyRound className="h-3.5 w-3.5 text-muted-foreground" /> Clave privada SSH
                 </label>
                 <textarea
                   className="form-textarea font-mono text-xs h-32"
@@ -171,12 +171,12 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
                   onChange={(e) => set('sshPrivateKey', e.target.value)}
                   placeholder={`-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----`}
                 />
-                <p className="text-xs text-gray-400 mt-1">Sin passphrase (SSH no puede pedirla interactivamente)</p>
+                <p className="text-xs text-muted-foreground mt-1">Sin passphrase (SSH no puede pedirla interactivamente)</p>
               </div>
             ) : (
               <div className="form-group">
                 <label className="form-label flex items-center gap-1">
-                  <Lock className="h-3.5 w-3.5 text-gray-400" /> Password SSH
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" /> Password SSH
                 </label>
                 <input className="form-input" type="password" value={form.sshPassword} onChange={(e) => set('sshPassword', e.target.value)} />
               </div>

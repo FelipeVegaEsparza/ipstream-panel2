@@ -110,7 +110,7 @@ export function EmailComposer() {
         <label className="form-label">Destinatarios</label>
         <div className="flex gap-4 mb-3">
           {(['single', 'selected', 'all'] as const).map((t) => (
-            <label key={t} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <label key={t} className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
               <input type="radio" checked={recipientType === t} onChange={() => setRecipientType(t)} className="accent-cyan-500" />
               {t === 'single' ? 'Un cliente' : t === 'selected' ? 'Varios' : 'Todos'}
             </label>
@@ -125,9 +125,9 @@ export function EmailComposer() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-700 divide-y divide-gray-700/60">
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-border divide-y divide-border/60">
               {filtered.map((c) => (
-                <label key={c.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-700/40">
+                <label key={c.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-secondary/40">
                   <input
                     type="checkbox"
                     checked={selected.includes(c.id)}
@@ -135,14 +135,14 @@ export function EmailComposer() {
                     className="accent-cyan-500"
                   />
                   <div className="min-w-0">
-                    <p className="text-sm text-white truncate">{c.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{c.email}</p>
+                    <p className="text-sm text-foreground truncate">{c.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{c.email}</p>
                   </div>
                 </label>
               ))}
-              {filtered.length === 0 && <p className="p-3 text-sm text-gray-500">Sin resultados</p>}
+              {filtered.length === 0 && <p className="p-3 text-sm text-muted-foreground">Sin resultados</p>}
             </div>
-            <p className="text-xs text-gray-500 mt-1">{selected.length} seleccionado{selected.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-muted-foreground mt-1">{selected.length} seleccionado{selected.length !== 1 ? 's' : ''}</p>
           </>
         )}
       </div>
@@ -175,9 +175,9 @@ export function EmailComposer() {
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+      <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
         <input type="checkbox" checked={attachBoleta} onChange={(e) => setAttachBoleta(e.target.checked)} className="accent-cyan-500" />
-        <Paperclip className="h-4 w-4 text-cyan-400" /> Adjuntar boleta (PDF de la cuenta del mes) de cada destinatario
+        <Paperclip className="h-4 w-4 text-brand" /> Adjuntar boleta (PDF de la cuenta del mes) de cada destinatario
       </label>
 
       <div className="flex flex-wrap gap-3 pt-2">

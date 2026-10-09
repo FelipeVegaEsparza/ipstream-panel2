@@ -75,10 +75,10 @@ export function AsignarPlanModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 max-w-lg w-full">
+      <div className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-lg w-full">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
           aria-label="Cerrar"
         >
           <X className="h-5 w-5" />
@@ -86,14 +86,14 @@ export function AsignarPlanModal({
 
         <div className="p-6 space-y-5">
           <div>
-            <h3 className="text-xl font-bold text-white">Asignar plan</h3>
-            <p className="text-sm text-gray-400 mt-1">
-              Cliente: <span className="text-white font-medium">{clientName}</span>
+            <h3 className="text-xl font-bold text-foreground">Asignar plan</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Cliente: <span className="text-foreground font-medium">{clientName}</span>
             </p>
           </div>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-2">Plan *</label>
+            <label className="text-sm text-muted-foreground block mb-2">Plan *</label>
             <div className="space-y-2">
               {plans.map((plan) => {
                 const isCurrent = plan.id === currentPlanId
@@ -102,8 +102,8 @@ export function AsignarPlanModal({
                     key={plan.id}
                     className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                       planId === plan.id
-                        ? 'border-cyan-500 bg-cyan-500/10'
-                        : 'border-gray-600 bg-gray-700/40 hover:bg-gray-700/60'
+                        ? 'border-brand bg-brand/10'
+                        : 'border-border bg-secondary/40 hover:bg-secondary/60'
                     }`}
                   >
                     <input
@@ -116,20 +116,20 @@ export function AsignarPlanModal({
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-medium">{plan.name}</span>
+                        <span className="text-foreground font-medium">{plan.name}</span>
                         {isCurrent && (
                           <span className="text-xs px-2 py-0.5 rounded bg-green-600 text-white">
                             Actual
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400">{plan.description}</p>
+                      <p className="text-xs text-muted-foreground">{plan.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-cyan-400 font-bold">
+                      <p className="text-brand font-bold">
                         {formatCurrency(plan.price, plan.currency)}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         /{plan.interval === 'monthly' ? 'mes' : 'año'}
                       </p>
                     </div>
@@ -145,14 +145,14 @@ export function AsignarPlanModal({
           </div>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Fecha de inicio *</label>
+            <label className="text-sm text-muted-foreground block mb-1">Fecha de inicio *</label>
             <Input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-secondary border-border text-foreground"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               La suscripción y los pagos mensuales se generarán a partir de esta fecha.
             </p>
           </div>
@@ -168,7 +168,7 @@ export function AsignarPlanModal({
               type="button"
               onClick={onClose}
               variant="outline"
-              className="flex-1 border-gray-600 hover:bg-gray-700"
+              className="flex-1 border-border hover:bg-secondary"
               disabled={loading}
             >
               Cancelar
@@ -176,7 +176,7 @@ export function AsignarPlanModal({
             <Button
               type="button"
               onClick={handleSubmit}
-              className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+              className="flex-1 bg-brand hover:bg-brand"
               disabled={loading || plans.length === 0}
             >
               {loading ? 'Asignando...' : 'Asignar plan'}
