@@ -16,10 +16,10 @@
 
 ## 3. Shell + Dashboard
 
-- [ ] 3.1 Reestilizar `components/dashboard/Sidebar.tsx` (marca con logo, ítems con iconos/estados, badge de "Primeros pasos", tarjeta "Al aire") usando tokens; verificar navegación (links activos, submenús, badges, mobile).
-- [ ] 3.2 Reestilizar `components/dashboard/Header.tsx` y `DashboardLayoutClient.tsx` (buscador, campana, usuario, breadcrumb); verificar que los botones/enlaces siguen funcionando.
-- [ ] 3.3 Reestilizar la pantalla `app/dashboard/page.tsx` (onboarding, `DashboardOverviewCards`, tarjetas de stats) hacia el layout de la maqueta; verificar que el progreso de "Primeros pasos" y los datos se muestran igual.
-- [ ] 3.4 **Guardrail** Fase 3: diff solo-estilos + smoke test (login, dashboard, navegar a 2-3 secciones, abrir un modal).
+- [x] 3.1 Reestilizar `components/dashboard/Sidebar.tsx` (marca con logo, ítems con iconos/estados, badge de "Primeros pasos", tarjeta "Al aire") usando tokens; verificar navegación (links activos, submenús, badges, mobile).
+- [x] 3.2 Reestilizar `components/dashboard/Header.tsx` y `DashboardLayoutClient.tsx` (buscador, campana, usuario, breadcrumb); verificar que los botones/enlaces siguen funcionando.
+- [x] 3.3 Reestilizar la pantalla `app/dashboard/page.tsx` (onboarding, `DashboardOverviewCards`, tarjetas de stats) hacia el layout de la maqueta; verificar que el progreso de "Primeros pasos" y los datos se muestran igual.
+- [x] 3.4 **Guardrail** Fase 3: diff solo-estilos + smoke test (login, dashboard, navegar a 2-3 secciones, abrir un modal).
 
 ## 4. Secciones del dashboard
 
