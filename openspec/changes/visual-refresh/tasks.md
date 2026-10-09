@@ -30,12 +30,12 @@
 
 ## 5. Admin
 
-- [ ] 5.1 Migrar `app/admin/**` y `components/admin/**` (planes, usuarios/dominios, servidores, ajustes) a tokens; verificar que las acciones de admin siguen funcionando (crear/editar/eliminar, "Proveer", DNS base).
-- [ ] 5.2 **Guardrail** Fase 5: diff solo-estilos + smoke test (editar plan, registrar/enlazar dominio, abrir nodos).
+- [x] 5.1 Migrar `app/admin/**` y `components/admin/**` (planes, usuarios/dominios, servidores, ajustes) a tokens; verificar que las acciones de admin siguen funcionando (crear/editar/eliminar, "Proveer", DNS base).
+- [x] 5.2 **Guardrail** Fase 5: diff solo-estilos + smoke test (editar plan, registrar/enlazar dominio, abrir nodos).
 
 ## 6. Público (opcional, separable)
 
-- [ ] 6.1 Migrar `app/registro`, `app/planes`, `app/auth/**` y `SignupForm` a tokens; verificar que el registro (incluido el campo de radio + chequeo de subdominio) sigue funcionando.
+- [x] 6.1 Migrar `app/registro`, `app/planes`, `app/auth/**` y `SignupForm` a tokens; verificar que el registro (incluido el campo de radio + chequeo de subdominio) sigue funcionando.
 
 ## 7. Limpieza y verificación final
 
