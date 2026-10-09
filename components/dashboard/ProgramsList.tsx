@@ -54,15 +54,15 @@ export function ProgramsList({ programs }: ProgramsListProps) {
   if (programs.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-muted mb-4">
+        <div className="text-muted-foreground mb-4">
           <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-primary mb-2">
+        <h3 className="text-lg font-medium text-foreground mb-2">
           No hay programas
         </h3>
-        <p className="text-secondary mb-4">
+        <p className="text-muted-foreground mb-4">
           Comienza agregando tu primer programa de radio
         </p>
         <Link href="/dashboard/programs/new" className="btn-primary">
@@ -92,21 +92,21 @@ export function ProgramsList({ programs }: ProgramsListProps) {
             )}
             
             <div className="space-y-3">
-              <h3 className="text-lg font-bold text-primary">
+              <h3 className="text-lg font-bold text-foreground">
                 {program.name}
               </h3>
               
-              <p className="text-secondary text-sm line-clamp-3">
+              <p className="text-muted-foreground text-sm line-clamp-3">
                 {program.description}
               </p>
               
-              <div className="text-sm text-secondary space-y-1">
+              <div className="text-sm text-muted-foreground space-y-1">
                 <div className="flex items-center">
-                  <span className="font-semibold text-accent mr-2">Horario:</span>
+                  <span className="font-semibold text-brand mr-2">Horario:</span>
                   <span>{formatTime(program.startTime)} - {formatTime(program.endTime)}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="font-semibold text-accent mr-2">Días:</span>
+                  <span className="font-semibold text-brand mr-2">Días:</span>
                   <span>{formatWeekDays(weekDays)}</span>
                 </div>
               </div>

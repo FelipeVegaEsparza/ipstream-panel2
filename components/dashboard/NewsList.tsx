@@ -63,15 +63,15 @@ export function NewsList({ news }: NewsListProps) {
   if (news.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-muted mb-4">
+        <div className="text-muted-foreground mb-4">
           <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-primary mb-2">
+        <h3 className="text-lg font-medium text-foreground mb-2">
           No hay noticias
         </h3>
-        <p className="text-secondary mb-4">
+        <p className="text-muted-foreground mb-4">
           Comienza publicando tu primera noticia
         </p>
         <Link href="/dashboard/news/new" className="btn-primary">
@@ -101,15 +101,15 @@ export function NewsList({ news }: NewsListProps) {
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-primary mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2">
                     {item.name}
                   </h3>
-                  <p className="text-secondary text-sm mb-2 line-clamp-2">
+                  <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
                     {item.shortText}
                   </p>
-                  <div className="flex items-center text-sm text-muted space-x-4">
-                    <span><span className="font-semibold text-accent">Publicado:</span> {formatDate(item.createdAt)}</span>
-                    <span><span className="font-semibold text-accent">Slug:</span> <code className="bg-secondary text-brand px-2 py-1 rounded text-xs">{item.slug}</code></span>
+                  <div className="flex items-center text-sm text-muted-foreground space-x-4">
+                    <span><span className="font-semibold text-brand">Publicado:</span> {formatDate(item.createdAt)}</span>
+                    <span><span className="font-semibold text-brand">Slug:</span> <code className="bg-secondary text-brand px-2 py-1 rounded text-xs">{item.slug}</code></span>
                   </div>
                 </div>
                 
@@ -143,7 +143,7 @@ export function NewsList({ news }: NewsListProps) {
                 </div>
               </div>
               
-              <div className="text-sm text-secondary line-clamp-3">
+              <div className="text-sm text-muted-foreground line-clamp-3">
                 {item.longText.substring(0, 200)}...
               </div>
             </div>

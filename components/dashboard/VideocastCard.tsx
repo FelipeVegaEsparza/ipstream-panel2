@@ -150,10 +150,10 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
           <div className="card max-w-md mx-4">
             <div className="text-center">
               <div className="text-4xl mb-4">🗑️</div>
-              <h3 className="text-lg font-bold text-primary mb-2">
+              <h3 className="text-lg font-bold text-foreground mb-2">
                 ¿Eliminar episodio?
               </h3>
-              <p className="text-secondary mb-6">
+              <p className="text-muted-foreground mb-6">
                 Esta acción no se puede deshacer. El episodio "{videocast.title}" será eliminado permanentemente.
               </p>
               <div className="flex space-x-3">

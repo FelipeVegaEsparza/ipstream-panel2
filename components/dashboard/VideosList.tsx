@@ -98,15 +98,15 @@ export function VideosList({ videos }: VideosListProps) {
   if (videos.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-muted mb-4">
+        <div className="text-muted-foreground mb-4">
           <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-primary mb-2">
+        <h3 className="text-lg font-medium text-foreground mb-2">
           No hay videos
         </h3>
-        <p className="text-secondary mb-4">
+        <p className="text-muted-foreground mb-4">
           Comienza agregando tu primer video al ranking
         </p>
         <Link href="/dashboard/videos/new" className="btn-primary">
@@ -125,7 +125,7 @@ export function VideosList({ videos }: VideosListProps) {
           <div key={video.id} className="card">
             <div className="flex gap-4">
               {/* Ranking Number */}
-              <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-brand/20 text-accent rounded-full font-bold text-lg border border-brand/30">
+              <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-brand/20 text-brand rounded-full font-bold text-lg border border-brand/30">
                 #{video.order}
               </div>
 
@@ -144,7 +144,7 @@ export function VideosList({ videos }: VideosListProps) {
                   </div>
                 ) : (
                   <div className="w-32 h-20 bg-secondary rounded-lg flex items-center justify-center">
-                    <PlayIcon className="h-8 w-8 text-muted" />
+                    <PlayIcon className="h-8 w-8 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -152,7 +152,7 @@ export function VideosList({ videos }: VideosListProps) {
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-bold text-primary">
+                  <h3 className="text-lg font-bold text-foreground">
                     {video.name}
                   </h3>
                   
@@ -161,7 +161,7 @@ export function VideosList({ videos }: VideosListProps) {
                     <button
                       onClick={() => handleReorder(video.id, 'up')}
                       disabled={index === 0 || loading === video.id}
-                      className="p-1 text-secondary hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="p-1 text-muted-foreground hover:text-brand disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       title="Subir en el ranking"
                     >
                       <ArrowUpIcon className="h-4 w-4" />
@@ -169,7 +169,7 @@ export function VideosList({ videos }: VideosListProps) {
                     <button
                       onClick={() => handleReorder(video.id, 'down')}
                       disabled={index === videos.length - 1 || loading === video.id}
-                      className="p-1 text-secondary hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="p-1 text-muted-foreground hover:text-brand disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       title="Bajar en el ranking"
                     >
                       <ArrowDownIcon className="h-4 w-4" />
@@ -198,16 +198,16 @@ export function VideosList({ videos }: VideosListProps) {
                   </div>
                 </div>
                 
-                <p className="text-secondary text-sm mb-2 line-clamp-2">
+                <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
                   {video.description}
                 </p>
                 
-                <div className="flex items-center justify-between text-sm text-muted">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <a
                     href={video.videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-accent hover:text-brand truncate max-w-xs transition-colors"
+                    className="text-brand hover:text-brand truncate max-w-xs transition-colors"
                   >
                     {video.videoUrl}
                   </a>

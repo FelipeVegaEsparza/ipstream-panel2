@@ -57,13 +57,13 @@ export function GenericNewsSelector({ useGenericNews, selectedCategories, allCat
     <div className="card p-4 space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
-          <p className="font-semibold text-primary">Noticias desde IpStream</p>
-          <p className="text-sm text-muted mt-1">
+          <p className="font-semibold text-foreground">Noticias desde IpStream</p>
+          <p className="text-sm text-muted-foreground mt-1">
             {enabled
               ? 'Mostrando noticias proporcionadas por el sistema'
               : 'Usando tus propias noticias'}
           </p>
-          <p className="text-xs text-muted mt-2 leading-relaxed">
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
             Al activar esta opción, tu sitio web mostrará las noticias publicadas desde IpStream
             en lugar de las que crees aquí. Podrás elegir qué categorías de noticias genéricas
             deseas mostrar a tu audiencia.
@@ -86,7 +86,7 @@ export function GenericNewsSelector({ useGenericNews, selectedCategories, allCat
 
       {enabled && allCategories.length > 0 && (
         <div>
-          <p className="text-sm font-medium text-primary mb-2">
+          <p className="text-sm font-medium text-foreground mb-2">
             Selecciona las categorías a mostrar:
           </p>
           <div className="flex flex-wrap gap-3">

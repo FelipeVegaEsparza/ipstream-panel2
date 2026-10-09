@@ -28,8 +28,8 @@ export default async function GcBarPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Barra GC</h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="text-2xl font-bold text-foreground">Barra GC</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Administra los mensajes o frases de la Barra GC. Se exponen por la API pública de tu sitio.
         </p>
       </div>

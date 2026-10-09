@@ -78,15 +78,15 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
   if (sponsors.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-muted mb-4">
+        <div className="text-muted-foreground mb-4">
           <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-primary mb-2">
+        <h3 className="text-lg font-medium text-foreground mb-2">
           No hay auspiciadores
         </h3>
-        <p className="text-secondary mb-4">
+        <p className="text-muted-foreground mb-4">
           Comienza agregando tu primer auspiciador
         </p>
         <Link href="/dashboard/sponsors/new" className="btn-primary">
@@ -115,7 +115,7 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                 />
               ) : (
                 <div className="h-20 w-32 bg-secondary rounded-lg flex items-center justify-center">
-                  <span className="text-muted text-sm">Sin logo</span>
+                  <span className="text-muted-foreground text-sm">Sin logo</span>
                 </div>
               )}
             </div>
@@ -123,18 +123,18 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
             {/* Content */}
             <div className="space-y-3">
               <div className="text-center">
-                <h3 className="text-lg font-bold text-primary">
+                <h3 className="text-lg font-bold text-foreground">
                   {sponsor.name}
                 </h3>
                 {sponsor.address && (
-                  <div className="flex items-center justify-center text-sm text-secondary mt-1">
+                  <div className="flex items-center justify-center text-sm text-muted-foreground mt-1">
                     <MapPinIcon className="h-4 w-4 mr-1" />
                     {sponsor.address}
                   </div>
                 )}
               </div>
               
-              <p className="text-secondary text-sm line-clamp-3 text-center">
+              <p className="text-muted-foreground text-sm line-clamp-3 text-center">
                 {sponsor.description}
               </p>
 
@@ -168,7 +168,7 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                     href={sponsor.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-accent hover:text-brand transition-colors"
+                    className="inline-flex items-center text-sm text-brand hover:text-brand transition-colors"
                   >
                     <GlobeAltIcon className="h-4 w-4 mr-1" />
                     Sitio Web
@@ -176,7 +176,7 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                 </div>
               )}
 
-              <div className="text-center text-xs text-muted">
+              <div className="text-center text-xs text-muted-foreground">
                 Agregado: {formatDate(sponsor.createdAt)}
               </div>
               

@@ -67,13 +67,13 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
   if (galleries.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-muted mb-4">
+        <div className="text-muted-foreground mb-4">
           <PhotoIcon className="mx-auto h-12 w-12" />
         </div>
-        <h3 className="text-lg font-medium text-primary mb-2">
+        <h3 className="text-lg font-medium text-foreground mb-2">
           No hay galerías
         </h3>
-        <p className="text-secondary mb-4">
+        <p className="text-muted-foreground mb-4">
           Comienza creando tu primera galería de imágenes
         </p>
         <Link href="/dashboard/galleries/new" className="btn-primary">
@@ -113,10 +113,10 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
             {/* Content */}
             <div className="space-y-3">
               <div>
-                <h3 className="text-lg font-bold text-primary mb-1">
+                <h3 className="text-lg font-bold text-foreground mb-1">
                   {gallery.title}
                 </h3>
-                <p className="text-secondary text-sm line-clamp-2">
+                <p className="text-muted-foreground text-sm line-clamp-2">
                   {gallery.description}
                 </p>
               </div>
@@ -146,7 +146,7 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
                 </div>
               )}
 
-              <div className="text-xs text-muted">
+              <div className="text-xs text-muted-foreground">
                 Creado: {formatDate(gallery.createdAt)}
               </div>
 

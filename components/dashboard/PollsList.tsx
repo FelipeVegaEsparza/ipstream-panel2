@@ -69,9 +69,9 @@ export function PollsList({ polls }: PollsListProps) {
   if (polls.length === 0) {
     return (
       <div className="text-center py-12">
-        <ChartBarIcon className="mx-auto h-12 w-12 text-muted mb-4" />
-        <h3 className="text-lg font-medium text-primary mb-2">No hay encuestas</h3>
-        <p className="text-secondary mb-4">Crea tu primera encuesta para los oyentes</p>
+        <ChartBarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium text-foreground mb-2">No hay encuestas</h3>
+        <p className="text-muted-foreground mb-4">Crea tu primera encuesta para los oyentes</p>
         <Link href="/dashboard/polls/new" className="btn-primary">Crear Encuesta</Link>
       </div>
     )
@@ -84,7 +84,7 @@ export function PollsList({ polls }: PollsListProps) {
         return (
           <div key={poll.id} className="card">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-lg font-bold text-primary flex-1">{poll.title}</h3>
+              <h3 className="text-lg font-bold text-foreground flex-1">{poll.title}</h3>
               <button
                 onClick={() => handleToggle(poll.id, poll.active)}
                 disabled={toggling === poll.id}
@@ -107,8 +107,8 @@ export function PollsList({ polls }: PollsListProps) {
                 return (
                   <div key={opt.id}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-secondary">{opt.text}</span>
-                      <span className="text-muted">{opt.votes} voto{opt.votes !== 1 ? 's' : ''} ({pct}%)</span>
+                      <span className="text-muted-foreground">{opt.text}</span>
+                      <span className="text-muted-foreground">{opt.votes} voto{opt.votes !== 1 ? 's' : ''} ({pct}%)</span>
                     </div>
                     <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-brand to-brand rounded-full transition-all" style={{ width: `${pct}%` }} />
@@ -118,7 +118,7 @@ export function PollsList({ polls }: PollsListProps) {
               })}
             </div>
 
-            <div className="flex items-center justify-between text-xs text-muted mb-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
               <span>{total} voto{total !== 1 ? 's' : ''}</span>
               <span className={poll.active ? 'text-green-400' : 'text-muted-foreground'}>
                 {poll.active ? 'Activa' : 'Inactiva'}

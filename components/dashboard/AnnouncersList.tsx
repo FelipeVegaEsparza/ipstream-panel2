@@ -45,9 +45,9 @@ export function AnnouncersList({ announcers }: AnnouncersListProps) {
   if (announcers.length === 0) {
     return (
       <div className="text-center py-12">
-        <MicrophoneIcon className="mx-auto h-12 w-12 text-muted mb-4" />
-        <h3 className="text-lg font-medium text-primary mb-2">No hay locutores</h3>
-        <p className="text-secondary mb-4">Agrega los locutores de tu radio</p>
+        <MicrophoneIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium text-foreground mb-2">No hay locutores</h3>
+        <p className="text-muted-foreground mb-4">Agrega los locutores de tu radio</p>
         <Link href="/dashboard/announcers/new" className="btn-primary">Crear Locutor</Link>
       </div>
     )
@@ -76,9 +76,9 @@ export function AnnouncersList({ announcers }: AnnouncersListProps) {
           )}
 
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-bold text-primary">{announcer.name}</h3>
-            <p className="text-secondary text-sm line-clamp-3">{announcer.description}</p>
-            <p className="text-xs text-muted">Creado: {formatDate(announcer.createdAt)}</p>
+            <h3 className="text-lg font-bold text-foreground">{announcer.name}</h3>
+            <p className="text-muted-foreground text-sm line-clamp-3">{announcer.description}</p>
+            <p className="text-xs text-muted-foreground">Creado: {formatDate(announcer.createdAt)}</p>
           </div>
 
           <div className="flex justify-center space-x-2 pt-3 border-t border-border mt-3">

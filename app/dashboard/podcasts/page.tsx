@@ -154,10 +154,10 @@ export default function PodcastsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-primary">
+            <h1 className="text-3xl font-bold text-foreground">
               {editingPodcast ? 'Editar Episodio' : 'Nuevo Episodio'}
             </h1>
-            <p className="text-secondary mt-2">
+            <p className="text-muted-foreground mt-2">
               {editingPodcast 
                 ? 'Actualiza la información del episodio de podcast' 
                 : 'Crea un nuevo episodio de podcast de audio'
@@ -183,10 +183,10 @@ export default function PodcastsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">
+          <h1 className="text-3xl font-bold text-foreground">
             🎙️ Podcasts
           </h1>
-          <p className="text-secondary mt-2">
+          <p className="text-muted-foreground mt-2">
             Gestiona los episodios de tu podcast de audio
           </p>
         </div>
@@ -244,16 +244,16 @@ export default function PodcastsPage() {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-secondary">Cargando episodios...</p>
+            <p className="text-muted-foreground">Cargando episodios...</p>
           </div>
         </div>
       ) : podcasts.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🎙️</div>
-          <h3 className="text-xl font-semibold text-primary mb-2">
+          <h3 className="text-xl font-semibold text-foreground mb-2">
             No hay episodios aún
           </h3>
-          <p className="text-secondary mb-6">
+          <p className="text-muted-foreground mb-6">
             Crea tu primer episodio de podcast de audio para comenzar
           </p>
           <button

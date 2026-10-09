@@ -87,12 +87,12 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
   return (
     <div className="space-y-6">
       <form onSubmit={submit} className="card space-y-4">
-        <h2 className="text-lg font-semibold text-primary">
+        <h2 className="text-lg font-semibold text-foreground">
           {editingId ? 'Editar mensaje' : 'Nuevo mensaje'}
         </h2>
 
         <div>
-          <label className="block text-sm font-medium text-secondary mb-2">Mensaje o frase *</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-2">Mensaje o frase *</label>
           <textarea
             className="form-input w-full resize-none"
             rows={2}
@@ -103,14 +103,14 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-secondary mb-2">Orden</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-2">Orden</label>
           <input
             type="number"
             className="form-input w-full max-w-xs"
             value={order}
             onChange={(e) => setOrder(e.target.value)}
           />
-          <p className="text-xs text-muted mt-1">El número menor aparece primero en la barra.</p>
+          <p className="text-xs text-muted-foreground mt-1">El número menor aparece primero en la barra.</p>
         </div>
 
         <div className="flex gap-3">
@@ -128,9 +128,9 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
 
       {messages.length === 0 ? (
         <div className="text-center py-12">
-          <Bars3BottomLeftIcon className="mx-auto h-12 w-12 text-muted mb-4" />
-          <h3 className="text-lg font-medium text-primary mb-2">No hay mensajes</h3>
-          <p className="text-secondary">Agrega el primer mensaje de la Barra GC.</p>
+          <Bars3BottomLeftIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">No hay mensajes</h3>
+          <p className="text-muted-foreground">Agrega el primer mensaje de la Barra GC.</p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -140,8 +140,8 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
               className={`card flex items-start justify-between gap-4 ${editingId === message.id ? 'ring-1 ring-brand' : ''}`}
             >
               <div className="min-w-0">
-                <span className="text-xs font-mono text-muted">#{message.order}</span>
-                <p className="text-primary whitespace-pre-wrap break-words">{message.text}</p>
+                <span className="text-xs font-mono text-muted-foreground">#{message.order}</span>
+                <p className="text-foreground whitespace-pre-wrap break-words">{message.text}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button

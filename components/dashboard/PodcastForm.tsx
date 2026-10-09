@@ -73,8 +73,8 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
           <div className="flex items-center space-x-3">
             <div className="text-2xl">🎵</div>
             <div>
-              <h3 className="font-semibold text-primary">Podcast de Audio</h3>
-              <p className="text-sm text-secondary">Este formulario es específico para episodios de audio</p>
+              <h3 className="font-semibold text-foreground">Podcast de Audio</h3>
+              <p className="text-sm text-muted-foreground">Este formulario es específico para episodios de audio</p>
             </div>
           </div>
         </div>

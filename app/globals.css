@@ -166,22 +166,9 @@
   }
 
   /* === TEXTOS === */
-  .text-primary {
-    @apply text-foreground;
-  }
-
-  .text-secondary {
-    @apply text-muted-foreground;
-  }
-
-  .text-muted {
-    @apply text-muted-foreground;
-  }
-
-  .text-accent {
-    color: var(--brand-500);
-  }
-
+  /* Nota: NO definir .text-primary/.text-secondary/.text-muted/.text-accent acá:
+     colisionan con los colores de Tailwind (primary/secondary/muted/accent son
+     colores, no texto). Usar text-foreground / text-muted-foreground / text-brand. */
   .text-title {
     @apply text-xl font-bold text-foreground transition-colors;
   }

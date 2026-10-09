@@ -54,9 +54,9 @@ export function EventsList({ events }: EventsListProps) {
   if (events.length === 0) {
     return (
       <div className="text-center py-12">
-        <CalendarDaysIcon className="mx-auto h-12 w-12 text-muted mb-4" />
-        <h3 className="text-lg font-medium text-primary mb-2">No hay eventos</h3>
-        <p className="text-secondary mb-4">Agrega eventos y transmisiones especiales</p>
+        <CalendarDaysIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium text-foreground mb-2">No hay eventos</h3>
+        <p className="text-muted-foreground mb-4">Agrega eventos y transmisiones especiales</p>
         <Link href="/dashboard/events/new" className="btn-primary">Crear Evento</Link>
       </div>
     )
@@ -80,18 +80,18 @@ export function EventsList({ events }: EventsListProps) {
             )}
 
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-primary">{event.title}</h3>
-              <div className="flex items-center text-sm text-secondary gap-1.5">
+              <h3 className="text-lg font-bold text-foreground">{event.title}</h3>
+              <div className="flex items-center text-sm text-muted-foreground gap-1.5">
                 <CalendarDaysIcon className="h-4 w-4 text-brand" />
                 <span>{formatDate(event.date)}{event.time ? ` - ${event.time}` : ''}</span>
               </div>
               {event.location && (
-                <div className="flex items-center text-sm text-secondary gap-1.5">
+                <div className="flex items-center text-sm text-muted-foreground gap-1.5">
                   <MapPinIcon className="h-4 w-4 text-brand" />
                   <span>{event.location}</span>
                 </div>
               )}
-              <p className="text-secondary text-sm line-clamp-2">{event.description}</p>
+              <p className="text-muted-foreground text-sm line-clamp-2">{event.description}</p>
             </div>
 
             <div className="flex justify-end space-x-2 pt-3 border-t border-border mt-3">
