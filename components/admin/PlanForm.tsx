@@ -23,6 +23,7 @@ interface Plan {
   features: string
   isActive: boolean
   services: string
+  onboardingSimple?: boolean
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
   menuHiddenKeys: string | null
@@ -46,6 +47,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     interval: plan?.interval || 'monthly',
     isActive: plan?.isActive ?? true,
     services: plan?.services || 'both',
+    onboardingSimple: plan?.onboardingSimple ?? false,
     radioStorageQuotaMB: plan?.radioStorageQuotaMB?.toString() || '',
     videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
     defaultServerId: plan?.defaultServerId || '',
@@ -260,6 +262,24 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
             <p className="text-xs text-gray-500 mt-1">
               Determina qué servicios se crean al contratar este plan.
             </p>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <input
+              id="onboardingSimple"
+              type="checkbox"
+              checked={formData.onboardingSimple}
+              onChange={(e) => setFormData({ ...formData, onboardingSimple: e.target.checked })}
+              className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-cyan-500"
+            />
+            <div>
+              <label htmlFor="onboardingSimple" className="text-sm font-medium text-gray-300">
+                Onboarding corto
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Lista reducida en &quot;Primeros pasos&quot;: marca, subir contenido, iniciar AutoDJ y barra GC.
+              </p>
+            </div>
           </div>
 
           <div>
