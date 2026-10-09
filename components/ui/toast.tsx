@@ -32,14 +32,14 @@ const ICONS: Record<ToastType, ReactNode> = {
   success: <CheckCircle className="h-5 w-5 text-green-400" />,
   error: <AlertCircle className="h-5 w-5 text-red-400" />,
   warning: <AlertTriangle className="h-5 w-5 text-yellow-400" />,
-  info: <Info className="h-5 w-5 text-cyan-400" />,
+  info: <Info className="h-5 w-5 text-brand" />,
 }
 
 const BORDER_COLORS: Record<ToastType, string> = {
   success: 'border-green-500/30',
   error: 'border-red-500/30',
   warning: 'border-yellow-500/30',
-  info: 'border-cyan-500/30',
+  info: 'border-brand/30',
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -68,18 +68,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl bg-gray-800 border ${BORDER_COLORS[t.type]} shadow-xl animate-slide-in-right`}
+            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl bg-card border ${BORDER_COLORS[t.type]} shadow-xl animate-slide-in-right`}
           >
             <div className="mt-0.5 flex-shrink-0">{ICONS[t.type]}</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white">{t.title}</p>
+              <p className="text-sm font-semibold text-foreground">{t.title}</p>
               {t.description && (
-                <p className="text-xs text-gray-400 mt-0.5">{t.description}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
               )}
             </div>
             <button
               onClick={() => dismiss(t.id)}
-              className="flex-shrink-0 p-0.5 rounded text-gray-500 hover:text-white transition-colors"
+              className="flex-shrink-0 p-0.5 rounded text-foreground0 hover:text-foreground transition-colors"
             >
               <X className="h-4 w-4" />
             </button>

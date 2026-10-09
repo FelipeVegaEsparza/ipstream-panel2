@@ -29,22 +29,22 @@ export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={formattedUserData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="date" 
-                  stroke="#9CA3AF"
+                  stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                 />
                 <YAxis 
-                  stroke="#9CA3AF"
+                  stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                 />
                 <Tooltip 
                   contentStyle={{
-                    backgroundColor: '#1F2937',
-                    border: '1px solid #374151',
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
-                    color: '#F9FAFB'
+                    color: 'hsl(var(--popover-foreground))'
                   }}
                 />
                 <Line 
@@ -86,10 +86,10 @@ export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
                 </Pie>
                 <Tooltip 
                   contentStyle={{
-                    backgroundColor: '#1F2937',
-                    border: '1px solid #374151',
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
-                    color: '#F9FAFB'
+                    color: 'hsl(var(--popover-foreground))'
                   }}
                 />
               </PieChart>

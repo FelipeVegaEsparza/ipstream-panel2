@@ -125,7 +125,7 @@ export function AttachmentUploader({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || uploading || pending.length >= MAX_FILES_PER_MESSAGE}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-gray-700 text-gray-200 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-secondary text-foreground hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {uploading ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -134,7 +134,7 @@ export function AttachmentUploader({
           )}
           Adjuntar
         </button>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-foreground0">
           {pending.length}/{MAX_FILES_PER_MESSAGE} archivos · máx 10 MB c/u
         </span>
       </div>

@@ -118,9 +118,9 @@ export function FileUpload({
 
   const getFileIcon = () => {
     if (fileType === 'audio') {
-      return <MusicalNoteIcon className="h-12 w-12 text-gray-400 mx-auto" />
+      return <MusicalNoteIcon className="h-12 w-12 text-muted-foreground mx-auto" />
     } else {
-      return <VideoCameraIcon className="h-12 w-12 text-gray-400 mx-auto" />
+      return <VideoCameraIcon className="h-12 w-12 text-muted-foreground mx-auto" />
     }
   }
 
@@ -145,10 +145,10 @@ export function FileUpload({
           className={`
             relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
             ${dragOver 
-              ? 'border-cyan-400 bg-cyan-500/10 backdrop-blur-sm' 
-              : 'border-gray-600 hover:border-cyan-500/50 bg-gray-700/30'
+              ? 'border-brand bg-brand/10 backdrop-blur-sm' 
+              : 'border-border hover:border-brand/50 bg-secondary/30'
             }
-            ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700/50'}
+            ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50'}
           `}
         >
           <input
@@ -162,17 +162,17 @@ export function FileUpload({
           
           {uploading ? (
             <div className="space-y-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400 mx-auto"></div>
-              <p className="text-sm text-gray-300">Subiendo archivo...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto"></div>
+              <p className="text-sm text-muted-foreground">Subiendo archivo...</p>
             </div>
           ) : (
             <div className="space-y-3">
               {getFileIcon()}
               <div>
-                <p className="text-sm text-gray-300">
-                  <span className="font-medium text-cyan-400">Haz clic para subir</span> o arrastra un archivo aquí
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-brand">Haz clic para subir</span> o arrastra un archivo aquí
                 </p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-foreground0 mt-2">
                   {description}
                 </p>
               </div>
@@ -183,17 +183,17 @@ export function FileUpload({
         {/* Current File Preview */}
         {value && (
           <div className="relative">
-            <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4">
+            <div className="bg-secondary/50 border border-border rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="text-2xl">
                     {fileType === 'audio' ? '🎵' : '🎥'}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-foreground">
                       {getFileName()}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       Archivo {fileType === 'audio' ? 'de audio' : 'de video'} cargado
                     </p>
                   </div>

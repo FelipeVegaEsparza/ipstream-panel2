@@ -14,7 +14,7 @@ export function DashboardWrapper({ children, fallback }: DashboardWrapperProps) 
   if (isLoading) {
     return (
       <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-4"></div>
         <p className="text-muted-foreground">Cargando...</p>
       </div>
     )
@@ -37,14 +37,14 @@ export function DashboardWrapper({ children, fallback }: DashboardWrapperProps) 
         {isImpersonating ? (
           <button
             onClick={() => window.location.href = '/admin'}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-brand hover:bg-brand text-white text-sm font-medium rounded-lg transition-colors"
           >
             Volver al Admin
           </button>
         ) : (
           <button
             onClick={() => window.location.href = '/dashboard'}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-brand hover:bg-brand text-white text-sm font-medium rounded-lg transition-colors"
           >
             Ir al Dashboard
           </button>

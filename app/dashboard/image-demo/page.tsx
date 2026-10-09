@@ -59,7 +59,7 @@ export default function ImageDemoPage() {
           </h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              <span className="w-2 h-2 bg-brand rounded-full"></span>
               <span>JPEG / JPG</span>
             </div>
             <div className="flex items-center space-x-2">

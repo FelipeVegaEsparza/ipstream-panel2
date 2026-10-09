@@ -15,11 +15,11 @@ module.exports = {
       },
       colors: {
         brand: {
-          DEFAULT: '#28B4F0',
-          300: '#64F0F0',
-          500: '#28B4F0',
-          600: '#1E9BD6',
-          700: '#0050B4',
+          DEFAULT: 'hsl(var(--brand))',
+          300: 'hsl(var(--brand-300-h))',
+          500: 'hsl(var(--brand))',
+          600: 'hsl(var(--brand-600-h))',
+          700: 'hsl(var(--brand-700-h))',
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

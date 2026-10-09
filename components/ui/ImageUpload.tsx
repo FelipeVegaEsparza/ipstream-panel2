@@ -123,10 +123,10 @@ export function ImageUpload({
           className={`
             relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
             ${dragOver 
-              ? 'border-cyan-400 bg-cyan-500/10 backdrop-blur-sm' 
-              : 'border-gray-600 hover:border-cyan-500/50 bg-gray-700/30'
+              ? 'border-brand bg-brand/10 backdrop-blur-sm' 
+              : 'border-border hover:border-brand/50 bg-secondary/30'
             }
-            ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700/50'}
+            ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50'}
           `}
         >
           <input
@@ -140,17 +140,17 @@ export function ImageUpload({
           
           {uploading ? (
             <div className="space-y-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400 mx-auto"></div>
-              <p className="text-sm text-gray-300">Subiendo imagen...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto"></div>
+              <p className="text-sm text-muted-foreground">Subiendo imagen...</p>
             </div>
           ) : (
             <div className="space-y-3">
-              <PhotoIcon className="h-12 w-12 text-gray-400 mx-auto" />
+              <PhotoIcon className="h-12 w-12 text-muted-foreground mx-auto" />
               <div>
-                <p className="text-sm text-gray-300">
-                  <span className="font-medium text-cyan-400">Haz clic para subir</span> o arrastra una imagen aquí
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-brand">Haz clic para subir</span> o arrastra una imagen aquí
                 </p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-foreground0 mt-2">
                   {description}
                 </p>
               </div>
@@ -167,7 +167,7 @@ export function ImageUpload({
                 alt="Vista previa"
                 width={400}
                 height={200}
-                className="w-full h-48 object-cover rounded-xl border border-gray-600 shadow-lg"
+                className="w-full h-48 object-cover rounded-xl border border-border shadow-lg"
               />
               <button
                 type="button"
@@ -178,7 +178,7 @@ export function ImageUpload({
                 <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-xs text-gray-400 text-center mt-3">
+            <p className="text-xs text-muted-foreground text-center mt-3">
               Imagen actual - Haz clic en la X para eliminar
             </p>
           </div>

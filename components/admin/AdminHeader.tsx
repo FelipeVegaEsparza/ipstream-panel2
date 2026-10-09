@@ -73,7 +73,7 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
                   </span>
                 </div>
                 <span className="hidden lg:flex lg:items-center">
-                  <span className="text-sm font-semibold leading-6 text-gray-100">
+                  <span className="text-sm font-semibold leading-6 text-foreground">
                     {user.name || user.email}
                   </span>
                 </span>
@@ -91,7 +91,7 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
               <Menu.Items className="absolute right-0 z-10 mt-2.5 w-48 origin-top-right rounded-xl bg-card py-2 shadow-2xl ring-1 ring-gray-700 focus:outline-none border border-border">
                 <div className="px-4 py-3 border-b border-border">
                   <p className="text-sm text-muted-foreground">Administrador</p>
-                  <p className="text-sm font-medium text-gray-100 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {user.name || user.email}
                   </p>
                 </div>

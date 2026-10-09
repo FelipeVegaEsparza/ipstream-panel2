@@ -58,7 +58,7 @@ export function PlayHistory() {
   const typeBadge = (type: string) => {
     switch (type) {
       case 'music':
-        return <span className="text-xs bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded-full">🎵 music</span>
+        return <span className="text-xs bg-brand/30 text-brand px-2 py-0.5 rounded-full">🎵 music</span>
       case 'jingle':
         return <span className="text-xs bg-amber-600/30 text-amber-300 px-2 py-0.5 rounded-full">🔔 jingle</span>
       case 'live_dj':

@@ -135,20 +135,20 @@ export default function StreamingStatsPage() {
             <h2 className="text-lg font-semibold text-foreground mb-4">Oyentes por día</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.daily}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis
                   dataKey="date"
                   tickFormatter={fmtDate}
-                  stroke="#9CA3AF"
+                  stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                 />
-                <YAxis stroke="#9CA3AF" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1F2937',
-                    border: '1px solid #374151',
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
-                    color: '#F3F4F6',
+                    color: 'hsl(var(--popover-foreground))',
                   }}
                   labelFormatter={fmtDate}
                 />

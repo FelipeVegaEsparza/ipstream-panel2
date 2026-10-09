@@ -58,9 +58,9 @@ export default function AboutPage() {
           </h3>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { name: 'Next.js 14', color: 'bg-blue-500' },
+              { name: 'Next.js 14', color: 'bg-brand' },
               { name: 'React 18', color: 'bg-brand' },
-              { name: 'TypeScript', color: 'bg-blue-600' },
+              { name: 'TypeScript', color: 'bg-brand' },
               { name: 'Tailwind CSS', color: 'bg-teal-500' },
               { name: 'Prisma ORM', color: 'bg-indigo-500' },
               { name: 'NextAuth.js', color: 'bg-purple-500' },
@@ -85,14 +85,14 @@ export default function AboutPage() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[
-            { icon: '📊', name: 'Datos Básicos', desc: 'Información del proyecto', color: 'from-blue-500/20 to-brand/20 border-blue-500/30' },
+            { icon: '📊', name: 'Datos Básicos', desc: 'Información del proyecto', color: 'from-brand/20 to-brand/20 border-brand/30' },
             { icon: '📱', name: 'Redes Sociales', desc: 'Enlaces a plataformas', color: 'from-green-500/20 to-green-600/20 border-green-500/30' },
             { icon: '🎙️', name: 'Programas', desc: 'Programación de radio', color: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30' },
             { icon: '📰', name: 'Noticias', desc: 'Sistema de noticias', color: 'from-purple-500/20 to-purple-600/20 border-purple-500/30' },
             { icon: '🎵', name: 'Podcasts', desc: 'Episodios de audio', color: 'from-indigo-500/20 to-purple-600/20 border-indigo-500/30' },
             { icon: '🎥', name: 'Videocasts', desc: 'Episodios con YouTube', color: 'from-red-500/20 to-pink-600/20 border-red-500/30' },
             { icon: '📺', name: 'Ranking Videos', desc: 'Top musical', color: 'from-orange-500/20 to-red-600/20 border-orange-500/30' },
-            { icon: '🏢', name: 'Auspiciadores', desc: 'Gestión de sponsors', color: 'from-teal-500/20 to-cyan-600/20 border-teal-500/30' },
+            { icon: '🏢', name: 'Auspiciadores', desc: 'Gestión de sponsors', color: 'from-teal-500/20 to-brand/20 border-teal-500/30' },
             { icon: '🎉', name: 'Promociones', desc: 'Ofertas especiales', color: 'from-pink-500/20 to-rose-600/20 border-pink-500/30' },
             { icon: '🔧', name: 'API REST', desc: 'Endpoints públicos', color: 'from-secondary/20 to-secondary/20 border-border/30' }
           ].map((module, index) => (
@@ -165,7 +165,7 @@ export default function AboutPage() {
             <div className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full border border-green-500/30">
               10 Módulos Activos
             </div>
-            <div className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/30">
+            <div className="bg-brand/20 text-brand px-3 py-1 rounded-full border border-brand/30">
               API REST Completa
             </div>
             <div className="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full border border-purple-500/30">

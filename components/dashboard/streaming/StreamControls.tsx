@@ -57,7 +57,7 @@ export function StreamControls({ isRunning, onChange }: Props) {
         <button
           onClick={() => call('restart')}
           disabled={busy !== null}
-          className="px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-secondary disabled:cursor-not-allowed text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+          className="px-4 py-3 bg-brand hover:bg-brand disabled:bg-secondary disabled:cursor-not-allowed text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
         >
           {busy === 'restart' ? '⏳' : '↻'} Reiniciar
         </button>

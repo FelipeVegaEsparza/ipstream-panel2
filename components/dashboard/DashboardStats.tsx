@@ -12,11 +12,11 @@ interface DashboardStatsProps {
 }
 
 const colorVariants = {
-  'bg-blue-500': {
-    gradient: 'from-blue-500/20 to-brand/20',
-    border: 'border-blue-500/30',
-    text: 'text-blue-400',
-    icon: 'text-blue-400'
+  'bg-brand': {
+    gradient: 'from-brand/20 to-brand/20',
+    border: 'border-brand/30',
+    text: 'text-brand',
+    icon: 'text-brand'
   },
   'bg-green-500': {
     gradient: 'from-green-500/20 to-green-600/20',

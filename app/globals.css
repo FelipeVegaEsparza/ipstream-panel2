@@ -31,6 +31,11 @@
     --brand-500: #28B4F0;
     --brand-700: #0050B4;
     --brand-300: #64F0F0;
+    /* Marca como HSL (para utilidades Tailwind theme-aware: text-brand, bg-brand…) */
+    --brand: 197 86% 55%;
+    --brand-300-h: 187 80% 70%;
+    --brand-600-h: 200 75% 48%;
+    --brand-700-h: 213 100% 35%;
     --brand-soft: rgba(40, 180, 240, 0.14);
     --brand-grad: linear-gradient(135deg, #28b4f0, #0050b4);
     --success-500: #5be29b;
@@ -64,6 +69,10 @@
     --brand-500: #1373d1;
     --brand-700: #0b4c9e;
     --brand-300: #4cc3f5;
+    --brand: 213 90% 38%;
+    --brand-300-h: 205 70% 50%;
+    --brand-600-h: 213 90% 33%;
+    --brand-700-h: 213 90% 27%;
     --brand-soft: rgba(19, 115, 209, 0.12);
     --brand-grad: linear-gradient(135deg, #2b93e6, #0b4c9e);
     --success-500: #1a9e6a;

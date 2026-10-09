@@ -29,7 +29,7 @@ export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
   const Icon = getFileIcon(attachment.mimeType)
 
   return (
-    <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-800/60 border border-gray-700 hover:border-gray-600 transition-colors group">
+    <div className="flex items-center gap-2 p-2 rounded-lg bg-card/60 border border-border hover:border-border transition-colors group">
       {isImage ? (
         <a
           href={attachment.fileUrl}
@@ -45,8 +45,8 @@ export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
           />
         </a>
       ) : (
-        <div className="flex-shrink-0 w-12 h-12 rounded bg-gray-700/60 flex items-center justify-center">
-          <Icon className="h-6 w-6 text-cyan-400" />
+        <div className="flex-shrink-0 w-12 h-12 rounded bg-secondary/60 flex items-center justify-center">
+          <Icon className="h-6 w-6 text-brand" />
         </div>
       )}
 
@@ -55,12 +55,12 @@ export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
           href={attachment.fileUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-white hover:text-cyan-300 transition-colors truncate flex items-center gap-1"
+          className="text-sm text-foreground hover:text-brand transition-colors truncate flex items-center gap-1"
         >
           {attachment.fileName}
           <ExternalLink className="h-3 w-3 opacity-50" />
         </a>
-        <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>
+        <p className="text-xs text-foreground0">{formatFileSize(attachment.fileSize)}</p>
       </div>
 
       <a
@@ -68,7 +68,7 @@ export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
         target="_blank"
         rel="noopener noreferrer"
         download
-        className="flex-shrink-0 p-1.5 rounded hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+        className="flex-shrink-0 p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
         title="Descargar"
       >
         <Download className="h-4 w-4" />
@@ -78,7 +78,7 @@ export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
         <button
           type="button"
           onClick={() => onRemove(attachment.id)}
-          className="flex-shrink-0 p-1.5 rounded hover:bg-red-600/20 text-gray-400 hover:text-red-400 transition-colors"
+          className="flex-shrink-0 p-1.5 rounded hover:bg-red-600/20 text-muted-foreground hover:text-red-400 transition-colors"
           title="Quitar"
         >
           <X className="h-4 w-4" />

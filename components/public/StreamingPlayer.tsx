@@ -37,7 +37,7 @@ interface Props {
 }
 
 const COLORS = {
-  cyan: 'bg-brand hover:bg-cyan-700',
+  cyan: 'bg-brand hover:bg-brand',
   red: 'bg-red-600 hover:bg-red-700',
   green: 'bg-green-600 hover:bg-green-700',
   purple: 'bg-purple-600 hover:bg-purple-700',
@@ -46,7 +46,7 @@ const COLORS = {
 const STATUS_COLORS: Record<string, string> = {
   autodj: 'bg-green-500',
   live: 'bg-red-500 animate-pulse',
-  off: 'bg-gray-500',
+  off: 'bg-secondary',
 }
 
 export function StreamingPlayer({
@@ -129,10 +129,10 @@ export function StreamingPlayer({
   }, [autoPlay, status?.streamUrls?.http])
 
   const color = COLORS[theme]
-  const statusColor = STATUS_COLORS[status?.status || 'off'] || 'bg-gray-500'
+  const statusColor = STATUS_COLORS[status?.status || 'off'] || 'bg-secondary'
 
   return (
-    <div className={`bg-gray-900 rounded-xl p-5 text-white shadow-xl ${className}`}>
+    <div className={`bg-background rounded-xl p-5 text-foreground shadow-xl ${className}`}>
       {status?.streamUrls?.http && (
         <audio
           ref={audioRef}
@@ -154,7 +154,7 @@ export function StreamingPlayer({
         <button
           onClick={togglePlay}
           disabled={loading || !!error}
-          className={`${color} disabled:bg-gray-700 text-white rounded-full w-14 h-14 flex items-center justify-center text-xl transition shadow-lg flex-shrink-0`}
+          className={`${color} disabled:bg-secondary text-foreground rounded-full w-14 h-14 flex items-center justify-center text-xl transition shadow-lg flex-shrink-0`}
           aria-label={playing ? 'Pausar' : 'Reproducir'}
         >
           {loading ? '⏳' : playing ? '⏸' : '▶'}
@@ -166,10 +166,10 @@ export function StreamingPlayer({
                 <span className={`inline-block w-2 h-2 rounded-full ${statusColor}`}></span>
                 {status.clientName}
               </div>
-              <div className="text-sm text-gray-400 truncate">
+              <div className="text-sm text-muted-foreground truncate">
                 {status.currentTitle || (status.isLive ? 'En vivo' : 'Fuera del aire')}
               </div>
-              <div className="text-xs text-gray-500 mt-0.5">
+              <div className="text-xs text-foreground0 mt-0.5">
                 {status.listeners} oyente{status.listeners !== 1 ? 's' : ''}
                 {status.bitrate && ` · ${status.bitrate} kbps`}
               </div>
@@ -179,7 +179,7 @@ export function StreamingPlayer({
       </div>
 
       <div className="flex items-center gap-2 mt-4">
-        <span className="text-xs text-gray-500">🔊</span>
+        <span className="text-xs text-foreground0">🔊</span>
         <input
           type="range"
           min="0"

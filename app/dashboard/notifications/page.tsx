@@ -56,10 +56,10 @@ export default async function NotificationsPage() {
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Para usar notificaciones push, el administrador debe configurar tus credenciales de OneSignal.
             </p>
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6 max-w-2xl mx-auto text-left">
-              <h4 className="text-blue-300 font-medium mb-3">¿Qué necesitas hacer?</h4>
+            <div className="bg-brand/10 border border-brand/30 rounded-lg p-6 max-w-2xl mx-auto text-left">
+              <h4 className="text-brand font-medium mb-3">¿Qué necesitas hacer?</h4>
               <ol className="text-muted-foreground space-y-2 list-decimal list-inside">
-                <li>Crea una cuenta gratuita en <a href="https://onesignal.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">OneSignal.com</a></li>
+                <li>Crea una cuenta gratuita en <a href="https://onesignal.com" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand underline">OneSignal.com</a></li>
                 <li>Crea una nueva aplicación (App) en OneSignal</li>
                 <li>Ve a Settings → Keys & IDs</li>
                 <li>Copia el "App ID" y "REST API Key"</li>

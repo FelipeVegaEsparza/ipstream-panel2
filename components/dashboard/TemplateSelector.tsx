@@ -198,7 +198,7 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
                   className={`w-full ${
                     isSelected 
                       ? 'bg-brand hover:bg-brand' 
-                      : 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-brand hover:bg-brand'
                   }`}
                 >
                   {isSelected ? (

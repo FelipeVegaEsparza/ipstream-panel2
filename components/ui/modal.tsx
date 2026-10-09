@@ -124,9 +124,9 @@ export function Modal({
       case 'warning':
         return <AlertTriangle className="h-12 w-12 text-orange-400" />
       case 'confirm':
-        return <Info className="h-12 w-12 text-blue-400" />
+        return <Info className="h-12 w-12 text-brand" />
       default:
-        return <Info className="h-12 w-12 text-cyan-400" />
+        return <Info className="h-12 w-12 text-brand" />
     }
   }
 
@@ -139,9 +139,9 @@ export function Modal({
       case 'warning':
         return 'border-orange-500/30 bg-orange-500/10'
       case 'confirm':
-        return 'border-blue-500/30 bg-blue-500/10'
+        return 'border-brand/30 bg-brand/10'
       default:
-        return 'border-cyan-500/30 bg-cyan-500/10'
+        return 'border-brand/30 bg-brand/10'
     }
   }
 
@@ -158,13 +158,13 @@ export function Modal({
         ref={containerRef}
         role="dialog"
         aria-modal="true"
-        className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 max-w-md w-full animate-in fade-in zoom-in duration-200"
+        className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-md w-full animate-in fade-in zoom-in duration-200"
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
@@ -177,12 +177,12 @@ export function Modal({
           </div>
 
           {/* Title */}
-          <h3 className="text-xl font-bold text-white text-center mb-3">
+          <h3 className="text-xl font-bold text-foreground text-center mb-3">
             {title}
           </h3>
 
           {/* Message */}
-          <p className="text-gray-300 text-center mb-6 whitespace-pre-line">
+          <p className="text-muted-foreground text-center mb-6 whitespace-pre-line">
             {message}
           </p>
 
@@ -192,7 +192,7 @@ export function Modal({
               <>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg font-medium transition-colors"
                 >
                   {cancelText}
                 </button>
@@ -201,7 +201,7 @@ export function Modal({
                     onConfirm()
                     onClose()
                   }}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg font-medium transition-colors"
                 >
                   {confirmText}
                 </button>
@@ -209,7 +209,7 @@ export function Modal({
             ) : (
               <button
                 onClick={onClose}
-                className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                className="w-full px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg font-medium transition-colors"
               >
                 {confirmText}
               </button>

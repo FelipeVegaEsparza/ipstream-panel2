@@ -41,7 +41,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
   }
 
   const socialNetworks = [
-    { name: 'Facebook', url: sponsor.facebook, color: 'bg-blue-600 hover:bg-blue-700' },
+    { name: 'Facebook', url: sponsor.facebook, color: 'bg-brand hover:bg-brand' },
     { name: 'Instagram', url: sponsor.instagram, color: 'bg-pink-600 hover:bg-pink-700' },
     { name: 'YouTube', url: sponsor.youtube, color: 'bg-red-600 hover:bg-red-700' },
     { name: 'TikTok', url: sponsor.tiktok, color: 'bg-card hover:bg-background' },

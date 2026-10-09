@@ -36,8 +36,8 @@ export function MessageBubble({ message, showAuthor = true }: MessageBubbleProps
       <div
         className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold ${
           isClient
-            ? 'bg-gray-700 text-gray-300'
-            : 'bg-cyan-600 text-white'
+            ? 'bg-secondary text-muted-foreground'
+            : 'bg-brand text-white'
         }`}
       >
         {isAdmin ? (
@@ -49,8 +49,8 @@ export function MessageBubble({ message, showAuthor = true }: MessageBubbleProps
 
       <div className={`flex-1 min-w-0 ${isClient ? '' : 'flex flex-col items-end'}`}>
         {showAuthor && (
-          <div className={`flex items-center gap-2 mb-1 text-xs text-gray-400 ${isClient ? '' : 'flex-row-reverse'}`}>
-            <span className="font-medium text-gray-300">{message.authorName}</span>
+          <div className={`flex items-center gap-2 mb-1 text-xs text-muted-foreground ${isClient ? '' : 'flex-row-reverse'}`}>
+            <span className="font-medium text-muted-foreground">{message.authorName}</span>
             <span>{isAdmin ? 'Soporte' : 'Cliente'}</span>
             <span title={dateValue.toLocaleString('es-ES')}>{timeAgo}</span>
           </div>
@@ -59,8 +59,8 @@ export function MessageBubble({ message, showAuthor = true }: MessageBubbleProps
         <div
           className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
             isClient
-              ? 'bg-gray-800 text-white border border-gray-700'
-              : 'bg-cyan-600 text-white'
+              ? 'bg-card text-foreground border border-border'
+              : 'bg-brand text-white'
           }`}
         >
           <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">

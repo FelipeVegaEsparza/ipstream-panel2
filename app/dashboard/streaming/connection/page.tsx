@@ -37,7 +37,7 @@ const ROLE_HIERARCHY: Record<string, number> = {
 
 const ROLE_STYLES: Record<string, string> = {
   owner: 'bg-red-900/50 text-red-300',
-  host: 'bg-blue-900/50 text-blue-300',
+  host: 'bg-blue-900/50 text-brand',
   guest: 'bg-secondary text-muted-foreground',
 }
 

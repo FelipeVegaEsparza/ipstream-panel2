@@ -214,7 +214,7 @@ export default function PodcastsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-500 to-brand rounded-2xl p-6 text-white">
+        <div className="bg-gradient-to-r from-brand to-brand rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100">Temporadas</p>

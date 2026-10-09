@@ -51,7 +51,7 @@ export function DashboardImpersonated() {
     return (
       <div className="space-y-6">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
           <h3 className="text-lg font-medium text-foreground mb-2">
             Cargando datos del cliente...
           </h3>
@@ -80,7 +80,7 @@ export function DashboardImpersonated() {
           </p>
           <button
             onClick={() => window.location.href = '/admin'}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-brand hover:bg-brand text-white text-sm font-medium rounded-lg transition-colors"
           >
             Volver al Admin
           </button>
@@ -110,7 +110,7 @@ export function DashboardImpersonated() {
       name: 'Programas',
       value: 0,
       href: '/dashboard/programs',
-      color: 'bg-blue-500'
+      color: 'bg-brand'
     },
     {
       name: 'Noticias',
@@ -181,7 +181,7 @@ export function DashboardImpersonated() {
               </a>
               <a
                 href="/dashboard/programs"
-                className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-brand hover:bg-brand text-white text-sm font-medium rounded-lg transition-colors"
               >
                 Ver Programas
               </a>
@@ -206,7 +206,7 @@ export function DashboardImpersonated() {
               className="block p-4 border border-border rounded-xl hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-brand rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                   <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                   </svg>
