@@ -60,7 +60,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="card">
           <div className="flex justify-center mb-8">
@@ -70,16 +70,16 @@ export default function RegisterPage() {
               className="h-20 w-auto filter drop-shadow-lg"
             />
           </div>
-          <h2 className="text-center text-3xl font-bold text-white mb-2">
+          <h2 className="text-center text-3xl font-bold text-foreground mb-2">
             Crear Cuenta
           </h2>
-          <p className="text-center text-sm text-gray-400 mb-8">
+          <p className="text-center text-sm text-muted-foreground mb-8">
             Regístrate para acceder al panel de gestión
           </p>
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg backdrop-blur-sm">
+              <div className="bg-red-500/15 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
@@ -163,7 +163,7 @@ export default function RegisterPage() {
             <div className="text-center">
               <Link 
                 href="/auth/login" 
-                className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                className="text-brand hover:text-brand/80 transition-colors"
               >
                 ¿Ya tienes cuenta? Inicia sesión
               </Link>
