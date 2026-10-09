@@ -3,7 +3,7 @@
 // =====================================================
 // StreamingPlayer — player público embebible
 // =====================================================
-// Para usar en el sitio del cliente: importa este componente y dale el clientId.
+// Para usar en el sitio del cliente: importa este componente y pásale el clientId.
 // Llama al endpoint público /api/public/[clientId]/streaming/status.
 
 import { useEffect, useRef, useState } from 'react'

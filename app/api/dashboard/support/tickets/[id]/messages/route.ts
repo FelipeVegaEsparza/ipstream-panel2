@@ -33,7 +33,7 @@ export async function POST(
     }
     if (ticket.status === 'closed') {
       return NextResponse.json(
-        { error: 'Este ticket está cerrado. Si necesitás ayuda con un tema relacionado, abre uno nuevo.' },
+        { error: 'Este ticket está cerrado. Si necesitas ayuda con un tema relacionado, abre uno nuevo.' },
         { status: 400 }
       )
     }

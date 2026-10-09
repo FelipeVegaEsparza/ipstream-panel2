@@ -330,7 +330,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
           {trialDays > 0 && (
             <div data-slot="trial" className="flex items-center gap-2 rounded-xl bg-cyan-50 border border-cyan-200 px-3 py-2 text-sm text-cyan-800">
               <Sparkles className="h-4 w-4 text-cyan-600" />
-              Incluye <strong>{trialDays} días de prueba gratis</strong>. Después pagás el plan que elijas.
+              Incluye <strong>{trialDays} días de prueba gratis</strong>. Después pagas el plan que elijas.
             </div>
           )}
 

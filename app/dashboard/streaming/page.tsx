@@ -36,7 +36,7 @@ export default function StreamingPage() {
       <div>
         <h1 className="text-3xl font-bold text-white">Streaming</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Gestioná tu radio en vivo: AutoDJ, playlists, biblioteca musical.
+          Gestiona tu radio en vivo: AutoDJ, playlists, biblioteca musical.
         </p>
       </div>
 

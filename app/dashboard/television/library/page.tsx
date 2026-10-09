@@ -197,7 +197,7 @@ export default function TvLibraryPage() {
       <div>
         <h1 className="text-3xl font-bold text-white">Videoteca</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Sube y gestioná tus videos para Televisión
+          Sube y gestiona tus videos para Televisión
         </p>
       </div>
 

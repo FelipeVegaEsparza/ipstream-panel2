@@ -90,7 +90,7 @@ export default async function RegistroPage({
         <div className="max-w-5xl mx-auto px-4 text-center text-sm text-gray-500 space-y-1.5">
           <p>© {new Date().getFullYear()} IPStream · Radio Online y Televisión por streaming</p>
           <p>
-            Al crear tu cuenta aceptás nuestros{' '}
+            Al crear tu cuenta aceptas nuestros{' '}
             <a href="#" className="text-blue-600 hover:underline">Términos y Condiciones</a> y{' '}
             <a href="#" className="text-blue-600 hover:underline">Política de Privacidad</a>.
           </p>

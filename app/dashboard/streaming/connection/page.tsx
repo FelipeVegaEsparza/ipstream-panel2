@@ -240,7 +240,7 @@ export default function ConnectionPage() {
       <div>
         <h1 className="text-3xl font-bold text-white">Conexión DJ</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Gestioná los DJs de tu radio y obtené los datos para que se conecten con BUTT, MIXXX u otro software.
+          Gestiona los DJs de tu radio y obtén los datos para que se conecten con BUTT, MIXXX u otro software.
         </p>
       </div>
 

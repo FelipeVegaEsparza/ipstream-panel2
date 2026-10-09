@@ -47,7 +47,7 @@ export default async function AdminTicketsPage() {
           Tickets de soporte
         </h1>
         <p className="text-gray-400 mt-1">
-          Gestioná los tickets de soporte de todos tus clientes
+          Gestiona los tickets de soporte de todos tus clientes
         </p>
       </div>
       <TicketsManager

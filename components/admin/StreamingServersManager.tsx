@@ -259,7 +259,7 @@ export function StreamingServersManager() {
             <Server className="h-10 w-10 text-gray-600 mb-3" />
             <p className="text-gray-300 font-medium">No hay servidores de streaming registrados</p>
             <p className="text-sm text-gray-500 mt-1 mb-5">
-              Agregá uno ya configurado o provisioná un VPS nuevo automáticamente
+              Agrega uno ya configurado o provisiona un VPS nuevo automáticamente
             </p>
             <div className="flex gap-3">
               <Button size="sm" onClick={openCreate}>

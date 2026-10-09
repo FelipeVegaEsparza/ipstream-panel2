@@ -168,7 +168,7 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
             Chat en Vivo
           </h1>
           <p className="text-sm text-gray-400 mt-1">
-            Moderá el chat de tu radio y participá como staff
+            Modera el chat de tu radio y participa como staff
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
