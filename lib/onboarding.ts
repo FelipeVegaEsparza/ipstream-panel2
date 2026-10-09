@@ -2,9 +2,11 @@
 // Onboarding — "Primeros pasos" (progreso derivado)
 // =====================================================
 // El progreso se calcula del estado real del cliente (no casillas manuales).
-// Los pasos dependen de los servicios del plan (radio / tv / both).
+// Qué tareas ve cada cliente depende de: los servicios del plan (radio/tv) y
+// la lista de tareas elegidas para el plan (`Plan.onboardingSteps`).
 
 import { prisma, type PrismaDb } from '@/lib/prisma'
+import { ONBOARDING_STEP_DEFS, parseOnboardingSteps } from '@/lib/onboarding-steps'
 
 export interface OnboardingStep {
   key: string
@@ -38,7 +40,10 @@ export async function getOnboarding(
   const [client, basic, programs, news, tracks, videotracks, gcbar, radio, video] = await Promise.all([
     db.client.findUnique({
       where: { id: clientId },
-      select: { plan: { select: { services: true, onboardingSimple: true } }, onboardingDismissedAt: true },
+      select: {
+        plan: { select: { services: true, onboardingSteps: true } },
+        onboardingDismissedAt: true,
+      },
     }),
     db.basicData.findUnique({ where: { clientId }, select: { logoUrl: true, websiteUrl: true } }),
     db.program.count({ where: { clientId } }),
@@ -56,101 +61,35 @@ export async function getOnboarding(
       : 'both'
   const hasRadio = services === 'radio' || services === 'both'
   const hasTv = services === 'tv' || services === 'both'
-  const simple = Boolean(client?.plan?.onboardingSimple)
 
-  const steps: OnboardingStep[] = [
-    {
-      key: 'brand',
-      title: 'Personaliza tu marca',
-      description: 'Sube tu logo y completa los datos del proyecto.',
-      href: '/dashboard/basic-data',
-      actionLabel: 'Completar',
-      done: Boolean(basic?.logoUrl),
-    },
-  ]
+  // Tareas elegidas para el plan; null = todas las que apliquen a los servicios.
+  const selected = parseOnboardingSteps(client?.plan?.onboardingSteps ?? null)
 
-  if (!simple) {
-    steps.push({
-      key: 'programs',
-      title: 'Crea tu primer programa',
-      description: 'Arma la parrilla con horarios y días.',
-      href: '/dashboard/programs',
-      actionLabel: 'Crear programa',
-      done: programs > 0,
-    })
+  const doneByKey: Record<string, boolean> = {
+    brand: Boolean(basic?.logoUrl),
+    programs: programs > 0,
+    'radio-library': tracks > 0,
+    'radio-autodj': radio?.status === 'autodj' || radio?.status === 'live',
+    'tv-library': videotracks > 0,
+    'tv-autodj': video?.status === 'autodj' || video?.status === 'live',
+    news: news > 0,
+    site: Boolean(basic?.websiteUrl),
+    'gc-bar': gcbar > 0,
   }
 
-  if (hasRadio) {
-    steps.push(
-      {
-        key: 'radio-library',
-        title: 'Sube tu música',
-        description: 'Carga canciones a tu biblioteca (MP3).',
-        href: '/dashboard/streaming/library',
-        actionLabel: 'Subir música',
-        done: tracks > 0,
-      },
-      {
-        key: 'radio-autodj',
-        title: 'Inicia tu AutoDJ',
-        description: 'Pon tu radio al aire con las playlists.',
-        href: '/dashboard/streaming',
-        actionLabel: 'Iniciar radio',
-        done: radio?.status === 'autodj' || radio?.status === 'live',
-      }
-    )
-  }
-
-  if (hasTv) {
-    steps.push(
-      {
-        key: 'tv-library',
-        title: 'Sube tus videos',
-        description: 'Carga videos a tu videoteca.',
-        href: '/dashboard/television/library',
-        actionLabel: 'Subir videos',
-        done: videotracks > 0,
-      },
-      {
-        key: 'tv-autodj',
-        title: 'Pon tu TV al aire',
-        description: 'Inicia la emisión automática de TV.',
-        href: '/dashboard/television',
-        actionLabel: 'Iniciar TV',
-        done: video?.status === 'autodj' || video?.status === 'live',
-      }
-    )
-  }
-
-  if (simple) {
-    steps.push({
-      key: 'gc-bar',
-      title: 'Configura la barra GC',
-      description: 'Agrega mensajes a la barra de tu sitio.',
-      href: '/dashboard/gc-bar',
-      actionLabel: 'Configurar',
-      done: gcbar > 0,
-    })
-  } else {
-    steps.push(
-      {
-        key: 'news',
-        title: 'Publica una noticia',
-        description: 'Suma contenido a tu sitio.',
-        href: '/dashboard/news',
-        actionLabel: 'Crear noticia',
-        done: news > 0,
-      },
-      {
-        key: 'site',
-        title: 'Comparte tu sitio',
-        description: 'Tu sitio ya está online; compártelo con tus oyentes.',
-        href: '/dashboard',
-        actionLabel: 'Ver mi sitio',
-        done: Boolean(basic?.websiteUrl),
-      }
-    )
-  }
+  const steps: OnboardingStep[] = ONBOARDING_STEP_DEFS.filter((d) => {
+    if (d.service === 'radio' && !hasRadio) return false
+    if (d.service === 'tv' && !hasTv) return false
+    if (selected && !selected.includes(d.key)) return false
+    return true
+  }).map((d) => ({
+    key: d.key,
+    title: d.title,
+    description: d.description,
+    href: d.href,
+    actionLabel: d.actionLabel,
+    done: doneByKey[d.key] ?? false,
+  }))
 
   const completed = steps.filter((s) => s.done).length
   return {

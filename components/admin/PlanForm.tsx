@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { showToast } from '@/components/ui/toast'
 
 import { useState, useEffect } from 'react'
+import { ONBOARDING_STEP_DEFS } from '@/lib/onboarding-steps'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +24,7 @@ interface Plan {
   features: string
   isActive: boolean
   services: string
-  onboardingSimple?: boolean
+  onboardingSteps?: string | null
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
   menuHiddenKeys: string | null
@@ -47,13 +48,32 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     interval: plan?.interval || 'monthly',
     isActive: plan?.isActive ?? true,
     services: plan?.services || 'both',
-    onboardingSimple: plan?.onboardingSimple ?? false,
     radioStorageQuotaMB: plan?.radioStorageQuotaMB?.toString() || '',
     videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
     defaultServerId: plan?.defaultServerId || '',
     imageUrl: plan?.imageUrl || '',
     demoUrl: plan?.demoUrl || '',
   })
+
+  // Tareas de "Primeros pasos" seleccionadas para este plan (default: todas).
+  const [selectedSteps, setSelectedSteps] = useState<Set<string>>(() => {
+    try {
+      const arr = plan?.onboardingSteps ? JSON.parse(plan.onboardingSteps) : null
+      if (Array.isArray(arr)) {
+        const keys = arr.filter((k: unknown): k is string => typeof k === 'string')
+        if (keys.length) return new Set(keys)
+      }
+    } catch {}
+    return new Set(ONBOARDING_STEP_DEFS.map((s) => s.key))
+  })
+
+  const toggleStep = (key: string) =>
+    setSelectedSteps((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
 
   const [servers, setServers] = useState<{ id: string; name: string; type: string }[]>([])
   useEffect(() => {
@@ -98,6 +118,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           radioStorageQuotaMB: formData.radioStorageQuotaMB === '' ? null : Number(formData.radioStorageQuotaMB),
           videoStorageQuotaMB: formData.videoStorageQuotaMB === '' ? null : Number(formData.videoStorageQuotaMB),
           menuHiddenKeys: Array.from(hiddenKeys),
+          onboardingSteps: Array.from(selectedSteps),
         })
       })
 
@@ -264,21 +285,32 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
             </p>
           </div>
 
-          <div className="flex items-start gap-3">
-            <input
-              id="onboardingSimple"
-              type="checkbox"
-              checked={formData.onboardingSimple}
-              onChange={(e) => setFormData({ ...formData, onboardingSimple: e.target.checked })}
-              className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-cyan-500"
-            />
-            <div>
-              <label htmlFor="onboardingSimple" className="text-sm font-medium text-gray-300">
-                Onboarding corto
-              </label>
-              <p className="text-xs text-gray-500 mt-1">
-                Lista reducida en &quot;Primeros pasos&quot;: marca, subir contenido, iniciar AutoDJ y barra GC.
-              </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Tareas de &quot;Primeros pasos&quot;
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Elige qué tareas ve el cliente en su onboarding. Las de Radio/TV solo se muestran si el plan incluye ese servicio.
+            </p>
+            <div className="space-y-2 rounded-md border border-gray-700 bg-gray-800/40 p-3">
+              {ONBOARDING_STEP_DEFS.map((s) => (
+                <label key={s.key} className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedSteps.has(s.key)}
+                    onChange={() => toggleStep(s.key)}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-600 bg-gray-700 text-cyan-500"
+                  />
+                  <span className="text-sm text-gray-300">
+                    {s.title}
+                    {s.service !== 'common' && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wide rounded bg-gray-700 px-1.5 py-0.5 text-gray-300">
+                        {s.service === 'radio' ? 'Radio' : 'TV'}
+                      </span>
+                    )}
+                  </span>
+                </label>
+              ))}
             </div>
           </div>
 

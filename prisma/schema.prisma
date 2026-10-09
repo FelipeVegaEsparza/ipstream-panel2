@@ -381,9 +381,9 @@ model Plan {
   maxDjs              Int      @default(4) // Máximo de DJs simultáneos por radio. NULL no soportado.
   // Servicios incluidos en el plan: "radio" | "tv" | "both"
   services            String   @default("both")
-  // Onboarding corto en /dashboard/primeros-pasos (planes básicos): marca,
-  // subir contenido, iniciar AutoDJ y barra GC.
-  onboardingSimple    Boolean  @default(false)
+  // Tareas de onboarding ("Primeros pasos") que ve este plan: JSON array de
+  // keys (ver lib/onboarding-steps.ts). null/vacío = todas las que apliquen.
+  onboardingSteps     String?  @db.Text
   // Secciones del dashboard que el plan NO incluye (JSON array de MenuItemKey).
   // Se fusiona con services: services oculta la sección entera (Radio/TV) y
   // menuHiddenKeys permite ocultar items puntuales. null = todas incluidas.
