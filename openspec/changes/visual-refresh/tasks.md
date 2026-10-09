@@ -23,10 +23,10 @@
 
 ## 4. Secciones del dashboard
 
-- [ ] 4.1 Migrar las secciones de Radio (`app/dashboard/streaming/**`, `components/dashboard/streaming/**`) a tokens/componentes; verificar reproducción/estado y formularios.
-- [ ] 4.2 Migrar las secciones de TV (`app/dashboard/television/**`); verificar biblioteca/parrilla/estado.
-- [ ] 4.3 Migrar el resto del dashboard (contenido, noticias, podcasts, etc.), por grupos; verificar cada grupo con build + smoke.
-- [ ] 4.4 **Guardrail** Fase 4: diff solo-estilos + smoke test por grupo.
+- [x] 4.1 Migrar las secciones de Radio (`app/dashboard/streaming/**`, `components/dashboard/streaming/**`) a tokens/componentes; verificar reproducción/estado y formularios.
+- [x] 4.2 Migrar las secciones de TV (`app/dashboard/television/**`); verificar biblioteca/parrilla/estado.
+- [x] 4.3 Migrar el resto del dashboard (contenido, noticias, podcasts, etc.), por grupos; verificar cada grupo con build + smoke.
+- [x] 4.4 **Guardrail** Fase 4: diff solo-estilos + smoke test por grupo.
 
 ## 5. Admin
 
