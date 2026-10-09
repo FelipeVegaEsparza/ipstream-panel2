@@ -65,7 +65,7 @@ export default async function DashboardLayout({
   return (
     <SessionProvider session={session}>
       <ModalProvider>
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
           <ImpersonationBanner />
           <DashboardLayoutClient
             user={session.user}

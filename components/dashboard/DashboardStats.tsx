@@ -13,7 +13,7 @@ interface DashboardStatsProps {
 
 const colorVariants = {
   'bg-blue-500': {
-    gradient: 'from-blue-500/20 to-blue-600/20',
+    gradient: 'from-blue-500/20 to-brand/20',
     border: 'border-blue-500/30',
     text: 'text-blue-400',
     icon: 'text-blue-400'
@@ -102,7 +102,7 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
                 <dt className={`truncate text-sm font-medium ${variant.text} mb-2`}>
                   {stat.name}
                 </dt>
-                <dd className="text-3xl font-bold tracking-tight text-white">
+                <dd className="text-3xl font-bold tracking-tight text-foreground">
                   {stat.value}
                 </dd>
               </div>

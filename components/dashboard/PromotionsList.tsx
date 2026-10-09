@@ -116,7 +116,7 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
                   href={promotion.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent hover:text-cyan-300 truncate transition-colors"
+                  className="text-accent hover:text-brand truncate transition-colors"
                 >
                   {promotion.link}
                 </a>
@@ -128,7 +128,7 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
             </div>
             
             {/* Actions */}
-            <div className="flex justify-end space-x-2 pt-3 border-t border-gray-700">
+            <div className="flex justify-end space-x-2 pt-3 border-t border-border">
               <Link
                 href={`/dashboard/promotions/${promotion.id}`}
                 className="action-button action-button-view"

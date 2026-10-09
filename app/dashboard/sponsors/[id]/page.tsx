@@ -44,8 +44,8 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
     { name: 'Facebook', url: sponsor.facebook, color: 'bg-blue-600 hover:bg-blue-700' },
     { name: 'Instagram', url: sponsor.instagram, color: 'bg-pink-600 hover:bg-pink-700' },
     { name: 'YouTube', url: sponsor.youtube, color: 'bg-red-600 hover:bg-red-700' },
-    { name: 'TikTok', url: sponsor.tiktok, color: 'bg-gray-800 hover:bg-gray-900' },
-    { name: 'X', url: sponsor.x, color: 'bg-gray-800 hover:bg-gray-900' },
+    { name: 'TikTok', url: sponsor.tiktok, color: 'bg-card hover:bg-background' },
+    { name: 'X', url: sponsor.x, color: 'bg-card hover:bg-background' },
     { name: 'WhatsApp', url: sponsor.whatsapp, color: 'bg-green-600 hover:bg-green-700' },
   ].filter(network => network.url)
 
@@ -55,7 +55,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
         <div className="flex items-center space-x-4">
           <Link
             href="/dashboard/sponsors"
-            className="p-2 text-gray-400 hover:text-gray-600"
+            className="p-2 text-muted-foreground hover:text-muted-foreground"
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
@@ -63,7 +63,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
             <h1 className="text-2xl font-bold text-gray-900">
               {sponsor.name}
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Información completa del auspiciador
             </p>
           </div>
@@ -94,7 +94,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
                   />
                 ) : (
                   <div className="h-24 w-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">Sin logo</span>
+                    <span className="text-muted-foreground text-sm">Sin logo</span>
                   </div>
                 )}
               </div>
@@ -106,7 +106,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
                 </h2>
                 
                 {sponsor.address && (
-                  <div className="flex items-center text-gray-600 mb-4">
+                  <div className="flex items-center text-muted-foreground mb-4">
                     <MapPinIcon className="h-5 w-5 mr-2" />
                     {sponsor.address}
                   </div>
@@ -150,7 +150,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
                     href={network.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`${network.color} text-white px-4 py-2 rounded-lg text-center text-sm font-medium transition-colors`}
+                    className={`${network.color} text-foreground px-4 py-2 rounded-lg text-center text-sm font-medium transition-colors`}
                   >
                     {network.name}
                   </a>
@@ -169,19 +169,19 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
             </h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-gray-500">Agregado:</span>
+                <span className="text-sm text-muted-foreground">Agregado:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(sponsor.createdAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Última actualización:</span>
+                <span className="text-sm text-muted-foreground">Última actualización:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(sponsor.updatedAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Redes sociales:</span>
+                <span className="text-sm text-muted-foreground">Redes sociales:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {socialNetworks.length} configuradas
                 </p>

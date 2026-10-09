@@ -65,7 +65,7 @@ function BasicDataContent({ clientId }: { clientId: string }) {
       <div className="space-y-6">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Cargando datos básicos...</p>
+          <p className="text-muted-foreground">Cargando datos básicos...</p>
         </div>
       </div>
     )
@@ -89,10 +89,10 @@ function BasicDataContent({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">
+        <h1 className="text-2xl font-bold text-foreground">
           Datos Básicos del Proyecto
         </h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <p className="mt-1 text-sm text-muted-foreground">
           Configura la información básica de tu proyecto de radio
         </p>
       </div>

@@ -19,9 +19,9 @@ export default function DashboardLoading() {
 }
 
 function SkeletonTitle() {
-  return <div className="h-9 w-48 bg-gray-700 rounded-lg animate-pulse" />
+  return <div className="h-9 w-48 bg-secondary rounded-lg animate-pulse" />
 }
 
 function SkeletonSubtitle() {
-  return <div className="h-4 w-72 bg-gray-700 rounded-lg animate-pulse mt-2" />
+  return <div className="h-4 w-72 bg-secondary rounded-lg animate-pulse mt-2" />
 }

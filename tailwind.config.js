@@ -14,6 +14,13 @@ module.exports = {
         soft: 'var(--shadow-soft)',
       },
       colors: {
+        brand: {
+          DEFAULT: '#28B4F0',
+          300: '#64F0F0',
+          500: '#28B4F0',
+          600: '#1E9BD6',
+          700: '#0050B4',
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

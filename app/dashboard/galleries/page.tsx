@@ -39,7 +39,7 @@ export default async function GalleriesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Galerías</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Gestiona las galerías de imágenes de tu radio
           </p>
         </div>

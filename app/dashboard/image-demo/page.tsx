@@ -7,7 +7,7 @@ export default function ImageDemoPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           Demo de Upload de Imágenes
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Prueba el sistema de subida de imágenes integrado
         </p>
       </div>
@@ -17,7 +17,7 @@ export default function ImageDemoPage() {
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Funcionalidades del Sistema de Upload
           </h3>
-          <div className="space-y-3 text-sm text-gray-600">
+          <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start space-x-2">
               <span className="text-green-500">✓</span>
               <span>Drag & Drop de imágenes</span>
@@ -78,7 +78,7 @@ export default function ImageDemoPage() {
 
           <div className="mt-6">
             <h4 className="font-medium text-gray-900 mb-2">Límites:</h4>
-            <ul className="text-sm text-gray-600 space-y-1">
+            <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Tamaño máximo: 5MB</li>
               <li>• Solo imágenes</li>
               <li>• Nombres seguros automáticos</li>

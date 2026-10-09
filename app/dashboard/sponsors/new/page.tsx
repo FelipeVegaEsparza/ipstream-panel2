@@ -7,7 +7,7 @@ export default function NewSponsorPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           Nuevo Auspiciador
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Agrega un nuevo auspiciador o sponsor
         </p>
       </div>

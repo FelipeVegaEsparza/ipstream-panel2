@@ -18,10 +18,10 @@ export default async function PaymentsPage() {
   if (!clientId) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-white mb-4">
+        <h2 className="text-2xl font-bold text-foreground mb-4">
           No tienes un cliente asignado
         </h2>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Contacta al administrador para que te asigne un plan
         </p>
       </div>
@@ -48,7 +48,7 @@ export default async function PaymentsPage() {
   if (!client) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-white mb-4">
+        <h2 className="text-2xl font-bold text-foreground mb-4">
           Cliente no encontrado
         </h2>
       </div>

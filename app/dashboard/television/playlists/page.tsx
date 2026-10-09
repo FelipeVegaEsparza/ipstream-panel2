@@ -268,7 +268,7 @@ export default function TvPlaylistsPage() {
     else setSelectedTrackIds(new Set(ids))
   }
 
-  if (loading) return <div className="text-gray-400 p-6">Cargando...</div>
+  if (loading) return <div className="text-muted-foreground p-6">Cargando...</div>
 
   const selectableTracks = tracks.filter(t => !inPlaylistIds.has(t.id))
   const allSelected = selectableTracks.length > 0 && selectableTracks.every((t) => selectedTrackIds.has(t.id))
@@ -276,8 +276,8 @@ export default function TvPlaylistsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Programación</h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <h1 className="text-3xl font-bold text-foreground">Programación</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Crea y edita las playlists de video para tu canal de Televisión. Los videos se agregan desde la Videoteca o con el buscador.
         </p>
       </div>
@@ -285,19 +285,19 @@ export default function TvPlaylistsPage() {
       <div className="flex gap-4">
         {/* Playlist sidebar */}
         <div className="w-64 flex-shrink-0 space-y-3">
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-gray-300">Playlists</h3>
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4 space-y-2">
+            <h3 className="text-sm font-semibold text-muted-foreground">Playlists</h3>
             {playlists.map(pl => (
               <div key={pl.id} className="flex items-center gap-1 group">
                 <button
                   onClick={() => setSelectedPlaylistId(pl.id)}
                   className={`flex-1 text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    selectedPlaylistId === pl.id ? 'bg-cyan-600/30 text-cyan-300' : 'text-gray-400 hover:bg-gray-700'
+                    selectedPlaylistId === pl.id ? 'bg-brand/30 text-brand' : 'text-muted-foreground hover:bg-secondary'
                   }`}
                 >
                   ▶ {pl.name} ({pl.trackCount})
                 </button>
-                <button onClick={() => deletePlaylist(pl.id)} className="hidden group-hover:block text-xs text-gray-500 hover:text-red-400">
+                <button onClick={() => deletePlaylist(pl.id)} className="hidden group-hover:block text-xs text-muted-foreground hover:text-red-400">
                   ✕
                 </button>
               </div>
@@ -308,9 +308,9 @@ export default function TvPlaylistsPage() {
                 onChange={e => setNewPlaylistName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && createPlaylist()}
                 placeholder="Nueva playlist..."
-                className="flex-1 bg-gray-700 text-white text-xs px-2 py-1.5 rounded border border-gray-600 outline-none focus:border-cyan-500"
+                className="flex-1 bg-secondary text-foreground text-xs px-2 py-1.5 rounded border border-border outline-none focus:border-brand"
               />
-              <button onClick={createPlaylist} className="px-2 py-1 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700">
+              <button onClick={createPlaylist} className="px-2 py-1 bg-brand text-white text-xs rounded hover:bg-brand">
                 +
               </button>
             </div>
@@ -319,7 +319,7 @@ export default function TvPlaylistsPage() {
           {selectedPlaylistId && (
             <button
               onClick={() => { setShowAdd(true); setSelectedTrackIds(new Set()); setSearch(''); setFolderFilter(null) }}
-              className="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded-lg transition-colors"
+              className="w-full px-3 py-2 bg-brand hover:bg-brand text-white text-sm rounded-lg transition-colors"
             >
               + Agregar tracks
             </button>
@@ -328,15 +328,15 @@ export default function TvPlaylistsPage() {
 
         {/* Playlist entries */}
         <div className="flex-1">
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl overflow-hidden">
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl overflow-hidden">
             {!selectedPlaylistId ? (
-              <div className="p-6 text-center text-gray-500">Selecciona o crea una playlist</div>
+              <div className="p-6 text-center text-muted-foreground">Selecciona o crea una playlist</div>
             ) : loadingEntries ? (
-              <div className="p-6 text-center text-gray-500">Cargando...</div>
+              <div className="p-6 text-center text-muted-foreground">Cargando...</div>
             ) : (
               <>
-                <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-white">
+                <div className="p-4 border-b border-border flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">
                     {playlists.find(p => p.id === selectedPlaylistId)?.name} ({entries.length})
                   </h2>
                   {orderChanged && (
@@ -350,7 +350,7 @@ export default function TvPlaylistsPage() {
                   )}
                 </div>
                 {entries.length === 0 ? (
-                  <div className="p-12 text-center text-gray-500">
+                  <div className="p-12 text-center text-muted-foreground">
                     Playlist vacía. Agregá videos desde la Videoteca o con "+ Agregar tracks".
                   </div>
                 ) : (
@@ -363,29 +363,29 @@ export default function TvPlaylistsPage() {
                         onDragOver={onDragOver(idx)}
                         onDrop={() => onDrop(idx)}
                         onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null) }}
-                        className={`flex items-center gap-3 p-3 border-b border-gray-700/50 cursor-move transition ${
+                        className={`flex items-center gap-3 p-3 border-b border-border/50 cursor-move transition ${
                           draggingIdx === idx ? 'opacity-30' :
-                          dragOverIdx === idx ? 'bg-cyan-900/30 border-cyan-600' :
-                          'hover:bg-gray-700/30'
+                          dragOverIdx === idx ? 'bg-brand/30 border-brand' :
+                          'hover:bg-secondary/30'
                         }`}
                       >
-                        <span className="text-gray-500 text-sm w-8 text-center select-none">
+                        <span className="text-muted-foreground text-sm w-8 text-center select-none">
                           ⋮⋮ {idx + 1}
                         </span>
                         <div className="flex-shrink-0 w-16 h-10">
                           {entry.thumbnail ? (
                             <img src={entry.thumbnail} alt="" className="w-16 h-10 object-cover rounded" />
                           ) : (
-                            <div className="w-16 h-10 bg-gray-700 rounded flex items-center justify-center text-gray-500 text-xs">N/A</div>
+                            <div className="w-16 h-10 bg-secondary rounded flex items-center justify-center text-muted-foreground text-xs">N/A</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-white truncate">{entry.title}</div>
-                          <div className="text-xs text-gray-500">{formatDuration(entry.duration)}</div>
+                          <div className="text-foreground truncate">{entry.title}</div>
+                          <div className="text-xs text-muted-foreground">{formatDuration(entry.duration)}</div>
                         </div>
                         <button
                           onClick={() => removeEntry(entry.id)}
-                          className="text-xs text-gray-500 hover:text-red-400"
+                          className="text-xs text-muted-foreground hover:text-red-400"
                         >
                           Quitar
                         </button>
@@ -403,20 +403,20 @@ export default function TvPlaylistsPage() {
       {showAdd && selectedPlaylistId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} />
-          <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-lg max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h3 className="text-lg font-semibold text-white">Agregar tracks</h3>
-              <button onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} className="text-gray-400 hover:text-white">
+          <div className="relative bg-card rounded-2xl shadow-2xl border border-border w-full max-w-lg max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h3 className="text-lg font-semibold text-foreground">Agregar tracks</h3>
+              <button onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} className="text-muted-foreground hover:text-foreground">
                 ✕
               </button>
             </div>
 
-            <div className="px-4 pt-3 pb-1 border-b border-gray-700">
+            <div className="px-4 pt-3 pb-1 border-b border-border">
               <div className="flex items-center gap-2">
                 <select
                   value={folderFilter ?? ''}
                   onChange={e => setFolderFilter(e.target.value || null)}
-                  className="flex-1 bg-gray-900 text-white text-sm px-2 py-1.5 rounded border border-gray-700 outline-none"
+                  className="flex-1 bg-background text-foreground text-sm px-2 py-1.5 rounded border border-border outline-none"
                 >
                   <option value="">Todas las carpetas</option>
                   <option value="__none__">Sin carpeta</option>
@@ -427,16 +427,16 @@ export default function TvPlaylistsPage() {
               </div>
             </div>
 
-            <div className="p-4 border-b border-gray-700">
+            <div className="p-4 border-b border-border">
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="🔍 Buscar en videoteca..."
-                className="w-full bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+                className="w-full bg-background text-foreground px-3 py-2 rounded border border-border"
               />
             </div>
 
-            <div className="px-4 py-2 border-b border-gray-700 flex items-center gap-2">
+            <div className="px-4 py-2 border-b border-border flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={allSelected && selectableTracks.length > 0}
@@ -444,14 +444,14 @@ export default function TvPlaylistsPage() {
                 disabled={selectableTracks.length === 0}
                 className="rounded"
               />
-              <span className="text-sm text-gray-300">
+              <span className="text-sm text-muted-foreground">
                 {allSelected ? 'Deseleccionar todos' : `Seleccionar todos (${selectableTracks.length} disponibles)`}
               </span>
             </div>
 
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {selectableTracks.length === 0 ? (
-                <div className="text-gray-500 text-sm py-8 text-center">
+                <div className="text-muted-foreground text-sm py-8 text-center">
                   {tracks.length === 0 ? 'No hay videos. Sube videos primero en la Videoteca.' : 'Sin resultados.'}
                 </div>
               ) : (
@@ -461,7 +461,7 @@ export default function TvPlaylistsPage() {
                     <div
                       key={t.id}
                       className={`flex items-center gap-2 p-2 rounded ${
-                        isSelected ? 'bg-indigo-900/40 border border-indigo-700' : 'bg-gray-800/50 hover:bg-gray-700'
+                        isSelected ? 'bg-indigo-900/40 border border-indigo-700' : 'bg-card/50 hover:bg-secondary'
                       }`}
                     >
                       <input
@@ -474,12 +474,12 @@ export default function TvPlaylistsPage() {
                         {t.thumbnail ? (
                           <img src={t.thumbnail} alt="" className="w-12 h-8 object-cover rounded" />
                         ) : (
-                          <div className="w-12 h-8 bg-gray-700 rounded" />
+                          <div className="w-12 h-8 bg-secondary rounded" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-white text-sm truncate">{t.title}</div>
-                        <div className="text-xs text-gray-500">{formatDuration(t.duration)}</div>
+                        <div className="text-foreground text-sm truncate">{t.title}</div>
+                        <div className="text-xs text-muted-foreground">{formatDuration(t.duration)}</div>
                       </div>
                     </div>
                   )
@@ -487,10 +487,10 @@ export default function TvPlaylistsPage() {
               )}
             </div>
 
-            <div className="p-4 border-t border-gray-700 flex gap-2">
+            <div className="p-4 border-t border-border flex gap-2">
               <button
                 onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }}
-                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium"
+                className="flex-1 px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded-lg font-medium"
               >
                 Cancelar
               </button>

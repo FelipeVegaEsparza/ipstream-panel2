@@ -34,7 +34,7 @@ export default async function EditProgramPage({ params }: EditProgramPageProps) 
         <h1 className="text-2xl font-bold text-gray-900">
           Editar Programa
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Modifica la información del programa
         </p>
       </div>

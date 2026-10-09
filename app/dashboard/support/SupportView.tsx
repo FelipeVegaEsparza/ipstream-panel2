@@ -32,17 +32,17 @@ export function SupportView({ initialTickets }: SupportViewProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <LifeBuoy className="h-6 w-6 text-cyan-400" />
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <LifeBuoy className="h-6 w-6 text-brand" />
             Soporte
           </h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Abre un ticket y te responderemos a la brevedad
           </p>
         </div>
         <button
           onClick={() => setShowNew(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand transition-colors"
         >
           <Plus className="h-4 w-4" />
           Nuevo ticket
@@ -50,15 +50,15 @@ export function SupportView({ initialTickets }: SupportViewProps) {
       </div>
 
       {tickets.length === 0 ? (
-        <div className="text-center py-16 bg-gray-800/40 rounded-xl border border-dashed border-gray-700">
-          <MessageCircle className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-          <h2 className="text-lg font-medium text-white mb-1">No tienes tickets</h2>
-          <p className="text-sm text-gray-400 mb-4">
+        <div className="text-center py-16 bg-card/40 rounded-xl border border-dashed border-border">
+          <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <h2 className="text-lg font-medium text-foreground mb-1">No tienes tickets</h2>
+          <p className="text-sm text-muted-foreground mb-4">
             Cuando tengas una duda o problema, abre un ticket y te ayudamos.
           </p>
           <button
             onClick={() => setShowNew(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand transition-colors"
           >
             <Plus className="h-4 w-4" />
             Abrir mi primer ticket
@@ -76,10 +76,10 @@ export function SupportView({ initialTickets }: SupportViewProps) {
               <li key={t.id}>
                 <Link
                   href={`/dashboard/support/${t.id}`}
-                  className="block bg-gray-800 border border-gray-700 rounded-xl p-4 hover:border-cyan-500 transition-colors"
+                  className="block bg-card border border-border rounded-xl p-4 hover:border-brand transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <h3 className="text-white font-semibold flex-1">{t.subject}</h3>
+                    <h3 className="text-foreground font-semibold flex-1">{t.subject}</h3>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span
                         className={`text-xs px-2 py-0.5 rounded border ${priorityConf.color}`}
@@ -94,14 +94,14 @@ export function SupportView({ initialTickets }: SupportViewProps) {
                     </div>
                   </div>
                   {lastMessage && (
-                    <p className="text-sm text-gray-400 line-clamp-1">
-                      <span className="text-gray-500">
+                    <p className="text-sm text-muted-foreground line-clamp-1">
+                      <span className="text-muted-foreground">
                         {lastMessage.authorType === 'admin' ? 'Soporte' : 'Tú'}:{' '}
                       </span>
                       {lastMessage.body}
                     </p>
                   )}
-                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                     <span>{t._count.messages} mensaje{t._count.messages === 1 ? '' : 's'}</span>
                     <span>·</span>
                     <span>
@@ -196,31 +196,31 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
       onClick={onClose}
     >
       <div
-        className="bg-gray-800 rounded-2xl border border-gray-700 max-w-lg w-full"
+        className="bg-card rounded-2xl border border-border max-w-lg w-full"
         onClick={(e) => e.stopPropagation()}
       >
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <h2 className="text-xl font-bold text-white">Nuevo ticket</h2>
+          <h2 className="text-xl font-bold text-foreground">Nuevo ticket</h2>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Asunto *</label>
+            <label className="text-sm text-muted-foreground block mb-1">Asunto *</label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ej: No puedo subir imágenes"
               maxLength={200}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Prioridad</label>
+            <label className="text-sm text-muted-foreground block mb-1">Prioridad</label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as 'low' | 'normal' | 'high' | 'urgent')}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
             >
               <option value="low">Baja</option>
               <option value="normal">Normal</option>
@@ -230,22 +230,22 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
           </div>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Mensaje *</label>
+            <label className="text-sm text-muted-foreground block mb-1">Mensaje *</label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Describe tu problema o pregunta con el mayor detalle posible"
               rows={5}
               maxLength={5000}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white resize-none"
+              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground resize-none"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">{body.length}/5000</p>
+            <p className="text-xs text-muted-foreground mt-1">{body.length}/5000</p>
           </div>
 
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Archivos adjuntos</label>
-            <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-cyan-500 cursor-pointer transition-colors text-sm">
+            <label className="text-sm text-muted-foreground block mb-1">Archivos adjuntos</label>
+            <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:border-brand cursor-pointer transition-colors text-sm">
               <input
                 type="file"
                 multiple
@@ -262,9 +262,9 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
             {files.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {files.map((f, i) => (
-                  <li key={i} className="text-xs text-gray-400 flex items-center gap-1">
+                  <li key={i} className="text-xs text-muted-foreground flex items-center gap-1">
                     <span className="truncate max-w-[200px]">{f.name}</span>
-                    <span className="text-gray-500 flex-shrink-0">
+                    <span className="text-muted-foreground flex-shrink-0">
                       ({(f.size / 1024 / 1024).toFixed(1)} MB)
                     </span>
                     <button
@@ -290,14 +290,14 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-700"
+              className="flex-1 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-secondary"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-4 py-2 rounded-lg bg-cyan-600 text-white font-medium hover:bg-cyan-700 disabled:opacity-50"
+              className="flex-1 px-4 py-2 rounded-lg bg-brand text-white font-medium hover:bg-brand disabled:opacity-50"
             >
               {submitting ? (uploadProgress ? 'Subiendo archivos...' : 'Creando...') : 'Crear ticket'}
             </button>

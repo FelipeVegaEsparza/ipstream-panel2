@@ -30,12 +30,12 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <Link href="/dashboard/events" className="p-2 text-gray-400 hover:text-gray-600">
+          <Link href="/dashboard/events" className="p-2 text-muted-foreground hover:text-muted-foreground">
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Vista de Evento</h1>
-            <p className="mt-1 text-sm text-gray-600">Información del evento</p>
+            <p className="mt-1 text-sm text-muted-foreground">Información del evento</p>
           </div>
         </div>
         <Link href={`/dashboard/events/${event.id}/edit`} className="btn-primary flex items-center gap-2">
@@ -51,7 +51,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 <Image src={event.imageUrl} alt={event.title} fill className="object-cover" />
                 {past && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="text-white text-lg font-bold uppercase tracking-wider bg-black/60 px-4 py-2 rounded-lg">Finalizado</span>
+                    <span className="text-foreground text-lg font-bold uppercase tracking-wider bg-black/60 px-4 py-2 rounded-lg">Finalizado</span>
                   </div>
                 )}
               </div>
@@ -60,13 +60,13 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
 
             <div className="flex flex-wrap gap-4 mb-6 text-sm">
-              <div className="flex items-center text-gray-600 gap-1.5">
-                <CalendarDaysIcon className="h-5 w-5 text-cyan-500" />
+              <div className="flex items-center text-muted-foreground gap-1.5">
+                <CalendarDaysIcon className="h-5 w-5 text-brand" />
                 <span>{formatDate(event.date)}{event.time ? ` - ${event.time}` : ''}</span>
               </div>
               {event.location && (
-                <div className="flex items-center text-gray-600 gap-1.5">
-                  <MapPinIcon className="h-5 w-5 text-cyan-500" />
+                <div className="flex items-center text-muted-foreground gap-1.5">
+                  <MapPinIcon className="h-5 w-5 text-brand" />
                   <span>{event.location}</span>
                 </div>
               )}
@@ -92,29 +92,29 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             <h3 className="text-lg font-medium text-gray-900 mb-4">Información</h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-gray-500">Estado:</span>
+                <span className="text-sm text-muted-foreground">Estado:</span>
                 <p className={`text-sm font-medium ${past ? 'text-red-600' : 'text-green-600'}`}>
                   {past ? 'Finalizado' : 'Próximo'}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Fecha:</span>
+                <span className="text-sm text-muted-foreground">Fecha:</span>
                 <p className="text-sm font-medium text-gray-900">{formatDate(event.date)}</p>
               </div>
               {event.time && (
                 <div>
-                  <span className="text-sm text-gray-500">Hora:</span>
+                  <span className="text-sm text-muted-foreground">Hora:</span>
                   <p className="text-sm font-medium text-gray-900">{event.time}</p>
                 </div>
               )}
               {event.location && (
                 <div>
-                  <span className="text-sm text-gray-500">Ubicación:</span>
+                  <span className="text-sm text-muted-foreground">Ubicación:</span>
                   <p className="text-sm font-medium text-gray-900">{event.location}</p>
                 </div>
               )}
               <div>
-                <span className="text-sm text-gray-500">Creado:</span>
+                <span className="text-sm text-muted-foreground">Creado:</span>
                 <p className="text-sm font-medium text-gray-900">{formatDateTime(event.createdAt)}</p>
               </div>
             </div>

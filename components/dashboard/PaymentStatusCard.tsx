@@ -47,21 +47,21 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
         return {
           title: 'Prueba Gratis',
           icon: SparklesIcon,
-          gradient: 'from-cyan-500/20 to-blue-600/20',
-          border: 'border-cyan-500/30',
-          textColor: 'text-cyan-400',
-          iconColor: 'text-cyan-400',
-          bgIcon: 'bg-cyan-500/20'
+          gradient: 'from-brand/20 to-brand/20',
+          border: 'border-brand/30',
+          textColor: 'text-brand',
+          iconColor: 'text-brand',
+          bgIcon: 'bg-brand/20'
         }
       default:
         return {
           title: 'Sin Plan Activo',
           icon: CreditCardIcon,
-          gradient: 'from-gray-500/20 to-gray-600/20',
-          border: 'border-gray-500/30',
-          textColor: 'text-gray-400',
-          iconColor: 'text-gray-400',
-          bgIcon: 'bg-gray-500/20'
+          gradient: 'from-secondary/20 to-secondary/20',
+          border: 'border-border/30',
+          textColor: 'text-muted-foreground',
+          iconColor: 'text-muted-foreground',
+          bgIcon: 'bg-secondary/20'
         }
     }
   }
@@ -104,7 +104,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
             <Icon className={`w-6 h-6 ${config.iconColor}`} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Estado de Pago</h3>
+            <h3 className="text-lg font-semibold text-foreground">Estado de Pago</h3>
             <p className={`text-sm font-medium ${config.textColor}`}>{config.title}</p>
           </div>
         </div>
@@ -112,23 +112,23 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
 
       {status === 'no-plan' ? (
         <div className="space-y-4">
-          <p className="text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             No tienes un plan activo. Contacta al administrador para activar tu suscripción.
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {/* Plan Info */}
-          <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-            <span className="text-sm text-gray-300">Plan Actual</span>
-            <span className="text-sm font-semibold text-white">{planName}</span>
+          <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
+            <span className="text-sm text-muted-foreground">Plan Actual</span>
+            <span className="text-sm font-semibold text-foreground">{planName}</span>
           </div>
 
           {/* Next Payment Date */}
           {nextPaymentDate && (
-            <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-              <span className="text-sm text-gray-300">{status === 'trial' ? 'Fin de prueba' : 'Próximo Pago'}</span>
-              <span className="text-sm font-semibold text-white">
+            <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
+              <span className="text-sm text-muted-foreground">{status === 'trial' ? 'Fin de prueba' : 'Próximo Pago'}</span>
+              <span className="text-sm font-semibold text-foreground">
                 {formatDate(nextPaymentDate)}
               </span>
             </div>
@@ -136,9 +136,9 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
 
           {/* Amount */}
           {planPrice && (
-            <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-              <span className="text-sm text-gray-300">{status === 'trial' ? 'Cobro al finalizar' : 'Monto'}</span>
-              <span className="text-sm font-semibold text-white">
+            <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
+              <span className="text-sm text-muted-foreground">{status === 'trial' ? 'Cobro al finalizar' : 'Monto'}</span>
+              <span className="text-sm font-semibold text-foreground">
                 {formatCurrency(planPrice)}
               </span>
             </div>
@@ -151,7 +151,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
                 <div className={`text-3xl font-bold ${config.textColor} mb-1`}>
                   {daysRemaining > 0 ? daysRemaining : Math.abs(daysRemaining)}
                 </div>
-                <div className="text-sm text-gray-300">
+                <div className="text-sm text-muted-foreground">
                   {daysRemaining > 0 
                     ? `día${daysRemaining !== 1 ? 's' : ''} restante${daysRemaining !== 1 ? 's' : ''}`
                     : daysRemaining === 0
@@ -166,7 +166,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
           {/* Action Button */}
           <Link
             href="/dashboard/payments"
-            className="block w-full text-center py-3 px-4 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors"
+            className="block w-full text-center py-3 px-4 bg-brand hover:bg-brand text-white font-medium rounded-lg transition-colors"
           >
             Ver Historial de Pagos
           </Link>

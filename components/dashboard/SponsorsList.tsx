@@ -114,7 +114,7 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                   className="h-20 w-auto object-contain"
                 />
               ) : (
-                <div className="h-20 w-32 bg-gray-700 rounded-lg flex items-center justify-center">
+                <div className="h-20 w-32 bg-secondary rounded-lg flex items-center justify-center">
                   <span className="text-muted text-sm">Sin logo</span>
                 </div>
               )}
@@ -168,7 +168,7 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                     href={sponsor.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-accent hover:text-cyan-300 transition-colors"
+                    className="inline-flex items-center text-sm text-accent hover:text-brand transition-colors"
                   >
                     <GlobeAltIcon className="h-4 w-4 mr-1" />
                     Sitio Web
@@ -181,7 +181,7 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
               </div>
               
               {/* Actions */}
-              <div className="flex justify-center space-x-2 pt-3 border-t border-gray-700">
+              <div className="flex justify-center space-x-2 pt-3 border-t border-border">
                 <Link
                   href={`/dashboard/sponsors/${sponsor.id}`}
                   className="action-button action-button-view"

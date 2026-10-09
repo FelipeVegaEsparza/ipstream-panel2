@@ -138,7 +138,7 @@ export function PushNotificationsManager() {
   }
 
   if (loading) {
-    return <div className="text-white">Cargando...</div>
+    return <div className="text-foreground">Cargando...</div>
   }
 
   return (
@@ -146,10 +146,10 @@ export function PushNotificationsManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Notificaciones Push
           </h1>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Envía notificaciones a los usuarios de tu PWA
           </p>
         </div>
@@ -167,7 +167,7 @@ export function PushNotificationsManager() {
       {/* Formulario */}
       {showForm && (
         <div className="card">
-          <h3 className="text-xl font-semibold text-white mb-6">
+          <h3 className="text-xl font-semibold text-foreground mb-6">
             Crear Notificación
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -183,7 +183,7 @@ export function PushNotificationsManager() {
                   required
                   maxLength={50}
                 />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {formData.title.length}/50 caracteres
                 </p>
               </div>
@@ -199,7 +199,7 @@ export function PushNotificationsManager() {
                   rows={3}
                   maxLength={200}
                 />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {formData.message.length}/200 caracteres
                 </p>
               </div>
@@ -227,25 +227,25 @@ export function PushNotificationsManager() {
               </div>
             </div>
 
-            <div className="border-t border-gray-700 pt-6">
+            <div className="border-t border-border pt-6">
               <div className="flex items-center gap-4 mb-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     checked={formData.sendNow}
                     onChange={() => setFormData({ ...formData, sendNow: true })}
-                    className="text-cyan-500"
+                    className="text-brand"
                   />
-                  <span className="text-white">Enviar ahora</span>
+                  <span className="text-foreground">Enviar ahora</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     checked={!formData.sendNow}
                     onChange={() => setFormData({ ...formData, sendNow: false })}
-                    className="text-cyan-500"
+                    className="text-brand"
                   />
-                  <span className="text-white">Programar envío</span>
+                  <span className="text-foreground">Programar envío</span>
                 </label>
               </div>
 
@@ -286,30 +286,30 @@ export function PushNotificationsManager() {
 
       {/* Historial */}
       <div className="card">
-        <h3 className="text-xl font-semibold text-white mb-6">
+        <h3 className="text-xl font-semibold text-foreground mb-6">
           Historial de Notificaciones
         </h3>
 
         {notifications.length === 0 ? (
           <div className="text-center py-12">
-            <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 text-muted-foreground mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <p className="text-gray-400">No has enviado notificaciones aún</p>
+            <p className="text-muted-foreground">No has enviado notificaciones aún</p>
           </div>
         ) : (
           <div className="space-y-4">
             {notifications.map((notification) => (
-              <div key={notification.id} className="glass-effect rounded-lg p-4 hover:bg-gray-700/30 transition-colors">
+              <div key={notification.id} className="glass-effect rounded-lg p-4 hover:bg-secondary/30 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1">
-                    <h4 className="text-white font-medium">{notification.title}</h4>
-                    <p className="text-gray-400 text-sm mt-1">{notification.message}</p>
+                    <h4 className="text-foreground font-medium">{notification.title}</h4>
+                    <p className="text-muted-foreground text-sm mt-1">{notification.message}</p>
                   </div>
                   {getStatusBadge(notification.status)}
                 </div>
                 
-                <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-400">
+                <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

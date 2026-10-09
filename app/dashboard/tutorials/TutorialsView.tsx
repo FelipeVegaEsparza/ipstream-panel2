@@ -60,9 +60,9 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
   if (initialCategories.length === 0) {
     return (
       <div className="text-center py-16">
-        <PlayCircle className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">No hay tutoriales aún</h2>
-        <p className="text-gray-400">
+        <PlayCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-foreground mb-2">No hay tutoriales aún</h2>
+        <p className="text-muted-foreground">
           Vuelve pronto, estamos preparando contenido para ti.
         </p>
       </div>
@@ -72,13 +72,13 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Tutoriales</h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <h1 className="text-2xl font-bold text-foreground">Tutoriales</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Aprende a usar la plataforma con nuestros videos paso a paso
         </p>
       </div>
 
-      <div className="flex gap-2 flex-wrap border-b border-gray-700 pb-3">
+      <div className="flex gap-2 flex-wrap border-b border-border pb-3">
         <CategoryTab
           label="Todos"
           count={initialTutorials.length}
@@ -97,7 +97,7 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-center text-gray-400 py-12">
+        <p className="text-center text-muted-foreground py-12">
           No hay tutoriales en esta categoría.
         </p>
       ) : (
@@ -114,9 +114,9 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
               <button
                 key={t.id}
                 onClick={() => setOpenTutorial(t)}
-                className="text-left bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-cyan-500 transition-colors group"
+                className="text-left bg-card border border-border rounded-xl overflow-hidden hover:border-brand transition-colors group"
               >
-                <div className="relative aspect-video bg-gray-900">
+                <div className="relative aspect-video bg-background">
                   {thumb ? (
                     <img
                       src={thumb}
@@ -125,27 +125,27 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
                       onError={() => setThumbErrors((prev) => ({ ...prev, [t.id]: true }))}
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                       <PlayCircle className="h-12 w-12" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-cyan-500 rounded-full p-3">
-                      <Play className="h-6 w-6 text-white fill-white" />
+                    <div className="bg-brand rounded-full p-3">
+                      <Play className="h-6 w-6 text-foreground fill-white" />
                     </div>
                   </div>
                 </div>
                 <div className="p-4 space-y-1">
                   {category && (
-                    <p className="text-xs text-cyan-400 font-medium uppercase tracking-wide">
+                    <p className="text-xs text-brand font-medium uppercase tracking-wide">
                       {category.name}
                     </p>
                   )}
-                  <h3 className="text-white font-semibold line-clamp-2 group-hover:text-cyan-300 transition-colors">
+                  <h3 className="text-foreground font-semibold line-clamp-2 group-hover:text-brand transition-colors">
                     {t.title}
                   </h3>
                   {t.description && (
-                    <p className="text-sm text-gray-400 line-clamp-2">{t.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{t.description}</p>
                   )}
                 </div>
               </button>
@@ -160,21 +160,21 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
           onClick={() => setOpenTutorial(null)}
         >
           <div
-            className="bg-gray-800 rounded-2xl border border-gray-700 max-w-4xl w-full overflow-hidden shadow-2xl"
+            className="bg-card rounded-2xl border border-border max-w-4xl w-full overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <div className="flex items-center justify-between p-4 border-b border-border">
               <div>
-                <h3 className="text-lg font-bold text-white">{openTutorial.title}</h3>
+                <h3 className="text-lg font-bold text-foreground">{openTutorial.title}</h3>
                 {initialCategories.find((c) => c.id === openTutorial.categoryId) && (
-                  <p className="text-xs text-cyan-400 uppercase tracking-wide">
+                  <p className="text-xs text-brand uppercase tracking-wide">
                     {initialCategories.find((c) => c.id === openTutorial.categoryId)?.name}
                   </p>
                 )}
               </div>
               <button
                 onClick={() => setOpenTutorial(null)}
-                className="text-gray-400 hover:text-white transition-colors p-1"
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
                 aria-label="Cerrar"
               >
                 <X className="h-6 w-6" />
@@ -190,7 +190,7 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
               />
             </div>
             {openTutorial.description && (
-              <div className="p-4 text-gray-300 text-sm">
+              <div className="p-4 text-muted-foreground text-sm">
                 {openTutorial.description}
               </div>
             )}
@@ -217,14 +217,14 @@ function CategoryTab({
       onClick={onClick}
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
         active
-          ? 'bg-cyan-600 text-white'
-          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          ? 'bg-brand text-white'
+          : 'bg-card text-muted-foreground hover:bg-secondary'
       }`}
     >
       {label}
       <span
         className={`text-xs px-1.5 py-0.5 rounded ${
-          active ? 'bg-cyan-700' : 'bg-gray-700'
+          active ? 'bg-brand' : 'bg-secondary'
         }`}
       >
         {count}

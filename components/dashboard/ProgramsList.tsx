@@ -111,7 +111,7 @@ export function ProgramsList({ programs }: ProgramsListProps) {
                 </div>
               </div>
               
-              <div className="flex justify-end space-x-2 pt-3 border-t border-gray-700">
+              <div className="flex justify-end space-x-2 pt-3 border-t border-border">
                 <Link
                   href={`/dashboard/programs/${program.id}/edit`}
                   className="action-button action-button-edit"

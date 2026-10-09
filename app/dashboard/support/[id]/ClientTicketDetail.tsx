@@ -119,12 +119,12 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
       <div className="flex items-center gap-3">
         <Link
           href="/dashboard/support"
-          className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-white truncate">{ticket.subject}</h1>
+          <h1 className="text-xl font-bold text-foreground truncate">{ticket.subject}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded border ${statusConf.color}`}>
               {statusConf.label}
@@ -136,7 +136,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
         </div>
       </div>
 
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="p-4 max-h-[60vh] overflow-y-auto space-y-4">
           {ticket.messages.map((m) => (
             <MessageBubble key={m.id} message={m} />
@@ -145,26 +145,26 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
         </div>
 
         {isClosed ? (
-          <div className="p-4 border-t border-gray-700 bg-gray-900/40">
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-700/30 text-sm text-gray-300">
-              <LifeBuoy className="h-4 w-4 mt-0.5 text-cyan-400 flex-shrink-0" />
+          <div className="p-4 border-t border-border bg-background/40">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-secondary/30 text-sm text-muted-foreground">
+              <LifeBuoy className="h-4 w-4 mt-0.5 text-brand flex-shrink-0" />
               <div>
-                <p className="font-medium text-white">Este ticket está cerrado</p>
-                <p className="text-gray-400 text-xs mt-0.5">
+                <p className="font-medium text-foreground">Este ticket está cerrado</p>
+                <p className="text-muted-foreground text-xs mt-0.5">
                   Si necesitas ayuda con un tema relacionado, abre uno nuevo.
                 </p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="p-4 border-t border-gray-700 bg-gray-900/40 space-y-3">
+          <div className="p-4 border-t border-border bg-background/40 space-y-3">
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Escribe tu respuesta..."
               rows={3}
               maxLength={5000}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 resize-none focus:outline-none focus:border-cyan-500"
+              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground placeholder-gray-500 resize-none focus:outline-none focus:border-brand"
             />
 
             <AttachmentUploader
@@ -185,7 +185,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
               <button
                 onClick={handleSend}
                 disabled={sending || body.trim().length === 0}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand disabled:opacity-50 transition-colors"
               >
                 <Send className="h-4 w-4" />
                 {sending ? 'Enviando...' : 'Enviar'}
@@ -202,12 +202,12 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
               setNewReply(null)
               messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
             }}
-            className="w-full flex items-start gap-3 p-4 rounded-xl bg-gray-800 border border-cyan-500/50 shadow-lg shadow-cyan-500/10 text-left hover:bg-gray-700 transition-colors"
+            className="w-full flex items-start gap-3 p-4 rounded-xl bg-card border border-brand/50 shadow-lg shadow-cyan-500/10 text-left hover:bg-secondary transition-colors"
           >
-            <BellRing className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+            <BellRing className="h-5 w-5 text-brand mt-0.5 flex-shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white">Nueva respuesta</p>
-              <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{newReply.body}</p>
+              <p className="text-sm font-semibold text-foreground">Nueva respuesta</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{newReply.body}</p>
             </div>
           </button>
         </div>

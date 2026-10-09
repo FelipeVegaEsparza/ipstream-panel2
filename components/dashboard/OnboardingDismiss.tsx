@@ -24,7 +24,7 @@ export function OnboardingDismiss() {
           setBusy(false)
         }
       }}
-      className="text-xs text-gray-500 hover:text-gray-300 disabled:opacity-50"
+      className="text-xs text-muted-foreground hover:text-muted-foreground disabled:opacity-50"
     >
       Ocultar
     </button>

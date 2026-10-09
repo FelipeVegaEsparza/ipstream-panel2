@@ -126,7 +126,7 @@ export function PromotionForm({ initialData }: PromotionFormProps) {
           placeholder="https://ejemplo.com/promocion"
           {...register('link')}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Enlace donde los usuarios pueden acceder a la promoción (opcional).
         </p>
         {errors.link && (

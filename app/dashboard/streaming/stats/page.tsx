@@ -69,7 +69,7 @@ export default function StreamingStatsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Estadísticas de Oyentes</h1>
+        <h1 className="text-2xl font-bold text-foreground">Estadísticas de Oyentes</h1>
         <div className="flex gap-2">
           {PERIODS.map((p) => (
             <button
@@ -78,7 +78,7 @@ export default function StreamingStatsPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 period === p.key
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-secondary text-muted-foreground hover:bg-secondary'
               }`}
             >
               {p.label}
@@ -102,37 +102,37 @@ export default function StreamingStatsPage() {
       {data && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
-              <p className="text-sm text-gray-400 mb-1">Promedio de oyentes</p>
-              <p className="text-3xl font-bold text-white">
+            <div className="bg-card rounded-xl p-5 border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Promedio de oyentes</p>
+              <p className="text-3xl font-bold text-foreground">
                 {data.summary.overallAvgListeners}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 en el período seleccionado
               </p>
             </div>
-            <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
-              <p className="text-sm text-gray-400 mb-1">Pico máximo histórico</p>
+            <div className="bg-card rounded-xl p-5 border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Pico máximo histórico</p>
               <p className="text-3xl font-bold text-indigo-400">
                 {data.summary.allTimePeakListeners}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 oyentes simultáneos
               </p>
             </div>
-            <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
-              <p className="text-sm text-gray-400 mb-1">Snapshots recolectados</p>
-              <p className="text-3xl font-bold text-white">
+            <div className="bg-card rounded-xl p-5 border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Snapshots recolectados</p>
+              <p className="text-3xl font-bold text-foreground">
                 {data.summary.totalSnapshots}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 muestras cada 5 minutos
               </p>
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
-            <h2 className="text-lg font-semibold text-white mb-4">Oyentes por día</h2>
+          <div className="bg-card rounded-xl p-5 border border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Oyentes por día</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.daily}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -173,14 +173,14 @@ export default function StreamingStatsPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-700">
-              <h2 className="text-lg font-semibold text-white">Desglose diario</h2>
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-5 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Desglose diario</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                  <tr className="text-left text-muted-foreground border-b border-border">
                     <th className="px-5 py-3 font-medium">Fecha</th>
                     <th className="px-5 py-3 font-medium">Muestras</th>
                     <th className="px-5 py-3 font-medium">Promedio</th>
@@ -190,13 +190,13 @@ export default function StreamingStatsPage() {
                 <tbody>
                   {data.daily.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
+                      <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground">
                         No hay datos en este período. Los datos empiezan a recolectarse desde el momento del despliegue.
                       </td>
                     </tr>
                   ) : (
                     data.daily.map((row) => (
-                      <tr key={row.date} className="border-b border-gray-700/50 text-gray-300 hover:bg-gray-700/30">
+                      <tr key={row.date} className="border-b border-border/50 text-muted-foreground hover:bg-secondary/30">
                         <td className="px-5 py-3">{fmtDate(row.date)}</td>
                         <td className="px-5 py-3">{row.snapshots}</td>
                         <td className="px-5 py-3">{row.avgListeners}</td>

@@ -22,7 +22,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Editar Evento</h1>
-        <p className="mt-1 text-sm text-gray-600">Modifica la información del evento</p>
+        <p className="mt-1 text-sm text-muted-foreground">Modifica la información del evento</p>
       </div>
       <div className="card max-w-2xl">
         <EventForm initialData={event} />

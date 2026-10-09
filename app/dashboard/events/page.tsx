@@ -31,7 +31,7 @@ export default async function EventsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Eventos</h1>
-          <p className="mt-1 text-sm text-gray-600">Gestiona eventos, conciertos y transmisiones especiales</p>
+          <p className="mt-1 text-sm text-muted-foreground">Gestiona eventos, conciertos y transmisiones especiales</p>
         </div>
         <Link href="/dashboard/events/new" className="btn-primary flex items-center gap-2">
           <PlusIcon className="h-5 w-5" /> Nuevo Evento

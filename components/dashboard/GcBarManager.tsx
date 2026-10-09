@@ -137,7 +137,7 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
           {messages.map((message) => (
             <li
               key={message.id}
-              className={`card flex items-start justify-between gap-4 ${editingId === message.id ? 'ring-1 ring-cyan-500' : ''}`}
+              className={`card flex items-start justify-between gap-4 ${editingId === message.id ? 'ring-1 ring-brand' : ''}`}
             >
               <div className="min-w-0">
                 <span className="text-xs font-mono text-muted">#{message.order}</span>

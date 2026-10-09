@@ -12,11 +12,11 @@ export default function ApiTestPage() {
   }, [])
   
   if (!mounted) {
-    return <div className="text-white">Cargando...</div>
+    return <div className="text-foreground">Cargando...</div>
   }
 
   if (!session?.user.clientId) {
-    return <div className="text-white">Error: No se encontró información del cliente</div>
+    return <div className="text-foreground">Error: No se encontró información del cliente</div>
   }
 
   const clientId = session.user.clientId
@@ -1263,10 +1263,10 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
     <div className="space-y-8">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Prueba de API REST
           </h1>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Prueba todos los endpoints de tu API REST pública
           </p>
         </div>
@@ -1282,16 +1282,16 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
       </div>
 
       <div className="glass-effect rounded-xl p-6">
-        <h3 className="text-lg font-medium text-cyan-400 mb-4 flex items-center">
+        <h3 className="text-lg font-medium text-brand mb-4 flex items-center">
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
           </svg>
           Tu Client ID
         </h3>
-        <code className="bg-gray-700/50 px-4 py-3 rounded-lg text-sm text-cyan-300 font-mono block border border-gray-600">
+        <code className="bg-secondary/50 px-4 py-3 rounded-lg text-sm text-brand font-mono block border border-border">
           {clientId}
         </code>
-        <p className="text-xs text-gray-400 mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           Usa este ID para acceder a tu API REST pública
         </p>
       </div>
@@ -1300,19 +1300,19 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
         {Object.entries(groupedEndpoints).map(([group, items]) => (
           <div key={group}>
             <div className="flex items-center gap-3 mb-3">
-              <h2 className="text-lg font-semibold text-white">{group}</h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-gray-700/50 to-transparent" />
-              <span className="text-xs text-gray-500">{items.length} endpoints</span>
+              <h2 className="text-lg font-semibold text-foreground">{group}</h2>
+              <div className="h-px flex-1 bg-gradient-to-r from-secondary/50 to-transparent" />
+              <span className="text-xs text-muted-foreground">{items.length} endpoints</span>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {items.map((endpoint) => (
                 <div key={endpoint.url} className="card hover:scale-[1.02] transition-transform duration-200">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-white mb-1">
+                      <h3 className="text-base font-semibold text-foreground mb-1">
                         {endpoint.name}
                       </h3>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         {endpoint.description}
                       </p>
                     </div>
@@ -1341,11 +1341,11 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
                       </button>
                     </div>
                   </div>
-                  <div className="bg-gray-700/30 p-3 rounded-lg border border-gray-600 flex items-center gap-3">
+                  <div className="bg-secondary/30 p-3 rounded-lg border border-border flex items-center gap-3">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded ${
                       endpoint.method === 'POST'
                         ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                        : 'bg-brand/20 text-brand border border-brand/30'
                     }`}>
                       {endpoint.method}
                     </span>
@@ -1361,17 +1361,17 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
       </div>
 
       <div className="card">
-        <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+        <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
           <svg className="w-6 h-6 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
           </svg>
           Sistema de Plantillas
         </h3>
         <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-6 mb-4">
-          <p className="text-gray-300 mb-4">
-            El endpoint principal <code className="text-purple-400 bg-gray-800 px-2 py-1 rounded">/api/public/{clientId}</code> ahora incluye el campo <code className="text-purple-400 bg-gray-800 px-2 py-1 rounded">selectedTemplate</code> que contiene el nombre de la plantilla que seleccionaste en tu dashboard.
+          <p className="text-muted-foreground mb-4">
+            El endpoint principal <code className="text-purple-400 bg-card px-2 py-1 rounded">/api/public/{clientId}</code> ahora incluye el campo <code className="text-purple-400 bg-card px-2 py-1 rounded">selectedTemplate</code> que contiene el nombre de la plantilla que seleccionaste en tu dashboard.
           </p>
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+          <div className="bg-background border border-border rounded-lg p-4">
             <pre className="text-purple-300 text-sm leading-relaxed overflow-x-auto">
 {`{
   "client": { "id": "${clientId}", "name": "..." },
@@ -1384,29 +1384,29 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
             </pre>
           </div>
         </div>
-        <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
+        <div className="bg-card/50 border border-border rounded-lg p-4">
           <h4 className="text-sm font-semibold text-purple-400 mb-2 flex items-center">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Cómo usar la plantilla en tu sitio web
           </h4>
-          <p className="text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             El sitio web debe leer el campo <code className="text-purple-400">selectedTemplate</code> y cargar la plantilla correspondiente. Si es <code className="text-purple-400">null</code>, usar una plantilla por defecto.
           </p>
         </div>
       </div>
 
       <div className="card">
-        <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+        <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
           <svg className="w-6 h-6 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Encuestas: Lógica de Votación
         </h3>
-        <p className="text-gray-300 mb-6">
+        <p className="text-muted-foreground mb-6">
           Implementa las encuestas en tu sitio web. El endpoint de votación valida que la encuesta esté activa
-          y que la opción exista. Usa <code className="text-green-400 bg-gray-800 px-1.5 py-0.5 rounded">localStorage</code> del lado cliente
+          y que la opción exista. Usa <code className="text-green-400 bg-card px-1.5 py-0.5 rounded">localStorage</code> del lado cliente
           para evitar votos duplicados.
         </p>
 
@@ -1486,14 +1486,14 @@ data.options.forEach(opt => {
           </div>
         </div>
 
-        <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
+        <div className="bg-card/50 border border-border rounded-lg p-4">
           <h4 className="text-sm font-semibold text-green-400 mb-2 flex items-center">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Recomendaciones
           </h4>
-          <ul className="text-gray-400 text-sm space-y-1 list-disc list-inside">
+          <ul className="text-muted-foreground text-sm space-y-1 list-disc list-inside">
             <li>El endpoint rechaza encuestas inactivas o <code className="text-green-400">optionId</code> inválidos</li>
             <li><code className="text-green-400">localStorage</code> evita votos duplicados del mismo navegador, pero el usuario puede borrarlo</li>
             <li>Si necesitas protección por IP, el administrador del sistema puede agregar esa lógica en el endpoint</li>
@@ -1503,15 +1503,15 @@ data.options.forEach(opt => {
       </div>
 
       <div className="card">
-        <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+        <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
           <svg className="w-6 h-6 text-indigo-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
           PWA: Lógica de Instalación
         </h3>
-        <p className="text-gray-300 mb-6">
-          Implementa el registro de instalación en tu PWA. La app debe enviar un <code className="text-indigo-400 bg-gray-800 px-1.5 py-0.5 rounded">deviceId</code> único por dispositivo
-          al endpoint de registro <strong className="text-white">una sola vez</strong>.
+        <p className="text-muted-foreground mb-6">
+          Implementa el registro de instalación en tu PWA. La app debe enviar un <code className="text-indigo-400 bg-card px-1.5 py-0.5 rounded">deviceId</code> único por dispositivo
+          al endpoint de registro <strong className="text-foreground">una sola vez</strong>.
         </p>
 
         <div className="grid gap-6 md:grid-cols-2 mb-6">
@@ -1551,30 +1551,30 @@ if (!deviceId) {
           </div>
         </div>
 
-        <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
+        <div className="bg-card/50 border border-border rounded-lg p-4">
           <h4 className="text-sm font-semibold text-indigo-400 mb-2 flex items-center">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Recomendaciones
           </h4>
-          <ul className="text-gray-400 text-sm space-y-1 list-disc list-inside">
+          <ul className="text-muted-foreground text-sm space-y-1 list-disc list-inside">
             <li>Usa <code className="text-indigo-400">crypto.randomUUID()</code> para generar un ID único por dispositivo</li>
             <li>El endpoint es idempotente: si el mismo <code className="text-indigo-400">deviceId</code> ya existe, no se duplica</li>
-            <li>El registro se hace <strong className="text-white">una sola vez</strong> por dispositivo, no en cada carga</li>
+            <li>El registro se hace <strong className="text-foreground">una sola vez</strong> por dispositivo, no en cada carga</li>
             <li>Puedes ver el conteo de instalaciones en tu Dashboard principal</li>
           </ul>
         </div>
       </div>
 
       <div className="card">
-        <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
-          <svg className="w-6 h-6 text-cyan-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
+          <svg className="w-6 h-6 text-brand mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
           </svg>
           Ejemplo de uso con JavaScript
         </h3>
-        <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 overflow-x-auto">
+        <div className="bg-background border border-border rounded-xl p-6 overflow-x-auto">
           <pre className="text-green-400 text-sm leading-relaxed">
 {`// Obtener toda la información del cliente (incluye plantilla)
 fetch('${baseUrl}/api/public/${clientId}')

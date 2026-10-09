@@ -51,7 +51,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
   return (
     <div className="card-content group">
       {/* Header con imagen */}
-      <div className="relative h-48 bg-gradient-to-br from-purple-500 to-blue-600">
+      <div className="relative h-48 bg-gradient-to-br from-purple-500 to-brand">
         {podcast.imageUrl ? (
           <Image
             src={podcast.imageUrl}
@@ -61,7 +61,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <div className="text-6xl opacity-80 text-white">
+            <div className="text-6xl opacity-80 text-foreground">
               {getFileIcon()}
             </div>
           </div>
@@ -84,7 +84,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
 
         {/* Duración */}
         {podcast.duration && (
-          <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium z-10">
+          <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-foreground px-3 py-1 rounded-full text-sm font-medium z-10">
             {podcast.duration}
           </div>
         )}

@@ -195,30 +195,30 @@ export default function TvLibraryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Videoteca</h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <h1 className="text-3xl font-bold text-foreground">Videoteca</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Sube y gestiona tus videos para Televisión
         </p>
       </div>
 
       {/* Storage bar */}
       {storage && (
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-4">
+        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-400">
+            <span className="text-muted-foreground">
               {storage.trackCount} videos — {storage.totalMB.toFixed(1)} MB
             </span>
             {storage.quotaMB && (
-              <span className={storage.percentUsed && storage.percentUsed > 90 ? 'text-red-400' : 'text-gray-400'}>
+              <span className={storage.percentUsed && storage.percentUsed > 90 ? 'text-red-400' : 'text-muted-foreground'}>
                 {storage.percentUsed?.toFixed(0)}% usado ({storage.remainingMB?.toFixed(0)} MB libres)
               </span>
             )}
           </div>
           {storage.quotaMB && storage.quotaMB > 0 && (
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-secondary rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
-                  storage.percentUsed && storage.percentUsed > 90 ? 'bg-red-500' : 'bg-cyan-500'
+                  storage.percentUsed && storage.percentUsed > 90 ? 'bg-red-500' : 'bg-brand'
                 }`}
                 style={{ width: `${Math.min(100, storage.percentUsed || 0)}%` }}
               />
@@ -230,12 +230,12 @@ export default function TvLibraryPage() {
       <div className="flex gap-4">
         {/* Folder sidebar */}
         <div className="w-64 flex-shrink-0">
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-300">Carpetas</h3>
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-muted-foreground">Carpetas</h3>
             <button
               onClick={() => setCurrentFolderId(null)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                !currentFolderId ? 'bg-cyan-600/30 text-cyan-300' : 'text-gray-400 hover:bg-gray-700'
+                !currentFolderId ? 'bg-brand/30 text-brand' : 'text-muted-foreground hover:bg-secondary'
               }`}
             >
               📁 Todas ({tracks.length})
@@ -246,7 +246,7 @@ export default function TvLibraryPage() {
                   <button
                     onClick={() => setCurrentFolderId(folder.id)}
                     className={`flex-1 text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      currentFolderId === folder.id ? 'bg-cyan-600/30 text-cyan-300' : 'text-gray-400 hover:bg-gray-700'
+                      currentFolderId === folder.id ? 'bg-brand/30 text-brand' : 'text-muted-foreground hover:bg-secondary'
                     }`}
                   >
                     📁 {folder.name} ({getTrackCount(folder)})
@@ -257,21 +257,21 @@ export default function TvLibraryPage() {
                         value={renamingName}
                         onChange={e => setRenamingName(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && renameFolder(folder.id)}
-                        className="w-24 bg-gray-700 text-white text-xs px-2 py-1 rounded"
+                        className="w-24 bg-secondary text-foreground text-xs px-2 py-1 rounded"
                         autoFocus
                       />
                       <button onClick={() => renameFolder(folder.id)} className="text-xs text-green-400">✓</button>
-                      <button onClick={() => setRenamingFolderId(null)} className="text-xs text-gray-500">✗</button>
+                      <button onClick={() => setRenamingFolderId(null)} className="text-xs text-muted-foreground">✗</button>
                     </div>
                   ) : (
                     <div className="hidden group-hover:flex gap-1">
                       <button
                         onClick={() => { setRenamingFolderId(folder.id); setRenamingName(folder.name) }}
-                        className="text-xs text-gray-500 hover:text-white"
+                        className="text-xs text-muted-foreground hover:text-foreground"
                       >
                         ✎
                       </button>
-                      <button onClick={() => deleteFolder(folder.id)} className="text-xs text-gray-500 hover:text-red-400">
+                      <button onClick={() => deleteFolder(folder.id)} className="text-xs text-muted-foreground hover:text-red-400">
                         ✕
                       </button>
                     </div>
@@ -286,9 +286,9 @@ export default function TvLibraryPage() {
                 onChange={e => setNewFolderName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && createFolder()}
                 placeholder="Nueva carpeta..."
-                className="flex-1 bg-gray-700 text-white text-xs px-2 py-1.5 rounded border border-gray-600 outline-none focus:border-cyan-500"
+                className="flex-1 bg-secondary text-foreground text-xs px-2 py-1.5 rounded border border-border outline-none focus:border-brand"
               />
-              <button onClick={createFolder} className="px-2 py-1 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700">
+              <button onClick={createFolder} className="px-2 py-1 bg-brand text-white text-xs rounded hover:bg-brand">
                 +
               </button>
             </div>
@@ -313,20 +313,20 @@ export default function TvLibraryPage() {
               placeholder="Buscar..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 text-sm outline-none focus:border-cyan-500"
+              className="w-full bg-card text-foreground px-3 py-2 rounded-lg border border-border text-sm outline-none focus:border-brand"
             />
           </div>
 
           {/* Batch actions */}
           {selectedTracks.size > 0 && (
-            <div className="bg-gray-800 rounded-lg p-3 flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-gray-300">{selectedTracks.size} seleccionados</span>
-              <button onClick={() => setSelectedTracks(new Set())} className="text-xs text-gray-500 hover:text-white">
+            <div className="bg-card rounded-lg p-3 flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground">{selectedTracks.size} seleccionados</span>
+              <button onClick={() => setSelectedTracks(new Set())} className="text-xs text-muted-foreground hover:text-foreground">
                 Deseleccionar
               </button>
               <select
                 onChange={e => batchMove(e.target.value || null)}
-                className="ml-auto bg-gray-700 text-white text-xs px-2 py-1 rounded"
+                className="ml-auto bg-secondary text-foreground text-xs px-2 py-1 rounded"
               >
                 <option value="">Mover a...</option>
                 <option value="">Raíz</option>
@@ -343,7 +343,7 @@ export default function TvLibraryPage() {
                       e.target.value = ''
                     }
                   }}
-                  className="bg-gray-700 text-white text-xs px-2 py-1 rounded"
+                  className="bg-secondary text-foreground text-xs px-2 py-1 rounded"
                 >
                   <option value="">Agregar a playlist...</option>
                   {playlists.map(p => (
@@ -355,15 +355,15 @@ export default function TvLibraryPage() {
           )}
 
           {/* Tracks table */}
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl overflow-hidden">
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl overflow-hidden">
             {loading ? (
-              <div className="p-6 text-center text-gray-500">Cargando...</div>
+              <div className="p-6 text-center text-muted-foreground">Cargando...</div>
             ) : tracks.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">No hay videos. Sube tu primer video.</div>
+              <div className="p-6 text-center text-muted-foreground">No hay videos. Sube tu primer video.</div>
             ) : (
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-700 text-xs text-gray-400 uppercase">
+                  <tr className="border-b border-border text-xs text-muted-foreground uppercase">
                     <th className="text-left p-3 w-8">
                       <input
                         type="checkbox"
@@ -384,7 +384,7 @@ export default function TvLibraryPage() {
                 </thead>
                 <tbody>
                   {tracks.map(track => (
-                    <tr key={track.id} className="border-b border-gray-700/50 hover:bg-gray-700/30 text-sm">
+                    <tr key={track.id} className="border-b border-border/50 hover:bg-secondary/30 text-sm">
                       <td className="p-3">
                         <input
                           type="checkbox"
@@ -400,28 +400,28 @@ export default function TvLibraryPage() {
                         {track.thumbnail ? (
                           <img src={track.thumbnail} alt="" className="w-16 h-10 object-cover rounded" />
                         ) : (
-                          <div className="w-16 h-10 bg-gray-700 rounded flex items-center justify-center text-gray-500 text-xs">N/A</div>
+                          <div className="w-16 h-10 bg-secondary rounded flex items-center justify-center text-muted-foreground text-xs">N/A</div>
                         )}
                       </td>
-                      <td className="p-3 text-white font-medium">
+                      <td className="p-3 text-foreground font-medium">
                         {track.title}
                         {track.status === 'processing' && (
-                          <span className="ml-2 text-xs text-cyan-400">procesando…</span>
+                          <span className="ml-2 text-xs text-brand">procesando…</span>
                         )}
                         {track.status === 'pending' && (
-                          <span className="ml-2 text-xs text-gray-400">en cola</span>
+                          <span className="ml-2 text-xs text-muted-foreground">en cola</span>
                         )}
                         {track.status === 'error' && (
                           <span className="ml-2 text-xs text-red-400" title={track.processingError || ''}>error</span>
                         )}
                       </td>
-                      <td className="p-3 text-gray-400">{formatDuration(track.duration)}</td>
-                      <td className="p-3 text-gray-400">
+                      <td className="p-3 text-muted-foreground">{formatDuration(track.duration)}</td>
+                      <td className="p-3 text-muted-foreground">
                         {track.width && track.height ? `${track.width}x${track.height}` : '-'}
                       </td>
-                      <td className="p-3 text-gray-400">{formatSize(Number(track.filesize))}</td>
+                      <td className="p-3 text-muted-foreground">{formatSize(Number(track.filesize))}</td>
                       <td className="p-3 text-right">
-                        <button onClick={() => deleteTrack(track.id)} className="text-gray-500 hover:text-red-400 text-xs">
+                        <button onClick={() => deleteTrack(track.id)} className="text-muted-foreground hover:text-red-400 text-xs">
                           Eliminar
                         </button>
                       </td>

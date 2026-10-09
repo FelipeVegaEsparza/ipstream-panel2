@@ -128,10 +128,10 @@ export function GalleryImageUpload({
         className={`
           relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
           ${dragOver
-            ? 'border-cyan-400 bg-cyan-500/10 backdrop-blur-sm'
-            : 'border-gray-600 hover:border-cyan-500/50 bg-gray-700/30'
+            ? 'border-brand bg-brand/10 backdrop-blur-sm'
+            : 'border-border hover:border-brand/50 bg-secondary/30'
           }
-          ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700/50'}
+          ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50'}
         `}
       >
         <input
@@ -146,17 +146,17 @@ export function GalleryImageUpload({
 
         {uploading ? (
           <div className="space-y-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400 mx-auto" />
-            <p className="text-sm text-gray-300">Subiendo imágenes...</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto" />
+            <p className="text-sm text-muted-foreground">Subiendo imágenes...</p>
           </div>
         ) : (
           <div className="space-y-3">
-            <PhotoIcon className="h-12 w-12 text-gray-400 mx-auto" />
+            <PhotoIcon className="h-12 w-12 text-muted-foreground mx-auto" />
             <div>
-              <p className="text-sm text-gray-300">
-                <span className="font-medium text-cyan-400">Haz clic para subir</span> o arrastra imágenes aquí
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-brand">Haz clic para subir</span> o arrastra imágenes aquí
               </p>
-              <p className="text-xs text-gray-500 mt-2">{description}</p>
+              <p className="text-xs text-muted-foreground mt-2">{description}</p>
             </div>
           </div>
         )}
@@ -166,10 +166,10 @@ export function GalleryImageUpload({
       {images.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {images.length} {images.length === 1 ? 'imagen' : 'imágenes'} seleccionada{images.length !== 1 ? 's' : ''}
             </p>
-            <p className="text-xs text-gray-500">Arrastra para reordenar</p>
+            <p className="text-xs text-muted-foreground">Arrastra para reordenar</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {images.map((url, index) => (
@@ -178,7 +178,7 @@ export function GalleryImageUpload({
                   src={normalizeImageUrl(url)}
                   alt={`Imagen ${index + 1}`}
                   fill
-                  className="object-cover rounded-lg border border-gray-600"
+                  className="object-cover rounded-lg border border-border"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
                   <button
@@ -187,7 +187,7 @@ export function GalleryImageUpload({
                       e.stopPropagation()
                       if (index > 0) handleReorder(index, index - 1)
                     }}
-                    className="p-1.5 bg-white/20 text-white rounded-full hover:bg-white/40 transition-colors"
+                    className="p-1.5 bg-white/20 text-foreground rounded-full hover:bg-white/40 transition-colors"
                     title="Mover izquierda"
                     disabled={index === 0}
                   >
@@ -195,7 +195,7 @@ export function GalleryImageUpload({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  <span className="text-white text-xs font-bold bg-black/50 px-2 py-0.5 rounded">
+                  <span className="text-foreground text-xs font-bold bg-black/50 px-2 py-0.5 rounded">
                     {index + 1}
                   </span>
                   <button
@@ -204,7 +204,7 @@ export function GalleryImageUpload({
                       e.stopPropagation()
                       if (index < images.length - 1) handleReorder(index, index + 1)
                     }}
-                    className="p-1.5 bg-white/20 text-white rounded-full hover:bg-white/40 transition-colors"
+                    className="p-1.5 bg-white/20 text-foreground rounded-full hover:bg-white/40 transition-colors"
                     title="Mover derecha"
                     disabled={index === images.length - 1}
                   >

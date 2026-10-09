@@ -73,7 +73,7 @@ export function GenericNewsSelector({ useGenericNews, selectedCategories, allCat
           onClick={handleToggle}
           disabled={saving}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
-            enabled ? 'bg-cyan-500' : 'bg-gray-600'
+            enabled ? 'bg-brand' : 'bg-secondary'
           }`}
         >
           <span
@@ -95,15 +95,15 @@ export function GenericNewsSelector({ useGenericNews, selectedCategories, allCat
                 key={cat.id}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
                   selected.includes(cat.id)
-                    ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
-                    : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+                    ? 'bg-brand/20 border-brand/40 text-brand'
+                    : 'bg-secondary/50 border-border text-muted-foreground hover:bg-secondary hover:border-border'
                 }`}
               >
                 <input
                   type="checkbox"
                   checked={selected.includes(cat.id)}
                   onChange={() => handleCategoryToggle(cat.id)}
-                  className="rounded border-gray-500 text-cyan-500 bg-gray-700 focus:ring-cyan-500"
+                  className="rounded border-border text-brand bg-secondary focus:ring-brand"
                 />
                 <span className="text-sm font-medium">{cat.name}</span>
               </label>

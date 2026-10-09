@@ -125,7 +125,7 @@ export function VideosList({ videos }: VideosListProps) {
           <div key={video.id} className="card">
             <div className="flex gap-4">
               {/* Ranking Number */}
-              <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-cyan-500/20 text-accent rounded-full font-bold text-lg border border-cyan-500/30">
+              <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-brand/20 text-accent rounded-full font-bold text-lg border border-brand/30">
                 #{video.order}
               </div>
 
@@ -139,11 +139,11 @@ export function VideosList({ videos }: VideosListProps) {
                       className="w-32 h-20 object-cover rounded-lg"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
-                      <PlayIcon className="h-8 w-8 text-white" />
+                      <PlayIcon className="h-8 w-8 text-foreground" />
                     </div>
                   </div>
                 ) : (
-                  <div className="w-32 h-20 bg-gray-700 rounded-lg flex items-center justify-center">
+                  <div className="w-32 h-20 bg-secondary rounded-lg flex items-center justify-center">
                     <PlayIcon className="h-8 w-8 text-muted" />
                   </div>
                 )}
@@ -207,7 +207,7 @@ export function VideosList({ videos }: VideosListProps) {
                     href={video.videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-accent hover:text-cyan-300 truncate max-w-xs transition-colors"
+                    className="text-accent hover:text-brand truncate max-w-xs transition-colors"
                   >
                     {video.videoUrl}
                   </a>

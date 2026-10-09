@@ -13,7 +13,7 @@ export default async function SupportPage() {
   const effective = await getEffectiveClient()
   if (!effective) {
     return (
-      <div className="text-center py-12 text-gray-400">
+      <div className="text-center py-12 text-muted-foreground">
         No tienes un cliente asignado.
       </div>
     )

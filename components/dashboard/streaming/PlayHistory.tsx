@@ -64,21 +64,21 @@ export function PlayHistory() {
       case 'live_dj':
         return <span className="text-xs bg-green-600/30 text-green-300 px-2 py-0.5 rounded-full">🎤 live</span>
       default:
-        return <span className="text-xs bg-gray-600/30 text-gray-300 px-2 py-0.5 rounded-full">autodj</span>
+        return <span className="text-xs bg-secondary/30 text-muted-foreground px-2 py-0.5 rounded-full">autodj</span>
     }
   }
 
   return (
-    <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
+    <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-white">Historial de reproducción</h2>
-        <span className="text-xs text-gray-500">
+        <h2 className="text-lg font-semibold text-foreground">Historial de reproducción</h2>
+        <span className="text-xs text-muted-foreground">
           {data ? `${data.total} registros` : ''}
         </span>
       </div>
 
       {!data || data.entries.length === 0 ? (
-        <p className="text-gray-500 text-sm py-8 text-center">
+        <p className="text-muted-foreground text-sm py-8 text-center">
           {loading ? 'Cargando...' : 'Aún no hay historial de reproducción'}
         </p>
       ) : (
@@ -86,7 +86,7 @@ export function PlayHistory() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-400 text-xs uppercase border-b border-gray-700">
+                <tr className="text-muted-foreground text-xs uppercase border-b border-border">
                   <th className="text-left py-2 pr-4 font-medium">Hora</th>
                   <th className="text-left py-2 pr-4 font-medium">Título</th>
                   <th className="text-left py-2 pr-4 font-medium">Artista</th>
@@ -95,15 +95,15 @@ export function PlayHistory() {
               </thead>
               <tbody>
                 {data.entries.map((e) => (
-                  <tr key={e.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
-                    <td className="py-2.5 pr-4 text-gray-400 font-mono text-xs whitespace-nowrap">
+                  <tr key={e.id} className="border-b border-border/50 hover:bg-secondary/20">
+                    <td className="py-2.5 pr-4 text-muted-foreground font-mono text-xs whitespace-nowrap">
                       {fmtTime(e.playedAt)}
                     </td>
-                    <td className="py-2.5 pr-4 text-white max-w-[200px] truncate">
-                      {e.title || <em className="text-gray-500">—</em>}
+                    <td className="py-2.5 pr-4 text-foreground max-w-[200px] truncate">
+                      {e.title || <em className="text-muted-foreground">—</em>}
                     </td>
-                    <td className="py-2.5 pr-4 text-gray-300 max-w-[150px] truncate">
-                      {e.artist || <em className="text-gray-500">—</em>}
+                    <td className="py-2.5 pr-4 text-muted-foreground max-w-[150px] truncate">
+                      {e.artist || <em className="text-muted-foreground">—</em>}
                     </td>
                     <td className="py-2.5 text-right">
                       {typeBadge(e.type)}
@@ -119,7 +119,7 @@ export function PlayHistory() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded transition-colors"
+              className="px-3 py-1.5 text-xs bg-secondary hover:bg-secondary disabled:bg-card disabled:text-muted-foreground text-foreground rounded transition-colors"
             >
               « Anterior
             </button>
@@ -129,7 +129,7 @@ export function PlayHistory() {
             <button
               onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
               disabled={page >= data.totalPages}
-              className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded transition-colors"
+              className="px-3 py-1.5 text-xs bg-secondary hover:bg-secondary disabled:bg-card disabled:text-muted-foreground text-foreground rounded transition-colors"
             >
               Siguiente »
             </button>
@@ -158,15 +158,15 @@ function renderPageButtons(current: number, total: number, goTo: (p: number) => 
 
   return pages.map((p, idx) =>
     p === 'ellipsis' ? (
-      <span key={`e${idx}`} className="px-1 text-gray-500 text-xs">...</span>
+      <span key={`e${idx}`} className="px-1 text-muted-foreground text-xs">...</span>
     ) : (
       <button
         key={p}
         onClick={() => goTo(p)}
         className={`px-2.5 py-1 text-xs rounded transition-colors ${
           p === current
-            ? 'bg-cyan-600 text-white'
-            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            ? 'bg-brand text-white'
+            : 'bg-secondary hover:bg-secondary text-muted-foreground'
         }`}
       >
         {p}

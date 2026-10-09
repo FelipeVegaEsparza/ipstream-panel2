@@ -73,7 +73,7 @@ export function EventsList({ events }: EventsListProps) {
                 <Image src={event.imageUrl} alt={event.title} fill className="object-cover" />
                 {past && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <span className="text-white text-sm font-semibold uppercase tracking-wider">Finalizado</span>
+                    <span className="text-foreground text-sm font-semibold uppercase tracking-wider">Finalizado</span>
                   </div>
                 )}
               </div>
@@ -82,19 +82,19 @@ export function EventsList({ events }: EventsListProps) {
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-primary">{event.title}</h3>
               <div className="flex items-center text-sm text-secondary gap-1.5">
-                <CalendarDaysIcon className="h-4 w-4 text-cyan-400" />
+                <CalendarDaysIcon className="h-4 w-4 text-brand" />
                 <span>{formatDate(event.date)}{event.time ? ` - ${event.time}` : ''}</span>
               </div>
               {event.location && (
                 <div className="flex items-center text-sm text-secondary gap-1.5">
-                  <MapPinIcon className="h-4 w-4 text-cyan-400" />
+                  <MapPinIcon className="h-4 w-4 text-brand" />
                   <span>{event.location}</span>
                 </div>
               )}
               <p className="text-secondary text-sm line-clamp-2">{event.description}</p>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-3 border-t border-gray-700 mt-3">
+            <div className="flex justify-end space-x-2 pt-3 border-t border-border mt-3">
               <Link href={`/dashboard/events/${event.id}`} className="action-button action-button-view" title="Ver evento">
                 <EyeIcon className="h-4 w-4" />
               </Link>

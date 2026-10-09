@@ -37,7 +37,7 @@ export default async function EditGalleryPage({ params }: EditGalleryPageProps) 
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Editar Galería</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Modifica la información y las imágenes de la galería
         </p>
       </div>

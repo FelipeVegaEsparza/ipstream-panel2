@@ -34,7 +34,7 @@ export default async function EditPromotionPage({ params }: EditPromotionPagePro
         <h1 className="text-2xl font-bold text-gray-900">
           Editar Promoción
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Modifica la información de la promoción
         </p>
       </div>

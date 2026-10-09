@@ -37,10 +37,10 @@ export default async function NotificationsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Notificaciones Push
           </h1>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Envía notificaciones a los usuarios de tu PWA
           </p>
         </div>
@@ -50,15 +50,15 @@ export default async function NotificationsPage() {
             <svg className="w-20 h-20 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               OneSignal no configurado
             </h3>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Para usar notificaciones push, el administrador debe configurar tus credenciales de OneSignal.
             </p>
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6 max-w-2xl mx-auto text-left">
               <h4 className="text-blue-300 font-medium mb-3">¿Qué necesitas hacer?</h4>
-              <ol className="text-gray-300 space-y-2 list-decimal list-inside">
+              <ol className="text-muted-foreground space-y-2 list-decimal list-inside">
                 <li>Crea una cuenta gratuita en <a href="https://onesignal.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">OneSignal.com</a></li>
                 <li>Crea una nueva aplicación (App) en OneSignal</li>
                 <li>Ve a Settings → Keys & IDs</li>

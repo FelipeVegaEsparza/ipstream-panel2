@@ -109,7 +109,7 @@ export function NewsForm({ initialData }: NewsFormProps) {
           placeholder="titulo-de-la-noticia"
           {...register('slug')}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Solo letras minúsculas, números y guiones. Se genera automáticamente desde el título.
         </p>
         {errors.slug && (
@@ -139,7 +139,7 @@ export function NewsForm({ initialData }: NewsFormProps) {
           placeholder="Breve resumen de la noticia que aparecerá en las listas..."
           {...register('shortText')}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Este texto aparecerá como resumen en las listas de noticias.
         </p>
         {errors.shortText && (
@@ -158,7 +158,7 @@ export function NewsForm({ initialData }: NewsFormProps) {
           placeholder="Escribe aquí el contenido completo de la noticia..."
           {...register('longText')}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Este es el contenido completo que se mostrará cuando se abra la noticia individual.
         </p>
         {errors.longText && (

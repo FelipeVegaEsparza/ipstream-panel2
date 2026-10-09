@@ -116,7 +116,7 @@ export function VideoForm({ initialData }: VideoFormProps) {
           placeholder="https://www.youtube.com/watch?v=..."
           {...register('videoUrl')}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Soporta URLs de YouTube, Vimeo y otros servicios de video
         </p>
         {errors.videoUrl && (
@@ -126,7 +126,7 @@ export function VideoForm({ initialData }: VideoFormProps) {
         {/* Preview thumbnail */}
         {thumbnail && (
           <div className="mt-3">
-            <p className="text-xs text-gray-500 mb-2">Vista previa:</p>
+            <p className="text-xs text-muted-foreground mb-2">Vista previa:</p>
             <img
               src={thumbnail}
               alt="Vista previa del video"

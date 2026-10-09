@@ -46,7 +46,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
         <div className="flex items-center space-x-4">
           <Link
             href="/dashboard/news"
-            className="p-2 text-gray-400 hover:text-gray-600"
+            className="p-2 text-muted-foreground hover:text-muted-foreground"
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
@@ -54,7 +54,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
             <h1 className="text-2xl font-bold text-gray-900">
               Vista de Noticia
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Previsualización de cómo se ve la noticia
             </p>
           </div>
@@ -75,7 +75,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
               {news.name}
             </h1>
             
-            <div className="flex items-center text-sm text-gray-500 space-x-4 mb-6">
+            <div className="flex items-center text-sm text-muted-foreground space-x-4 mb-6">
               <span>Publicado: {formatDate(news.createdAt)}</span>
               <span>•</span>
               <span>Slug: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{news.slug}</code></span>
@@ -95,7 +95,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
 
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Resumen:</h3>
-              <p className="text-gray-600 italic">
+              <p className="text-muted-foreground italic">
                 {news.shortText}
               </p>
             </div>

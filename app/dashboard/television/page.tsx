@@ -251,8 +251,8 @@ export default function TelevisionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Televisión</h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <h1 className="text-3xl font-bold text-foreground">Televisión</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Transmisión de video en vivo — AutoDJ 24/7
         </p>
       </div>
@@ -260,12 +260,12 @@ export default function TelevisionPage() {
       {/* Status badge */}
       <div className="flex items-center gap-3">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-          isOff ? 'bg-gray-700 text-gray-400' :
+          isOff ? 'bg-secondary text-muted-foreground' :
           isLive ? 'bg-red-900/60 text-red-300 border border-red-500/40' :
           'bg-green-900/60 text-green-300 border border-green-500/40'
         }`}>
           <span className={`w-2 h-2 rounded-full ${
-            isOff ? 'bg-gray-500' :
+            isOff ? 'bg-secondary' :
             isLive ? 'bg-red-500 animate-pulse' :
             'bg-green-500 animate-pulse'
           }`} />
@@ -293,8 +293,8 @@ export default function TelevisionPage() {
 
       {/* HLS Player */}
       {hlsUrl && (isAutoDj || isLive) && (
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
-          <h2 className="text-lg font-semibold text-white mb-3">Vista previa</h2>
+        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+          <h2 className="text-lg font-semibold text-foreground mb-3">Vista previa</h2>
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
             <video
               key={hlsApp}
@@ -311,11 +311,11 @@ export default function TelevisionPage() {
 
       {/* URLs de transmisión */}
       {stableUrl && (
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5 space-y-3">
-          <h2 className="text-lg font-semibold text-white mb-1">URL de transmisión</h2>
+        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5 space-y-3">
+          <h2 className="text-lg font-semibold text-foreground mb-1">URL de transmisión</h2>
 
           <div>
-            <p className="text-xs text-gray-400 mb-1.5">
+            <p className="text-xs text-muted-foreground mb-1.5">
               Estable (muestra AutoDJ u OBS según lo que esté al aire)
             </p>
             <div className="flex flex-col md:flex-row gap-2">
@@ -323,10 +323,10 @@ export default function TelevisionPage() {
                 type="text"
                 readOnly
                 value={stableUrl}
-                className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none"
                 onClick={(e) => e.currentTarget.select()}
               />
-              <button onClick={copyStable} className="px-4 py-2.5 bg-cyan-700 hover:bg-cyan-600 text-white rounded-lg transition-colors text-sm">
+              <button onClick={copyStable} className="px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg transition-colors text-sm">
                 {copiedStable ? '✓ Copiado' : 'Copiar'}
               </button>
             </div>
@@ -334,7 +334,7 @@ export default function TelevisionPage() {
 
           {playerUrl && (
             <div>
-              <p className="text-xs text-gray-400 mb-1.5">
+              <p className="text-xs text-muted-foreground mb-1.5">
                 Reproductor (abre una página para ver lo que esté al aire)
               </p>
               <div className="flex flex-col md:flex-row gap-2">
@@ -342,7 +342,7 @@ export default function TelevisionPage() {
                   type="text"
                   readOnly
                   value={playerUrl}
-                  className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                  className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none"
                   onClick={(e) => e.currentTarget.select()}
                 />
                 <a
@@ -353,7 +353,7 @@ export default function TelevisionPage() {
                 >
                   Abrir
                 </a>
-                <button onClick={copyPlayer} className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
+                <button onClick={copyPlayer} className="px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-colors text-sm">
                   {copiedPlayer ? '✓ Copiado' : 'Copiar'}
                 </button>
               </div>
@@ -362,7 +362,7 @@ export default function TelevisionPage() {
 
           {displayUrl && (
             <div>
-              <p className="text-xs text-gray-400 mb-1.5">
+              <p className="text-xs text-muted-foreground mb-1.5">
                 Actual ({isLive ? 'OBS en vivo' : isAutoDj ? 'AutoDJ' : 'Detenido'})
               </p>
               <div className="flex flex-col md:flex-row gap-2">
@@ -370,10 +370,10 @@ export default function TelevisionPage() {
                   type="text"
                   readOnly
                   value={displayUrl}
-                  className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                  className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none"
                   onClick={(e) => e.currentTarget.select()}
                 />
-                <button onClick={copyHls} className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
+                <button onClick={copyHls} className="px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-colors text-sm">
                   {copiedHls ? '✓ Copiado' : 'Copiar'}
                 </button>
               </div>
@@ -383,18 +383,18 @@ export default function TelevisionPage() {
       )}
 
       {/* Now Playing */}
-      <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-2">Ahora en pantalla</h2>
+      <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+        <h2 className="text-lg font-semibold text-foreground mb-2">Ahora en pantalla</h2>
         {isLive ? (
-          <p className="text-cyan-400 font-medium">Transmisión en vivo desde OBS</p>
+          <p className="text-brand font-medium">Transmisión en vivo desde OBS</p>
         ) : isAutoDj ? (
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             {videoStatus?.encoder.currentTrack
               ? `Reproduciendo: ${videoStatus.encoder.currentTrack}`
               : 'Reproduciendo...'}
           </p>
         ) : (
-          <p className="text-gray-500 italic">Stream detenido</p>
+          <p className="text-muted-foreground italic">Stream detenido</p>
         )}
       </div>
     </div>

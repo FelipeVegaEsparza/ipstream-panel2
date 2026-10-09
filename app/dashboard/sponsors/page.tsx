@@ -36,7 +36,7 @@ export default async function SponsorsPage() {
           <h1 className="text-2xl font-bold text-gray-900">
             Auspiciadores
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Gestiona los sponsors y auspiciadores de tu radio
           </p>
         </div>

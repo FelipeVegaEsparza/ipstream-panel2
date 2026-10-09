@@ -124,7 +124,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
                     ? 'bg-gradient-to-br from-amber-500 to-orange-600'
                     : 'bg-brand-grad'
                 }`}>
-                  <span className="text-white font-semibold text-sm">
+                  <span className="text-foreground font-semibold text-sm">
                     {(displayUser.name || displayUser.email).charAt(0).toUpperCase()}
                   </span>
                 </div>

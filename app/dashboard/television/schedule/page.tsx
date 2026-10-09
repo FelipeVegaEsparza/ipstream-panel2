@@ -177,13 +177,13 @@ export default function TvSchedulePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Parrilla TV</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Parrilla TV</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Asigna playlists de video a franjas horarias por día de la semana.
-            <span className="ml-2 text-xs text-gray-500">Horario: {timezone}</span>
+            <span className="ml-2 text-xs text-muted-foreground">Horario: {timezone}</span>
             {currentSlot && (
-              <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-brand/20 text-brand border border-brand/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                 Ahora: {currentSlot.playlistName} ({fmtTime(currentSlot.startTime)} - {fmtTime(currentSlot.endTime)})
               </span>
             )}
@@ -198,9 +198,9 @@ export default function TvSchedulePage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">Cargando...</div>
+        <div className="text-center py-12 text-muted-foreground">Cargando...</div>
       ) : schedules.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 border-2 border-dashed border-gray-700 rounded-xl">
+        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
           <p className="text-lg mb-2">No hay franjas programadas</p>
           <p className="text-sm">Crea tu primera franja para comenzar a programar tu parrilla</p>
         </div>
@@ -208,12 +208,12 @@ export default function TvSchedulePage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-3 px-4 text-gray-400 font-medium w-28">Día</th>
-                <th className="text-left py-3 px-4 text-gray-400 font-medium w-28">Inicio</th>
-                <th className="text-left py-3 px-4 text-gray-400 font-medium w-28">Fin</th>
-                <th className="text-left py-3 px-4 text-gray-400 font-medium">Playlist</th>
-                <th className="text-right py-3 px-4 text-gray-400 font-medium w-24">Acciones</th>
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">Día</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">Inicio</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">Fin</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Playlist</th>
+                <th className="text-right py-3 px-4 text-muted-foreground font-medium w-24">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -224,33 +224,33 @@ export default function TvSchedulePage() {
                     return (
                       <tr
                         key={slot.id}
-                        className={`border-b border-gray-800/50 transition-colors ${
-                          now ? 'bg-cyan-500/10' : 'hover:bg-gray-800/30'
+                        className={`border-b border-border/50 transition-colors ${
+                          now ? 'bg-brand/10' : 'hover:bg-card/30'
                         }`}
                       >
                         {slotIdx === 0 && (
                           <td
                             rowSpan={daySlots.length}
-                            className="py-3 px-4 text-gray-300 font-medium align-top pt-4"
+                            className="py-3 px-4 text-muted-foreground font-medium align-top pt-4"
                           >
                             {DAYS[dayIdx]}
                           </td>
                         )}
-                        <td className={`py-3 px-4 ${now ? 'text-cyan-300' : 'text-gray-300'}`}>
+                        <td className={`py-3 px-4 ${now ? 'text-brand' : 'text-muted-foreground'}`}>
                           {fmtTime(slot.startTime)}
                         </td>
-                        <td className={`py-3 px-4 ${now ? 'text-cyan-300' : 'text-gray-300'}`}>
+                        <td className={`py-3 px-4 ${now ? 'text-brand' : 'text-muted-foreground'}`}>
                           {fmtTime(slot.endTime)}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             {now && (
-                              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                              <span className="w-2 h-2 rounded-full bg-brand animate-pulse shrink-0" />
                             )}
-                            <span className={now ? 'text-cyan-300 font-medium' : 'text-gray-300'}>
+                            <span className={now ? 'text-brand font-medium' : 'text-muted-foreground'}>
                               {slot.playlistName}
                             </span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-muted-foreground">
                               ({slot.playlistTrackCount} videos)
                             </span>
                           </div>
@@ -259,7 +259,7 @@ export default function TvSchedulePage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openEdit(slot)}
-                              className="text-xs px-2.5 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+                              className="text-xs px-2.5 py-1 rounded-lg bg-secondary hover:bg-secondary text-muted-foreground transition-colors"
                             >
                               Editar
                             </button>
@@ -285,13 +285,13 @@ export default function TvSchedulePage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-700">
-            <h2 className="text-lg font-semibold text-white mb-4">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 border border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               {editId ? 'Editar franja' : 'Nueva franja'}
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Playlist</label>
+                <label className="block text-sm text-muted-foreground mb-1">Playlist</label>
                 <select
                   value={formPlaylistId}
                   onChange={(e) => setFormPlaylistId(e.target.value)}
@@ -306,7 +306,7 @@ export default function TvSchedulePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Día</label>
+                <label className="block text-sm text-muted-foreground mb-1">Día</label>
                 <select
                   value={formDayOfWeek}
                   onChange={(e) => setFormDayOfWeek(Number(e.target.value))}
@@ -319,7 +319,7 @@ export default function TvSchedulePage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Inicio</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Inicio</label>
                   <input
                     type="time"
                     value={formStartTime}
@@ -328,7 +328,7 @@ export default function TvSchedulePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Fin</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Fin</label>
                   <input
                     type="time"
                     value={formEndTime}
@@ -341,7 +341,7 @@ export default function TvSchedulePage() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg text-gray-400 hover:text-white transition-colors"
+                className="px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
               >
                 Cancelar
               </button>

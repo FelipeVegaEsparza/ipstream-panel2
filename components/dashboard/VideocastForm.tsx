@@ -167,7 +167,7 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
         </div>
 
         {/* Botones */}
-        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-700">
+        <div className="flex justify-end space-x-4 pt-6 border-t border-border">
           <button
             type="button"
             onClick={onCancel}

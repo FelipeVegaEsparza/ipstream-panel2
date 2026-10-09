@@ -53,7 +53,7 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <div className="text-6xl opacity-80 text-white">
+            <div className="text-6xl opacity-80 text-foreground">
               🎥
             </div>
           </div>
@@ -76,7 +76,7 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
 
         {/* Duración */}
         {videocast.duration && (
-          <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium z-10">
+          <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-foreground px-3 py-1 rounded-full text-sm font-medium z-10">
             {videocast.duration}
           </div>
         )}

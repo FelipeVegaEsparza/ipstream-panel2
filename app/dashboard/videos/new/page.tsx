@@ -7,7 +7,7 @@ export default function NewVideoPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           Nuevo Video
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Agrega un nuevo video al ranking
         </p>
       </div>

@@ -145,7 +145,7 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
     const Icon = config.icon
 
     return (
-      <Badge className={`${config.color} text-white flex items-center gap-1`}>
+      <Badge className={`${config.color} text-foreground flex items-center gap-1`}>
         <Icon className="h-3 w-3" />
         {config.text}
       </Badge>
@@ -158,10 +158,10 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Mis Pagos
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Historial de pagos y próximo vencimiento
         </p>
       </div>
@@ -173,36 +173,36 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
             ? 'border-orange-500 bg-orange-500/10' 
             : daysUntilNext !== null && daysUntilNext < 0
             ? 'border-red-500 bg-red-500/10'
-            : 'border-cyan-500 bg-cyan-500/10'
+            : 'border-brand bg-brand/10'
         }`}>
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Calendar className="h-6 w-6 text-cyan-400" />
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <Calendar className="h-6 w-6 text-brand" />
               Próximo Pago
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <p className="text-sm text-gray-400 mb-1">Plan Actual</p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-sm text-muted-foreground mb-1">Plan Actual</p>
+                <p className="text-xl font-bold text-foreground">
                   {client.subscription.plan.name}
                 </p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   {client.subscription.plan.interval === 'monthly' ? 'Mensual' : 'Anual'}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-400 mb-1">Monto</p>
-                <p className="text-2xl font-bold text-cyan-400">
+                <p className="text-sm text-muted-foreground mb-1">Monto</p>
+                <p className="text-2xl font-bold text-brand">
                   {formatCurrency(client.subscription.plan.price, client.subscription.plan.currency)}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-400 mb-1">Fecha de Vencimiento</p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-sm text-muted-foreground mb-1">Fecha de Vencimiento</p>
+                <p className="text-xl font-bold text-foreground">
                   {formatDate(nextPaymentDate)}
                 </p>
                 {daysUntilNext !== null && (
@@ -243,7 +243,7 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
                         : '¡Tu suscripción está por vencer!'
                       }
                     </p>
-                    <p className="text-sm text-gray-300 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Contacta al administrador para renovar tu plan y evitar la interrupción del servicio.
                     </p>
                   </div>
@@ -256,13 +256,13 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
 
       {/* Sin Plan */}
       {!client.subscription && (
-        <Card className="border-2 border-gray-600 bg-gray-800">
+        <Card className="border-2 border-border bg-card">
           <CardContent className="py-12 text-center">
-            <CreditCard className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">
+            <CreditCard className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-foreground mb-2">
               No tienes un plan activo
             </h3>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Contacta al administrador para contratar un plan
             </p>
           </CardContent>
@@ -270,10 +270,10 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
       )}
 
       {/* Historial de Pagos */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <DollarSign className="h-6 w-6 text-cyan-400" />
+          <CardTitle className="text-foreground flex items-center gap-2">
+            <DollarSign className="h-6 w-6 text-brand" />
             Historial de Pagos
           </CardTitle>
         </CardHeader>
@@ -283,30 +283,30 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
               {payments.map((payment) => (
                 <div 
                   key={payment.id} 
-                  className="p-4 rounded-lg bg-gray-700/50 border border-gray-600 hover:border-gray-500 transition-colors"
+                  className="p-4 rounded-lg bg-secondary/50 border border-border hover:border-border transition-colors"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <p className="text-xl font-bold text-white">
+                        <p className="text-xl font-bold text-foreground">
                           {formatCurrency(payment.amount, payment.currency)}
                         </p>
                         {getPaymentStatusBadge(payment.status)}
                       </div>
 
                       {payment.subscription && (
-                        <p className="text-sm text-gray-300 mb-1">
+                        <p className="text-sm text-muted-foreground mb-1">
                           Plan: {payment.subscription.plan.name}
                         </p>
                       )}
 
                       {payment.description && (
-                        <p className="text-sm text-gray-400 mb-2">
+                        <p className="text-sm text-muted-foreground mb-2">
                           {payment.description}
                         </p>
                       )}
 
-                      <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+                      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           Vencimiento: {formatDate(payment.dueDate)}
@@ -334,7 +334,7 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
                         size="sm"
                         variant="outline"
                         onClick={() => window.open(payment.receiptUrl!, '_blank')}
-                        className="border-cyan-600 text-cyan-400 hover:bg-cyan-600 hover:text-white"
+                        className="border-brand text-brand hover:bg-brand hover:text-white"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         Ver Comprobante
@@ -346,11 +346,11 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
             </div>
           ) : (
             <div className="text-center py-12">
-              <DollarSign className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-white mb-2">
+              <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 No hay pagos registrados
               </h3>
-              <p className="text-gray-400">
+              <p className="text-muted-foreground">
                 Los pagos aparecerán aquí cuando se registren
               </p>
             </div>

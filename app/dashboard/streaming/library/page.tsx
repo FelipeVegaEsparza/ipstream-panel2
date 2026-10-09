@@ -74,15 +74,15 @@ function renderPageButtons(current: number, total: number, goTo: (p: number) => 
 
   return pages.map((p, idx) =>
     p === 'ellipsis' ? (
-      <span key={`e${idx}`} className="px-1 text-gray-500 text-xs">...</span>
+      <span key={`e${idx}`} className="px-1 text-muted-foreground text-xs">...</span>
     ) : (
       <button
         key={p}
         onClick={() => goTo(p)}
         className={`px-2.5 py-1 text-xs rounded transition-colors ${
           p === current
-            ? 'bg-cyan-600 text-white'
-            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            ? 'bg-brand text-white'
+            : 'bg-secondary hover:bg-secondary text-muted-foreground'
         }`}
       >
         {p}
@@ -343,8 +343,8 @@ export default function LibraryPage() {
         <div
           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-sm transition-colors group ${
             selectedFolderId === f.id
-              ? 'bg-cyan-600/20 text-cyan-300'
-              : 'text-gray-300 hover:bg-gray-700/50'
+              ? 'bg-brand/20 text-brand'
+              : 'text-muted-foreground hover:bg-secondary/50'
           }`}
           style={{ paddingLeft: `${12 + depth * 16}px` }}
           onClick={() => setSelectedFolderId(f.id)}
@@ -356,18 +356,18 @@ export default function LibraryPage() {
               onChange={e => setRenameValue(e.target.value)}
               onBlur={handleRenameFolder}
               onKeyDown={e => { if (e.key === 'Enter') handleRenameFolder(); if (e.key === 'Escape') setRenamingFolderId(null) }}
-              className="flex-1 bg-gray-900 text-white px-1 py-0.5 rounded text-sm outline-none"
+              className="flex-1 bg-background text-foreground px-1 py-0.5 rounded text-sm outline-none"
               autoFocus
               onClick={e => e.stopPropagation()}
             />
           ) : (
             <span className="flex-1 truncate">{f.name}</span>
           )}
-          <span className="text-[11px] text-gray-500">{count}</span>
+          <span className="text-[11px] text-muted-foreground">{count}</span>
           <div className="hidden group-hover:flex items-center gap-0.5">
             <button
               onClick={e => { e.stopPropagation(); setRenamingFolderId(f.id); setRenameValue(f.name) }}
-              className="p-1 text-gray-500 hover:text-cyan-400"
+              className="p-1 text-muted-foreground hover:text-brand"
               title="Renombrar"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -376,7 +376,7 @@ export default function LibraryPage() {
             </button>
             <button
               onClick={e => { e.stopPropagation(); handleDeleteFolder(f.id) }}
-              className="p-1 text-gray-500 hover:text-red-400"
+              className="p-1 text-muted-foreground hover:text-red-400"
               title="Eliminar"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -394,48 +394,48 @@ export default function LibraryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Biblioteca</h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <h1 className="text-3xl font-bold text-foreground">Biblioteca</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Sube tus MP3s para usar en las playlists de AutoDJ.
           </p>
         </div>
       </div>
 
       {storage && (
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
+        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
-              <span className="text-sm font-semibold text-gray-300">Almacenamiento</span>
+              <span className="text-sm font-semibold text-muted-foreground">Almacenamiento</span>
             </div>
-            <span className="text-xs text-gray-400 font-mono">
+            <span className="text-xs text-muted-foreground font-mono">
               {storage.totalMB.toFixed(1)} MB {storage.quotaMB ? `/ ${storage.quotaMB} MB` : 'usados'}
             </span>
           </div>
           {storage.quotaMB && storage.percentUsed !== null ? (
             <>
-              <div className="w-full h-3 bg-gray-900 rounded-full overflow-hidden">
+              <div className="w-full h-3 bg-background rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    storage.exceeded ? 'bg-red-500' : storage.percentUsed > 80 ? 'bg-amber-500' : 'bg-cyan-500'
+                    storage.exceeded ? 'bg-red-500' : storage.percentUsed > 80 ? 'bg-amber-500' : 'bg-brand'
                   }`}
                   style={{ width: `${Math.min(storage.percentUsed, 100)}%` }}
                 />
               </div>
               <div className="flex items-center justify-between mt-2 text-xs">
-                <span className={storage.exceeded ? 'text-red-400' : 'text-gray-400'}>
+                <span className={storage.exceeded ? 'text-red-400' : 'text-muted-foreground'}>
                   {storage.percentUsed.toFixed(1)}% usado
                 </span>
-                <span className="text-gray-500">
+                <span className="text-muted-foreground">
                   {storage.remainingMB !== null ? `${storage.remainingMB.toFixed(1)} MB libres` : '—'}
                 </span>
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
               Sin límite de almacenamiento configurado
             </div>
           )}
@@ -448,24 +448,24 @@ export default function LibraryPage() {
         <button
           onClick={refreshCovers}
           disabled={refreshingCovers}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-secondary text-white text-sm font-medium rounded-lg transition-colors"
         >
           {refreshingCovers ? 'Buscando carátulas...' : '🎵 Buscar carátulas faltantes'}
         </button>
         {coverResult && (
-          <span className="text-xs text-gray-400">{coverResult}</span>
+          <span className="text-xs text-muted-foreground">{coverResult}</span>
         )}
       </div>
 
       <div className="flex gap-6">
         {/* Sidebar */}
         <div className="w-64 shrink-0">
-          <div className="bg-gray-800 rounded-lg shadow-lg">
-            <div className="p-3 border-b border-gray-700 flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Carpetas</span>
+          <div className="bg-card rounded-lg shadow-lg">
+            <div className="p-3 border-b border-border flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Carpetas</span>
               <button
                 onClick={() => { setCreatingFolder(true); setNewFolderParentId(null); setNewFolderName('') }}
-                className="p-1 text-gray-400 hover:text-white transition-colors"
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
                 title="Nueva carpeta"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -475,7 +475,7 @@ export default function LibraryPage() {
             </div>
 
             {creatingFolder && (
-              <div className="p-3 border-b border-gray-700">
+              <div className="p-3 border-b border-border">
                 <div className="flex items-center gap-2">
                   <FolderIcon />
                   <input
@@ -483,11 +483,11 @@ export default function LibraryPage() {
                     onChange={e => setNewFolderName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') { setCreatingFolder(false); setNewFolderName('') } }}
                     placeholder="Nombre..."
-                    className="flex-1 bg-gray-900 text-white px-2 py-1 rounded text-sm outline-none"
+                    className="flex-1 bg-background text-foreground px-2 py-1 rounded text-sm outline-none"
                     autoFocus
                   />
                   <button onClick={handleCreateFolder} className="text-green-400 text-xs font-medium">OK</button>
-                  <button onClick={() => { setCreatingFolder(false); setNewFolderName('') }} className="text-gray-500 text-xs">✕</button>
+                  <button onClick={() => { setCreatingFolder(false); setNewFolderName('') }} className="text-muted-foreground text-xs">✕</button>
                 </div>
               </div>
             )}
@@ -497,8 +497,8 @@ export default function LibraryPage() {
               <div
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-sm transition-colors ${
                   selectedFolderId === null
-                    ? 'bg-gray-700/60 text-white'
-                    : 'text-gray-400 hover:bg-gray-700/50'
+                    ? 'bg-secondary/60 text-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/50'
                 }`}
                 onClick={() => setSelectedFolderId(null)}
               >
@@ -506,36 +506,36 @@ export default function LibraryPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
                 <span className="flex-1">Todos</span>
-                <span className="text-[11px] text-gray-500">{tracks.length}</span>
+                <span className="text-[11px] text-muted-foreground">{tracks.length}</span>
               </div>
 
               {/* Sin carpeta */}
               <div
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-sm transition-colors ${
                   selectedFolderId === '__none__'
-                    ? 'bg-gray-700/60 text-white'
-                    : 'text-gray-400 hover:bg-gray-700/50'
+                    ? 'bg-secondary/60 text-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/50'
                 }`}
                 onClick={() => setSelectedFolderId('__none__')}
               >
-                <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
                 <span className="flex-1">Sin carpeta</span>
-                <span className="text-[11px] text-gray-500">{tracks.filter(t => !t.folderId).length}</span>
+                <span className="text-[11px] text-muted-foreground">{tracks.filter(t => !t.folderId).length}</span>
               </div>
 
-              {rootFolders.length > 0 && <div className="border-t border-gray-700/50 my-1.5" />}
+              {rootFolders.length > 0 && <div className="border-t border-border/50 my-1.5" />}
 
               {rootFolders.map(f => renderFolderItem(f))}
             </div>
 
             {/* Crear subcarpeta dentro de carpeta seleccionada */}
             {selectedFolderId && selectedFolderId !== '__none__' && (
-              <div className="p-2 border-t border-gray-700">
+              <div className="p-2 border-t border-border">
                 <button
                   onClick={() => { setCreatingFolder(true); setNewFolderParentId(selectedFolderId); setNewFolderName('') }}
-                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors w-full px-2 py-1"
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-full px-2 py-1"
                 >
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -549,30 +549,30 @@ export default function LibraryPage() {
 
         {/* Main content */}
         <div className="flex-1 min-w-0">
-          <div className="bg-gray-800 rounded-lg shadow-lg overflow-x-auto">
-            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+          <div className="bg-card rounded-lg shadow-lg overflow-x-auto">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 {currentFolderName && (
                   <>
                     <FolderIcon />
                     <span>{currentFolderName}</span>
-                    <span className="text-gray-500 font-normal">·</span>
+                    <span className="text-muted-foreground font-normal">·</span>
                   </>
                 )}
                 {loading ? 'Cargando...' : `${filteredTracks.length} track${filteredTracks.length !== 1 ? 's' : ''}`}
               </h2>
-              <a href="/dashboard/streaming" className="text-sm text-cyan-400 hover:text-cyan-300">
+              <a href="/dashboard/streaming" className="text-sm text-brand hover:text-brand">
                 ← Volver a Streaming
               </a>
             </div>
 
             {filteredTracks.length === 0 && !loading ? (
-              <div className="p-12 text-center text-gray-500">
+              <div className="p-12 text-center text-muted-foreground">
                 {selectedFolderId ? 'Esta carpeta está vacía.' : 'No hay tracks todavía. Sube tu primer MP3.'}
               </div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
+                <thead className="bg-background/50 text-muted-foreground uppercase text-xs">
                   <tr>
                     <th className="text-left p-3 w-10">🎵</th>
                     <th className="text-left p-3 w-12">Carátula</th>
@@ -585,14 +585,14 @@ export default function LibraryPage() {
                 </thead>
                 <tbody>
                   {pageTracks.map((t) => (
-                    <tr key={t.id} className="border-t border-gray-700/50 hover:bg-gray-700/20">
+                    <tr key={t.id} className="border-t border-border/50 hover:bg-secondary/20">
                       <td className="p-3">
                         <button
                           onClick={() => togglePlay(t.id, t.title)}
                           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
                             playingId === t.id
                               ? 'bg-green-600 text-white'
-                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                              : 'bg-secondary text-muted-foreground hover:bg-secondary'
                           }`}
                           title={playingId === t.id ? 'Detener' : 'Previsualizar'}
                         >
@@ -609,7 +609,7 @@ export default function LibraryPage() {
                               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                             />
                             {!t.coverUrl && (
-                              <div className="w-10 h-10 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-lg">🎵</div>
+                              <div className="w-10 h-10 rounded bg-secondary flex items-center justify-center text-muted-foreground text-lg">🎵</div>
                             )}
                             <input
                               ref={coverInputRef}
@@ -621,7 +621,7 @@ export default function LibraryPage() {
                             <button
                               onClick={() => { setCoverTrackId(t.id); coverInputRef.current?.click() }}
                               disabled={coverUploadingId === t.id || coverDeletingId === t.id}
-                              className="absolute -bottom-1 -right-1 w-5 h-5 bg-cyan-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-cyan-500 disabled:opacity-50"
+                              className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand rounded-full flex items-center justify-center text-white text-xs hover:bg-brand disabled:opacity-50"
                               title="Subir carátula"
                             >
                               {coverUploadingId === t.id ? '⏳' : '📷'}
@@ -641,39 +641,39 @@ export default function LibraryPage() {
                           t.coverUrl ? (
                             <img src={t.coverUrl} alt="" className="w-10 h-10 rounded object-cover shadow-sm" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                           ) : (
-                            <div className="w-10 h-10 rounded bg-gray-700 flex items-center justify-center text-gray-500 text-lg">🎵</div>
+                            <div className="w-10 h-10 rounded bg-secondary flex items-center justify-center text-muted-foreground text-lg">🎵</div>
                           )
                         )}
                       </td>
-                      <td className="p-3 text-white">
+                      <td className="p-3 text-foreground">
                         {editingId === t.id ? (
-                          <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="bg-gray-900 text-white px-2 py-1 rounded w-full" />
+                          <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="bg-background text-foreground px-2 py-1 rounded w-full" />
                         ) : (
                           t.title
                         )}
                       </td>
-                      <td className="p-3 text-gray-300 hidden sm:table-cell">
+                      <td className="p-3 text-muted-foreground hidden sm:table-cell">
                         {editingId === t.id ? (
-                          <input value={editArtist} onChange={(e) => setEditArtist(e.target.value)} placeholder="Sin artista" className="bg-gray-900 text-white px-2 py-1 rounded w-full" />
+                          <input value={editArtist} onChange={(e) => setEditArtist(e.target.value)} placeholder="Sin artista" className="bg-background text-foreground px-2 py-1 rounded w-full" />
                         ) : (
-                          t.artist || <span className="text-gray-500">—</span>
+                          t.artist || <span className="text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="p-3 text-gray-300 whitespace-nowrap">{fmtDuration(t.duration)}</td>
-                      <td className="p-3 text-gray-400 hidden md:table-cell">{fmtSize(t.fileSize)}</td>
+                      <td className="p-3 text-muted-foreground whitespace-nowrap">{fmtDuration(t.duration)}</td>
+                      <td className="p-3 text-muted-foreground hidden md:table-cell">{fmtSize(t.fileSize)}</td>
                       <td className="p-3 text-right">
                         {editingId === t.id ? (
                           <>
                             <button onClick={saveEdit} disabled={savingEdit} className="text-green-400 hover:text-green-300 disabled:text-green-700 mr-3 text-xs">
                               {savingEdit ? 'Guardando...' : 'Guardar'}
                             </button>
-                            <button onClick={() => { if (!savingEdit) { setEditingId(null); setCoverTrackId(null) } }} className="text-gray-400 hover:text-gray-300 text-xs disabled:opacity-50" disabled={savingEdit}>
+                            <button onClick={() => { if (!savingEdit) { setEditingId(null); setCoverTrackId(null) } }} className="text-muted-foreground hover:text-muted-foreground text-xs disabled:opacity-50" disabled={savingEdit}>
                               Cancelar
                             </button>
                           </>
                         ) : (
                           <>
-                            <button onClick={() => startEdit(t)} className="text-cyan-400 hover:text-cyan-300 mr-2 text-xs">Editar</button>
+                            <button onClick={() => startEdit(t)} className="text-brand hover:text-brand mr-2 text-xs">Editar</button>
                             <button
                               onClick={() => setMoveTrackId(moveTrackId === t.id ? null : t.id)}
                               className="text-amber-400 hover:text-amber-300 mr-2 text-xs"
@@ -682,11 +682,11 @@ export default function LibraryPage() {
                               Mover
                             </button>
                             {moveTrackId === t.id && (
-                              <div className="absolute mt-1 right-0 z-10 bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-2 min-w-[180px]">
-                                <div className="text-[11px] text-gray-400 uppercase px-2 py-1">Mover a...</div>
-                                <button onClick={() => handleMoveTrack(t.id, null)} className="block w-full text-left px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-700 rounded">Sin carpeta</button>
+                              <div className="absolute mt-1 right-0 z-10 bg-card border border-border rounded-lg shadow-xl p-2 min-w-[180px]">
+                                <div className="text-[11px] text-muted-foreground uppercase px-2 py-1">Mover a...</div>
+                                <button onClick={() => handleMoveTrack(t.id, null)} className="block w-full text-left px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary rounded">Sin carpeta</button>
                                 {folders.map(f => (
-                                  <button key={f.id} onClick={() => handleMoveTrack(t.id, f.id)} className="block w-full text-left px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-700 rounded flex items-center gap-1.5">
+                                  <button key={f.id} onClick={() => handleMoveTrack(t.id, f.id)} className="block w-full text-left px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary rounded flex items-center gap-1.5">
                                     <FolderIcon /> {f.name}
                                   </button>
                                 ))}
@@ -714,7 +714,7 @@ export default function LibraryPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded transition-colors"
+                className="px-3 py-1.5 text-xs bg-secondary hover:bg-secondary disabled:bg-card disabled:text-muted-foreground text-foreground rounded transition-colors"
               >
                 « Anterior
               </button>
@@ -724,7 +724,7 @@ export default function LibraryPage() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages}
-                className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded transition-colors"
+                className="px-3 py-1.5 text-xs bg-secondary hover:bg-secondary disabled:bg-card disabled:text-muted-foreground text-foreground rounded transition-colors"
               >
                 Siguiente »
               </button>

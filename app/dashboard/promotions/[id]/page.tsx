@@ -46,7 +46,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
         <div className="flex items-center space-x-4">
           <Link
             href="/dashboard/promotions"
-            className="p-2 text-gray-400 hover:text-gray-600"
+            className="p-2 text-muted-foreground hover:text-muted-foreground"
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
@@ -54,7 +54,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
             <h1 className="text-2xl font-bold text-gray-900">
               Vista de Promoción
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Previsualización de cómo se ve la promoción
             </p>
           </div>
@@ -78,7 +78,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
                   {promotion.title}
                 </h1>
                 
-                <div className="flex items-center text-sm text-gray-500 mb-6">
+                <div className="flex items-center text-sm text-muted-foreground mb-6">
                   <span>Creado: {formatDate(promotion.createdAt)}</span>
                   <span className="mx-2">•</span>
                   <span>Actualizado: {formatDate(promotion.updatedAt)}</span>
@@ -136,31 +136,31 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
             </h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-gray-500">Estado:</span>
+                <span className="text-sm text-muted-foreground">Estado:</span>
                 <p className="text-sm font-medium text-green-600">
                   Activa
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Creada:</span>
+                <span className="text-sm text-muted-foreground">Creada:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(promotion.createdAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Última actualización:</span>
+                <span className="text-sm text-muted-foreground">Última actualización:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(promotion.updatedAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Tiene imagen:</span>
+                <span className="text-sm text-muted-foreground">Tiene imagen:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {promotion.imageUrl ? 'Sí' : 'No'}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Tiene enlace:</span>
+                <span className="text-sm text-muted-foreground">Tiene enlace:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {promotion.link ? 'Sí' : 'No'}
                 </p>

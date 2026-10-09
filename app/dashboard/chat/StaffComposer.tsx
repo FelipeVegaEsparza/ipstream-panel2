@@ -56,14 +56,14 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-gray-800/40 border border-cyan-700/40 rounded-xl p-4"
+      className="bg-card/40 border border-brand/40 rounded-xl p-4"
     >
       <div className="flex items-center gap-2 mb-2">
-        <Megaphone className="h-4 w-4 text-cyan-400" />
-        <span className="text-xs uppercase tracking-wide text-cyan-300 font-semibold">
+        <Megaphone className="h-4 w-4 text-brand" />
+        <span className="text-xs uppercase tracking-wide text-brand font-semibold">
           Mensaje de Staff
         </span>
-        <span className="text-xs text-gray-500">se mostrará como: {staffName}</span>
+        <span className="text-xs text-muted-foreground">se mostrará como: {staffName}</span>
       </div>
       <div className="flex items-end gap-2">
         <textarea
@@ -73,21 +73,21 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
           placeholder="Escribe un mensaje para los oyentes…"
           rows={2}
           maxLength={500}
-          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm resize-none focus:border-cyan-500 focus:outline-none"
+          className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-foreground text-sm resize-none focus:border-brand focus:outline-none"
           disabled={sending}
         />
         <button
           type="submit"
           disabled={!body.trim() || sending}
-          className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send className="h-4 w-4" />
           {sending ? 'Enviando…' : 'Enviar'}
         </button>
       </div>
       <div className="flex items-center justify-between mt-1">
-        <p className="text-xs text-gray-500">Enter para enviar · Shift+Enter para nueva línea</p>
-        <p className="text-xs text-gray-500">{body.length}/500</p>
+        <p className="text-xs text-muted-foreground">Enter para enviar · Shift+Enter para nueva línea</p>
+        <p className="text-xs text-muted-foreground">{body.length}/500</p>
       </div>
     </form>
   )

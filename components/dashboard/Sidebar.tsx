@@ -203,8 +203,8 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                     <item.icon
                                       className={`h-6 w-6 shrink-0 transition-colors ${
                                         isActive
-                                          ? 'text-cyan-400'
-                                          : 'text-gray-400 group-hover:text-cyan-400'
+                                          ? 'text-brand'
+                                          : 'text-muted-foreground group-hover:text-brand'
                                       }`}
                                       aria-hidden="true"
                                     />
@@ -247,8 +247,8 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                           <child.icon
                                             className={`h-5 w-5 shrink-0 transition-colors ${
                                               childActive
-                                                ? 'text-cyan-400'
-                                                : 'text-gray-400 group-hover:text-cyan-400'
+                                                ? 'text-brand'
+                                                : 'text-muted-foreground group-hover:text-brand'
                                             }`}
                                             aria-hidden="true"
                                           />
@@ -275,8 +275,8 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                               <item.icon
                                 className={`h-6 w-6 shrink-0 transition-colors ${
                                   isActive
-                                    ? 'text-cyan-400'
-                                    : 'text-gray-400 group-hover:text-cyan-400'
+                                    ? 'text-brand'
+                                    : 'text-muted-foreground group-hover:text-brand'
                                 }`}
                                 aria-hidden="true"
                               />
@@ -287,7 +287,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                 </span>
                               )}
                               {item.key === 'onboarding' && onboardingPending > 0 && (
-                                <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-cyan-500 text-[10px] font-bold text-white leading-none">
+                                <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-brand text-[10px] font-bold text-white leading-none">
                                   {onboardingPending > 9 ? '9+' : onboardingPending}
                                 </span>
                               )}
@@ -308,8 +308,8 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
       </nav>
 
       <div className="glass-effect rounded-xl p-4 text-center">
-        <p className="text-xs text-gray-400">{APP_NAME}</p>
-        <p className="text-xs text-gray-500">v{APP_VERSION}</p>
+        <p className="text-xs text-muted-foreground">{APP_NAME}</p>
+        <p className="text-xs text-muted-foreground">v{APP_VERSION}</p>
       </div>
     </div>
   )
@@ -328,7 +328,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-gray-900/80" />
+            <div className="fixed inset-0 bg-background/80" />
           </Transition.Child>
 
           <div className="fixed inset-0 flex">
@@ -358,7 +358,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                       onClick={() => setSidebarOpen?.(false)}
                     >
                       <span className="sr-only">Cerrar sidebar</span>
-                      <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
+                      <XMarkIcon className="h-6 w-6 text-foreground" aria-hidden="true" />
                     </button>
                   </div>
                 </Transition.Child>

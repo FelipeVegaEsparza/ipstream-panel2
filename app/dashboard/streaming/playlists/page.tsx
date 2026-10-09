@@ -111,47 +111,47 @@ export default function PlaylistsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Playlists</h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <h1 className="text-3xl font-bold text-foreground">Playlists</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Listas de reproducción para tu AutoDJ. Solo una puede estar activa.
           </p>
         </div>
         <button
           onClick={() => setShowNew(true)}
-          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
+          className="px-4 py-2 bg-brand hover:bg-brand text-white rounded-lg"
         >
           + Nueva playlist
         </button>
       </div>
 
       {showNew && (
-        <div className="bg-gray-800 rounded-lg p-6 space-y-3 border border-cyan-700">
-          <h3 className="text-lg font-semibold text-white">Crear playlist</h3>
+        <div className="bg-card rounded-lg p-6 space-y-3 border border-brand">
+          <h3 className="text-lg font-semibold text-foreground">Crear playlist</h3>
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Nombre (ej: Playlist Principal)"
-            className="w-full bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+            className="w-full bg-background text-foreground px-3 py-2 rounded border border-border"
             autoFocus
           />
           <textarea
             value={newDesc}
             onChange={(e) => setNewDesc(e.target.value)}
             placeholder="Descripción (opcional)"
-            className="w-full bg-gray-900 text-white px-3 py-2 rounded border border-gray-700"
+            className="w-full bg-background text-foreground px-3 py-2 rounded border border-border"
             rows={2}
           />
           <div className="flex gap-2">
             <button
               onClick={create}
               disabled={creating || !newName.trim()}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white rounded"
+              className="px-4 py-2 bg-brand hover:bg-brand disabled:bg-secondary text-white rounded"
             >
               {creating ? 'Creando...' : 'Crear'}
             </button>
             <button
               onClick={() => { setShowNew(false); setNewName(''); setNewDesc('') }}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
+              className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded"
             >
               Cancelar
             </button>
@@ -161,22 +161,22 @@ export default function PlaylistsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {loading ? (
-          <div className="col-span-2 text-center text-gray-500 py-12">Cargando...</div>
+          <div className="col-span-2 text-center text-muted-foreground py-12">Cargando...</div>
         ) : playlists.length === 0 ? (
-          <div className="col-span-2 text-center text-gray-500 py-12">
+          <div className="col-span-2 text-center text-muted-foreground py-12">
             No hay playlists todavía. Crea la primera.
           </div>
         ) : (
           playlists.map((p) => (
             <div
               key={p.id}
-              className={`bg-gray-800 rounded-lg p-5 border-2 ${
+              className={`bg-card rounded-lg p-5 border-2 ${
                 p.isActive ? 'border-green-600' : 'border-transparent'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-white font-semibold flex items-center gap-2">
+                  <h3 className="text-foreground font-semibold flex items-center gap-2">
                     {p.name}
                     {p.isActive && (
                       <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">
@@ -185,9 +185,9 @@ export default function PlaylistsPage() {
                     )}
                   </h3>
                   {p.description && (
-                    <p className="text-sm text-gray-400 mt-1">{p.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{p.description}</p>
                   )}
-                  <div className="flex gap-3 mt-3 text-xs text-gray-500">
+                  <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
                     <span>🎵 {p.entryCount} track{p.entryCount !== 1 ? 's' : ''}</span>
                     <span>⏱️ {fmtDuration(p.totalDuration)}</span>
                     {p.shuffle && <span>🔀 Shuffle</span>}
@@ -198,7 +198,7 @@ export default function PlaylistsPage() {
               <div className="flex gap-2 mt-4">
                 <Link
                   href={`/dashboard/streaming/playlists/${p.id}`}
-                  className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded"
+                  className="px-3 py-1.5 bg-brand hover:bg-brand text-white text-sm rounded"
                 >
                   Editar
                 </Link>
@@ -206,7 +206,7 @@ export default function PlaylistsPage() {
                   <button
                     onClick={() => activate(p.id)}
                     disabled={activatingId === p.id}
-                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-sm rounded"
+                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-secondary text-white text-sm rounded"
                   >
                     {activatingId === p.id ? '...' : 'Activar'}
                   </button>
@@ -214,7 +214,7 @@ export default function PlaylistsPage() {
                 <button
                   onClick={() => remove(p.id, p.name)}
                   disabled={deletingId === p.id}
-                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white text-sm rounded ml-auto"
+                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-secondary text-white text-sm rounded ml-auto"
                 >
                   Eliminar
                 </button>

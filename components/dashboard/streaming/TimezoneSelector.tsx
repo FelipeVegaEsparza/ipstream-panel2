@@ -85,7 +85,7 @@ export default function TimezoneSelector({ onChanged, compact }: TimezoneSelecto
 
   return (
     <div className={`flex items-center gap-2 ${compact ? '' : 'flex-col sm:flex-row'}`}>
-      <label className="text-sm text-gray-400 whitespace-nowrap">Zona horaria</label>
+      <label className="text-sm text-muted-foreground whitespace-nowrap">Zona horaria</label>
       <select
         value={timezone}
         onChange={(e) => handleSave(e.target.value)}
@@ -97,7 +97,7 @@ export default function TimezoneSelector({ onChanged, compact }: TimezoneSelecto
           <option key={z} value={z}>{z}</option>
         ))}
       </select>
-      {saving && <span className="text-xs text-gray-500">Guardando...</span>}
+      {saving && <span className="text-xs text-muted-foreground">Guardando...</span>}
     </div>
   )
 }

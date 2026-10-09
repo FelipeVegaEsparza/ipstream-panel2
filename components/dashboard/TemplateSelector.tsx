@@ -109,26 +109,26 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
         onClose={closeActivation}
       />
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Plantilla del Sitio
         </h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Selecciona la plantilla que deseas usar para tu sitio web
         </p>
       </div>
 
       {selectedTemplateId && (
-        <Card className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30">
+        <Card className="bg-gradient-to-r from-brand/20 to-brand/20 border-brand/30">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="bg-cyan-500/20 p-2 rounded-lg">
-                <Check className="h-5 w-5 text-cyan-400" />
+              <div className="bg-brand/20 p-2 rounded-lg">
+                <Check className="h-5 w-5 text-brand" />
               </div>
               <div>
-                <p className="text-sm font-medium text-cyan-300">
+                <p className="text-sm font-medium text-brand">
                   Plantilla Actual
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   {templates.find(t => t.id === selectedTemplateId)?.displayName || 'Sin plantilla'}
                 </p>
               </div>
@@ -144,14 +144,14 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
           return (
             <Card 
               key={template.id} 
-              className={`bg-gray-800 border-2 overflow-hidden transition-all duration-200 ${
+              className={`bg-card border-2 overflow-hidden transition-all duration-200 ${
                 isSelected 
-                  ? 'border-cyan-500 shadow-lg shadow-cyan-500/20' 
-                  : 'border-gray-700 hover:border-gray-600'
+                  ? 'border-brand shadow-lg shadow-cyan-500/20' 
+                  : 'border-border hover:border-border'
               }`}
             >
               {template.imageUrl && (
-                <div className="w-full h-96 bg-gray-700 relative">
+                <div className="w-full h-96 bg-secondary relative">
                   <img
                     src={template.imageUrl}
                     alt={template.displayName}
@@ -159,7 +159,7 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
                   />
                   {isSelected && (
                     <div className="absolute top-2 right-2">
-                      <Badge className="bg-cyan-500 text-white">
+                      <Badge className="bg-brand text-white">
                         <Check className="h-3 w-3 mr-1" />
                         Seleccionada
                       </Badge>
@@ -168,11 +168,11 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
                 </div>
               )}
               {!template.imageUrl && (
-                <div className="w-full h-96 bg-gray-700 flex items-center justify-center relative">
-                  <ImageIcon className="h-16 w-16 text-gray-600" />
+                <div className="w-full h-96 bg-secondary flex items-center justify-center relative">
+                  <ImageIcon className="h-16 w-16 text-muted-foreground" />
                   {isSelected && (
                     <div className="absolute top-2 right-2">
-                      <Badge className="bg-cyan-500 text-white">
+                      <Badge className="bg-brand text-white">
                         <Check className="h-3 w-3 mr-1" />
                         Seleccionada
                       </Badge>
@@ -182,12 +182,12 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
               )}
 
               <CardContent className="p-4">
-                <h3 className="text-lg font-semibold text-white mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   {template.displayName}
                 </h3>
 
                 {template.description && (
-                  <p className="text-sm text-gray-400 mb-4 line-clamp-3">
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
                     {template.description}
                   </p>
                 )}
@@ -197,7 +197,7 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
                   disabled={isSubmitting}
                   className={`w-full ${
                     isSelected 
-                      ? 'bg-cyan-600 hover:bg-cyan-700' 
+                      ? 'bg-brand hover:bg-brand' 
                       : 'bg-blue-600 hover:bg-blue-700'
                   }`}
                 >
@@ -217,11 +217,11 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
 
         {templates.length === 0 && (
           <div className="col-span-full text-center py-12">
-            <ImageIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">
+            <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               No hay plantillas disponibles
             </h3>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Contacta al administrador para que agregue plantillas
             </p>
           </div>

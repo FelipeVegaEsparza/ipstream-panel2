@@ -53,25 +53,25 @@ export function TemplateActivationModal({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 max-w-md w-full"
+        className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-md w-full"
       >
         <button
           onClick={onClose}
           disabled={isSubmitting}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
         >
           <X className="h-5 w-5" />
         </button>
 
         <div className="p-6">
-          <div className="w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto mb-4">
-            <Palette className="h-8 w-8 text-cyan-400" />
+          <div className="w-16 h-16 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center mx-auto mb-4">
+            <Palette className="h-8 w-8 text-brand" />
           </div>
 
-          <h3 className="text-xl font-bold text-white text-center mb-1">
+          <h3 className="text-xl font-bold text-foreground text-center mb-1">
             Activar {templateName}
           </h3>
-          <p className="text-sm text-gray-400 text-center mb-6">
+          <p className="text-sm text-muted-foreground text-center mb-6">
             Elige un color destacado para tu sitio o usa el color propio de la plantilla.
           </p>
 
@@ -86,7 +86,7 @@ export function TemplateActivationModal({
                   setHex(e.target.value)
                   setUseTemplate(false)
                 }}
-                className="h-12 w-14 rounded-lg bg-gray-900 border border-gray-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-12 w-14 rounded-lg bg-background border border-border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <input
                 type="text"
@@ -97,7 +97,7 @@ export function TemplateActivationModal({
                   setHex(e.target.value)
                   setUseTemplate(false)
                 }}
-                className="flex-1 px-3 py-2.5 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3 py-2.5 bg-background border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-brand disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -107,9 +107,9 @@ export function TemplateActivationModal({
               </p>
             )}
 
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span
-                className="inline-block h-4 w-4 rounded-full border border-gray-600"
+                className="inline-block h-4 w-4 rounded-full border border-border"
                 style={{ backgroundColor: previewColor ?? 'transparent' }}
               />
               {useTemplate ? 'Usando el color de la plantilla' : (isHexValid ? hex.toLowerCase() : 'Color inválido')}
@@ -121,8 +121,8 @@ export function TemplateActivationModal({
               disabled={isSubmitting}
               className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
                 useTemplate
-                  ? 'bg-cyan-600 text-white'
-                  : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  ? 'bg-brand text-white'
+                  : 'bg-secondary hover:bg-secondary text-foreground'
               } disabled:opacity-50`}
             >
               {useTemplate && <Check className="h-4 w-4" />}
@@ -135,7 +135,7 @@ export function TemplateActivationModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg font-medium transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -143,7 +143,7 @@ export function TemplateActivationModal({
               type="button"
               onClick={handleConfirm}
               disabled={!canConfirm || isSubmitting}
-              className="flex-1 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Guardando...' : 'Activar'}
             </button>

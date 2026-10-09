@@ -109,7 +109,7 @@ export function NewsList({ news }: NewsListProps) {
                   </p>
                   <div className="flex items-center text-sm text-muted space-x-4">
                     <span><span className="font-semibold text-accent">Publicado:</span> {formatDate(item.createdAt)}</span>
-                    <span><span className="font-semibold text-accent">Slug:</span> <code className="bg-gray-700 text-cyan-400 px-2 py-1 rounded text-xs">{item.slug}</code></span>
+                    <span><span className="font-semibold text-accent">Slug:</span> <code className="bg-secondary text-brand px-2 py-1 rounded text-xs">{item.slug}</code></span>
                   </div>
                 </div>
                 

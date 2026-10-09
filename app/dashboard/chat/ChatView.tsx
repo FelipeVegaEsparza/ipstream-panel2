@@ -163,15 +163,15 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <MessagesSquare className="h-6 w-6 text-cyan-400" />
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <MessagesSquare className="h-6 w-6 text-brand" />
             Chat en Vivo
           </h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Modera el chat de tu radio y participa como staff
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           Actualizando cada {POLL_INTERVAL_MS / 1000}s
         </div>

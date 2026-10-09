@@ -51,7 +51,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
         <div className="flex items-center space-x-4">
           <Link
             href="/dashboard/galleries"
-            className="p-2 text-gray-400 hover:text-gray-600"
+            className="p-2 text-muted-foreground hover:text-muted-foreground"
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
@@ -59,7 +59,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
             <h1 className="text-2xl font-bold text-gray-900">
               Vista de Galería
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Previsualización de la galería de imágenes
             </p>
           </div>
@@ -83,7 +83,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
                   {gallery.title}
                 </h1>
 
-                <div className="flex items-center text-sm text-gray-500 mb-6">
+                <div className="flex items-center text-sm text-muted-foreground mb-6">
                   <span>Creado: {formatDate(gallery.createdAt)}</span>
                   <span className="mx-2">&bull;</span>
                   <span>Actualizado: {formatDate(gallery.updatedAt)}</span>
@@ -115,8 +115,8 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
                 </div>
               ) : (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">
+                  <PhotoIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <p className="mt-2 text-sm text-muted-foreground">
                     Esta galería no tiene imágenes
                   </p>
                 </div>
@@ -133,23 +133,23 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
             </h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-gray-500">Estado:</span>
+                <span className="text-sm text-muted-foreground">Estado:</span>
                 <p className="text-sm font-medium text-green-600">Activa</p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Cantidad de imágenes:</span>
+                <span className="text-sm text-muted-foreground">Cantidad de imágenes:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {gallery.images.length}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Creada:</span>
+                <span className="text-sm text-muted-foreground">Creada:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(gallery.createdAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Última actualización:</span>
+                <span className="text-sm text-muted-foreground">Última actualización:</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(gallery.updatedAt)}
                 </p>

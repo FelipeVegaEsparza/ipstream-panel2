@@ -27,12 +27,12 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <Link href="/dashboard/announcers" className="p-2 text-gray-400 hover:text-gray-600">
+          <Link href="/dashboard/announcers" className="p-2 text-muted-foreground hover:text-muted-foreground">
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Vista de Locutor</h1>
-            <p className="mt-1 text-sm text-gray-600">Información del locutor</p>
+            <p className="mt-1 text-sm text-muted-foreground">Información del locutor</p>
           </div>
         </div>
         <Link href={`/dashboard/announcers/${announcer.id}/edit`} className="btn-primary flex items-center gap-2">
@@ -48,13 +48,13 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
                 <Image src={announcer.imageUrl} alt={announcer.name} width={200} height={200} className="w-48 h-48 object-cover rounded-xl border border-gray-200" />
               ) : (
                 <div className="w-48 h-48 rounded-xl bg-gray-100 flex items-center justify-center border border-gray-200">
-                  <MicrophoneIcon className="h-16 w-16 text-gray-400" />
+                  <MicrophoneIcon className="h-16 w-16 text-muted-foreground" />
                 </div>
               )}
               <div className="space-y-4 flex-1">
                 <h1 className="text-3xl font-bold text-gray-900">{announcer.name}</h1>
                 <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">{announcer.description}</div>
-                <div className="flex items-center text-sm text-gray-500">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <span>Creado: {formatDate(announcer.createdAt)}</span>
                   <span className="mx-2">&bull;</span>
                   <span>Actualizado: {formatDate(announcer.updatedAt)}</span>

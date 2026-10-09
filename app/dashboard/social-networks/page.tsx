@@ -32,7 +32,7 @@ export default async function SocialNetworksPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           Redes Sociales
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Configura los enlaces a tus redes sociales
         </p>
       </div>

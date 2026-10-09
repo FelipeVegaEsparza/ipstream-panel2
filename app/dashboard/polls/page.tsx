@@ -32,7 +32,7 @@ export default async function PollsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Encuestas</h1>
-          <p className="mt-1 text-sm text-gray-600">Crea encuestas para tus oyentes y consulta los resultados</p>
+          <p className="mt-1 text-sm text-muted-foreground">Crea encuestas para tus oyentes y consulta los resultados</p>
         </div>
         <Link href="/dashboard/polls/new" className="btn-primary flex items-center gap-2">
           <PlusIcon className="h-5 w-5" /> Nueva Encuesta

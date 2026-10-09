@@ -36,7 +36,7 @@ export default async function ProgramsPage() {
           <h1 className="text-2xl font-bold text-gray-900">
             Programas
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Gestiona la programación de tu radio
           </p>
         </div>

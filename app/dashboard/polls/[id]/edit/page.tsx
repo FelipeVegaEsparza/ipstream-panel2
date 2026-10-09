@@ -23,7 +23,7 @@ export default async function EditPollPage({ params }: EditPollPageProps) {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Editar Encuesta</h1>
-        <p className="mt-1 text-sm text-gray-600">Modifica la pregunta y opciones de la encuesta</p>
+        <p className="mt-1 text-sm text-muted-foreground">Modifica la pregunta y opciones de la encuesta</p>
       </div>
       <div className="card max-w-2xl">
         <PollForm initialData={poll} />

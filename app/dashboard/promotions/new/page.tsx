@@ -7,7 +7,7 @@ export default function NewPromotionPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           Nueva Promoción
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Crea una nueva promoción u oferta especial
         </p>
       </div>

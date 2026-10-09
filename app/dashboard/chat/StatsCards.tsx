@@ -19,8 +19,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       label: 'Mensajes última hora',
       value: stats.lastHourMessages,
       icon: Clock,
-      color: 'text-cyan-300',
-      bg: 'bg-cyan-500/10',
+      color: 'text-brand',
+      bg: 'bg-brand/10',
     },
     {
       label: 'Mensajes últimas 24h',
@@ -51,15 +51,15 @@ export function StatsCards({ stats }: StatsCardsProps) {
         return (
           <div
             key={c.label}
-            className="bg-gray-800/40 border border-gray-700 rounded-xl p-4"
+            className="bg-card/40 border border-border rounded-xl p-4"
           >
             <div className="flex items-center gap-2 mb-1.5">
               <div className={`p-1.5 rounded ${c.bg}`}>
                 <Icon className={`h-4 w-4 ${c.color}`} />
               </div>
-              <span className="text-xs text-gray-400">{c.label}</span>
+              <span className="text-xs text-muted-foreground">{c.label}</span>
             </div>
-            <p className="text-2xl font-bold text-white">{c.value}</p>
+            <p className="text-2xl font-bold text-foreground">{c.value}</p>
           </div>
         )
       })}

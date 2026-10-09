@@ -200,12 +200,12 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
             onBlur={() => setTimeout(() => setCityOpen(false), 150)}
           />
           {cityOpen && suggestions.length > 0 && (
-            <ul className="absolute z-20 mt-1 w-full bg-gray-800 border border-gray-600 rounded-md shadow-xl max-h-60 overflow-auto">
+            <ul className="absolute z-20 mt-1 w-full bg-card border border-border rounded-md shadow-xl max-h-60 overflow-auto">
               {suggestions.map((s) => (
                 <li key={s.id}>
                   <button
                     type="button"
-                    className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-cyan-500/20"
+                    className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-brand/20"
                     onMouseDown={(e) => {
                       e.preventDefault()
                       pickCity(s)
@@ -220,8 +220,8 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           )}
         </div>
         {location && (
-          <div className="flex items-center justify-between mt-2 px-3 py-2 bg-cyan-500/10 border border-cyan-500/40 rounded-md">
-            <span className="text-sm text-cyan-300">
+          <div className="flex items-center justify-between mt-2 px-3 py-2 bg-brand/10 border border-brand/40 rounded-md">
+            <span className="text-sm text-brand">
               {location.city}
               {location.region ? `, ${location.region}` : ''} · {location.country}
             </span>
@@ -237,7 +237,7 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
         {errors.location && (
           <p className="text-sm text-red-600">{errors.location.message}</p>
         )}
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           El panel resuelve automáticamente la ubicación (ciudades de cualquier país). Los sitios podrán mostrar el clima con estas coordenadas.
         </p>
       </div>
@@ -250,11 +250,11 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           type="text"
           id="radioStreamingUrl"
           readOnly
-          className="form-input bg-gray-800 text-cyan-400 font-mono text-sm cursor-not-allowed"
+          className="form-input bg-card text-brand font-mono text-sm cursor-not-allowed"
           value={initialData?.radioStreamingUrl || ''}
           placeholder="Se genera automáticamente según tu servidor"
         />
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Generada automáticamente según el servidor configurado. Copiala para usarla en tu sitio o player.
         </p>
       </div>
@@ -267,11 +267,11 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           type="text"
           id="videoStreamingUrl"
           readOnly
-          className="form-input bg-gray-800 text-cyan-400 font-mono text-sm cursor-not-allowed"
+          className="form-input bg-card text-brand font-mono text-sm cursor-not-allowed"
           value={initialData?.videoStreamingUrl || ''}
           placeholder="Se genera automáticamente según tu servidor"
         />
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Generada automáticamente según el servidor configurado. Copiala para usarla en tu sitio o player.
         </p>
       </div>

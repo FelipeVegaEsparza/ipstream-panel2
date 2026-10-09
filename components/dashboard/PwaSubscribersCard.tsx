@@ -27,16 +27,16 @@ export function PwaSubscribersCard() {
           <dt className="truncate text-sm font-medium text-indigo-400 mb-2">
             Instalaciones PWA
           </dt>
-          <dd className="text-3xl font-bold tracking-tight text-white">
+          <dd className="text-3xl font-bold tracking-tight text-foreground">
             {loading ? (
               <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
             ) : error || count === null ? (
-              <span className="text-lg font-normal text-gray-500">—</span>
+              <span className="text-lg font-normal text-muted-foreground">—</span>
             ) : (
               count
             )}
           </dd>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {count === 0 && !loading
               ? 'Sin instalaciones registradas'
               : count === 1

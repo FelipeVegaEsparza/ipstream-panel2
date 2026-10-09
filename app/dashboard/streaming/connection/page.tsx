@@ -38,7 +38,7 @@ const ROLE_HIERARCHY: Record<string, number> = {
 const ROLE_STYLES: Record<string, string> = {
   owner: 'bg-red-900/50 text-red-300',
   host: 'bg-blue-900/50 text-blue-300',
-  guest: 'bg-gray-700 text-gray-300',
+  guest: 'bg-secondary text-muted-foreground',
 }
 
 export default function ConnectionPage() {
@@ -238,25 +238,25 @@ export default function ConnectionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Conexión DJ</h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <h1 className="text-3xl font-bold text-foreground">Conexión DJ</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Gestiona los DJs de tu radio y obtén los datos para que se conecten con BUTT, MIXXX u otro software.
         </p>
       </div>
 
       {/* Status */}
       <div className={`rounded-lg p-4 text-sm border ${
-        djConnected ? 'bg-green-900/30 border-green-700 text-green-100' : 'bg-gray-800 border-gray-700 text-gray-300'
+        djConnected ? 'bg-green-900/30 border-green-700 text-green-100' : 'bg-card border-border text-muted-foreground'
       }`}>
         <div className="flex items-center gap-2">
-          <span className={`inline-block w-3 h-3 rounded-full ${djConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
-          <span className={djConnected ? 'text-green-400' : 'text-cyan-400'}>
+          <span className={`inline-block w-3 h-3 rounded-full ${djConnected ? 'bg-green-500 animate-pulse' : 'bg-secondary'}`} />
+          <span className={djConnected ? 'text-green-400' : 'text-brand'}>
             {djConnected
               ? `DJ en vivo${connectedLabel ? ` (${connectedLabel})` : ''}`
               : 'AutoDJ activo'}
           </span>
         </div>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-muted-foreground">
           {djConnected
             ? `${connectedSlots.length > 1 ? `${connectedSlots.length} DJs conectados` : 'DJ conectado'}. El AutoDJ se reanudará automáticamente al desconectarse todos.`
             : 'No hay DJ conectado. Configura tu encoder con los datos de abajo.'}
@@ -272,10 +272,10 @@ export default function ConnectionPage() {
       )}
 
       {/* Jerarquía de roles */}
-      <div className="bg-gray-800 rounded-lg p-4 text-sm space-y-1">
-        <h3 className="font-semibold text-gray-300 mb-2">Jerarquía de roles</h3>
+      <div className="bg-card rounded-lg p-4 text-sm space-y-1">
+        <h3 className="font-semibold text-muted-foreground mb-2">Jerarquía de roles</h3>
         {Object.entries(ROLE_LABELS).map(([role, desc]) => (
-          <div key={role} className="flex items-start gap-2 text-gray-400">
+          <div key={role} className="flex items-start gap-2 text-muted-foreground">
             <span className={`font-medium px-1.5 py-0.5 rounded text-xs uppercase ${ROLE_STYLES[role]}`}>{role}</span>
             <span>{desc}</span>
           </div>
@@ -283,11 +283,11 @@ export default function ConnectionPage() {
       </div>
 
       {/* Slots de DJ + CRUD */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+      <div className="bg-card rounded-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-white">Slots de DJ</h2>
-            <p className="text-xs text-gray-400">
+            <h2 className="text-lg font-semibold text-foreground">Slots de DJ</h2>
+            <p className="text-xs text-muted-foreground">
               Plan máximo: {planMaxDjs} DJs. Cada slot tiene mount y password propio.
             </p>
           </div>
@@ -302,23 +302,23 @@ export default function ConnectionPage() {
         </div>
 
         {djSlots.length === 0 ? (
-          <div className="text-center text-gray-500 py-8 text-sm">
+          <div className="text-center text-muted-foreground py-8 text-sm">
             No hay DJs configurados. Crea el primer slot para que puedan transmitir en vivo.
           </div>
         ) : (
           <div className="space-y-3">
             {sortedSlots.map(slot => (
               <div key={slot.id} className={`border rounded-lg p-4 ${
-                slot.connected ? 'border-green-700 bg-green-900/20' : 'border-gray-700 bg-gray-900/50'
+                slot.connected ? 'border-green-700 bg-green-900/20' : 'border-border bg-background/50'
               }`}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className={`w-2.5 h-2.5 rounded-full ${slot.connected ? 'bg-green-500 animate-pulse' : 'bg-gray-600'}`} />
-                    <span className="text-white font-medium">{slot.name}</span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${slot.connected ? 'bg-green-500 animate-pulse' : 'bg-secondary'}`} />
+                    <span className="text-foreground font-medium">{slot.name}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded uppercase ${ROLE_STYLES[slot.role]}`}>{slot.role}</span>
                     {slot.connected && slot.onAir && <span className="text-xs font-semibold text-green-400">ON AIR</span>}
                     {slot.connected && !slot.onAir && <span className="text-xs text-yellow-400">Conectado — en espera</span>}
-                    {!slot.connected && slot.isActive && <span className="text-xs text-gray-400">Disponible</span>}
+                    {!slot.connected && slot.isActive && <span className="text-xs text-muted-foreground">Disponible</span>}
                     {!slot.isActive && <span className="text-xs text-red-400">Inactivo</span>}
                   </div>
                   <div className="flex gap-2">
@@ -327,7 +327,7 @@ export default function ConnectionPage() {
                         Desconectar
                       </button>
                     )}
-                    <button onClick={() => startEdit(slot)} className="text-xs px-2.5 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded">
+                    <button onClick={() => startEdit(slot)} className="text-xs px-2.5 py-1.5 bg-secondary hover:bg-secondary text-muted-foreground rounded">
                       Editar
                     </button>
                     <button onClick={() => handleDelete(slot)} className="text-xs px-2.5 py-1.5 bg-red-900/50 hover:bg-red-800 text-red-300 rounded">
@@ -337,22 +337,22 @@ export default function ConnectionPage() {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div>
-                    <span className="text-gray-500">Mount</span>
+                    <span className="text-muted-foreground">Mount</span>
                     <div className="flex items-center gap-1 mt-0.5">
-                      <code className="bg-gray-900 text-cyan-400 px-2 py-1 rounded flex-1 font-mono">{slot.mount}</code>
-                      <button onClick={() => copy(slot.mount, 'Mount')} className="px-1.5 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">Copiar</button>
+                      <code className="bg-background text-brand px-2 py-1 rounded flex-1 font-mono">{slot.mount}</code>
+                      <button onClick={() => copy(slot.mount, 'Mount')} className="px-1.5 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
                     </div>
                   </div>
                   <div>
-                    <span className="text-gray-500">Prioridad</span>
-                    <div className="mt-0.5 text-white">{slot.priority}</div>
+                    <span className="text-muted-foreground">Prioridad</span>
+                    <div className="mt-0.5 text-foreground">{slot.priority}</div>
                   </div>
                   <div>
-                    <span className="text-gray-500">Rol</span>
-                    <div className="mt-0.5 text-gray-300">{ROLE_LABELS[slot.role] || slot.role}</div>
+                    <span className="text-muted-foreground">Rol</span>
+                    <div className="mt-0.5 text-muted-foreground">{ROLE_LABELS[slot.role] || slot.role}</div>
                   </div>
                   <div>
-                    <span className="text-gray-500">Estado</span>
+                    <span className="text-muted-foreground">Estado</span>
                     <div className="mt-0.5">{slot.isActive ? (slot.connected ? (slot.onAir ? 'Transmitiendo' : 'En espera') : 'Disponible') : 'Inactivo'}</div>
                   </div>
                 </div>
@@ -363,61 +363,61 @@ export default function ConnectionPage() {
       </div>
 
       {/* Server info */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Configuración del servidor</h2>
-        <p className="text-xs text-gray-400 -mt-2">Datos comunes para todos los DJs.</p>
+      <div className="bg-card rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Configuración del servidor</h2>
+        <p className="text-xs text-muted-foreground -mt-2">Datos comunes para todos los DJs.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-gray-400 uppercase">Servidor</label>
+            <label className="text-xs text-muted-foreground uppercase">Servidor</label>
             <div className="flex items-center gap-2 mt-1">
-              <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">{harborHost}</code>
-              <button onClick={() => copy(harborHost, 'Servidor')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">Copiar</button>
+              <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">{harborHost}</code>
+              <button onClick={() => copy(harborHost, 'Servidor')} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 uppercase">Puerto (Harbor)</label>
+            <label className="text-xs text-muted-foreground uppercase">Puerto (Harbor)</label>
             <div className="flex items-center gap-2 mt-1">
-              <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">{harborPort}</code>
-              <button onClick={() => copy(String(harborPort), 'Puerto')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">Copiar</button>
+              <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">{harborPort}</code>
+              <button onClick={() => copy(String(harborPort), 'Puerto')} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 uppercase">Usuario</label>
+            <label className="text-xs text-muted-foreground uppercase">Usuario</label>
             <div className="flex items-center gap-2 mt-1">
-              <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">source</code>
-              <button onClick={() => copy('source', 'Usuario')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">Copiar</button>
+              <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">source</code>
+              <button onClick={() => copy('source', 'Usuario')} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-400 uppercase">Password por defecto</label>
+            <label className="text-xs text-muted-foreground uppercase">Password por defecto</label>
             <div className="flex items-center gap-2 mt-1">
-              <code className="bg-gray-900 text-cyan-400 px-3 py-2 rounded flex-1 font-mono text-sm">{displayPassword}</code>
-              <button onClick={revealPassword} disabled={loadingPassword} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded" title={showPassword ? 'Ocultar' : 'Mostrar'}>
+              <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">{displayPassword}</code>
+              <button onClick={revealPassword} disabled={loadingPassword} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary disabled:opacity-50 text-foreground rounded" title={showPassword ? 'Ocultar' : 'Mostrar'}>
                 {loadingPassword ? '...' : showPassword ? '🙈' : '👁'}
               </button>
               {livePassword && showPassword && (
-                <button onClick={() => copy(livePassword, 'Password')} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded">Copiar</button>
+                <button onClick={() => copy(livePassword, 'Password')} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Cada DJ tiene su propio password. Este es el global.</p>
+            <p className="text-xs text-muted-foreground mt-1">Cada DJ tiene su propio password. Este es el global.</p>
           </div>
         </div>
       </div>
 
       {/* Recent sessions */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Últimas sesiones de DJ</h2>
+      <div className="bg-card rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Últimas sesiones de DJ</h2>
         {sessions.length === 0 ? (
-          <p className="text-sm text-gray-500">No hay sesiones recientes.</p>
+          <p className="text-sm text-muted-foreground">No hay sesiones recientes.</p>
         ) : (
           <div className="space-y-2">
             {sessions.map(s => (
-              <div key={s.id} className="flex items-center justify-between text-sm border-b border-gray-700 pb-2">
-                <div className="text-gray-300">
-                  <span className="font-medium text-white">{s.mount}</span>
-                  <span className="text-xs text-gray-500 ml-2">({s.role})</span>
+              <div key={s.id} className="flex items-center justify-between text-sm border-b border-border pb-2">
+                <div className="text-muted-foreground">
+                  <span className="font-medium text-foreground">{s.mount}</span>
+                  <span className="text-xs text-muted-foreground ml-2">({s.role})</span>
                 </div>
-                <div className="text-gray-400 text-xs">
+                <div className="text-muted-foreground text-xs">
                   {new Date(s.startedAt).toLocaleString('es-CL')}
                   {s.endedAt ? ` — ${formatDuration(s.durationSeconds)}` : ' — en curso'}
                 </div>
@@ -428,18 +428,18 @@ export default function ConnectionPage() {
       </div>
 
       {/* Logs */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+      <div className="bg-card rounded-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Logs de conexión</h2>
+          <h2 className="text-lg font-semibold text-foreground">Logs de conexión</h2>
           <button
             onClick={() => setShowLogs(v => !v)}
-            className="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded"
+            className="text-xs px-3 py-1.5 bg-secondary hover:bg-secondary text-foreground rounded"
           >
             {showLogs ? 'Ocultar' : 'Ver últimas líneas'}
           </button>
         </div>
         {showLogs && (
-          <div className="bg-gray-900 rounded p-3 text-xs font-mono text-gray-400 max-h-64 overflow-y-auto space-y-1">
+          <div className="bg-background rounded p-3 text-xs font-mono text-muted-foreground max-h-64 overflow-y-auto space-y-1">
             {logs.length === 0 ? (
               <p>No hay logs disponibles.</p>
             ) : (
@@ -450,15 +450,15 @@ export default function ConnectionPage() {
       </div>
 
       {/* BUTT example */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-white">Configuración en BUTT (ejemplo)</h2>
-        <ol className="text-sm text-gray-300 space-y-2 list-decimal pl-5">
+      <div className="bg-card rounded-lg p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Configuración en BUTT (ejemplo)</h2>
+        <ol className="text-sm text-muted-foreground space-y-2 list-decimal pl-5">
           <li>Abre BUTT → Settings → Stream</li>
-          <li>Server type: <code className="text-cyan-400">Icecast 2</code></li>
-          <li>Address: <code className="text-cyan-400">{harborHost}</code></li>
-          <li>Port: <code className="text-cyan-400">{harborPort}</code></li>
-          <li>Mount: <code className="text-cyan-400">/dj1</code> (el de tu slot)</li>
-          <li>Username: <code className="text-cyan-400">source</code></li>
+          <li>Server type: <code className="text-brand">Icecast 2</code></li>
+          <li>Address: <code className="text-brand">{harborHost}</code></li>
+          <li>Port: <code className="text-brand">{harborPort}</code></li>
+          <li>Mount: <code className="text-brand">/dj1</code> (el de tu slot)</li>
+          <li>Username: <code className="text-brand">source</code></li>
           <li>Password: tu password DJ individual</li>
           <li>Click <strong>Add</strong> y luego <strong>Play</strong></li>
         </ol>
@@ -467,20 +467,20 @@ export default function ConnectionPage() {
       {/* Form modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md space-y-4">
-            <h2 className="text-lg font-semibold text-white">{editId ? 'Editar DJ' : 'Nuevo DJ'}</h2>
+          <div className="bg-card rounded-lg p-6 w-full max-w-md space-y-4">
+            <h2 className="text-lg font-semibold text-foreground">{editId ? 'Editar DJ' : 'Nuevo DJ'}</h2>
 
             <div>
-              <label className="text-xs text-gray-400 uppercase">Nombre del DJ</label>
+              <label className="text-xs text-muted-foreground uppercase">Nombre del DJ</label>
               <input value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-                className="w-full mt-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm"
                 placeholder="Ej: DJ Alex" />
             </div>
 
             <div>
-              <label className="text-xs text-gray-400 uppercase">Mountpoint</label>
-              <div className="flex items-center mt-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm">
-                <span className="text-gray-500 mr-2">/dj</span>
+              <label className="text-xs text-muted-foreground uppercase">Mountpoint</label>
+              <div className="flex items-center mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm">
+                <span className="text-muted-foreground mr-2">/dj</span>
                 <input
                   type="number"
                   min={1}
@@ -494,7 +494,7 @@ export default function ConnectionPage() {
                   className="bg-transparent w-full outline-none disabled:opacity-50"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {editId
                   ? 'El mount no se puede cambiar al editar.'
                   : `Elige un número entre 1 y ${planMaxDjs}. El próximo libre se sugiere automáticamente.`}
@@ -503,15 +503,15 @@ export default function ConnectionPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-gray-400 uppercase">Prioridad</label>
+                <label className="text-xs text-muted-foreground uppercase">Prioridad</label>
                 <input type="number" min={1} max={4} value={form.priority}
                   onChange={e => setForm({...form, priority: parseInt(e.target.value) || 1})}
-                  className="w-full mt-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm" />
+                  className="w-full mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 uppercase">Rol</label>
+                <label className="text-xs text-muted-foreground uppercase">Rol</label>
                 <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}
-                  className="w-full mt-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm">
+                  className="w-full mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm">
                   <option value="owner">Dueño</option>
                   <option value="host">Locutor</option>
                   <option value="guest">Invitado</option>
@@ -520,19 +520,19 @@ export default function ConnectionPage() {
             </div>
 
             <div>
-              <label className="text-xs text-gray-400 uppercase">Password {editId ? '(vacío = mantener)' : ''}</label>
+              <label className="text-xs text-muted-foreground uppercase">Password {editId ? '(vacío = mantener)' : ''}</label>
               <input value={form.password} onChange={e => setForm({...form, password: e.target.value})}
-                className="w-full mt-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm"
+                className="w-full mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm"
                 placeholder={editId ? 'Dejar vacío = mantener actual' : 'Password para conectar'}
                 type="password" />
             </div>
 
             {form.role && (
-              <div className="text-xs text-gray-500 bg-gray-900 rounded p-2">{ROLE_LABELS[form.role]}</div>
+              <div className="text-xs text-muted-foreground bg-background rounded p-2">{ROLE_LABELS[form.role]}</div>
             )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={resetForm} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm">Cancelar</button>
+              <button onClick={resetForm} className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm">Cancelar</button>
               <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded text-sm">
                 {saving ? 'Guardando...' : editId ? 'Guardar' : 'Crear DJ'}
               </button>

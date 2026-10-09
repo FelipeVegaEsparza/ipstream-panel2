@@ -209,11 +209,11 @@ export function MediaUploader({
   const statusIcon = (status: MediaUploadStatus) => {
     switch (status) {
       case 'pending':
-        return <div className="w-4 h-4 rounded-full border-2 border-gray-500" />
+        return <div className="w-4 h-4 rounded-full border-2 border-border" />
       case 'uploading':
       case 'processing':
         return (
-          <svg className="animate-spin h-4 w-4 text-cyan-400" viewBox="0 0 24 24">
+          <svg className="animate-spin h-4 w-4 text-brand" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
@@ -253,7 +253,7 @@ export function MediaUploader({
         onClick={() => !isProcessing && inputRef.current?.click()}
         className={`
           border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition
-          ${dragOver ? 'border-cyan-500 bg-cyan-500/10' : 'border-gray-600 hover:border-gray-500'}
+          ${dragOver ? 'border-brand bg-brand/10' : 'border-border hover:border-border'}
           ${isProcessing ? 'opacity-60 pointer-events-none' : ''}
         `}
       >
@@ -268,16 +268,16 @@ export function MediaUploader({
         <div className="text-3xl mb-1">
           {isProcessing ? '⏳' : '⬆️'}
         </div>
-        <div className="text-white font-medium text-sm">
+        <div className="text-foreground font-medium text-sm">
           {dropTitle || 'Arrastra archivos aquí o haz clic para seleccionar'}
         </div>
-        {hint && <div className="text-xs text-gray-400 mt-1">{hint}</div>}
+        {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
       </div>
 
       {queue.length > 0 && (
-        <div className="bg-gray-800/80 rounded-lg border border-gray-700 overflow-hidden">
-          <div className="px-3 py-2 border-b border-gray-700 flex items-center justify-between">
-            <span className="text-sm text-gray-300">
+        <div className="bg-card/80 rounded-lg border border-border overflow-hidden">
+          <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
               Cola de subida ({completedCount}/{totalCount})
             </span>
             {hasPending && !isProcessing && (
@@ -291,12 +291,12 @@ export function MediaUploader({
           </div>
 
           {isProcessing && (
-            <div className="px-3 py-2 bg-gray-900/50">
-              <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+            <div className="px-3 py-2 bg-background/50">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <span>Progreso total</span>
                 <span className="ml-auto">{totalProgress}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-1.5">
+              <div className="w-full bg-secondary rounded-full h-1.5">
                 <div
                   className="bg-indigo-500 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${totalProgress}%` }}
@@ -305,19 +305,19 @@ export function MediaUploader({
             </div>
           )}
 
-          <div className="divide-y divide-gray-700/50 max-h-64 overflow-y-auto">
+          <div className="divide-y divide-border/50 max-h-64 overflow-y-auto">
             {queue.map((item) => (
               <div key={item.id} className="flex items-center gap-3 px-3 py-2">
                 <div className="flex-shrink-0">{statusIcon(item.status)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-white truncate">{item.file.name}</span>
-                    <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{item.sizeLabel}</span>
+                    <span className="text-sm text-foreground truncate">{item.file.name}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">{item.sizeLabel}</span>
                   </div>
                   {item.status === 'uploading' && (
-                    <div className="mt-1 w-full bg-gray-700 rounded-full h-1">
+                    <div className="mt-1 w-full bg-secondary rounded-full h-1">
                       <div
-                        className="bg-cyan-500 h-1 rounded-full transition-all duration-200"
+                        className="bg-brand h-1 rounded-full transition-all duration-200"
                         style={{ width: `${item.progress}%` }}
                       />
                     </div>
@@ -326,17 +326,17 @@ export function MediaUploader({
                     <div className="text-xs text-red-400 truncate mt-0.5">{item.error}</div>
                   )}
                   {item.status === 'pending' && (
-                    <div className="text-xs text-gray-500 mt-0.5">Pendiente</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Pendiente</div>
                   )}
                   {item.status === 'processing' && (
-                    <div className="text-xs text-cyan-400 mt-0.5">Procesando…</div>
+                    <div className="text-xs text-brand mt-0.5">Procesando…</div>
                   )}
                   {item.status === 'completed' && (
                     <div className="text-xs text-green-400 mt-0.5">Completado</div>
                   )}
                 </div>
                 {item.status === 'uploading' && (
-                  <span className="text-xs text-cyan-400 flex-shrink-0">{item.progress}%</span>
+                  <span className="text-xs text-brand flex-shrink-0">{item.progress}%</span>
                 )}
               </div>
             ))}

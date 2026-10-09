@@ -60,38 +60,38 @@ export default function TvConnectionPage() {
     setTimeout(() => setter(false), 2000)
   }
 
-  if (loading) return <div className="text-gray-400 p-6">Cargando...</div>
+  if (loading) return <div className="text-muted-foreground p-6">Cargando...</div>
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Conexión OBS</h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <h1 className="text-3xl font-bold text-foreground">Conexión OBS</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Usa estos datos para conectar OBS Studio a tu canal de Televisión
         </p>
       </div>
 
       {/* DJ Status */}
-      <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-3">Estado del DJ</h2>
+      <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+        <h2 className="text-lg font-semibold text-foreground mb-3">Estado del DJ</h2>
         <div className="flex items-center gap-2">
-          <span className={`w-2.5 h-2.5 rounded-full ${info?.dj.active ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`} />
-          <span className={info?.dj.active ? 'text-red-300 font-medium' : 'text-gray-400'}>
+          <span className={`w-2.5 h-2.5 rounded-full ${info?.dj.active ? 'bg-red-500 animate-pulse' : 'bg-secondary'}`} />
+          <span className={info?.dj.active ? 'text-red-300 font-medium' : 'text-muted-foreground'}>
             {info?.dj.active ? 'Transmitiendo en vivo' : 'Sin DJ conectado'}
           </span>
         </div>
         {info?.dj.active && info.dj.connectedAt && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Conectado desde {new Date(info.dj.connectedAt).toLocaleString('es-CL')}
           </p>
         )}
         <div className="flex items-center gap-2 mt-3">
-          <span className={`w-2.5 h-2.5 rounded-full ${info?.status === 'autodj' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
-          <span className={info?.status === 'autodj' ? 'text-green-300 text-sm font-medium' : 'text-gray-400 text-sm'}>
+          <span className={`w-2.5 h-2.5 rounded-full ${info?.status === 'autodj' ? 'bg-green-500 animate-pulse' : 'bg-secondary'}`} />
+          <span className={info?.status === 'autodj' ? 'text-green-300 text-sm font-medium' : 'text-muted-foreground text-sm'}>
             {info?.status === 'autodj' ? 'AutoDJ activo' : info?.status === 'off' ? 'AutoDJ detenido' : 'AutoDJ detenido (DJ en vivo)'}
           </span>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           Al conectar tu transmisión, el AutoDJ se detiene automáticamente. Al terminar, se reanuda.
         </p>
       </div>
@@ -99,8 +99,8 @@ export default function TvConnectionPage() {
       {/* Conexión Universal (H.264 estándar; HEVC/AV1 por enhanced RTMP se descartan en ingesta con SRS v5) */}
       {info && (
         <>
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-700/40 shadow-xl p-5">
-            <h2 className="text-lg font-semibold text-white mb-3">Conexión Universal (H.264)</h2>
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+            <h2 className="text-lg font-semibold text-foreground mb-3">Conexión Universal (H.264)</h2>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
               <span className="text-green-300 text-sm font-medium">Relay activo</span>
@@ -110,12 +110,12 @@ export default function TvConnectionPage() {
                 type="text"
                 readOnly
                 value={relayServerUrl}
-                className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none"
                 onClick={(e) => e.currentTarget.select()}
               />
               <button
                 onClick={() => copy(relayServerUrl, setCopiedRelay, 'Servidor Relay')}
-                className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm whitespace-nowrap"
+                className="px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-colors text-sm whitespace-nowrap"
               >
                 {copiedRelay ? '✓ Copiado' : 'Copiar Relay'}
               </button>
@@ -125,17 +125,17 @@ export default function TvConnectionPage() {
                 type="text"
                 readOnly
                 value={info.streamKey}
-                className="flex-1 bg-gray-900 text-cyan-400 px-3 py-2.5 rounded-lg border border-gray-700 font-mono text-sm outline-none"
+                className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none"
                 onClick={(e) => e.currentTarget.select()}
               />
               <button
                 onClick={() => copy(info.streamKey, setCopiedRelayKey, 'Stream Key')}
-                className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm whitespace-nowrap"
+                className="px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-colors text-sm whitespace-nowrap"
               >
                 {copiedRelayKey ? '✓ Copiado' : 'Copiar Key'}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               Usa esta URL en OBS como Servidor y tu Stream Key en "Clave de stream". Configura un encoder
               H.264 estándar (x264, NVENC, QuickSync o AMF) y desactiva "Enhanced streaming" (HEVC/AV1): esos
               códecs no se soportan y el video se ve en negro. Con un key incorrecto la conexión es rechazada.

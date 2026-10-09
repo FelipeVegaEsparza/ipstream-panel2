@@ -193,7 +193,7 @@ export default function PodcastsPage() {
         
         <button
           onClick={() => setShowForm(true)}
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg flex items-center space-x-2"
+          className="bg-gradient-to-r from-purple-600 to-brand hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg flex items-center space-x-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -214,7 +214,7 @@ export default function PodcastsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+        <div className="bg-gradient-to-r from-blue-500 to-brand rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100">Temporadas</p>
@@ -258,7 +258,7 @@ export default function PodcastsPage() {
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
+            className="bg-gradient-to-r from-purple-600 to-brand hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
           >
             Crear Primer Episodio
           </button>

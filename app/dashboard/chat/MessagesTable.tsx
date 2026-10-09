@@ -40,19 +40,19 @@ export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
   }
 
   return (
-    <div className="bg-gray-800/40 border border-gray-700 rounded-xl">
-      <div className="p-4 border-b border-gray-700 flex flex-wrap items-center gap-3">
+    <div className="bg-card/40 border border-border rounded-xl">
+      <div className="p-4 border-b border-border flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email o mensaje…"
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground focus:border-brand focus:outline-none"
           />
         </div>
-        <div className="flex items-center gap-1 bg-gray-900 border border-gray-700 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-background border border-border rounded-lg p-1">
           {[
             { key: 'all', label: 'Todos' },
             { key: 'listener', label: 'Oyentes' },
@@ -63,64 +63,64 @@ export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
               onClick={() => setFilter(opt.key as 'all' | 'listener' | 'staff')}
               className={`px-3 py-1 text-xs rounded ${
                 filter === opt.key
-                  ? 'bg-cyan-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-brand text-white'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {opt.label}
             </button>
           ))}
         </div>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted-foreground">
           {filtered.length} mensaje{filtered.length === 1 ? '' : 's'}
         </span>
       </div>
 
       <div className="max-h-[600px] overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 text-sm">
+          <div className="p-8 text-center text-muted-foreground text-sm">
             No hay mensajes para mostrar.
           </div>
         ) : (
-          <ul className="divide-y divide-gray-700/50">
+          <ul className="divide-y divide-border/50">
             {filtered.map((m) => {
               const isStaff = m.authorType === 'staff'
               const created = new Date(m.createdAt)
               return (
-                <li key={m.id} className="p-4 hover:bg-gray-800/30 transition-colors">
+                <li key={m.id} className="p-4 hover:bg-card/30 transition-colors">
                   <div className="flex items-start gap-3">
                     <div
                       className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                        isStaff ? 'bg-cyan-600/20 text-cyan-300' : 'bg-gray-700 text-gray-300'
+                        isStaff ? 'bg-brand/20 text-brand' : 'bg-secondary text-muted-foreground'
                       }`}
                     >
                       {isStaff ? <ShieldCheck className="h-4 w-4" /> : <UserIcon className="h-4 w-4" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className={`font-semibold text-sm ${isStaff ? 'text-cyan-300' : 'text-white'}`}>
+                        <span className={`font-semibold text-sm ${isStaff ? 'text-brand' : 'text-foreground'}`}>
                           {m.name}
                         </span>
                         {isStaff && (
-                          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-cyan-600/20 text-cyan-300 border border-cyan-600/30">
+                          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-brand/20 text-brand border border-brand/30">
                             Staff
                           </span>
                         )}
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(created, { addSuffix: true, locale: es })}
                         </span>
                         {m.email && !isStaff && (
-                          <span className="text-xs text-gray-600 truncate" title={m.email}>
+                          <span className="text-xs text-muted-foreground truncate" title={m.email}>
                             · {m.email}
                           </span>
                         )}
                         {m.ipAddress && !isStaff && (
-                          <span className="text-xs text-gray-600" title="IP">
+                          <span className="text-xs text-muted-foreground" title="IP">
                             · {m.ipAddress}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-200 whitespace-pre-wrap break-words">
+                      <p className="text-sm text-foreground whitespace-pre-wrap break-words">
                         {m.body}
                       </p>
                     </div>
@@ -137,7 +137,7 @@ export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
                           <button
                             onClick={() => setConfirmId(null)}
                             disabled={deleting}
-                            className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+                            className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-secondary"
                           >
                             Cancelar
                           </button>
@@ -145,7 +145,7 @@ export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
                       ) : (
                         <button
                           onClick={() => setConfirmId(m.id)}
-                          className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10"
+                          className="p-1.5 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
                           title="Borrar mensaje"
                         >
                           <Trash2 className="h-4 w-4" />

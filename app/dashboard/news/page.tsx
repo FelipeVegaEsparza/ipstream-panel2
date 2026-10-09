@@ -56,7 +56,7 @@ export default async function NewsPage() {
           <h1 className="text-2xl font-bold text-gray-900">
             Noticias
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {useGenericNews
               ? 'Estás usando noticias genéricas del sistema'
               : 'Gestiona las noticias de tu radio'}
@@ -83,7 +83,7 @@ export default async function NewsPage() {
 
       {useGenericNews ? (
         <div className="card p-6">
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Las noticias que se muestran en tu sitio web son proporcionadas por el sistema.
             Puedes seleccionar las categorías que deseas mostrar en la sección de configuración superior.
           </p>

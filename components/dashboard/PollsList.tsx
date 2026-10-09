@@ -88,7 +88,7 @@ export function PollsList({ polls }: PollsListProps) {
               <button
                 onClick={() => handleToggle(poll.id, poll.active)}
                 disabled={toggling === poll.id}
-                className={`ml-2 p-1.5 rounded-full ${poll.active ? 'text-green-400 hover:text-green-300' : 'text-gray-500 hover:text-gray-400'}`}
+                className={`ml-2 p-1.5 rounded-full ${poll.active ? 'text-green-400 hover:text-green-300' : 'text-muted-foreground hover:text-muted-foreground'}`}
                 title={poll.active ? 'Desactivar' : 'Activar'}
               >
                 {toggling === poll.id ? (
@@ -110,8 +110,8 @@ export function PollsList({ polls }: PollsListProps) {
                       <span className="text-secondary">{opt.text}</span>
                       <span className="text-muted">{opt.votes} voto{opt.votes !== 1 ? 's' : ''} ({pct}%)</span>
                     </div>
-                    <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-brand to-brand rounded-full transition-all" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 )
@@ -120,13 +120,13 @@ export function PollsList({ polls }: PollsListProps) {
 
             <div className="flex items-center justify-between text-xs text-muted mb-3">
               <span>{total} voto{total !== 1 ? 's' : ''}</span>
-              <span className={poll.active ? 'text-green-400' : 'text-gray-500'}>
+              <span className={poll.active ? 'text-green-400' : 'text-muted-foreground'}>
                 {poll.active ? 'Activa' : 'Inactiva'}
               </span>
               <span>{formatDate(poll.createdAt)}</span>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-3 border-t border-gray-700">
+            <div className="flex justify-end space-x-2 pt-3 border-t border-border">
               <Link href={`/dashboard/polls/${poll.id}`} className="action-button action-button-view" title="Ver encuesta">
                 <EyeIcon className="h-4 w-4" />
               </Link>

@@ -99,14 +99,14 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
                   fill
                   className="object-cover"
                 />
-                <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                <div className="absolute top-2 right-2 bg-black/60 text-foreground text-xs px-2 py-1 rounded-full backdrop-blur-sm">
                   {gallery.images.length}{' '}
                   {gallery.images.length === 1 ? 'imagen' : 'imágenes'}
                 </div>
               </div>
             ) : (
-              <div className="mb-4 h-48 bg-gray-700/50 rounded-lg flex items-center justify-center">
-                <PhotoIcon className="h-12 w-12 text-gray-500" />
+              <div className="mb-4 h-48 bg-secondary/50 rounded-lg flex items-center justify-center">
+                <PhotoIcon className="h-12 w-12 text-muted-foreground" />
               </div>
             )}
 
@@ -139,7 +139,7 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
                     </div>
                   ))}
                   {gallery.images.length > 4 && (
-                    <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center text-xs text-gray-400 flex-shrink-0">
+                    <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center text-xs text-muted-foreground flex-shrink-0">
                       +{gallery.images.length - 4}
                     </div>
                   )}
@@ -151,7 +151,7 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end space-x-2 pt-3 border-t border-gray-700">
+              <div className="flex justify-end space-x-2 pt-3 border-t border-border">
                 <Link
                   href={`/dashboard/galleries/${gallery.id}`}
                   className="action-button action-button-view"

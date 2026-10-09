@@ -28,12 +28,12 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <Link href="/dashboard/polls" className="p-2 text-gray-400 hover:text-gray-600">
+          <Link href="/dashboard/polls" className="p-2 text-muted-foreground hover:text-muted-foreground">
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Resultados de Encuesta</h1>
-            <p className="mt-1 text-sm text-gray-600">Resultados en tiempo real</p>
+            <p className="mt-1 text-sm text-muted-foreground">Resultados en tiempo real</p>
           </div>
         </div>
         <Link href={`/dashboard/polls/${poll.id}/edit`} className="btn-primary flex items-center gap-2">
@@ -55,16 +55,16 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
                     <div key={opt.id}>
                       <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center gap-2">
-                          <span className={`text-sm font-bold ${i === 0 && totalVotes > 0 ? 'text-cyan-400' : 'text-gray-700'}`}>
+                          <span className={`text-sm font-bold ${i === 0 && totalVotes > 0 ? 'text-brand' : 'text-gray-700'}`}>
                             {i + 1}
                           </span>
                           <span className="text-gray-800 font-medium">{opt.text}</span>
                         </div>
-                        <span className="text-sm text-gray-500">{opt.votes} votos ({pct}%)</span>
+                        <span className="text-sm text-muted-foreground">{opt.votes} votos ({pct}%)</span>
                       </div>
                       <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all ${i === 0 && totalVotes > 0 ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 'bg-gray-400'}`}
+                          className={`h-full rounded-full transition-all ${i === 0 && totalVotes > 0 ? 'bg-gradient-to-r from-brand to-brand' : 'bg-gray-400'}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -73,7 +73,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
                 })}
             </div>
 
-            <p className="text-sm text-gray-400 mt-6">Total: {totalVotes} voto{totalVotes !== 1 ? 's' : ''}</p>
+            <p className="text-sm text-muted-foreground mt-6">Total: {totalVotes} voto{totalVotes !== 1 ? 's' : ''}</p>
           </div>
         </div>
 
@@ -82,21 +82,21 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
             <h3 className="text-lg font-medium text-gray-900 mb-4">Información</h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-gray-500">Estado:</span>
+                <span className="text-sm text-muted-foreground">Estado:</span>
                 <p className={`text-sm font-medium ${poll.active ? 'text-green-600' : 'text-red-600'}`}>
                   {poll.active ? 'Activa' : 'Inactiva'}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Opciones:</span>
+                <span className="text-sm text-muted-foreground">Opciones:</span>
                 <p className="text-sm font-medium text-gray-900">{poll.options.length}</p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Votos totales:</span>
+                <span className="text-sm text-muted-foreground">Votos totales:</span>
                 <p className="text-sm font-medium text-gray-900">{totalVotes}</p>
               </div>
               <div>
-                <span className="text-sm text-gray-500">Creada:</span>
+                <span className="text-sm text-muted-foreground">Creada:</span>
                 <p className="text-sm font-medium text-gray-900">{formatDate(poll.createdAt)}</p>
               </div>
             </div>

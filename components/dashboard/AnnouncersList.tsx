@@ -64,13 +64,13 @@ export function AnnouncersList({ announcers }: AnnouncersListProps) {
                 alt={announcer.name}
                 width={120}
                 height={120}
-                className="w-28 h-28 object-cover rounded-full border-4 border-gray-600"
+                className="w-28 h-28 object-cover rounded-full border-4 border-border"
               />
             </div>
           ) : (
             <div className="mb-4 flex justify-center">
-              <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center border-4 border-gray-600">
-                <MicrophoneIcon className="h-10 w-10 text-gray-500" />
+              <div className="w-28 h-28 rounded-full bg-secondary flex items-center justify-center border-4 border-border">
+                <MicrophoneIcon className="h-10 w-10 text-muted-foreground" />
               </div>
             </div>
           )}
@@ -81,7 +81,7 @@ export function AnnouncersList({ announcers }: AnnouncersListProps) {
             <p className="text-xs text-muted">Creado: {formatDate(announcer.createdAt)}</p>
           </div>
 
-          <div className="flex justify-center space-x-2 pt-3 border-t border-gray-700 mt-3">
+          <div className="flex justify-center space-x-2 pt-3 border-t border-border mt-3">
             <Link href={`/dashboard/announcers/${announcer.id}`} className="action-button action-button-view" title="Ver locutor">
               <EyeIcon className="h-4 w-4" />
             </Link>

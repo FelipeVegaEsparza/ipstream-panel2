@@ -95,7 +95,7 @@ export function PollForm({ initialData }: PollFormProps) {
         <button
           type="button"
           onClick={() => append('')}
-          className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+          className="text-sm text-brand hover:text-brand flex items-center gap-1"
         >
           <PlusIcon className="h-4 w-4" /> Agregar opción
         </button>

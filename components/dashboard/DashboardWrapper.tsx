@@ -15,7 +15,7 @@ export function DashboardWrapper({ children, fallback }: DashboardWrapperProps) 
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-400">Cargando...</p>
+        <p className="text-muted-foreground">Cargando...</p>
       </div>
     )
   }
@@ -28,10 +28,10 @@ export function DashboardWrapper({ children, fallback }: DashboardWrapperProps) 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-white mb-2">
+        <h3 className="text-lg font-medium text-foreground mb-2">
           Error: No se encontró información del cliente
         </h3>
-        <p className="text-gray-400 mb-4">
+        <p className="text-muted-foreground mb-4">
           No se pudo determinar el cliente para mostrar esta página
         </p>
         {isImpersonating ? (
