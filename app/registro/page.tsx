@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { SignupForm, PublicPlan } from '@/components/public/SignupForm'
+import { planPriceList } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,9 +32,7 @@ export default async function RegistroPage({
       name: p.name,
       price: p.price,
       currency: p.currency,
-      prices: p.prices && p.prices.length > 0
-        ? p.prices.map((x) => ({ currency: x.currency, amount: x.amount }))
-        : [{ currency: p.currency, amount: p.price }],
+      prices: planPriceList(p),
       interval: p.interval,
       features,
       maxDjs: p.maxDjs,

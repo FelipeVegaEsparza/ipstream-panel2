@@ -19,13 +19,29 @@ export function parsePlanFeatures(features: string | null | undefined): string[]
   return []
 }
 
+export type PlanPriceItem = { currency: string; amount: number }
+
+/**
+ * Lista de precios de un plan: la moneda base (`Plan.currency`/`Plan.price`)
+ * primero, más las monedas adicionales (`PlanPrice`), sobreescribiendo la base
+ * si coincide. Así la web pública muestra SIEMPRE la moneda base aunque no
+ * exista una fila `PlanPrice` para ella.
+ */
+export function planPriceList(
+  plan: Pick<Plan, 'currency' | 'price'> & { prices?: PlanPriceItem[] | null }
+): PlanPriceItem[] {
+  const map = new Map<string, number>()
+  map.set(plan.currency, plan.price)
+  for (const p of plan.prices ?? []) {
+    if (p && p.currency) map.set(p.currency, p.amount)
+  }
+  return Array.from(map, ([currency, amount]) => ({ currency, amount }))
+}
+
 export function toPublicPlan(
   plan: Plan & { prices?: Array<{ currency: string; amount: number }> }
 ): PublicPlan {
-  const prices =
-    plan.prices && plan.prices.length > 0
-      ? plan.prices.map((p) => ({ currency: p.currency, amount: p.amount }))
-      : [{ currency: plan.currency, amount: plan.price }]
+  const prices = planPriceList(plan)
 
   return {
     id: plan.id,
