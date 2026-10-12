@@ -62,10 +62,10 @@ export async function generateAccountPdf(
     where: { id: clientId },
     include: {
       user: true,
-      plan: true,
+      plan: { include: { prices: true } },
       subscription: {
         include: {
-          plan: true,
+          plan: { include: { prices: true } },
           payments: { orderBy: { dueDate: 'asc' } },
         },
       },
@@ -78,6 +78,15 @@ export async function generateAccountPdf(
 
   const payments = client.subscription?.payments ?? []
   const plan = client.plan ?? client.subscription?.plan ?? null
+
+  // Precio del plan en la moneda con que se factura al cliente (si difiere de la base).
+  const billingCurrency = client.subscription?.billingCurrency ?? plan?.currency ?? 'CLP'
+  const planPrice = (() => {
+    if (!plan) return null
+    if (plan.currency === billingCurrency) return { amount: plan.price, currency: plan.currency }
+    const pp = plan.prices?.find((x) => x.currency === billingCurrency)
+    return pp ? { amount: pp.amount, currency: pp.currency } : { amount: plan.price, currency: plan.currency }
+  })()
 
   const totalFacturado = payments
     .filter((p) => p.status !== 'refunded')
@@ -250,7 +259,7 @@ export async function generateAccountPdf(
   doc.setTextColor(...COL_INK_SOFT)
   if (plan) {
     doc.text(
-      `${formatCurrency(plan.price, plan.currency)} / ${plan.interval === 'monthly' ? 'mes' : 'año'}`,
+      `${formatCurrency(planPrice?.amount ?? plan.price, planPrice?.currency ?? plan.currency)} / ${plan.interval === 'monthly' ? 'mes' : 'año'}`,
       rightX,
       y + 52
     )

@@ -17,9 +17,9 @@
 
 ## 3. Fase 3 — Pulido
 
-- [ ] 3.1 Mostrar estado/transacción de PayPal en la vista de pagos del admin.
-- [ ] 3.2 Correos/PDF con la moneda elegida; verificar el render.
-- [ ] 3.3 Documentar envs de PayPal y el alcance (CLP manual) en `AGENTS.md`/`.env.example`.
+- [x] 3.1 Mostrar estado/transacción de PayPal en la vista de pagos del admin.
+- [x] 3.2 Correos/PDF con la moneda elegida; verificar el render.
+- [x] 3.3 Documentar envs de PayPal y el alcance (CLP manual) en `AGENTS.md`/`.env.example`.
 
 ## 4. Verificación
 

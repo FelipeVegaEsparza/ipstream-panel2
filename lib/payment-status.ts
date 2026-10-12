@@ -11,6 +11,7 @@ export interface ClientPayment {
   paidAt: Date | string | null
   createdAt: Date | string
   paymentMethod: string
+  transactionId?: string | null
   description?: string | null
   receiptUrl?: string | null
 }

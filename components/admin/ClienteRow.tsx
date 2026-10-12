@@ -412,6 +412,14 @@ export function ClienteRow({
                             <span className="text-xs text-muted-foreground">
                               {PAYMENT_METHOD_LABELS[p.paymentMethod] ?? p.paymentMethod}
                             </span>
+                            {p.paymentMethod === 'paypal' && p.transactionId && (
+                              <span
+                                className="text-xs font-mono text-muted-foreground/80"
+                                title="ID de transacción PayPal"
+                              >
+                                {p.transactionId}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">

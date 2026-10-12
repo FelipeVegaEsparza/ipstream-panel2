@@ -75,6 +75,7 @@ export default async function BillingPage() {
       paidAt: p.paidAt,
       createdAt: p.createdAt,
       paymentMethod: p.paymentMethod,
+      transactionId: p.transactionId,
       description: p.description,
       receiptUrl: p.receiptUrl,
     })) ?? [],

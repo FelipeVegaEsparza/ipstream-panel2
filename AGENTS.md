@@ -43,6 +43,15 @@
 - **Deploy**: el panel se deploya con GitHub Actions (push a `main`). El bundle de la PWA se publica con el workflow `deploy-site-bundle.yml` (se dispara con cambios en `pwa/**`) hacia `./data/client-site` del VPS.
 - Un cambio que toca solo `pwa/**` **no** deploya el panel, pero **sí** republica el bundle (workflow aparte). Un cambio en el shell (`lib/client-site.ts`, `lib/client-icons.ts`, `app/api/tenant/*`, `middleware.ts`, `deploy/Caddyfile`) sí deploya el panel.
 
+## Facturación / Pagos (multi-moneda + PayPal)
+
+- **Precios por moneda**: `PlanPrice { planId, currency, amount }` (una fila por moneda) además del precio base `Plan.price/currency`. La web pública (`/planes`, `/registro`) y `PlanForm` muestran/editan esas monedas; el registro propaga la moneda elegida a `Subscription.billingCurrency` y al `Payment` (`amount`/`currency`).
+- **Pago online con PayPal (USD)**: botón "Pagar con PayPal" en `/dashboard/payments` para pagos `pending`/`failed` en moneda soportada. Rutas: `POST /api/checkout/paypal` (crea orden) → retorno a `/dashboard/payments?paypal=return` → `POST /api/checkout/paypal/capture`; webhook público en `POST /api/webhooks/paypal` (verifica firma e idempotente vía `lib/billing-payments.ts` → `markPaymentPaid`, que activa la suscripción).
+- **CLP se mantiene manual**: PayPal no soporta CLP; esos pagos siguen por transferencia + registro manual del admin.
+- **Envs**: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV` (`sandbox`|`live`), `PAYPAL_WEBHOOK_ID`. Sin credenciales, el botón no se muestra (el resto de la facturación sigue igual). `live` autentica en `api-m.paypal.com`; `sandbox` en `api-m.sandbox.paypal.com`.
+- **Webhook**: crear el webhook en la app de PayPal → `https://<panel>/api/webhooks/paypal` con eventos `CHECKOUT.ORDER.APPROVED` y `PAYMENT.CAPTURE.COMPLETED`, y setear `PAYPAL_WEBHOOK_ID` (sin él, la firma no se puede verificar y el webhook responde 400).
+- Solo toca el panel: un cambio aquí **no** requiere "Actualizar nodo".
+
 ## Streaming / Nodos remotos
 
 - El deploy de GitHub Actions solo actualiza el panel y el agente del VPS principal.
