@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -64,9 +65,60 @@ interface Client {
 interface ClientPaymentsViewProps {
   client: Client
   payments: Payment[]
+  paypalEnabled?: boolean
+  paypalCurrencies?: string[]
 }
 
-export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps) {
+export function ClientPaymentsView({
+  client,
+  payments,
+  paypalEnabled = false,
+  paypalCurrencies = [],
+}: ClientPaymentsViewProps) {
+  const [paying, setPaying] = useState<string | null>(null)
+
+  // Retorno del checkout de PayPal: captura la orden por `?token=<orderId>`.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const mode = params.get('paypal')
+    if (mode === 'return') {
+      const orderId = params.get('token')
+      if (orderId) {
+        fetch('/api/checkout/paypal/capture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId }),
+        })
+          .then((r) => r.json())
+          .then((d) => window.alert(d.ok ? '¡Pago completado!' : d.error || 'No se pudo completar el pago'))
+          .catch(() => window.alert('Error al completar el pago'))
+          .finally(() => {
+            window.location.href = '/dashboard/payments'
+          })
+      }
+    } else if (mode === 'cancel') {
+      window.history.replaceState({}, '', '/dashboard/payments')
+    }
+  }, [])
+
+  async function payWithPaypal(paymentId: string) {
+    setPaying(paymentId)
+    try {
+      const res = await fetch('/api/checkout/paypal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Error al iniciar el pago')
+      if (!data.approvalUrl) throw new Error('PayPal no devolvió una URL de pago')
+      window.location.href = data.approvalUrl
+    } catch (err) {
+      window.alert((err as Error).message)
+      setPaying(null)
+    }
+  }
+
   const formatCurrency = (amount: number, currency: string) => {
     if (currency === 'CLP') {
       return new Intl.NumberFormat('es-CL', { 
@@ -329,17 +381,32 @@ export function ClientPaymentsView({ client, payments }: ClientPaymentsViewProps
                       </div>
                     </div>
 
-                    {payment.receiptUrl && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(payment.receiptUrl!, '_blank')}
-                        className="border-brand text-brand hover:bg-brand hover:text-white"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver Comprobante
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {(payment.status === 'pending' || payment.status === 'failed') &&
+                        paypalEnabled &&
+                        paypalCurrencies.includes(payment.currency) && (
+                          <Button
+                            size="sm"
+                            onClick={() => payWithPaypal(payment.id)}
+                            disabled={paying === payment.id}
+                            className="bg-brand text-white hover:brightness-[1.07]"
+                          >
+                            <CreditCard className="h-4 w-4 mr-1" />
+                            {paying === payment.id ? 'Redirigiendo…' : 'Pagar con PayPal'}
+                          </Button>
+                        )}
+                      {payment.receiptUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(payment.receiptUrl!, '_blank')}
+                          className="border-brand text-brand hover:bg-brand hover:text-white"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver Comprobante
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

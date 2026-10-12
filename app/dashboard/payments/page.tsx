@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { ClientPaymentsView } from '@/components/dashboard/ClientPaymentsView'
+import { paypalEnabled, PAYPAL_CURRENCIES } from '@/lib/paypal'
 
 export default async function PaymentsPage() {
   const session = await getServerSession(authOptions)
@@ -69,9 +70,11 @@ export default async function PaymentsPage() {
   })
 
   return (
-    <ClientPaymentsView 
+    <ClientPaymentsView
       client={client}
       payments={payments}
+      paypalEnabled={paypalEnabled()}
+      paypalCurrencies={PAYPAL_CURRENCIES}
     />
   )
 }

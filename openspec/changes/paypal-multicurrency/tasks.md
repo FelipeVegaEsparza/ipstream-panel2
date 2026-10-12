@@ -10,10 +10,10 @@
 
 ## 2. Fase 2 — PayPal (USD)
 
-- [ ] 2.1 Crear `lib/paypal.ts` (auth OAuth2 + crear/capturar orden) leyendo env (`PAYPAL_CLIENT_ID/SECRET/ENV/WEBHOOK_ID`); verificar que sin credenciales queda deshabilitado.
-- [ ] 2.2 `POST /api/checkout/paypal` (crear orden para un `Payment` pendiente en moneda soportada) y `POST /api/checkout/paypal/capture`; verificar creación y captura (sandbox).
-- [ ] 2.3 `/api/webhooks/paypal` con verificación de firma e idempotencia; verificar un evento repetido no duplica ni altera un pago completado.
-- [ ] 2.4 Botón "Pagar con PayPal" en `ClientPaymentsView`/`PaymentStatusCard` (solo pagos pendientes en monedas soportadas; CLP mantiene el flujo actual); verificar el flujo end-to-end en sandbox.
+- [x] 2.1 Crear `lib/paypal.ts` (auth OAuth2 + crear/capturar orden) leyendo env (`PAYPAL_CLIENT_ID/SECRET/ENV/WEBHOOK_ID`); verificar que sin credenciales queda deshabilitado.
+- [x] 2.2 `POST /api/checkout/paypal` (crear orden para un `Payment` pendiente en moneda soportada) y `POST /api/checkout/paypal/capture`; verificar creación y captura (sandbox).
+- [x] 2.3 `/api/webhooks/paypal` con verificación de firma e idempotencia; verificar un evento repetido no duplica ni altera un pago completado.
+- [x] 2.4 Botón "Pagar con PayPal" en `ClientPaymentsView`/`PaymentStatusCard` (solo pagos pendientes en monedas soportadas; CLP mantiene el flujo actual); verificar el flujo end-to-end en sandbox.
 
 ## 3. Fase 3 — Pulido
 
@@ -23,6 +23,6 @@
 
 ## 4. Verificación
 
-- [ ] 4.1 `npx tsc --noEmit` + `npm run build` sin errores.
+- [x] 4.1 `npx tsc --noEmit` + `npm run build` sin errores.
 - [ ] 4.2 Registro en USD → suscripción/pago en USD; pago con PayPal sandbox → pago `completed`; reintento/idempotencia OK.
 - [ ] 4.3 Registro en CLP → flujo actual intacto (pago manual).
