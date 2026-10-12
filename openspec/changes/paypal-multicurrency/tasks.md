@@ -2,11 +2,11 @@
 
 ## 1. Fase 1 — Precios por moneda + selector
 
-- [ ] 1.1 Agregar `PlanPrice { planId, currency, amount }` y `Subscription.billingCurrency` a Prisma; verificar `prisma validate` + `generate`.
-- [ ] 1.2 Gestionar precios por moneda (CLP/USD) en `PlanForm` + API de planes; verificar guardar/leer precios.
-- [ ] 1.3 Selector de moneda en `app/planes/**` y `SignupForm` (default moneda base; sólo monedas con precio); verificar que cambia el precio mostrado.
-- [ ] 1.4 Propagar la moneda elegida al registro (`/api/auth/register` + `createSignupSubscription`) y generar el pago con el monto/moneda elegidos; verificar suscripción y pago en esa moneda.
-- [ ] 1.5 Formatear montos según moneda en web pública, dashboard y PDF (reusar `lib/currency.ts`); verificar CLP y USD.
+- [x] 1.1 Agregar `PlanPrice { planId, currency, amount }` y `Subscription.billingCurrency` a Prisma; verificar `prisma validate` + `generate`.
+- [x] 1.2 Gestionar precios por moneda (CLP/USD) en `PlanForm` + API de planes; verificar guardar/leer precios.
+- [x] 1.3 Selector de moneda en `app/planes/**` y `SignupForm` (default moneda base; sólo monedas con precio); verificar que cambia el precio mostrado.
+- [x] 1.4 Propagar la moneda elegida al registro (`/api/auth/register` + `createSignupSubscription`) y generar el pago con el monto/moneda elegidos; verificar suscripción y pago en esa moneda.
+- [x] 1.5 Formatear montos según moneda en web pública, dashboard y PDF (reusar `lib/currency.ts`); verificar CLP y USD.
 
 ## 2. Fase 2 — PayPal (USD)
 
