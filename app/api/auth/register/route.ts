@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, password, planId, radioName } = registerSchema.parse(body)
+    const { name, email, password, planId, radioName, currency } = registerSchema.parse(body)
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -145,7 +145,15 @@ export async function POST(request: NextRequest) {
       // Suscripción + cuota inicial + primer pago pendiente
       let subscription = null
       if (plan) {
-        subscription = await createSignupSubscription(tx, client.id, plan)
+        // Moneda elegida por el cliente: si el plan tiene precio en esa moneda, se usa.
+        let priced: { currency: string; amount: number } | null = null
+        if (currency) {
+          const pp = await tx.planPrice.findUnique({
+            where: { planId_currency: { planId: plan.id, currency } },
+          })
+          if (pp) priced = { currency: pp.currency, amount: pp.amount }
+        }
+        subscription = await createSignupSubscription(tx, client.id, plan, priced)
       }
 
       return { user, client, radioStream, subscription, plan, clientDomain }

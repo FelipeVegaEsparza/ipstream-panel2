@@ -150,7 +150,7 @@ export function ImageUpload({
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-brand">Haz clic para subir</span> o arrastra una imagen aquí
                 </p>
-                <p className="text-xs text-foreground0 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {description}
                 </p>
               </div>

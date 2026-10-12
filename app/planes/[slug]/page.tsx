@@ -14,7 +14,11 @@ const SERVICES_META: Record<string, { label: string; icon: any }> = {
 }
 
 async function getPlan(slug: string): Promise<{ plan: PublicPlan; index: number; popularId: string | null } | null> {
-  const plans = await prisma.plan.findMany({ where: { isActive: true }, orderBy: { price: 'asc' } })
+  const plans = await prisma.plan.findMany({
+    where: { isActive: true },
+    orderBy: { price: 'asc' },
+    include: { prices: true },
+  })
   const publicPlans = plans.map(toPublicPlan)
   const index = publicPlans.findIndex((p) => planSlug(p.name) === slug)
   if (index === -1) return null

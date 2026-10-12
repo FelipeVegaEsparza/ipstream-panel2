@@ -60,7 +60,7 @@ export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
           {attachment.fileName}
           <ExternalLink className="h-3 w-3 opacity-50" />
         </a>
-        <p className="text-xs text-foreground0">{formatFileSize(attachment.fileSize)}</p>
+        <p className="text-xs text-muted-foreground">{formatFileSize(attachment.fileSize)}</p>
       </div>
 
       <a

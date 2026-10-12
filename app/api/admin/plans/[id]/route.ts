@@ -51,7 +51,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, onboardingSteps, menuHiddenKeys, defaultServerId, imageUrl, demoUrl } = body
+    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, prices, onboardingSteps, menuHiddenKeys, defaultServerId, imageUrl, demoUrl } = body
 
     // Validaciones
     if (!name || !description || price === undefined || !interval) {
@@ -107,6 +107,15 @@ export async function PUT(
         demoUrl: typeof demoUrl === 'string' && demoUrl.trim() ? demoUrl.trim() : null,
       }
     })
+
+    // Precios por moneda: reemplaza el set actual
+    if (Array.isArray(prices)) {
+      await prisma.planPrice.deleteMany({ where: { planId: params.id } })
+      for (const pr of prices) {
+        if (!pr || typeof pr.currency !== 'string' || typeof pr.amount !== 'number') continue
+        await prisma.planPrice.create({ data: { planId: params.id, currency: pr.currency, amount: pr.amount } })
+      }
+    }
 
     return NextResponse.json(plan)
   } catch (error) {

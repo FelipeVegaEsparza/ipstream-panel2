@@ -24,6 +24,7 @@ interface Plan {
   features: string
   isActive: boolean
   services: string
+  prices?: { currency: string; amount: number }[]
   onboardingSteps?: string | null
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
@@ -56,6 +57,12 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
   })
 
   // Tareas de "Primeros pasos" seleccionadas para este plan (default: todas).
+  const [prices, setPrices] = useState<Record<string, string>>(() => {
+    const map: Record<string, string> = {}
+    for (const p of plan?.prices ?? []) map[p.currency] = String(p.amount)
+    return map
+  })
+
   const [selectedSteps, setSelectedSteps] = useState<Set<string>>(() => {
     try {
       const arr = plan?.onboardingSteps ? JSON.parse(plan.onboardingSteps) : null
@@ -119,6 +126,9 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           videoStorageQuotaMB: formData.videoStorageQuotaMB === '' ? null : Number(formData.videoStorageQuotaMB),
           menuHiddenKeys: Array.from(hiddenKeys),
           onboardingSteps: Array.from(selectedSteps),
+          prices: Object.entries(prices)
+            .filter(([, v]) => v !== '' && Number(v) > 0)
+            .map(([currency, v]) => ({ currency, amount: Number(v) })),
         })
       })
 
@@ -206,6 +216,41 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                   <option value="CLP">CLP (Peso Chileno)</option>
                   <option value="USD">USD (Dólar)</option>
                 </select>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Precios por moneda (opcional)
+            </label>
+            <p className="text-xs text-muted-foreground mb-2">
+              El cliente podrá elegir entre las monedas que definas aquí. El precio de arriba es el base.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">CLP</label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={prices.CLP ?? ''}
+                  onChange={(e) => setPrices({ ...prices, CLP: e.target.value })}
+                  placeholder="0"
+                  className="bg-secondary border-border text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">USD</label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={prices.USD ?? ''}
+                  onChange={(e) => setPrices({ ...prices, USD: e.target.value })}
+                  placeholder="0.00"
+                  className="bg-secondary border-border text-foreground"
+                />
               </div>
             </div>
           </div>

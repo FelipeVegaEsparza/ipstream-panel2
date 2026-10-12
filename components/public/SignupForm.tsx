@@ -5,12 +5,18 @@ import Link from 'next/link'
 import { Check, Radio, MonitorPlay, HardDrive, ArrowRight, CheckCircle2, User, Mail, Lock, ShieldCheck, Clapperboard, Sparkles } from 'lucide-react'
 import styles from './SignupForm.module.css'
 
+export interface PlanPriceItem {
+  currency: string
+  amount: number
+}
+
 export interface PublicPlan {
   id: string
   name: string
   description?: string
   price: number
   currency: string
+  prices: PlanPriceItem[]
   interval: string
   features: string[]
   maxDjs: number
@@ -59,11 +65,11 @@ function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
           </div>
           <div className="mt-1 flex items-baseline gap-1">
             <span data-slot="summary-price" className="text-2xl font-bold text-gray-900">{price}</span>
-            <span data-slot="muted" className="text-sm text-foreground0">/{plan.interval === 'monthly' ? 'mes' : 'año'}</span>
+            <span data-slot="muted" className="text-sm text-muted-foreground">/{plan.interval === 'monthly' ? 'mes' : 'año'}</span>
           </div>
         </div>
       </div>
-      <div data-slot="muted" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-foreground0">
+      <div data-slot="muted" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
         {plan.services !== 'tv' && (
           <span className="inline-flex items-center gap-1">
             <HardDrive data-slot="icon" className="h-3 w-3 text-brand" /> Radio: {fmtMB(plan.radioStorageQuotaMB)}
@@ -97,6 +103,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'reserved' | 'invalid' | 'unconfigured'>('idle')
   const [siteHost, setSiteHost] = useState('')
   const [createdSiteUrl, setCreatedSiteUrl] = useState<string | null>(null)
+  const [currency, setCurrency] = useState<string>('')
 
   // Chequeo de disponibilidad del subdominio (debounce).
   useEffect(() => {
@@ -127,8 +134,24 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
   }, [radioName])
 
   const selected = plans.find((p) => p.id === planId) || null
-  const formatPrice = (p: PublicPlan) =>
-    p.currency === 'CLP' ? `$${Math.round(p.price).toLocaleString('es-CL')}` : `${p.currency} ${p.price.toLocaleString('es-CL')}`
+
+  // Moneda por defecto: la moneda base del plan elegido.
+  useEffect(() => {
+    const p = plans.find((x) => x.id === planId)
+    setCurrency(p?.prices?.[0]?.currency || p?.currency || 'CLP')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId])
+
+  const priceOf = (p: PublicPlan, cur: string | null | undefined) =>
+    p.prices?.find((x) => x.currency === cur)?.amount ?? p.price
+
+  const formatPrice = (p: PublicPlan) => {
+    const cur = currency || p.currency
+    const amount = priceOf(p, cur)
+    return cur === 'CLP'
+      ? `$${Math.round(amount).toLocaleString('es-CL')}`
+      : `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
   const fmtMB = (mb: number | null) =>
     mb && mb > 0 ? `${mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'}` : '—'
 
@@ -162,7 +185,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, planId, radioName }),
+        body: JSON.stringify({ name, email, password, planId, radioName, currency }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -225,11 +248,11 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
       <div className="space-y-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Elige tu plan</h2>
-          <p className="text-foreground0 mt-1">Precios simples, sin permanencia. Cambia de plan cuando quieras.</p>
+          <p className="text-muted-foreground mt-1">Precios simples, sin permanencia. Cambia de plan cuando quieras.</p>
         </div>
 
         {plans.length === 0 ? (
-          <p className="text-foreground0 text-sm">Los planes estarán disponibles próximamente.</p>
+          <p className="text-muted-foreground text-sm">Los planes estarán disponibles próximamente.</p>
         ) : (
           plans.map((p) => {
             const isSelected = planId === p.id
@@ -273,10 +296,10 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
 
                   <div className="mt-1.5 flex items-baseline gap-1">
                     <span className="text-2xl font-bold text-gray-900">{formatPrice(p)}</span>
-                    <span className="text-sm text-foreground0">/{p.interval === 'monthly' ? 'mes' : 'año'}</span>
+                    <span className="text-sm text-muted-foreground">/{p.interval === 'monthly' ? 'mes' : 'año'}</span>
                   </div>
 
-                  <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-foreground0">
+                  <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     {p.services !== 'tv' && (
                       <span className="inline-flex items-center gap-1">
                         <HardDrive className="h-3 w-3 text-brand" /> Radio: {fmtMB(p.radioStorageQuotaMB)}
@@ -319,13 +342,33 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
           <div>
             <h3 data-slot="heading" className="text-xl font-bold text-gray-900">Crea tu cuenta</h3>
             {selected ? (
-              <p data-slot="sub" className="mt-1 text-sm text-foreground0">
+              <p data-slot="sub" className="mt-1 text-sm text-muted-foreground">
                 Plan <span data-slot="accent" className="text-brand font-medium">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
               </p>
             ) : (
-              <p data-slot="sub" className="mt-1 text-sm text-foreground0">Completa tus datos para comenzar</p>
+              <p data-slot="sub" className="mt-1 text-sm text-muted-foreground">Completa tus datos para comenzar</p>
             )}
           </div>
+
+          {selected && selected.prices && selected.prices.length > 1 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Moneda:</span>
+              {selected.prices.map((pr) => (
+                <button
+                  key={pr.currency}
+                  type="button"
+                  onClick={() => setCurrency(pr.currency)}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    currency === pr.currency
+                      ? 'bg-brand text-white border-transparent'
+                      : 'border-gray-300 text-gray-600 hover:border-brand'
+                  }`}
+                >
+                  {pr.currency}
+                </button>
+              ))}
+            </div>
+          )}
 
           {trialDays > 0 && (
             <div data-slot="trial" className="flex items-center gap-2 rounded-xl bg-cyan-50 border border-cyan-200 px-3 py-2 text-sm text-brand">
@@ -410,11 +453,11 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
             )}
           </button>
 
-          <div data-slot="shield" className="flex items-center justify-center gap-1.5 text-xs text-foreground0">
+          <div data-slot="shield" className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5 text-brand" /> Tus datos están protegidos.
           </div>
 
-          <p data-slot="prompt" className="text-center text-sm text-foreground0">
+          <p data-slot="prompt" className="text-center text-sm text-muted-foreground">
             ¿Ya tienes cuenta?{' '}
             <Link data-slot="link" href="/auth/login" className="text-brand hover:text-brand font-medium hover:underline">Inicia sesión</Link>
           </p>

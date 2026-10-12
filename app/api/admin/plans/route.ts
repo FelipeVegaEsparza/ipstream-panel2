@@ -15,6 +15,7 @@ export async function GET() {
     const plans = await prisma.plan.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
+        prices: true,
         _count: {
           select: {
             clients: true,
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, onboardingSteps, menuHiddenKeys, defaultServerId, imageUrl, demoUrl } = body
+    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, prices, onboardingSteps, menuHiddenKeys, defaultServerId, imageUrl, demoUrl } = body
 
     // Validaciones
     if (!name || !description || price === undefined || !interval) {
@@ -85,6 +86,13 @@ export async function POST(request: NextRequest) {
         demoUrl: typeof demoUrl === 'string' && demoUrl.trim() ? demoUrl.trim() : null,
       }
     })
+
+    if (Array.isArray(prices)) {
+      for (const pr of prices) {
+        if (!pr || typeof pr.currency !== 'string' || typeof pr.amount !== 'number') continue
+        await prisma.planPrice.create({ data: { planId: plan.id, currency: pr.currency, amount: pr.amount } })
+      }
+    }
 
     return NextResponse.json(plan, { status: 201 })
   } catch (error) {

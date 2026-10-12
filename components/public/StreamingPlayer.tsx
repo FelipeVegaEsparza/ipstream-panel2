@@ -169,7 +169,7 @@ export function StreamingPlayer({
               <div className="text-sm text-muted-foreground truncate">
                 {status.currentTitle || (status.isLive ? 'En vivo' : 'Fuera del aire')}
               </div>
-              <div className="text-xs text-foreground0 mt-0.5">
+              <div className="text-xs text-muted-foreground mt-0.5">
                 {status.listeners} oyente{status.listeners !== 1 ? 's' : ''}
                 {status.bitrate && ` · ${status.bitrate} kbps`}
               </div>
@@ -179,7 +179,7 @@ export function StreamingPlayer({
       </div>
 
       <div className="flex items-center gap-2 mt-4">
-        <span className="text-xs text-foreground0">🔊</span>
+        <span className="text-xs text-muted-foreground">🔊</span>
         <input
           type="range"
           min="0"

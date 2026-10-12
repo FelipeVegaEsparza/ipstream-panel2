@@ -401,10 +401,23 @@ model Plan {
   // Relaciones
   clients       Client[]
   subscriptions Subscription[]
+  prices        PlanPrice[]
   defaultServer StreamingServer? @relation("PlanDefaultServer", fields: [defaultServerId], references: [id], onDelete: SetNull)
 
   @@index([defaultServerId])
   @@map("plans")
+}
+
+// Precio de un plan por moneda (CLP, USD, …). El cliente elige la moneda.
+model PlanPrice {
+  id       String @id @default(cuid())
+  planId   String
+  currency String // "CLP" | "USD" | …
+  amount   Float
+  plan     Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, currency])
+  @@map("plan_prices")
 }
 
 model Subscription {
@@ -412,6 +425,8 @@ model Subscription {
   clientId           String    @unique
   planId             String
   status             String // "active" | "trialing" | "cancelled" | "expired" | "pending"
+  // Moneda con la que el cliente eligió pagar (define el precio de los pagos).
+  billingCurrency    String    @default("CLP")
   startDate          DateTime
   endDate            DateTime
   trialEndsAt        DateTime? // fin del período de prueba gratuita (null = sin prueba)

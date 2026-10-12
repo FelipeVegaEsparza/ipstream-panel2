@@ -67,8 +67,17 @@ export async function ensureStreamsForServices(
  * la misma transacción que crea la cuenta para que un fallo no deje estados
  * parciales. El plan ya debe venir validado (existe y está activo).
  */
-export async function createSignupSubscription(db: PrismaDb, clientId: string, plan: SignupPlan) {
+export async function createSignupSubscription(
+  db: PrismaDb,
+  clientId: string,
+  plan: SignupPlan,
+  priced?: { currency: string; amount: number } | null
+) {
   const now = new Date()
+
+  // Moneda elegida por el cliente (o la base del plan).
+  const billingCurrency = priced?.currency || plan.currency
+  const billingAmount = typeof priced?.amount === 'number' ? priced.amount : plan.price
 
   // Duración de la prueba (global). Sin fila de config → 7 días por defecto.
   const config = await db.appConfig.findFirst({ select: { trialDays: true } })
@@ -90,6 +99,7 @@ export async function createSignupSubscription(db: PrismaDb, clientId: string, p
       clientId,
       planId: plan.id,
       status: isTrial ? SUBSCRIPTION_STATUS.TRIALING : SUBSCRIPTION_STATUS.ACTIVE,
+      billingCurrency,
       startDate: now,
       endDate: isTrial ? trialEndsAt! : periodEnd,
       trialEndsAt,
@@ -111,8 +121,8 @@ export async function createSignupSubscription(db: PrismaDb, clientId: string, p
     data: {
       clientId,
       subscriptionId: subscription.id,
-      amount: plan.price,
-      currency: plan.currency,
+      amount: billingAmount,
+      currency: billingCurrency,
       status: 'pending',
       paymentMethod: 'pending',
       description,

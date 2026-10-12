@@ -134,7 +134,7 @@ export function AttachmentUploader({
           )}
           Adjuntar
         </button>
-        <span className="text-xs text-foreground0">
+        <span className="text-xs text-muted-foreground">
           {pending.length}/{MAX_FILES_PER_MESSAGE} archivos · máx 10 MB c/u
         </span>
       </div>

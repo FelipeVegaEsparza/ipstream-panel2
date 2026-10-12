@@ -116,6 +116,7 @@ export const registerSchema = z.object({
     .string()
     .min(2, 'Ingresa el nombre de la radio (mínimo 2 caracteres)')
     .max(60, 'El nombre de la radio es demasiado largo'),
+  currency: z.string().optional(),
 })
 
 export type BasicDataInput = z.infer<typeof basicDataSchema>

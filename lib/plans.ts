@@ -19,13 +19,21 @@ export function parsePlanFeatures(features: string | null | undefined): string[]
   return []
 }
 
-export function toPublicPlan(plan: Plan): PublicPlan {
+export function toPublicPlan(
+  plan: Plan & { prices?: Array<{ currency: string; amount: number }> }
+): PublicPlan {
+  const prices =
+    plan.prices && plan.prices.length > 0
+      ? plan.prices.map((p) => ({ currency: p.currency, amount: p.amount }))
+      : [{ currency: plan.currency, amount: plan.price }]
+
   return {
     id: plan.id,
     name: plan.name,
     description: plan.description,
     price: plan.price,
     currency: plan.currency,
+    prices,
     interval: plan.interval,
     features: parsePlanFeatures(plan.features),
     maxDjs: plan.maxDjs,

@@ -12,7 +12,11 @@ export default async function RegistroPage({
 }: {
   searchParams: { plan?: string }
 }) {
-  const plans = await prisma.plan.findMany({ where: { isActive: true }, orderBy: { price: 'asc' } })
+  const plans = await prisma.plan.findMany({
+    where: { isActive: true },
+    orderBy: { price: 'asc' },
+    include: { prices: true },
+  })
   const config = await prisma.appConfig.findFirst({ select: { trialDays: true } })
   const trialDays = config?.trialDays ?? 7
 
@@ -27,6 +31,9 @@ export default async function RegistroPage({
       name: p.name,
       price: p.price,
       currency: p.currency,
+      prices: p.prices && p.prices.length > 0
+        ? p.prices.map((x) => ({ currency: x.currency, amount: x.amount }))
+        : [{ currency: p.currency, amount: p.price }],
       interval: p.interval,
       features,
       maxDjs: p.maxDjs,
@@ -87,7 +94,7 @@ export default async function RegistroPage({
 
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white py-6">
-        <div className="max-w-5xl mx-auto px-4 text-center text-sm text-foreground0 space-y-1.5">
+        <div className="max-w-5xl mx-auto px-4 text-center text-sm text-muted-foreground space-y-1.5">
           <p>© {new Date().getFullYear()} IPStream · Radio Online y Televisión por streaming</p>
           <p>
             Al crear tu cuenta aceptas nuestros{' '}

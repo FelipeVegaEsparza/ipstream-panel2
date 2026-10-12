@@ -172,7 +172,7 @@ export function FileUpload({
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-brand">Haz clic para subir</span> o arrastra un archivo aquí
                 </p>
-                <p className="text-xs text-foreground0 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {description}
                 </p>
               </div>
