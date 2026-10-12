@@ -136,3 +136,36 @@
 .dark [data-slot="done-icon"] svg {
   color: var(--ipp-ok);
 }
+
+.dark [data-slot="currency-label"],
+.dark [data-slot="currency-amount"],
+.dark [data-slot="currency-note"] {
+  color: var(--ipp-steel);
+}
+
+.dark [data-slot="currency-note"] strong {
+  color: var(--ipp-text);
+}
+
+.dark [data-slot="currency-option"] {
+  background: var(--ipp-ink);
+  border-color: var(--ipp-line);
+  border-radius: 4px;
+}
+
+.dark [data-slot="currency-option"]:hover {
+  border-color: var(--ipp-signal);
+}
+
+.dark [data-slot="currency-option"][data-active="true"] {
+  border-color: var(--ipp-signal);
+  background: rgba(53, 214, 208, 0.1);
+}
+
+.dark [data-slot="currency-region"] {
+  color: var(--ipp-text);
+}
+
+.dark [data-slot="currency-option"][data-active="true"] [data-slot="currency-region"] {
+  color: var(--ipp-signal);
+}

@@ -363,19 +363,18 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
           </div>
 
           {selected && selected.prices && selected.prices.length > 1 && (
-            <div data-slot="currency" className="rounded-xl border border-gray-200 bg-gray-50/80 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-gray-800">Elige tu moneda</span>
-                <span className="text-[11px] text-muted-foreground">Según dónde estés</span>
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
+            <div data-slot="currency" className="space-y-2">
+              <span data-slot="currency-label" className="block text-xs font-medium text-gray-700">
+                Moneda
+              </span>
+              <div className="grid grid-cols-2 gap-2">
                 {selected.prices.map((pr) => {
                   const active = currency === pr.currency
                   const region =
                     pr.currency === 'CLP'
                       ? 'Chile'
                       : pr.currency === 'USD'
-                      ? 'Resto del mundo'
+                      ? 'Internacional'
                       : pr.currency
                   return (
                     <button
@@ -383,28 +382,30 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
                       type="button"
                       onClick={() => setCurrency(pr.currency)}
                       aria-pressed={active}
-                      className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                      data-slot="currency-option"
+                      data-active={active ? 'true' : 'false'}
+                      className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
                         active
-                          ? 'border-brand bg-white ring-1 ring-brand'
-                          : 'border-gray-200 bg-white hover:border-brand'
+                          ? 'border-brand bg-brand/5'
+                          : 'border-gray-300 bg-gray-50 hover:border-brand/60'
                       }`}
                     >
                       <span
+                        data-slot="currency-region"
                         className={`block text-sm font-semibold ${active ? 'text-brand' : 'text-gray-900'}`}
                       >
                         {region}
                       </span>
-                      <span className="block text-xs text-muted-foreground">
+                      <span data-slot="currency-amount" className="block text-xs text-muted-foreground">
                         {pr.currency} · {formatAmount(pr.amount, pr.currency)}
                       </span>
                     </button>
                   )
                 })}
               </div>
-              <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-                Publicamos el precio en <strong className="font-semibold text-gray-700">CLP</strong> para Chile y en{' '}
-                <strong className="font-semibold text-gray-700">USD</strong> para el resto del mundo. Elige el que
-                corresponda a tu país.
+              <p data-slot="currency-note" className="text-xs leading-snug text-muted-foreground">
+                El precio en <strong className="font-medium text-gray-700">CLP</strong> es para Chile y en{' '}
+                <strong className="font-medium text-gray-700">USD</strong> para el resto del mundo.
               </p>
             </div>
           )}
