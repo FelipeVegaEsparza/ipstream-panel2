@@ -137,6 +137,18 @@
   color: var(--ipp-ok);
 }
 
+.dark [data-slot="trial"] {
+  background: rgba(53, 214, 208, 0.08);
+  border-color: rgba(53, 214, 208, 0.35);
+  border-radius: 4px;
+  color: var(--ipp-text);
+}
+
+.dark [data-slot="trial"] strong,
+.dark [data-slot="trial-icon"] {
+  color: var(--ipp-signal);
+}
+
 .dark [data-slot="currency-label"],
 .dark [data-slot="currency-amount"],
 .dark [data-slot="currency-note"] {
