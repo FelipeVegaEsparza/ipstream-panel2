@@ -53,8 +53,14 @@ export default async function PlanPage({ params }: { params: { slug: string } })
   const config = await prisma.appConfig.findFirst({ select: { trialDays: true } })
   const trialDays = config?.trialDays ?? 7
 
-  const formatPrice = (p: PublicPlan) =>
-    p.currency === 'CLP' ? `$${Math.round(p.price).toLocaleString('es-CL')}` : `${p.currency} ${p.price.toLocaleString('es-CL')}`
+  const formatPrice = (p: PublicPlan) => {
+    const usd = p.prices?.find((x) => x.currency === 'USD')
+    const amount = usd?.amount ?? p.price
+    const cur = usd ? 'USD' : p.currency
+    return cur === 'CLP'
+      ? `$${Math.round(amount).toLocaleString('es-CL')}`
+      : `US$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
   const fmtMB = (mb: number | null) =>
     mb && mb > 0 ? `${mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'}` : '—'
 

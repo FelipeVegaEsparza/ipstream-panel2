@@ -85,6 +85,14 @@ function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
   )
 }
 
+/** Moneda por defecto de un plan: USD (mercado internacional) si existe. */
+function defaultCurrencyFor(plan?: PublicPlan | null): string {
+  if (!plan) return 'CLP'
+  const codes = plan.prices?.map((x) => x.currency) ?? []
+  if (codes.includes('USD')) return 'USD'
+  return plan.prices?.[0]?.currency || plan.currency || 'CLP'
+}
+
 export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', trialDays = 0 }: { plans: PublicPlan[]; preselect?: string; fixedPlanId?: string; theme?: 'light' | 'dark'; trialDays?: number }) {
   const darkClass = theme === 'dark' ? styles.dark : ''
   const isFixed = Boolean(fixedPlanId)
@@ -103,7 +111,9 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'reserved' | 'invalid' | 'unconfigured'>('idle')
   const [siteHost, setSiteHost] = useState('')
   const [createdSiteUrl, setCreatedSiteUrl] = useState<string | null>(null)
-  const [currency, setCurrency] = useState<string>('')
+  const [currency, setCurrency] = useState<string>(() =>
+    defaultCurrencyFor(plans.find((p) => p.id === initial) || plans[0] || null)
+  )
 
   // Chequeo de disponibilidad del subdominio (debounce).
   useEffect(() => {
@@ -135,22 +145,24 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
 
   const selected = plans.find((p) => p.id === planId) || null
 
-  // Moneda por defecto: la moneda base del plan elegido.
+  // Moneda por defecto del plan elegido (USD para el mercado internacional).
   useEffect(() => {
     const p = plans.find((x) => x.id === planId)
-    setCurrency(p?.prices?.[0]?.currency || p?.currency || 'CLP')
+    setCurrency(defaultCurrencyFor(p))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planId])
 
   const priceOf = (p: PublicPlan, cur: string | null | undefined) =>
     p.prices?.find((x) => x.currency === cur)?.amount ?? p.price
 
-  const formatPrice = (p: PublicPlan) => {
-    const cur = currency || p.currency
-    const amount = priceOf(p, cur)
-    return cur === 'CLP'
+  const formatAmount = (amount: number, cur: string) =>
+    cur === 'CLP'
       ? `$${Math.round(amount).toLocaleString('es-CL')}`
-      : `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : `US$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+  const formatPrice = (p: PublicPlan) => {
+    const cur = currency || defaultCurrencyFor(p)
+    return formatAmount(priceOf(p, cur), cur)
   }
   const fmtMB = (mb: number | null) =>
     mb && mb > 0 ? `${mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'}` : '—'
@@ -351,22 +363,49 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light', tri
           </div>
 
           {selected && selected.prices && selected.prices.length > 1 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Moneda:</span>
-              {selected.prices.map((pr) => (
-                <button
-                  key={pr.currency}
-                  type="button"
-                  onClick={() => setCurrency(pr.currency)}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                    currency === pr.currency
-                      ? 'bg-brand text-white border-transparent'
-                      : 'border-gray-300 text-gray-600 hover:border-brand'
-                  }`}
-                >
-                  {pr.currency}
-                </button>
-              ))}
+            <div data-slot="currency" className="rounded-xl border border-gray-200 bg-gray-50/80 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-gray-800">Elige tu moneda</span>
+                <span className="text-[11px] text-muted-foreground">Según dónde estés</span>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {selected.prices.map((pr) => {
+                  const active = currency === pr.currency
+                  const region =
+                    pr.currency === 'CLP'
+                      ? 'Chile'
+                      : pr.currency === 'USD'
+                      ? 'Resto del mundo'
+                      : pr.currency
+                  return (
+                    <button
+                      key={pr.currency}
+                      type="button"
+                      onClick={() => setCurrency(pr.currency)}
+                      aria-pressed={active}
+                      className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                        active
+                          ? 'border-brand bg-white ring-1 ring-brand'
+                          : 'border-gray-200 bg-white hover:border-brand'
+                      }`}
+                    >
+                      <span
+                        className={`block text-sm font-semibold ${active ? 'text-brand' : 'text-gray-900'}`}
+                      >
+                        {region}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {pr.currency} · {formatAmount(pr.amount, pr.currency)}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+                Publicamos el precio en <strong className="font-semibold text-gray-700">CLP</strong> para Chile y en{' '}
+                <strong className="font-semibold text-gray-700">USD</strong> para el resto del mundo. Elige el que
+                corresponda a tu país.
+              </p>
             </div>
           )}
 
