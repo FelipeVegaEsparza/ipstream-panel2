@@ -16,11 +16,15 @@ export function handleCors() {
   })
 }
 
+// Cabecera por defecto para respuestas públicas: no cachear. Los endpoints de
+// contenido read-only optan explícitamente por caché con createCachedCorsResponse.
+export const NO_STORE = 'no-store, must-revalidate'
+
 // Función para crear respuesta con CORS headers
 export function createCorsResponse(data: any, status: number = 200) {
   return NextResponse.json(data, {
     status,
-    headers: corsHeaders
+    headers: { ...corsHeaders, 'Cache-Control': NO_STORE },
   })
 }
 
@@ -39,6 +43,6 @@ export function createCachedCorsResponse(data: any, status: number = 200) {
 export function createCorsErrorResponse(error: string, status: number = 500) {
   return NextResponse.json(
     { error },
-    { status, headers: corsHeaders }
+    { status, headers: { ...corsHeaders, 'Cache-Control': NO_STORE } }
   )
 }

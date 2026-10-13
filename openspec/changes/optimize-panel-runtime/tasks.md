@@ -27,5 +27,5 @@
 ## 5. Verificación de integración
 
 - [x] 5.1 Correr `npm run build` (incluye `prisma generate` + `next build`) y verificar que compila sin errores
-- [ ] 5.2 Ejecutar `loadtest/smoke.js` contra el entorno y verificar 0 fallos de checks
-- [ ] 5.3 Repetir `loadtest/realistic.js` a 50 y 100 VUs y comparar el p95 contra la línea base (50 VUs: p95 ~408ms; 100 VUs: p95 ~1.5s); documentar el resultado en el change
+- [x] 5.2 Ejecutar `loadtest/smoke.js` contra el entorno y verificar 0 fallos de checks
+- [x] 5.3 Repetir `loadtest/realistic.js` a 50 y 100 VUs y comparar el p95 contra la línea base (50 VUs: p95 ~408ms; 100 VUs: p95 ~1.5s); documentar el resultado en el change
