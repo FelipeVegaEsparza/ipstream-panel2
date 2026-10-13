@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { videocastSchema } from '@/lib/validations'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
 import { sanitizeObject, validateText } from '@/lib/text-sanitizer'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function PUT(
   request: NextRequest,
@@ -29,6 +30,7 @@ export async function PUT(
     const effectiveClient = await getEffectiveClientFromRequest(request)
     
     if (!effectiveClient) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado - Sin cliente asociado' },
         { status: 401 }
@@ -44,6 +46,7 @@ export async function PUT(
     })
 
     if (!existingVideocast) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Episodio no encontrado' },
         { status: 404 }
@@ -62,9 +65,11 @@ export async function PUT(
     })
 
     console.log('🎥 Videocast updated successfully:', videocast.id)
+    invalidatePublicCache()
     return NextResponse.json(videocast)
   } catch (error) {
     console.error('🎥 Error updating videocast:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
@@ -97,6 +102,7 @@ export async function DELETE(
     const effectiveClient = await getEffectiveClientFromRequest(request)
     
     if (!effectiveClient) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado - Sin cliente asociado' },
         { status: 401 }
@@ -113,6 +119,7 @@ export async function DELETE(
     })
 
     if (!existingVideocast) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Episodio no encontrado' },
         { status: 404 }
@@ -124,9 +131,11 @@ export async function DELETE(
     })
 
     console.log('🎥 Videocast deleted successfully:', params.id)
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('🎥 Error deleting videocast:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

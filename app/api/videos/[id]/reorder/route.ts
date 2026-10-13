@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function PATCH(
   request: NextRequest,
@@ -25,6 +26,7 @@ export async function PATCH(
     const session = await getSession()
 
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -35,6 +37,7 @@ export async function PATCH(
     const { direction } = body
 
     if (!['up', 'down'].includes(direction)) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Dirección inválida' },
         { status: 400 }
@@ -50,6 +53,7 @@ export async function PATCH(
     })
 
     if (!currentVideo) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Video no encontrado' },
         { status: 404 }
@@ -68,6 +72,7 @@ export async function PATCH(
     })
 
     if (!targetVideo) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No se puede mover en esa dirección' },
         { status: 400 }
@@ -88,9 +93,11 @@ export async function PATCH(
       })
     ])
 
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error reordering video:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

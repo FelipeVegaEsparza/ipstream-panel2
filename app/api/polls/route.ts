@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { pollSchema } from '@/lib/validations'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
 import { sanitizeObject, validateText } from '@/lib/text-sanitizer'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function POST(request: NextRequest) {
   // MENU_GUARD_INJECTED
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const effectiveClient = await getEffectiveClientFromRequest(request)
     if (!effectiveClient) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado - Sin cliente asociado' }, { status: 401 })
     }
 
@@ -39,12 +41,15 @@ export async function POST(request: NextRequest) {
       } as Prisma.PollUncheckedCreateInput
     })
 
+    invalidatePublicCache()
     return NextResponse.json(poll)
   } catch (error) {
     console.error('Error creating poll:', error)
     if (error instanceof z.ZodError) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
     }
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

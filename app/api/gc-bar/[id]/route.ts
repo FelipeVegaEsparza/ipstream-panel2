@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { gcBarMessageSchema } from '@/lib/validations'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
 import { z } from 'zod'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   // MENU_GUARD_INJECTED
@@ -60,6 +61,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     const effectiveClient = await getEffectiveClientFromRequest(request)
     if (!effectiveClient) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado - Sin cliente asociado' }, { status: 401 })
     }
 
@@ -71,6 +73,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       select: { id: true },
     })
     if (!existing) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Mensaje no encontrado' }, { status: 404 })
     }
 
@@ -82,12 +85,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       },
     })
 
+    invalidatePublicCache()
     return NextResponse.json(message)
   } catch (error) {
     console.error('Error updating gc bar message:', error)
     if (error instanceof z.ZodError) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
     }
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -111,6 +117,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const effectiveClient = await getEffectiveClientFromRequest(request)
     if (!effectiveClient) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado - Sin cliente asociado' }, { status: 401 })
     }
 
@@ -119,14 +126,17 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       select: { id: true },
     })
     if (!existing) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Mensaje no encontrado' }, { status: 404 })
     }
 
     await prisma.gcBarMessage.delete({ where: { id: params.id } })
 
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting gc bar message:', error)
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

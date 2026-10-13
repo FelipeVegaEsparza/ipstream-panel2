@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { rankingVideoSchema } from '@/lib/validations'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function POST(request: NextRequest) {
   // MENU_GUARD_INJECTED
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
     const session = await getSession()
     
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -50,12 +52,15 @@ export async function POST(request: NextRequest) {
       } as Prisma.RankingVideoUncheckedCreateInput
     })
 
+    invalidatePublicCache()
     return NextResponse.json(video)
   } catch (error) {
     console.error('Error creating video:', error)
     if (error instanceof z.ZodError) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
     }
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { videocastSchema } from '@/lib/validations'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
 import { sanitizeObject, validateText } from '@/lib/text-sanitizer'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function POST(request: NextRequest) {
   // MENU_GUARD_INJECTED
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
     
     if (!effectiveClient) {
       console.log('🎥 No effective client found')
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado - Sin cliente asociado' },
         { status: 401 }
@@ -47,9 +49,11 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('🎥 Videocast created successfully:', videocast.id)
+    invalidatePublicCache()
     return NextResponse.json(videocast)
   } catch (error) {
     console.error('🎥 Error creating videocast:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

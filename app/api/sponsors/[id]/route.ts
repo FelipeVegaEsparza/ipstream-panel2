@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { sponsorSchema } from '@/lib/validations'
 import { z } from 'zod'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function PUT(
   request: NextRequest,
@@ -27,6 +28,7 @@ export async function PUT(
   try {
     const session = await getSession()
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -41,12 +43,15 @@ export async function PUT(
       data: data as Prisma.SponsorUpdateInput,
     })
 
+    invalidatePublicCache()
     return NextResponse.json(updated)
   } catch (error) {
     console.error('Error updating sponsor:', error)
     if (error instanceof z.ZodError) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
     }
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -74,6 +79,7 @@ export async function DELETE(
     const session = await getSession()
     
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -87,9 +93,11 @@ export async function DELETE(
       }
     })
 
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting sponsor:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

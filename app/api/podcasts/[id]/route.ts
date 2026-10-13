@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { podcastSchema } from '@/lib/validations'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
 import { sanitizeObject, validateText } from '@/lib/text-sanitizer'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function GET(
   request: NextRequest,
@@ -89,6 +90,7 @@ export async function PUT(
     
     if (!effectiveClient) {
       console.log('🎙️ No effective client found')
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado - Sin cliente asociado' },
         { status: 401 }
@@ -105,6 +107,7 @@ export async function PUT(
     })
 
     if (!existingPodcast) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Episodio no encontrado' },
         { status: 404 }
@@ -123,6 +126,7 @@ export async function PUT(
       const titleValidation = validateText(sanitizedBody.title)
       if (!titleValidation.isValid) {
         console.log('🎙️ Invalid title text:', titleValidation.error)
+        invalidatePublicCache()
         return NextResponse.json(
           { error: `Título del episodio inválido: ${titleValidation.error}` },
           { status: 400 }
@@ -134,6 +138,7 @@ export async function PUT(
       const descValidation = validateText(sanitizedBody.description)
       if (!descValidation.isValid) {
         console.log('🎙️ Invalid description:', descValidation.error)
+        invalidatePublicCache()
         return NextResponse.json(
           { error: `Descripción inválida: ${descValidation.error}` },
           { status: 400 }
@@ -149,6 +154,7 @@ export async function PUT(
       console.log('🎙️ Zod validation successful')
     } catch (zodError) {
       console.log('🎙️ Zod validation failed:', zodError)
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Error de validación: ' + zodError.message },
         { status: 400 }
@@ -168,6 +174,7 @@ export async function PUT(
     })
 
     console.log('🎙️ Podcast updated successfully:', podcast.id)
+    invalidatePublicCache()
     return NextResponse.json(podcast)
   } catch (error) {
     console.error('🎙️ Error updating podcast:', error)
@@ -178,6 +185,7 @@ export async function PUT(
       
       // Check for specific Prisma errors
       if (error.message.includes('Unique constraint')) {
+        invalidatePublicCache()
         return NextResponse.json(
           { error: 'Ya existe un episodio con datos similares' },
           { status: 400 }
@@ -185,6 +193,7 @@ export async function PUT(
       }
     }
     
+    invalidatePublicCache()
     return NextResponse.json(
       { 
         error: 'Error interno del servidor',
@@ -222,6 +231,7 @@ export async function DELETE(
     
     if (!effectiveClient) {
       console.log('🎙️ No effective client found')
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado - Sin cliente asociado' },
         { status: 401 }
@@ -238,6 +248,7 @@ export async function DELETE(
     })
 
     if (!existingPodcast) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Episodio no encontrado' },
         { status: 404 }
@@ -252,9 +263,11 @@ export async function DELETE(
     })
 
     console.log('🎙️ Podcast deleted successfully')
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('🎙️ Error deleting podcast:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

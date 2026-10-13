@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { withPublicContentCache } from '@/lib/public-cache'
 
 export async function OPTIONS() {
   return handleCors()
 }
 
-export async function GET(
+async function handleGet(
   request: NextRequest,
   { params }: { params: { clientId: string } }
 ) {
@@ -53,3 +54,5 @@ export async function GET(
     return createCorsErrorResponse('Error interno del servidor', 500)
   }
 }
+
+export const GET = withPublicContentCache(handleGet)

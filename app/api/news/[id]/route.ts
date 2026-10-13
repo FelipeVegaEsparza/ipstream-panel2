@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { newsSchema } from '@/lib/validations'
 import { z } from 'zod'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function PUT(
   request: NextRequest,
@@ -27,6 +28,7 @@ export async function PUT(
   try {
     const session = await getSession()
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -42,6 +44,7 @@ export async function PUT(
     })
 
     if (existing) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Ya existe una noticia con este slug' },
         { status: 400 }
@@ -56,12 +59,15 @@ export async function PUT(
       data: data as Prisma.NewsUpdateInput,
     })
 
+    invalidatePublicCache()
     return NextResponse.json(updated)
   } catch (error) {
     console.error('Error updating news:', error)
     if (error instanceof z.ZodError) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
     }
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -89,6 +95,7 @@ export async function DELETE(
     const session = await getSession()
     
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -102,9 +109,11 @@ export async function DELETE(
       }
     })
 
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting news:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

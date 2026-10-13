@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { programSchema } from '@/lib/validations'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function PUT(
   request: NextRequest,
@@ -26,6 +27,7 @@ export async function PUT(
     const session = await getSession()
 
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -46,9 +48,11 @@ export async function PUT(
       }
     })
 
+    invalidatePublicCache()
     return NextResponse.json(program)
   } catch (error) {
     console.error('Error updating program:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
@@ -79,6 +83,7 @@ export async function DELETE(
     const session = await getSession()
     
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -92,9 +97,11 @@ export async function DELETE(
       }
     })
 
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting program:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

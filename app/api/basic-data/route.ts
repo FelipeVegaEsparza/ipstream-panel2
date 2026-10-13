@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { basicDataSchema } from '@/lib/validations'
 import { sanitizeObject, validateText } from '@/lib/text-sanitizer'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function POST(request: NextRequest) {
   return handleBasicData(request)
@@ -119,6 +120,7 @@ async function handleBasicData(request: NextRequest) {
     await rewriteClientPublicUrls(effectiveClient.clientId).catch(() => {})
 
     console.log('🏠 Basic data updated successfully:', basicData.id)
+    invalidatePublicCache()
     return NextResponse.json(basicData)
   } catch (error) {
     console.error('🏠 Error updating basic data:', error)

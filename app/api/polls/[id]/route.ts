@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { pollSchema } from '@/lib/validations'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   // MENU_GUARD_INJECTED
@@ -22,6 +23,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     const session = await getSession()
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -30,6 +32,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     })
 
     if (!existingPoll) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Encuesta no encontrada' }, { status: 404 })
     }
 
@@ -45,9 +48,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       include: { options: true },
     })
 
+    invalidatePublicCache()
     return NextResponse.json(poll)
   } catch (error) {
     console.error('Error updating poll:', error)
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -71,6 +76,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const session = await getSession()
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -78,9 +84,11 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       where: { id: params.id, clientId: session.user.clientId },
     })
 
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting poll:', error)
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -142,6 +150,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   try {
     const session = await getSession()
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -153,9 +162,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       include: { options: true },
     })
 
+    invalidatePublicCache()
     return NextResponse.json(poll)
   } catch (error) {
     console.error('Error toggling poll:', error)
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { newsSchema } from '@/lib/validations'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function POST(request: NextRequest) {
   // MENU_GUARD_INJECTED
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
     const session = await getSession()
     
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -43,6 +45,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingNews) {
+      invalidatePublicCache()
       return NextResponse.json(
         { error: 'Ya existe una noticia con este slug' },
         { status: 400 }
@@ -56,9 +59,11 @@ export async function POST(request: NextRequest) {
       } as Prisma.NewsUncheckedCreateInput
     })
 
+    invalidatePublicCache()
     return NextResponse.json(news)
   } catch (error) {
     console.error('Error creating news:', error)
+    invalidatePublicCache()
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

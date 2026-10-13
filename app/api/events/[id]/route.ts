@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { eventSchema } from '@/lib/validations'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   // MENU_GUARD_INJECTED
@@ -22,6 +23,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     const session = await getSession()
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -30,6 +32,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     })
 
     if (!existingEvent) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
     }
 
@@ -44,9 +47,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       },
     })
 
+    invalidatePublicCache()
     return NextResponse.json(event)
   } catch (error) {
     console.error('Error updating event:', error)
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -70,6 +75,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const session = await getSession()
     if (!session?.user.clientId) {
+      invalidatePublicCache()
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -77,9 +83,11 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       where: { id: params.id, clientId: session.user.clientId },
     })
 
+    invalidatePublicCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting event:', error)
+    invalidatePublicCache()
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

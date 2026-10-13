@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { socialNetworksSchema } from '@/lib/validations'
 import { sanitizeObject, validateText } from '@/lib/text-sanitizer'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
+import { invalidatePublicCache } from '@/lib/public-cache'
 
 export async function POST(request: NextRequest) {
   return handleSocialNetworks(request)
@@ -67,6 +68,7 @@ async function handleSocialNetworks(request: NextRequest) {
     })
 
     console.log('🌐 Social networks updated successfully:', socialNetworks.id)
+    invalidatePublicCache()
     return NextResponse.json(socialNetworks)
   } catch (error) {
     console.error('🌐 Error updating social networks:', error)
