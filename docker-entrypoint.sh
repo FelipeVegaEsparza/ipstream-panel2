@@ -162,7 +162,7 @@ if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD" ]; then
   ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_NAME="${ADMIN_NAME:-Administrador}" \
     node -e "
     const { PrismaClient } = require('@prisma/client');
-    const bcrypt = require('bcryptjs');
+    const bcrypt = require('@node-rs/bcrypt');
     (async () => {
       const prisma = new PrismaClient();
       try {
@@ -171,7 +171,7 @@ if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD" ]; then
         const name = process.env.ADMIN_NAME || 'Administrador';
         const exists = await prisma.user.findUnique({ where: { email } });
         if (exists) { console.log('[entrypoint] Admin ya existe, OK'); return; }
-        const hashed = await bcrypt.hash(password, 12);
+        const hashed = await bcrypt.hash(password, { cost: 10 });
         await prisma.user.create({ data: { email, password: hashed, name, role: 'ADMIN' } });
         console.log('[entrypoint] Admin creado:', email);
       } catch (e) { console.error('[entrypoint] Error creando admin:', e.message); }
