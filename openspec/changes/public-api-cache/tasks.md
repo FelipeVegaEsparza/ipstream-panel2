@@ -14,5 +14,5 @@
 ## 3. Verificación de integración
 
 - [x] 3.1 Correr `npm run build` sin errores
-- [ ] 3.2 Ejecutar `loadtest/smoke.js` y una prueba funcional de frescura (crear/editar contenido y confirmar que la lectura pública se actualiza)
-- [ ] 3.3 Re-ejecutar `loadtest/mixed.js` (panel 50 + PWA 150) y comparar contra la línea base (p95 panel ~4 s / PWA ~1.6–2.3 s, 0 errores)
+- [x] 3.2 Ejecutar `loadtest/smoke.js` y una prueba funcional de frescura (crear/editar contenido y confirmar que la lectura pública se actualiza)
+- [x] 3.3 Re-ejecutar `loadtest/mixed.js` (panel 50 + PWA 150) y comparar contra la línea base (p95 panel ~4 s / PWA ~1.6–2.3 s, 0 errores)
