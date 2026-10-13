@@ -1,73 +1,67 @@
 // =====================================================
-// Rate limit — contador en memoria
+// Rate limit — contador compartido en MySQL
 // =====================================================
-// Alcance: el contador vive en el proceso del panel y se reinicia al
-// reiniciar/recrear el contenedor. Es correcto para el despliegue actual de
-// una sola instancia; si el panel pasa a multi-instancia habrá que migrar a
-// un store compartido (tabla en DB o Redis) para que el límite sea global.
+// El contador vive en la tabla `rate_limits` para que el límite sea global
+// entre todos los procesos worker del panel (cluster). La escritura es atómica
+// (INSERT ... ON DUPLICATE KEY UPDATE) y luego se lee el valor resultante.
 //
-// La identidad del solicitante (IP) la resuelve quien llama; la ruta de
-// registro usa el último salto de confianza de `x-forwarded-for` para que no
-// se pueda evadir el límite añadiendo valores a la cabecera.
+// Fail-open: si la DB falla, se permite la petición y se loguea el error, para
+// no bloquear login/registro por un problema del almacén.
+//
+// La identidad del solicitante (IP/email) la resuelve quien llama.
 
-const rateMap = new Map<string, { count: number; resetAt: number }>()
+import { prisma } from '@/lib/prisma'
 
-const MAX_ENTRIES = 10000
+// Limpieza perezosa: con baja probabilidad se borran las filas vencidas.
 const CLEANUP_CHANCE = 0.01
 
-function cleanup(now: number) {
-  for (const [key, record] of rateMap) {
-    if (now > record.resetAt) {
-      rateMap.delete(key)
-    }
+async function cleanupExpired(now: Date) {
+  try {
+    await prisma.rateLimit.deleteMany({ where: { resetAt: { lt: now } } })
+  } catch {
+    // best-effort
   }
 }
 
-function enforceSizeLimit(now: number) {
-  if (rateMap.size <= MAX_ENTRIES) return
-  cleanup(now)
-  if (rateMap.size <= MAX_ENTRIES) return
-  // Si aún excede, eliminar la entrada más antigua
-  const oldest = rateMap.keys().next().value
-  if (oldest !== undefined) {
-    rateMap.delete(oldest)
-  }
-}
-
-export function rateLimit(options: {
+export async function rateLimit(options: {
   maxRequests: number
   windowMs: number
   identifier: string
-}): { allowed: boolean; remaining: number; resetAt: number } {
-  const now = Date.now()
+}): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  const now = new Date()
+  const resetAt = new Date(now.getTime() + options.windowMs)
+  const { maxRequests, identifier } = options
 
-  if (Math.random() < CLEANUP_CHANCE) {
-    cleanup(now)
-  }
-  enforceSizeLimit(now)
+  try {
+    await prisma.$executeRaw`
+      INSERT INTO rate_limits (identifier, \`count\`, resetAt)
+      VALUES (${identifier}, 1, ${resetAt})
+      ON DUPLICATE KEY UPDATE
+        \`count\` = IF(resetAt <= ${now}, 1, \`count\` + 1),
+        resetAt = IF(resetAt <= ${now}, ${resetAt}, resetAt)
+    `
 
-  const record = rateMap.get(options.identifier)
-
-  if (!record || now > record.resetAt) {
-    rateMap.set(options.identifier, {
-      count: 1,
-      resetAt: now + options.windowMs,
+    const row = await prisma.rateLimit.findUnique({
+      where: { identifier },
+      select: { count: true, resetAt: true },
     })
-    return {
-      allowed: true,
-      remaining: options.maxRequests - 1,
-      resetAt: now + options.windowMs,
+
+    if (Math.random() < CLEANUP_CHANCE) {
+      void cleanupExpired(now)
     }
-  }
 
-  if (record.count >= options.maxRequests) {
-    return { allowed: false, remaining: 0, resetAt: record.resetAt }
-  }
+    if (!row) {
+      // No debería pasar tras el upsert; fail-open.
+      return { allowed: true, remaining: maxRequests, resetAt: resetAt.getTime() }
+    }
 
-  record.count++
-  return {
-    allowed: true,
-    remaining: options.maxRequests - record.count,
-    resetAt: record.resetAt,
+    return {
+      allowed: row.count <= maxRequests,
+      remaining: Math.max(0, maxRequests - row.count),
+      resetAt: row.resetAt.getTime(),
+    }
+  } catch (error) {
+    console.error('Rate limit (DB) error, fail-open:', error)
+    return { allowed: true, remaining: maxRequests, resetAt: resetAt.getTime() }
   }
 }

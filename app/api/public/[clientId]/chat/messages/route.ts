@@ -111,7 +111,7 @@ export async function POST(
 
     // Rate limit por IP+email: 5 mensajes por minuto
     const rlIdentifier = `chat:${clientId}:${ipAddress || 'noip'}:${email}`
-    const rl = rateLimit({ maxRequests: 5, windowMs: 60_000, identifier: rlIdentifier })
+    const rl = await rateLimit({ maxRequests: 5, windowMs: 60_000, identifier: rlIdentifier })
     if (!rl.allowed) {
       return createCorsErrorResponse('Demasiados mensajes. Espera un momento.', 429)
     }

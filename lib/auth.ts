@@ -18,7 +18,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Rate-limit por email (fuerza bruta de credenciales)
-        const { allowed } = rateLimit({
+        const { allowed } = await rateLimit({
           maxRequests: 10,
           windowMs: 15 * 60 * 1000, // 10 intentos cada 15 min
           identifier: `login:${credentials.email.toLowerCase()}`,

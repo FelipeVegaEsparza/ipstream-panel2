@@ -37,7 +37,7 @@ function getClientIp(request: NextRequest): string {
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request)
-    const { allowed } = rateLimit({
+    const { allowed } = await rateLimit({
       maxRequests: 5,
       windowMs: 60 * 60 * 1000, // 5 registros por hora por IP
       identifier: `register:${ip}`,

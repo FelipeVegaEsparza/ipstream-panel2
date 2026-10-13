@@ -1229,3 +1229,15 @@ model EmailLog {
 }
 
 // Modelos no utilizados eliminados: VideoPlayHistory, EdgeServer, ClientEdgeAssignment
+
+// =====================================================
+// Rate-limit compartido entre workers (cluster)
+// =====================================================
+model RateLimit {
+  identifier String   @id @db.VarChar(191)
+  count      Int      @default(0)
+  resetAt    DateTime
+
+  @@index([resetAt])
+  @@map("rate_limits")
+}

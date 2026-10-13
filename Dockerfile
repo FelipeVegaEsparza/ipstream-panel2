@@ -82,6 +82,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 COPY --from=builder --chown=nextjs:nodejs /app/components ./components
 COPY --from=builder --chown=nextjs:nodejs /app/app ./app
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./docker-entrypoint.sh
+COPY --from=builder --chown=nextjs:nodejs /app/server.js ./server.js
 
 # Volumen para uploads subidos por los clientes
 RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
@@ -96,4 +97,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS http://localhost:3000/api/health || exit 1
 
 ENTRYPOINT ["/usr/bin/tini", "--", "./docker-entrypoint.sh"]
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]

@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-    const rateLimitResult = rateLimit({
+    const rateLimitResult = await rateLimit({
       maxRequests: 10,
       windowMs: 60 * 1000,
       identifier: `push-notifications:${clientIp}`

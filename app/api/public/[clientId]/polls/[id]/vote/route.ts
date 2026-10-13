@@ -18,7 +18,7 @@ export async function POST(
       || request.headers.get('x-real-ip')
       || 'unknown'
 
-    const { allowed } = rateLimit({
+    const { allowed } = await rateLimit({
       maxRequests: 10,
       windowMs: 60 * 1000,
       identifier: `poll-vote:${ip}:${id}`,

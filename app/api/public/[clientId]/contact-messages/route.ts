@@ -22,7 +22,7 @@ export async function POST(
       || 'unknown'
 
     // Rate limit por IP: 5 mensajes / 10 minutos
-    const rl = rateLimit({
+    const rl = await rateLimit({
       maxRequests: 5,
       windowMs: 10 * 60 * 1000,
       identifier: `contact-message:${ip}`,
