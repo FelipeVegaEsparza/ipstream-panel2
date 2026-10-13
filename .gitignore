@@ -39,6 +39,11 @@ tsconfig.tsbuildinfo
 streaming/liquidsoap/scripts/*.liq
 
 # =====================================================
+# Pruebas de carga (k6): credenciales de prueba generadas
+# =====================================================
+loadtest/users.json
+
+# =====================================================
 # PWA (app hermana en pwa/, dependencias aisladas del panel)
 # =====================================================
 pwa/node_modules/

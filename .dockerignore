@@ -97,6 +97,9 @@ data/
 # PWA (app hermana con sus propias dependencias — no va en la imagen del panel)
 pwa/
 
+# Pruebas de carga k6 (herramienta de dev, no va en la imagen)
+loadtest/
+
 # Bundle único de la PWA y cache de iconos: se montan como volumen, no van en la imagen
 public/client-site/
 public/client-icons/
