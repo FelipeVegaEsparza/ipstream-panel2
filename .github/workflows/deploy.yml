@@ -11,6 +11,8 @@ on:
       # La app PWA hermana (pwa/) no forma parte de la imagen del panel;
       # sus cambios no deben disparar un rebuild/deploy del panel.
       - 'pwa/**'
+      # Las pruebas de carga (k6) son herramienta de dev, no van en la imagen.
+      - 'loadtest/**'
   workflow_dispatch:
     inputs:
       image_tag:

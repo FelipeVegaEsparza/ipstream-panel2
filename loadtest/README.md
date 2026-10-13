@@ -55,6 +55,33 @@ node loadtest/seed-users.js --cleanup
   `contact-messages/unread-count`.
 - **`public.js`** — lecturas públicas sin auth (lo que consumen los oyentes):
   `basic-data`, `news`, `programs`.
+- **`mixed.js`** — panel + PWA **a la vez** (escenarios concurrentes). Sirve para
+  ver cómo se reparte la capacidad total entre operadores y espectadores:
+  `PANEL_VUS=100 PUBLIC_VUS=300 BASE_URL=... k6 run loadtest/mixed.js`.
+
+## Capacidad medida (VPS 4 vCPU, cluster de 3 workers)
+
+Presupuesto **compartido**: panel y PWA usan el mismo proceso Node. Los números
+son de un test real contra `panelipstream.cl`.
+
+| Carga | Throughput combinado | p95 | Errores |
+| --- | --- | --- | --- |
+| Panel 100 VUs (solo) | ~8 páginas/s | ~0.9 s | 0% |
+| Panel 200 VUs (solo) | ~10 páginas/s | ~6.6 s | 0% |
+| Mixto: panel 50 + PWA 150 | ~162 req/s | panel ~4 s / PWA ~1.6–2.3 s | 0% |
+| Mixto: panel 100 + PWA 300 | ~160 req/s | ~27 s | 0.03% |
+
+Conclusiones:
+
+- El techo del **host de 4 cores** es ~**160–200 req/s combinadas** (app + MySQL +
+  streaming + el propio k6 compiten). El app usa hasta ~3.8 cores.
+- A más espectadores, menos margen para los operadores (mismo presupuesto).
+- Para escalar espectadores **sin** comerse la CPU del Node, poner caché delante
+  de `/api/public/*` (Cloudflare o cache en Caddy): hoy las respuestas ya traen
+  `Cache-Control: public, s-maxage=60`, pero Caddy no cachea por defecto.
+- Para escalar en total: VPS con más cores + subir `WEB_CONCURRENCY` (o correr k6
+  desde otra máquina para medir el techo real sin competir con el panel).
+
 
 ## Cómo correrlo contra el VPS
 
