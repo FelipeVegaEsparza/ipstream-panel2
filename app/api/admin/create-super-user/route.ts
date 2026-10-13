@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
+import { hash as hashPassword } from '@node-rs/bcrypt'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hashear la contraseña
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedPassword = await hashPassword(password, { cost: 10 })
 
     // Verificación + creación atómica para evitar doble creación concurrente
     const result = await prisma.$transaction(async (tx) => {

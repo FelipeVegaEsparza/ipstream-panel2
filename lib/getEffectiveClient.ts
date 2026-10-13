@@ -1,7 +1,7 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
+import { getSession } from '@/lib/session'
 import { verifyImpersonationToken, ImpersonationData } from '@/lib/impersonation'
 
 export interface EffectiveClientData {
@@ -28,8 +28,8 @@ function isAuthorizedForImpersonation(
   )
 }
 
-export async function getEffectiveClient(): Promise<EffectiveClientData | null> {
-  const session = await getServerSession(authOptions)
+async function resolveEffectiveClient(): Promise<EffectiveClientData | null> {
+  const session = await getSession()
 
   if (!session?.user) {
     return null
@@ -64,9 +64,13 @@ export async function getEffectiveClient(): Promise<EffectiveClientData | null> 
   }
 }
 
+// Memoiza por request (React cache): el cliente efectivo se resuelve una sola
+// vez aunque la ruta (o el guard de menú) lo consulte varias veces.
+export const getEffectiveClient = cache(resolveEffectiveClient)
+
 export async function getEffectiveClientFromRequest(request: NextRequest): Promise<EffectiveClientData | null> {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
 
     if (!session?.user) {
       return null

@@ -3,17 +3,16 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { encrypt } from '@/lib/encryption'
 import { streamingServerUpdateSchema } from '@/lib/validations'
 import { invalidateServerCache } from '@/lib/streaming-servers'
+import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
 async function requireAdmin() {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user || session.user.role !== 'ADMIN') {
     return null
   }

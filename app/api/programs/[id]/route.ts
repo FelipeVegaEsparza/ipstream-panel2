@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { programSchema } from '@/lib/validations'
 
@@ -24,7 +23,7 @@ export async function PUT(
     }
   }
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
 
     if (!session?.user.clientId) {
       return NextResponse.json(
@@ -77,7 +76,7 @@ export async function DELETE(
     }
   }
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     
     if (!session?.user.clientId) {
       return NextResponse.json(

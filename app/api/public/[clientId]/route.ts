@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 import { normalizeAccentColor } from '@/lib/accent-color'
 
 export async function OPTIONS() {
@@ -301,7 +301,7 @@ export async function GET(
     const { getPublicBasicData } = await import('@/lib/public-basic-data')
     const basicData = await getPublicBasicData(clientId)
 
-    return createCorsResponse({
+    return createCachedCorsResponse({
       client: {
         id: client.id,
         name: client.name

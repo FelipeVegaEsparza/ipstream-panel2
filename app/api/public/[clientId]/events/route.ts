@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 
 export async function OPTIONS() {
   return handleCors()
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: { clientId
       orderBy: [{ date: 'desc' }, { time: 'asc' }],
     })
 
-    return createCorsResponse(events)
+    return createCachedCorsResponse(events)
   } catch (error) {
     console.error('Error getting events:', error)
     return createCorsErrorResponse('Error interno del servidor', 500)

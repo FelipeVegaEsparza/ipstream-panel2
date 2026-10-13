@@ -1,25 +1,42 @@
 import { prisma } from '@/lib/prisma'
 import { MENU_ITEMS, type MenuItemKey } from '@/lib/menu-items'
+import {
+  getCachedGlobalHidden,
+  setCachedGlobalHidden,
+  getCachedMenuEntry,
+  setCachedMenuEntry,
+  type MenuCacheEntry,
+} from '@/lib/menu-cache'
 
 /**
  * Devuelve un Set con las keys de los items ocultos GLOBALMENTE por el admin.
  * Si el campo hiddenMenuItems es null/inválido, devuelve Set vacío (fail-open).
+ * El resultado se cachea en proceso con TTL corto.
  */
 export async function getGloballyHiddenMenuItems(): Promise<Set<MenuItemKey>> {
+  const cached = getCachedGlobalHidden()
+  if (cached) return cached
+
+  let value: Set<MenuItemKey>
   try {
     const config = await prisma.appConfig.findFirst({
       select: { hiddenMenuItems: true },
     })
-    if (!config?.hiddenMenuItems) return new Set()
-    const arr = JSON.parse(config.hiddenMenuItems)
-    if (!Array.isArray(arr)) return new Set()
-    return new Set(
-      arr.filter((k): k is MenuItemKey => typeof k === 'string') as MenuItemKey[]
-    )
+    if (!config?.hiddenMenuItems) {
+      value = new Set()
+    } else {
+      const arr = JSON.parse(config.hiddenMenuItems)
+      value = Array.isArray(arr)
+        ? new Set(arr.filter((k): k is MenuItemKey => typeof k === 'string') as MenuItemKey[])
+        : new Set()
+    }
   } catch (error) {
     console.error('Error cargando menú global:', error)
     return new Set()
   }
+
+  setCachedGlobalHidden(value)
+  return value
 }
 
 /**
@@ -44,6 +61,60 @@ function planHiddenKeys(services: string): MenuItemKey[] {
 }
 
 /**
+ * Resuelve y cachea los permisos de menú de un cliente: items ocultos globales,
+ * overrides por cliente y secciones ocultas por plan. Una sola lectura de DB
+ * alimenta a `getDisabledMenuItems` y a `isMenuItemEnabled`.
+ */
+async function computeMenuEntry(clientId: string): Promise<MenuCacheEntry> {
+  const [globallyHidden, rows] = await Promise.all([
+    getGloballyHiddenMenuItems(),
+    prisma.clientMenuItem.findMany({
+      where: { clientId },
+      select: { itemKey: true, enabled: true },
+    }),
+  ])
+
+  const overrides = new Map<MenuItemKey, boolean>()
+  for (const row of rows) overrides.set(row.itemKey as MenuItemKey, row.enabled)
+
+  const disabled = new Set<MenuItemKey>(globallyHidden)
+  for (const [key, enabled] of overrides) {
+    if (!enabled) disabled.add(key)
+  }
+
+  // Plan: ocultar secciones no incluidas
+  try {
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
+      select: { plan: { select: { services: true, menuHiddenKeys: true } } },
+    })
+    const services = client?.plan?.services || 'both'
+    for (const k of planHiddenKeys(services)) disabled.add(k)
+    // Ocultar items puntuales definidos en el plan
+    if (client?.plan?.menuHiddenKeys) {
+      try {
+        const arr = JSON.parse(client.plan.menuHiddenKeys)
+        if (Array.isArray(arr)) {
+          for (const k of arr) {
+            if (typeof k === 'string') disabled.add(k as MenuItemKey)
+          }
+        }
+      } catch {}
+    }
+  } catch {}
+
+  return { at: Date.now(), globallyHidden, overrides, disabled }
+}
+
+async function getMenuEntry(clientId: string): Promise<MenuCacheEntry> {
+  const cached = getCachedMenuEntry(clientId)
+  if (cached) return cached
+  const entry = await computeMenuEntry(clientId)
+  setCachedMenuEntry(clientId, entry)
+  return entry
+}
+
+/**
  * Devuelve un Set con las keys de los items que están DESHABILITADOS
  * para el cliente, combinando el override global, el per-client y las
  * secciones que su plan no incluye (radio/tv).
@@ -53,37 +124,8 @@ function planHiddenKeys(services: string): MenuItemKey[] {
  */
 export async function getDisabledMenuItems(clientId: string): Promise<Set<MenuItemKey>> {
   try {
-    const [globalHidden, clientOverrides] = await Promise.all([
-      getGloballyHiddenMenuItems(),
-      prisma.clientMenuItem.findMany({
-        where: { clientId, enabled: false },
-        select: { itemKey: true },
-      }),
-    ])
-    const disabled = new Set<MenuItemKey>([...globalHidden, ...clientOverrides.map((r) => r.itemKey as MenuItemKey)])
-
-    // Plan: ocultar secciones no incluidas
-    try {
-      const client = await prisma.client.findUnique({
-        where: { id: clientId },
-        select: { plan: { select: { services: true, menuHiddenKeys: true } } },
-      })
-      const services = client?.plan?.services || 'both'
-      for (const k of planHiddenKeys(services)) disabled.add(k)
-      // Ocultar items puntuales definidos en el plan
-      if (client?.plan?.menuHiddenKeys) {
-        try {
-          const arr = JSON.parse(client.plan.menuHiddenKeys)
-          if (Array.isArray(arr)) {
-            for (const k of arr) {
-              if (typeof k === 'string') disabled.add(k as MenuItemKey)
-            }
-          }
-        } catch {}
-      }
-    } catch {}
-
-    return disabled
+    const entry = await getMenuEntry(clientId)
+    return entry.disabled
   } catch (error) {
     console.error('Error cargando permisos de menú:', error)
     return new Set()
@@ -100,15 +142,9 @@ export async function isMenuItemEnabled(
   itemKey: MenuItemKey
 ): Promise<boolean> {
   try {
-    const [globalHidden, row] = await Promise.all([
-      getGloballyHiddenMenuItems(),
-      prisma.clientMenuItem.findUnique({
-        where: { clientId_itemKey: { clientId, itemKey } },
-        select: { enabled: true },
-      }),
-    ])
-    if (globalHidden.has(itemKey)) return false
-    return row ? row.enabled : true
+    const entry = await getMenuEntry(clientId)
+    if (entry.globallyHidden.has(itemKey)) return false
+    return entry.overrides.get(itemKey) ?? true
   } catch (error) {
     console.error('Error verificando permiso de menú:', error)
     return true

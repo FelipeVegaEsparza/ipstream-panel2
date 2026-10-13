@@ -1,8 +1,7 @@
 import { z } from 'zod'
+import { getSession } from '@/lib/session'
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { promotionSchema } from '@/lib/validations'
 
@@ -23,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
   }
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     
     if (!session?.user.clientId) {
       return NextResponse.json(

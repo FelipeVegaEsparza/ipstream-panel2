@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
@@ -16,7 +15,7 @@ const createSchema = z.object({
 })
 
 async function requireAdmin() {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user || session.user.role !== 'ADMIN') return null
   return session
 }

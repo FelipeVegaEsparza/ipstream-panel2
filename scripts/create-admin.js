@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client')
-const bcrypt = require('bcryptjs')
+const { hash } = require('@node-rs/bcrypt')
 
 const prisma = new PrismaClient()
 
@@ -23,7 +23,7 @@ async function createAdmin() {
     }
 
     // Hashear la contraseña
-    const hashedPassword = await bcrypt.hash(adminData.password, 12)
+    const hashedPassword = await hash(adminData.password, { cost: 10 })
 
     // Crear el usuario administrador
     const admin = await prisma.user.create({

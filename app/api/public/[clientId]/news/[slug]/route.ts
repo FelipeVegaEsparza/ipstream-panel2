@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 
 export async function OPTIONS() {
   return handleCors()
@@ -57,7 +57,7 @@ export async function GET(
         return createCorsErrorResponse('Noticia no encontrada', 404)
       }
 
-      return createCorsResponse({ ...news, source: 'generic' })
+      return createCachedCorsResponse({ ...news, source: 'generic' })
     }
 
     const news = await prisma.news.findFirst({
@@ -81,7 +81,7 @@ export async function GET(
       return createCorsErrorResponse('Noticia no encontrada', 404)
     }
 
-    return createCorsResponse({ ...news, source: 'own' })
+    return createCachedCorsResponse({ ...news, source: 'own' })
 
   } catch (error) {
     console.error('Error getting news:', error)

@@ -5,16 +5,15 @@
 // POST: ejecuta la migración (SIEMPRE iniciada por el admin)
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { runClientMigration, MigrationError } from '@/lib/migration'
+import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
 async function requireAdmin() {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user || session.user.role !== 'ADMIN') {
     return null
   }

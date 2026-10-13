@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { hash as hashPassword } from '@node-rs/bcrypt'
 import { z } from 'zod'
 import { encrypt, decrypt, isEncrypted } from '@/lib/encryption'
 
@@ -26,7 +25,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(
@@ -91,7 +90,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(
@@ -138,7 +137,7 @@ export async function PUT(
 
     // Solo actualizar contraseña si se proporciona
     if (data.password && data.password.length > 0) {
-      updateData.password = await bcrypt.hash(data.password, 12)
+      updateData.password = await hashPassword(data.password, { cost: 10 })
     }
 
     // Actualizar usuario y cliente en una transacción
@@ -207,7 +206,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(

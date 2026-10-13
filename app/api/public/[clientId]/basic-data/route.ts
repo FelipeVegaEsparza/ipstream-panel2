@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 
 export async function OPTIONS() {
   return handleCors()
@@ -19,7 +19,7 @@ export async function GET(
       return createCorsErrorResponse('Datos básicos no encontrados', 404)
     }
 
-    return createCorsResponse(basicData)
+    return createCachedCorsResponse(basicData)
 
   } catch (error) {
     console.error('Error getting basic data:', error)

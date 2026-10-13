@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
+import { hash as hashPassword } from '@node-rs/bcrypt'
 import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/validations'
 import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/streaming-helpers'
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hashear la contraseña (fuera de la transacción: es costoso y no toca la DB)
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedPassword = await hashPassword(password, { cost: 10 })
 
     // Config de sitios (dominio base) para el subdominio del cliente.
     const sitesConfig = await getClientSitesConfig()

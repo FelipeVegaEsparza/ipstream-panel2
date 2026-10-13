@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { MENU_ITEMS, type MenuItemKey } from '@/lib/menu-items'
+import { invalidateMenuCache } from '@/lib/menu-cache'
 
 const VALID_KEYS = new Set<string>(
   MENU_ITEMS.flatMap((i) => [i.key, ...(i.children?.map((c) => c.key) ?? [])])
@@ -13,7 +13,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
@@ -64,6 +64,8 @@ export async function PUT(
       }
     })
 
+    invalidateMenuCache(params.id)
+
     return NextResponse.json({
       message: 'Menú actualizado',
       items,
@@ -80,7 +82,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }

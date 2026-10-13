@@ -5,10 +5,9 @@
 // antes de Phase 6, o donde falló el auto-create).
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createRadioStreamForClient } from '@/lib/streaming-helpers'
+import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +15,7 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: { clientId: string } }
 ) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user || session.user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }

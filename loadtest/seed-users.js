@@ -23,7 +23,7 @@
 const fs = require('fs')
 const path = require('path')
 const { PrismaClient } = require('@prisma/client')
-const bcrypt = require('bcryptjs')
+const bcrypt = require('@node-rs/bcrypt')
 
 const prisma = new PrismaClient()
 
@@ -59,7 +59,7 @@ async function seed() {
   console.log(`Sembrando ${COUNT} usuarios de prueba (password: ${PASSWORD})...`)
 
   // bcrypt cost 12 es lento (~250ms); hashear una vez y reutilizar el hash.
-  const hash = await bcrypt.hash(PASSWORD, 12)
+  const hash = await bcrypt.hash(PASSWORD, { cost: 10 })
 
   const out = []
 

@@ -1,8 +1,6 @@
 import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { basicDataSchema } from '@/lib/validations'
 import { sanitizeObject, validateText } from '@/lib/text-sanitizer'

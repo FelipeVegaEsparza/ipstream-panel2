@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { hash as hashPassword } from '@node-rs/bcrypt'
 import { z } from 'zod'
 import { encrypt } from '@/lib/encryption'
 import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/streaming-helpers'
@@ -10,7 +9,7 @@ import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/st
 // GET - Obtener todos los usuarios (sin API keys en la lista)
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -55,7 +54,7 @@ const createUserSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession()
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hashear la contraseña
-    const hashedPassword = await bcrypt.hash(data.password, 12)
+      const hashedPassword = await hashPassword(data.password, { cost: 10 })
 
     // Crear usuario y cliente en una transacción
     const result = await prisma.$transaction(async (tx) => {

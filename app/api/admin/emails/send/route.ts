@@ -6,18 +6,17 @@
 // Envío secuencial con throttling y log por destinatario.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { emailSendSchema } from '@/lib/validations'
 import { sendEmail, sendTemplateEmail } from '@/lib/resend'
 import { sendAccountEmail } from '@/lib/email-hooks'
 import { generateAccountPdf } from '@/lib/account-pdf'
+import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
 async function requireAdmin() {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user || session.user.role !== 'ADMIN') return null
   return session
 }

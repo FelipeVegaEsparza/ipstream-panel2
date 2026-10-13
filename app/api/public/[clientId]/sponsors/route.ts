@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 
 export async function OPTIONS() {
   return handleCors()
@@ -45,7 +45,7 @@ export async function GET(
       orderBy: { name: 'asc' }
     })
 
-    return createCorsResponse(sponsors)
+    return createCachedCorsResponse(sponsors)
 
   } catch (error) {
     console.error('Error getting sponsors:', error)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 
 export async function OPTIONS() {
   return handleCors()
@@ -65,7 +65,7 @@ export async function GET(
 
     const totalPages = Math.ceil(total / limit)
 
-    return createCorsResponse({
+    return createCachedCorsResponse({
       data: podcasts,
       pagination: {
         page,

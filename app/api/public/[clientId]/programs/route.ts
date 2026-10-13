@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 
 export async function OPTIONS() {
   return handleCors()
@@ -46,7 +46,7 @@ export async function GET(
       weekDays: typeof program.weekDays === 'string' ? JSON.parse(program.weekDays) : program.weekDays
     }))
 
-    return createCorsResponse(processedPrograms)
+    return createCachedCorsResponse(processedPrograms)
 
   } catch (error) {
     console.error('Error getting programs:', error)
