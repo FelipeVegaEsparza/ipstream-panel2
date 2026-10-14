@@ -267,8 +267,10 @@ Envía las notificaciones push con `status=pending` y `scheduledFor <= ahora`, m
 Crontab del VPS (ejemplo):
 
 ```cron
-* * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://panelipstream.cl/api/cron/send-pending-notifications >/dev/null 2>&1
+* * * * * /opt/ipstream-panel/deploy/scripts/cron-push.sh >/dev/null 2>&1
 ```
+
+El script lee `CRON_SECRET` y el dominio del `.env` del proyecto.
 
 ### Endpoints del dashboard (requieren auth, para moderar)
 
