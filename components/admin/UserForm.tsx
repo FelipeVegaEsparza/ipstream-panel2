@@ -18,6 +18,7 @@ const createUserSchema = z.object({
   websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
+  oneSignalSafariWebId: z.string().optional().transform(val => val?.trim() || undefined),
   radioServerId: z.string().optional().transform(val => val?.trim() || undefined),
   videoServerId: z.string().optional().transform(val => val?.trim() || undefined),
 })
@@ -35,6 +36,7 @@ const editUserSchema = z.object({
   websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
+  oneSignalSafariWebId: z.string().optional().transform(val => val?.trim() || undefined),
 })
 
 type UserInput = z.infer<typeof createUserSchema>
@@ -52,6 +54,7 @@ interface UserFormProps {
       websiteUrl?: string | null
       oneSignalAppId?: string | null
       oneSignalApiKey?: string | null
+      oneSignalSafariWebId?: string | null
     } | null
   } | null
 }
@@ -85,6 +88,7 @@ export function UserForm({ initialData }: UserFormProps) {
       websiteUrl: initialData?.client?.websiteUrl || '',
       oneSignalAppId: initialData?.client?.oneSignalAppId || '',
       oneSignalApiKey: initialData?.client?.oneSignalApiKey || '',
+      oneSignalSafariWebId: initialData?.client?.oneSignalSafariWebId || '',
     },
   })
 
@@ -312,6 +316,22 @@ export function UserForm({ initialData }: UserFormProps) {
             />
             <p className="text-xs text-muted-foreground mt-1">
               ID de la aplicación en OneSignal (formato UUID). Ejemplo: 12345678-1234-1234-1234-123456789012
+            </p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="oneSignalSafariWebId" className="form-label">
+              Safari Web ID (opcional, iOS/Safari)
+            </label>
+            <input
+              type="text"
+              id="oneSignalSafariWebId"
+              className="form-input font-mono text-sm"
+              placeholder="web.onesignal.auto.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              {...register('oneSignalSafariWebId')}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Requerido para push en iOS/Safari (la PWA debe estar instalada). Settings → Keys &amp; IDs en OneSignal.
             </p>
           </div>
 

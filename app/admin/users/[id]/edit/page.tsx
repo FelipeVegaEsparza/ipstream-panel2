@@ -46,7 +46,8 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
       phone: user.client.phone,
       websiteUrl: user.client.basicData?.websiteUrl,
       oneSignalAppId: user.client.oneSignalAppId,
-      oneSignalApiKey: user.client.oneSignalApiKey
+      oneSignalApiKey: user.client.oneSignalApiKey,
+      oneSignalSafariWebId: user.client.oneSignalSafariWebId
     } : null
   }
 

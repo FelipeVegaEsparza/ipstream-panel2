@@ -67,6 +67,7 @@ async function handleGet(
         templateId: true,
         accentColor: true,
         oneSignalAppId: true,
+        oneSignalSafariWebId: true,
         useGenericNews: true,
         genericCategories: {
           select: { id: true }
@@ -310,6 +311,7 @@ async function handleGet(
       selectedTemplate,
       accentColor: normalizeAccentColor(client.accentColor),
       oneSignalAppId: client.oneSignalAppId || null,
+      oneSignalSafariWebId: client.oneSignalSafariWebId || null,
       basicData,
       socialNetworks,
       programs: processedPrograms,

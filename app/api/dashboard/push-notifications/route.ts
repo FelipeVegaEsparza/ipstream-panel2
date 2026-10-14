@@ -3,7 +3,7 @@ import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { z } from 'zod'
-import { decrypt } from '@/lib/encryption'
+import { sendPushNotification } from '@/lib/push-notifications'
 import { rateLimit } from '@/lib/rate-limit'
 
 const createNotificationSchema = z.object({
@@ -141,67 +141,39 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    let apiKey: string
-    try {
-      apiKey = decrypt(client.oneSignalApiKey)
-    } catch {
-      apiKey = client.oneSignalApiKey
-    }
+    const result = await sendPushNotification(client, {
+      notificationId: notification.id,
+      title,
+      message,
+      imageUrl,
+      targetUrl
+    })
 
-    let oneSignalId = null
-    let sentAt = null
-    let recipientsCount = 0
-    let errorMessage = null
-    let status = 'pending'
-
-    try {
-      const oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${apiKey}`
-        },
-        body: JSON.stringify({
-          app_id: client.oneSignalAppId,
-          included_segments: ['All'],
-          headings: { en: title },
-          contents: { en: message },
-          ...(imageUrl && { big_picture: imageUrl }),
-          ...(targetUrl && { url: targetUrl }),
-          data: { notificationId: notification.id }
-        })
-      })
-
-      const oneSignalData = await oneSignalResponse.json()
-
-      if (oneSignalResponse.ok) {
-        oneSignalId = oneSignalData.id
-        status = 'sent'
-        sentAt = new Date()
-        recipientsCount = oneSignalData.recipients || 0
-      } else {
-        const errorMsg = oneSignalData.errors
-          ? (Array.isArray(oneSignalData.errors) ? oneSignalData.errors[0] : oneSignalData.errors)
-          : 'Error al enviar la notificación'
-        errorMessage = errorMsg
-        status = 'failed'
-      }
-    } catch (error) {
-      errorMessage = 'Error de conexión con OneSignal'
-      status = 'failed'
-    }
+    const status = result.ok ? 'sent' : 'failed'
+    const sentAt = result.ok ? new Date() : null
 
     await prisma.pushNotification.update({
       where: { id: notification.id },
-      data: { oneSignalId, sentAt, status, recipientsCount }
+      data: {
+        oneSignalId: result.id,
+        sentAt,
+        status,
+        recipientsCount: result.recipients
+      }
     })
 
     return NextResponse.json({
-      message: status === 'sent'
-        ? `Notificación enviada a ${recipientsCount} usuarios`
+      message: result.ok
+        ? `Notificación enviada a ${result.recipients} usuarios`
         : 'Notificación creada pero falló el envío',
-      notification: { ...notification, oneSignalId, sentAt, status, recipientsCount },
-      ...(errorMessage && { error: errorMessage })
+      notification: {
+        ...notification,
+        oneSignalId: result.id,
+        sentAt,
+        status,
+        recipientsCount: result.recipients
+      },
+      ...(result.error && { error: result.error })
     })
   } catch (error) {
     console.error('Error al crear notificación:', error)

@@ -192,9 +192,11 @@ POST   /api/public/[clientId]/pwa/register                 # Registrar PWA ({ de
 
 ### Notificaciones Push (OneSignal)
 - Envío y programación de notificaciones
-- Seguimiento: pending, sent, failed
+- Seguimiento: pending, sending, sent, failed
 - OneSignal App ID y API Key por cliente (encriptados AES-256-GCM)
-- Webhook para eventos
+- Webhook para eventos (requiere `ONESIGNAL_WEBHOOK_SECRET` para contar clicks)
+- Programadas: cron `/api/cron/send-pending-notifications` cada 1 min (con `CRON_SECRET`), idempotente
+- Receptor en la PWA (`pwa/`): SDK v16, opt-in, service worker de push
 
 ---
 

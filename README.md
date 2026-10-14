@@ -255,6 +255,21 @@ Authorization: Bearer ${CRON_SECRET}
 
 Borra todos los mensajes con más de 48 h. Configurar para correr cada 1 h en el proveedor (Vercel Cron / externo). Si `CRON_SECRET` no está configurado, el endpoint no exige auth (útil para desarrollo local).
 
+### Envío de notificaciones programadas (Cron)
+
+```http
+POST /api/cron/send-pending-notifications
+Authorization: Bearer ${CRON_SECRET}
+```
+
+Envía las notificaciones push con `status=pending` y `scheduledFor <= ahora`, marcándolas `sent`/`failed`. **Debe correr cada 1 minuto** o las programadas no salen. El endpoint reclama cada notificación de forma atómica (`pending` → `sending`), así que dos corridas solapadas no reenvían.
+
+Crontab del VPS (ejemplo):
+
+```cron
+* * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://panelipstream.cl/api/cron/send-pending-notifications >/dev/null 2>&1
+```
+
 ### Endpoints del dashboard (requieren auth, para moderar)
 
 | Método | Path | Descripción |

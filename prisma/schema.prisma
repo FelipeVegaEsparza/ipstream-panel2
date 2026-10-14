@@ -35,6 +35,7 @@ model Client {
   onboardingDismissedAt DateTime? // Si está seteado, el cliente ocultó el empujón de "Primeros pasos"
   oneSignalAppId  String? // OneSignal App ID
   oneSignalApiKey String?  @db.Text // OneSignal REST API Key (encriptada)
+  oneSignalSafariWebId String? // OneSignal Safari Web ID (push en iOS/Safari)
   useGenericNews  Boolean  @default(false)
   phone           String? // Número de WhatsApp (con código de país, ej: 56912345678)
   timezone        String   @default("UTC")

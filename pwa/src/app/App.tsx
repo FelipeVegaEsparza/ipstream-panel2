@@ -8,6 +8,7 @@ import { deriveServiceMode } from '@/core/service'
 import { useTenant } from '@/core/config/TenantContext'
 import { useFullClientData } from '@/core/hooks/useFullClientData'
 import { usePwaRegistration } from '@/modules/pwa/usePwaRegistration'
+import { PushOptIn } from '@/modules/pwa/PushOptIn'
 import { useDocumentTitle } from '@/core/hooks/useDocumentTitle'
 import { ContentSections } from '@/modules/content/ContentSections'
 import { TemplateSlot } from '@/templates'
@@ -95,35 +96,41 @@ function TenantApp({ clientId }: { clientId: string }) {
   }
 
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <Routes>
-        <Route
-          element={
-            <TemplateSlot
-              templateId={data?.selectedTemplate}
-              clientData={data}
-              isLoading={isLoading}
-            />
-          }
-        >
-          <Route index element={<ContentSections />} />
-          <Route path="noticias" element={<NewsListPage />} />
-          <Route path="noticias/:slug" element={<NewsDetailPage />} />
-          <Route path="podcasts" element={<PodcastsListPage />} />
-          <Route path="podcasts/:id" element={<PodcastDetailPage />} />
-          <Route path="videocasts" element={<VideocastsListPage />} />
-          <Route path="videocasts/:id" element={<VideocastDetailPage />} />
+    <>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
           <Route
-            path="*"
             element={
-              <ErrorScreen
-                title="Página no encontrada"
-                message="La ruta solicitada no existe."
+              <TemplateSlot
+                templateId={data?.selectedTemplate}
+                clientData={data}
+                isLoading={isLoading}
               />
             }
-          />
-        </Route>
-      </Routes>
-    </Suspense>
+          >
+            <Route index element={<ContentSections />} />
+            <Route path="noticias" element={<NewsListPage />} />
+            <Route path="noticias/:slug" element={<NewsDetailPage />} />
+            <Route path="podcasts" element={<PodcastsListPage />} />
+            <Route path="podcasts/:id" element={<PodcastDetailPage />} />
+            <Route path="videocasts" element={<VideocastsListPage />} />
+            <Route path="videocasts/:id" element={<VideocastDetailPage />} />
+            <Route
+              path="*"
+              element={
+                <ErrorScreen
+                  title="Página no encontrada"
+                  message="La ruta solicitada no existe."
+                />
+              }
+            />
+          </Route>
+        </Routes>
+      </Suspense>
+      <PushOptIn
+        appId={data?.oneSignalAppId}
+        safariWebId={data?.oneSignalSafariWebId}
+      />
+    </>
   )
 }

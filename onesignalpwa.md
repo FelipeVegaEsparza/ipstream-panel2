@@ -1,189 +1,127 @@
-# Integración de Notificaciones Push con OneSignal en la PWA
+# Notificaciones Push con OneSignal en la PWA
 
-## Contexto para la IA
+Guía del **lado receptor** (PWA) y de su integración con el panel. La PWA ya
+implementa todo esto en este repo (`pwa/`); este documento describe cómo está
+armado y cómo configurarlo por cliente.
 
-Eres una IA implementando notificaciones push en una **PWA de reproductor de radio**. El panel de administración ya gestiona el envío de notificaciones. Tu tarea es implementar el **lado del cliente** (PWA) para que los usuarios puedan suscribirse y recibir notificaciones.
-
-## Endpoint de Configuración
-
-La PWA obtiene su configuración desde:
+## Arquitectura
 
 ```
-GET https://panel-ipstream.com/api/public/{clientId}
+Panel (envía)                                  PWA (recibe)
+─────────────                                  ────────────
+/dashboard/notifications
+   │ POST /api/dashboard/push-notifications
+   ▼
+lib/push-notifications.ts ── Basic Auth ──▶  OneSignal API v1
+   │                                              │
+   │ included_segments: ['All']                   ▼
+   │ isAnyWeb, data.notificationId          OneSignal SDK v16 (react-onesignal)
+   │                                              │
+   └ programadas: cron cada 1 min                 ▼
+                                        /push/onesignal/OneSignalSDKWorker.js
+                                        (scope propio, no choca con el SW de la PWA)
 ```
 
-**Respuesta relevante:**
+- Cada cliente tiene **su propia App de OneSignal** (`oneSignalAppId`) → el
+  segmento `All` queda aislado por cliente.
+- El `data.notificationId` que envía el panel permite atribuir los clicks.
+
+## Configuración por cliente (panel)
+
+En `/admin/users/[id]/edit` → **Configuración OneSignal**:
+
+| Campo | Uso |
+|-------|-----|
+| `OneSignal App ID` | App del cliente (requerido para enviar/suscribir) |
+| `OneSignal REST API Key` | Envío desde el panel (se guarda encriptada) |
+| `Safari Web ID` | Push en iOS/Safari (opcional) |
+
+El `App ID` y el `Safari Web ID` se exponen en la API pública:
+
+```http
+GET https://panelipstream.cl/api/public/{clientId}
+```
+
 ```json
 {
   "oneSignalAppId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "client": { "id": "abc123", "name": "Radio Ejemplo" }
+  "oneSignalSafariWebId": "web.onesignal.auto.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 }
 ```
 
-Si `oneSignalAppId` es `null`, OneSignal no está configurado para este cliente.
+Si `oneSignalAppId` es `null`, la PWA no inicializa OneSignal ni muestra el
+botón de suscripción.
 
-## Implementación Paso a Paso
+### Configurar la App en OneSignal (por cliente)
 
-### 1. Instalar dependencias
+- Tipo de integración: **Custom Code** (no "Typical Site"). Nosotros pasamos el
+  path del service worker por código (`serviceWorkerPath`/`serviceWorkerParam`);
+  los campos de path del dashboard no aplican en Custom Code.
+- **Site URL**: el dominio del cliente (esquema incluido, sin `www.` si no lo usás).
+- **notifyButton**: no se usa; la PWA tiene su propio aviso opt-in (`PushOptIn`).
 
-```bash
-npm install react-onesignal
+OneSignal muestra dos fragmentos al crear la app:
+
+```js
+// 1) Contenido del service worker → ya está en
+//    pwa/public/push/onesignal/OneSignalSDKWorker.js
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
 ```
 
-### 2. Crear Service Worker
-
-`public/OneSignalSDKWorker.js`:
-```javascript
-importScripts('https://cdn.onesignal.com/sdks/OneSignalSDKWorker.js');
+```html
+<!-- 2) Snippet HTML con appId/safari_web_id → NO se pega en el proyecto.
+     react-onesignal hace el init con esos valores leídos de la API pública. -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 ```
 
-### 3. Inicializar OneSignal en el Layout
+El `appId`, el `safari_web_id` y la REST API Key del snippet **van por cliente en
+el panel**, nunca hardcodeados en la PWA (el bundle es único y compartido).
 
-`app/layout.tsx` (o el layout principal de la app):
-```tsx
-'use client'
+## Lado PWA (implementación actual)
 
-import { useEffect } from 'react'
-import OneSignal from 'react-onesignal'
+- **SDK**: `react-onesignal` v3 (envoltorio del OneSignal Web SDK **v16**).
+- **Init**: `pwa/src/modules/pwa/push.ts` → `initPush(appId, safariWebId)`.
+  Se llama desde `PushOptIn` cuando ya se resolvió el tenant
+  (`FullClientData.oneSignalAppId`). Usa:
+  ```ts
+  serviceWorkerPath: 'push/onesignal/OneSignalSDKWorker.js',
+  serviceWorkerParam: { scope: '/push/onesignal/' }
+  ```
+- **Service worker**: `pwa/public/push/onesignal/OneSignalSDKWorker.js`:
+  ```js
+  importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+  ```
+  Va en **subcarpeta** porque la PWA ya tiene su propio service worker workbox
+  en `/` (`pwa/src/sw.ts`). Combinarlos está desaconsejado por OneSignal.
+- **Opt-in**: `pwa/src/modules/pwa/PushOptIn.tsx` muestra un aviso con botón
+  "Activar". No se pide permiso automáticamente al abrir.
+- **Clic**: el panel envía `url: targetUrl`; el SDK abre la URL por defecto.
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    const clientId = 'REEMPLAZAR_CON_CLIENT_ID_REAL'
+> La PWA **no** usa `OneSignalSDKWorker.js` en la raíz ni `sw.ts` para el push.
 
-    fetch(`https://panel-ipstream.com/api/public/${clientId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.oneSignalAppId) {
-          OneSignal.init({
-            appId: data.oneSignalAppId,
-            allowLocalhostAsSecureOrigin: process.env.NODE_ENV === 'development',
-            notifyButton: { enable: false },
-          })
-        }
-      })
-      .catch(err => console.error('Error al inicializar OneSignal:', err))
-  }, [])
+## iOS / Safari
 
-  return <html>{children}</html>
-}
-```
+- Requiere **iOS 16.4+** y que la PWA esté **instalada** en la pantalla de
+  inicio (Safari no entrega push a una pestaña común).
+- Requiere que el cliente tenga cargado su **Safari Web ID**, que la PWA pasa
+  como `safari_web_id` en el `init`.
 
-### 4. Componente de Botón de Suscripción
+## Webhook de clicks (opcional)
 
-`components/NotificationButton.tsx`:
-```tsx
-'use client'
+Para que el panel cuente clicks, en OneSignal → Webhooks apuntar a:
 
-import { useState, useEffect } from 'react'
-import OneSignal from 'react-onesignal'
-
-export function NotificationButton() {
-  const [isSubscribed, setIsSubscribed] = useState(false)
-  const [isSupported, setIsSupported] = useState(true)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    if (!('Notification' in window)) {
-      setIsSupported(false)
-      setIsLoading(false)
-      return
-    }
-
-    const check = async () => {
-      try {
-        const enabled = await OneSignal.isPushNotificationsEnabled()
-        setIsSubscribed(enabled)
-      } catch {
-        // OneSignal aún no está listo
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    const timer = setTimeout(check, 1500)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const handleSubscribe = async () => {
-    setIsLoading(true)
-    try {
-      await OneSignal.showSlidedownPrompt()
-      setTimeout(async () => {
-        const enabled = await OneSignal.isPushNotificationsEnabled()
-        setIsSubscribed(enabled)
-        setIsLoading(false)
-      }, 1500)
-    } catch (error) {
-      console.error('Error al suscribirse:', error)
-      setIsLoading(false)
-    }
-  }
-
-  if (!isSupported) return null
-  if (isLoading) return <button disabled className="...">...</button>
-
-  if (isSubscribed) {
-    return (
-      <div className="...">
-        <span>Notificaciones activadas</span>
-      </div>
-    )
-  }
-
-  return (
-    <button onClick={handleSubscribe} className="...">
-      <span>Activar notificaciones</span>
-    </button>
-  )
-}
-```
-
-### 5. Integrar el Botón en la UI
-
-Agrega `<NotificationButton />` en el header, sidebar, o menú de navegación de la PWA.
-
-### 6. Manejar Clics en Notificaciones
-
-El panel envía `data: { notificationId: "..." }` en cada notificación. OneSignal redirige automáticamente a la `targetUrl` si se configuró. Para tracking adicional:
-
-```tsx
-OneSignal.on('notificationClick', (event) => {
-  console.log('Notificación clickeada:', event)
-})
-```
-
-## Comportamiento Esperado
-
-| Acción | Resultado |
-|--------|-----------|
-| Usuario abre la PWA por primera vez | Ve el botón "Activar notificaciones" |
-| Usuario hace clic en "Activar" | OneSignal muestra el prompt de permiso del navegador |
-| Usuario acepta | El botón cambia a "Notificaciones activadas" |
-| Admin envía notificación desde el panel | Llega a todos los suscritos (incluso con PWA cerrada) |
-| Usuario hace clic en la notificación | Redirige a la `targetUrl` configurada |
-
-## Configurar Webhook de Clics (Opcional)
-
-Para tracking de clics en el panel, configura en OneSignal Dashboard un webhook que apunte a:
-
-```
-POST https://panel-ipstream.com/api/webhook/onesignal
+```http
+POST https://panelipstream.cl/api/webhook/onesignal
 Authorization: Bearer {ONESIGNAL_WEBHOOK_SECRET}
 ```
 
-## Notas Técnicas
-
-- **HTTPS obligatorio** en producción. `localhost` funciona en desarrollo.
-- **iOS Safari** no soporta push notifications en PWA (limitación de Apple).
-- El `OneSignalSDKWorker.js` debe estar en `/public/` y ser accesible en `/OneSignalSDKWorker.js`.
-- No usar el botón nativo de OneSignal (`notifyButton: { enable: false }`).
+Debe estar seteado `ONESIGNAL_WEBHOOK_SECRET` en el `.env` del panel; sin él el
+webhook no puede verificar la petición y no incrementa `clicksCount`.
 
 ## Checklist
 
-- [ ] Instalado `react-onesignal`
-- [ ] Creado `public/OneSignalSDKWorker.js`
-- [ ] Inicializado OneSignal en el layout con `appId` de la API
-- [ ] Creado componente `NotificationButton`
-- [ ] Integrado botón en la UI
-- [ ] Probado en Chrome Desktop y Android
-- [ ] Verificado que notificaciones llegan con PWA cerrada
+- [ ] `oneSignalAppId` (y API Key) cargados por cliente en el panel
+- [ ] Web platform activada en la App de OneSignal (Site URL = dominio del cliente)
+- [ ] `Safari Web ID` cargado si se quiere iOS (y app instalada)
+- [ ] Webhook de clicks configurado + `ONESIGNAL_WEBHOOK_SECRET` en producción
+- [ ] Probado en Chrome desktop y Android; iOS con la PWA instalada

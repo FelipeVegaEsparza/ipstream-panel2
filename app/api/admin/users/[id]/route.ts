@@ -17,6 +17,7 @@ const updateUserSchema = z.object({
   websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
+  oneSignalSafariWebId: z.string().optional().transform(val => val?.trim() || undefined),
   plan: z.string().optional(),
 })
 
@@ -160,7 +161,8 @@ export async function PUT(
             name: data.clientName,
             phone: data.phone || null,
             oneSignalAppId: data.oneSignalAppId ?? existingUser.client.oneSignalAppId,
-            oneSignalApiKey
+            oneSignalApiKey,
+            oneSignalSafariWebId: data.oneSignalSafariWebId ?? existingUser.client.oneSignalSafariWebId
           }
         })
 

@@ -112,11 +112,13 @@ export function PushNotificationsManager() {
   const getStatusBadge = (status: string) => {
     const badges = {
       pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      sending: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       sent: 'bg-green-500/20 text-green-400 border-green-500/30',
       failed: 'bg-red-500/20 text-red-400 border-red-500/30'
     }
     const labels = {
       pending: 'Pendiente',
+      sending: 'Enviando',
       sent: 'Enviada',
       failed: 'Fallida'
     }

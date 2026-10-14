@@ -48,6 +48,7 @@ const createUserSchema = z.object({
   clientName: z.string().min(1, 'El nombre del proyecto es requerido'),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
+  oneSignalSafariWebId: z.string().optional().transform(val => val?.trim() || undefined),
   radioServerId: z.string().optional().transform(val => val?.trim() || undefined),
   videoServerId: z.string().optional().transform(val => val?.trim() || undefined),
 })
@@ -103,6 +104,7 @@ export async function POST(request: NextRequest) {
           name: data.clientName,
           oneSignalAppId: data.oneSignalAppId || null,
           oneSignalApiKey,
+          oneSignalSafariWebId: data.oneSignalSafariWebId || null,
         }
       })
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { decrypt } from '@/lib/encryption'
+import { sendPushNotification } from '@/lib/push-notifications'
 import crypto from 'crypto'
 
 function isAuthorized(authHeader: string | null, secret: string): boolean {
@@ -45,66 +45,41 @@ export async function POST(request: NextRequest) {
     const results = []
 
     for (const notification of pendingNotifications) {
-      const { client } = notification
-      const oneSignalAppId = client?.oneSignalAppId
-      const oneSignalApiKey = client?.oneSignalApiKey
+      // Idempotencia: reclamo condicional `pending` → `sending`. Si otra corrida
+      // ya la tomó, `count` es 0 y se omite para no reenviar.
+      const claimed = await prisma.pushNotification.updateMany({
+        where: { id: notification.id, status: 'pending' },
+        data: { status: 'sending' }
+      })
 
-      if (!oneSignalAppId || !oneSignalApiKey) {
-        await prisma.pushNotification.update({
-          where: { id: notification.id },
-          data: { status: 'failed' }
-        })
-        results.push({ id: notification.id, status: 'failed', reason: 'OneSignal not configured' })
+      if (claimed.count === 0) {
+        results.push({ id: notification.id, status: 'skipped', reason: 'already processing' })
         continue
       }
 
-      try {
-        const apiKey = decrypt(oneSignalApiKey)
+      const result = await sendPushNotification(notification.client, {
+        notificationId: notification.id,
+        title: notification.title,
+        message: notification.message,
+        imageUrl: notification.imageUrl,
+        targetUrl: notification.targetUrl
+      })
 
-        const oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${apiKey}`
-          },
-          body: JSON.stringify({
-            app_id: oneSignalAppId,
-            included_segments: ['All'],
-            headings: { en: notification.title },
-            contents: { en: notification.message },
-            ...(notification.imageUrl && { big_picture: notification.imageUrl }),
-            ...(notification.targetUrl && { url: notification.targetUrl }),
-            data: { notificationId: notification.id }
-          })
-        })
-
-        const oneSignalData = await oneSignalResponse.json()
-
-        if (oneSignalResponse.ok) {
-          await prisma.pushNotification.update({
-            where: { id: notification.id },
-            data: {
-              status: 'sent',
-              sentAt: new Date(),
-              oneSignalId: oneSignalData.id,
-              recipientsCount: oneSignalData.recipients || 0
-            }
-          })
-          results.push({ id: notification.id, status: 'sent' })
-        } else {
-          await prisma.pushNotification.update({
-            where: { id: notification.id },
-            data: { status: 'failed' }
-          })
-          results.push({ id: notification.id, status: 'failed', error: oneSignalData })
+      await prisma.pushNotification.update({
+        where: { id: notification.id },
+        data: {
+          status: result.ok ? 'sent' : 'failed',
+          sentAt: result.ok ? new Date() : null,
+          oneSignalId: result.id,
+          recipientsCount: result.recipients
         }
-      } catch (error) {
-        await prisma.pushNotification.update({
-          where: { id: notification.id },
-          data: { status: 'failed' }
-        })
-        results.push({ id: notification.id, status: 'failed', error: String(error) })
-      }
+      })
+
+      results.push({
+        id: notification.id,
+        status: result.ok ? 'sent' : 'failed',
+        ...(result.error && { error: result.error })
+      })
     }
 
     return NextResponse.json({

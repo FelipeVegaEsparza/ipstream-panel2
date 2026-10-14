@@ -16,6 +16,7 @@ export interface FullClientData {
   selectedTemplate: string | null
   accentColor?: string | null
   oneSignalAppId: string | null
+  oneSignalSafariWebId?: string | null
   basicData: BasicData | null
   socialNetworks: SocialNetworks | null
   programs: Program[]

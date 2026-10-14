@@ -34,4 +34,5 @@ IPStream Panel. Es parte del repo del panel; ver el `AGENTS.md` de la raíz.
   genera desde el logo del cliente).
 - `compartir-enlaces.md`, `splash-carga.md`, `color-destacado.md`,
   `clima.md`, `instalacion-pwa.md` — comportamiento de la app.
+- `notificaciones-push.md` — receptor de push (OneSignal SDK v16).
 - `instruccionesapi.md` — contrato de la API pública del panel.
