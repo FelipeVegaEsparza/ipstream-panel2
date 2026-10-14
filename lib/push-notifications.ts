@@ -19,6 +19,39 @@ import { decrypt, isEncrypted } from '@/lib/encryption'
 
 const ONESIGNAL_API_URL = 'https://onesignal.com/api/v1/notifications'
 
+// La respuesta de creación de la API v1 suele traer `recipients: 0` aunque la
+// entrega haya sido exitosa (p. ej. web push). La cantidad real se lee de las
+// stats de la notificación (`successful`), que pueden tardar ~1-2 s en estar.
+const STATS_MAX_ATTEMPTS = 3
+const STATS_RETRY_MS = 1000
+
+async function fetchDeliveredCount(
+  appId: string,
+  apiKey: string,
+  notificationId: string,
+  fallback: number
+): Promise<number> {
+  for (let attempt = 0; attempt < STATS_MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetch(
+        `${ONESIGNAL_API_URL}/${notificationId}?app_id=${appId}`,
+        { headers: { Authorization: `Basic ${apiKey}` } }
+      )
+      const data: unknown = await response.json().catch(() => null)
+      const stats = data as { successful?: number; completed_at?: number } | null
+      if (response.ok && stats?.completed_at) {
+        return stats.successful ?? 0
+      }
+    } catch {
+      // se reintenta
+    }
+    if (attempt < STATS_MAX_ATTEMPTS - 1) {
+      await new Promise((resolve) => setTimeout(resolve, STATS_RETRY_MS))
+    }
+  }
+  return fallback
+}
+
 export interface PushNotificationClient {
   oneSignalAppId?: string | null
   oneSignalApiKey?: string | null
@@ -91,12 +124,14 @@ export async function sendPushNotification(
     payload.chrome_web_badge = input.iconUrl
   }
 
+  const apiKey = resolveApiKey(storedKey)
+
   try {
     const response = await fetch(ONESIGNAL_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Basic ${resolveApiKey(storedKey)}`,
+        Authorization: `Basic ${apiKey}`,
       },
       body: JSON.stringify(payload),
     })
@@ -105,12 +140,15 @@ export async function sendPushNotification(
 
     if (response.ok && data) {
       const body = data as { id?: string; recipients?: number }
-      return {
-        ok: true,
-        id: body.id ?? null,
-        recipients: body.recipients ?? 0,
-        error: null,
+      const notificationId = body.id ?? null
+      let recipients = body.recipients ?? 0
+
+      // Si el conteo vino en 0, se consulta la stats (fuente confiable).
+      if (notificationId && recipients === 0) {
+        recipients = await fetchDeliveredCount(appId, apiKey, notificationId, recipients)
       }
+
+      return { ok: true, id: notificationId, recipients, error: null }
     }
 
     return { ok: false, id: null, recipients: 0, error: extractError(data) }

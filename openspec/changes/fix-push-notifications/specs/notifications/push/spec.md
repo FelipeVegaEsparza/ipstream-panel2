@@ -80,11 +80,11 @@ El sistema SHALL incrementar el contador de clicks de una notificación cuando O
 - **THEN** el sistema incrementa `clicksCount` de esa notificación
 
 ### Requirement: Compatibilidad con el modelo de suscripciones de OneSignal
-El envío SHALL entregar a las suscripciones creadas por el SDK que use la PWA, y el sistema SHALL poder verificarlo con la cantidad de destinatarios reportada.
+El envío SHALL entregar a las suscripciones creadas por el SDK que use la PWA, y el sistema SHALL registrar la cantidad de envíos exitosos reportada por OneSignal (su respuesta de creación puede reportar 0 aunque la entrega haya sido correcta).
 
 #### Scenario: Verificación de entrega
 - **WHEN** se envía una notificación a un dispositivo suscrito
-- **THEN** OneSignal reporta `recipients` > 0
+- **THEN** las estadísticas de la notificación en OneSignal reportan al menos un envío exitoso (`successful` ≥ 1)
 - **AND** el sistema registra esa cantidad
 
 ### Requirement: Autorización del envío desde el dashboard

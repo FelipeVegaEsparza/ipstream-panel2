@@ -37,8 +37,8 @@ Agendar `POST /api/cron/send-pending-notifications` cada 1 min con `CRON_SECRET`
 - `ONESIGNAL_WEBHOOK_SECRET`: setear en `.env` de producción y en cada app de OneSignal (webhook click con header Bearer). `setup-prod.sh` ya lo lista; se documenta como **requerido para clicks**.
 - Verificar que `CRON_SECRET` esté seteado (ya lo está).
 
-### D6. Modelo OneSignal
-Mantener la API v1 (`included_segments: ['All']`) y **verificar** con un dispositivo suscrito que `recipients > 0`. Si el modelo nuevo no entrega, evaluar `include_aliases`/endpoint actual. No se cambia a ciegas.
+### D6. Modelo OneSignal y conteo de entregas
+Mantener la API v1 (`included_segments: ['All']`) y verificar con un dispositivo suscrito. **Hallazgo en producción:** la respuesta de creación trae `recipients: 0` aunque la entrega sea exitosa (`successful: 1`); la cantidad real está en las stats de la notificación (`GET /notifications/{id}` → `successful`, con `completed_at`). Por eso el helper, cuando `recipients` viene 0, consulta las stats (con reintentos acotados) y usa `successful` como `recipientsCount`. No se cambia de endpoint ni de modelo.
 
 ### D7. Documentación PWA
 Actualizar `onesignalpwa.md` al SDK actual e incluir `safari_web_id` para iOS/Safari. El documento ya no debe asumir "otro repo": la PWA vive en `pwa/`.
