@@ -39,4 +39,4 @@
 
 ## 7. Verificación end-to-end
 
-- [ ] 7.1 Con un cliente real y un dispositivo suscrito desde su PWA: enviar **inmediata** y **programada**, confirmar entrega (`recipients > 0`), registrar un **click** (verificar `clicksCount`) y confirmar la recepción con la PWA cerrada; documentar el resultado y cerrar el change.
+- [x] 7.1 Con un cliente real y un dispositivo suscrito desde su PWA: enviar **inmediata** y **programada**, confirmar entrega (`recipients > 0`), registrar un **click** (verificar `clicksCount`) y confirmar la recepción con la PWA cerrada; documentar el resultado y cerrar el change.
