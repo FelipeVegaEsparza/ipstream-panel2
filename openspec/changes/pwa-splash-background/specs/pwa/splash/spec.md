@@ -59,3 +59,8 @@ El splash SHALL mostrar el fondo (imagen o color) con un desenfoque suave para q
 #### Scenario: Duración mínima del splash
 - **WHEN** el oyente abre la PWA
 - **THEN** el splash permanece visible al menos el tiempo mínimo configurado (~6 s), aunque el contenido cargue antes
+
+#### Scenario: Animación de entrada
+- **WHEN** se muestra el splash
+- **THEN** el fondo y el logo aparecen con una animación suave (fade/zoom sutil)
+- **AND** si el usuario tiene activado "reducir movimiento", no se anima

@@ -18,8 +18,9 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(14px);
-  transform: scale(1.08);
+  filter: blur(8px);
+  transform: scale(1.06);
+  animation: screenBg 8s ease-out both;
 }
 
 /* Capa de contraste para que el logo resalte. */
@@ -27,7 +28,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(15, 18, 32, 0.45);
+  background: rgba(15, 18, 32, 0.35);
 }
 
 .overlay {
@@ -38,6 +39,36 @@
   align-items: center;
   gap: 16px;
   padding: 24px 32px;
+  animation: screenIn 0.8s ease-out both;
+}
+
+@keyframes screenBg {
+  from {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen::before,
+  .overlay {
+    animation: none;
+  }
 }
 
 .logo {
