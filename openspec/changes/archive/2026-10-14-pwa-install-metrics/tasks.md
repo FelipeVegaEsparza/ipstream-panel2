@@ -18,4 +18,4 @@
 
 ## 4. Verificación end-to-end
 
-- [ ] 4.1 Con un cliente real: los números arrancan en 0; instalar la PWA y abrir la app instalada sube la tarjeta a 1; una visita desde el navegador (sin instalar) no incrementa; y el conteo de un cliente no incluye instalaciones de otro.
+- [x] 4.1 Con un cliente real: los números arrancan en 0; instalar la PWA y abrir la app instalada sube la tarjeta a 1; una visita desde el navegador (sin instalar) no incrementa; y el conteo de un cliente no incluye instalaciones de otro.
