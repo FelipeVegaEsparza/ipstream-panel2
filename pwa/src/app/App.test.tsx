@@ -143,7 +143,7 @@ describe('App shell', () => {
     renderApp()
 
     expect(
-      await screen.findByText('Sintoniza nuestra señal', {}, { timeout: 3000 })
+      await screen.findByText('Sintoniza nuestra señal', {}, { timeout: 10000 })
     ).toBeInTheDocument()
     expect((await screen.findAllByText('Radio Fusion Austral')).length).toBeGreaterThan(0)
 
@@ -162,7 +162,7 @@ describe('App shell', () => {
     renderApp()
 
     expect(
-      await screen.findByText('Sintoniza nuestra señal', {}, { timeout: 3000 })
+      await screen.findByText('Sintoniza nuestra señal', {}, { timeout: 10000 })
     ).toBeInTheDocument()
 
     const registerCalls = fetchMock.mock.calls.filter(([input]) =>
@@ -230,7 +230,7 @@ describe('App shell', () => {
     expect(screen.getByRole('status')).toBeInTheDocument()
 
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull(), {
-      timeout: 3000
+      timeout: 10000
     })
     expect((await screen.findAllByText('Radio Fusion Austral')).length).toBeGreaterThan(0)
   })
@@ -244,4 +244,4 @@ describe('App shell', () => {
 
     expect(await screen.findByText('Cliente no encontrado')).toBeInTheDocument()
   })
-})
+}, 15000)

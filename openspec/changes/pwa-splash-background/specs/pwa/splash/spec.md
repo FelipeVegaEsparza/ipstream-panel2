@@ -47,3 +47,15 @@ La imagen de splash del cliente SHALL estar disponible en el payload público de
 #### Scenario: Payload público incluye la imagen
 - **WHEN** se consulta el contenido público del cliente
 - **THEN** el bloque `basicData` incluye `splashBackgroundUrl` (o `null` si no está configurada)
+
+### Requirement: Presentación del splash
+El splash SHALL mostrar el fondo (imagen o color) con un desenfoque suave para que el logo se distinga nítido por encima, y SHALL permanecer visible un tiempo mínimo configurable (~6 segundos).
+
+#### Scenario: Fondo desenfocado y logo nítido
+- **WHEN** se muestra el splash de un cliente con imagen de fondo
+- **THEN** el fondo se ve desenfocado y suavizado
+- **AND** el logo se ve nítido por encima
+
+#### Scenario: Duración mínima del splash
+- **WHEN** el oyente abre la PWA
+- **THEN** el splash permanece visible al menos el tiempo mínimo configurado (~6 s), aunque el contenido cargue antes

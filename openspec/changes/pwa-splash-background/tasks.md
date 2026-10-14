@@ -16,6 +16,8 @@
 
 - [x] 3.1 En `lib/client-site.ts` (`renderShell`) inyectar un `<style>` con `:root { --splash-bg-image: url('...') }` cuando el cliente tiene `splashBackgroundUrl`; verificar que el HTML servido lo incluya y no rompa el OG.
 - [x] 3.2 En la PWA, hacer que `pwa/index.html` (`.app-splash`) y `pwa/src/app/LoadingScreen.module.css` (`.screen`) usen `background-image: var(--splash-bg-image, none)` con `cover`/`center` y fondo de color como fallback; verificar `cd pwa && npm run build` y `npm test`.
+- [x] 3.3 Aplicar un desenfoque suave al fondo del splash (pseudo-elemento `::before` con `filter: blur`, en `index.html` y `LoadingScreen.module.css`) con una capa de contraste, dejando el logo nítido; verificar en el build.
+- [x] 3.4 Subir la duración mínima del splash a ~6 s (`SPLASH_MIN_MS = 6000` en `pwa/src/app/App.tsx`); verificar que el loader se mantenga ese tiempo aunque el contenido cargue antes.
 
 ## 4. Verificación end-to-end
 

@@ -47,6 +47,9 @@ Sin imagen (o si falla la carga), el `background-image` queda en `none` y se ve 
 ### D6. Optimización de la imagen (WebP + vertical)
 Al subir el fondo se procesa con `sharp`: `resize(720, 1280, { fit: 'cover', position: 'centre' })` + `webp({ quality: 82 })`, de modo que la imagen guardada es **WebP** con relación 9:16 y liviana. Se implementa como un **preset** en `/api/upload` (p. ej. `?preset=splash`) para no alterar el comportamiento del resto de las imágenes; `ImageUpload` acepta un `preset` opcional. Alternativa descartada: procesar en `/api/basic-data` al guardar (más acoplado y no reutilizable).
 
+### D7. Presentación: blur del fondo y duración
+El fondo se pinta en un **pseudo-elemento** (`::before`) de `.app-splash`/`.screen` con `background-image: var(--splash-bg-image)` y `filter: blur(12px)` (+ `transform: scale(1.1)` para evitar bordes transparentes), dejando el logo/contenido en una capa superior **nítida**. Se suma una capa oscura semitransparente para contraste. La duración mínima del splash sube a `SPLASH_MIN_MS = 6000` en `pwa/src/app/App.tsx`. Alternativa descartada: `filter: blur` sobre el contenedor → desenfocaría también el logo.
+
 ## Risks / Trade-offs
 
 - **[Peso de la imagen]** → un fondo pesado retrasa el splash. Mitigación: recomendación de tamaño/peso en la UI (no se re-encodea).

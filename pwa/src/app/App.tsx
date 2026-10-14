@@ -36,8 +36,8 @@ const VideocastDetailPage = lazy(() =>
 )
 
 // Tiempo mínimo que el splash permanece visible aunque los datos lleguen antes,
-// para que se alcance a apreciar.
-const SPLASH_MIN_MS = 1200
+// para que se alcance a apreciar el fondo de marca.
+const SPLASH_MIN_MS = 6000
 
 export function App() {
   const tenant = useTenant()

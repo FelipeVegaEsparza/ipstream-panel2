@@ -6,13 +6,33 @@
   align-items: center;
   justify-content: center;
   background-color: #1a1a2e;
+  overflow: hidden;
+}
+
+/* Fondo desenfocado (imagen del cliente). El logo va encima, nítido. */
+.screen::before {
+  content: '';
+  position: absolute;
+  inset: -24px;
   background-image: var(--splash-bg-image, none);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  filter: blur(14px);
+  transform: scale(1.08);
+}
+
+/* Capa de contraste para que el logo resalte. */
+.screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 18, 32, 0.45);
 }
 
 .overlay {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;

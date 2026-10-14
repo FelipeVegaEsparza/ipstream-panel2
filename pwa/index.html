@@ -25,12 +25,31 @@
         align-items: center;
         justify-content: center;
         background-color: #1a1a2e;
+        overflow: hidden;
+      }
+      /* Fondo desenfocado (la imagen del cliente, si la hay). El logo va encima,
+         nítido. inset negativo + scale evitan bordes transparentes por el blur. */
+      .app-splash::before {
+        content: '';
+        position: absolute;
+        inset: -24px;
         background-image: var(--splash-bg-image, none);
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
+        filter: blur(14px);
+        transform: scale(1.08);
+      }
+      /* Capa de contraste para que el logo resalte. */
+      .app-splash::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 18, 32, 0.45);
       }
       .app-splash__overlay {
+        position: relative;
+        z-index: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
