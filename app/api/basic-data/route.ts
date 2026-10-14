@@ -115,6 +115,13 @@ async function handleBasicData(request: NextRequest) {
       } as Prisma.BasicDataUncheckedCreateInput
     })
 
+    // Si cambió el logo o el cover, se invalidan los iconos PWA cacheados para
+    // que se regeneren desde la nueva imagen.
+    if ('logoUrl' in prismaData || 'coverUrl' in prismaData) {
+      const { clearClientIconCache } = await import('@/lib/client-icons')
+      await clearClientIconCache(effectiveClient.clientId)
+    }
+
     // Re-derivar y almacenar las URLs de streaming desde el servidor asignado
     const { rewriteClientPublicUrls } = await import('@/lib/streaming-helpers')
     await rewriteClientPublicUrls(effectiveClient.clientId).catch(() => {})
