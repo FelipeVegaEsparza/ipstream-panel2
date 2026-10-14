@@ -29,7 +29,7 @@
 - [x] 5.3 Crear `pwa/public/push/onesignal/OneSignalSDKWorker.js` (`importScripts` del SDK v16) y configurar el init con `serviceWorkerPath` y `serviceWorkerParam` (scope `/push/onesignal/`); verificar que el archivo se sirve y que una notificación se muestra con la PWA cerrada en Chrome Android/desktop.
 - [x] 5.4 Manejar el clic de notificación abriendo `targetUrl`; verificar que el clic navega a la URL configurada.
 - [x] 5.5 Añadir UX de suscripción opt-in (botón/aviso) en el template/app; verificar que antes del permiso no suscribe y tras aceptar la `PushSubscription` queda activa (y no se auto-prompta).
-- [ ] 5.6 Verificar aislamiento multi-tenant: una suscripción en el dominio de un cliente cae en su App de OneSignal y no recibe notificaciones de otro cliente.
+- [x] 5.6 Verificar aislamiento multi-tenant: una suscripción en el dominio de un cliente cae en su App de OneSignal y no recibe notificaciones de otro cliente.
 - [x] 5.7 Cubrir la recepción con tests (Vitest) donde sea viable (p. ej. helper de init/estado de suscripción) y verificar `cd pwa && npm test`.
 
 ## 6. Documentación PWA / OneSignal
