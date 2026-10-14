@@ -5,14 +5,17 @@
 #   * * * * * /opt/ipstream-panel/deploy/scripts/cron-push.sh >/dev/null 2>&1
 # Ver README.md -> "Envío de notificaciones programadas (Cron)".
 # =====================================================
-set -euo pipefail
+set -u
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ENV_FILE="$PROJECT_DIR/.env"
 
 read_env() {
+  local line
   [[ -f "$ENV_FILE" ]] || return 0
-  grep -E "^$1=" "$ENV_FILE" | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'
+  line="$(grep -E "^$1=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
+  [[ -n "$line" ]] || return 0
+  printf '%s' "${line#*=}" | sed -e 's/^"//' -e 's/"$//'
 }
 
 CRON_SECRET="${CRON_SECRET:-$(read_env CRON_SECRET)}"
