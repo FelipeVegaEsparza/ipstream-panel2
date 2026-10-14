@@ -2,8 +2,8 @@
 
 ## 1. Configuración y secretos
 
-- [ ] 1.1 Setear `ONESIGNAL_WEBHOOK_SECRET` en el `.env` de producción y documentarlo como requerido para clicks; verificar que `/api/webhook/onesignal` responda 401 (no 500) sin secreto válido y procese con el correcto.
-- [ ] 1.2 Verificar que `CRON_SECRET` esté seteado y documentarlo en `.env.example`/`deploy/.env.prod.example`; verificar que el cron responda 401 sin Bearer válido.
+- [x] 1.1 Setear `ONESIGNAL_WEBHOOK_SECRET` en el `.env` de producción y documentarlo como requerido para clicks; verificar que `/api/webhook/onesignal` responda 401 (no 500) sin secreto válido y procese con el correcto.
+- [x] 1.2 Verificar que `CRON_SECRET` esté seteado y documentarlo en `.env.example`/`deploy/.env.prod.example`; verificar que el cron responda 401 sin Bearer válido.
 - [x] 1.3 Agregar `oneSignalSafariWebId` a `Client` (schema), al `UserForm`/API de admin, y exponer `oneSignalSafariWebId` en `GET /api/public/[clientId]`; verificar `prisma db push` (o migración) y typecheck.
 
 ## 2. Helper de envío unificado
@@ -15,11 +15,11 @@
 
 - [x] 3.1 Refactorizar `app/api/dashboard/push-notifications/route.ts` para usar el helper; verificar envío inmediato (`status=sent`, `recipientsCount`) y programado (`status=pending`).
 - [x] 3.2 Refactorizar `app/api/cron/send-pending-notifications/route.ts` para usar el helper e idempotencia (`pending`→`sending` condicional); verificar que dos corridas solapadas no reenvíen.
-- [ ] 3.3 Verificar el webhook de clicks end-to-end: con el secreto correcto, un click incrementa `clicksCount` (por ID propio o por ID de OneSignal).
+- [x] 3.3 Verificar el webhook de clicks end-to-end: con el secreto correcto, un click incrementa `clicksCount` (por ID propio o por ID de OneSignal).
 
 ## 4. Cron scheduling (infra)
 
-- [ ] 4.1 Agendar `POST /api/cron/send-pending-notifications` (cada 1 min, con `CRON_SECRET`) en el VPS (crontab o timer); verificar que una notificación programada pase a `sent` sin intervención manual.
+- [x] 4.1 Agendar `POST /api/cron/send-pending-notifications` (cada 1 min, con `CRON_SECRET`) en el VPS (crontab o timer); verificar que una notificación programada pase a `sent` sin intervención manual.
 - [x] 4.2 Documentar el agendado del cron (y el de `chat/cleanup` si aplica) en `README.md`/`resumen.md`.
 
 ## 5. Receptor en la PWA (`pwa/`)
