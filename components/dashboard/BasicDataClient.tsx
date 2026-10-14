@@ -11,6 +11,7 @@ interface BasicData {
   projectDescription: string
   logoUrl?: string | null
   coverUrl?: string | null
+  splashBackgroundUrl?: string | null
   radioStreamingUrl?: string | null
   videoStreamingUrl?: string | null
   location?: {

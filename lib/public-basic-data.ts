@@ -16,6 +16,7 @@ export interface PublicBasicData {
   projectDescription: string | null
   logoUrl: string | null
   coverUrl: string | null
+  splashBackgroundUrl: string | null
   radioStreamingUrl: string | null
   videoStreamingUrl: string | null
   createdAt: Date | null
@@ -45,6 +46,7 @@ export async function getPublicBasicData(clientId: string): Promise<PublicBasicD
         projectDescription: true,
         logoUrl: true,
         coverUrl: true,
+        splashBackgroundUrl: true,
         city: true,
         region: true,
         country: true,

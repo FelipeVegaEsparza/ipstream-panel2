@@ -16,6 +16,7 @@ interface BasicDataFormProps {
     projectDescription: string
     logoUrl?: string | null
     coverUrl?: string | null
+    splashBackgroundUrl?: string | null
     radioStreamingUrl?: string | null
     videoStreamingUrl?: string | null
     location?: {
@@ -49,6 +50,7 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
       projectDescription: initialData?.projectDescription || '',
       logoUrl: initialData?.logoUrl || '',
       coverUrl: initialData?.coverUrl || '',
+      splashBackgroundUrl: initialData?.splashBackgroundUrl || '',
       radioStreamingUrl: initialData?.radioStreamingUrl || '',
       videoStreamingUrl: initialData?.videoStreamingUrl || '',
       location: initialData?.location ?? null,
@@ -179,6 +181,18 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
       />
       {errors.coverUrl && (
         <p className="text-sm text-red-600">{errors.coverUrl.message}</p>
+      )}
+
+      <ImageUpload
+        label="Fondo del splash (PWA)"
+        description="Imagen de fondo al abrir la app. Recomendado: vertical 720x1280px. Se optimiza a WebP automáticamente."
+        value={watch('splashBackgroundUrl')}
+        onChange={(url) => setValue('splashBackgroundUrl', url)}
+        onRemove={() => setValue('splashBackgroundUrl', '')}
+        preset="splash"
+      />
+      {errors.splashBackgroundUrl && (
+        <p className="text-sm text-red-600">{errors.splashBackgroundUrl.message}</p>
       )}
 
       <div className="form-group">

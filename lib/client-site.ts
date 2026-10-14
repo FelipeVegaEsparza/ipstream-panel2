@@ -169,7 +169,7 @@ async function loadBranding(clientId: string) {
     prisma.client.findUnique({ where: { id: clientId }, select: { name: true, accentColor: true } }),
     prisma.basicData.findUnique({
       where: { clientId },
-      select: { projectName: true, projectDescription: true, logoUrl: true, coverUrl: true },
+      select: { projectName: true, projectDescription: true, logoUrl: true, coverUrl: true, splashBackgroundUrl: true },
     }),
   ])
   return { client, basic }
@@ -182,7 +182,7 @@ export async function renderShell(clientId: string, origin: string, html: string
   const image = absoluteImage(basic?.coverUrl, origin) || absoluteImage(basic?.logoUrl, origin)
   const logo = absoluteImage(basic?.logoUrl, origin)
 
-  return injectOgMeta(html, {
+  let rendered = injectOgMeta(html, {
     title,
     description: basic?.projectDescription || null,
     image: image || logo,
@@ -190,6 +190,21 @@ export async function renderShell(clientId: string, origin: string, html: string
     siteName: title,
     themeColor: client?.accentColor || null,
   })
+
+  // Fondo del splash de la PWA: se expone como variable CSS para que la use
+  // tanto el splash estático (index.html) como el loader de React.
+  const splashBg = normalizeImageUrl(basic?.splashBackgroundUrl)
+  if (splashBg) {
+    rendered = rendered.replace('</head>', `${renderSplashStyle(splashBg)}\n  </head>`)
+  }
+
+  return rendered
+}
+
+/** `<style>` con la variable CSS del fondo del splash (URL saneada para CSS). */
+function renderSplashStyle(url: string): string {
+  const safe = url.replace(/["'()\\\n\r]/g, (c) => `\\${c}`)
+  return `    <style>:root { --splash-bg-image: url("${safe}"); }</style>`
 }
 
 export interface TenantManifest {

@@ -13,6 +13,8 @@ interface ImageUploadProps {
   label?: string
   description?: string
   className?: string
+  /** Preset de procesamiento del endpoint de subida (p. ej. `splash`). */
+  preset?: string
 }
 
 export function ImageUpload({ 
@@ -21,7 +23,8 @@ export function ImageUpload({
   onRemove, 
   label = "Imagen",
   description = "Sube una imagen (JPG, PNG, GIF, WebP - Máx. 5MB)",
-  className = ""
+  className = "",
+  preset
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
@@ -36,7 +39,7 @@ export function ImageUpload({
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch(`/api/upload${preset ? `?preset=${encodeURIComponent(preset)}` : ''}`, {
         method: 'POST',
         body: formData,
       })

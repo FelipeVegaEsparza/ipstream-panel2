@@ -119,6 +119,7 @@ model BasicData {
   projectDescription String   @db.Text
   logoUrl            String?
   coverUrl           String?
+  splashBackgroundUrl String?
   websiteUrl         String?  @db.VarChar(500)
   radioStreamingUrl  String?
   videoStreamingUrl  String?

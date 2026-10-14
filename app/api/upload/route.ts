@@ -89,21 +89,36 @@ export async function POST(request: NextRequest) {
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
     let fileName = `${timestamp}_${originalName}`
 
-    // Redimensionar imágenes con Sharp para optimización web
-    if (imageTypes.includes(file.type)) {
+    const preset = request.nextUrl.searchParams.get('preset')
+    const baseName = originalName.replace(/\.[^.]+$/, '')
+
+    if (imageTypes.includes(file.type) && preset === 'splash') {
+      // Fondo de splash: WebP vertical (9:16), recorte centrado.
+      try {
+        buffer = await sharp(buffer)
+          .resize(720, 1280, { fit: 'cover', position: 'centre' })
+          .webp({ quality: 82 })
+          .toBuffer()
+        fileName = `${timestamp}_${baseName}_splash.webp`
+      } catch (sharpError) {
+        console.error('Error processing splash image with Sharp:', sharpError)
+        // Si falla Sharp, guardar la imagen original
+      }
+    } else if (imageTypes.includes(file.type)) {
+      // Redimensionar imágenes con Sharp para optimización web
       try {
         const image = sharp(buffer)
         const metadata = await image.metadata()
-        
+
         // Redimensionar si el ancho supera 1920px (manteniendo aspect ratio)
         if (metadata.width && metadata.width > 1920) {
           image.resize(1920, undefined, { fit: 'inside', withoutEnlargement: true })
         }
-        
+
         // Convertir a WebP si es JPEG/PNG para mejor compresión
         if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
           buffer = await image.webp({ quality: 82 }).toBuffer()
-          fileName = `${timestamp}_${originalName.replace(/\.[^.]+$/, '')}.webp`
+          fileName = `${timestamp}_${baseName}.webp`
         } else {
           buffer = await image.jpeg({ quality: 82 }).toBuffer()
         }
