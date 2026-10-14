@@ -8,6 +8,7 @@ import { deriveServiceMode } from '@/core/service'
 import { useTenant } from '@/core/config/TenantContext'
 import { useFullClientData } from '@/core/hooks/useFullClientData'
 import { usePwaRegistration } from '@/modules/pwa/usePwaRegistration'
+import { usePwaInstallReport } from '@/modules/pwa/usePwaInstallReport'
 import { PushOptIn } from '@/modules/pwa/PushOptIn'
 import { useDocumentTitle } from '@/core/hooks/useDocumentTitle'
 import { ContentSections } from '@/modules/content/ContentSections'
@@ -58,6 +59,7 @@ function TenantApp({ clientId }: { clientId: string }) {
   const queryClient = useQueryClient()
 
   usePwaRegistration(clientId)
+  usePwaInstallReport(clientId)
   useDocumentTitle(data?.basicData?.projectName)
 
   // El splash se muestra al menos SPLASH_MIN_MS desde el montaje del tenant.

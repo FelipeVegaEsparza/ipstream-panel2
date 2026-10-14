@@ -271,12 +271,13 @@ export async function sendChatMessage(
 
 export async function registerPwaInstall(
   clientId: string,
-  deviceId: string
+  deviceId: string,
+  installed = false
 ): Promise<PwaRegisterResponse> {
   const response = await request(getPublicApiBase(clientId) + '/pwa/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ deviceId }),
+    body: JSON.stringify({ deviceId, installed }),
     retries: 1
   })
   if (!response.ok) {

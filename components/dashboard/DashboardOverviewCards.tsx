@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Headphones, HardDrive, Crown } from 'lucide-react'
+import { Headphones, HardDrive, Crown, Smartphone } from 'lucide-react'
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
 
 interface OverviewPlan {
@@ -54,9 +54,25 @@ function fmtCurrency(price: number, currency: string) {
 export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: DashboardOverviewCardsProps) {
   const { status } = useStreamingStatus({ pollingMs: 5000 })
   const [tvViewers, setTvViewers] = useState<number>(0)
+  const [installedCount, setInstalledCount] = useState<number | null>(null)
 
   const hasRadio = plan?.services === 'radio' || plan?.services === 'both'
   const hasTv = plan?.services === 'tv' || plan?.services === 'both'
+
+  useEffect(() => {
+    let active = true
+    fetch('/api/dashboard/pwa-stats', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (active) setInstalledCount(typeof data.installedCount === 'number' ? data.installedCount : 0)
+      })
+      .catch(() => {
+        // silencioso: se muestra "—"
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!hasTv) return
@@ -94,7 +110,7 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
   if (hasTv) storageItems.push({ label: 'TV', used: usageVideo, quota: plan?.videoStorageQuotaMB ?? null })
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
       {/* Oyentes en vivo */}
       <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center gap-2 mb-3">
@@ -176,6 +192,24 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
             <span className="text-[color:var(--brand-500)]">Contacta al soporte para activar tu plan.</span>
           </p>
         )}
+      </div>
+
+      {/* PWA instalada */}
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+        <div className="flex items-center gap-2 mb-3">
+          <Smartphone className="h-4 w-4 text-[color:var(--brand-500)]" />
+          <h3 className="font-semibold text-foreground">PWA instalada</h3>
+        </div>
+        <div className="text-2xl font-bold text-foreground">
+          {installedCount === null ? '—' : installedCount}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1">
+          {installedCount === null
+            ? 'Dispositivos con la app instalada'
+            : installedCount === 1
+              ? 'dispositivo con la app instalada'
+              : 'dispositivos con la app instalada'}
+        </div>
       </div>
     </div>
   )

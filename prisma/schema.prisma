@@ -330,10 +330,11 @@ model PollOption {
 }
 
 model PwaInstall {
-  id        String   @id @default(cuid())
-  clientId  String
-  deviceId  String
-  createdAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  clientId    String
+  deviceId    String
+  createdAt   DateTime  @default(now())
+  installedAt DateTime? // no nulo = instalación confirmada de la app
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 

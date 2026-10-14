@@ -10,11 +10,13 @@ export async function POST(request: NextRequest, { params }: { params: { clientI
   try {
     const { clientId } = params
     const body = await request.json()
-    const { deviceId } = body
+    const { deviceId, installed } = body
 
     if (!deviceId || typeof deviceId !== 'string') {
       return createCorsErrorResponse('deviceId es requerido', 400)
     }
+
+    const markInstalled = installed === true
 
     const client = await prisma.client.findUnique({
       where: { id: clientId },
@@ -32,18 +34,32 @@ export async function POST(request: NextRequest, { params }: { params: { clientI
     let registered = false
     if (!existing) {
       await prisma.pwaInstall.create({
-        data: { clientId, deviceId },
+        data: {
+          clientId,
+          deviceId,
+          installedAt: markInstalled ? new Date() : null,
+        },
       })
       registered = true
+    } else if (markInstalled && !existing.installedAt) {
+      // Marca idempotente: una vez instalado, no vuelve a cambiar.
+      await prisma.pwaInstall.update({
+        where: { id: existing.id },
+        data: { installedAt: new Date() },
+      })
     }
 
-    const total = await prisma.pwaInstall.count({
-      where: { clientId },
-    })
+    const [total, installedCount] = await Promise.all([
+      prisma.pwaInstall.count({ where: { clientId } }),
+      prisma.pwaInstall.count({
+        where: { clientId, installedAt: { not: null } },
+      }),
+    ])
 
     return createCorsResponse({
       registered,
       total,
+      installedCount,
       firstTime: !existing,
     })
   } catch (error) {

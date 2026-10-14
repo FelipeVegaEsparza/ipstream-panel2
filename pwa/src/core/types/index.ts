@@ -307,5 +307,6 @@ export interface ChatOnlineResponse {
 export interface PwaRegisterResponse {
   registered: boolean
   total: number
+  installedCount: number
   firstTime: boolean
 }

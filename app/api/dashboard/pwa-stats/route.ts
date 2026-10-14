@@ -10,11 +10,11 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const count = await prisma.pwaInstall.count({
-      where: { clientId: effectiveClient.clientId },
+    const installedCount = await prisma.pwaInstall.count({
+      where: { clientId: effectiveClient.clientId, installedAt: { not: null } },
     })
 
-    return NextResponse.json({ count })
+    return NextResponse.json({ installedCount })
   } catch (error) {
     console.error('Error fetching PWA stats:', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
