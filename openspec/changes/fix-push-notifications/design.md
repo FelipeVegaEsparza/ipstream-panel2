@@ -53,7 +53,7 @@ La PWA ya usa `vite-plugin-pwa` con `injectManifest` (`pwa/src/sw.ts` → `sw.js
 El App ID viene del tenant resuelto por host (`TenantContext` → `clientId` → `FullClientData.oneSignalAppId`). Como cada cliente se sirve en su propio dominio, el scope del SW y la App de OneSignal quedan aislados por origen. En dev, sin dominio de cliente, se usa el fallback del `clientId` horneado; si el appId es `null`, la UX de suscripción no se muestra.
 
 ### D11. UX de suscripción (opt-in)
-Botón/aviso de activación explícito; **sin prompt automático** al abrir (evita el rechazo permanente que bloquea reintentos). Se usa la API de la suscripción (`PushSubscription.optIn`) del SDK v16. Ubicación: header/sidebar según template. Alternativa descartada: `Slidesdown` automático — agresivo y peor tasa de aceptación.
+Opt-in explícito mediante un **modal centrado con fondo oscurecido** (`PushOptIn`): no se pide permiso automáticamente al abrir. El usuario elige **Activar** o **Ahora no**. El modal se muestra solo si hay appId, el navegador soporta push, el permiso no está bloqueado y el usuario no está suscrito; "Ahora no" lo descarta por 24 h (no reaparece en cada carga). Alternativa descartada: `Slidesdown`/prompt automático — agresivo y peor tasa de aceptación.
 
 ### D12. iOS/Safari
 Incluir `safari_web_id` en el init (requerido en Safari/iOS). Documentar que iOS requiere PWA **instalada** en pantalla de inicio (iOS 16.4+) para recibir push; actualizar la afirmación obsoleta "iOS no soporta push".
