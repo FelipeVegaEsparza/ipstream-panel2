@@ -98,6 +98,21 @@ export const config = {
   // Public hostname DJs use to reach the Liquidsoap harbor input
   harborPublicHostname: required('HARBOR_PUBLIC_HOSTNAME'),
 
+  // Analytics (analytics-redesign) — muestreo de audiencia y sesiones
+  analytics: {
+    // Intervalo de muestreo de audiencia (ms).
+    sampleIntervalMs: intEnv('ANALYTICS_SAMPLE_INTERVAL_MS', 60_000),
+    // Intervalo de rollups (ms). Por defecto 1 hora.
+    rollupIntervalMs: intEnv('ANALYTICS_ROLLUP_INTERVAL_MS', 60 * 60 * 1000),
+    // Contenedor del proxy Caddy que escribe los access log.
+    caddyContainer: required('ANALYTICS_CADDY_CONTAINER', 'ipstream-caddy'),
+    // Access log de los streams de radio (panel) y de TV.
+    radioLogPath: required('ANALYTICS_RADIO_LOG', '/data/stream-access.log'),
+    videoLogPath: required('ANALYTICS_VIDEO_LOG', '/data/access.log'),
+    // Cuántos bytes del final del log leer en cada ciclo.
+    tailBytes: intEnv('ANALYTICS_LOG_TAIL_BYTES', 5_000_000),
+  },
+
   // Liquidsoap
   liquidsoap: {
     bin: required('LIQUIDSOAP_BIN', '/usr/bin/liquidsoap'),

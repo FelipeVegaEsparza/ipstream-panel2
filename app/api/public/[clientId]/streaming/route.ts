@@ -19,7 +19,7 @@ export async function GET(
       where: { clientId: params.clientId },
       select: {
         id: true, icecastMount: true, bitrate: true, status: true,
-        listenerCount: true, currentTitle: true, currentArtist: true,
+        currentTitle: true, currentArtist: true,
         jinglePlayEvery: true, jinglePlayCount: true,
         lastStatusAt: true,
         client: { select: { name: true } },

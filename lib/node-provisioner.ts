@@ -154,6 +154,15 @@ const CADDYFILE = `# IPStream — Caddyfile para nodos de streaming
 
 \t\tencode zstd gzip
 \t}
+
+\t# Access log para la analítica (sesiones de radio y TV). El agente lo lee
+\t# vía docker exec para calcular oyentes únicos, duración y geolocalización.
+\tlog {
+\t\toutput file /data/access.log {
+\t\t\troll_size 10mb
+\t\t\troll_keep 5
+\t\t}
+\t}
 }
 `
 

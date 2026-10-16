@@ -76,15 +76,21 @@ model Client {
   streamingAuditLogs     StreamingAuditLog[]
   jingles                Jingle[]
   playlistSchedules      PlaylistSchedule[]
-  streamStats            StreamStat[]
   folders                Folder[]
   djSessions             DjSession[]
+  // Analytics — audiencia
+  listenerSamples        ListenerSample[]
+  listenerSessions       ListenerSession[]
+  playHistory            PlayHistory[]
   // Streaming — Video (Televisión)
   videoStream            VideoStream?
   videoTracks            VideoTrack[]
   videoPlaylists         VideoPlaylist[]
   videoPlaylistEntries   VideoPlaylistEntry[]
   videoPlaylistSchedules VideoPlaylistSchedule[]
+  viewerSamples          ViewerSample[]
+  viewerSessions         ViewerSession[]
+  videoPlayHistory       VideoPlayHistory[]
   emailLogs              EmailLog[]
   clientDomains          ClientDomain[]
 
@@ -758,7 +764,6 @@ model RadioStream {
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)
   currentTitle         String?
   currentArtist        String?
-  listenerCount        Int       @default(0)
   lastStatusAt         DateTime?
   // Estado interno del proceso liquidsoap (gestionado por streaming-agent)
   liquidsoapRunning    Boolean   @default(false)
@@ -775,9 +780,11 @@ model RadioStream {
   playlists         Playlist[]
   jingles           Jingle[]
   playlistSchedules PlaylistSchedule[]
-  streamStats       StreamStat[]
   djs               RadioDj[]
   djSessions        DjSession[]
+  listenerSamples   ListenerSample[]
+  listenerSessions  ListenerSession[]
+  playHistory       PlayHistory[]
 
   @@unique([serverId, liquidsoapTelnetPort])
   @@index([status])
@@ -1001,25 +1008,6 @@ model PlaylistSchedule {
   @@map("playlist_schedules")
 }
 
-// Estadísticas históricas de oyentes (snapshots periódicos del agente)
-model StreamStat {
-  id            String   @id @default(cuid())
-  clientId      String
-  radioStreamId String
-  listenerCount Int
-  listenerPeak  Int
-  currentTitle  String?  @db.VarChar(191)
-  currentArtist String?  @db.VarChar(191)
-  timestamp     DateTime
-
-  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  radioStream RadioStream @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
-
-  @@index([clientId, timestamp])
-  @@index([radioStreamId, timestamp])
-  @@map("stream_stats")
-}
-
 // ================================================================
 // Servidores de streaming — nodos (radio/tv) registrados en el panel
 // ================================================================
@@ -1084,6 +1072,8 @@ model VideoStream {
   server                 StreamingServer?        @relation(fields: [serverId], references: [id], onDelete: SetNull)
   videoTracks            VideoTrack[]
   videoPlaylistSchedules VideoPlaylistSchedule[]
+  viewerSamples          ViewerSample[]
+  viewerSessions         ViewerSession[]
 
   @@index([serverId])
   @@map("video_streams")
@@ -1232,6 +1222,163 @@ model EmailLog {
 }
 
 // Modelos no utilizados eliminados: VideoPlayHistory, EdgeServer, ClientEdgeAssignment
+
+// =====================================================
+// Analytics — muestreo de audiencia y sesiones
+// (las tablas las crea el streaming-agent; estos modelos
+//  permiten leerlas desde el panel vía Prisma)
+// =====================================================
+
+model ListenerSample {
+  id            String   @id @default(cuid())
+  clientId      String
+  radioStreamId String
+  listeners     Int
+  peak          Int
+  online        Boolean  @default(false)
+  bitrate       Int?
+  title         String?  @db.VarChar(191)
+  artist        String?  @db.VarChar(191)
+  timestamp     DateTime @db.DateTime(3)
+
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  radioStream RadioStream @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, timestamp])
+  @@index([radioStreamId, timestamp])
+  @@map("listener_samples")
+}
+
+model ViewerSample {
+  id            String   @id @default(cuid())
+  clientId      String
+  videoStreamId String
+  viewers       Int
+  online        Boolean  @default(false)
+  timestamp     DateTime @db.DateTime(3)
+
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  videoStream VideoStream @relation(fields: [videoStreamId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, timestamp])
+  @@index([videoStreamId, timestamp])
+  @@map("viewer_samples")
+}
+
+model ListenerSession {
+  id              String   @id @default(cuid())
+  clientId        String
+  radioStreamId   String
+  ip              String?  @db.VarChar(45)
+  country         String?  @db.VarChar(2)
+  city            String?  @db.VarChar(128)
+  device          String?  @db.VarChar(20)
+  browser         String?  @db.VarChar(40)
+  userAgent       String?  @db.VarChar(500)
+  bytes           BigInt   @default(0)
+  startedAt       DateTime @db.DateTime(3)
+  durationSeconds Int      @default(0)
+  signature       String   @unique @db.VarChar(64)
+
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  radioStream RadioStream @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, startedAt])
+  @@index([radioStreamId, startedAt])
+  @@map("listener_sessions")
+}
+
+model ViewerSession {
+  id              String   @id @default(cuid())
+  clientId        String
+  videoStreamId   String
+  ip              String?  @db.VarChar(45)
+  country         String?  @db.VarChar(2)
+  city            String?  @db.VarChar(128)
+  device          String?  @db.VarChar(20)
+  browser         String?  @db.VarChar(40)
+  userAgent       String?  @db.VarChar(500)
+  bytes           BigInt   @default(0)
+  startedAt       DateTime @db.DateTime(3)
+  durationSeconds Int      @default(0)
+  signature       String   @unique @db.VarChar(64)
+
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  videoStream VideoStream @relation(fields: [videoStreamId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, startedAt])
+  @@index([videoStreamId, startedAt])
+  @@map("viewer_sessions")
+}
+
+model MetricsHourly {
+  clientId        String
+  service         String   @db.VarChar(10)
+  bucketStartUtc  DateTime @db.DateTime(3)
+  listenersAvg    Float    @default(0)
+  listenersMax    Int      @default(0)
+  listenerMinutes Float    @default(0)
+  sessions        Int      @default(0)
+  airtimeSeconds  Int      @default(0)
+  uniqueListeners Int      @default(0)
+
+  @@id([clientId, service, bucketStartUtc])
+  @@index([clientId, bucketStartUtc])
+  @@map("metrics_hourly")
+}
+
+model MetricsDaily {
+  clientId        String
+  service         String   @db.VarChar(10)
+  dayLocal        DateTime @db.Date
+  tz              String   @db.VarChar(64)
+  listenersAvg    Float    @default(0)
+  listenersMax    Int      @default(0)
+  listenerMinutes Float    @default(0)
+  sessions        Int      @default(0)
+  airtimeSeconds  Int      @default(0)
+  uniqueListeners Int      @default(0)
+
+  @@id([clientId, service, dayLocal])
+  @@index([clientId, dayLocal])
+  @@map("metrics_daily")
+}
+
+// play_history — la crea el agente; faltaba el modelo (drift)
+model PlayHistory {
+  id            String   @id @default(cuid())
+  clientId      String
+  radioStreamId String
+  title         String?  @db.VarChar(191)
+  artist        String?  @db.VarChar(191)
+  type          String   @default("autodj") @db.VarChar(20)
+  playedAt      DateTime @db.DateTime(3)
+
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  radioStream RadioStream @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, playedAt])
+  @@index([radioStreamId, playedAt])
+  @@map("play_history")
+}
+
+// video_play_history — la crea el agente; faltaba el modelo (drift)
+model VideoPlayHistory {
+  id        String   @id @default(cuid())
+  clientId  String
+  streamId  String
+  trackId   String?
+  trackType String   @default("music") @db.VarChar(20)
+  title     String   @db.VarChar(191)
+  artist    String?  @db.VarChar(191)
+  thumbnail String?  @db.VarChar(255)
+  playedAt  DateTime @default(now()) @db.DateTime(3)
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, streamId, playedAt])
+  @@map("video_play_history")
+}
 
 // =====================================================
 // Rate-limit compartido entre workers (cluster)

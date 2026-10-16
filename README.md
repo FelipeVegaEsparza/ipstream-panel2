@@ -529,3 +529,6 @@ Ver `streaming/PHASE-*.md` para los detalles de cada fase:
 - `PHASE-4-RESULTS.md` — Cliente HTTP + API dashboard + API pública
 - `PHASE-5-RESULTS.md` — UI completa + player público
 - `PHASE-6-RESULTS.md` — Polish + WebSocket + auto-create
+### Analítica de radio y TV
+
+El panel expone `/dashboard/estadisticas` con tabs Radio | TV: KPIs (promedio, pico, únicos, tiempo de escucha, sesiones, uptime), series por hora/día, rankings (canciones, artistas, DJs, videos), heatmap día×hora y export CSV. Las métricas se recolectan en el agente (`listener_samples`/`viewer_samples`, `listener_sessions`/`viewer_sessions`), se agregan en `metrics_hourly`/`metrics_daily` y se leen con la zona horaria del cliente (configurada en Datos Básicos). Ver la sección "Analítica / Estadísticas" de `AGENTS.md`.

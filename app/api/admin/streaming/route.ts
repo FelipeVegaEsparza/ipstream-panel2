@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getStorageUsage } from '@/lib/streaming-helpers'
+import { getLiveListenersByClient } from '@/lib/admin-live-listening'
 import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
@@ -40,7 +41,6 @@ export async function GET(_request: NextRequest) {
             maxListeners: true,
             maxTracksPerPlaylist: true,
             adminNotes: true,
-            listenerCount: true,
             createdAt: true,
             updatedAt: true,
           },
@@ -89,6 +89,14 @@ export async function GET(_request: NextRequest) {
         }
       })
     )
+
+    // Oyentes en vivo por cliente (estado real de Icecast, no el campo cacheado muerto).
+    const liveListeners = await getLiveListenersByClient()
+    for (const row of result) {
+      if ((row as any).hasRadioStream) {
+        ;(row as any).listenerCount = liveListeners.get((row as any).clientId) ?? 0
+      }
+    }
 
     return NextResponse.json({ count: result.length, clients: result })
   } catch (err) {

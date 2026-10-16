@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { streamingClient } from '@/lib/streaming-client'
 
 function isValidTimezone(value: string): boolean {
   try {
@@ -59,6 +60,13 @@ export async function PATCH(request: NextRequest) {
       where: { id: effectiveClient.clientId },
       data: { timezone },
     })
+
+    // Re-alinear los rollups diarios de analítica a la nueva zona (best-effort).
+    try {
+      await streamingClient.recomputeAnalyticsDaily(effectiveClient.clientId)
+    } catch (e) {
+      console.error('No se pudieron recalcular las estadísticas diarias:', e)
+    }
 
     return NextResponse.json({ success: true, timezone })
   } catch (error) {

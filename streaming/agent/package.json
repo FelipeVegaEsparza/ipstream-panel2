@@ -23,6 +23,8 @@
     "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
     "music-metadata": "^7.14.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "geoip-lite": "^1.4.10",
+    "ua-parser-js": "^1.0.37"
   }
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { DashboardWrapper } from './DashboardWrapper'
 import { BasicDataForm } from './BasicDataForm'
+import TimezoneSelector from './streaming/TimezoneSelector'
 
 interface BasicData {
   id: string
@@ -100,6 +101,14 @@ function BasicDataContent({ clientId }: { clientId: string }) {
 
       <div className="card max-w-2xl">
         <BasicDataForm initialData={basicData} clientId={clientId} />
+      </div>
+
+      <div className="card max-w-2xl">
+        <h2 className="text-lg font-semibold text-foreground mb-1">Zona horaria</h2>
+        <p className="text-sm text-muted-foreground mb-3">
+          Se usa para interpretar tu programación y agrupar las estadísticas.
+        </p>
+        <TimezoneSelector />
       </div>
     </div>
   )

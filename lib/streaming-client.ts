@@ -255,16 +255,6 @@ export const streamingClient = {
       body: { jinglePlayEvery, jinglePlayCount },
     }),
 
-  // Stats (estadísticas de oyentes)
-  listStats: async (clientId: string, params?: { period?: 'day' | 'week' | 'month'; from?: string; to?: string }) => {
-    const search = new URLSearchParams()
-    if (params?.period) search.set('period', params.period)
-    if (params?.from) search.set('from', params.from)
-    if (params?.to) search.set('to', params.to)
-    const qs = search.toString()
-    return request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/stats${qs ? `?${qs}` : ''}`)
-  },
-
   // History (play history)
   getHistory: async (clientId: string, page = 1, limit = 25) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/history?page=${page}&limit=${limit}`),
@@ -316,6 +306,13 @@ export const streamingClient = {
     request(await resolveTarget('default'), '/api/admin/host-stats'),
   getStreamingStatus: async () =>
     request(await resolveTarget('default'), '/api/admin/streaming-status'),
+
+  // Analytics — recalcula rollups diarios (p. ej. tras cambiar la zona horaria)
+  recomputeAnalyticsDaily: async (clientId: string) =>
+    request(await resolveTarget('default'), '/api/analytics/recompute-daily', {
+      method: 'POST',
+      body: { clientId },
+    }),
 }
 
 // =====================================================

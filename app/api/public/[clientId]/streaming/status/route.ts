@@ -22,7 +22,6 @@ export async function GET(
         icecastMount: true,
         bitrate: true,
         status: true,
-        listenerCount: true,
         currentTitle: true,
         currentArtist: true,
         lastStatusAt: true,

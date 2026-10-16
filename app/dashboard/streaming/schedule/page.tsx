@@ -3,7 +3,6 @@
 import { showToast } from '@/components/ui/toast'
 
 import { useEffect, useState, useCallback } from 'react'
-import TimezoneSelector from '@/components/dashboard/streaming/TimezoneSelector'
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
@@ -190,7 +189,6 @@ export default function SchedulePage() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <TimezoneSelector onChanged={() => { load() }} compact />
           <button onClick={openCreate} className="btn-primary">
             + Añadir franja
           </button>

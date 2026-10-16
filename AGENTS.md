@@ -93,3 +93,16 @@
 - Para verificar conformidad (resolución/fps/SAR/códec/audio/keyframes):
   `docker exec ipstream-streaming-agent node scripts/check-conformity.js [clientId]`
 - Tocar `streaming/agent/*` o `streaming/srs/*`: **recordar pulsar "Actualizar nodo"** en los nodos remotos tras el deploy.
+
+## Analítica / Estadísticas (analytics-redesign)
+
+- Sección del cliente en `/dashboard/estadisticas` (tabs **Radio | TV**). La antigua `/dashboard/streaming/stats` **redirige** ahí.
+- **Recolección (agente, cada 1 min)**: concurrencia de radio desde Icecast (`status-json.xsl`) y espectadores de TV desde el log de Caddy → `listener_samples` / `viewer_samples` (incluye `online` para promediar y medir uptime).
+- **Sesiones** (IP real, duración, dispositivo, geolocalización): se derivan del access log de **Caddy** (no de Icecast, que está detrás del proxy y solo ve la IP del proxy) → `listener_sessions` / `viewer_sessions`. Idempotente por `signature` única.
+- **Rollups**: `metrics_hourly` (UTC) y `metrics_daily` (día local del cliente, alineado con `client.timezone`). Retención por capas en `streaming/agent/lib/retention-plan.js`: crudo 30 días, rollups 24 meses.
+- **Zona horaria**: se configura en **Datos Básicos** (ya no en la parrilla). Al cambiarla, el panel recalcula los `metrics_daily` del cliente vía `POST /api/analytics/recompute-daily` del agente.
+- **GeoIP** local con `geoip-lite` (sin license key) y dispositivo con `ua-parser-js`. La IP solo se guarda en la sesión cruda y no se expone en la UI.
+- **Dependencias nuevas del agente**: `geoip-lite`, `ua-parser-js`.
+- **Nodos**: `Caddyfile.node` (y el `CADDYFILE` de `lib/node-provisioner.ts`) ahora escribe `log` a `/data/access.log` (radio + TV); sin eso, los nodos remotos no alimentan sesiones.
+- Tests del agente (incluye analytics): `cd streaming/agent && npm test`.
+- Tocar `streaming/agent/*`: **pulsar "Actualizar nodo"** en cada nodo remoto tras el deploy.

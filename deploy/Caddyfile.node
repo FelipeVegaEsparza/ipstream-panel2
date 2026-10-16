@@ -45,4 +45,13 @@
 		# Importante: NO comprimir (rompe el streaming)
 		encode zstd gzip
 	}
+
+	# Access log para la analítica (sesiones de radio y TV). El agente lo lee
+	# vía docker exec para calcular oyentes únicos, duración y geolocalización.
+	log {
+		output file /data/access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
 }

@@ -19,13 +19,13 @@ import playlistRoutes from './routes/playlists.js'
 import jingleRoutes from './routes/jingles.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import folderRoutes from './routes/folders.js'
-import statsRoutes, { startStatsCron, stopStatsCron } from './routes/stats.js'
 import monitorRoutes from './routes/monitor.js'
 import videoRoutes from './routes/video.js'
 import playoutRoutes from './routes/playout.js'
 import tvRoutes from './routes/tv.js'
 import videoScheduleRoutes, { startVideoScheduleCron } from './routes/video-schedule.js'
 import migrationRoutes from './routes/migration.js'
+import analyticsRoutes from './routes/analytics.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
 import { rebuildAllDjState } from './lib/dj-state.js'
@@ -35,6 +35,7 @@ import { recoverVideoNormalizations } from './lib/video-normalize-queue.js'
 import { startRetentionCron, stopRetentionCron } from './lib/retention.js'
 import { startStreamSupervisor, stopStreamSupervisor } from './lib/stream-supervisor.js'
 import { startHistoryCron, stopHistoryCron } from './lib/track-history.js'
+import { startAnalyticsCrons, stopAnalyticsCrons } from './lib/analytics/index.js'
 
 const MAX_VIDEO_UPLOAD_BYTES = config.video.maxUploadMb * 1024 * 1024
 
@@ -325,28 +326,6 @@ try {
 
 try {
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS stream_stats (
-      id VARCHAR(191) NOT NULL PRIMARY KEY,
-      clientId VARCHAR(191) NOT NULL,
-      radioStreamId VARCHAR(191) NOT NULL,
-      listenerCount INT NOT NULL,
-      listenerPeak INT NOT NULL,
-      currentTitle VARCHAR(191),
-      currentArtist VARCHAR(191),
-      timestamp DATETIME(3) NOT NULL,
-      INDEX idx_stats_client_date (clientId, timestamp),
-      INDEX idx_stats_radio_date (radioStreamId, timestamp),
-      CONSTRAINT fk_stats_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
-      CONSTRAINT fk_stats_radio FOREIGN KEY (radioStreamId) REFERENCES radio_streams(id) ON DELETE CASCADE
-    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-  `)
-  logger.info('Tabla stream_stats asegurada')
-} catch (err) {
-  logger.error({ err: err.message }, 'Error creando tabla stream_stats')
-}
-
-try {
-  await pool.query(`
     CREATE TABLE IF NOT EXISTS play_history (
       id VARCHAR(191) NOT NULL PRIMARY KEY,
       clientId VARCHAR(191) NOT NULL,
@@ -391,6 +370,150 @@ try {
   logger.info('Tabla dj_sessions asegurada')
 } catch (err) {
   logger.error({ err: err.message }, 'Error creando tabla dj_sessions')
+}
+
+// Analytics (analytics-redesign): muestreo de audiencia y sesiones
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS listener_samples (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      radioStreamId VARCHAR(191) NOT NULL,
+      listeners INT NOT NULL,
+      peak INT NOT NULL,
+      online BOOLEAN NOT NULL DEFAULT false,
+      bitrate INT,
+      title VARCHAR(191),
+      artist VARCHAR(191),
+      timestamp DATETIME(3) NOT NULL,
+      INDEX idx_ls_client_time (clientId, timestamp),
+      INDEX idx_ls_radio_time (radioStreamId, timestamp),
+      CONSTRAINT fk_ls_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_ls_radio FOREIGN KEY (radioStreamId) REFERENCES radio_streams(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla listener_samples asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla listener_samples')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS viewer_samples (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      videoStreamId VARCHAR(191) NOT NULL,
+      viewers INT NOT NULL,
+      online BOOLEAN NOT NULL DEFAULT false,
+      timestamp DATETIME(3) NOT NULL,
+      INDEX idx_vs_client_time (clientId, timestamp),
+      INDEX idx_vs_video_time (videoStreamId, timestamp),
+      CONSTRAINT fk_vs_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_vs_video FOREIGN KEY (videoStreamId) REFERENCES video_streams(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla viewer_samples asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla viewer_samples')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS listener_sessions (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      radioStreamId VARCHAR(191) NOT NULL,
+      ip VARCHAR(45),
+      country VARCHAR(2),
+      city VARCHAR(128),
+      device VARCHAR(20),
+      browser VARCHAR(40),
+      userAgent VARCHAR(500),
+      bytes BIGINT NOT NULL DEFAULT 0,
+      startedAt DATETIME(3) NOT NULL,
+      durationSeconds INT NOT NULL DEFAULT 0,
+      signature VARCHAR(64) NOT NULL,
+      UNIQUE KEY uq_lsess_signature (signature),
+      INDEX idx_lsess_client_start (clientId, startedAt),
+      INDEX idx_lsess_radio_start (radioStreamId, startedAt),
+      CONSTRAINT fk_lsess_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_lsess_radio FOREIGN KEY (radioStreamId) REFERENCES radio_streams(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla listener_sessions asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla listener_sessions')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS viewer_sessions (
+      id VARCHAR(191) NOT NULL PRIMARY KEY,
+      clientId VARCHAR(191) NOT NULL,
+      videoStreamId VARCHAR(191) NOT NULL,
+      ip VARCHAR(45),
+      country VARCHAR(2),
+      city VARCHAR(128),
+      device VARCHAR(20),
+      browser VARCHAR(40),
+      userAgent VARCHAR(500),
+      bytes BIGINT NOT NULL DEFAULT 0,
+      startedAt DATETIME(3) NOT NULL,
+      durationSeconds INT NOT NULL DEFAULT 0,
+      signature VARCHAR(64) NOT NULL,
+      UNIQUE KEY uq_vsess_signature (signature),
+      INDEX idx_vsess_client_start (clientId, startedAt),
+      INDEX idx_vsess_video_start (videoStreamId, startedAt),
+      CONSTRAINT fk_vsess_client FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE,
+      CONSTRAINT fk_vsess_video FOREIGN KEY (videoStreamId) REFERENCES video_streams(id) ON DELETE CASCADE
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla viewer_sessions asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla viewer_sessions')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS metrics_hourly (
+      clientId VARCHAR(191) NOT NULL,
+      service VARCHAR(10) NOT NULL,
+      bucketStartUtc DATETIME(3) NOT NULL,
+      listenersAvg DOUBLE NOT NULL DEFAULT 0,
+      listenersMax INT NOT NULL DEFAULT 0,
+      listenerMinutes DOUBLE NOT NULL DEFAULT 0,
+      sessions INT NOT NULL DEFAULT 0,
+      airtimeSeconds INT NOT NULL DEFAULT 0,
+      uniqueListeners INT NOT NULL DEFAULT 0,
+      PRIMARY KEY (clientId, service, bucketStartUtc),
+      INDEX idx_mh_client_bucket (clientId, bucketStartUtc)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla metrics_hourly asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla metrics_hourly')
+}
+
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS metrics_daily (
+      clientId VARCHAR(191) NOT NULL,
+      service VARCHAR(10) NOT NULL,
+      dayLocal DATE NOT NULL,
+      tz VARCHAR(64) NOT NULL,
+      listenersAvg DOUBLE NOT NULL DEFAULT 0,
+      listenersMax INT NOT NULL DEFAULT 0,
+      listenerMinutes DOUBLE NOT NULL DEFAULT 0,
+      sessions INT NOT NULL DEFAULT 0,
+      airtimeSeconds INT NOT NULL DEFAULT 0,
+      uniqueListeners INT NOT NULL DEFAULT 0,
+      PRIMARY KEY (clientId, service, dayLocal),
+      INDEX idx_md_client_day (clientId, dayLocal)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `)
+  logger.info('Tabla metrics_daily asegurada')
+} catch (err) {
+  logger.error({ err: err.message }, 'Error creando tabla metrics_daily')
 }
 
 // Video tables
@@ -661,10 +784,10 @@ await app.register(libraryRoutes)
 await app.register(playlistRoutes)
 await app.register(jingleRoutes)
 await app.register(scheduleRoutes)
-await app.register(statsRoutes)
 await app.register(monitorRoutes)
   await app.register(folderRoutes)
 await app.register(migrationRoutes)
+await app.register(analyticsRoutes)
 
   // Reconstruir estado DJ desde Liquidsoap antes de iniciar watchers
   // (solo streams running tienen puerto telnet activo).
@@ -678,11 +801,11 @@ await app.register(migrationRoutes)
   // Iniciar crons
   startScheduleCron()
   startVideoScheduleCron()
-  startStatsCron()
   startDjWatcher()
   startRetentionCron()
   startStreamSupervisor()
   startHistoryCron()
+  startAnalyticsCrons()
 
   // Reencolar normalizaciones de video interrumpidas por un reinicio
   await recoverVideoNormalizations()
@@ -691,11 +814,11 @@ await app.register(migrationRoutes)
 const shutdown = async (signal) => {
   logger.info({ signal }, 'Shutdown signal recibido')
   try {
-    stopStatsCron()
     stopDjWatcher()
     stopRetentionCron()
     stopStreamSupervisor()
     stopHistoryCron()
+    stopAnalyticsCrons()
     await app.close()
     await pool.end()
     logger.info('Cleanup completo. Saliendo.')

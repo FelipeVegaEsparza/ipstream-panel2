@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getStorageUsage } from '@/lib/streaming-helpers'
+import { getLiveListenersByClient } from '@/lib/admin-live-listening'
 import { streamingAdminConfigSchema } from '@/lib/validations'
 import { getSession } from '@/lib/session'
 
@@ -42,6 +43,12 @@ export async function GET(
       return NextResponse.json({ error: 'client_not_found' }, { status: 404 })
     }
 
+    // Oyentes en vivo (reemplaza el campo cacheado muerto listenerCount).
+    const liveListeners = await getLiveListenersByClient()
+    const radioStream = client.radioStream
+      ? { ...client.radioStream, listenerCount: liveListeners.get(params.clientId) ?? 0 }
+      : null
+
     return NextResponse.json({
       client: {
         id: client.id,
@@ -52,7 +59,7 @@ export async function GET(
         trackCount: client._count.tracks,
         playlistCount: client._count.playlists,
       },
-      radioStream: client.radioStream,
+      radioStream,
       usage,
     })
   } catch (err) {

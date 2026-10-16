@@ -146,8 +146,8 @@ export const MENU_ITEMS: MenuItemDef[] = [
 {
   key: 'streaming-stats',
   name: 'Estadísticas',
-  href: '/dashboard/streaming/stats',
-  section: 'Radio',
+  href: '/dashboard/estadisticas',
+  section: 'General',
   icon: ChartBarIcon,
 },
   // ================================================================
