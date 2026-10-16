@@ -69,4 +69,4 @@ Nota: el panel no tiene runner de tests; por decisión del usuario, estas tareas
 ## 10. Verificación de integración
 
 - [x] 10.1 Ejecutar `cd streaming/agent && npm test` y `npm run lint`/`npm run build` en la raíz, verificando que todo pasa
-- [ ] 10.2 En un entorno con tráfico real, verificar de punta a punta que las sesiones y rollups de radio y TV aparecen en `/dashboard/estadisticas` con KPIs, series y rankings coherentes con lo observado
+- [x] 10.2 En un entorno con tráfico real, verificar de punta a punta que las sesiones y rollups de radio y TV aparecen en `/dashboard/estadisticas` con KPIs, series y rankings coherentes con lo observado
