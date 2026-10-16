@@ -58,7 +58,7 @@ Se agregan modelos Prisma equivalentes y los que faltan (`PlayHistory`, `VideoPl
 - **Por qué**: el agente puede reiniciarse o reprocesar un tramo; la firma evita sesiones duplicadas sin necesidad de recordar cada línea.
 
 ### Rollups y zona horaria
-- **Decisión**: el nodo main calcula rollups horarios (UTC) y diarios (día local del cliente) cada hora. Al cambiar la zona del cliente se recalculan sus `metrics_daily` (costo bajo, un cliente). La agregación de rangos largos usa `metrics_daily`; la de períodos cortos usa `metrics_hourly`.
+- **Decisión**: el nodo main calcula rollups horarios (UTC) y diarios (día local del cliente) cada 5 minutos, recalculando la última ventana con upserts idempotentes (así el dashboard se actualiza pronto en vez de esperar al cambio de hora). Al cambiar la zona del cliente se recalculan sus `metrics_daily` (costo bajo, un cliente). La agregación de rangos largos usa `metrics_daily`; la de períodos cortos usa `metrics_hourly`.
 - **Por qué**: mantiene la consulta barata y evita recalcular todo el histórico; solo el día local depende de la zona.
 - **Nota**: `uniqueListeners` no es aditivo, por eso vive en `metrics_daily` (y por eso no se puede derivar solo de `metrics_hourly`).
 

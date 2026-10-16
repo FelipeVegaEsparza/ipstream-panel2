@@ -102,8 +102,9 @@ export const config = {
   analytics: {
     // Intervalo de muestreo de audiencia (ms).
     sampleIntervalMs: intEnv('ANALYTICS_SAMPLE_INTERVAL_MS', 60_000),
-    // Intervalo de rollups (ms). Por defecto 1 hora.
-    rollupIntervalMs: intEnv('ANALYTICS_ROLLUP_INTERVAL_MS', 60 * 60 * 1000),
+    // Intervalo de rollups (ms). Por defecto 5 min: recalcula la última ventana
+    // (upserts idempotentes) para que el dashboard no espere hasta la hora.
+    rollupIntervalMs: intEnv('ANALYTICS_ROLLUP_INTERVAL_MS', 5 * 60 * 1000),
     // Contenedor del proxy Caddy que escribe los access log.
     caddyContainer: required('ANALYTICS_CADDY_CONTAINER', 'ipstream-caddy'),
     // Access log de los streams de radio (panel) y de TV.
