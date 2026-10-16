@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { ServerFormModal, EditableServer } from './ServerFormModal'
 import { ProvisionNodeModal } from './ProvisionNodeModal'
+import { formatDate } from '@/lib/billing-format'
 
 interface ServerRow {
   id: string
@@ -349,6 +350,10 @@ export function StreamingServersManager() {
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Clientes</span>
                       <span>{server._count.radioStreams} radio · {server._count.videoStreams} TV</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Última actualización</span>
+                      <span>{server.provisionedAt ? formatDate(server.provisionedAt, true) : '—'}</span>
                     </div>
                     {server.sshHost && (
                       <div className="flex items-center justify-between">
