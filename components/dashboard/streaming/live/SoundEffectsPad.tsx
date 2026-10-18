@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { PlusIcon, SpeakerWaveIcon, StopIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon, PlusIcon, SpeakerWaveIcon, StopIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { SOUND_EFFECT_PAD_SIZES, type SoundEffect } from '@/lib/live-console/effects'
 
 interface Props {
@@ -38,7 +38,7 @@ export function SoundEffectsPad({
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+    <section className="rounded-xl border border-border bg-card p-3 shadow-soft">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -81,34 +81,34 @@ export function SoundEffectsPad({
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
         {slots.map((effect, slot) => (
           <div key={slot} className="min-w-0">
             {effect ? (
               <button
                 type="button"
                 onClick={() => void onPlay(slot)}
-                className="flex h-24 w-full flex-col items-center justify-center gap-1 rounded-xl border border-brand/30 bg-brand/10 px-2 text-center transition-colors hover:bg-brand/15"
+                className="flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-lg border border-brand/30 bg-brand/10 px-1.5 text-center transition-colors hover:bg-brand/15"
                 title={`Reproducir ${effect.name}`}
               >
-                <SpeakerWaveIcon className="h-5 w-5 text-brand" />
-                <span className="line-clamp-2 text-xs font-semibold text-brand">{effect.name}</span>
+                <SpeakerWaveIcon className="h-4 w-4 text-brand" />
+                <span className="line-clamp-2 text-[11px] font-semibold leading-tight text-brand">{effect.name}</span>
                 <span className="text-[9px] text-muted-foreground">Botón {slot + 1}</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => openPicker(slot)}
-                className="flex h-24 w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border bg-background px-2 text-center transition-colors hover:border-brand hover:text-brand"
+                className="flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-border bg-background px-1.5 text-center transition-colors hover:border-brand hover:text-brand"
               >
-                <PlusIcon className="h-5 w-5" />
+                <PlusIcon className="h-4 w-4" />
                 <span className="text-[11px] font-medium">Agregar sonido</span>
                 <span className="text-[9px] text-muted-foreground">Botón {slot + 1}</span>
               </button>
             )}
 
             {effect && (
-              <div className="mt-1.5 flex items-center gap-1.5">
+              <div className="mt-1 flex items-center gap-1">
                 <input
                   type="range"
                   min={-40}
@@ -123,10 +123,11 @@ export function SoundEffectsPad({
                 <button
                   type="button"
                   onClick={() => openPicker(slot)}
-                  className="rounded-md px-1.5 py-1 text-[10px] text-muted-foreground hover:text-foreground"
+                  className="rounded-md p-1 text-muted-foreground hover:text-foreground"
                   title="Cambiar sonido"
+                  aria-label={`Cambiar ${effect.name}`}
                 >
-                  Cambiar
+                  <ArrowPathIcon className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"

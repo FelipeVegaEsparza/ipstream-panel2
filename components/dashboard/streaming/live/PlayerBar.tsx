@@ -4,6 +4,7 @@ import {
   BackwardIcon,
   ForwardIcon,
   MicrophoneIcon,
+  MusicalNoteIcon,
   PauseIcon,
   PlayIcon,
   SpeakerWaveIcon,
@@ -52,13 +53,17 @@ export function PlayerBar({
   const progress = Math.max(0, Math.min(position, duration || 0))
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-        <div className="flex items-center gap-2">
+    <section className="rounded-xl border border-border bg-card p-3 shadow-soft">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
+          <MusicalNoteIcon className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+        </div>
+
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => void onPrevious()}
-            className="rounded-full border border-border p-2.5 text-muted-foreground transition-colors hover:text-foreground"
+            className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground"
             title="Tema anterior"
             aria-label="Tema anterior"
           >
@@ -67,7 +72,7 @@ export function PlayerBar({
           <button
             type="button"
             onClick={() => (playing ? onPause() : void onPlay())}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-brand text-white transition-opacity hover:opacity-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white transition-opacity hover:opacity-90"
             title={playing ? 'Pausar' : 'Reproducir'}
             aria-label={playing ? 'Pausar' : 'Reproducir'}
           >
@@ -76,7 +81,7 @@ export function PlayerBar({
           <button
             type="button"
             onClick={() => void onNext()}
-            className="rounded-full border border-border p-2.5 text-muted-foreground transition-colors hover:text-foreground"
+            className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground"
             title="Tema siguiente"
             aria-label="Tema siguiente"
           >
@@ -84,7 +89,7 @@ export function PlayerBar({
           </button>
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[220px] flex-1">
           <div className="flex items-baseline justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">
@@ -123,7 +128,7 @@ export function PlayerBar({
               if (mic.enabled) onDisableMic()
               else void onEnableMic()
             }}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-medium transition-colors ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
               mic.enabled ? 'bg-red-500/15 text-red-300' : 'bg-secondary text-foreground hover:text-brand'
             }`}
             title={mic.enabled ? 'Apagar micrófono' : 'Encender micrófono'}
@@ -138,17 +143,17 @@ export function PlayerBar({
             step={0.5}
             value={mic.gain}
             onChange={(event) => onMicGain(Number(event.target.value))}
-            className="h-1.5 w-20 cursor-pointer accent-[var(--brand-500)]"
+            className="h-1.5 w-16 cursor-pointer accent-[var(--brand-500)]"
             title="Ganancia del micrófono"
             aria-label="Ganancia del micrófono"
           />
-          <div className="w-24">
+          <div className="w-20">
             <VuMeter db={mic.levelDb} compact />
           </div>
           <button
             type="button"
             onClick={() => onMonitor(!monitorEnabled)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-medium transition-colors ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
               monitorEnabled ? 'bg-brand/15 text-brand' : 'bg-secondary text-muted-foreground hover:text-foreground'
             }`}
             title="Escuchar el programa por auriculares"

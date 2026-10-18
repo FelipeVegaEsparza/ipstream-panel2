@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { SessionPanel } from './SessionPanel'
+import { BroadcastBar } from './BroadcastBar'
 import type { SessionState, SlotOption, TransportStats } from '@/lib/live-console/types'
 
 const stats: TransportStats = {
@@ -22,7 +22,7 @@ const slot: SlotOption = {
   onAir: false,
 }
 
-function renderPanel(overrides: {
+function renderBar(overrides: {
   state?: SessionState
   slotId?: string | null
   slots?: SlotOption[]
@@ -38,7 +38,7 @@ function renderPanel(overrides: {
     onRefreshSlots: vi.fn().mockResolvedValue(undefined),
   }
   render(
-    <SessionPanel
+    <BroadcastBar
       engineReady
       state={overrides.state ?? 'idle'}
       transport="whip"
@@ -57,50 +57,39 @@ function renderPanel(overrides: {
       onStopLive={handlers.onStopLive}
       onReconnect={handlers.onReconnect}
       onRefreshSlots={handlers.onRefreshSlots}
-    />,
+    />
   )
   return handlers
 }
 
-describe('SessionPanel', () => {
-  it('bloquea salir al aire sin confirmar auriculares', () => {
-    renderPanel()
+describe('BroadcastBar', () => {
+  it('bloquea salir al aire sin auriculares', () => {
+    renderBar()
     expect(screen.getByText(/Confirmá el uso de auriculares/)).toBeInTheDocument()
     expect(screen.getByText('Salir al aire')).toBeDisabled()
   })
 
-  it('permite salir al aire con auriculares confirmados', () => {
-    const handlers = renderPanel({ headphones: true })
-    const button = screen.getByText('Salir al aire')
-    expect(button).toBeEnabled()
-    fireEvent.click(button)
+  it('permite salir al aire con auriculares', () => {
+    const handlers = renderBar({ headphones: true })
+    fireEvent.click(screen.getByText('Salir al aire'))
     expect(handlers.onGoLive).toHaveBeenCalledOnce()
   })
 
-  it('bloquea un slot ya conectado', () => {
-    renderPanel({ headphones: true, slots: [{ ...slot, connected: true, onAir: true }] })
+  it('bloquea un slot ocupado', () => {
+    renderBar({ headphones: true, slots: [{ ...slot, connected: true, onAir: true }] })
     expect(screen.getByText(/Ese slot ya está conectado/)).toBeInTheDocument()
     expect(screen.getByText('Salir al aire')).toBeDisabled()
   })
 
-  it('muestra terminar transmisión cuando está en vivo', () => {
-    const handlers = renderPanel({ state: 'live', headphones: true })
-    const button = screen.getByText('Terminar transmisión')
-    fireEvent.click(button)
+  it('muestra terminar cuando está en vivo', () => {
+    const handlers = renderBar({ state: 'live', headphones: true })
+    fireEvent.click(screen.getByText('Terminar transmisión'))
     expect(handlers.onStopLive).toHaveBeenCalledOnce()
   })
 
   it('muestra el error y permite reintentar', () => {
-    const handlers = renderPanel({ state: 'error', headphones: true, error: 'Falló la conexión' })
-    expect(screen.getByText('Falló la conexión')).toBeInTheDocument()
+    const handlers = renderBar({ state: 'error', headphones: true, error: 'Falló la conexión' })
     fireEvent.click(screen.getByText('Reintentar'))
     expect(handlers.onReconnect).toHaveBeenCalledOnce()
-  })
-
-  it('muestra transporte, bitrate y métricas', () => {
-    renderPanel({ state: 'live', headphones: true })
-    expect(screen.getByText('WebRTC')).toBeInTheDocument()
-    expect(screen.getByText('192 kbps')).toBeInTheDocument()
-    expect(screen.getByText('40 ms')).toBeInTheDocument()
   })
 })

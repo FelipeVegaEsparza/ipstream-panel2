@@ -20,7 +20,6 @@ function track(id: string, title: string): LocalTrack {
   }
 }
 
-const current = track('t1', 'Actual')
 const one = track('t2', 'Segundo')
 const two = track('t3', 'Tercero')
 
@@ -34,9 +33,6 @@ function renderPlaylist() {
   render(
     <PlaylistPanel
       queue={[one, two]}
-      current={current}
-      nextTrack={one}
-      playing
       {...handlers}
     />
   )
@@ -44,10 +40,9 @@ function renderPlaylist() {
 }
 
 describe('PlaylistPanel', () => {
-  it('muestra actual, siguiente y la cola', () => {
+  it('muestra la cola', () => {
     renderPlaylist()
-    expect(screen.getByText('Actual')).toBeInTheDocument()
-    expect(screen.getAllByText('Segundo').length).toBeGreaterThan(0)
+    expect(screen.getByText('Segundo')).toBeInTheDocument()
     expect(screen.getByText('Tercero')).toBeInTheDocument()
   })
 
@@ -57,7 +52,7 @@ describe('PlaylistPanel', () => {
     fireEvent.click(screen.getByLabelText('Subir Tercero'))
     fireEvent.click(screen.getByLabelText('Bajar Segundo'))
     fireEvent.click(screen.getByLabelText('Quitar Segundo de la lista'))
-    fireEvent.click(screen.getByText('Vaciar lista'))
+    fireEvent.click(screen.getByText('Vaciar'))
     expect(handlers.onPlayNow).toHaveBeenCalledWith(one)
     expect(handlers.onMove).toHaveBeenCalledWith('t3', -1)
     expect(handlers.onMove).toHaveBeenCalledWith('t2', 1)

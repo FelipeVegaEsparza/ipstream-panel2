@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 import { FileBrowser } from './FileBrowser'
+import { BroadcastBar } from './BroadcastBar'
 import { PlayerBar } from './PlayerBar'
 import { PlaylistPanel } from './PlaylistPanel'
-import { SessionPanel } from './SessionPanel'
 import { SoundEffectsPad } from './SoundEffectsPad'
 import { useLiveConsole } from '@/lib/live-console/use-live-console'
 
@@ -35,7 +35,7 @@ export function LiveConsole() {
   }
 
   const panelHeight = isFullscreen
-    ? 'h-[calc(100vh-560px)] min-h-[280px]'
+    ? 'h-[calc(100vh-480px)] min-h-[260px]'
     : 'h-[520px] lg:h-[560px]'
 
   const playlistIds = useMemo(
@@ -77,7 +77,7 @@ export function LiveConsole() {
         </div>
       </div>
 
-      <SessionPanel
+      <BroadcastBar
         engineReady={live.engineReady}
         state={live.session.state}
         transport={live.session.transport}
@@ -121,9 +121,6 @@ export function LiveConsole() {
         <div className={panelHeight}>
           <PlaylistPanel
             queue={live.library.queue}
-            current={live.player.current}
-            nextTrack={live.player.nextTrack}
-            playing={live.player.playing}
             onPlayNow={live.player.playNow}
             onRemove={live.player.removeFromPlaylist}
             onClear={live.player.clearPlaylist}
