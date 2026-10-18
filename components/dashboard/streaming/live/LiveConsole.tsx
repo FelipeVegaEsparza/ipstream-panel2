@@ -100,7 +100,7 @@ export function LiveConsole() {
         onRefreshSlots={live.refreshSlots}
       />
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)_168px]">
         <div className={panelHeight}>
           <FileBrowser
             tracks={live.library.tracks}
@@ -136,6 +136,16 @@ export function LiveConsole() {
             onMove={live.player.moveInPlaylist}
           />
         </div>
+
+        <div className="h-40 lg:h-auto">
+          <AnnouncementsBar
+            loading={live.announcements.loading}
+            error={live.announcements.error}
+            voice={live.announcements.voice}
+            onVoice={live.announcements.setVoice}
+            onAnnounce={live.announcements.announce}
+          />
+        </div>
       </div>
 
       <PlayerBar
@@ -155,12 +165,6 @@ export function LiveConsole() {
         onMicGain={live.setMicGain}
         monitorEnabled={live.monitorEnabled}
         onMonitor={live.setMonitor}
-      />
-
-      <AnnouncementsBar
-        loading={live.announcements.loading}
-        error={live.announcements.error}
-        onAnnounce={live.announcements.announce}
       />
 
       <SoundEffectsPad

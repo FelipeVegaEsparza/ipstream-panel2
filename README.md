@@ -553,9 +553,10 @@ mezclan sobre el programa (sale al aire y por el monitor). El clima usa la
 ciudad/coordenadas configuradas en **Datos Básicos** y Open-Meteo; la hora usa
 la zona horaria del cliente. Durante el anuncio la música baja al 25 %.
 
-La voz se sintetiza con **Piper TTS** en el contenedor `piper`
-(`es_ES-davefx-medium`). Es offline y no depende de APIs externas. El agente
-genera el WAV bajo demanda. Tocar `streaming/piper/*`, `streaming/agent/*` o
+La voz se sintetiza con **Piper TTS** en el contenedor `piper`. Hay dos voces
+latinas (`es_MX-ald-medium` masculina y `es_MX-claude-high` femenina) y se
+eligen desde la tarjeta **Locución**. Es offline y no depende de APIs externas.
+El agente genera el WAV bajo demanda. Tocar `streaming/piper/*`, `streaming/agent/*` o
 `docker-compose.streaming.yml` obliga a **"Actualizar nodo"**.
 
 ### Fallback por silencio

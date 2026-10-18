@@ -2,25 +2,39 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { AnnouncementsBar } from './AnnouncementsBar'
 
-function renderBar(overrides: { loading?: 'weather' | 'time' | null; error?: string | null } = {}) {
-  const onAnnounce = vi.fn().mockResolvedValue(undefined)
+function renderBar(overrides: {
+  loading?: 'weather' | 'time' | null
+  error?: string | null
+  voice?: 'male' | 'female'
+} = {}) {
+  const handlers = {
+    onAnnounce: vi.fn().mockResolvedValue(undefined),
+    onVoice: vi.fn(),
+  }
   render(
     <AnnouncementsBar
       loading={overrides.loading ?? null}
       error={overrides.error ?? null}
-      onAnnounce={onAnnounce}
+      voice={overrides.voice ?? 'male'}
+      {...handlers}
     />
   )
-  return onAnnounce
+  return handlers
 }
 
 describe('AnnouncementsBar', () => {
   it('dispara clima y hora', () => {
-    const onAnnounce = renderBar()
+    const handlers = renderBar()
     fireEvent.click(screen.getByText('Clima'))
     fireEvent.click(screen.getByText('Hora'))
-    expect(onAnnounce).toHaveBeenNthCalledWith(1, 'weather')
-    expect(onAnnounce).toHaveBeenNthCalledWith(2, 'time')
+    expect(handlers.onAnnounce).toHaveBeenNthCalledWith(1, 'weather')
+    expect(handlers.onAnnounce).toHaveBeenNthCalledWith(2, 'time')
+  })
+
+  it('permite cambiar la voz', () => {
+    const handlers = renderBar()
+    fireEvent.change(screen.getByLabelText('Voz de la locución'), { target: { value: 'female' } })
+    expect(handlers.onVoice).toHaveBeenCalledWith('female')
   })
 
   it('bloquea mientras genera y muestra el estado', () => {

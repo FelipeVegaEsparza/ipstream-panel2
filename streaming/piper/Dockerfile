@@ -16,10 +16,14 @@ RUN mkdir -p /opt /voices \
     && curl -fsSL \
         https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz \
         | tar xz -C /opt \
-    && curl -fsSL -o /voices/es_ES-davefx-medium.onnx \
-        https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_ES/davefx/medium/es_ES-davefx-medium.onnx \
-    && curl -fsSL -o /voices/es_ES-davefx-medium.onnx.json \
-        https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_ES/davefx/medium/es_ES-davefx-medium.onnx.json
+    && curl -fsSL -o /voices/es_MX-ald-medium.onnx \
+        https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/ald/medium/es_MX-ald-medium.onnx \
+    && curl -fsSL -o /voices/es_MX-ald-medium.onnx.json \
+        https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/ald/medium/es_MX-ald-medium.onnx.json \
+    && curl -fsSL -o /voices/es_MX-claude-high.onnx \
+        https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx \
+    && curl -fsSL -o /voices/es_MX-claude-high.onnx.json \
+        https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx.json
 
 ENV PATH="/opt/piper:${PATH}"
 

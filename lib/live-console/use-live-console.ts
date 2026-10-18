@@ -125,11 +125,14 @@ export interface PlayerApi {
 }
 
 export type AnnouncementType = 'weather' | 'time'
+export type AnnouncementVoice = 'male' | 'female'
 
 export interface AnnouncementsApi {
   announce: (type: AnnouncementType) => Promise<void>
   loading: AnnouncementType | null
   error: string | null
+  voice: AnnouncementVoice
+  setVoice: (voice: AnnouncementVoice) => void
 }
 
 export interface SoundEffectsApi {
@@ -248,6 +251,14 @@ export function useLiveConsole(): UseLiveConsoleResult {
   const [effectsError, setEffectsError] = useState<string | null>(null)
   const [announcementLoading, setAnnouncementLoading] = useState<AnnouncementType | null>(null)
   const [announcementError, setAnnouncementError] = useState<string | null>(null)
+  const [announcementVoice, setAnnouncementVoice] = useState<AnnouncementVoice>(() => {
+    if (typeof window === 'undefined') return 'male'
+    try {
+      return window.localStorage.getItem('live-announcement-voice') === 'female' ? 'female' : 'male'
+    } catch {
+      return 'male'
+    }
+  })
   const effectsRef = useRef<Map<number, SoundEffect>>(new Map())
   const effectBuffersRef = useRef<Map<string, AudioBuffer>>(new Map())
   useEffect(() => { effectsRef.current = soundEffects }, [soundEffects])
@@ -487,6 +498,13 @@ export function useLiveConsole(): UseLiveConsoleResult {
     } catch (err) {
       setEffectsError(err instanceof Error ? err.message : 'No se pudo reproducir el efecto')
     }
+  }, [announcementVoice])
+
+  const setAnnouncementVoicePersisted = useCallback((voice: AnnouncementVoice) => {
+    setAnnouncementVoice(voice)
+    try {
+      window.localStorage.setItem('live-announcement-voice', voice)
+    } catch {}
   }, [])
 
   const stopAllEffects = useCallback(() => {
@@ -506,7 +524,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
       const res = await fetch('/api/dashboard/streaming/live/announce', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type }),
+        body: JSON.stringify({ type, voice: announcementVoice }),
       })
       if (!res.ok) {
         let message = 'No se pudo generar la locución.'
@@ -1158,7 +1176,9 @@ export function useLiveConsole(): UseLiveConsoleResult {
     announce,
     loading: announcementLoading,
     error: announcementError,
-  }), [announce, announcementLoading, announcementError])
+    voice: announcementVoice,
+    setVoice: setAnnouncementVoicePersisted,
+  }), [announce, announcementLoading, announcementError, announcementVoice, setAnnouncementVoicePersisted])
 
   const player = useMemo<PlayerApi>(() => ({
     current: decks.A.track,

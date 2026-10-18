@@ -136,7 +136,8 @@ export const config = {
     // Piper TTS (locuciones de clima/hora)
     ttsContainer: required('PIPER_CONTAINER', 'ipstream-piper'),
     ttsBin: required('PIPER_BIN', '/opt/piper/piper'),
-    ttsModel: required('PIPER_MODEL', '/voices/es_ES-davefx-medium.onnx'),
+    ttsModelMale: required('PIPER_MODEL_MALE', '/voices/es_MX-ald-medium.onnx'),
+    ttsModelFemale: required('PIPER_MODEL_FEMALE', '/voices/es_MX-claude-high.onnx'),
     // Fallback automático al AutoDJ cuando la fuente en vivo queda en silencio.
     // Aplica a la consola web y a DJs externos conectados al harbor.
     silenceFallbackSeconds: intEnv('RADIO_SILENCE_FALLBACK_SECONDS', 10),

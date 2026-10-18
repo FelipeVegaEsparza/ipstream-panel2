@@ -191,7 +191,7 @@ export class LiveAudioEngine {
     this.announcementCount += 1
     const now = this.context.currentTime
     this.announcementDuck.gain.cancelScheduledValues(now)
-    this.announcementDuck.gain.setTargetAtTime(0.25, now, 0.08)
+    this.announcementDuck.gain.setTargetAtTime(0.12, now, 0.08)
 
     source.onended = () => {
       this.announcementCount = Math.max(0, this.announcementCount - 1)

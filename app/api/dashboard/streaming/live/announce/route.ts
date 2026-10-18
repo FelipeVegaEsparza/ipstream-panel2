@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
     const ctx = await requireStreamingClient()
     const body = await request.json().catch(() => ({}))
     const type = body?.type
+    const voice = body?.voice === 'female' ? 'female' : 'male'
 
     if (type !== 'weather' && type !== 'time') {
       return NextResponse.json({ error: 'invalid_type' }, { status: 400 })
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
         Authorization: `Bearer ${target.token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, voice }),
       signal: AbortSignal.timeout(30000),
     })
 

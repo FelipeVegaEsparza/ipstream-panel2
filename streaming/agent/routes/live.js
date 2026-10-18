@@ -207,12 +207,14 @@ export default async function liveRoutes(app) {
       ? request.body.text.trim().slice(0, 500)
       : ''
     if (!text) return reply.code(400).send({ error: 'text_required' })
+    const voice = request.body?.voice === 'female' ? 'female' : 'male'
+    const model = voice === 'female' ? config.live.ttsModelFemale : config.live.ttsModelMale
 
     const tmp = `/tmp/tts-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const script = [
       `trap 'rm -f "${tmp}.wav" "${tmp}.txt"' EXIT`,
       `cat > "${tmp}.txt"`,
-      `${config.live.ttsBin} --model ${config.live.ttsModel} --output_file "${tmp}.wav" < "${tmp}.txt" >/dev/null 2>&1`,
+      `${config.live.ttsBin} --model ${model} --output_file "${tmp}.wav" < "${tmp}.txt" >/dev/null 2>&1`,
       `cat "${tmp}.wav"`,
     ].join('; ')
 
