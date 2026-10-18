@@ -108,8 +108,9 @@ test('acepta un WHIP válido y reescribe Location', async () => {
   assert.equal(res.statusCode, 201)
   assert.equal(res.headers.location, '/rtc/v1/whip/?app=radio&stream=s1')
   assert.equal(fetchCalls.length, 1)
-  assert.equal(fetchCalls[0].url, 'http://srs:8080/rtc/v1/whip?app=radio&stream=s1')
+  assert.equal(fetchCalls[0].url, 'http://srs:8080/rtc/v1/whip/?app=radio&stream=s1')
   assert.equal(fetchCalls[0].init.method, 'POST')
+  assert.equal(fetchCalls[0].init.redirect, 'manual')
   assert.equal(fetchCalls[0].init.body, 'offer-sdp')
 })
 

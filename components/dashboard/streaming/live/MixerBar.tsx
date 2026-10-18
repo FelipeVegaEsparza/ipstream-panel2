@@ -9,6 +9,8 @@ interface Props {
   masterDb: number
   onMasterDb: (value: number) => void
   masterLevelDb: number
+  monitorEnabled: boolean
+  onMonitor: (value: boolean) => void
   mic: MicSnapshot
   onEnableMic: () => Promise<boolean>
   onDisableMic: () => void
@@ -23,6 +25,8 @@ export function MixerBar({
   masterDb,
   onMasterDb,
   masterLevelDb,
+  monitorEnabled,
+  onMonitor,
   mic,
   onEnableMic,
   onDisableMic,
@@ -70,6 +74,27 @@ export function MixerBar({
           <div className="mt-3">
             <VuMeter db={masterLevelDb} label="Nivel de programa" />
           </div>
+          <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-2">
+            <div>
+              <p className="text-[11px] font-medium text-foreground">Monitor programa</p>
+              <p className="text-[10px] text-muted-foreground">
+                {monitorEnabled ? 'Escuchás la mezcla por auriculares' : 'Silenciado en la salida local'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onMonitor(!monitorEnabled)}
+              className={`rounded-lg px-3 py-1.5 text-[11px] font-medium transition-colors ${
+                monitorEnabled ? 'bg-brand/15 text-brand' : 'bg-secondary text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {monitorEnabled ? 'ON' : 'OFF'}
+            </button>
+          </div>
+          <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+            Si no escuchás, activá <strong>Monitor</strong> o el <strong>CUE</strong> del deck.
+            El programa no se reproduce por parlantes para evitar acoples.
+          </p>
         </div>
       </div>
 

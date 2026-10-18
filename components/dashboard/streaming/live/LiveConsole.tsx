@@ -82,6 +82,8 @@ export function LiveConsole() {
             masterDb={live.masterDb}
             onMasterDb={live.setMasterDb}
             masterLevelDb={live.masterLevelDb}
+            monitorEnabled={live.monitorEnabled}
+            onMonitor={live.setMonitor}
             mic={live.mic}
             onEnableMic={live.enableMic}
             onDisableMic={live.disableMic}

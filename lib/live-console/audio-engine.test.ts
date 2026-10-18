@@ -101,6 +101,9 @@ describe('LiveAudioEngine', () => {
     const cue = engine['cueBus'] as unknown as FakeNode
     expect(cue.connections).toContain(context.destination)
 
+    const monitor = engine['monitorGain'] as unknown as FakeNode
+    expect(monitor.connections).toContain(context.destination)
+
     expect(engine.getSnapshot().decks.A.mode).toBeNull()
     engine.destroy()
   })

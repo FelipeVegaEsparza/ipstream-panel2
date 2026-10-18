@@ -146,6 +146,8 @@ export interface UseLiveConsoleResult {
   toggleCue: (deckId: DeckId) => void
   setCrossfader: (position: number) => void
   setMasterDb: (db: number) => void
+  monitorEnabled: boolean
+  setMonitor: (enabled: boolean) => void
   enableMic: () => Promise<boolean>
   disableMic: () => void
   setMicGain: (db: number) => void
@@ -167,6 +169,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     crossfader: 0.5,
     masterDb: 0,
     masterLevelDb: -Infinity,
+    monitorEnabled: false,
     contextState: 'unavailable',
   })
   const [cue, setCue] = useState<Record<DeckId, boolean>>({ A: false, B: false })
@@ -228,6 +231,11 @@ export function useLiveConsole(): UseLiveConsoleResult {
       engineRef.current = null
     }
   }, [])
+
+  // Con auriculares confirmados, monitorear el programa en la salida local.
+  useEffect(() => {
+    engineRef.current?.setMonitor(headphonesConfirmed)
+  }, [headphonesConfirmed])
 
   // --------------------------------------------------
   // Biblioteca
@@ -563,6 +571,10 @@ export function useLiveConsole(): UseLiveConsoleResult {
     engineRef.current?.setMasterDb(db)
   }, [])
 
+  const setMonitor = useCallback((enabled: boolean) => {
+    engineRef.current?.setMonitor(enabled)
+  }, [])
+
   const enableMic = useCallback(async () => {
     const ok = await engineRef.current?.enableMic()
     return Boolean(ok)
@@ -810,6 +822,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     crossfader: snapshot.crossfader,
     masterDb: snapshot.masterDb,
     masterLevelDb: snapshot.masterLevelDb,
+    monitorEnabled: snapshot.monitorEnabled,
     session: {
       state: sessionState,
       transport: sessionTransport,
@@ -837,6 +850,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     toggleCue,
     setCrossfader,
     setMasterDb,
+    setMonitor,
     enableMic,
     disableMic,
     setMicGain,

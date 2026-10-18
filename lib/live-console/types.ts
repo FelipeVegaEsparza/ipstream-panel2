@@ -72,6 +72,7 @@ export interface EngineSnapshot {
   crossfader: number
   masterDb: number
   masterLevelDb: number
+  monitorEnabled: boolean
   contextState: AudioContextState | 'unavailable'
 }
 

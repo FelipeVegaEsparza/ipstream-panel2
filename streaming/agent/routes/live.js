@@ -38,6 +38,9 @@ function validateSession(request, expectedTransport) {
 
 function srsPath(path, stream) {
   const url = new URL(path, SRS_HTTP)
+  // SRS redirige /rtc/v1/whip -> /rtc/v1/whip/ con 302. Node fetch seguiría
+  // el redirect como GET y perdería el SDP. Usamos siempre la ruta final.
+  if (url.pathname === '/rtc/v1/whip') url.pathname = '/rtc/v1/whip/'
   url.searchParams.set('app', 'radio')
   url.searchParams.set('stream', stream)
   return url
@@ -110,6 +113,7 @@ export default async function liveRoutes(app) {
         method: request.method,
         headers,
         body: ['POST', 'PATCH'].includes(request.method) ? request.body : undefined,
+        redirect: 'manual',
         signal: AbortSignal.timeout(15000),
       })
       const body = await res.text()

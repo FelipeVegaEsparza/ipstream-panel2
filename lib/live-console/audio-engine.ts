@@ -30,6 +30,8 @@ export class LiveAudioEngine {
   private musicBus: GainNode
   private duckGain: GainNode
   private cueBus: GainNode
+  private monitorGain: GainNode
+  private monitorEnabled = false
   private crossfadeA: GainNode
   private crossfadeB: GainNode
 
@@ -77,6 +79,11 @@ export class LiveAudioEngine {
     this.cueBus = this.context.createGain()
     this.cueBus.gain.value = 1
 
+    // Monitor local del programa: apagado por defecto. Al confirmar
+    // auriculares se activa para escuchar la mezcla sin acoplar.
+    this.monitorGain = this.context.createGain()
+    this.monitorGain.gain.value = 0
+
     this.crossfadeA = this.context.createGain()
     this.crossfadeB = this.context.createGain()
     this.crossfadeA.gain.value = 1
@@ -89,6 +96,8 @@ export class LiveAudioEngine {
     this.masterGain.connect(this.limiter)
     this.limiter.connect(this.streamDestination)
     this.limiter.connect(this.masterAnalyser)
+    this.limiter.connect(this.monitorGain)
+    this.monitorGain.connect(this.context.destination)
     this.cueBus.connect(this.context.destination)
 
     this.decks = {
@@ -135,6 +144,11 @@ export class LiveAudioEngine {
     const now = this.context.currentTime
     this.crossfadeA.gain.setTargetAtTime(a, now, 0.01)
     this.crossfadeB.gain.setTargetAtTime(b, now, 0.01)
+  }
+
+  setMonitor(enabled: boolean): void {
+    this.monitorEnabled = enabled
+    this.monitorGain.gain.setTargetAtTime(enabled ? 1 : 0, this.context.currentTime, 0.02)
   }
 
   setMasterDb(db: number): void {
@@ -349,6 +363,7 @@ export class LiveAudioEngine {
       crossfader: this.crossfader,
       masterDb: this.masterDb,
       masterLevelDb: this.readMasterLevelDb(),
+      monitorEnabled: this.monitorEnabled,
       contextState: this.context.state,
     }
   }
@@ -366,6 +381,7 @@ export class LiveAudioEngine {
     this.limiter.disconnect()
     this.masterAnalyser.disconnect()
     this.cueBus.disconnect()
+    this.monitorGain.disconnect()
     void this.context.close()
   }
 }
