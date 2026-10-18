@@ -1,23 +1,30 @@
 'use client'
 
+import { useMemo } from 'react'
 import { DeckCard } from './DeckCard'
-import { LibraryPanel } from './LibraryPanel'
+import { FileBrowser } from './FileBrowser'
 import { MixerBar } from './MixerBar'
+import { PlayerBar } from './PlayerBar'
+import { PlaylistPanel } from './PlaylistPanel'
 import { SessionPanel } from './SessionPanel'
 import { useLiveConsole } from '@/lib/live-console/use-live-console'
 
 export function LiveConsole() {
   const live = useLiveConsole()
   const { A, B } = live.decks
+  const playlistIds = useMemo(
+    () => new Set(live.library.queue.map((track) => track.id)),
+    [live.library.queue]
+  )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Transmitir en vivo</h1>
+          <h1 className="text-3xl font-bold text-foreground">Reproductor en vivo</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Tu consola en el navegador: música local, micrófono, EQ y loops. Los archivos no se suben
-            al servidor; solo sale la mezcla hacia tu radio.
+            Elegí música de tu equipo, armá la lista y salí al aire. Si la fuente queda en silencio,
+            el AutoDJ retoma el control automáticamente.
           </p>
         </div>
         <div className="rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground">
@@ -44,11 +51,66 @@ export function LiveConsole() {
         onStopLive={live.stopLive}
         onReconnect={live.reconnect}
         onRefreshSlots={live.refreshSlots}
-        current={live.current}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="h-[520px] lg:h-[560px]">
+          <FileBrowser
+            tracks={live.library.tracks}
+            playlistIds={playlistIds}
+            scanning={live.library.scanning}
+            restoring={live.library.restoring}
+            progress={live.library.progress}
+            persisted={live.library.persisted}
+            supportsPersistence={live.library.supportsPersistence}
+            error={live.library.error}
+            onAddFiles={live.library.addFiles}
+            onAddDirectory={live.library.addDirectory}
+            onRestoreDirectory={live.library.restoreDirectory}
+            onRemoveTrack={live.library.removeTrack}
+            onAddToPlaylist={live.player.addToPlaylist}
+            onPlayNow={live.player.playNow}
+          />
+        </div>
+
+        <div className="h-[520px] lg:h-[560px]">
+          <PlaylistPanel
+            queue={live.library.queue}
+            current={live.player.current}
+            nextTrack={live.player.nextTrack}
+            playing={live.player.playing}
+            onPlayNow={live.player.playNow}
+            onRemove={live.player.removeFromPlaylist}
+            onClear={live.player.clearPlaylist}
+            onMove={live.player.moveInPlaylist}
+          />
+        </div>
+      </div>
+
+      <PlayerBar
+        current={live.player.current}
+        nextTrack={live.player.nextTrack}
+        playing={live.player.playing}
+        position={live.player.position}
+        duration={live.player.duration}
+        onPlay={live.player.play}
+        onPause={live.player.pause}
+        onPrevious={live.player.previous}
+        onNext={live.player.next}
+        onSeek={live.player.seek}
+        mic={live.mic}
+        onEnableMic={live.enableMic}
+        onDisableMic={live.disableMic}
+        onMicGain={live.setMicGain}
+        monitorEnabled={live.monitorEnabled}
+        onMonitor={live.setMonitor}
+      />
+
+      <details className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+        <summary className="cursor-pointer text-sm font-semibold text-foreground">
+          Mezclador avanzado (2 decks, EQ, loops)
+        </summary>
+        <div className="mt-4 space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <DeckCard
               deck={A}
@@ -91,33 +153,8 @@ export function LiveConsole() {
             onTalkover={live.setTalkover}
             onMicCue={live.setMicCue}
           />
-
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            El programa se envía al stream y el cue se reproduce solo en tu salida local. Para
-            transmitir música con la mejor calidad posible, usá archivos locales sin DRM y
-            auriculares con cable.
-          </p>
         </div>
-
-        <LibraryPanel
-          tracks={live.library.tracks}
-          queue={live.library.queue}
-          scanning={live.library.scanning}
-          restoring={live.library.restoring}
-          progress={live.library.progress}
-          persisted={live.library.persisted}
-          supportsPersistence={live.library.supportsPersistence}
-          error={live.library.error}
-          onAddFiles={live.library.addFiles}
-          onAddDirectory={live.library.addDirectory}
-          onRestoreDirectory={live.library.restoreDirectory}
-          onRemoveTrack={live.library.removeTrack}
-          onEnqueue={live.library.enqueue}
-          onDequeue={live.library.dequeue}
-          onClearQueue={live.library.clearQueue}
-          onLoadToDeck={live.loadToDeck}
-        />
-      </div>
+      </details>
     </div>
   )
 }

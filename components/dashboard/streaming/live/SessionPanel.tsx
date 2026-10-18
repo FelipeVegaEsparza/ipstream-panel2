@@ -21,7 +21,6 @@ interface Props {
   onStopLive: () => Promise<void>
   onReconnect: () => Promise<void>
   onRefreshSlots: () => Promise<void>
-  current: { title: string | null; artist: string | null; nextTitle: string | null; nextArtist: string | null }
 }
 
 const STATUS: Record<SessionState, { label: string; className: string }> = {
@@ -62,7 +61,6 @@ export function SessionPanel({
   onStopLive,
   onReconnect,
   onRefreshSlots,
-  current,
 }: Props) {
   const status = STATUS[state]
   const busy = state === 'preparing' || state === 'connecting'
@@ -125,19 +123,6 @@ export function SessionPanel({
             <Stat label="RTT" value={stats.rttMs != null ? `${stats.rttMs} ms` : '—'} />
             <Stat label="Pérdida" value={stats.packetLoss != null ? `${stats.packetLoss}%` : '—'} />
           </div>
-
-          {(current.title || current.nextTitle) && (
-            <div className="rounded-lg border border-border bg-background px-3 py-2 text-[11px]">
-              <div className="text-muted-foreground">
-                Ahora: <span className="text-foreground">{current.title || '—'}</span>
-                {current.artist ? ` · ${current.artist}` : ''}
-              </div>
-              <div className="text-muted-foreground">
-                Siguiente: <span className="text-foreground">{current.nextTitle || '—'}</span>
-                {current.nextArtist ? ` · ${current.nextArtist}` : ''}
-              </div>
-            </div>
-          )}
 
           {streamBitrate < bitrate && (
             <p className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-[11px] text-yellow-200/80">

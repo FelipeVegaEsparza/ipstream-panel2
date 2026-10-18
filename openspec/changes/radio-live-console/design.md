@@ -130,7 +130,7 @@ La consola reporta current/next en cada cambio. El agente actualiza `radio_strea
 
 ### 10. UI y feature flag
 
-Nueva ruta `app/dashboard/streaming/live/page.tsx`, ítem `streaming-live` en `lib/menu-items.ts` y en `disabledMenuItems` del plan. El motor vive en `lib/live-console/` como clase TS sin React; la UI lo controla con un hook. Waveform, parser de tags y detector de BPM se cargan con `import()` diferido.
+Nueva ruta `app/dashboard/streaming/live/page.tsx`, ítem `streaming-live` en `lib/menu-items.ts` y en `disabledMenuItems` del plan. La vista principal prioriza el flujo de un reproductor tipo RadioBOSS/ZaraRadio: navegador de archivos a la izquierda, lista de reproducción a la derecha, transporte con anterior/play-pausa/siguiente y seek, y tema actual/próximo. El mezclador de 2 decks/EQ/loops se conserva en un bloque "Avanzado" colapsado. El motor vive en `lib/live-console/` como clase TS sin React; la UI lo controla con un hook. Waveform, parser de tags y detector de BPM se cargan con `import()` diferido.
 
 ## Risks / Trade-offs
 

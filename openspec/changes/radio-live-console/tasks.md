@@ -83,3 +83,9 @@
 - [x] 8.3 Informar el motivo `silence` en el heartbeat y evitar la reconexión automática en el panel; verificar typecheck/build.
 - [x] 8.4 Documentar las variables `RADIO_SILENCE_*` y el comportamiento en README/AGENTS.
 - [x] 8.5 Ejecutar la suite del agente y del panel; verificar que pasan.
+
+
+## 9. Reproductor simple tipo RadioBOSS/ZaraRadio
+
+- [x] 9.1 Reorganizar la vista principal a navegador de archivos (izquierda) + lista de reproducción (derecha) + transporte con anterior/play-pausa/siguiente y seek; verificar build y tests.
+- [x] 9.2 Mostrar tema actual y próximo y mantener el mezclador de 2 decks/EQ/loops en una sección avanzada colapsada; verificar que sigue accesible.

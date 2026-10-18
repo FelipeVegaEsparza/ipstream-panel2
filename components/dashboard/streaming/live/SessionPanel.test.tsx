@@ -57,7 +57,6 @@ function renderPanel(overrides: {
       onStopLive={handlers.onStopLive}
       onReconnect={handlers.onReconnect}
       onRefreshSlots={handlers.onRefreshSlots}
-      current={{ title: 'Tema', artist: 'Artista', nextTitle: null, nextArtist: null }}
     />,
   )
   return handlers

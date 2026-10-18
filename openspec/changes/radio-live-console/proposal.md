@@ -7,6 +7,7 @@ Hoy un DJ de radio necesita instalar BUTT, MIXXX u otro encoder para salir al ai
 ## What Changes
 
 - Nueva sección **Transmitir en vivo** en Radio (`/dashboard/streaming/live`), separada de **Conexión DJ** (que sigue siendo para encoders externos).
+- La vista principal se simplifica a un reproductor tipo RadioBOSS/ZaraRadio: navegador de archivos a la izquierda, lista de reproducción a la derecha y transporte (anterior, play/pausa, siguiente, seek, tema actual y próximo). El mezclador de 2 decks/EQ/loops queda en una sección avanzada colapsada.
 - Biblioteca local persistente: el navegador recuerda una carpeta autorizada (File System Access API + handles en IndexedDB, Chromium). En navegadores sin soporte se degrada a archivos por sesión. Los audios nunca se suben al servidor.
 - Consola de mezcla en el navegador: 2 decks, crossfader, gain, EQ de 3 bandas, loops manuales y loops cuantizados a beat cuando hay BPM, micrófono con high-pass/compresor, talkover (ducking), VU meters y cue/PFL por auriculares.
 - Salida de audio única (mezcla) enviada a un **transporte pluggable**: WHIP/WebRTC contra SRS como camino principal y WebSocket/MP3 como plan B si el spike de calidad muestra pérdida audible. La consola no cambia al cambiar de transporte.

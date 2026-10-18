@@ -61,7 +61,7 @@
 
 ## Consola web de radio ("Transmitir en vivo")
 
-- Sección `/dashboard/streaming/live`: biblioteca local (File System Access + IndexedDB; Chromium recuerda carpeta, el resto por sesión), 2 decks, EQ, loops, micrófono, talkover y cue. Los audios **no se suben** al servidor.
+- Sección `/dashboard/streaming/live`: vista principal tipo RadioBOSS/ZaraRadio (navegador de archivos a la izquierda, lista a la derecha, transporte anterior/play-pausa/siguiente, seek, actual/próximo). El mezclador de 2 decks/EQ/loops/mic/talkover/cue vive en un bloque "Avanzado" colapsado. Biblioteca local (File System Access + IndexedDB; Chromium recuerda carpeta, el resto por sesión); los audios **no se suben** al servidor.
 - Motor en `lib/live-console/*` (Web Audio, sin React) y UI en `components/dashboard/streaming/live/*`.
 - Transporte pluggable: `WHIP/WebRTC` contra SRS (primario) y `WebSocket + FFmpeg` (fallback). El puente corre en el contenedor `audio-bridge` y publica al harbor de Liquidsoap del slot.
 - Envs: `LIVE_SESSION_SECRET`, `LIVE_AUDIO_BITRATE` (192), `LIVE_BRIDGE_CODEC` (`mp3`), `AUDIO_BRIDGE_CONTAINER`, `SRS_RTC_UDP_PORT` (8010), `RTC_CANDIDATE`, `LIVE_ICE_SERVERS`, `LIVE_TRANSPORT_DEFAULT`.

@@ -94,6 +94,24 @@ function mergeTracks(current: LocalTrack[], incoming: LocalTrack[]): LocalTrack[
   return Array.from(map.values()).sort((a, b) => a.path.localeCompare(b.path))
 }
 
+export interface PlayerApi {
+  current: LocalTrack | null
+  nextTrack: LocalTrack | null
+  playing: boolean
+  position: number
+  duration: number
+  play: () => Promise<void>
+  pause: () => void
+  next: () => Promise<void>
+  previous: () => Promise<void>
+  seek: (seconds: number) => void
+  playNow: (track: LocalTrack) => Promise<void>
+  addToPlaylist: (track: LocalTrack) => void
+  removeFromPlaylist: (id: string) => void
+  clearPlaylist: () => void
+  moveInPlaylist: (id: string, direction: -1 | 1) => void
+}
+
 export interface UseLiveConsoleResult {
   engineReady: boolean
   library: {
@@ -114,6 +132,7 @@ export interface UseLiveConsoleResult {
     clearQueue: () => void
   }
   decks: Record<DeckId, DeckSnapshot>
+  player: PlayerApi
   cue: Record<DeckId, boolean>
   mic: MicSnapshot
   crossfader: number
@@ -177,6 +196,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
   const [tracks, setTracks] = useState<LocalTrack[]>([])
   const [queue, setQueue] = useState<LocalTrack[]>([])
   const queueRef = useRef<LocalTrack[]>([])
+  const historyRef = useRef<LocalTrack[]>([])
   useEffect(() => { queueRef.current = queue }, [queue])
 
   const [scanning, setScanning] = useState(false)
@@ -340,6 +360,18 @@ export function useLiveConsole(): UseLiveConsoleResult {
 
   const clearQueue = useCallback(() => setQueue([]), [])
 
+  const moveInPlaylist = useCallback((id: string, direction: -1 | 1) => {
+    setQueue((prev) => {
+      const index = prev.findIndex((track) => track.id === id)
+      if (index < 0) return prev
+      const nextIndex = index + direction
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev
+      const copy = [...prev]
+      ;[copy[index], copy[nextIndex]] = [copy[nextIndex], copy[index]]
+      return copy
+    })
+  }, [])
+
   // Restaurar índice cacheado al montar (sin pedir permisos)
   useEffect(() => {
     void (async () => {
@@ -447,6 +479,13 @@ export function useLiveConsole(): UseLiveConsoleResult {
     const engine = engineRef.current
     if (!engine) return
     engine.onDeckEnded = (id) => {
+      if (id === 'A') {
+        const ended = engine.getDeck('A').snapshotTrack
+        if (ended) {
+          historyRef.current.push(ended)
+          if (historyRef.current.length > 50) historyRef.current.shift()
+        }
+      }
       const next = queueRef.current[0]
       if (!next) return
       setQueue((prev) => prev.filter((item) => item.id !== next.id))
@@ -538,6 +577,71 @@ export function useLiveConsole(): UseLiveConsoleResult {
   const seekDeck = useCallback((deckId: DeckId, seconds: number) => {
     engineRef.current?.getDeck(deckId).seek(seconds)
   }, [])
+
+  const rememberCurrent = useCallback(() => {
+    const current = engineRef.current?.getDeck('A').snapshotTrack
+    if (!current) return
+    historyRef.current.push(current)
+    if (historyRef.current.length > 50) historyRef.current.shift()
+  }, [])
+
+  const playNow = useCallback(async (track: LocalTrack) => {
+    const engine = engineRef.current
+    if (!engine) return
+    const current = engine.getDeck('A').snapshotTrack
+    if (current?.id === track.id) {
+      await playDeck('A')
+      return
+    }
+    if (current) rememberCurrent()
+    await loadToDeck('A', track)
+    await playDeck('A')
+  }, [loadToDeck, playDeck, rememberCurrent])
+
+  const playNext = useCallback(async () => {
+    const engine = engineRef.current
+    if (!engine) return
+    const nextTrack = queueRef.current[0]
+    if (!nextTrack) {
+      engine.getDeck('A').stop()
+      return
+    }
+    rememberCurrent()
+    await loadToDeck('A', nextTrack)
+    await playDeck('A')
+  }, [loadToDeck, playDeck, rememberCurrent])
+
+  const playPrevious = useCallback(async () => {
+    const engine = engineRef.current
+    if (!engine) return
+    const previousTrack = historyRef.current.pop()
+    if (!previousTrack) {
+      engine.getDeck('A').seek(0)
+      return
+    }
+    const current = engine.getDeck('A').snapshotTrack
+    if (current) {
+      setQueue((prev) => [current, ...prev.filter((track) => track.id !== current.id)])
+    }
+    await loadToDeck('A', previousTrack)
+    await playDeck('A')
+  }, [loadToDeck, playDeck])
+
+  const playerPlay = useCallback(async () => {
+    const engine = engineRef.current
+    if (!engine) return
+    const deck = engine.getDeck('A')
+    if (deck.snapshotTrack) {
+      if (deck.getPosition() >= deck.getDuration() - 0.5) deck.seek(0)
+      await playDeck('A')
+      return
+    }
+    const first = queueRef.current[0]
+    if (first) await playNow(first)
+  }, [playDeck, playNow])
+
+  const playerPause = useCallback(() => pauseDeck('A'), [pauseDeck])
+  const playerSeek = useCallback((seconds: number) => seekDeck('A', seconds), [seekDeck])
 
   const setDeckGain = useCallback((deckId: DeckId, db: number) => {
     engineRef.current?.setDeckGain(deckId, db)
@@ -832,6 +936,37 @@ export function useLiveConsole(): UseLiveConsoleResult {
     B: { ...snapshot.decks.B, cue: cue.B },
   }), [snapshot, cue])
 
+  const player = useMemo<PlayerApi>(() => ({
+    current: decks.A.track,
+    nextTrack: queue[0] ?? null,
+    playing: decks.A.playing,
+    position: decks.A.position,
+    duration: decks.A.duration,
+    play: playerPlay,
+    pause: playerPause,
+    next: playNext,
+    previous: playPrevious,
+    seek: playerSeek,
+    playNow,
+    addToPlaylist: enqueue,
+    removeFromPlaylist: dequeue,
+    clearPlaylist: clearQueue,
+    moveInPlaylist,
+  }), [
+    decks,
+    queue,
+    playerPlay,
+    playerPause,
+    playNext,
+    playPrevious,
+    playerSeek,
+    playNow,
+    enqueue,
+    dequeue,
+    clearQueue,
+    moveInPlaylist,
+  ])
+
   return {
     engineReady,
     library: {
@@ -852,6 +987,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
       clearQueue,
     },
     decks,
+    player,
     cue,
     mic: snapshot.mic,
     crossfader: snapshot.crossfader,

@@ -18,6 +18,23 @@ The system SHALL expose a **Transmitir en vivo** section for Radio in the dashbo
 - **WHEN** a client's plan does not include the live console
 - **THEN** the section is not available and a direct visit is rejected without exposing console controls
 
+### Requirement: Simple player layout
+
+The console SHALL present a file browser on the left and a playlist on the right. It SHALL provide transport controls for previous track, play/pause, next track, and seek within the current track. It SHALL show the current track and the next track. The two-deck mixer, EQ, and loops SHALL remain available in an advanced section that is collapsed by default.
+
+#### Scenario: Main layout
+- **WHEN** the user opens the live console
+- **THEN** the file browser is on the left, the playlist is on the right, and the transport bar is visible
+
+#### Scenario: Transport controls
+- **WHEN** the user presses previous, play/pause, or next
+- **THEN** the current track changes or pauses/resumes as expected
+- **AND** the current and next track names update
+
+#### Scenario: Advanced mixer
+- **WHEN** the user expands the advanced section
+- **THEN** the two decks, EQ, loops, crossfader, and cue controls remain available
+
 ### Requirement: Local audio library access and persistence
 
 The console SHALL let the user add audio files from their device through an explicit file selection, drag and drop, or an authorized directory. On supported browsers the console SHALL remember the authorized directory across sessions; on unsupported browsers it SHALL degrade to per-session file selection without blocking broadcast. Audio files SHALL remain on the user's device and SHALL NOT be uploaded to the server. The console SHALL persist only directory handles and index metadata.
