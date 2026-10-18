@@ -53,6 +53,7 @@ export class LiveAudioEngine {
   private talkoverTimer: ReturnType<typeof setInterval> | null = null
   private micPermission: MicSnapshot['permission'] = 'unknown'
   private analyserBuffer = new Float32Array(2048)
+  private activeEffects = new Set<AudioBufferSourceNode>()
 
   constructor() {
     this.context = new AudioContext({ latencyHint: 'interactive' })
@@ -132,6 +133,34 @@ export class LiveAudioEngine {
     if (this.context.state === 'suspended') {
       await this.context.resume()
     }
+  }
+
+  async decodeAudio(data: ArrayBuffer): Promise<AudioBuffer> {
+    return this.context.decodeAudioData(data)
+  }
+
+  /** Reproduce un efecto one-shot sobre el programa (y por lo tanto al stream). */
+  playEffect(buffer: AudioBuffer, gainDb = 0): void {
+    const source = this.context.createBufferSource()
+    source.buffer = buffer
+    const gain = this.context.createGain()
+    gain.gain.value = dbToGain(gainDb)
+    source.connect(gain)
+    gain.connect(this.masterGain)
+    source.onended = () => {
+      this.activeEffects.delete(source)
+      try { source.disconnect() } catch {}
+      try { gain.disconnect() } catch {}
+    }
+    this.activeEffects.add(source)
+    source.start()
+  }
+
+  stopAllEffects(): void {
+    for (const source of this.activeEffects) {
+      try { source.stop() } catch {}
+    }
+    this.activeEffects.clear()
   }
 
   setCrossfader(position: number): void {
@@ -369,6 +398,7 @@ export class LiveAudioEngine {
   }
 
   destroy(): void {
+    this.stopAllEffects()
     this.stopTalkover()
     this.disableMic()
     this.decks.A.destroy()

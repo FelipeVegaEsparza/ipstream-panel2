@@ -88,4 +88,12 @@
 ## 9. Reproductor simple tipo RadioBOSS/ZaraRadio
 
 - [x] 9.1 Reorganizar la vista principal a navegador de archivos (izquierda) + lista de reproducción (derecha) + transporte con anterior/play-pausa/siguiente y seek; verificar build y tests.
-- [x] 9.2 Mostrar tema actual y próximo y mantener el mezclador de 2 decks/EQ/loops en una sección avanzada colapsada; verificar que sigue accesible.
+- [x] 9.2 Mostrar tema actual y próximo y ocultar el mezclador de 2 decks/EQ/loops de la vista; conservar los componentes para una etapa posterior.
+
+
+## 10. Botonera de efectos de sonido
+
+- [x] 10.1 Persistir efectos como Blob en IndexedDB y el tamaño de la botonera en localStorage; verificar con tests.
+- [x] 10.2 Mezclar el efecto en el programa (`masterGain`) para que salga al stream y al monitor; verificar typecheck/build.
+- [x] 10.3 Agregar la UI de botonera con cantidad de botones, asignar/cambiar/quitar, volumen individual y detener; verificar tests de componentes.
+- [x] 10.4 Documentar que los efectos son locales y persisten en el navegador.

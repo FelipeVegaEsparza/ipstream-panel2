@@ -130,7 +130,15 @@ La consola reporta current/next en cada cambio. El agente actualiza `radio_strea
 
 ### 10. UI y feature flag
 
-Nueva ruta `app/dashboard/streaming/live/page.tsx`, ítem `streaming-live` en `lib/menu-items.ts` y en `disabledMenuItems` del plan. La vista principal prioriza el flujo de un reproductor tipo RadioBOSS/ZaraRadio: navegador de archivos a la izquierda, lista de reproducción a la derecha, transporte con anterior/play-pausa/siguiente y seek, y tema actual/próximo. El mezclador de 2 decks/EQ/loops se conserva en un bloque "Avanzado" colapsado. El motor vive en `lib/live-console/` como clase TS sin React; la UI lo controla con un hook. Waveform, parser de tags y detector de BPM se cargan con `import()` diferido.
+Nueva ruta `app/dashboard/streaming/live/page.tsx`, ítem `streaming-live` en `lib/menu-items.ts` y en `disabledMenuItems` del plan. La vista principal prioriza el flujo de un reproductor tipo RadioBOSS/ZaraRadio: navegador de archivos a la izquierda, lista de reproducción a la derecha, transporte con anterior/play-pausa/siguiente y seek, y tema actual/próximo. El mezclador de 2 decks/EQ/loops **no se muestra** en esta iteración; los componentes y el motor quedan en el código para retomarlo más adelante. Debajo del reproductor se muestra la botonera de efectos. El motor vive en `lib/live-console/` como clase TS sin React; la UI lo controla con un hook. Waveform, parser de tags y detector de BPM se cargan con `import()` diferido.
+
+### 11. Botonera de efectos de sonido
+
+Los efectos se guardan como `Blob` en IndexedDB (`ipstream-live-effects`) y el tamaño de la botonera en `localStorage`. No se suben al servidor. El motor decodifica el efecto y lo conecta a `masterGain`, de modo que se mezcla sobre música/micrófono y sale al stream y al monitor. Cada slot tiene volumen propio y se puede reemplazar o quitar. Los efectos siguen disponibles después de cerrar el navegador; si se limpia el almacenamiento del sitio, se pierden.
+
+Alternativas:
+- Subirlos al servidor: permitiría usarlos en otros dispositivos, pero suma storage, cuotas y latencia; queda fuera de esta iteración.
+- Reproducirlos solo en el cue: no cumpliría el objetivo de que salgan al aire. Se conectan al programa.
 
 ## Risks / Trade-offs
 

@@ -502,7 +502,8 @@ salir al aire desde el navegador, sin BUTT/MIXXX:
   se recuerda (File System Access + IndexedDB); en otros navegadores se elige por
   sesión. Los audios **no se suben** al servidor.
 - **Reproductor simple**: navegador de archivos a la izquierda, lista de reproducción a la derecha, transporte con anterior/play-pausa/siguiente, seek y tema actual/próximo.
-- **Mezcladora avanzada** (colapsada): dos decks, crossfader, gain, EQ de 3 bandas, loops manuales y loops cuantizados a beat, micrófono con high-pass, compresor, talkover y cue/PFL por auriculares.
+- **Botonera de efectos de sonido**: cantidad de botones configurable, un audio por botón y volumen individual. Se guardan en el navegador (IndexedDB) y se mezclan sobre la transmisión.
+- **Mezcladora avanzada**: dos decks, crossfader, gain, EQ, loops, micrófono, talkover y cue. Por ahora no se muestra en la vista; queda para una etapa posterior.
 - **Transporte**: WHIP/WebRTC contra SRS como camino principal y WebSocket/FFmpeg
   como fallback. La consola no cambia al cambiar de transporte.
 - **Calidad**: el puente apunta a 192 kbps. Antes de fijar el transporte se corre

@@ -1,17 +1,15 @@
 'use client'
 
 import { useMemo } from 'react'
-import { DeckCard } from './DeckCard'
 import { FileBrowser } from './FileBrowser'
-import { MixerBar } from './MixerBar'
 import { PlayerBar } from './PlayerBar'
 import { PlaylistPanel } from './PlaylistPanel'
 import { SessionPanel } from './SessionPanel'
+import { SoundEffectsPad } from './SoundEffectsPad'
 import { useLiveConsole } from '@/lib/live-console/use-live-console'
 
 export function LiveConsole() {
   const live = useLiveConsole()
-  const { A, B } = live.decks
   const playlistIds = useMemo(
     () => new Set(live.library.queue.map((track) => track.id)),
     [live.library.queue]
@@ -106,55 +104,18 @@ export function LiveConsole() {
         onMonitor={live.setMonitor}
       />
 
-      <details className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <summary className="cursor-pointer text-sm font-semibold text-foreground">
-          Mezclador avanzado (2 decks, EQ, loops)
-        </summary>
-        <div className="mt-4 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <DeckCard
-              deck={A}
-              cue={live.cue.A}
-              onPlay={() => void live.playDeck('A')}
-              onPause={() => live.pauseDeck('A')}
-              onSeek={(seconds) => live.seekDeck('A', seconds)}
-              onGain={(db) => live.setDeckGain('A', db)}
-              onEq={(band, db) => live.setDeckEq('A', band, db)}
-              onLoop={(loop) => live.setDeckLoop('A', loop)}
-              onClearLoop={() => live.clearDeckLoop('A')}
-              onToggleCue={() => live.toggleCue('A')}
-            />
-            <DeckCard
-              deck={B}
-              cue={live.cue.B}
-              onPlay={() => void live.playDeck('B')}
-              onPause={() => live.pauseDeck('B')}
-              onSeek={(seconds) => live.seekDeck('B', seconds)}
-              onGain={(db) => live.setDeckGain('B', db)}
-              onEq={(band, db) => live.setDeckEq('B', band, db)}
-              onLoop={(loop) => live.setDeckLoop('B', loop)}
-              onClearLoop={() => live.clearDeckLoop('B')}
-              onToggleCue={() => live.toggleCue('B')}
-            />
-          </div>
-
-          <MixerBar
-            crossfader={live.crossfader}
-            onCrossfader={live.setCrossfader}
-            masterDb={live.masterDb}
-            onMasterDb={live.setMasterDb}
-            masterLevelDb={live.masterLevelDb}
-            monitorEnabled={live.monitorEnabled}
-            onMonitor={live.setMonitor}
-            mic={live.mic}
-            onEnableMic={live.enableMic}
-            onDisableMic={live.disableMic}
-            onMicGain={live.setMicGain}
-            onTalkover={live.setTalkover}
-            onMicCue={live.setMicCue}
-          />
-        </div>
-      </details>
+      <SoundEffectsPad
+        padSize={live.effects.padSize}
+        slots={live.effects.slots}
+        loading={live.effects.loading}
+        error={live.effects.error}
+        onPadSize={live.effects.setPadSize}
+        onAdd={live.effects.addEffect}
+        onRemove={live.effects.removeEffect}
+        onGain={live.effects.setGain}
+        onPlay={live.effects.play}
+        onStopAll={live.effects.stopAll}
+      />
     </div>
   )
 }

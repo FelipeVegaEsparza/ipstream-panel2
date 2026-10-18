@@ -21,6 +21,18 @@ import {
   verifyDirectoryPermission,
 } from './library'
 import { createTransport } from './transport'
+import {
+  DEFAULT_PAD_SIZE,
+  SOUND_EFFECT_PAD_SIZES,
+  createEffect,
+  deleteEffect,
+  loadEffects,
+  loadPadSize,
+  padSlots,
+  saveEffect,
+  savePadSize,
+  type SoundEffect,
+} from './effects'
 import type {
   DeckEq,
   DeckId,
@@ -112,6 +124,19 @@ export interface PlayerApi {
   moveInPlaylist: (id: string, direction: -1 | 1) => void
 }
 
+export interface SoundEffectsApi {
+  padSize: number
+  slots: (SoundEffect | null)[]
+  loading: boolean
+  error: string | null
+  addEffect: (slot: number, file: File) => Promise<void>
+  removeEffect: (slot: number) => Promise<void>
+  setGain: (slot: number, db: number) => Promise<void>
+  play: (slot: number) => Promise<void>
+  stopAll: () => void
+  setPadSize: (size: number) => void
+}
+
 export interface UseLiveConsoleResult {
   engineReady: boolean
   library: {
@@ -133,6 +158,7 @@ export interface UseLiveConsoleResult {
   }
   decks: Record<DeckId, DeckSnapshot>
   player: PlayerApi
+  effects: SoundEffectsApi
   cue: Record<DeckId, boolean>
   mic: MicSnapshot
   crossfader: number
@@ -204,6 +230,14 @@ export function useLiveConsole(): UseLiveConsoleResult {
   const [progress, setProgress] = useState({ scanned: 0, added: 0 })
   const [persisted, setPersisted] = useState(false)
   const [libraryError, setLibraryError] = useState<string | null>(null)
+
+  const [soundEffects, setSoundEffects] = useState<Map<number, SoundEffect>>(new Map())
+  const [padSize, setPadSizeState] = useState(DEFAULT_PAD_SIZE)
+  const [effectsLoading, setEffectsLoading] = useState(true)
+  const [effectsError, setEffectsError] = useState<string | null>(null)
+  const effectsRef = useRef<Map<number, SoundEffect>>(new Map())
+  const effectBuffersRef = useRef<Map<string, AudioBuffer>>(new Map())
+  useEffect(() => { effectsRef.current = soundEffects }, [soundEffects])
 
   const [sessionState, setSessionState] = useState<SessionState>('idle')
   const [sessionTransport, setSessionTransport] = useState<TransportKind | null>(null)
@@ -372,6 +406,88 @@ export function useLiveConsole(): UseLiveConsoleResult {
     })
   }, [])
 
+  const addEffect = useCallback(async (slot: number, file: File) => {
+    try {
+      const effect = createEffect(slot, file)
+      const previous = effectsRef.current.get(slot)
+      await saveEffect(effect)
+      if (previous) effectBuffersRef.current.delete(previous.id)
+      setSoundEffects((prev) => {
+        const next = new Map(prev)
+        next.set(slot, effect)
+        effectsRef.current = next
+        return next
+      })
+      setEffectsError(null)
+    } catch (err) {
+      setEffectsError(err instanceof Error ? err.message : 'No se pudo agregar el efecto')
+    }
+  }, [])
+
+  const removeEffect = useCallback(async (slot: number) => {
+    try {
+      const previous = effectsRef.current.get(slot)
+      if (previous) effectBuffersRef.current.delete(previous.id)
+      await deleteEffect(slot)
+      setSoundEffects((prev) => {
+        const next = new Map(prev)
+        next.delete(slot)
+        effectsRef.current = next
+        return next
+      })
+      setEffectsError(null)
+    } catch (err) {
+      setEffectsError(err instanceof Error ? err.message : 'No se pudo quitar el efecto')
+    }
+  }, [])
+
+  const setEffectGain = useCallback(async (slot: number, db: number) => {
+    const current = effectsRef.current.get(slot)
+    if (!current) return
+    const updated = { ...current, gainDb: Math.max(-40, Math.min(6, db)) }
+    try {
+      await saveEffect(updated)
+      setSoundEffects((prev) => {
+        const next = new Map(prev)
+        next.set(slot, updated)
+        effectsRef.current = next
+        return next
+      })
+    } catch (err) {
+      setEffectsError(err instanceof Error ? err.message : 'No se pudo guardar el volumen')
+    }
+  }, [])
+
+  const playEffect = useCallback(async (slot: number) => {
+    const effect = effectsRef.current.get(slot)
+    const engine = engineRef.current
+    if (!effect || !engine) return
+    try {
+      await engine.resume()
+      let buffer = effectBuffersRef.current.get(effect.id)
+      if (!buffer) {
+        buffer = await engine.decodeAudio(await effect.blob.arrayBuffer())
+        effectBuffersRef.current.set(effect.id, buffer)
+      }
+      engine.playEffect(buffer, effect.gainDb)
+      setEffectsError(null)
+    } catch (err) {
+      setEffectsError(err instanceof Error ? err.message : 'No se pudo reproducir el efecto')
+    }
+  }, [])
+
+  const stopAllEffects = useCallback(() => {
+    engineRef.current?.stopAllEffects()
+  }, [])
+
+  const setPadSize = useCallback((size: number) => {
+    const normalized = (SOUND_EFFECT_PAD_SIZES as readonly number[]).includes(size)
+      ? size
+      : DEFAULT_PAD_SIZE
+    savePadSize(normalized)
+    setPadSizeState(normalized)
+  }, [])
+
   // Restaurar índice cacheado al montar (sin pedir permisos)
   useEffect(() => {
     void (async () => {
@@ -379,6 +495,23 @@ export function useLiveConsole(): UseLiveConsoleResult {
       if (cached.length > 0) setTracks(cached)
       const handle = await loadDirectoryHandle()
       if (handle) setPersisted(true)
+    })()
+  }, [])
+
+  // Efectos de sonido: Blob en IndexedDB + tamaño de botonera en localStorage.
+  useEffect(() => {
+    void (async () => {
+      try {
+        const [stored, size] = await Promise.all([loadEffects(), Promise.resolve(loadPadSize())])
+        const map = new Map(stored.map((effect) => [effect.slot, effect]))
+        effectsRef.current = map
+        setSoundEffects(map)
+        setPadSizeState(size)
+      } catch (err) {
+        setEffectsError(err instanceof Error ? err.message : 'No se pudieron cargar los efectos')
+      } finally {
+        setEffectsLoading(false)
+      }
     })()
   }, [])
 
@@ -936,6 +1069,35 @@ export function useLiveConsole(): UseLiveConsoleResult {
     B: { ...snapshot.decks.B, cue: cue.B },
   }), [snapshot, cue])
 
+  const effectSlots = useMemo(
+    () => padSlots(soundEffects, padSize),
+    [soundEffects, padSize]
+  )
+
+  const effects = useMemo<SoundEffectsApi>(() => ({
+    padSize,
+    slots: effectSlots,
+    loading: effectsLoading,
+    error: effectsError,
+    addEffect,
+    removeEffect,
+    setGain: setEffectGain,
+    play: playEffect,
+    stopAll: stopAllEffects,
+    setPadSize,
+  }), [
+    padSize,
+    effectSlots,
+    effectsLoading,
+    effectsError,
+    addEffect,
+    removeEffect,
+    setEffectGain,
+    playEffect,
+    stopAllEffects,
+    setPadSize,
+  ])
+
   const player = useMemo<PlayerApi>(() => ({
     current: decks.A.track,
     nextTrack: queue[0] ?? null,
@@ -988,6 +1150,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     },
     decks,
     player,
+    effects,
     cue,
     mic: snapshot.mic,
     crossfader: snapshot.crossfader,

@@ -20,7 +20,7 @@ The system SHALL expose a **Transmitir en vivo** section for Radio in the dashbo
 
 ### Requirement: Simple player layout
 
-The console SHALL present a file browser on the left and a playlist on the right. It SHALL provide transport controls for previous track, play/pause, next track, and seek within the current track. It SHALL show the current track and the next track. The two-deck mixer, EQ, and loops SHALL remain available in an advanced section that is collapsed by default.
+The console SHALL present a file browser on the left and a playlist on the right. It SHALL provide transport controls for previous track, play/pause, next track, and seek within the current track. It SHALL show the current track and the next track. The two-deck mixer, EQ, and loops SHALL NOT be exposed in the main UI during this iteration; the audio engine MAY retain that capability for a future change.
 
 #### Scenario: Main layout
 - **WHEN** the user opens the live console
@@ -31,9 +31,34 @@ The console SHALL present a file browser on the left and a playlist on the right
 - **THEN** the current track changes or pauses/resumes as expected
 - **AND** the current and next track names update
 
-#### Scenario: Advanced mixer
-- **WHEN** the user expands the advanced section
-- **THEN** the two decks, EQ, loops, crossfader, and cue controls remain available
+#### Scenario: Advanced mixer hidden
+- **WHEN** the user opens the live console
+- **THEN** only the simple player, file browser, playlist, transport, and effects pad are visible
+- **AND** the advanced deck/EQ/loop controls are not exposed
+
+### Requirement: Sound effects pad
+
+The console SHALL provide a configurable sound effects pad. The user SHALL be able to choose the number of buttons, assign an audio file to each slot, adjust each effect's volume, replace or remove it, and trigger it over the program. Effects SHALL be stored locally and SHALL persist after closing and reopening the browser. Effects SHALL NOT be uploaded to the server.
+
+#### Scenario: Add an effect
+- **WHEN** the user assigns an audio file to an empty slot
+- **THEN** the slot shows the effect name and can be triggered
+
+#### Scenario: Persist after reload
+- **WHEN** the user reloads the browser after adding effects and changing the pad size
+- **THEN** the same effects are still assigned to their slots and the pad size is preserved
+
+#### Scenario: Trigger while live
+- **WHEN** the user presses an effect button while the console is on air
+- **THEN** the effect is mixed over the music/microphone and sent to the stream
+
+#### Scenario: Remove or replace
+- **WHEN** the user removes or replaces an effect
+- **THEN** the slot is emptied or updated and the change persists after reload
+
+#### Scenario: Unsupported file
+- **WHEN** the user selects a file that is not a supported audio format
+- **THEN** the console reports the error and leaves the slot unchanged
 
 ### Requirement: Local audio library access and persistence
 
