@@ -539,6 +539,13 @@ Prerrequisitos del nodo:
 4. Tras un cambio de agente/SRS/Caddy, pulsar **"Actualizar nodo"** en cada nodo
    remoto.
 
+### Watchdog de Icecast
+
+El supervisor del agente verifica Icecast cada 60 s. Si no responde, reinicia
+el contenedor `ipstream-icecast` y, cuando vuelve, reinicia los streams que
+quedaron sin mount. No reinicia un stream si hay un DJ conectado al harbor.
+Hay un cooldown de 60 s para evitar bucles.
+
 ### Fallback por silencio
 
 Si la fuente en vivo deja de emitir audio (consola web o DJ externo conectado al

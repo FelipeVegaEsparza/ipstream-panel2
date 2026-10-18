@@ -11,11 +11,16 @@
 //   - audita cada reinicio y cada abandono.
 // =====================================================
 
+import { exec } from 'child_process'
+import { promisify } from 'util'
 import { logger } from './logger.js'
 import { pool } from './db.js'
-import { isProcessRunning, startStream } from './liquidsoap.js'
+import { getMountStatus, ping as icecastPing } from './icecast.js'
+import { isProcessRunning, restartStream, startStream } from './liquidsoap.js'
 import { resolveSelfServerId } from './self-server.js'
 import { isAnyHarborSourceConnected } from './liquidsoap-telnet.js'
+
+const execp = promisify(exec)
 
 const CHECK_INTERVAL_MS = 60_000
 // Espera entre reintentos (ms). Se usa el índice min(attempts-1, len-1).
@@ -24,21 +29,94 @@ const MAX_RESTART_ATTEMPTS = 6
 // Chequeos consecutivos sin proceso antes de reiniciar. Evita que un
 // fallo transitorio de `docker exec` dispare un reinicio innecesario.
 const MISSES_BEFORE_RESTART = 2
+// Evita reiniciar Icecast en bucle si no puede levantarse.
+const ICECAST_RESTART_COOLDOWN_MS = 60_000
 
 let intervalHandle = null
+let startupTimer = null
+let lastIcecastRestart = 0
 // clientId -> { attempts, misses, nextAttemptAt }
 const _recovery = new Map()
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * Si Icecast no responde, reinicia el contenedor local. Devuelve si quedó
+ * operativo y si esta llamada fue la que lo recuperó.
+ */
+async function ensureIcecast() {
+  if (await icecastPing()) return { ok: true, recovered: false }
+
+  const now = Date.now()
+  if (now - lastIcecastRestart < ICECAST_RESTART_COOLDOWN_MS) {
+    return { ok: false, recovered: false }
+  }
+  lastIcecastRestart = now
+
+  logger.warn('Icecast no responde; reiniciando contenedor ipstream-icecast')
+  try {
+    await execp('docker restart ipstream-icecast', { timeout: 20_000 })
+    await sleep(4_000)
+    if (await icecastPing()) {
+      logger.info('Icecast recuperado por el supervisor')
+      return { ok: true, recovered: true }
+    }
+    logger.error('Icecast sigue sin responder tras reiniciar el contenedor')
+  } catch (err) {
+    logger.error({ err: err.message }, 'No se pudo reiniciar ipstream-icecast')
+  }
+  return { ok: false, recovered: false }
+}
+
+/**
+ * Tras recuperar Icecast, los procesos Liquidsoap pueden seguir vivos pero
+ * sin publicar. Reinicia los que no tienen mount (salvo que haya un DJ
+ * conectado al harbor, para no cortar una fuente en vivo).
+ */
+async function recoverMountsAfterIcecast(rows) {
+  for (const row of rows) {
+    try {
+      const proc = await isProcessRunning(row.icecastMount, { bypassCache: true })
+      if (!proc.running) continue
+      const mount = await getMountStatus(row.icecastMount).catch(() => null)
+      if (mount) continue
+
+      const harborConnected = await isAnyHarborSourceConnected(row.liquidsoapTelnetPort)
+      if (harborConnected === true) {
+        logger.warn({ clientId: row.clientId, mount: row.icecastMount }, 'Icecast recuperado pero hay un DJ conectado; no se reinicia el stream')
+        continue
+      }
+
+      logger.warn({ clientId: row.clientId, mount: row.icecastMount }, 'Icecast recuperado; reiniciando stream sin mount')
+      await restartStream(row.clientId)
+      await audit(row.clientId, 'supervisor_icecast_recovery', { mount: row.icecastMount })
+    } catch (err) {
+      logger.warn({ err: err.message, clientId: row.clientId }, 'No se pudo recuperar el stream tras Icecast')
+    }
+  }
+}
 
 export function startStreamSupervisor() {
   if (intervalHandle) return
   logger.info('Stream supervisor iniciado (intervalo: 60s)')
   intervalHandle = setInterval(checkStreams, CHECK_INTERVAL_MS)
+  // Primera pasada al arrancar, con margen para que Icecast/Liquidsoap
+  // terminen de levantar.
+  startupTimer = setTimeout(() => {
+    void checkStreams()
+  }, 10_000)
 }
 
 export function stopStreamSupervisor() {
   if (intervalHandle) {
     clearInterval(intervalHandle)
     intervalHandle = null
+  }
+  if (startupTimer) {
+    clearTimeout(startupTimer)
+    startupTimer = null
   }
 }
 
@@ -67,6 +145,9 @@ async function markOff(clientId, lastError) {
 
 async function checkStreams() {
   try {
+    const icecast = await ensureIcecast()
+    if (!icecast.ok) return
+
     const selfId = await resolveSelfServerId()
 
     // Solo supervisar streams de ESTE servidor (o legacy sin serverId).
@@ -79,6 +160,10 @@ async function checkStreams() {
       }`,
       selfId ? [selfId] : []
     )
+
+    if (icecast.recovered && rows.length > 0) {
+      await recoverMountsAfterIcecast(rows)
+    }
 
     for (const row of rows) {
       try {
@@ -97,8 +182,12 @@ async function checkStream(row) {
   const proc = await isProcessRunning(icecastMount)
 
   if (proc.running) {
-    resetRecovery(clientId)
-    return
+    const mount = await getMountStatus(icecastMount).catch(() => null)
+    if (mount) {
+      resetRecovery(clientId)
+      return
+    }
+    logger.warn({ clientId, mount: icecastMount }, 'Stream supervisor: proceso activo pero sin mount en Icecast')
   }
 
   const state = _recovery.get(clientId) || { attempts: 0, misses: 0, nextAttemptAt: 0 }
