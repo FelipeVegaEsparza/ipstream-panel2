@@ -122,6 +122,18 @@ services:
       - ipstream-net
 
   # =====================================================
+  # Piper TTS — locuciones de clima y hora
+  # =====================================================
+  piper:
+    build:
+      context: ./streaming/piper
+      dockerfile: Dockerfile
+    container_name: ipstream-piper
+    restart: unless-stopped
+    networks:
+      - ipstream-net
+
+  # =====================================================
   # Audio Bridge — FFmpeg para la consola web de radio
   # Toma el RTMP de SRS (WHIP) o stdin (WebSocket) y lo publica
   # al harbor de Liquidsoap del slot.
@@ -148,6 +160,8 @@ services:
       icecast:
         condition: service_healthy
       audio-bridge:
+        condition: service_started
+      piper:
         condition: service_started
     environment:
       NODE_ENV: production

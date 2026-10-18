@@ -31,6 +31,8 @@ export class LiveAudioEngine {
   private analyserR: AnalyserNode
   private musicBus: GainNode
   private duckGain: GainNode
+  private announcementDuck: GainNode
+  private announcementCount = 0
   private cueBus: GainNode
   private monitorGain: GainNode
   private monitorEnabled = false
@@ -83,6 +85,11 @@ export class LiveAudioEngine {
     this.duckGain = this.context.createGain()
     this.duckGain.gain.value = 1
 
+    // Ducking independiente para locuciones (clima/hora). El talkover del
+    // micrófono usa duckGain; este nodo evita que se pisen.
+    this.announcementDuck = this.context.createGain()
+    this.announcementDuck.gain.value = 1
+
     this.cueBus = this.context.createGain()
     this.cueBus.gain.value = 1
 
@@ -99,7 +106,8 @@ export class LiveAudioEngine {
     this.crossfadeA.connect(this.musicBus)
     this.crossfadeB.connect(this.musicBus)
     this.musicBus.connect(this.duckGain)
-    this.duckGain.connect(this.masterGain)
+    this.duckGain.connect(this.announcementDuck)
+    this.announcementDuck.connect(this.masterGain)
     this.masterGain.connect(this.limiter)
     this.limiter.connect(this.streamDestination)
     this.limiter.connect(this.masterSplitter)
@@ -169,6 +177,31 @@ export class LiveAudioEngine {
       try { source.stop() } catch {}
     }
     this.activeEffects.clear()
+  }
+
+  /** Locución TTS: baja la música mientras habla y la restaura al terminar. */
+  playAnnouncement(buffer: AudioBuffer, gainDb = 0): void {
+    const source = this.context.createBufferSource()
+    source.buffer = buffer
+    const gain = this.context.createGain()
+    gain.gain.value = dbToGain(gainDb)
+    source.connect(gain)
+    gain.connect(this.masterGain)
+
+    this.announcementCount += 1
+    const now = this.context.currentTime
+    this.announcementDuck.gain.cancelScheduledValues(now)
+    this.announcementDuck.gain.setTargetAtTime(0.25, now, 0.08)
+
+    source.onended = () => {
+      this.announcementCount = Math.max(0, this.announcementCount - 1)
+      if (this.announcementCount === 0) {
+        this.announcementDuck.gain.setTargetAtTime(1, this.context.currentTime, 0.3)
+      }
+      try { source.disconnect() } catch {}
+      try { gain.disconnect() } catch {}
+    }
+    source.start()
   }
 
   setCrossfader(position: number): void {
@@ -425,6 +458,7 @@ export class LiveAudioEngine {
     this.crossfadeB.disconnect()
     this.musicBus.disconnect()
     this.duckGain.disconnect()
+    this.announcementDuck.disconnect()
     this.masterGain.disconnect()
     this.limiter.disconnect()
     this.masterSplitter.disconnect()

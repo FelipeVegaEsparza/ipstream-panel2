@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 import { FileBrowser } from './FileBrowser'
+import { AnnouncementsBar } from './AnnouncementsBar'
 import { BroadcastBar } from './BroadcastBar'
 import { PlayerBar } from './PlayerBar'
 import { PlaylistPanel } from './PlaylistPanel'
@@ -154,6 +155,12 @@ export function LiveConsole() {
         onMicGain={live.setMicGain}
         monitorEnabled={live.monitorEnabled}
         onMonitor={live.setMonitor}
+      />
+
+      <AnnouncementsBar
+        loading={live.announcements.loading}
+        error={live.announcements.error}
+        onAnnounce={live.announcements.announce}
       />
 
       <SoundEffectsPad

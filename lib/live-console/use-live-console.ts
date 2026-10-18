@@ -124,6 +124,14 @@ export interface PlayerApi {
   moveInPlaylist: (id: string, direction: -1 | 1) => void
 }
 
+export type AnnouncementType = 'weather' | 'time'
+
+export interface AnnouncementsApi {
+  announce: (type: AnnouncementType) => Promise<void>
+  loading: AnnouncementType | null
+  error: string | null
+}
+
 export interface SoundEffectsApi {
   padSize: number
   slots: (SoundEffect | null)[]
@@ -159,6 +167,7 @@ export interface UseLiveConsoleResult {
   decks: Record<DeckId, DeckSnapshot>
   player: PlayerApi
   effects: SoundEffectsApi
+  announcements: AnnouncementsApi
   cue: Record<DeckId, boolean>
   mic: MicSnapshot
   crossfader: number
@@ -237,6 +246,8 @@ export function useLiveConsole(): UseLiveConsoleResult {
   const [padSize, setPadSizeState] = useState(DEFAULT_PAD_SIZE)
   const [effectsLoading, setEffectsLoading] = useState(true)
   const [effectsError, setEffectsError] = useState<string | null>(null)
+  const [announcementLoading, setAnnouncementLoading] = useState<AnnouncementType | null>(null)
+  const [announcementError, setAnnouncementError] = useState<string | null>(null)
   const effectsRef = useRef<Map<number, SoundEffect>>(new Map())
   const effectBuffersRef = useRef<Map<string, AudioBuffer>>(new Map())
   useEffect(() => { effectsRef.current = soundEffects }, [soundEffects])
@@ -480,6 +491,38 @@ export function useLiveConsole(): UseLiveConsoleResult {
 
   const stopAllEffects = useCallback(() => {
     engineRef.current?.stopAllEffects()
+  }, [])
+
+  const announce = useCallback(async (type: AnnouncementType) => {
+    const engine = engineRef.current
+    if (!engine) return
+    setAnnouncementLoading(type)
+    setAnnouncementError(null)
+    try {
+      // La locución va al programa; activamos el monitor para escucharla
+      // localmente y, si hay sesión, también sale al stream.
+      engine.setMonitor(true)
+      await engine.resume()
+      const res = await fetch('/api/dashboard/streaming/live/announce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      })
+      if (!res.ok) {
+        let message = 'No se pudo generar la locución.'
+        try {
+          const data = await res.json()
+          message = data?.message || data?.error || message
+        } catch {}
+        throw new Error(message)
+      }
+      const buffer = await engine.decodeAudio(await res.arrayBuffer())
+      engine.playAnnouncement(buffer)
+    } catch (err) {
+      setAnnouncementError(err instanceof Error ? err.message : 'No se pudo reproducir la locución')
+    } finally {
+      setAnnouncementLoading(null)
+    }
   }, [])
 
   const setPadSize = useCallback((size: number) => {
@@ -1111,6 +1154,12 @@ export function useLiveConsole(): UseLiveConsoleResult {
     setPadSize,
   ])
 
+  const announcements = useMemo<AnnouncementsApi>(() => ({
+    announce,
+    loading: announcementLoading,
+    error: announcementError,
+  }), [announce, announcementLoading, announcementError])
+
   const player = useMemo<PlayerApi>(() => ({
     current: decks.A.track,
     nextTrack: queue[0] ?? null,
@@ -1164,6 +1213,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     decks,
     player,
     effects,
+    announcements,
     cue,
     mic: snapshot.mic,
     crossfader: snapshot.crossfader,

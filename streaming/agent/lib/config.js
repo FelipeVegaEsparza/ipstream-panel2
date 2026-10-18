@@ -133,6 +133,10 @@ export const config = {
     bridgeCodec: required('LIVE_BRIDGE_CODEC', 'mp3'),
     // Heartbeat máximo antes de considerar la sesión abandonada.
     staleMs: intEnv('LIVE_SESSION_STALE_MS', 45000),
+    // Piper TTS (locuciones de clima/hora)
+    ttsContainer: required('PIPER_CONTAINER', 'ipstream-piper'),
+    ttsBin: required('PIPER_BIN', '/opt/piper/piper'),
+    ttsModel: required('PIPER_MODEL', '/voices/es_ES-davefx-medium.onnx'),
     // Fallback automático al AutoDJ cuando la fuente en vivo queda en silencio.
     // Aplica a la consola web y a DJs externos conectados al harbor.
     silenceFallbackSeconds: intEnv('RADIO_SILENCE_FALLBACK_SECONDS', 10),

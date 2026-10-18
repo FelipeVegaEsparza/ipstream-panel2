@@ -546,6 +546,18 @@ el contenedor `ipstream-icecast` y, cuando vuelve, reinicia los streams que
 quedaron sin mount. No reinicia un stream si hay un DJ conectado al harbor.
 Hay un cooldown de 60 s para evitar bucles.
 
+### Locuciones de clima y hora
+
+La consola tiene botones **Clima** y **Hora** que generan una locución y la
+mezclan sobre el programa (sale al aire y por el monitor). El clima usa la
+ciudad/coordenadas configuradas en **Datos Básicos** y Open-Meteo; la hora usa
+la zona horaria del cliente. Durante el anuncio la música baja al 25 %.
+
+La voz se sintetiza con **Piper TTS** en el contenedor `piper`
+(`es_ES-davefx-medium`). Es offline y no depende de APIs externas. El agente
+genera el WAV bajo demanda. Tocar `streaming/piper/*`, `streaming/agent/*` o
+`docker-compose.streaming.yml` obliga a **"Actualizar nodo"**.
+
 ### Fallback por silencio
 
 Si la fuente en vivo deja de emitir audio (consola web o DJ externo conectado al
