@@ -26,7 +26,9 @@ export class LiveAudioEngine {
   readonly streamDestination: MediaStreamAudioDestinationNode
   private masterGain: GainNode
   private limiter: DynamicsCompressorNode
-  private masterAnalyser: AnalyserNode
+  private masterSplitter: ChannelSplitterNode
+  private analyserL: AnalyserNode
+  private analyserR: AnalyserNode
   private musicBus: GainNode
   private duckGain: GainNode
   private cueBus: GainNode
@@ -52,7 +54,8 @@ export class LiveAudioEngine {
   private talkover = true
   private talkoverTimer: ReturnType<typeof setInterval> | null = null
   private micPermission: MicSnapshot['permission'] = 'unknown'
-  private analyserBuffer = new Float32Array(2048)
+  private analyserBufferL = new Float32Array(2048)
+  private analyserBufferR = new Float32Array(2048)
   private activeEffects = new Set<AudioBufferSourceNode>()
 
   constructor() {
@@ -70,8 +73,11 @@ export class LiveAudioEngine {
     this.limiter.attack.value = 0.003
     this.limiter.release.value = 0.25
 
-    this.masterAnalyser = this.context.createAnalyser()
-    this.masterAnalyser.fftSize = 2048
+    this.masterSplitter = this.context.createChannelSplitter(2)
+    this.analyserL = this.context.createAnalyser()
+    this.analyserL.fftSize = 2048
+    this.analyserR = this.context.createAnalyser()
+    this.analyserR.fftSize = 2048
 
     this.musicBus = this.context.createGain()
     this.duckGain = this.context.createGain()
@@ -96,7 +102,9 @@ export class LiveAudioEngine {
     this.duckGain.connect(this.masterGain)
     this.masterGain.connect(this.limiter)
     this.limiter.connect(this.streamDestination)
-    this.limiter.connect(this.masterAnalyser)
+    this.limiter.connect(this.masterSplitter)
+    this.masterSplitter.connect(this.analyserL, 0)
+    this.masterSplitter.connect(this.analyserR, 1)
     this.limiter.connect(this.monitorGain)
     this.monitorGain.connect(this.context.destination)
     this.cueBus.connect(this.context.destination)
@@ -348,9 +356,18 @@ export class LiveAudioEngine {
     }
   }
 
+  readMasterLevelsDb(): { left: number; right: number } {
+    this.analyserL.getFloatTimeDomainData(this.analyserBufferL)
+    this.analyserR.getFloatTimeDomainData(this.analyserBufferR)
+    return {
+      left: gainToDb(computeRms(this.analyserBufferL)),
+      right: gainToDb(computeRms(this.analyserBufferR)),
+    }
+  }
+
   readMasterLevelDb(): number {
-    this.masterAnalyser.getFloatTimeDomainData(this.analyserBuffer)
-    return gainToDb(computeRms(this.analyserBuffer))
+    const { left, right } = this.readMasterLevelsDb()
+    return Math.max(left, right)
   }
 
   readMicLevelDb(): number {
@@ -392,6 +409,7 @@ export class LiveAudioEngine {
       crossfader: this.crossfader,
       masterDb: this.masterDb,
       masterLevelDb: this.readMasterLevelDb(),
+      masterLevels: this.readMasterLevelsDb(),
       monitorEnabled: this.monitorEnabled,
       contextState: this.context.state,
     }
@@ -409,7 +427,9 @@ export class LiveAudioEngine {
     this.duckGain.disconnect()
     this.masterGain.disconnect()
     this.limiter.disconnect()
-    this.masterAnalyser.disconnect()
+    this.masterSplitter.disconnect()
+    this.analyserL.disconnect()
+    this.analyserR.disconnect()
     this.cueBus.disconnect()
     this.monitorGain.disconnect()
     void this.context.close()

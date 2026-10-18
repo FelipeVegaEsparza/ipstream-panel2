@@ -164,6 +164,7 @@ export interface UseLiveConsoleResult {
   crossfader: number
   masterDb: number
   masterLevelDb: number
+  masterLevels: { left: number; right: number }
   session: {
     state: SessionState
     transport: TransportKind | null
@@ -214,6 +215,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     crossfader: 0.5,
     masterDb: 0,
     masterLevelDb: -Infinity,
+    masterLevels: { left: -Infinity, right: -Infinity },
     monitorEnabled: false,
     contextState: 'unavailable',
   })
@@ -1167,6 +1169,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     crossfader: snapshot.crossfader,
     masterDb: snapshot.masterDb,
     masterLevelDb: snapshot.masterLevelDb,
+    masterLevels: snapshot.masterLevels,
     monitorEnabled: snapshot.monitorEnabled,
     session: {
       state: sessionState,

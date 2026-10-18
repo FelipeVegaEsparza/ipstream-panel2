@@ -48,6 +48,7 @@ class FakeContext {
   streamDest = { stream: { getAudioTracks: () => [] } }
 
   createGain() { return new FakeGain() }
+  createChannelSplitter() { return new FakeNode() }
   createBiquadFilter() { return new FakeFilter() }
   createDynamicsCompressor() { return new FakeCompressor() }
   createAnalyser() { return new FakeAnalyser() }

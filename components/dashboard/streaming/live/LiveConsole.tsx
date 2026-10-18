@@ -7,6 +7,7 @@ import { BroadcastBar } from './BroadcastBar'
 import { PlayerBar } from './PlayerBar'
 import { PlaylistPanel } from './PlaylistPanel'
 import { SoundEffectsPad } from './SoundEffectsPad'
+import { StereoVuMeter } from './StereoVuMeter'
 import { useLiveConsole } from '@/lib/live-console/use-live-console'
 
 export function LiveConsole() {
@@ -98,7 +99,7 @@ export function LiveConsole() {
         onRefreshSlots={live.refreshSlots}
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)]">
         <div className={panelHeight}>
           <FileBrowser
             tracks={live.library.tracks}
@@ -115,6 +116,13 @@ export function LiveConsole() {
             onRemoveTrack={live.library.removeTrack}
             onAddToPlaylist={live.player.addToPlaylist}
             onPlayNow={live.player.playNow}
+          />
+        </div>
+
+        <div className="h-40 lg:h-auto">
+          <StereoVuMeter
+            leftDb={live.masterLevels.left}
+            rightDb={live.masterLevels.right}
           />
         </div>
 
@@ -135,7 +143,6 @@ export function LiveConsole() {
         playing={live.player.playing}
         position={live.player.position}
         duration={live.player.duration}
-        masterLevelDb={live.masterLevelDb}
         onPlay={live.player.play}
         onPause={live.player.pause}
         onPrevious={live.player.previous}
