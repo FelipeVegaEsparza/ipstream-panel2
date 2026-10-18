@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 import { FileBrowser } from './FileBrowser'
 import { PlayerBar } from './PlayerBar'
 import { PlaylistPanel } from './PlaylistPanel'
@@ -10,13 +11,43 @@ import { useLiveConsole } from '@/lib/live-console/use-live-console'
 
 export function LiveConsole() {
   const live = useLiveConsole()
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === rootRef.current)
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
+  const toggleFullscreen = async () => {
+    const root = rootRef.current
+    if (!root) return
+    try {
+      if (document.fullscreenElement === root) {
+        await document.exitFullscreen()
+      } else {
+        await root.requestFullscreen()
+      }
+    } catch {
+      // Algunos navegadores no permiten fullscreen en este contexto.
+    }
+  }
+
+  const panelHeight = isFullscreen
+    ? 'h-[calc(100vh-560px)] min-h-[280px]'
+    : 'h-[520px] lg:h-[560px]'
+
   const playlistIds = useMemo(
     () => new Set(live.library.queue.map((track) => track.id)),
     [live.library.queue]
   )
 
   return (
-    <div className="space-y-5">
+    <div
+      ref={rootRef}
+      className={isFullscreen ? 'flex min-h-screen flex-col gap-4 overflow-y-auto bg-background p-4' : 'space-y-5'}
+    >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Reproductor en vivo</h1>
@@ -25,8 +56,24 @@ export function LiveConsole() {
             el AutoDJ retoma el control automáticamente.
           </p>
         </div>
-        <div className="rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground">
-          Calidad objetivo: <span className="font-mono text-foreground">192 kbps</span>
+        <div className="flex items-center gap-2">
+          <div className="rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground">
+            Calidad objetivo: <span className="font-mono text-foreground">192 kbps</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void toggleFullscreen()}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
+            title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          >
+            {isFullscreen ? (
+              <ArrowsPointingInIcon className="h-3.5 w-3.5" />
+            ) : (
+              <ArrowsPointingOutIcon className="h-3.5 w-3.5" />
+            )}
+            <span className="hidden sm:inline">{isFullscreen ? 'Salir' : 'Pantalla completa'}</span>
+          </button>
         </div>
       </div>
 
@@ -52,7 +99,7 @@ export function LiveConsole() {
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="h-[520px] lg:h-[560px]">
+        <div className={panelHeight}>
           <FileBrowser
             tracks={live.library.tracks}
             playlistIds={playlistIds}
@@ -71,7 +118,7 @@ export function LiveConsole() {
           />
         </div>
 
-        <div className="h-[520px] lg:h-[560px]">
+        <div className={panelHeight}>
           <PlaylistPanel
             queue={live.library.queue}
             current={live.player.current}

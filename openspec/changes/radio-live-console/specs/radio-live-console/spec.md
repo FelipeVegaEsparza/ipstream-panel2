@@ -36,6 +36,11 @@ The console SHALL present a file browser on the left and a playlist on the right
 - **THEN** only the simple player, file browser, playlist, transport, and effects pad are visible
 - **AND** the advanced deck/EQ/loop controls are not exposed
 
+#### Scenario: Fullscreen
+- **WHEN** the user presses the fullscreen button
+- **THEN** the console is shown without the dashboard sidebar/header and the panels use the available screen height
+- **AND** pressing Escape or the button again returns to the normal layout
+
 ### Requirement: Sound effects pad
 
 The console SHALL provide a configurable sound effects pad. The user SHALL be able to choose the number of buttons, assign an audio file to each slot, adjust each effect's volume, replace or remove it, and trigger it over the program. Effects SHALL be stored locally and SHALL persist after closing and reopening the browser. Effects SHALL NOT be uploaded to the server.

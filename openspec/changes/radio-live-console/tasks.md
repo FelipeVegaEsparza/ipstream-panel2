@@ -97,3 +97,8 @@
 - [x] 10.2 Mezclar el efecto en el programa (`masterGain`) para que salga al stream y al monitor; verificar typecheck/build.
 - [x] 10.3 Agregar la UI de botonera con cantidad de botones, asignar/cambiar/quitar, volumen individual y detener; verificar tests de componentes.
 - [x] 10.4 Documentar que los efectos son locales y persisten en el navegador.
+
+
+## 11. Pantalla completa
+
+- [x] 11.1 Agregar un botón de pantalla completa sobre el contenedor de la consola, con salida por Escape/botón y alturas adaptadas; verificar build.
