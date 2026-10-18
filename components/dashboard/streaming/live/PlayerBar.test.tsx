@@ -40,6 +40,7 @@ function renderBar(overrides: { playing?: boolean } = {}) {
       playing={overrides.playing ?? false}
       position={10}
       duration={120}
+      masterLevelDb={-12}
       mic={mic}
       monitorEnabled={false}
       {...handlers}

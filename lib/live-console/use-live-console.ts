@@ -697,6 +697,9 @@ export function useLiveConsole(): UseLiveConsoleResult {
   const playDeck = useCallback(async (deckId: DeckId) => {
     const engine = engineRef.current
     if (!engine) return
+    // Al reproducir desde la consola, monitorear el programa en la salida
+    // local para que el usuario escuche aunque todavía no esté al aire.
+    engine.setMonitor(true)
     await engine.resume()
     await engine.getDeck(deckId).play()
     currentDeckRef.current = deckId
@@ -770,8 +773,16 @@ export function useLiveConsole(): UseLiveConsoleResult {
       return
     }
     const first = queueRef.current[0]
-    if (first) await playNow(first)
-  }, [playDeck, playNow])
+    if (first) {
+      await playNow(first)
+      return
+    }
+    // Si no hay nada cargado ni en cola, arrancar con el primer archivo
+    // de la biblioteca local. Así el botón Play del reproductor no queda
+    // muerto después de agregar una carpeta.
+    const libraryFirst = tracks[0]
+    if (libraryFirst) await playNow(libraryFirst)
+  }, [playDeck, playNow, tracks])
 
   const playerPause = useCallback(() => pauseDeck('A'), [pauseDeck])
   const playerSeek = useCallback((seconds: number) => seekDeck('A', seconds), [seekDeck])

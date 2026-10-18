@@ -19,6 +19,7 @@ interface Props {
   playing: boolean
   position: number
   duration: number
+  masterLevelDb: number
   onPlay: () => Promise<void>
   onPause: () => void
   onPrevious: () => Promise<void>
@@ -38,6 +39,7 @@ export function PlayerBar({
   playing,
   position,
   duration,
+  masterLevelDb,
   onPlay,
   onPause,
   onPrevious,
@@ -147,8 +149,11 @@ export function PlayerBar({
             title="Ganancia del micrófono"
             aria-label="Ganancia del micrófono"
           />
+          <div className="w-28">
+            <VuMeter db={masterLevelDb} label="Programa" compact />
+          </div>
           <div className="w-20">
-            <VuMeter db={mic.levelDb} compact />
+            <VuMeter db={mic.levelDb} label="Mic" compact />
           </div>
           <button
             type="button"

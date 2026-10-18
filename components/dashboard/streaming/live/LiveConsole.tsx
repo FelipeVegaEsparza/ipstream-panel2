@@ -135,6 +135,7 @@ export function LiveConsole() {
         playing={live.player.playing}
         position={live.player.position}
         duration={live.player.duration}
+        masterLevelDb={live.masterLevelDb}
         onPlay={live.player.play}
         onPause={live.player.pause}
         onPrevious={live.player.previous}
