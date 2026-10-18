@@ -72,7 +72,8 @@ export default async function videoRoutes(fastify) {
     const { app, stream } = req.body || {}
 
     // El app 'live' lo usan el encoder de AutoDJ: nunca es un DJ.
-    if (app !== 'dj' && app !== 'relay') {
+    // 'radio' es la consola web (WHIP -> RTMP) y también tiene su puente.
+    if (app !== 'dj' && app !== 'relay' && app !== 'radio') {
       reply.send({ code: 0, message: 'ignored' })
       return
     }
