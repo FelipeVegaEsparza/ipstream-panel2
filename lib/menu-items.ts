@@ -25,6 +25,7 @@ import {
   QueueListIcon,
   Bars3BottomLeftIcon,
   RocketLaunchIcon,
+  SignalIcon,
 } from '@heroicons/react/24/outline'
 
 export type MenuItemKey =
@@ -58,6 +59,7 @@ export type MenuItemKey =
   | 'streaming-jingles'
   | 'streaming-schedule'
   | 'streaming-connection'
+  | 'streaming-live'
   | 'streaming-stats'
   // Televisión
   | 'television'
@@ -128,6 +130,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   href: '/dashboard/streaming/connection',
   section: 'Radio',
   icon: LinkIcon,
+},
+{
+  key: 'streaming-live',
+  name: 'Transmitir en vivo',
+  href: '/dashboard/streaming/live',
+  section: 'Radio',
+  icon: SignalIcon,
 },
 {
   key: 'streaming-jingles',

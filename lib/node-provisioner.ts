@@ -97,7 +97,7 @@ function buildNodeEnv(server: {
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || '',
     STREAMING_AGENT_TOKEN: token,
     HARBOR_CALLBACK_SECRET: process.env.HARBOR_CALLBACK_SECRET || '',
-    CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS || '',
+    CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS || `https://${panelHost()},http://localhost:3000`,
     ICE_ADMIN_USER: 'admin',
     ICE_ADMIN_PASSWORD: rand(),
     ICE_SOURCE_PASSWORD: rand(),
@@ -111,6 +111,16 @@ function buildNodeEnv(server: {
     HARBOR_PORT_RANGE: '22340-22350',
     MYSQL_HOST: process.env.MYSQL_HOST || panelHost(),
     MYSQL_PORT: '3307',
+    // Consola web de radio (WebRTC/WebSocket)
+    LIVE_SESSION_SECRET: process.env.LIVE_SESSION_SECRET || token,
+    AUDIO_BRIDGE_CONTAINER: 'ipstream-audio-bridge',
+    LIVE_AUDIO_BITRATE: '192',
+    LIVE_BRIDGE_CODEC: process.env.LIVE_BRIDGE_CODEC || 'mp3',
+    RTC_CANDIDATE: process.env.RTC_CANDIDATE || server.sshHost,
+    SRS_RTC_UDP_PORT: process.env.SRS_RTC_UDP_PORT || '8010',
+    SRS_HOST: 'srs',
+    SRS_RTMP_PORT: '1935',
+    SRS_HTTP_PORT: '8080',
   }
 
   return Object.entries(env)
@@ -131,6 +141,12 @@ const CADDYFILE = `# IPStream — Caddyfile para nodos de streaming
 \t\treverse_proxy agent:4000
 \t}
 \thandle /api/video/playout/* {
+\t\treverse_proxy agent:4000
+\t}
+\thandle /rtc/* {
+\t\treverse_proxy agent:4000
+\t}
+\thandle /ws/live {
 \t\treverse_proxy agent:4000
 \t}
 \thandle /dj/* {
@@ -166,11 +182,10 @@ const CADDYFILE = `# IPStream — Caddyfile para nodos de streaming
 }
 `
 
-/** Override para nodos SOLO radio: excluye SRS y video-encoder (perfiles). */
+/** Override para nodos SOLO radio: excluye el encoder de video.
+ * SRS se mantiene porque la consola web usa WHIP/WebRTC para la ingesta. */
 function radioOverrideYml(): string {
   return `services:
-  srs:
-    profiles: ["disabled"]
   video-encoder:
     profiles: ["disabled"]
 `

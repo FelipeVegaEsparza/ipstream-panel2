@@ -10,7 +10,7 @@ import { logger } from './logger.js'
  * Start a DJ session. Idempotent: if an active session already exists for the
  * same DJ slot, it is reused instead of creating a duplicate.
  */
-export async function startSession({ clientId, radioStreamId, djId, mount, role, ipAddress }) {
+export async function startSession({ clientId, radioStreamId, djId, mount, role, ipAddress, origin = 'harbor' }) {
   // Buscar sesión abierta existente para este slot
   const [existing] = await pool.query(
     `SELECT id FROM dj_sessions
@@ -26,9 +26,9 @@ export async function startSession({ clientId, radioStreamId, djId, mount, role,
 
   const id = crypto.randomUUID()
   await pool.query(
-    `INSERT INTO dj_sessions (id, clientId, radioStreamId, djId, mount, role, ipAddress, startedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [id, clientId, radioStreamId, djId, mount, role, ipAddress]
+    `INSERT INTO dj_sessions (id, clientId, radioStreamId, djId, mount, role, ipAddress, origin, startedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+    [id, clientId, radioStreamId, djId, mount, role, ipAddress, origin]
   )
   logger.info({ id, clientId, djId, mount }, 'DJ session iniciada')
   return id
@@ -72,7 +72,7 @@ export async function listSessions(clientId, { page = 1, limit = 25 } = {}) {
   const total = countRows[0]?.cnt || 0
 
   const [rows] = await pool.query(
-    `SELECT id, djId, mount, role, ipAddress, startedAt, endedAt, durationSeconds
+    `SELECT id, djId, mount, role, ipAddress, origin, startedAt, endedAt, durationSeconds
      FROM dj_sessions
      WHERE clientId = ?
      ORDER BY startedAt DESC

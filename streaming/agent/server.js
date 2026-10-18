@@ -26,6 +26,7 @@ import tvRoutes from './routes/tv.js'
 import videoScheduleRoutes, { startVideoScheduleCron } from './routes/video-schedule.js'
 import migrationRoutes from './routes/migration.js'
 import analyticsRoutes from './routes/analytics.js'
+import liveRoutes from './routes/live.js'
 import { deployIcecastConfig } from './lib/icecast-config.js'
 import { startDjWatcher, stopDjWatcher } from './lib/dj-watcher.js'
 import { rebuildAllDjState } from './lib/dj-state.js'
@@ -36,6 +37,8 @@ import { startRetentionCron, stopRetentionCron } from './lib/retention.js'
 import { startStreamSupervisor, stopStreamSupervisor } from './lib/stream-supervisor.js'
 import { startHistoryCron, stopHistoryCron } from './lib/track-history.js'
 import { startAnalyticsCrons, stopAnalyticsCrons } from './lib/analytics/index.js'
+import { startSessionSweep, stopSessionSweep, stopAllSessions, endSession } from './lib/live-sessions.js'
+import { reconcileOrphanBridges } from './lib/live-bridge.js'
 
 const MAX_VIDEO_UPLOAD_BYTES = config.video.maxUploadMb * 1024 * 1024
 
@@ -96,6 +99,11 @@ app.addContentTypeParser(/^application\/x-www-form-urlencoded/, { parseAs: 'stri
   done(null, body)
 })
 
+// WHIP envía el SDP como application/sdp (texto plano).
+app.addContentTypeParser('application/sdp', { parseAs: 'string' }, (_req, body, done) => {
+  done(null, body)
+})
+
 // Multipart (upload de MP3s y videos de TV)
 await app.register(multipart, {
   limits: { fileSize: MAX_VIDEO_UPLOAD_BYTES },
@@ -104,7 +112,11 @@ await app.register(multipart, {
 
 // WebSocket
 await app.register(websocket, {
-  options: { maxPayload: 1048576 },
+  options: {
+    maxPayload: 1048576,
+    // La consola web ofrece el token de sesión como subprotocolo.
+    handleProtocols: (protocols) => protocols.values().next().value,
+  },
 })
 
 // Hook de auth (aplica a todo excepto /health y auth-source POST)
@@ -682,6 +694,23 @@ try {
   logger.info({ err: err.message }, 'Columna currentTrackStartedAt en radio_streams (ya existía o ignorado)')
 }
 
+// Columna origin en dj_sessions: distingue DJs externos (harbor) de la consola
+// web (webrtc/websocket). Prisma la crea, pero el agente no depende del orden.
+try {
+  const [originCols] = await pool.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'dj_sessions' AND COLUMN_NAME = 'origin'`
+  )
+  if (originCols.length === 0) {
+    await pool.query(`ALTER TABLE dj_sessions ADD COLUMN origin VARCHAR(20) NOT NULL DEFAULT 'harbor'`)
+    logger.info('Columna origin en dj_sessions asegurada')
+  } else {
+    logger.info('Columna origin en dj_sessions (ya existía)')
+  }
+} catch (err) {
+  logger.info({ err: err.message }, 'Columna origin en dj_sessions (ya existía o ignorado)')
+}
+
 try {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS video_playlist_entries (
@@ -788,6 +817,7 @@ await app.register(monitorRoutes)
   await app.register(folderRoutes)
 await app.register(migrationRoutes)
 await app.register(analyticsRoutes)
+await app.register(liveRoutes)
 
   // Reconstruir estado DJ desde Liquidsoap antes de iniciar watchers
   // (solo streams running tienen puerto telnet activo).
@@ -806,6 +836,8 @@ await app.register(analyticsRoutes)
   startStreamSupervisor()
   startHistoryCron()
   startAnalyticsCrons()
+  startSessionSweep((session) => endSession(session))
+  await reconcileOrphanBridges()
 
   // Reencolar normalizaciones de video interrumpidas por un reinicio
   await recoverVideoNormalizations()
@@ -819,6 +851,8 @@ const shutdown = async (signal) => {
     stopStreamSupervisor()
     stopHistoryCron()
     stopAnalyticsCrons()
+    stopSessionSweep()
+    await stopAllSessions()
     await app.close()
     await pool.end()
     logger.info('Cleanup completo. Saliendo.')

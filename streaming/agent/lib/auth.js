@@ -15,7 +15,9 @@ export function buildAuthHook(expectedToken, harborSecret) {
         url === '/api/video/hooks/on-publish' ||
         url === '/api/video/hooks/on-unpublish' ||
         url.startsWith('/api/video/playout/') ||
-        url.startsWith('/tv/')) {
+        url.startsWith('/tv/') ||
+        url.startsWith('/rtc/') ||
+        url === '/ws/live') {
       return
     }
 

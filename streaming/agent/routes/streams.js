@@ -18,6 +18,7 @@ import { decrypt, encrypt, isEncrypted } from '../lib/encryption.js'
 import { detectAndLogTrack } from '../lib/track-history.js'
 import { _djActive as _djSlotActive, isAnyDjActive, setDjSlotActive } from '../lib/dj-state.js'
 import { startSession, endSession, listSessions } from '../lib/dj-sessions.js'
+import { listSessions as listLiveSessions } from '../lib/live-sessions.js'
 import { stopHarborInput } from '../lib/liquidsoap-telnet.js'
 import crypto from 'crypto'
 
@@ -266,6 +267,9 @@ export default async function streamRoutes(app) {
         [clientId, djMount]
       )
       if (djRows.length > 0) {
+        const liveSession = listLiveSessions().find(
+          (session) => session.clientId === clientId && session.mount === djMount
+        )
         await startSession({
           clientId,
           radioStreamId: rs.id,
@@ -273,6 +277,7 @@ export default async function streamRoutes(app) {
           mount: djMount,
           role: djRows[0].role,
           ipAddress: request.ip || null,
+          origin: liveSession?.origin || 'harbor',
         })
       }
 

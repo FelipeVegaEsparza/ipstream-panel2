@@ -493,6 +493,52 @@ biblioteca MP3, playlists y soporte para DJs en vivo.
 - **Audit log** de todas las acciones
 - **Encriptación** de passwords con AES-256-GCM (compatible con `lib/encryption.ts`)
 
+### Transmitir en vivo (consola web, WebRTC)
+
+La sección **Radio → Transmitir en vivo** (`/dashboard/streaming/live`) permite
+salir al aire desde el navegador, sin BUTT/MIXXX:
+
+- **Biblioteca local**: se eligen archivos o una carpeta. En Chromium la carpeta
+  se recuerda (File System Access + IndexedDB); en otros navegadores se elige por
+  sesión. Los audios **no se suben** al servidor.
+- **Mezcladora**: dos decks, crossfader, gain, EQ de 3 bandas, loops manuales y
+  loops cuantizados a beat cuando hay BPM confiable, micrófono con high-pass,
+  compresor, talkover y cue/PFL por auriculares.
+- **Transporte**: WHIP/WebRTC contra SRS como camino principal y WebSocket/FFmpeg
+  como fallback. La consola no cambia al cambiar de transporte.
+- **Calidad**: el puente apunta a 192 kbps. Antes de fijar el transporte se corre
+  un gate A/B contra una fuente MP3 directa (ver `openspec/changes/radio-live-console`).
+
+Variables nuevas:
+
+```env
+LIVE_SESSION_SECRET=openssl rand -hex 32
+LIVE_AUDIO_BITRATE=192
+LIVE_BRIDGE_CODEC=mp3          # o 'aac' si input.harbor lo acepta (spike)
+AUDIO_BRIDGE_CONTAINER=ipstream-audio-bridge
+SRS_RTC_UDP_PORT=8010
+RTC_CANDIDATE=203.0.113.10     # IP pública del nodo (no DNS)
+LIVE_ICE_SERVERS=[]            # STUN/TURN extra en JSON
+LIVE_TRANSPORT_DEFAULT=whip
+LIVE_PUBLIC_BASE_URL=          # opcional; usa el publicUrl del servidor
+```
+
+Para probar en local sin Caddy, apuntá el navegador directo al agente:
+
+```env
+LIVE_PUBLIC_BASE_URL=http://localhost:4000
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+```
+
+Prerrequisitos del nodo:
+
+1. Abrir el puerto **UDP 8010** en el firewall del VPS.
+2. Configurar `RTC_CANDIDATE` con la IP pública.
+3. Caddy debe enrutar `/rtc/*` y `/ws/live` al agente (ya incluido en
+   `deploy/Caddyfile`, `deploy/Caddyfile.node` y el provisioner).
+4. Tras un cambio de agente/SRS/Caddy, pulsar **"Actualizar nodo"** en cada nodo
+   remoto.
+
 ### Variables de entorno
 
 ```env

@@ -12,11 +12,11 @@ import crypto from 'crypto'
 /**
  * Crea un RadioStream para un Client.
  * @param clientId
- * @param bitrate (opcional, default 128)
+ * @param bitrate (opcional, default 192)
  * @param serverId (opcional, default: primer servidor activo)
  * @returns {RadioStream}
  */
-export async function createRadioStreamForClient(clientId: string, bitrate = 128, serverId?: string, db: PrismaDb = prisma) {
+export async function createRadioStreamForClient(clientId: string, bitrate = 192, serverId?: string, db: PrismaDb = prisma) {
   // Asignar servidor por defecto si no se indica
   const assignedServerId = serverId ?? (await getDefaultServerDbId(db))
 

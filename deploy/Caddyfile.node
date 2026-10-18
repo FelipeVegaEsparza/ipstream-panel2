@@ -20,6 +20,14 @@
 	handle /api/video/playout/* {
 		reverse_proxy agent:4000
 	}
+	# Radio: consola web (WHIP/WebSocket). El agente valida el token de sesión.
+	handle /rtc/* {
+		reverse_proxy agent:4000
+	}
+	handle /ws/live {
+		reverse_proxy agent:4000
+	}
+
 	# TV: DJ en vivo y HLS de SRS
 	handle /dj/* {
 		reverse_proxy srs:8080

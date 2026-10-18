@@ -19,6 +19,8 @@ import { enqueueVideoNormalization, requeueNonConformantTracks } from '../lib/vi
 import { startEncoder, stopEncoder, getEncoderStatus, getAllEncoders, generatePlaylist, autoStartVideoStreams, ENCODER_CONTAINER, getRelayIngestUrl, startTranscoder, stopTranscoder, getTranscoderStatus, resolvePlaylistEntries } from '../lib/video-encoder.js'
 import { startTracking, stopTracking, getTrackHistory, detectAndLogVideoTrack } from '../lib/track-history-video.js'
 import { countVideoViewers } from '../lib/video-viewers.js'
+import { getSessionByStream, endSession } from '../lib/live-sessions.js'
+import { startBridge } from '../lib/live-bridge.js'
 
 // Directorio de video compartido con el contenedor video-encoder.
 const VIDEO_DIR = '/var/lib/video'
@@ -77,6 +79,21 @@ export default async function videoRoutes(fastify) {
 
     if (!stream) {
       reply.send({ code: 0, message: 'no stream' })
+      return
+    }
+
+    // Radio live console: el WHIP publica en el app 'radio'; el puente
+    // FFmpeg toma el RTMP y lo publica al harbor del slot.
+    if (app === 'radio') {
+      const session = getSessionByStream(stream)
+      if (!session) {
+        reply.type('text/plain').send('-1')
+        return
+      }
+      startBridge(session, 'whip').catch((err) => {
+        logger.error({ err: err.message, sessionId: session.sessionId }, 'Live bridge start failed')
+      })
+      reply.send({ code: 0, message: 'OK' })
       return
     }
 
@@ -139,6 +156,14 @@ export default async function videoRoutes(fastify) {
           logger.info({ clientId: matched.clientId }, 'Universal connection ended — transcoder stopped')
         }
       }
+      reply.send({ code: 0, message: 'OK' })
+      return
+    }
+
+    // Radio live console: al desaparecer el publish de WHIP terminamos la sesión.
+    if (app === 'radio') {
+      const session = getSessionByStream(stream)
+      if (session) await endSession(session)
       reply.send({ code: 0, message: 'OK' })
       return
     }

@@ -59,6 +59,15 @@
 - **Siempre que se haga un cambio que toque el streaming-agent o sus scripts** (lib/streaming-client.ts, streaming/agent/*, streaming/liquidsoap/*, docker-compose.streaming.yml, node-provisioner.ts), indicar al usuario que debe pulsar "Actualizar nodo" en cada nodo remoto después del deploy.
 - Si el cambio toca SOLO el panel (app/*, lib/* que no use el agente), no hace falta el botón.
 
+## Consola web de radio ("Transmitir en vivo")
+
+- Sección `/dashboard/streaming/live`: biblioteca local (File System Access + IndexedDB; Chromium recuerda carpeta, el resto por sesión), 2 decks, EQ, loops, micrófono, talkover y cue. Los audios **no se suben** al servidor.
+- Motor en `lib/live-console/*` (Web Audio, sin React) y UI en `components/dashboard/streaming/live/*`.
+- Transporte pluggable: `WHIP/WebRTC` contra SRS (primario) y `WebSocket + FFmpeg` (fallback). El puente corre en el contenedor `audio-bridge` y publica al harbor de Liquidsoap del slot.
+- Envs: `LIVE_SESSION_SECRET`, `LIVE_AUDIO_BITRATE` (192), `LIVE_BRIDGE_CODEC` (`mp3`), `AUDIO_BRIDGE_CONTAINER`, `SRS_RTC_UDP_PORT` (8010), `RTC_CANDIDATE`, `LIVE_ICE_SERVERS`, `LIVE_TRANSPORT_DEFAULT`.
+- Nodos: abrir **UDP 8010**, setear `RTC_CANDIDATE` con IP pública, y enrutar `/rtc/*` + `/ws/live` al agente. Tocar cualquiera de esos archivos (`streaming/agent/*`, `streaming/srs/*`, `streaming/audio-bridge/*`, `docker-compose.streaming.yml`, `deploy/Caddyfile*`, `lib/node-provisioner.ts`) obliga a **"Actualizar nodo"** tras el deploy.
+- Antes de fijar WHIP como transporte definitivo, correr el gate A/B de calidad a 192k del change `radio-live-console`.
+
 ## Subida de video de TV (archivos grandes)
 
 - La videoteca de TV sube videos por streaming (sin buffer en memoria) hasta el máximo configurable `MAX_VIDEO_UPLOAD_MB` (default `2048` MB) y muestra una cola con progreso.

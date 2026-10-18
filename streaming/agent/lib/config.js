@@ -114,6 +114,27 @@ export const config = {
     tailBytes: intEnv('ANALYTICS_LOG_TAIL_BYTES', 5_000_000),
   },
 
+  // SRS (Televisión + ingesta WebRTC de radio)
+  srs: {
+    host: required('SRS_HOST', 'srs'),
+    rtmpPort: intEnv('SRS_RTMP_PORT', 1935),
+    httpPort: intEnv('SRS_HTTP_PORT', 8080),
+  },
+
+  // Consola web de radio (WebRTC / WebSocket)
+  live: {
+    // Clave compartida con el panel para firmar/validar tokens de sesión.
+    sessionSecret: required('LIVE_SESSION_SECRET', required('STREAMING_AGENT_TOKEN')),
+    // Contenedor que ejecuta FFmpeg para el puente al harbor.
+    bridgeContainer: required('AUDIO_BRIDGE_CONTAINER', 'ipstream-audio-bridge'),
+    // Bitrate del audio que se publica al harbor.
+    bitrateKbps: intEnv('LIVE_AUDIO_BITRATE', 192),
+    // 'mp3' (seguro) o 'aac' (solo si el harbor lo acepta; ver spike).
+    bridgeCodec: required('LIVE_BRIDGE_CODEC', 'mp3'),
+    // Heartbeat máximo antes de considerar la sesión abandonada.
+    staleMs: intEnv('LIVE_SESSION_STALE_MS', 45000),
+  },
+
   // Liquidsoap
   liquidsoap: {
     bin: required('LIQUIDSOAP_BIN', '/usr/bin/liquidsoap'),

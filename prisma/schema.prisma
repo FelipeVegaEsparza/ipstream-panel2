@@ -747,7 +747,7 @@ model RadioStream {
   sourcePasswordEnc    String    @db.Text // password del AutoDJ (liquidsoap → icecast)
   livePasswordEnc      String    @db.Text // password del DJ en vivo
   // Configuración de audio
-  bitrate              Int       @default(128) // kbps
+  bitrate              Int       @default(192) // kbps
   autoStart            Boolean   @default(false) // iniciar AutoDJ al arrancar el agente
   autoRestart          Boolean   @default(true) // recuperar AutoDJ si el proceso muere (false = parada intencional)
   // === Configuración administrativa (configurable desde /admin/streaming) ===
@@ -825,6 +825,7 @@ model DjSession {
   mount           String    @db.VarChar(10)
   role            String    @db.VarChar(10)
   ipAddress       String?   @db.VarChar(45)
+  origin          String    @default("harbor") @db.VarChar(20) // "harbor" | "webrtc" | "websocket"
   startedAt       DateTime
   endedAt         DateTime?
   durationSeconds Int?

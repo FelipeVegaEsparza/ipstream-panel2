@@ -46,6 +46,15 @@
         -Server
     }
 
+    # === Radio: consola web (WHIP/WebSocket) ===
+    # El agente valida el token de sesión y proxea la señalización a SRS.
+    handle /rtc/* {
+        reverse_proxy agent:4000
+    }
+    handle /ws/live {
+        reverse_proxy agent:4000
+    }
+
     # === HLS streaming (proxy a SRS) ===
     # AutoDJ se sirve en /live/* y el DJ en vivo en /dj/*
     # CORS: los sitios de los clientes consumen el HLS cross-origin (Web

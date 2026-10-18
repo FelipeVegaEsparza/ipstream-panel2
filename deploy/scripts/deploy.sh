@@ -108,8 +108,8 @@ $COMPOSE_CMD pull video-encoder || {
 }
 
 # === 5. Construir servicios locales (agente, icecast, liquidsoap) ===
-echo "🔨 4/9 — Construyendo servicios locales (agente, icecast, liquidsoap)..."
-$COMPOSE_CMD build agent icecast liquidsoap
+echo "🔨 4/9 — Construyendo servicios locales (agente, icecast, liquidsoap, audio-bridge)..."
+$COMPOSE_CMD build agent icecast liquidsoap audio-bridge
 
 # === 6. Esperar a que la DB esté healthy (DB container sigue corriendo) ===
 echo "⏳ 5/9 — Esperando a que MySQL esté healthy..."
