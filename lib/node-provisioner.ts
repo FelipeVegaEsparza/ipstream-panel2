@@ -121,6 +121,9 @@ function buildNodeEnv(server: {
     SRS_HOST: 'srs',
     SRS_RTMP_PORT: '1935',
     SRS_HTTP_PORT: '8080',
+    RADIO_SILENCE_FALLBACK_SECONDS: process.env.RADIO_SILENCE_FALLBACK_SECONDS || '10',
+    RADIO_SILENCE_THRESHOLD_DB: process.env.RADIO_SILENCE_THRESHOLD_DB || '-50',
+    RADIO_SILENCE_COOLDOWN_SECONDS: process.env.RADIO_SILENCE_COOLDOWN_SECONDS || '30',
   }
 
   return Object.entries(env)

@@ -280,6 +280,10 @@ services:
       SRS_HOST: srs
       SRS_RTMP_PORT: "1935"
       SRS_HTTP_PORT: "8080"
+      # Fallback automático al AutoDJ si la fuente en vivo queda en silencio.
+      RADIO_SILENCE_FALLBACK_SECONDS: ${RADIO_SILENCE_FALLBACK_SECONDS:-}
+      RADIO_SILENCE_THRESHOLD_DB: ${RADIO_SILENCE_THRESHOLD_DB:-}
+      RADIO_SILENCE_COOLDOWN_SECONDS: ${RADIO_SILENCE_COOLDOWN_SECONDS:-}
       # Video TV: límite de subida, timeout de ffmpeg (0 = sin límite) y
       # preset/hilos del re-encode (ultrafast/veryfast bajan mucho la CPU).
       MAX_VIDEO_UPLOAD_MB: ${MAX_VIDEO_UPLOAD_MB:-2048}

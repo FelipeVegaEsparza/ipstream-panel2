@@ -98,6 +98,7 @@ export interface TransportStats {
   jitterMs: number | null
   state: 'idle' | 'connecting' | 'live' | 'reconnecting' | 'closed' | 'error'
   error?: string | null
+  reason?: string | null
 }
 
 export interface LiveTransport {
@@ -135,7 +136,7 @@ export interface LiveSessionResponse {
 export interface LiveConsoleApi {
   createSession: (slotId: string | null) => Promise<LiveSessionResponse>
   endSession: (sessionId: string) => Promise<void>
-  heartbeat: (sessionId: string) => Promise<{ ok: boolean; state?: string }>
+  heartbeat: (sessionId: string) => Promise<{ ok: boolean; state?: string; reason?: string }>
   updateNowPlaying: (payload: {
     sessionId: string
     title: string | null

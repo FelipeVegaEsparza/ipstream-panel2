@@ -84,6 +84,21 @@ export function generateLiquidsoapScript({
     return agentCallback(url)
   }
 
+  // Cuando la fuente en vivo queda en silencio, el agente la corta y el
+  // fallback de Liquidsoap vuelve al AutoDJ. No se reproduce silencio.
+  const silenceSeconds = Number(config.live.silenceFallbackSeconds) || 10
+  const silenceThreshold = Number(config.live.silenceThresholdDb) || -50
+
+  function silenceCallbackCmd(djMount, slotName) {
+    const url = `${agentBase}/api/streams/${safeClient}/harbor/silence?dj=${encodeURIComponent(djMount)}&slot=${encodeURIComponent(slotName)}`
+    return agentCallback(url)
+  }
+
+  function wrapWithSilenceDetector(sourceName, djMount, slotName) {
+    return `${sourceName} = blank.detect(max_blank=${silenceSeconds}.0, threshold=${silenceThreshold}.0, ${sourceName})
+${sourceName}.on_blank(synchronous=false, fun () -> ${silenceCallbackCmd(djMount, slotName)})`
+  }
+
   // Notifica al agente cada vez que el AutoDJ arranca un track (on_track).
   // El agente guarda currentTrackStartedAt → elapsed en /now-playing.
   function trackStartCmd() {
@@ -120,7 +135,8 @@ live = input.harbor("/live",
   password="${safeHarborPwd}",
   on_connect=fun (_) -> ${harborCallbackCmd('connected', '/live', 'live')},
   on_disconnect=fun () -> ${harborCallbackCmd('disconnected', '/live', 'live')}
-)`
+)
+${wrapWithSilenceDetector('live', '/live', 'live')}`
     fallbackSources = ['live']
   } else {
     // Multiple DJ slots — generate one input.harbor per DJ, grouped by role
@@ -151,7 +167,8 @@ live = input.harbor("/live",
   password="${djPwd}",
   on_connect=fun (_) -> ${harborCallbackCmd('connected', djMount, slotName)},
   on_disconnect=fun () -> ${harborCallbackCmd('disconnected', djMount, slotName)}
-)`)
+)
+${wrapWithSilenceDetector(slotName, djMount, slotName)}`)
       }
     }
 

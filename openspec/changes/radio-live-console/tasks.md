@@ -74,3 +74,12 @@
 - [ ] 7.5 Habilitar el flag en staging y verificar una sesión real de 30 minutos con metadata e historial.
 - [ ] 7.6 Verificar la convivencia con Conexión DJ: un DJ externo y la consola respetan prioridades y no duplican fuentes.
 - [ ] 7.7 Verificar rollback apagando el flag: la sección desaparece y el streaming existente sigue operativo.
+
+
+## 8. Fallback automático al AutoDJ por silencio
+
+- [x] 8.1 Envolver cada `input.harbor` con `blank.detect` y callback al agente; verificar que el script generado compila con `liquidsoap --check`.
+- [x] 8.2 Agregar el endpoint de silencio con cooldown, cierre de la consola o kick del DJ externo, y auditoría; verificar los tests del agente.
+- [x] 8.3 Informar el motivo `silence` en el heartbeat y evitar la reconexión automática en el panel; verificar typecheck/build.
+- [x] 8.4 Documentar las variables `RADIO_SILENCE_*` y el comportamiento en README/AGENTS.
+- [x] 8.5 Ejecutar la suite del agente y del panel; verificar que pasan.

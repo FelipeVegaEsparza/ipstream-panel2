@@ -10,6 +10,8 @@ import { stopBridge } from './live-bridge.js'
 const sessions = new Map()
 // `${clientId}:${mount}` -> sessionId
 const slots = new Map()
+// sessionId -> { reason, at } para avisar al panel por qué terminó la sesión.
+const recentEnds = new Map()
 
 let sweepTimer = null
 
@@ -48,6 +50,7 @@ export function createSession(payload) {
   }
 
   const now = Date.now()
+  recentEnds.delete(payload.sid)
   const session = {
     sessionId: payload.sid,
     stream: payload.sid,
@@ -90,9 +93,25 @@ export function listSessions() {
   return Array.from(sessions.values())
 }
 
+/** Motivo reciente de cierre (p. ej. 'silence') para el heartbeat del panel. */
+export function getRecentEndReason(sessionId) {
+  const entry = recentEnds.get(sessionId)
+  if (!entry) return null
+  if (Date.now() - entry.at > 60000) {
+    recentEnds.delete(sessionId)
+    return null
+  }
+  return entry.reason
+}
+
 /** Detiene el puente y libera la sesión. Seguro de llamar más de una vez. */
-export async function endSession(session) {
+export async function endSession(session, reason = null) {
   if (!session) return
+  if (reason) recentEnds.set(session.sessionId, { reason, at: Date.now() })
+  try {
+    if (reason && session.closeWithReason) session.closeWithReason(reason)
+    else session.close?.()
+  } catch {}
   await stopBridge(session)
   removeSession(session.sessionId)
 }

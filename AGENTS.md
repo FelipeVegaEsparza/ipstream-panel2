@@ -67,6 +67,7 @@
 - Envs: `LIVE_SESSION_SECRET`, `LIVE_AUDIO_BITRATE` (192), `LIVE_BRIDGE_CODEC` (`mp3`), `AUDIO_BRIDGE_CONTAINER`, `SRS_RTC_UDP_PORT` (8010), `RTC_CANDIDATE`, `LIVE_ICE_SERVERS`, `LIVE_TRANSPORT_DEFAULT`.
 - Nodos: abrir **UDP 8010**, setear `RTC_CANDIDATE` con IP pública, y enrutar `/rtc/*` + `/ws/live` al agente. Tocar cualquiera de esos archivos (`streaming/agent/*`, `streaming/srs/*`, `streaming/audio-bridge/*`, `docker-compose.streaming.yml`, `deploy/Caddyfile*`, `lib/node-provisioner.ts`) obliga a **"Actualizar nodo"** tras el deploy.
 - Antes de fijar WHIP como transporte definitivo, correr el gate A/B de calidad a 192k del change `radio-live-console`.
+- **Fallback por silencio**: cada `input.harbor` se envuelve con `blank.detect`; si la fuente en vivo queda en silencio, el agente termina la consola o hace kick del DJ externo y vuelve el AutoDJ. Envs: `RADIO_SILENCE_FALLBACK_SECONDS` (10), `RADIO_SILENCE_THRESHOLD_DB` (-50), `RADIO_SILENCE_COOLDOWN_SECONDS` (30). Tocar el script generator/agente obliga a **"Actualizar nodo"** y reiniciar los streams para regenerar los `.liq`.
 
 ## Subida de video de TV (archivos grandes)
 

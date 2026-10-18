@@ -400,7 +400,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
   }, [])
 
   const sendHeartbeat = useCallback(async (id: string) => {
-    return jsonFetch<{ ok: boolean; state?: string }>('/api/dashboard/streaming/live/heartbeat', {
+    return jsonFetch<{ ok: boolean; state?: string; reason?: string }>('/api/dashboard/streaming/live/heartbeat', {
       method: 'POST',
       body: JSON.stringify({ sessionId: id }),
     })
@@ -624,6 +624,26 @@ export function useLiveConsole(): UseLiveConsoleResult {
     statsRef.current = null
   }, [])
 
+  // El agente corta la fuente por silencio y vuelve el AutoDJ. No reconectar
+  // automáticamente: el usuario debe volver a salir al aire cuando tenga audio.
+  const handleRemoteEnd = useCallback(async (reason: string) => {
+    clearTimers()
+    reconnectRef.current = false
+    const transport = transportRef.current
+    transportRef.current = null
+    if (transport) await transport.stop()
+    sessionRef.current = null
+    await releaseWakeLock()
+    setSessionId(null)
+    setSessionState('ended')
+    setStats(EMPTY_STATS)
+    setSessionError(
+      reason === 'silence'
+        ? 'AutoDJ retomó el control por silencio. Cuando vuelvas a tener audio, salí al aire de nuevo.'
+        : 'La sesión terminó.'
+    )
+  }, [clearTimers, releaseWakeLock])
+
   const stopLive = useCallback(async () => {
     clearTimers()
     const transport = transportRef.current
@@ -661,7 +681,13 @@ export function useLiveConsole(): UseLiveConsoleResult {
     heartbeatRef.current = setInterval(async () => {
       try {
         const result = await sendHeartbeat(session.sessionId)
-        if (!result.ok) throw new Error('Sesión expirada')
+        if (!result.ok) {
+          if (result.reason === 'silence') {
+            await handleRemoteEnd('silence')
+            return
+          }
+          throw new Error(result.reason || 'Sesión expirada')
+        }
       } catch (err) {
         if (!reconnectRef.current) {
           reconnectRef.current = true
@@ -686,7 +712,16 @@ export function useLiveConsole(): UseLiveConsoleResult {
     statsRef.current = setInterval(async () => {
       const next = await transport.getStats()
       setStats(next)
+      if (next.reason === 'silence') {
+        await handleRemoteEnd('silence')
+        return
+      }
       if (next.state === 'error' && !reconnectRef.current) {
+        const hb = await sendHeartbeat(session.sessionId).catch(() => null)
+        if (hb && hb.reason === 'silence') {
+          await handleRemoteEnd('silence')
+          return
+        }
         reconnectRef.current = true
         setSessionState('reconnecting')
         setSessionError(next.error ?? 'Error de transporte')
@@ -703,7 +738,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
         }
       }
     }, 2000)
-  }, [clearTimers, createSession, endSession, sendHeartbeat])
+  }, [clearTimers, createSession, endSession, handleRemoteEnd, sendHeartbeat])
 
   const goLive = useCallback(async () => {
     if (!headphonesConfirmed) {

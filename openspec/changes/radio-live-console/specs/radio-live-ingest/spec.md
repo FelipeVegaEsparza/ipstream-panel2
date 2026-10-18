@@ -62,6 +62,27 @@ The agent SHALL accept an authenticated audio stream over WebSocket, publish it 
 - **WHEN** the WebSocket closes or the heartbeat expires
 - **THEN** the agent stops the publisher, releases the slot, and allows the AutoDJ to resume
 
+### Requirement: Silence fallback
+
+The system SHALL detect sustained silence from a live source and return the radio to AutoDJ without leaving the stream silent. The silence threshold and grace period SHALL be configurable. A per-slot cooldown SHALL prevent repeated kicks when an encoder reconnects.
+
+#### Scenario: Browser console goes silent
+- **WHEN** the browser live source is connected but produces no audio above the threshold for the configured grace period
+- **THEN** the agent ends the live session, the harbor disconnects, and the AutoDJ resumes
+- **AND** the console shows that AutoDJ took over instead of reconnecting automatically
+
+#### Scenario: External DJ goes silent
+- **WHEN** an external DJ is connected to the harbor but sends no audio above the threshold for the configured grace period
+- **THEN** the agent stops that harbor input and the AutoDJ resumes
+
+#### Scenario: Audio returns before the grace period
+- **WHEN** the live source is silent for less than the configured grace period and then audio returns
+- **THEN** the live source remains on air without interruption
+
+#### Scenario: Repeated silence
+- **WHEN** the same slot becomes silent again before the cooldown expires
+- **THEN** the agent does not kick it again until the cooldown passes
+
 ### Requirement: Harbor handoff and AutoDJ fallback
 
 The agent SHALL connect the live source to the selected Liquidsoap harbor mount using the slot credentials so that existing connect/disconnect callbacks, role priority, and fallback behavior remain authoritative. The agent SHALL start the handoff when a live source is accepted and stop it when the source ends, cleaning up orphaned processes.

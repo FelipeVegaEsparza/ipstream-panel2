@@ -539,6 +539,19 @@ Prerrequisitos del nodo:
 4. Tras un cambio de agente/SRS/Caddy, pulsar **"Actualizar nodo"** en cada nodo
    remoto.
 
+### Fallback por silencio
+
+Si la fuente en vivo deja de emitir audio (consola web o DJ externo conectado al
+harbor), Liquidsoap detecta el silencio y el agente corta la fuente para que
+vuelva el AutoDJ. La consola no se reconecta en bucle: muestra que el AutoDJ
+tomó el control y permite salir al aire de nuevo.
+
+```env
+RADIO_SILENCE_FALLBACK_SECONDS=10   # gracia antes de cortar
+RADIO_SILENCE_THRESHOLD_DB=-50      # umbral de silencio
+RADIO_SILENCE_COOLDOWN_SECONDS=30   # evita cortes repetidos
+```
+
 ### Variables de entorno
 
 ```env

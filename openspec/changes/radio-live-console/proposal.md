@@ -14,6 +14,7 @@ Hoy un DJ de radio necesita instalar BUTT, MIXXX u otro encoder para salir al ai
 - Stream de radio a **192 kbps** para que la meta de calidad sea real.
 - Metadata en vivo: la consola reporta tema actual y siguiente; el agente actualiza `radio_streams` y el metadata de Icecast. Historial de sesiones reutiliza `dj_sessions`.
 - Reconexión y cierre ordenado: heartbeat, `sendBeacon` al cerrar, lock por slot, reanudación del AutoDJ al desconectar.
+- Fallback automático al AutoDJ por silencio: si la fuente en vivo (consola o DJ externo) deja de emitir audio por el período configurado, el agente la corta y Liquidsoap vuelve al AutoDJ. La consola no reconecta en bucle; muestra el aviso correspondiente.
 - Televisión queda fuera de este cambio; se reutilizará el lenguaje de UI y el transporte en un cambio posterior.
 
 ## Capabilities

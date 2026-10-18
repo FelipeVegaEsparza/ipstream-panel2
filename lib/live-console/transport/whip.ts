@@ -111,6 +111,7 @@ export class WhipTransport implements LiveTransport {
       jitterMs: null,
       state: this.state,
       error: this.error,
+      reason: null,
     }
     if (!this.pc) return base
 

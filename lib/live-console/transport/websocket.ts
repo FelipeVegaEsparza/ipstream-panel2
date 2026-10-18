@@ -29,6 +29,8 @@ export class WebSocketTransport implements LiveTransport {
   private bytesSent = 0
   private startedAt = 0
   private lastBitrate = 0
+  private closeCode: number | null = null
+  private closeReason: string | null = null
 
   async start(stream: MediaStream, session: SessionInfo): Promise<void> {
     if (!session.wsUrl) throw new Error('La sesión no expone una URL WebSocket')
@@ -81,10 +83,14 @@ export class WebSocketTransport implements LiveTransport {
     recorder.start(250)
     this.state = 'live'
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
+      this.closeCode = event.code
+      this.closeReason = event.reason || null
       if (this.state !== 'closed') {
         this.state = 'error'
-        this.error = 'El servidor cerró la conexión de audio'
+        this.error = event.reason
+          ? `El servidor cerró la conexión: ${event.reason}`
+          : 'El servidor cerró la conexión de audio'
       }
     }
   }
@@ -113,6 +119,7 @@ export class WebSocketTransport implements LiveTransport {
       jitterMs: null,
       state: this.state,
       error: this.error,
+      reason: this.closeCode === 4410 || this.closeReason === 'silence' ? 'silence' : null,
     }
   }
 }

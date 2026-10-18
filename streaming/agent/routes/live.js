@@ -10,6 +10,7 @@ import { bearerToken, verifyLiveToken } from '../lib/live-token.js'
 import {
   createSession,
   endSession,
+  getRecentEndReason,
   getSession,
   touchSession,
 } from '../lib/live-sessions.js'
@@ -153,6 +154,12 @@ export default async function liveRoutes(app) {
     let session = getSession(payload.sid)
     if (!session) session = createSession(payload)
     else touchSession(payload.sid)
+    session.close = () => {
+      try { socket.close(1000, 'ended') } catch {}
+    }
+    session.closeWithReason = (reason) => {
+      try { socket.close(4410, reason) } catch {}
+    }
 
     try {
       await startBridge(session, 'websocket')
@@ -198,7 +205,11 @@ export default async function liveRoutes(app) {
     const { sessionId, clientId, end } = request.body || {}
     if (!sessionId) return reply.code(400).send({ error: 'session_id_required' })
     const session = touchSession(sessionId)
-    if (!session) return reply.code(404).send({ error: 'session_not_found' })
+    if (!session) {
+      const reason = getRecentEndReason(sessionId)
+      if (reason) return { ok: false, reason }
+      return reply.code(404).send({ error: 'session_not_found' })
+    }
     if (clientId && session.clientId !== clientId) {
       return reply.code(403).send({ error: 'session_client_mismatch' })
     }

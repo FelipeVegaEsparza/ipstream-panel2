@@ -18,7 +18,7 @@ import { decrypt, encrypt, isEncrypted } from '../lib/encryption.js'
 import { detectAndLogTrack } from '../lib/track-history.js'
 import { _djActive as _djSlotActive, isAnyDjActive, setDjSlotActive } from '../lib/dj-state.js'
 import { startSession, endSession, listSessions } from '../lib/dj-sessions.js'
-import { listSessions as listLiveSessions } from '../lib/live-sessions.js'
+import { listSessions as listLiveSessions, endSession as endLiveSession } from '../lib/live-sessions.js'
 import { stopHarborInput } from '../lib/liquidsoap-telnet.js'
 import crypto from 'crypto'
 
@@ -30,6 +30,9 @@ function sanitizeMount(mount) {
   if (!mount) return ''
   return mount.replace(/^\//, '')
 }
+
+// Evita que el detector de silencio corte en bucle si el encoder reconecta.
+const silenceCooldown = new Map()
 
 export default async function streamRoutes(app) {
   /**
@@ -344,6 +347,59 @@ export default async function streamRoutes(app) {
       return { ok: true, status: anyActive ? 'live' : 'autodj', djMount }
     } catch (err) {
       logger.error({ err, clientId }, 'harbor: error on disconnected')
+      return reply.code(500).send({ error: err.message })
+    }
+  })
+
+  /**
+   * POST /api/streams/:clientId/harbor/silence
+   * Llamado por Liquidsoap (blank.detect) cuando la fuente en vivo queda en
+   * silencio. Corta la consola web o el DJ externo para que vuelva el AutoDJ.
+   */
+  app.post('/api/streams/:clientId/harbor/silence', async (request, reply) => {
+    const { clientId } = request.params
+    const djMount = request.query?.dj || '/live'
+    const slotName = request.query?.slot || (djMount === '/live' ? 'live' : null)
+    if (!slotName) return reply.code(400).send({ error: 'slot_required' })
+
+    const key = `${clientId}:${djMount}`
+    const now = Date.now()
+    const last = silenceCooldown.get(key) || 0
+    if (now - last < config.live.silenceCooldownMs) {
+      return { ok: true, action: 'cooldown' }
+    }
+    silenceCooldown.set(key, now)
+
+    try {
+      const liveSession = listLiveSessions().find(
+        (session) => session.clientId === clientId && session.mount === djMount
+      )
+
+      if (liveSession) {
+        await endLiveSession(liveSession, 'silence')
+        await pool.query(
+          `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'dj_silence_fallback', ?, NOW())`,
+          [uuid(), clientId, JSON.stringify({ djMount, slotName, source: 'live_console' })]
+        )
+        logger.warn({ clientId, djMount, sessionId: liveSession.sessionId }, 'Silencio: consola live cerrada, AutoDJ retoma')
+        return { ok: true, action: 'ended_live' }
+      }
+
+      const [rsRows] = await pool.query(
+        `SELECT liquidsoapTelnetPort FROM radio_streams WHERE clientId = ? LIMIT 1`,
+        [clientId]
+      )
+      if (rsRows.length === 0) return reply.code(404).send({ error: 'not_found' })
+
+      const stopped = await stopHarborInput(rsRows[0].liquidsoapTelnetPort, slotName)
+      await pool.query(
+        `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt) VALUES (?, ?, 'dj_silence_fallback', ?, NOW())`,
+        [uuid(), clientId, JSON.stringify({ djMount, slotName, source: 'external_dj', stopped })]
+      )
+      logger.warn({ clientId, djMount, slotName, stopped }, 'Silencio: DJ externo cortado, AutoDJ retoma')
+      return { ok: true, action: stopped ? 'kicked' : 'kick_failed' }
+    } catch (err) {
+      logger.error({ err, clientId, djMount }, 'harbor: error on silence')
       return reply.code(500).send({ error: err.message })
     }
   })

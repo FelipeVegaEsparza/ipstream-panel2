@@ -133,6 +133,11 @@ export const config = {
     bridgeCodec: required('LIVE_BRIDGE_CODEC', 'mp3'),
     // Heartbeat máximo antes de considerar la sesión abandonada.
     staleMs: intEnv('LIVE_SESSION_STALE_MS', 45000),
+    // Fallback automático al AutoDJ cuando la fuente en vivo queda en silencio.
+    // Aplica a la consola web y a DJs externos conectados al harbor.
+    silenceFallbackSeconds: intEnv('RADIO_SILENCE_FALLBACK_SECONDS', 10),
+    silenceThresholdDb: intEnv('RADIO_SILENCE_THRESHOLD_DB', -50),
+    silenceCooldownMs: intEnv('RADIO_SILENCE_COOLDOWN_SECONDS', 30) * 1000,
   },
 
   // Liquidsoap

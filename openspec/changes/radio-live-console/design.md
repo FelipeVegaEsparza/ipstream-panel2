@@ -111,11 +111,24 @@ SRS se configura con `rtc_server` en UDP 8010 (8000 choca con Icecast), `candida
 
 Si un nodo no tiene IP pública o el UDP está bloqueado, la sesión cae al transporte WebSocket.
 
-### 8. Metadata e historial
+### 8. Fallback automático al AutoDJ por silencio
+
+Cada `input.harbor` se envuelve con `blank.detect` (`max_blank`/`threshold` configurables). Cuando la fuente queda en silencio, Liquidsoap llama al agente por `/api/streams/:clientId/harbor/silence`. El agente:
+
+- Si hay una sesión de consola para ese mount, la termina con motivo `silence`; el puente se detiene, el harbor se desconecta y vuelve el AutoDJ.
+- Si es un DJ externo, ejecuta `stopHarborInput` por telnet; el harbor se desconecta y vuelve el AutoDJ.
+
+Un cooldown por slot evita cortes repetidos si el encoder reconecta. El panel recibe el motivo en el heartbeat y deja de reconectar automáticamente; muestra "AutoDJ retomó el control por silencio" y permite volver a salir al aire. Los valores por defecto son 10 s, -50 dB y 30 s de cooldown, configurables por env.
+
+Alternativas:
+- Detección solo en el cliente: no cubre a un DJ externo que deja el encoder conectado en silencio.
+- Kick directo sin callback: menos control y sin auditoría. Se prefiere el callback al agente para decidir entre consola y DJ externo.
+
+### 9. Metadata e historial
 
 La consola reporta current/next en cada cambio. El agente actualiza `radio_streams` y llama a `updateMetadata` de Icecast para que el oyente vea el título. La sesión se registra en `dj_sessions` con una columna `origin` (`harbor`, `webrtc`, `websocket`). El estado en vivo reutiliza `dj-state` para que el dashboard y el WS existentes lo muestren.
 
-### 9. UI y feature flag
+### 10. UI y feature flag
 
 Nueva ruta `app/dashboard/streaming/live/page.tsx`, ítem `streaming-live` en `lib/menu-items.ts` y en `disabledMenuItems` del plan. El motor vive en `lib/live-console/` como clase TS sin React; la UI lo controla con un hook. Waveform, parser de tags y detector de BPM se cargan con `import()` diferido.
 

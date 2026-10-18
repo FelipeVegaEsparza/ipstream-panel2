@@ -21,7 +21,7 @@ process.env.LIVE_BRIDGE_CODEC = 'mp3'
 process.env.LIVE_AUDIO_BITRATE = '192'
 
 const { default: liveRoutes } = await import('../routes/live.js')
-const { endSession, listSessions } = await import('../lib/live-sessions.js')
+const { createSession, endSession, listSessions } = await import('../lib/live-sessions.js')
 const { ffmpegArgs } = await import('../lib/live-bridge.js')
 
 function b64url(input) {
@@ -148,6 +148,27 @@ test('DELETE libera la sesión', async () => {
   })
   assert.equal(res.statusCode, 200)
   assert.equal(listSessions().length, 0)
+})
+
+test('heartbeat informa que la sesión terminó por silencio', async () => {
+  const session = createSession({
+    sid: 's-silence',
+    cid: 'client-1',
+    slotId: 'dj-1',
+    mount: '/dj1',
+    transport: 'whip',
+  })
+  await endSession(session, 'silence')
+
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/live/session/heartbeat',
+    headers: { 'content-type': 'application/json' },
+    payload: JSON.stringify({ sessionId: 's-silence', clientId: 'client-1' }),
+  })
+
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(res.json(), { ok: false, reason: 'silence' })
 })
 
 test('ffmpegArgs arma el puente WHIP hacia el harbor', () => {
