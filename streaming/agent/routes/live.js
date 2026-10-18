@@ -216,55 +216,59 @@ export default async function liveRoutes(app) {
       `cat "${tmp}.wav"`,
     ].join('; ')
 
-    const child = spawn(
-      'docker',
-      ['exec', '-i', config.live.ttsContainer, 'sh', '-c', script],
-      { stdio: ['pipe', 'pipe', 'pipe'] }
-    )
+    return new Promise((resolve) => {
+      let finished = false
+      let timer = null
+      const chunks = []
+      const errors = []
+      let errorBytes = 0
 
-    let finished = false
-    const chunks = []
-    const errors = []
-    let errorBytes = 0
+      const child = spawn(
+        'docker',
+        ['exec', '-i', config.live.ttsContainer, 'sh', '-c', script],
+        { stdio: ['pipe', 'pipe', 'pipe'] }
+      )
 
-    const timer = setTimeout(() => {
-      if (finished) return
-      finished = true
-      try { child.kill('SIGKILL') } catch {}
-      reply.code(504).send({ error: 'tts_timeout', message: 'La locución tardó demasiado' })
-    }, 25000)
-
-    child.stdout.on('data', (chunk) => chunks.push(chunk))
-    child.stderr.on('data', (chunk) => {
-      if (errorBytes < 4000) {
-        errors.push(chunk)
-        errorBytes += chunk.length
+      const finish = (send) => {
+        if (finished) return
+        finished = true
+        if (timer) clearTimeout(timer)
+        resolve(send())
       }
-    })
-    child.on('error', (err) => {
-      if (finished) return
-      finished = true
-      clearTimeout(timer)
-      reply.code(502).send({ error: 'tts_failed', message: err.message })
-    })
-    child.on('close', (code) => {
-      if (finished) return
-      finished = true
-      clearTimeout(timer)
-      const audio = Buffer.concat(chunks)
-      if (code !== 0 || audio.length < 44) {
-        const detail = Buffer.concat(errors).toString('utf8').slice(0, 300)
-        logger.warn({ code, detail }, 'Piper TTS falló')
-        return reply.code(502).send({
-          error: 'tts_failed',
-          message: 'No se pudo generar la locución',
+
+      timer = setTimeout(() => {
+        try { child.kill('SIGKILL') } catch {}
+        finish(() => reply.code(504).send({ error: 'tts_timeout', message: 'La locución tardó demasiado' }))
+      }, 25000)
+
+      child.stdout.on('data', (chunk) => chunks.push(chunk))
+      child.stderr.on('data', (chunk) => {
+        if (errorBytes < 4000) {
+          errors.push(chunk)
+          errorBytes += chunk.length
+        }
+      })
+      child.on('error', (err) => {
+        finish(() => reply.code(502).send({ error: 'tts_failed', message: err.message }))
+      })
+      child.on('close', (code) => {
+        finish(() => {
+          const audio = Buffer.concat(chunks)
+          if (code !== 0 || audio.length < 44) {
+            const detail = Buffer.concat(errors).toString('utf8').slice(0, 300)
+            logger.warn({ code, detail }, 'Piper TTS falló')
+            return reply.code(502).send({
+              error: 'tts_failed',
+              message: 'No se pudo generar la locución',
+            })
+          }
+          reply.header('Cache-Control', 'no-store')
+          return reply.type('audio/wav').send(audio)
         })
-      }
-      reply.header('Cache-Control', 'no-store')
-      return reply.type('audio/wav').send(audio)
-    })
+      })
 
-    child.stdin.end(text)
+      child.stdin.end(text)
+    })
   })
 
   // --------------------------------------------------
