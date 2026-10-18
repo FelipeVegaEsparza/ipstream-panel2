@@ -13,13 +13,15 @@ describe('StereoVuMeter', () => {
     expect(within(right).getByText('-3')).toBeInTheDocument()
   })
 
-  it('ilumina segmentos según la señal', () => {
+  it('ilumina segmentos según la señal y cambia de color por intensidad', () => {
     render(<StereoVuMeter leftDb={-6} rightDb={-30} />)
     const left = screen.getByLabelText('Canal izquierdo')
     const right = screen.getByLabelText('Canal derecho')
     expect(left.querySelectorAll('[data-active="true"]').length).toBeGreaterThan(
       right.querySelectorAll('[data-active="true"]').length
     )
+    expect(left.querySelectorAll('[data-color="bg-red-500"]').length).toBeGreaterThan(0)
+    expect(right.querySelectorAll('[data-color="bg-emerald-500"]').length).toBeGreaterThan(0)
   })
 
   it('maneja silencio', () => {

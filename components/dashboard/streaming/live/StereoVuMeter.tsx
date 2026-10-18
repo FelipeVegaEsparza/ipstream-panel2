@@ -15,10 +15,12 @@ function segmentDb(index: number): number {
   return MIN_DB + (index / (SEGMENTS - 1)) * (MAX_DB - MIN_DB)
 }
 
-function segmentColor(index: number): string {
-  const db = segmentDb(index)
-  if (db >= -3) return 'bg-red-500'
-  if (db >= -10) return 'bg-yellow-500'
+const YELLOW_DB = -18
+const RED_DB = -6
+
+function levelColor(db: number): string {
+  if (db >= RED_DB) return 'bg-red-500'
+  if (db >= YELLOW_DB) return 'bg-yellow-500'
   return 'bg-emerald-500'
 }
 
@@ -29,6 +31,7 @@ function formatLevel(db: number): string {
 
 function Channel({ label, db, ariaLabel }: { label: string; db: number; ariaLabel: string }) {
   const level = Number.isFinite(db) ? db : MIN_DB - 1
+  const activeColor = levelColor(level)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center gap-1" aria-label={ariaLabel}>
@@ -43,8 +46,9 @@ function Channel({ label, db, ariaLabel }: { label: string; db: number; ariaLabe
             <div
               key={index}
               data-active={active ? 'true' : 'false'}
+              data-color={active ? activeColor : undefined}
               className={`min-h-0 flex-1 rounded-[1px] transition-colors duration-75 ${
-                active ? segmentColor(index) : 'bg-secondary'
+                active ? activeColor : 'bg-secondary'
               }`}
             />
           )
@@ -70,7 +74,7 @@ export function StereoVuMeter({ leftDb, rightDb }: Props) {
       </div>
       <div className="mt-1 flex justify-between px-1 text-[8px] font-mono text-muted-foreground">
         <span>-60</span>
-        <span>-10</span>
+        <span>-18</span>
         <span>0</span>
       </div>
     </section>
