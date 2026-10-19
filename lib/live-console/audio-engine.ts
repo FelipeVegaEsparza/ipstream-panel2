@@ -197,14 +197,6 @@ export class LiveAudioEngine {
       this.announcementDuck.gain.cancelScheduledValues(now)
       this.announcementDuck.gain.setTargetAtTime(0.12, now, 0.08)
 
-      if (maxSeconds > 0) {
-        const end = now + maxSeconds
-        const fadeStart = Math.max(now, end - 0.35)
-        gain.gain.setValueAtTime(gain.gain.value, fadeStart)
-        gain.gain.linearRampToValueAtTime(0, end)
-        source.stop(end)
-      }
-
       source.onended = () => {
         this.announcementCount = Math.max(0, this.announcementCount - 1)
         if (this.announcementCount === 0) {
@@ -214,7 +206,18 @@ export class LiveAudioEngine {
         try { gain.disconnect() } catch {}
         resolve()
       }
+
+      // Importante: start() antes de programar stop(). Programar stop() antes
+      // de start() deja la fuente sin reproducir en varios navegadores.
       source.start()
+
+      if (maxSeconds > 0) {
+        const end = now + maxSeconds
+        const fadeStart = Math.max(now, end - 0.35)
+        gain.gain.setValueAtTime(gain.gain.value, fadeStart)
+        gain.gain.linearRampToValueAtTime(0, end)
+        source.stop(end)
+      }
     })
   }
 

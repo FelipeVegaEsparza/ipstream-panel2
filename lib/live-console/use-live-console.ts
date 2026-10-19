@@ -235,6 +235,30 @@ export interface UseLiveConsoleResult {
   current: { title: string | null; artist: string | null; nextTitle: string | null; nextArtist: string | null }
 }
 
+function createSpotTrack(blob: Blob, text: string, duration: number | null = null): LocalTrack {
+  const clean = text.replace(/\s+/g, ' ').trim()
+  const file = new File([blob], `locucion-${Date.now()}.mp3`, {
+    type: blob.type || 'audio/mpeg',
+  })
+  return {
+    id: `spot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: file.name,
+    path: file.name,
+    title: clean.slice(0, 60) || 'Locución IA',
+    artist: 'Locución IA',
+    album: null,
+    duration,
+    size: file.size,
+    lastModified: file.lastModified,
+    mimeType: file.type || 'audio/mpeg',
+    source: 'file',
+    handle: null,
+    file,
+    available: true,
+    kind: 'spot',
+  }
+}
+
 export function useLiveConsole(
   options: {
     premiumVoiceAvailable?: boolean
@@ -480,28 +504,7 @@ export function useLiveConsole(
   }, [])
 
   const addSpot = useCallback((blob: Blob, text: string) => {
-    const clean = text.replace(/\s+/g, ' ').trim()
-    const file = new File([blob], `locucion-${Date.now()}.mp3`, {
-      type: blob.type || 'audio/mpeg',
-    })
-    const track: LocalTrack = {
-      id: `spot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name: file.name,
-      path: file.name,
-      title: clean.slice(0, 60) || 'Locución IA',
-      artist: 'Locución IA',
-      album: null,
-      duration: null,
-      size: file.size,
-      lastModified: file.lastModified,
-      mimeType: file.type || 'audio/mpeg',
-      source: 'file',
-      handle: null,
-      file,
-      available: true,
-      kind: 'spot',
-    }
-    enqueue(track)
+    enqueue(createSpotTrack(blob, text))
   }, [enqueue])
 
   const dequeue = useCallback((id: string) => {
@@ -820,6 +823,7 @@ export function useLiveConsole(
 
     setPresenterGenerating(true)
     setAiError(null)
+    const introText = buildPresenterText(stationName, next)
     try {
       let blob: Blob | null = null
       const prefetched =
@@ -829,7 +833,7 @@ export function useLiveConsole(
       if (prefetched) {
         blob = await prefetched
       } else {
-        const promise = generateSpeech(buildPresenterText(stationName, next))
+        const promise = generateSpeech(introText)
         introPrefetchRef.current = { trackId: next.id, promise }
         blob = await promise
       }
@@ -841,6 +845,7 @@ export function useLiveConsole(
       engine.setMonitor(true)
       const buffer = await engine.decodeAudio(await blob.arrayBuffer())
       await engine.playAnnouncement(buffer, 0, 15)
+      pushHistory(createSpotTrack(blob, introText, buffer.duration))
     } catch (err) {
       introPrefetchRef.current = null
       tracksSinceIntroRef.current = 0
@@ -848,7 +853,7 @@ export function useLiveConsole(
     } finally {
       setPresenterGenerating(false)
     }
-  }, [aiEnabled, aiPresenterEnabled, presenterEvery, stationName, generateSpeech])
+  }, [aiEnabled, aiPresenterEnabled, presenterEvery, stationName, generateSpeech, pushHistory])
 
   // Pre-genera la presentación mientras suena el tema anterior.
   useEffect(() => {
