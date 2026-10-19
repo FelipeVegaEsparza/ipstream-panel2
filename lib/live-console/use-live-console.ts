@@ -634,6 +634,9 @@ export function useLiveConsole(
         const parsed = Number(remaining)
         if (Number.isFinite(parsed)) setAiRemaining(Math.max(0, parsed))
       }
+      if (res.headers.get('X-TTS-Provider') === 'piper') {
+        setAnnouncementError('Se usó Piper porque ElevenLabs no pudo generar la locución.')
+      }
       const buffer = await engine.decodeAudio(await res.arrayBuffer())
       void engine.playAnnouncement(buffer)
     } catch (err) {
@@ -661,6 +664,11 @@ export function useLiveConsole(
     if (remaining != null) {
       const parsed = Number(remaining)
       if (Number.isFinite(parsed)) setAiRemaining(Math.max(0, parsed))
+    }
+    if (res.headers.get('X-TTS-Provider') === 'piper') {
+      setAiError('Se usó Piper porque ElevenLabs no pudo generar la locución.')
+    } else {
+      setAiError(null)
     }
     return res.blob()
   }, [])
