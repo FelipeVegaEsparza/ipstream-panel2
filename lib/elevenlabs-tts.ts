@@ -22,6 +22,7 @@ export interface ElevenLabsTtsInput {
   voiceId: string
   model: string
   cacheEnabled: boolean
+  style?: number
 }
 
 const CACHE_ROOT =
@@ -36,7 +37,7 @@ function safeSegment(value: string): string {
 
 function cacheFile(input: ElevenLabsTtsInput): string {
   const hash = createHash('sha256')
-    .update(`${input.model}\n${input.voiceId}\n${input.text}`)
+    .update(`${input.model}\n${input.voiceId}\n${input.style ?? 0}\n${input.text}`)
     .digest('hex')
   return path.join(CACHE_ROOT, safeSegment(input.model), safeSegment(input.voiceId), `${hash}.mp3`)
 }
@@ -79,7 +80,7 @@ async function generate(input: ElevenLabsTtsInput): Promise<Buffer> {
       voice_settings: {
         stability: 0.5,
         similarity_boost: 0.75,
-        style: 0,
+        style: Math.max(0, Math.min(1, input.style ?? 0)),
         use_speaker_boost: true,
       },
     }),

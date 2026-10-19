@@ -11,6 +11,9 @@ interface Config {
   enabled: boolean
   every: number
   phrases: string[]
+  voiceId: string
+  voiceStyle: number
+  voices: { id: string; name: string; description?: string }[]
   timeEveryMinutes: number
   weatherEveryMinutes: number
   aiEnabled: boolean
@@ -29,6 +32,8 @@ export function LocutorIaSettings() {
   const [enabled, setEnabled] = useState(false)
   const [every, setEvery] = useState(3)
   const [phrases, setPhrases] = useState<string[]>([...DEFAULT_PRESENTER_PHRASES])
+  const [voiceId, setVoiceId] = useState('')
+  const [voiceStyle, setVoiceStyle] = useState(0)
   const [timeEveryMinutes, setTimeEveryMinutes] = useState(0)
   const [weatherEveryMinutes, setWeatherEveryMinutes] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -46,6 +51,8 @@ export function LocutorIaSettings() {
       setEnabled(Boolean(data.enabled))
       setEvery(Number(data.every) || 3)
       setPhrases(Array.isArray(data.phrases) && data.phrases.length ? data.phrases : [...DEFAULT_PRESENTER_PHRASES])
+      setVoiceId(data.voiceId || '')
+      setVoiceStyle(Number(data.voiceStyle) || 0)
       setTimeEveryMinutes(Number(data.timeEveryMinutes) || 0)
       setWeatherEveryMinutes(Number(data.weatherEveryMinutes) || 0)
     } catch (err) {
@@ -69,6 +76,8 @@ export function LocutorIaSettings() {
           enabled,
           every,
           phrases: clean.length ? clean : DEFAULT_PRESENTER_PHRASES,
+          voiceId,
+          voiceStyle,
           timeEveryMinutes,
           weatherEveryMinutes,
         }),
@@ -195,6 +204,46 @@ export function LocutorIaSettings() {
           <p className="mt-1 text-xs text-muted-foreground">
             En vivo se aplica al refrescar la consola. En AutoDJ, al pulsar “Aplicar al AutoDJ”.
           </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              Voz de la emisora
+            </label>
+            <select
+              value={voiceId}
+              onChange={(event) => setVoiceId(event.target.value)}
+              className={input}
+            >
+              <option value="">Voz predeterminada</option>
+              {config.voices.map((voice) => (
+                <option key={voice.id} value={voice.id}>
+                  {voice.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Cambiar de voz invalida el caché de esa voz; los audios nuevos consumen créditos.
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              Expresividad: {voiceStyle}%
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={voiceStyle}
+              onChange={(event) => setVoiceStyle(Number(event.target.value))}
+              className="mt-3 w-full accent-[var(--brand-500)]"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Más expresión en la lectura. No cambia el costo por carácter.
+            </p>
+          </div>
         </div>
 
         <div>

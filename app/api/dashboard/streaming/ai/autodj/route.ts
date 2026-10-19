@@ -12,6 +12,7 @@ import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 import { buildPresenterText, normalizePhrases } from '@/lib/live-console/presenter'
+import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
       )
     }
     const phrases = normalizePhrases(parsePhrases(clientInfo?.radioStream?.aiIntroPhrases))
+    const clientVoice = await getClientVoiceSettings(ctx.clientId)
     const entries = playlist.entries
     const count = Math.ceil(entries.length / every)
     if (count > MAX_INTROS) {
@@ -174,9 +176,10 @@ export async function POST(request: NextRequest) {
       const audio = await synthesizeElevenLabs({
         text,
         apiKey: config.apiKey,
-        voiceId: config.voiceId,
+        voiceId: clientVoice.voiceId || config.voiceId,
         model: config.model,
         cacheEnabled: config.cacheEnabled,
+        style: clientVoice.style / 100,
       })
       if (!audio.cached) {
         try {

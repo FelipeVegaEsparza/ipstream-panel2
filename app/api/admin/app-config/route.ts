@@ -5,6 +5,7 @@ import { encrypt } from '@/lib/encryption'
 import { invalidateClientSitesConfig } from '@/lib/client-sites-config'
 import { getElevenLabsConfig, invalidateElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { ELEVENLABS_MODELS } from '@/lib/elevenlabs-models'
+import { parseVoiceCatalog } from '@/lib/elevenlabs-voices'
 
 export async function GET() {
   try {
@@ -36,6 +37,7 @@ export async function GET() {
       elevenLabsModel: eleven.model,
       elevenLabsEnabled: eleven.enabled,
       ttsCacheEnabled: eleven.cacheEnabled,
+      elevenLabsVoices: parseVoiceCatalog(config.elevenLabsVoices),
     })
   } catch (error) {
     console.error('Error getting app config:', error)
@@ -65,6 +67,7 @@ export async function PUT(request: NextRequest) {
       elevenLabsEnabled,
       ttsCacheEnabled,
       clearElevenLabsApiKey,
+      elevenLabsVoices,
     } = body
 
     let trialDaysValue: number | undefined
@@ -101,10 +104,29 @@ export async function PUT(request: NextRequest) {
       elevenLabsModelValue = model
     }
 
+    let voicesValue: { id: string; name: string; description?: string }[] | undefined
+    if (elevenLabsVoices !== undefined) {
+      if (!Array.isArray(elevenLabsVoices)) {
+        return NextResponse.json({ error: 'elevenLabsVoices debe ser un array' }, { status: 400 })
+      }
+      voicesValue = elevenLabsVoices
+        .filter((v) => v && typeof v.id === 'string' && typeof v.name === 'string')
+        .map((v) => ({
+          id: v.id.trim().slice(0, 191),
+          name: v.name.trim().slice(0, 191),
+          ...(typeof v.description === 'string' && v.description.trim()
+            ? { description: v.description.trim().slice(0, 300) }
+            : {}),
+        }))
+        .filter((v) => v.id && v.name)
+        .slice(0, 30)
+    }
+
     const elevenLabsData = {
       ...(elevenLabsVoiceId !== undefined
         ? { elevenLabsVoiceId: String(elevenLabsVoiceId).trim() || null }
         : {}),
+      ...(voicesValue !== undefined ? { elevenLabsVoices: JSON.stringify(voicesValue) } : {}),
       ...(elevenLabsModelValue !== undefined ? { elevenLabsModel: elevenLabsModelValue } : {}),
       ...(typeof elevenLabsEnabled === 'boolean' ? { elevenLabsEnabled } : {}),
       ...(typeof ttsCacheEnabled === 'boolean' ? { ttsCacheEnabled } : {}),
@@ -143,6 +165,8 @@ export async function PUT(request: NextRequest) {
     }
 
     invalidateClientSitesConfig()
+    invalidateElevenLabsConfig()
+    const eleven = await getElevenLabsConfig()
 
     return NextResponse.json({
       enableGenericNews: config.enableGenericNews,
@@ -152,6 +176,12 @@ export async function PUT(request: NextRequest) {
       clientSitesTarget: config.clientSitesTarget || process.env.CLIENT_SITES_TARGET || '',
       clientSitesIp: config.clientSitesIp || process.env.CLIENT_SITES_IP || '',
       cloudflareTokenSet: Boolean(config.cloudflareApiTokenEnc || process.env.CLOUDFLARE_API_TOKEN),
+      elevenLabsKeySet: Boolean(eleven.apiKey),
+      elevenLabsVoiceId: eleven.voiceId,
+      elevenLabsModel: eleven.model,
+      elevenLabsEnabled: eleven.enabled,
+      ttsCacheEnabled: eleven.cacheEnabled,
+      elevenLabsVoices: parseVoiceCatalog(config.elevenLabsVoices),
     })
   } catch (error) {
     console.error('Error updating app config:', error)

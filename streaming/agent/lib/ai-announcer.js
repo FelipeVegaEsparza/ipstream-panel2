@@ -97,16 +97,19 @@ async function loadTtsConfig() {
 
 async function loadClientContext(clientId) {
   const [rows] = await pool.query(
-    `SELECT c.timezone, p.aiLiveEnabled, p.aiMonthlyCharacters
-     FROM clients c LEFT JOIN plans p ON p.id = c.planId
+    `SELECT c.timezone, p.aiLiveEnabled, p.aiMonthlyCharacters,
+            rs.aiVoiceId, rs.aiVoiceStyle
+     FROM clients c
+     LEFT JOIN plans p ON p.id = c.planId
+     LEFT JOIN radio_streams rs ON rs.clientId = c.id
      WHERE c.id = ? LIMIT 1`,
     [clientId]
   )
   return rows[0] || null
 }
 
-async function cachePath(clientId, text, voiceId, model) {
-  const hash = createHash('sha256').update(`${model}\n${voiceId}\n${text}`).digest('hex')
+async function cachePath(clientId, text, voiceId, model, style) {
+  const hash = createHash('sha256').update(`${model}\n${voiceId}\n${style}\n${text}`).digest('hex')
   const dir = join(ANNOUNCE_DIR, clientId, 'announcements')
   await fs.mkdir(dir, { recursive: true })
   return join(dir, `${hash}.mp3`)
@@ -133,7 +136,9 @@ export async function generateAnnouncement(clientId, type) {
   if (type === 'weather') text = await weatherText(clientId)
   if (!text) return null
 
-  const file = await cachePath(clientId, text, tts.voiceId, tts.model)
+  const voiceId = client.aiVoiceId || tts.voiceId
+  const style = Math.max(0, Math.min(100, Number(client.aiVoiceStyle) || 0)) / 100
+  const file = await cachePath(clientId, text, voiceId, tts.model, style)
   try {
     await fs.access(file)
     return { path: file, cached: true, characters: 0 }
@@ -149,7 +154,7 @@ export async function generateAnnouncement(clientId, type) {
     return null
   }
 
-  const url = new URL(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(tts.voiceId)}`)
+  const url = new URL(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`)
   url.searchParams.set('output_format', 'mp3_44100_128')
   const res = await fetch(url, {
     method: 'POST',
@@ -158,7 +163,11 @@ export async function generateAnnouncement(clientId, type) {
       'Content-Type': 'application/json',
       Accept: 'audio/mpeg',
     },
-    body: JSON.stringify({ text, model_id: tts.model }),
+    body: JSON.stringify({
+      text,
+      model_id: tts.model,
+      voice_settings: { stability: 0.5, similarity_boost: 0.75, style, use_speaker_boost: true },
+    }),
     signal: AbortSignal.timeout(30000),
   })
   if (!res.ok) {

@@ -10,6 +10,7 @@ import { resolveRadioServerTarget } from '@/lib/streaming-servers'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
+import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 
 export const dynamic = 'force-dynamic'
 
@@ -85,12 +86,14 @@ export async function POST(request: NextRequest) {
 
     if (config.enabled && config.apiKey && config.voiceId) {
       try {
+        const clientVoice = await getClientVoiceSettings(ctx.clientId)
         const eleven = await synthesizeElevenLabs({
           text,
           apiKey: config.apiKey,
-          voiceId: config.voiceId,
+          voiceId: clientVoice.voiceId || config.voiceId,
           model: config.model,
           cacheEnabled: config.cacheEnabled,
+          style: clientVoice.style / 100,
         })
         if (!eleven.cached) {
           try {

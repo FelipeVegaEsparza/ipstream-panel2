@@ -4,12 +4,19 @@ import { useEffect, useState } from 'react'
 import { showToast } from '@/components/ui/toast'
 import { ELEVENLABS_MODELS, DEFAULT_ELEVENLABS_MODEL } from '@/lib/elevenlabs-models'
 
+interface VoiceOption {
+  id: string
+  name: string
+  description?: string
+}
+
 interface Config {
   elevenLabsKeySet: boolean
   elevenLabsVoiceId: string
   elevenLabsModel: string
   elevenLabsEnabled: boolean
   ttsCacheEnabled: boolean
+  elevenLabsVoices?: VoiceOption[]
 }
 
 export function ElevenLabsSettings() {
@@ -18,6 +25,7 @@ export function ElevenLabsSettings() {
   const [model, setModel] = useState(DEFAULT_ELEVENLABS_MODEL)
   const [enabled, setEnabled] = useState(false)
   const [cacheEnabled, setCacheEnabled] = useState(true)
+  const [voices, setVoices] = useState<VoiceOption[]>([])
   const [keySet, setKeySet] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadingCfg, setLoadingCfg] = useState(true)
@@ -31,6 +39,7 @@ export function ElevenLabsSettings() {
         setModel(data.elevenLabsModel || DEFAULT_ELEVENLABS_MODEL)
         setEnabled(Boolean(data.elevenLabsEnabled))
         setCacheEnabled(data.ttsCacheEnabled !== false)
+        setVoices(Array.isArray(data.elevenLabsVoices) ? data.elevenLabsVoices : [])
       })
       .catch(() => showToast({ type: 'error', title: 'No se pudo cargar la configuración' }))
       .finally(() => setLoadingCfg(false))
@@ -44,6 +53,7 @@ export function ElevenLabsSettings() {
         elevenLabsModel: model,
         elevenLabsEnabled: enabled,
         ttsCacheEnabled: cacheEnabled,
+        elevenLabsVoices: voices,
       }
       if (apiKey.trim()) body.elevenLabsApiKey = apiKey.trim()
 
@@ -171,6 +181,60 @@ export function ElevenLabsSettings() {
               v4 Turbo cuesta USD 0,04 por 1.000 caracteres. Para locución de clima/hora es el
               equilibrio recomendado.
             </p>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <label className="block text-xs text-muted-foreground">Voces disponibles para los clientes</label>
+                <p className="text-[11px] text-muted-foreground">
+                  El cliente elige una en Locutor IA. La voz global se usa si no hay selección.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVoices((prev) => [...prev, { id: '', name: '' }])}
+                disabled={voices.length >= 30}
+                className="rounded border border-border px-2.5 py-1.5 text-xs text-foreground hover:border-brand hover:text-brand disabled:opacity-40"
+              >
+                Agregar voz
+              </button>
+            </div>
+            <div className="mt-2 space-y-2">
+              {voices.map((voice, index) => (
+                <div key={index} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                  <input
+                    className={input}
+                    value={voice.name}
+                    onChange={(e) =>
+                      setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, name: e.target.value } : v)))
+                    }
+                    placeholder="Nombre (ej. Locutor chileno)"
+                  />
+                  <input
+                    className={input}
+                    value={voice.id}
+                    onChange={(e) =>
+                      setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, id: e.target.value } : v)))
+                    }
+                    placeholder="Voice ID de ElevenLabs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVoices((prev) => prev.filter((_, i) => i !== index))}
+                    className="rounded border border-border px-2 text-muted-foreground hover:text-red-300"
+                    aria-label="Quitar voz"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {voices.length === 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  No hay voces alternativas. Los clientes usarán la voz global.
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex items-start justify-between gap-4 rounded-lg bg-secondary/50 p-3">

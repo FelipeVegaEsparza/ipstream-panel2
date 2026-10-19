@@ -555,6 +555,7 @@ model AppConfig {
   elevenLabsVoiceId    String? // Voice ID de la voz de la emisora
   elevenLabsModel      String? // eleven_v4_turbo | eleven_v4 | eleven_v3 | ...
   elevenLabsEnabled    Boolean @default(false)
+  elevenLabsVoices     String? @db.Text // JSON [{id,name,description}] para que el cliente elija
   ttsCacheEnabled      Boolean @default(true) // cache de audios generados (app_uploads)
 
   @@map("app_config")
@@ -793,6 +794,8 @@ model RadioStream {
   aiIntroPhrases       String?   @db.Text // JSON array de frases del locutor
   aiTimeEveryMinutes   Int       @default(0) // 0 = desactivado
   aiWeatherEveryMinutes Int      @default(0) // 0 = desactivado
+  aiVoiceId            String? // voz elegida por el cliente; null = voz global
+  aiVoiceStyle         Int       @default(0) // 0-100 expresividad
   // Estado actual
   status               String    @default("off") // "off" | "autodj" | "live"
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)

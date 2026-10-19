@@ -7,6 +7,7 @@ import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth
 import { prisma } from '@/lib/prisma'
 import { getAiLiveAccess } from '@/lib/ai-live'
 import { DEFAULT_PRESENTER_PHRASES, normalizePhrases } from '@/lib/live-console/presenter'
+import { getVoiceCatalog } from '@/lib/elevenlabs-voices'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,16 +26,25 @@ function parsePhrases(raw: string | null | undefined): string[] {
 }
 
 async function loadConfig(clientId: string) {
-  const [rs, access, client] = await Promise.all([
+  const [rs, access, client, voices] = await Promise.all([
     prisma.radioStream.findUnique({
       where: { clientId },
-      select: { aiPresenterEnabled: true, aiPresenterEvery: true, aiIntroPhrases: true, aiTimeEveryMinutes: true, aiWeatherEveryMinutes: true },
+      select: {
+        aiPresenterEnabled: true,
+        aiPresenterEvery: true,
+        aiIntroPhrases: true,
+        aiTimeEveryMinutes: true,
+        aiWeatherEveryMinutes: true,
+        aiVoiceId: true,
+        aiVoiceStyle: true,
+      },
     }),
     getAiLiveAccess(clientId),
     prisma.client.findUnique({
       where: { id: clientId },
       select: { name: true, basicData: { select: { projectName: true } } },
     }),
+    getVoiceCatalog(),
   ])
   if (!rs) return null
   return {
@@ -43,6 +53,9 @@ async function loadConfig(clientId: string) {
     phrases: parsePhrases(rs.aiIntroPhrases),
     timeEveryMinutes: rs.aiTimeEveryMinutes,
     weatherEveryMinutes: rs.aiWeatherEveryMinutes,
+    voiceId: rs.aiVoiceId || '',
+    voiceStyle: rs.aiVoiceStyle,
+    voices,
     aiEnabled: access.enabled,
     remaining: access.remaining,
     limit: access.limit,
@@ -91,6 +104,15 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    const voiceId = typeof body?.voiceId === 'string' ? body.voiceId.trim().slice(0, 191) : ''
+    const voiceStyle = Number(body?.voiceStyle)
+    if (!Number.isInteger(voiceStyle) || voiceStyle < 0 || voiceStyle > 100) {
+      return NextResponse.json(
+        { error: 'invalid_voice_style', message: 'La expresividad debe ser un entero entre 0 y 100.' },
+        { status: 400 }
+      )
+    }
+
     const timeEveryMinutes = Number(body?.timeEveryMinutes)
     const weatherEveryMinutes = Number(body?.weatherEveryMinutes)
     if (
@@ -120,6 +142,8 @@ export async function PUT(request: NextRequest) {
         aiIntroPhrases: JSON.stringify(phrases),
         aiTimeEveryMinutes: timeEveryMinutes,
         aiWeatherEveryMinutes: weatherEveryMinutes,
+        aiVoiceId: voiceId || null,
+        aiVoiceStyle: voiceStyle,
       },
     })
 
