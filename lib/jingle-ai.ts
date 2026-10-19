@@ -57,7 +57,7 @@ async function generateMusic(prompt: string, duration: number, apiKey: string): 
     signal: AbortSignal.timeout(120_000),
   })
   if (!res.ok) {
-    let message = `Eleven Music respondió ${res.status}`
+    let message = `No se pudo generar la música (${res.status}).`
     try {
       const data = await res.json()
       message =
@@ -109,7 +109,7 @@ async function mixMusicAndVoice(
 
 export async function generateJingle(input: GenerateJingleInput): Promise<GeneratedJingle> {
   const config = await getElevenLabsConfig()
-  if (!config.enabled || !config.apiKey) throw new Error('ElevenLabs no está configurado.')
+  if (!config.enabled || !config.apiKey) throw new Error('La voz premium no está configurada.' )
   if (!JINGLE_DURATIONS.includes(input.duration as 10 | 15)) {
     throw new Error('Duración inválida.')
   }

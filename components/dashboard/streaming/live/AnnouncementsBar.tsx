@@ -78,7 +78,7 @@ export function AnnouncementsBar({
           className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-brand"
           aria-label="Voz de la locución"
         >
-          {premiumAvailable && <option value="premium">Premium (ElevenLabs)</option>}
+          {premiumAvailable && <option value="premium">Voz premium</option>}
           <option value="male">Ald (Piper)</option>
           <option value="female">Claude (Piper)</option>
         </select>

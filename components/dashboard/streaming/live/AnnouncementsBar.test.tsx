@@ -43,7 +43,7 @@ describe('AnnouncementsBar', () => {
     const handlers = renderBar({ premiumAvailable: true, voice: 'premium' })
     const select = screen.getByLabelText('Voz de la locución') as HTMLSelectElement
     expect(select.value).toBe('premium')
-    expect(screen.getByRole('option', { name: /Premium/ })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /Voz premium/ })).toBeInTheDocument()
     fireEvent.change(select, { target: { value: 'male' } })
     expect(handlers.onVoice).toHaveBeenCalledWith('male')
   })

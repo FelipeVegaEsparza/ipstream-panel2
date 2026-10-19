@@ -27,7 +27,8 @@ const input =
 export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const [info, setInfo] = useState<AiInfo | null>(null)
   const [title, setTitle] = useState('Jingle de la emisora')
-  const [prompt, setPrompt] = useState('Jingle instrumental de radio, synth pop moderno, energía alta, final limpio, sin voces.')
+  const [styles, setStyles] = useState<string[]>(['Pop'])
+  const [energy, setEnergy] = useState<'suave' | 'media' | 'alta'>('alta')
   const [tagline, setTagline] = useState('{{radio}}, la que te mueve.')
   const [duration, setDuration] = useState(10)
   const [generating, setGenerating] = useState(false)
@@ -58,15 +59,20 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
 
   if (!open) return null
 
+  const toggleStyle = (style: string) => {
+    setStyles((prev) => prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style])
+  }
+
   const generate = async () => {
     setGenerating(true)
     setError(null)
     setBlob(null)
+    const musicPrompt = `Jingle instrumental de radio, estilo ${(styles.length ? styles : ['Pop']).join(', ')}, energía ${energy}, final limpio, sin voces.`
     try {
       const res = await fetch('/api/dashboard/streaming/jingles/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, prompt, tagline, duration }),
+        body: JSON.stringify({ title, prompt: musicPrompt, tagline, duration }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -116,7 +122,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
               Crear jingle IA
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Música instrumental con Eleven Music y locución con la voz de la emisora.
+              Música instrumental y locución con la voz de la emisora.
             </p>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary" aria-label="Cerrar">
@@ -146,11 +152,40 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
             <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={180} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Estilo de la música</label>
-            <textarea className={`${input} resize-none`} rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} maxLength={600} />
+            <label className="mb-2 block text-xs text-muted-foreground">Estilo de la música</label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {['Pop', 'Rock', 'Urbano', 'Electrónica', 'Corporativo', 'Acústico'].map((style) => (
+                <label key={style} className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={styles.includes(style)}
+                    onChange={() => toggleStyle(style)}
+                    className="h-4 w-4 rounded border-border bg-secondary"
+                  />
+                  {style}
+                </label>
+              ))}
+            </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Describí género, energía e instrumentos. Se genera instrumental, sin voces.
+              Podés elegir más de uno. Se genera música instrumental, sin voces.
             </p>
+          </div>
+          <div>
+            <label className="mb-2 block text-xs text-muted-foreground">Energía</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['suave', 'media', 'alta'] as const).map((value) => (
+                <label key={value} className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm capitalize ${energy === value ? 'border-brand bg-brand/10 text-brand' : 'border-border bg-background text-foreground'}`}>
+                  <input
+                    type="radio"
+                    name="jingle-energy"
+                    checked={energy === value}
+                    onChange={() => setEnergy(value)}
+                    className="sr-only"
+                  />
+                  {value}
+                </label>
+              ))}
+            </div>
           </div>
           <div>
             <label className="mb-1 block text-xs text-muted-foreground">Locución</label>
@@ -160,11 +195,21 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
             </p>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Duración</label>
-            <select className={input} value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
-              <option value={10}>10 segundos</option>
-              <option value={15}>15 segundos</option>
-            </select>
+            <label className="mb-2 block text-xs text-muted-foreground">Duración</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[10, 15].map((value) => (
+                <label key={value} className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm ${duration === value ? 'border-brand bg-brand/10 text-brand' : 'border-border bg-background text-foreground'}`}>
+                  <input
+                    type="radio"
+                    name="jingle-duration"
+                    checked={duration === value}
+                    onChange={() => setDuration(value)}
+                    className="sr-only"
+                  />
+                  {value} segundos
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
