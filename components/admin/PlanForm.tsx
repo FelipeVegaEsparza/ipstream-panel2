@@ -28,6 +28,8 @@ interface Plan {
   onboardingSteps?: string | null
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
+  aiLiveEnabled: boolean
+  aiMonthlyCharacters: number
   menuHiddenKeys: string | null
   defaultServerId: string | null
   imageUrl: string | null
@@ -51,6 +53,8 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     services: plan?.services || 'both',
     radioStorageQuotaMB: plan?.radioStorageQuotaMB?.toString() || '',
     videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
+    aiLiveEnabled: plan?.aiLiveEnabled ?? false,
+    aiMonthlyCharacters: plan?.aiMonthlyCharacters?.toString() || '',
     defaultServerId: plan?.defaultServerId || '',
     imageUrl: plan?.imageUrl || '',
     demoUrl: plan?.demoUrl || '',
@@ -356,6 +360,50 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                   </span>
                 </label>
               ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">IA en vivo</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Presentador automático cada N temas, locuciones libres y voz premium para clima/hora.
+              </p>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={formData.aiLiveEnabled}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    aiLiveEnabled: e.target.checked,
+                    ...(e.target.checked && !formData.aiMonthlyCharacters
+                      ? { aiMonthlyCharacters: '100000' }
+                      : {}),
+                  })
+                }
+                className="rounded border-border bg-secondary"
+              />
+              Incluir IA en este plan
+            </label>
+            <div>
+              <label className="block text-xs text-muted-foreground mb-1">
+                Cuota mensual de caracteres IA (0 = sin acceso)
+              </label>
+              <Input
+                type="number"
+                min="0"
+                step="1000"
+                value={formData.aiMonthlyCharacters}
+                onChange={(e) => setFormData({ ...formData, aiMonthlyCharacters: e.target.value })}
+                placeholder="ej: 100000"
+                className="bg-secondary border-border text-foreground"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Incluye presentador, locuciones libres y clima/hora con voz premium. Los audios
+                cacheados no consumen cuota.
+              </p>
             </div>
           </div>
 

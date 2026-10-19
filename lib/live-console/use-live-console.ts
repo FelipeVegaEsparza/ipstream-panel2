@@ -21,6 +21,7 @@ import {
   verifyDirectoryPermission,
 } from './library'
 import { createTransport } from './transport'
+import { buildPresenterText } from './presenter'
 import {
   DEFAULT_PAD_SIZE,
   SOUND_EFFECT_PAD_SIZES,
@@ -135,6 +136,20 @@ export interface AnnouncementsApi {
   setVoice: (voice: AnnouncementVoice) => void
 }
 
+export interface AiApi {
+  enabled: boolean
+  presenterEnabled: boolean
+  every: number
+  generating: boolean
+  error: string | null
+  remaining: number
+  limit: number
+  setPresenterEnabled: (enabled: boolean) => void
+  setEvery: (every: number) => void
+  generateSpeech: (text: string) => Promise<Blob>
+  addSpot: (blob: Blob, text: string) => void
+}
+
 export interface SoundEffectsApi {
   padSize: number
   slots: (SoundEffect | null)[]
@@ -171,6 +186,7 @@ export interface UseLiveConsoleResult {
   player: PlayerApi
   effects: SoundEffectsApi
   announcements: AnnouncementsApi
+  ai: AiApi
   cue: Record<DeckId, boolean>
   mic: MicSnapshot
   crossfader: number
@@ -219,9 +235,17 @@ export interface UseLiveConsoleResult {
 }
 
 export function useLiveConsole(
-  options: { premiumVoiceAvailable?: boolean } = {}
+  options: {
+    premiumVoiceAvailable?: boolean
+    aiEnabled?: boolean
+    stationName?: string
+    aiRemaining?: number
+    aiLimit?: number
+  } = {}
 ): UseLiveConsoleResult {
   const premiumVoiceAvailable = Boolean(options.premiumVoiceAvailable)
+  const aiEnabled = Boolean(options.aiEnabled)
+  const stationName = (options.stationName || 'la radio').trim() || 'la radio'
   const engineRef = useRef<LiveAudioEngine | null>(null)
   const [engineReady, setEngineReady] = useState(false)
   const [snapshot, setSnapshot] = useState<EngineSnapshot>({
@@ -265,6 +289,30 @@ export function useLiveConsole(
       return premiumVoiceAvailable ? 'premium' : 'male'
     }
   })
+  const [aiPresenterEnabled, setAiPresenterEnabled] = useState(() => {
+    if (!aiEnabled || typeof window === 'undefined') return aiEnabled
+    try {
+      return window.localStorage.getItem('live-ai-presenter-enabled') !== 'false'
+    } catch {
+      return true
+    }
+  })
+  const [presenterEvery, setPresenterEvery] = useState(() => {
+    if (typeof window === 'undefined') return 3
+    try {
+      const stored = Number(window.localStorage.getItem('live-ai-presenter-every') || 3)
+      return Number.isFinite(stored) ? Math.min(10, Math.max(2, Math.round(stored))) : 3
+    } catch {
+      return 3
+    }
+  })
+  const [presenterGenerating, setPresenterGenerating] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiRemaining, setAiRemaining] = useState(Math.max(0, options.aiRemaining ?? 0))
+  const aiLimit = Math.max(0, options.aiLimit ?? 0)
+  const tracksSinceIntroRef = useRef(0)
+  const introPrefetchRef = useRef<{ trackId: string; promise: Promise<Blob | null> } | null>(null)
+
   const effectsRef = useRef<Map<number, SoundEffect>>(new Map())
   const effectBuffersRef = useRef<Map<string, AudioBuffer>>(new Map())
   useEffect(() => { effectsRef.current = soundEffects }, [soundEffects])
@@ -418,6 +466,31 @@ export function useLiveConsole(
     setQueue((prev) => (prev.some((item) => item.id === track.id) ? prev : [...prev, track]))
   }, [])
 
+  const addSpot = useCallback((blob: Blob, text: string) => {
+    const clean = text.replace(/\s+/g, ' ').trim()
+    const file = new File([blob], `locucion-${Date.now()}.mp3`, {
+      type: blob.type || 'audio/mpeg',
+    })
+    const track: LocalTrack = {
+      id: `spot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: file.name,
+      path: file.name,
+      title: clean.slice(0, 60) || 'Locución IA',
+      artist: 'Locución IA',
+      album: null,
+      duration: null,
+      size: file.size,
+      lastModified: file.lastModified,
+      mimeType: file.type || 'audio/mpeg',
+      source: 'file',
+      handle: null,
+      file,
+      available: true,
+      kind: 'spot',
+    }
+    enqueue(track)
+  }, [enqueue])
+
   const dequeue = useCallback((id: string) => {
     setQueue((prev) => prev.filter((track) => track.id !== id))
   }, [])
@@ -513,6 +586,22 @@ export function useLiveConsole(
     } catch {}
   }, [])
 
+  const setAiPresenterEnabledPersisted = useCallback((enabled: boolean) => {
+    setAiPresenterEnabled(enabled)
+    if (!enabled) introPrefetchRef.current = null
+    try {
+      window.localStorage.setItem('live-ai-presenter-enabled', String(enabled))
+    } catch {}
+  }, [])
+
+  const setPresenterEveryPersisted = useCallback((every: number) => {
+    const value = Math.min(10, Math.max(2, Math.round(every)))
+    setPresenterEvery(value)
+    try {
+      window.localStorage.setItem('live-ai-presenter-every', String(value))
+    } catch {}
+  }, [])
+
   const stopAllEffects = useCallback(() => {
     engineRef.current?.stopAllEffects()
   }, [])
@@ -540,14 +629,41 @@ export function useLiveConsole(
         } catch {}
         throw new Error(message)
       }
+      const remaining = res.headers.get('X-AI-Remaining')
+      if (remaining != null) {
+        const parsed = Number(remaining)
+        if (Number.isFinite(parsed)) setAiRemaining(Math.max(0, parsed))
+      }
       const buffer = await engine.decodeAudio(await res.arrayBuffer())
-      engine.playAnnouncement(buffer)
+      void engine.playAnnouncement(buffer)
     } catch (err) {
       setAnnouncementError(err instanceof Error ? err.message : 'No se pudo reproducir la locución')
     } finally {
       setAnnouncementLoading(null)
     }
   }, [announcementVoice])
+
+  const generateSpeech = useCallback(async (text: string): Promise<Blob> => {
+    const res = await fetch('/api/dashboard/streaming/live/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    })
+    if (!res.ok) {
+      let message = 'No se pudo generar la locución.'
+      try {
+        const data = await res.json()
+        message = data?.message || data?.error || message
+      } catch {}
+      throw new Error(message)
+    }
+    const remaining = res.headers.get('X-AI-Remaining')
+    if (remaining != null) {
+      const parsed = Number(remaining)
+      if (Number.isFinite(parsed)) setAiRemaining(Math.max(0, parsed))
+    }
+    return res.blob()
+  }, [])
 
   const setPadSize = useCallback((size: number) => {
     const normalized = (SOUND_EFFECT_PAD_SIZES as readonly number[]).includes(size)
@@ -676,6 +792,57 @@ export function useLiveConsole(
     }, 400)
   }, [sendNowPlaying])
 
+
+  const maybePlayPresenter = useCallback(async (next: LocalTrack) => {
+    if (!aiEnabled || !aiPresenterEnabled || next.kind === 'spot') return
+    if (tracksSinceIntroRef.current < presenterEvery) return
+
+    setPresenterGenerating(true)
+    setAiError(null)
+    try {
+      let blob: Blob | null = null
+      const prefetched =
+        introPrefetchRef.current?.trackId === next.id
+          ? introPrefetchRef.current.promise
+          : null
+      if (prefetched) {
+        blob = await prefetched
+      } else {
+        const promise = generateSpeech(buildPresenterText(stationName, next))
+        introPrefetchRef.current = { trackId: next.id, promise }
+        blob = await promise
+      }
+      introPrefetchRef.current = null
+      tracksSinceIntroRef.current = 0
+      if (!blob) return
+      const engine = engineRef.current
+      if (!engine) return
+      engine.setMonitor(true)
+      const buffer = await engine.decodeAudio(await blob.arrayBuffer())
+      await engine.playAnnouncement(buffer, 0, 15)
+    } catch (err) {
+      introPrefetchRef.current = null
+      tracksSinceIntroRef.current = 0
+      setAiError(err instanceof Error ? err.message : 'No se pudo generar la presentación')
+    } finally {
+      setPresenterGenerating(false)
+    }
+  }, [aiEnabled, aiPresenterEnabled, presenterEvery, stationName, generateSpeech])
+
+  // Pre-genera la presentación mientras suena el tema anterior.
+  useEffect(() => {
+    if (!aiEnabled || !aiPresenterEnabled) return
+    if (tracksSinceIntroRef.current < presenterEvery) return
+    const next = queue[0]
+    if (!next || next.kind === 'spot') return
+    if (introPrefetchRef.current?.trackId === next.id) return
+    const promise = generateSpeech(buildPresenterText(stationName, next)).catch((err) => {
+      setAiError(err instanceof Error ? err.message : 'No se pudo generar la presentación')
+      return null
+    })
+    introPrefetchRef.current = { trackId: next.id, promise }
+  }, [queue, aiEnabled, aiPresenterEnabled, presenterEvery, stationName, generateSpeech])
+
   // Auto-advance cuando termina un deck
   useEffect(() => {
     const engine = engineRef.current
@@ -690,12 +857,13 @@ export function useLiveConsole(
       }
       const next = queueRef.current[0]
       if (!next) return
-      setQueue((prev) => prev.filter((item) => item.id !== next.id))
       void (async () => {
         try {
+          await maybePlayPresenter(next)
+          setQueue((prev) => prev.filter((item) => item.id !== next.id))
           const file = await getFileForTrack(next)
           const mode = await engine.loadTrack(id, next, file)
-          if (mode === 'buffer') detectBpm(id)
+          if (mode === 'buffer' && next.kind !== 'spot') detectBpm(id)
           await engine.resume()
           await engine.getDeck(id).play()
           currentDeckRef.current = id
@@ -708,7 +876,7 @@ export function useLiveConsole(
     return () => {
       engine.onDeckEnded = null
     }
-  }, [detectBpm, updateNowPlaying])
+  }, [detectBpm, updateNowPlaying, maybePlayPresenter])
 
   const refreshSlots = useCallback(async () => {
     try {
@@ -757,8 +925,9 @@ export function useLiveConsole(
     await engine.resume()
     const file = await getFileForTrack(track)
     const mode = await engine.loadTrack(deckId, track, file)
-    if (mode === 'buffer') detectBpm(deckId)
+    if (mode === 'buffer' && track.kind !== 'spot') detectBpm(deckId)
     else engine.setDeckBpm(deckId, null, 0)
+    if (track.kind !== 'spot') tracksSinceIntroRef.current += 1
     setQueue((prev) => prev.filter((item) => item.id !== track.id))
     updateNowPlaying(deckId)
   }, [detectBpm, updateNowPlaying])
@@ -811,10 +980,11 @@ export function useLiveConsole(
       engine.getDeck('A').stop()
       return
     }
+    await maybePlayPresenter(nextTrack)
     rememberCurrent()
     await loadToDeck('A', nextTrack)
     await playDeck('A')
-  }, [loadToDeck, playDeck, rememberCurrent])
+  }, [loadToDeck, playDeck, rememberCurrent, maybePlayPresenter])
 
   const playPrevious = useCallback(async () => {
     const engine = engineRef.current
@@ -1186,6 +1356,32 @@ export function useLiveConsole(
     setVoice: setAnnouncementVoicePersisted,
   }), [announce, announcementLoading, announcementError, announcementVoice, setAnnouncementVoicePersisted])
 
+  const ai = useMemo<AiApi>(() => ({
+    enabled: aiEnabled,
+    presenterEnabled: aiPresenterEnabled,
+    every: presenterEvery,
+    generating: presenterGenerating,
+    error: aiError,
+    remaining: aiRemaining,
+    limit: aiLimit,
+    setPresenterEnabled: setAiPresenterEnabledPersisted,
+    setEvery: setPresenterEveryPersisted,
+    generateSpeech,
+    addSpot,
+  }), [
+    aiEnabled,
+    aiPresenterEnabled,
+    presenterEvery,
+    presenterGenerating,
+    aiError,
+    aiRemaining,
+    aiLimit,
+    setAiPresenterEnabledPersisted,
+    setPresenterEveryPersisted,
+    generateSpeech,
+    addSpot,
+  ])
+
   const player = useMemo<PlayerApi>(() => ({
     current: decks.A.track,
     nextTrack: queue[0] ?? null,
@@ -1240,6 +1436,7 @@ export function useLiveConsole(
     player,
     effects,
     announcements,
+    ai,
     cue,
     mic: snapshot.mic,
     crossfader: snapshot.crossfader,

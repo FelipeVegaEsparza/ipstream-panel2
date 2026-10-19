@@ -22,7 +22,7 @@ export function AnnouncementsBar({
 }: Props) {
   const busy = loading != null
   return (
-    <aside className="flex h-full min-h-[180px] flex-col rounded-xl border border-border bg-card p-3 shadow-soft">
+    <aside className="flex min-h-[180px] flex-col rounded-xl border border-border bg-card p-3 shadow-soft">
       <h2 className="text-sm font-semibold text-foreground">Locución</h2>
       <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
         Clima y hora con la voz de la emisora.

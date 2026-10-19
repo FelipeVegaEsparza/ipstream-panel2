@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 import { FileBrowser } from './FileBrowser'
 import { AnnouncementsBar } from './AnnouncementsBar'
+import { AiPresenterCard } from './AiPresenterCard'
+import { AiLocutionModal } from './AiLocutionModal'
 import { BroadcastBar } from './BroadcastBar'
 import { PlayerBar } from './PlayerBar'
 import { PlaylistPanel } from './PlaylistPanel'
@@ -11,8 +13,27 @@ import { SoundEffectsPad } from './SoundEffectsPad'
 import { StereoVuMeter } from './StereoVuMeter'
 import { useLiveConsole } from '@/lib/live-console/use-live-console'
 
-export function LiveConsole({ premiumVoiceAvailable = false }: { premiumVoiceAvailable?: boolean }) {
-  const live = useLiveConsole({ premiumVoiceAvailable })
+export function LiveConsole({
+  premiumVoiceAvailable = false,
+  aiEnabled = false,
+  stationName = 'la radio',
+  aiRemaining = 0,
+  aiLimit = 0,
+}: {
+  premiumVoiceAvailable?: boolean
+  aiEnabled?: boolean
+  stationName?: string
+  aiRemaining?: number
+  aiLimit?: number
+}) {
+  const live = useLiveConsole({
+    premiumVoiceAvailable,
+    aiEnabled,
+    stationName,
+    aiRemaining,
+    aiLimit,
+  })
+  const [composerOpen, setComposerOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -137,7 +158,7 @@ export function LiveConsole({ premiumVoiceAvailable = false }: { premiumVoiceAva
           />
         </div>
 
-        <div className="h-40 lg:h-auto">
+        <div className="flex flex-col gap-3">
           <AnnouncementsBar
             loading={live.announcements.loading}
             error={live.announcements.error}
@@ -146,6 +167,19 @@ export function LiveConsole({ premiumVoiceAvailable = false }: { premiumVoiceAva
             onVoice={live.announcements.setVoice}
             onAnnounce={live.announcements.announce}
           />
+          {aiEnabled && (
+            <AiPresenterCard
+              presenterEnabled={live.ai.presenterEnabled}
+              every={live.ai.every}
+              generating={live.ai.generating}
+              error={live.ai.error}
+              remaining={live.ai.remaining}
+              limit={live.ai.limit}
+              onToggle={live.ai.setPresenterEnabled}
+              onEvery={live.ai.setEvery}
+              onOpenComposer={() => setComposerOpen(true)}
+            />
+          )}
         </div>
       </div>
 
@@ -167,6 +201,15 @@ export function LiveConsole({ premiumVoiceAvailable = false }: { premiumVoiceAva
         monitorEnabled={live.monitorEnabled}
         onMonitor={live.setMonitor}
       />
+
+      {aiEnabled && (
+        <AiLocutionModal
+          open={composerOpen}
+          onClose={() => setComposerOpen(false)}
+          generate={live.ai.generateSpeech}
+          onAdd={live.ai.addSpot}
+        />
+      )}
 
       <SoundEffectsPad
         padSize={live.effects.padSize}

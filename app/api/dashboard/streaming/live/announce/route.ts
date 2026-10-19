@@ -11,6 +11,7 @@ import { resolveRadioServerTarget } from '@/lib/streaming-servers'
 import { weatherPhrase } from '@/lib/weather-label'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
+import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,7 @@ interface AudioResult {
   contentType: string
   provider: 'elevenlabs' | 'piper'
   cached: boolean
+  remaining: number
 }
 
 class NoServerError extends Error {}
@@ -114,6 +116,7 @@ async function piperTts(clientId: string, text: string, voice: PiperVoice): Prom
     contentType: ttsRes.headers.get('content-type') || 'audio/wav',
     provider: 'piper',
     cached: false,
+    remaining: 0,
   }
 }
 
@@ -155,8 +158,10 @@ export async function POST(request: NextRequest) {
     }
 
     let result: AudioResult | null = null
+    const access = await getAiLiveAccess(ctx.clientId)
+    const premiumAllowed = access.enabled && text.length <= access.remaining
 
-    if (requestedVoice === 'premium') {
+    if (requestedVoice === 'premium' && premiumAllowed) {
       const config = await getElevenLabsConfig()
       if (config.enabled && config.apiKey && config.voiceId) {
         try {
@@ -167,11 +172,19 @@ export async function POST(request: NextRequest) {
             model: config.model,
             cacheEnabled: config.cacheEnabled,
           })
+          if (!eleven.cached) {
+            try {
+              await consumeAiCharacters(ctx.clientId, text.length)
+            } catch (err) {
+              console.error('[live/announce] no se pudo registrar la cuota:', err)
+            }
+          }
           result = {
             audio: eleven.audio,
             contentType: eleven.contentType,
             provider: 'elevenlabs',
             cached: eleven.cached,
+            remaining: Math.max(0, access.remaining - (eleven.cached ? 0 : text.length)),
           }
         } catch (err) {
           console.error('[live/announce] ElevenLabs falló; usando Piper:', err)
@@ -186,6 +199,7 @@ export async function POST(request: NextRequest) {
           text,
           requestedVoice === 'female' ? 'female' : 'male'
         )
+        result.remaining = access.remaining
       } catch (err) {
         if (err instanceof NoServerError) {
           return NextResponse.json(
@@ -210,6 +224,7 @@ export async function POST(request: NextRequest) {
         'Cache-Control': 'no-store',
         'X-TTS-Provider': result.provider,
         'X-TTS-Cached': result.cached ? '1' : '0',
+        'X-AI-Remaining': String(result.remaining),
       },
     })
   } catch (err) {

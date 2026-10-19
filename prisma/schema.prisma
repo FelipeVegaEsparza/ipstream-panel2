@@ -69,6 +69,7 @@ model Client {
   chatMessages           ChatMessage[]
   chatBans               ChatBan[]
   contactMessages        ContactMessage[]
+  aiTtsUsage             AiTtsUsage[]
   // Streaming — Audio (Radio)
   radioStream            RadioStream?
   tracks                 Track[]
@@ -404,6 +405,10 @@ model Plan {
   // Se aplican a RadioStream.storageQuotaMB / VideoStream.storageQuotaMB al asignar el plan.
   radioStorageQuotaMB Int?
   videoStorageQuotaMB Int?
+  // IA en vivo: presentador automático + locuciones libres + voz premium.
+  // aiMonthlyCharacters = 0 desactiva la IA aunque el flag esté activo.
+  aiLiveEnabled       Boolean @default(false)
+  aiMonthlyCharacters Int     @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -513,6 +518,22 @@ model PushNotification {
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@map("push_notifications")
+}
+
+model AiTtsUsage {
+  id         String   @id @default(cuid())
+  clientId   String
+  period     String   // YYYY-MM (UTC)
+  characters Int      @default(0)
+  requests   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, period])
+  @@index([clientId])
+  @@map("ai_tts_usage")
 }
 
 model AppConfig {

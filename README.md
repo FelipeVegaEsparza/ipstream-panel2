@@ -562,6 +562,18 @@ generar. Si no está configurado o falla, se usa **Piper TTS** como fallback
 Tocar `streaming/piper/*`, `streaming/agent/*` o `docker-compose.streaming.yml`
 obliga a **"Actualizar nodo"**; el panel con ElevenLabs no requiere ese paso.
 
+### Plan IA en vivo
+
+El plan puede incluir **IA en vivo** (`aiLiveEnabled`) con una cuota mensual
+(`aiMonthlyCharacters`). Incluye el presentador automático de la consola
+(cada N temas, intro de hasta 15 s con nombre de la radio y próximo tema),
+locuciones libres creadas por el cliente y voz premium para clima/hora.
+
+La cuota se descuenta por caracteres solo cuando ElevenLabs genera un audio
+nuevo; los audios cacheados no consumen. Al agotarse, el clima/hora y las
+locuciones caen a Piper; el presentador se omite y muestra el aviso. Las
+locuciones libres se agregan a la lista como pistas tipo `spot`.
+
 ### Fallback por silencio
 
 Si la fuente en vivo deja de emitir audio (consola web o DJ externo conectado al

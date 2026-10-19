@@ -179,29 +179,43 @@ export class LiveAudioEngine {
     this.activeEffects.clear()
   }
 
-  /** Locución TTS: baja la música mientras habla y la restaura al terminar. */
-  playAnnouncement(buffer: AudioBuffer, gainDb = 0): void {
-    const source = this.context.createBufferSource()
-    source.buffer = buffer
-    const gain = this.context.createGain()
-    gain.gain.value = dbToGain(gainDb)
-    source.connect(gain)
-    gain.connect(this.masterGain)
+  /**
+   * Locución TTS: baja la música mientras habla y la restaura al terminar.
+   * Devuelve una promesa que resuelve cuando termina (o al alcanzar maxSeconds).
+   */
+  playAnnouncement(buffer: AudioBuffer, gainDb = 0, maxSeconds = 0): Promise<void> {
+    return new Promise((resolve) => {
+      const source = this.context.createBufferSource()
+      source.buffer = buffer
+      const gain = this.context.createGain()
+      gain.gain.value = dbToGain(gainDb)
+      source.connect(gain)
+      gain.connect(this.masterGain)
 
-    this.announcementCount += 1
-    const now = this.context.currentTime
-    this.announcementDuck.gain.cancelScheduledValues(now)
-    this.announcementDuck.gain.setTargetAtTime(0.12, now, 0.08)
+      this.announcementCount += 1
+      const now = this.context.currentTime
+      this.announcementDuck.gain.cancelScheduledValues(now)
+      this.announcementDuck.gain.setTargetAtTime(0.12, now, 0.08)
 
-    source.onended = () => {
-      this.announcementCount = Math.max(0, this.announcementCount - 1)
-      if (this.announcementCount === 0) {
-        this.announcementDuck.gain.setTargetAtTime(1, this.context.currentTime, 0.3)
+      if (maxSeconds > 0) {
+        const end = now + maxSeconds
+        const fadeStart = Math.max(now, end - 0.35)
+        gain.gain.setValueAtTime(gain.gain.value, fadeStart)
+        gain.gain.linearRampToValueAtTime(0, end)
+        source.stop(end)
       }
-      try { source.disconnect() } catch {}
-      try { gain.disconnect() } catch {}
-    }
-    source.start()
+
+      source.onended = () => {
+        this.announcementCount = Math.max(0, this.announcementCount - 1)
+        if (this.announcementCount === 0) {
+          this.announcementDuck.gain.setTargetAtTime(1, this.context.currentTime, 0.3)
+        }
+        try { source.disconnect() } catch {}
+        try { gain.disconnect() } catch {}
+        resolve()
+      }
+      source.start()
+    })
   }
 
   setCrossfader(position: number): void {

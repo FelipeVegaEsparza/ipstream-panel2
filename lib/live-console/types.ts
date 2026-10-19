@@ -28,6 +28,8 @@ export interface LocalTrack {
   handle?: FileSystemFileHandle | null
   file?: File | null
   available: boolean
+  /** 'spot' = locución generada por IA; no cuenta para el presentador. */
+  kind?: 'music' | 'spot'
 }
 
 export interface DeckEq {

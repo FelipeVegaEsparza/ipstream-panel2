@@ -24,6 +24,8 @@ interface Plan {
   services: string
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
+  aiLiveEnabled: boolean
+  aiMonthlyCharacters: number
   menuHiddenKeys: string | null
   defaultServerId: string | null
   imageUrl: string | null

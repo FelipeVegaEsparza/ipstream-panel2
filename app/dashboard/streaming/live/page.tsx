@@ -2,6 +2,8 @@ import { LiveConsole } from '@/components/dashboard/streaming/live/LiveConsole'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { getDisabledMenuItems } from '@/lib/menu-permissions'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
+import { getAiLiveAccess } from '@/lib/ai-live'
+import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,10 +25,30 @@ export default async function LivePage() {
     )
   }
 
-  const elevenLabs = await getElevenLabsConfig()
+  const [elevenLabs, aiAccess, clientInfo] = await Promise.all([
+    getElevenLabsConfig(),
+    getAiLiveAccess(client.clientId),
+    prisma.client.findUnique({
+      where: { id: client.clientId },
+      select: {
+        name: true,
+        basicData: { select: { projectName: true } },
+      },
+    }),
+  ])
+  const aiEnabled = aiAccess.enabled
   const premiumVoiceAvailable = Boolean(
-    elevenLabs.enabled && elevenLabs.apiKey && elevenLabs.voiceId
+    elevenLabs.enabled && elevenLabs.apiKey && elevenLabs.voiceId && aiEnabled
   )
+  const stationName = clientInfo?.basicData?.projectName || clientInfo?.name || 'la radio'
 
-  return <LiveConsole premiumVoiceAvailable={premiumVoiceAvailable} />
+  return (
+    <LiveConsole
+      premiumVoiceAvailable={premiumVoiceAvailable}
+      aiEnabled={aiEnabled}
+      stationName={stationName}
+      aiRemaining={aiAccess.remaining}
+      aiLimit={aiAccess.limit}
+    />
+  )
 }
