@@ -787,6 +787,9 @@ model RadioStream {
   // Jingles (cuñas publicitarias)
   jinglePlayEvery      Int       @default(5) // cada X canciones
   jinglePlayCount      Int       @default(1) // reproducir Y jingles
+  // Presentador IA del AutoDJ (fuente separada de los jingles)
+  aiPresenterEnabled   Boolean   @default(false)
+  aiPresenterEvery     Int       @default(3) // cada X temas de música
   // Estado actual
   status               String    @default("off") // "off" | "autodj" | "live"
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)

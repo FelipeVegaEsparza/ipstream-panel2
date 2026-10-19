@@ -2,7 +2,7 @@
 // Filesystem helpers para la biblioteca MP3
 // =====================================================
 
-import { mkdir, writeFile, unlink, stat, readdir, rename } from 'fs/promises'
+import { mkdir, writeFile, unlink, stat, readdir, rename, rm } from 'fs/promises'
 import { join, extname } from 'path'
 import { existsSync } from 'fs'
 import { config } from './config.js'
@@ -200,4 +200,43 @@ export function isSafeFileName(fileName) {
   if (typeof fileName !== 'string') return false
   if (fileName.includes('/') || fileName.includes('..') || fileName.includes('\\')) return false
   return true
+}
+
+// =====================================================
+// AI intro file helpers (presentador del AutoDJ)
+// =====================================================
+
+export function clientAiIntrosDir(clientId) {
+  return join(LIBRARY_PATH, clientId, 'ai-intros')
+}
+
+export function aiIntroPath(clientId, fileName) {
+  return join(clientAiIntrosDir(clientId), fileName)
+}
+
+export async function ensureAiIntrosDir(clientId) {
+  const dir = clientAiIntrosDir(clientId)
+  if (!existsSync(dir)) await mkdir(dir, { recursive: true })
+  return dir
+}
+
+export async function saveAiIntro(clientId, fileName, buffer) {
+  await ensureAiIntrosDir(clientId)
+  const dest = join(clientAiIntrosDir(clientId), fileName)
+  await writeFile(dest, buffer)
+  const stats = await stat(dest)
+  return { path: dest, size: stats.size }
+}
+
+export async function clearAiIntros(clientId) {
+  const dir = clientAiIntrosDir(clientId)
+  if (existsSync(dir)) await rm(dir, { recursive: true, force: true })
+  return true
+}
+
+export async function listAiIntroFiles(clientId) {
+  const dir = clientAiIntrosDir(clientId)
+  if (!existsSync(dir)) return []
+  const files = await readdir(dir)
+  return files.filter((f) => extname(f).toLowerCase() === '.mp3').sort()
 }

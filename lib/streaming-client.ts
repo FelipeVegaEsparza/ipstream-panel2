@@ -247,6 +247,21 @@ export const streamingClient = {
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/jingles/${encodeURIComponent(jingleId)}/cover`, {
       method: 'DELETE',
     }),
+  // AI intros del AutoDJ (separadas de los jingles)
+  clearAiIntros: async (clientId: string) =>
+    request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/ai-intros`, {
+      method: 'DELETE',
+    }),
+  uploadAiIntro: async (clientId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/ai-intros/upload`, {
+      method: 'POST',
+      body: form,
+      isMultipart: true,
+      timeoutMs: UPLOAD_TIMEOUT_MS,
+    })
+  },
   getJingleConfig: async (clientId: string) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/jingles/config`),
   updateJingleConfig: async (clientId: string, jinglePlayEvery: number, jinglePlayCount: number) =>

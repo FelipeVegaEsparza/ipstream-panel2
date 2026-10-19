@@ -17,6 +17,7 @@ import websocketRoutes from './routes/ws.js'
 import libraryRoutes from './routes/library.js'
 import playlistRoutes from './routes/playlists.js'
 import jingleRoutes from './routes/jingles.js'
+import aiIntroRoutes from './routes/ai-intros.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import folderRoutes from './routes/folders.js'
 import monitorRoutes from './routes/monitor.js'
@@ -812,6 +813,7 @@ await app.register(websocketRoutes)
 await app.register(libraryRoutes)
 await app.register(playlistRoutes)
 await app.register(jingleRoutes)
+await app.register(aiIntroRoutes)
 await app.register(scheduleRoutes)
 await app.register(monitorRoutes)
   await app.register(folderRoutes)

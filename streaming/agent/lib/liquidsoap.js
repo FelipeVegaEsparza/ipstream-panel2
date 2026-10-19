@@ -1,12 +1,14 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { writeFile, unlink, access, mkdir } from 'fs/promises'
+import { existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { config } from './config.js'
 import { logger } from './logger.js'
 import { generateLiquidsoapScript } from './script-generator.js'
 import { pool } from './db.js'
 import { decrypt, isEncrypted } from './encryption.js'
+import { listAiIntroFiles, clientAiIntrosDir } from './files.js'
 
 const execp = promisify(exec)
 
@@ -142,11 +144,14 @@ export async function regenerateScript(clientId) {
     : null
 
   const jinglesM3uPath = `/var/lib/radio/${clientId}/jingles.m3u`
+  const aiIntrosM3uPath = `/var/lib/radio/${clientId}/ai-intros.m3u`
   const [jingleRows] = await pool.query(
     `SELECT COUNT(*) AS cnt FROM jingles WHERE clientId = ?`,
     [clientId]
   )
   const hasJingles = jingleRows[0]?.cnt > 0 && rs.jinglePlayEvery > 0
+  const hasAi = !!rs.aiPresenterEnabled && rs.aiPresenterEvery > 0 &&
+    !(playlist?.shuffle ?? false) && existsSync(aiIntrosM3uPath)
 
   let sourcePassword = config.ice.sourcePassword
   let harborPassword = config.ice.sourcePassword
@@ -189,6 +194,8 @@ export async function regenerateScript(clientId) {
     jinglePlayEvery: hasJingles ? rs.jinglePlayEvery : 0,
     jinglePlayCount: hasJingles ? rs.jinglePlayCount : 0,
     jinglesM3uPath: hasJingles ? jinglesM3uPath : null,
+    aiPresenterEvery: hasAi ? rs.aiPresenterEvery : 0,
+    aiIntrosM3uPath: hasAi ? aiIntrosM3uPath : null,
     agentToken: config.harborCallbackSecret,
     djs: djs.map(d => ({
       mount: d.mount,
@@ -374,6 +381,21 @@ export async function regenerateM3u(clientId) {
   await writeFile(m3uPath, lines.join('\n') + '\n', { mode: 0o644 })
   logger.info({ clientId, m3uPath, trackCount: entries.length }, 'm3u regenerado')
   return { active: true, trackCount: entries.length }
+}
+
+export async function regenerateAiIntrosM3u(clientId) {
+  const files = await listAiIntroFiles(clientId)
+  const m3uPath = join(LIQUIDSOAP_MP3_DIR, clientId, 'ai-intros.m3u')
+  const dir = clientAiIntrosDir(clientId)
+  await mkdir(dirname(m3uPath), { recursive: true })
+  const lines = ['#EXTM3U']
+  for (const fileName of files) {
+    lines.push('#EXTINF:-1,Locutor IA')
+    lines.push(join(dir, fileName))
+  }
+  await writeFile(m3uPath, lines.join('\n') + (files.length ? '\n' : ''), { mode: 0o644 })
+  logger.info({ clientId, m3uPath, introCount: files.length }, 'ai-intros.m3u regenerado')
+  return { introCount: files.length }
 }
 
 export async function regenerateJinglesM3u(clientId) {

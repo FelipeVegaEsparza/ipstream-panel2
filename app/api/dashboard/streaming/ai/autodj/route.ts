@@ -1,8 +1,7 @@
 // =====================================================
 // /api/dashboard/streaming/ai/autodj
-// Genera las intros del presentador IA para el AutoDJ y las instala como
-// jingles en el orden de la playlist activa. El AutoDJ las reproduce cada N
-// temas usando el scheduler de jingles existente.
+// Presentador IA del AutoDJ en una fuente separada de los jingles.
+// Genera una intro por bloque, la sube a ai-intros y actualiza la frecuencia.
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -16,11 +15,7 @@ import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 export const dynamic = 'force-dynamic'
 
 const MAX_INTROS = 80
-const AI_ARTIST = 'Locutor IA'
-
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+const AI_JINGLE_ARTIST = 'Locutor IA'
 
 function textFor(station: string, title: string, artist: string | null): string {
   const cleanTitle = title.trim() || 'la siguiente canción'
@@ -108,28 +103,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // La lista de jingles es el scheduler del AutoDJ. Si hay jingles normales,
-    // el orden de las intros se mezcla y ya no coincide con el próximo tema.
-    const existing = await streamingClient.listJingles(ctx.clientId)
-    const allJingles = Array.isArray(existing?.jingles) ? existing.jingles : []
-    const normalJingles = allJingles.filter((j: { artist?: string | null }) => j.artist !== AI_ARTIST)
-    if (normalJingles.length > 0) {
-      return NextResponse.json(
-        {
-          error: 'normal_jingles_present',
-          message: 'El AutoDJ IA no se puede combinar con jingles normales. Eliminá o desactivá los jingles antes de prepararlo.',
-        },
-        { status: 409 }
-      )
-    }
-
-    const targets: Array<{ track: { id: string; title: string; artist: string | null; fileName: string } }> = []
+    const targets = []
     for (let k = 1; k <= count; k++) {
       const index = (k * every) % entries.length
-      targets.push({ track: entries[index].track })
+      targets.push(entries[index].track)
     }
-
-    const texts = targets.map(({ track }) =>
+    const texts = targets.map((track) =>
       textFor(station, track.title || track.fileName.replace(/\.[^.]+$/, ''), track.artist)
     )
     const totalChars = texts.reduce((sum, text) => sum + text.length, 0)
@@ -143,22 +122,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Reemplazar las intros anteriores. Los jingles normales ya se rechazaron.
-    for (const jingle of allJingles) {
-      if (jingle.artist === AI_ARTIST && jingle.id) {
-        try {
-          await streamingClient.deleteJingle(ctx.clientId, jingle.id)
-        } catch (err) {
-          console.warn('[ai/autodj] no se pudo borrar intro anterior', jingle.id, err)
+    // Limpieza de la implementación anterior basada en jingles. Solo tocamos
+    // las intros IA; los jingles reales de los clientes quedan intactos.
+    try {
+      const existing = await streamingClient.listJingles(ctx.clientId)
+      const jingles = Array.isArray(existing?.jingles) ? existing.jingles : []
+      const aiJingles = jingles.filter((j: { artist?: string | null }) => j.artist === AI_JINGLE_ARTIST)
+      const normalJingles = jingles.filter((j: { artist?: string | null }) => j.artist !== AI_JINGLE_ARTIST)
+      for (const jingle of aiJingles) {
+        if (jingle.id) {
+          try {
+            await streamingClient.deleteJingle(ctx.clientId, jingle.id)
+          } catch (err) {
+            console.warn('[ai/autodj] no se pudo borrar jingle IA legado', jingle.id, err)
+          }
         }
       }
+      if (aiJingles.length > 0 && normalJingles.length === 0) {
+        // Restaurar la frecuencia de jingles que había antes de la prueba
+        // basada en jingles, solo si el cliente no tiene jingles reales.
+        try {
+          await streamingClient.updateJingleConfig(ctx.clientId, 5, 1)
+        } catch (err) {
+          console.warn('[ai/autodj] no se pudo restaurar jinglePlayEvery', err)
+        }
+      }
+    } catch (err) {
+      console.warn('[ai/autodj] no se pudieron limpiar jingles IA legados', err)
     }
+
+    await streamingClient.clearAiIntros(ctx.clientId)
 
     let remaining = access.remaining
     let generated = 0
     for (let i = 0; i < targets.length; i++) {
       const text = texts[i]
-      const track = targets[i].track
       const audio = await synthesizeElevenLabs({
         text,
         apiKey: config.apiKey,
@@ -177,27 +175,18 @@ export async function POST(request: NextRequest) {
 
       const fileName = `ia-${String(i + 1).padStart(4, '0')}.mp3`
       const file = new File([new Uint8Array(audio.audio)], fileName, { type: 'audio/mpeg' })
-      const uploaded = await streamingClient.uploadJingle(ctx.clientId, file)
-      const jingleId = uploaded?.jingle?.id
-      if (jingleId) {
-        const label = track.artist ? `${track.artist} - ${track.title}` : track.title
-        try {
-          await streamingClient.updateJingle(ctx.clientId, jingleId, {
-            title: label.slice(0, 180),
-            artist: AI_ARTIST,
-          })
-        } catch (err) {
-          console.warn('[ai/autodj] no se pudo etiquetar la intro', jingleId, err)
-        }
-      }
+      await streamingClient.uploadAiIntro(ctx.clientId, file)
       generated++
-      // uploadedAt tiene precisión de milisegundos y define el orden del m3u.
-      await wait(80)
     }
 
-    // El scheduler de jingles del AutoDJ reproduce una intro cada `every`
-    // canciones. El reinicio aplica la nueva config y el nuevo m3u.
-    await streamingClient.updateJingleConfig(ctx.clientId, every, 1)
+    await prisma.radioStream.update({
+      where: { clientId: ctx.clientId },
+      data: {
+        aiPresenterEnabled: true,
+        aiPresenterEvery: every,
+      },
+    })
+    await streamingClient.restart(ctx.clientId)
 
     return NextResponse.json({
       ok: true,
@@ -206,7 +195,7 @@ export async function POST(request: NextRequest) {
       totalCharacters: totalChars,
       remaining,
       playlistTracks: entries.length,
-      message: `AutoDJ preparado: ${generated} intros cada ${every} temas.`,
+      message: `AutoDJ preparado: ${generated} intros cada ${every} temas (fuente IA separada).`,
     })
   } catch (err) {
     if (err instanceof StreamingAuthError) {

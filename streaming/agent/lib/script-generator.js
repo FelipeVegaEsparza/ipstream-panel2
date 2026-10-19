@@ -24,6 +24,8 @@ export function generateLiquidsoapScript({
   jinglePlayEvery = 0,
   jinglePlayCount = 1,
   jinglesM3uPath = null,
+  aiPresenterEvery = 0,
+  aiIntrosM3uPath = null,
   agentToken = '',
   djs = [],              // [{ mount: '/dj1', password: '...', priority: 1 }]
 }) {
@@ -37,6 +39,7 @@ export function generateLiquidsoapScript({
   const harborPort = telnetPort + 10000
 
   const hasJingles = jinglePlayEvery > 0 && jinglesM3uPath
+  const hasAi = aiPresenterEvery > 0 && aiIntrosM3uPath && !shuffle
 
   const playlistMode = shuffle ? 'randomize' : 'normal'
   const loopStr = repeat ? 'true' : 'false'
@@ -44,23 +47,51 @@ export function generateLiquidsoapScript({
   let sourceBlock
   if (mode !== 'playlist') {
     sourceBlock = 'blank()'
-  } else if (hasJingles) {
-    const jingleMode = shuffle ? 'random' : 'normal'
-    sourceBlock = `mksafe(rotate(
-    weights=[${jinglePlayEvery}, ${jinglePlayCount}],
-    [
-      playlist(id="${safeMount}-music", "${m3u}", mode="${playlistMode}", reload_mode="watch", loop=${loopStr}),
-      playlist(id="${safeMount}-jingles", "${jinglesM3uPath}", mode="${jingleMode}", reload_mode="watch", loop=true)
-    ]
-  ))`
   } else {
-    sourceBlock = `mksafe(playlist(
-    id="${safeMount}-playlist",
+    const musicSource = `playlist(
+    id="${safeMount}-music",
     "${m3u}",
     mode="${playlistMode}",
     reload_mode="watch",
     loop=${loopStr}
-  ))`
+  )`
+    // La fuente IA se intercala cada N temas de música. Los jingles van en
+    // una capa exterior separada, así no alteran el contador del presentador.
+    let baseSource = musicSource
+    if (hasAi) {
+      const aiSource = `playlist(
+    id="${safeMount}-ai",
+    "${aiIntrosM3uPath}",
+    mode="normal",
+    reload_mode="watch",
+    loop=true
+  )`
+      baseSource = `rotate(
+    weights=[${aiPresenterEvery}, 1],
+    [
+      ${musicSource},
+      ${aiSource}
+    ]
+  )`
+    }
+    if (hasJingles) {
+      const jingleMode = shuffle ? 'random' : 'normal'
+      const jingleSource = `playlist(
+    id="${safeMount}-jingles",
+    "${jinglesM3uPath}",
+    mode="${jingleMode}",
+    reload_mode="watch",
+    loop=true
+  )`
+      baseSource = `rotate(
+    weights=[${jinglePlayEvery}, ${jinglePlayCount}],
+    [
+      ${baseSource},
+      ${jingleSource}
+    ]
+  )`
+    }
+    sourceBlock = `mksafe(${baseSource})`
   }
 
   const agentHost = config.ice.host === 'localhost' ? 'localhost' : 'agent'

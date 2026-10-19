@@ -102,7 +102,7 @@ export function AiPresenterCard({
       <p className="mt-auto pt-1 text-[9px] leading-snug text-muted-foreground">
         Cuota IA: {remaining.toLocaleString('es-CL')} / {limit.toLocaleString('es-CL')} caracteres.
         <br />
-        El AutoDJ usa la misma frecuencia y reemplaza sus intros IA.
+        El AutoDJ usa la misma frecuencia y una fuente IA separada de los jingles.
       </p>
     </aside>
   )

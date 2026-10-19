@@ -574,6 +574,16 @@ nuevo; los audios cacheados no consumen. Al agotarse, el clima/hora y las
 locuciones caen a Piper; el presentador se omite y muestra el aviso. Las
 locuciones libres se agregan a la lista como pistas tipo `spot`.
 
+### Presentador IA en AutoDJ
+
+El presentador del AutoDJ usa una **fuente Liquidsoap separada** de los jingles:
+las intros se generan por bloque con el próximo tema y se guardan en
+`ai-intros.m3u`. Los jingles del cliente se mantienen en su propia capa y no
+se modifican. La frecuencia se configura por radio (`aiPresenterEvery`) desde
+la tarjeta **Presentador IA → Aplicar al AutoDJ**; requiere playlist sin
+shuffle. Tocar el agente o el script de Liquidsoap obliga a **“Actualizar nodo”**
+en los nodos remotos.
+
 ### Fallback por silencio
 
 Si la fuente en vivo deja de emitir audio (consola web o DJ externo conectado al
