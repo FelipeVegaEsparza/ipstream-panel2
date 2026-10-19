@@ -12,6 +12,7 @@ import { PlaylistPanel } from './PlaylistPanel'
 import { SoundEffectsPad } from './SoundEffectsPad'
 import { StereoVuMeter } from './StereoVuMeter'
 import { useLiveConsole } from '@/lib/live-console/use-live-console'
+import { showToast } from '@/components/ui/toast'
 
 export function LiveConsole({
   premiumVoiceAvailable = false,
@@ -34,6 +35,8 @@ export function LiveConsole({
     aiLimit,
   })
   const [composerOpen, setComposerOpen] = useState(false)
+  const [autoDjPreparing, setAutoDjPreparing] = useState(false)
+  const [autoDjError, setAutoDjError] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -42,6 +45,25 @@ export function LiveConsole({
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
   }, [])
+
+  const prepareAutoDj = async () => {
+    setAutoDjPreparing(true)
+    setAutoDjError(null)
+    try {
+      const res = await fetch('/api/dashboard/streaming/ai/autodj', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ every: live.ai.every }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.message || data?.error || 'No se pudo preparar el AutoDJ')
+      showToast({ type: 'success', title: data.message || 'AutoDJ preparado' })
+    } catch (err) {
+      setAutoDjError(err instanceof Error ? err.message : 'No se pudo preparar el AutoDJ')
+    } finally {
+      setAutoDjPreparing(false)
+    }
+  }
 
   const toggleFullscreen = async () => {
     const root = rootRef.current
@@ -176,9 +198,12 @@ export function LiveConsole({
               error={live.ai.error}
               remaining={live.ai.remaining}
               limit={live.ai.limit}
+              autoDjPreparing={autoDjPreparing}
+              autoDjError={autoDjError}
               onToggle={live.ai.setPresenterEnabled}
               onEvery={live.ai.setEvery}
               onOpenComposer={() => setComposerOpen(true)}
+              onPrepareAutoDj={() => void prepareAutoDj()}
             />
           )}
         </div>

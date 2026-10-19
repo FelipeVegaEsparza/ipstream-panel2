@@ -9,9 +9,12 @@ interface Props {
   error: string | null
   remaining: number
   limit: number
+  autoDjPreparing: boolean
+  autoDjError: string | null
   onToggle: (enabled: boolean) => void
   onEvery: (every: number) => void
   onOpenComposer: () => void
+  onPrepareAutoDj: () => void
 }
 
 export function AiPresenterCard({
@@ -21,9 +24,12 @@ export function AiPresenterCard({
   error,
   remaining,
   limit,
+  autoDjPreparing,
+  autoDjError,
   onToggle,
   onEvery,
   onOpenComposer,
+  onPrepareAutoDj,
 }: Props) {
   return (
     <aside className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-soft">
@@ -79,10 +85,24 @@ export function AiPresenterCard({
         Crear locución libre
       </button>
 
+      <button
+        type="button"
+        onClick={onPrepareAutoDj}
+        disabled={autoDjPreparing}
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand/40 bg-brand/10 px-3 py-2 text-[11px] font-medium text-brand transition-colors hover:bg-brand/20 disabled:opacity-50"
+        title="Genera las intros para el AutoDJ y reinicia el stream"
+      >
+        <SparklesIcon className="h-3.5 w-3.5" />
+        {autoDjPreparing ? 'Preparando AutoDJ…' : 'Aplicar al AutoDJ'}
+      </button>
+
       {error && <p className="text-[10px] leading-snug text-red-300">{error}</p>}
+      {autoDjError && <p className="text-[10px] leading-snug text-red-300">{autoDjError}</p>}
 
       <p className="mt-auto pt-1 text-[9px] leading-snug text-muted-foreground">
         Cuota IA: {remaining.toLocaleString('es-CL')} / {limit.toLocaleString('es-CL')} caracteres.
+        <br />
+        El AutoDJ usa la misma frecuencia y reemplaza sus intros IA.
       </p>
     </aside>
   )
