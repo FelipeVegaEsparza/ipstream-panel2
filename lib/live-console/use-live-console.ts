@@ -818,6 +818,7 @@ export function useLiveConsole(
 
 
   const maybePlayPresenter = useCallback(async (next: LocalTrack | null) => {
+    console.log('[presenter] maybe', { next: next?.title ?? null, count: tracksSinceIntroRef.current, every: presenterEvery, aiEnabled, aiPresenterEnabled })
     if (!aiEnabled || !aiPresenterEnabled) return
     if (next?.kind === 'spot') return
     if (tracksSinceIntroRef.current < presenterEvery) return
@@ -840,14 +841,19 @@ export function useLiveConsole(
       }
       introPrefetchRef.current = null
       tracksSinceIntroRef.current = 0
+      console.log('[presenter] blob', { hasBlob: Boolean(blob), size: blob?.size ?? 0, introText })
       if (!blob) return
       const engine = engineRef.current
       if (!engine) return
       engine.setMonitor(true)
       const buffer = await engine.decodeAudio(await blob.arrayBuffer())
+      console.log('[presenter] decoded', { duration: buffer.duration })
       await engine.playAnnouncement(buffer, 0, 15)
+      console.log('[presenter] play done')
       pushHistory(createSpotTrack(blob, introText, buffer.duration))
+      console.log('[presenter] history pushed')
     } catch (err) {
+      console.log('[presenter] error', err)
       introPrefetchRef.current = null
       tracksSinceIntroRef.current = 0
       setAiError(err instanceof Error ? err.message : 'No se pudo generar la presentación')
@@ -863,7 +869,9 @@ export function useLiveConsole(
     const next = queue[0]
     if (!next || next.kind === 'spot') return
     if (introPrefetchRef.current?.trackId === next.id) return
+    console.log('[presenter] prefetch', { next: next.title, count: tracksSinceIntroRef.current, every: presenterEvery })
     const promise = generateSpeech(buildPresenterText(stationName, next)).catch((err) => {
+      console.log('[presenter] prefetch error', err)
       setAiError(err instanceof Error ? err.message : 'No se pudo generar la presentación')
       return null
     })
@@ -884,6 +892,7 @@ export function useLiveConsole(
         try {
           await maybePlayPresenter(next)
           if (!next) return
+          console.log('[presenter] auto next', { next: next.title, countBefore: tracksSinceIntroRef.current, every: presenterEvery })
           if (next.kind !== 'spot') tracksSinceIntroRef.current += 1
           setQueue((prev) => prev.filter((item) => item.id !== next.id))
           const file = await getFileForTrack(next)
