@@ -184,7 +184,6 @@ export class LiveAudioEngine {
    * Devuelve una promesa que resuelve cuando termina (o al alcanzar maxSeconds).
    */
   playAnnouncement(buffer: AudioBuffer, gainDb = 0, maxSeconds = 0): Promise<void> {
-    console.log('[announce] play', { duration: buffer.duration, maxSeconds, state: this.context.state })
     return new Promise((resolve) => {
       const source = this.context.createBufferSource()
       source.buffer = buffer
@@ -199,7 +198,6 @@ export class LiveAudioEngine {
       this.announcementDuck.gain.setTargetAtTime(0.12, now, 0.08)
 
       source.onended = () => {
-        console.log('[announce] ended', { duration: buffer.duration, maxSeconds })
         this.announcementCount = Math.max(0, this.announcementCount - 1)
         if (this.announcementCount === 0) {
           this.announcementDuck.gain.setTargetAtTime(1, this.context.currentTime, 0.3)
