@@ -26,6 +26,12 @@ describe('buildPresenterText', () => {
     expect(buildPresenterText('Radio X', track)).toContain('El artista')
   })
 
+  it('genera un cierre genérico cuando no hay próximo tema', () => {
+    const text = buildPresenterText('Radio X', null)
+    expect(text).toContain('Radio X')
+    expect(text).toContain('Seguimos con la mejor música')
+  })
+
   it('usa el nombre del archivo si no hay título y no supera 300 caracteres', () => {
     const text = buildPresenterText('Radio X', { ...track, title: '', name: 'tema.mp3' })
     expect(text).toContain('tema')

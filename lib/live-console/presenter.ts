@@ -10,8 +10,11 @@ function trackTitle(track: LocalTrack): string {
   return clean(track.name).replace(/\.[^.]+$/, '') || 'la siguiente canción'
 }
 
-export function buildPresenterText(stationName: string, track: LocalTrack): string {
+export function buildPresenterText(stationName: string, track: LocalTrack | null): string {
   const station = clean(stationName) || 'la radio'
+  if (!track) {
+    return `Estás escuchando ${station}. Seguimos con la mejor música.`.slice(0, 300)
+  }
   const title = trackTitle(track)
   const artist = clean(track.artist)
   const intro = artist

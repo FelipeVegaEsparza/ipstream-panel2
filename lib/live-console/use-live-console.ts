@@ -817,8 +817,9 @@ export function useLiveConsole(
   }, [sendNowPlaying])
 
 
-  const maybePlayPresenter = useCallback(async (next: LocalTrack) => {
-    if (!aiEnabled || !aiPresenterEnabled || next.kind === 'spot') return
+  const maybePlayPresenter = useCallback(async (next: LocalTrack | null) => {
+    if (!aiEnabled || !aiPresenterEnabled) return
+    if (next?.kind === 'spot') return
     if (tracksSinceIntroRef.current < presenterEvery) return
 
     setPresenterGenerating(true)
@@ -827,7 +828,7 @@ export function useLiveConsole(
     try {
       let blob: Blob | null = null
       const prefetched =
-        introPrefetchRef.current?.trackId === next.id
+        next && introPrefetchRef.current?.trackId === next.id
           ? introPrefetchRef.current.promise
           : null
       if (prefetched) {
@@ -878,11 +879,11 @@ export function useLiveConsole(
         const ended = engine.getDeck('A').snapshotTrack
         if (ended) pushHistory(ended)
       }
-      const next = queueRef.current[0]
-      if (!next) return
+      const next = queueRef.current[0] ?? null
       void (async () => {
         try {
           await maybePlayPresenter(next)
+          if (!next) return
           setQueue((prev) => prev.filter((item) => item.id !== next.id))
           const file = await getFileForTrack(next)
           const mode = await engine.loadTrack(id, next, file)
@@ -1000,6 +1001,7 @@ export function useLiveConsole(
     if (!engine) return
     const nextTrack = queueRef.current[0]
     if (!nextTrack) {
+      await maybePlayPresenter(null)
       engine.getDeck('A').stop()
       return
     }

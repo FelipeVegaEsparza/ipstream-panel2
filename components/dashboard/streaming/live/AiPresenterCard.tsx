@@ -66,7 +66,7 @@ export function AiPresenterCard({
         {generating
           ? 'Generando presentación…'
           : presenterEnabled
-            ? `Se presenta antes del tema ${every + 1}.`
+            ? `Se presenta cada ${every} temas (antes del siguiente o al cerrar la tanda).`
             : 'Presentador apagado.'}
       </div>
 
