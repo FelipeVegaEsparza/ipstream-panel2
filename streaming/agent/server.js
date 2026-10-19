@@ -35,6 +35,7 @@ import { autoStartStreams } from './lib/liquidsoap.js'
 import { autoStartVideoStreams, execCmd, ENCODER_CONTAINER } from './lib/video-encoder.js'
 import { recoverVideoNormalizations } from './lib/video-normalize-queue.js'
 import { startRetentionCron, stopRetentionCron } from './lib/retention.js'
+import { startAiAnnouncementScheduler } from './lib/ai-announcement-scheduler.js'
 import { startStreamSupervisor, stopStreamSupervisor } from './lib/stream-supervisor.js'
 import { startHistoryCron, stopHistoryCron } from './lib/track-history.js'
 import { startAnalyticsCrons, stopAnalyticsCrons } from './lib/analytics/index.js'
@@ -835,6 +836,7 @@ await app.register(liveRoutes)
   startVideoScheduleCron()
   startDjWatcher()
   startRetentionCron()
+startAiAnnouncementScheduler()
   startStreamSupervisor()
   startHistoryCron()
   startAnalyticsCrons()

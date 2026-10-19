@@ -10,6 +10,8 @@ interface Config {
   enabled: boolean
   every: number
   phrases: string[]
+  timeEveryMinutes: number
+  weatherEveryMinutes: number
   aiEnabled: boolean
   remaining: number
   limit: number
@@ -24,6 +26,8 @@ export function LocutorIaSettings() {
   const [enabled, setEnabled] = useState(false)
   const [every, setEvery] = useState(3)
   const [phrases, setPhrases] = useState<string[]>([...DEFAULT_PRESENTER_PHRASES])
+  const [timeEveryMinutes, setTimeEveryMinutes] = useState(0)
+  const [weatherEveryMinutes, setWeatherEveryMinutes] = useState(0)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [applying, setApplying] = useState(false)
@@ -39,6 +43,8 @@ export function LocutorIaSettings() {
       setEnabled(Boolean(data.enabled))
       setEvery(Number(data.every) || 3)
       setPhrases(Array.isArray(data.phrases) && data.phrases.length ? data.phrases : [...DEFAULT_PRESENTER_PHRASES])
+      setTimeEveryMinutes(Number(data.timeEveryMinutes) || 0)
+      setWeatherEveryMinutes(Number(data.weatherEveryMinutes) || 0)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo cargar la configuración')
     } finally {
@@ -60,6 +66,8 @@ export function LocutorIaSettings() {
           enabled,
           every,
           phrases: clean.length ? clean : DEFAULT_PRESENTER_PHRASES,
+          timeEveryMinutes,
+          weatherEveryMinutes,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -253,6 +261,42 @@ export function LocutorIaSettings() {
       </section>
 
       <aside className="space-y-4">
+        <section className="card space-y-3">
+          <h2 className="text-lg font-semibold text-foreground">Hora y clima</h2>
+          <p className="text-sm text-muted-foreground">
+            Locuciones automáticas del AutoDJ. Se emiten en el siguiente corte de tema.
+          </p>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-muted-foreground">Hora cada</span>
+            <select
+              value={timeEveryMinutes}
+              onChange={(event) => setTimeEveryMinutes(Number(event.target.value))}
+              className={input}
+            >
+              <option value={0}>Desactivado</option>
+              {[15, 30, 60, 120, 180, 240].map((value) => (
+                <option key={value} value={value}>{value} minutos</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-muted-foreground">Clima cada</span>
+            <select
+              value={weatherEveryMinutes}
+              onChange={(event) => setWeatherEveryMinutes(Number(event.target.value))}
+              className={input}
+            >
+              <option value={0}>Desactivado</option>
+              {[15, 30, 60, 120, 180, 240].map((value) => (
+                <option key={value} value={value}>{value} minutos</option>
+              ))}
+            </select>
+          </label>
+          <p className="text-[11px] text-muted-foreground">
+            Usa la ciudad de Datos Básicos y la voz premium. Se aplica al guardar y reiniciar el AutoDJ.
+          </p>
+        </section>
+
         <section className="card space-y-3">
           <h2 className="text-lg font-semibold text-foreground">AutoDJ</h2>
           <p className="text-sm text-muted-foreground">

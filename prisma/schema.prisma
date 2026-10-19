@@ -791,6 +791,8 @@ model RadioStream {
   aiPresenterEnabled   Boolean   @default(false)
   aiPresenterEvery     Int       @default(3) // cada X temas de música
   aiIntroPhrases       String?   @db.Text // JSON array de frases del locutor
+  aiTimeEveryMinutes   Int       @default(0) // 0 = desactivado
+  aiWeatherEveryMinutes Int      @default(0) // 0 = desactivado
   // Estado actual
   status               String    @default("off") // "off" | "autodj" | "live"
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)

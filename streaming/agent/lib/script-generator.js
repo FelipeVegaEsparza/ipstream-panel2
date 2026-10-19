@@ -245,7 +245,8 @@ settings.server.telnet.bind_addr.set("0.0.0.0")
 
 settings.harbor.bind_addrs := ["0.0.0.0"]
 
-autodj = ${sourceBlock}
+announcements = request.queue(id="announcements")
+autodj = fallback(track_sensitive=true, [announcements, ${sourceBlock}])
 ${harborInputs}
 
 radio = fallback(track_sensitive=false, [${fallbackList}])

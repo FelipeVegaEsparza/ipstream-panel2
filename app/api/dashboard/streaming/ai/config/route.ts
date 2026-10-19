@@ -28,7 +28,7 @@ async function loadConfig(clientId: string) {
   const [rs, access, client] = await Promise.all([
     prisma.radioStream.findUnique({
       where: { clientId },
-      select: { aiPresenterEnabled: true, aiPresenterEvery: true, aiIntroPhrases: true },
+      select: { aiPresenterEnabled: true, aiPresenterEvery: true, aiIntroPhrases: true, aiTimeEveryMinutes: true, aiWeatherEveryMinutes: true },
     }),
     getAiLiveAccess(clientId),
     prisma.client.findUnique({
@@ -41,6 +41,8 @@ async function loadConfig(clientId: string) {
     enabled: rs.aiPresenterEnabled,
     every: rs.aiPresenterEvery,
     phrases: parsePhrases(rs.aiIntroPhrases),
+    timeEveryMinutes: rs.aiTimeEveryMinutes,
+    weatherEveryMinutes: rs.aiWeatherEveryMinutes,
     aiEnabled: access.enabled,
     remaining: access.remaining,
     limit: access.limit,
@@ -87,6 +89,18 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    const timeEveryMinutes = Number(body?.timeEveryMinutes)
+    const weatherEveryMinutes = Number(body?.weatherEveryMinutes)
+    if (
+      !Number.isInteger(timeEveryMinutes) || timeEveryMinutes < 0 || timeEveryMinutes > 1440 ||
+      !Number.isInteger(weatherEveryMinutes) || weatherEveryMinutes < 0 || weatherEveryMinutes > 1440
+    ) {
+      return NextResponse.json(
+        { error: 'invalid_intervals', message: 'Los intervalos deben ser enteros entre 0 y 1440 minutos.' },
+        { status: 400 }
+      )
+    }
+
     const rawPhrases = Array.isArray(body?.phrases) ? body.phrases : []
     const phrases = normalizePhrases(
       rawPhrases
@@ -102,6 +116,8 @@ export async function PUT(request: NextRequest) {
         aiPresenterEnabled: enabled,
         aiPresenterEvery: every,
         aiIntroPhrases: JSON.stringify(phrases),
+        aiTimeEveryMinutes: timeEveryMinutes,
+        aiWeatherEveryMinutes: weatherEveryMinutes,
       },
     })
 
