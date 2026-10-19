@@ -975,10 +975,11 @@ export function useLiveConsole(
       await playDeck('A')
       return
     }
+    await maybePlayPresenter(track)
     if (current) rememberCurrent()
     await loadToDeck('A', track)
     await playDeck('A')
-  }, [loadToDeck, playDeck, rememberCurrent])
+  }, [loadToDeck, playDeck, rememberCurrent, maybePlayPresenter])
 
   const playNext = useCallback(async () => {
     const engine = engineRef.current
