@@ -1,6 +1,7 @@
 import { LiveConsole } from '@/components/dashboard/streaming/live/LiveConsole'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { getDisabledMenuItems } from '@/lib/menu-permissions'
+import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,5 +23,10 @@ export default async function LivePage() {
     )
   }
 
-  return <LiveConsole />
+  const elevenLabs = await getElevenLabsConfig()
+  const premiumVoiceAvailable = Boolean(
+    elevenLabs.enabled && elevenLabs.apiKey && elevenLabs.voiceId
+  )
+
+  return <LiveConsole premiumVoiceAvailable={premiumVoiceAvailable} />
 }

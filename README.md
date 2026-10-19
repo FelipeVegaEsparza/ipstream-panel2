@@ -551,13 +551,16 @@ Hay un cooldown de 60 s para evitar bucles.
 La consola tiene botones **Clima** y **Hora** que generan una locución y la
 mezclan sobre el programa (sale al aire y por el monitor). El clima usa la
 ciudad/coordenadas configuradas en **Datos Básicos** y Open-Meteo; la hora usa
-la zona horaria del cliente. Durante el anuncio la música baja al 25 %.
+la zona horaria del cliente. Durante el anuncio la música baja al 12 %.
 
-La voz se sintetiza con **Piper TTS** en el contenedor `piper`. Hay dos voces
-latinas (`es_MX-ald-medium` masculina y `es_MX-claude-high` femenina) y se
-eligen desde la tarjeta **Locución**. Es offline y no depende de APIs externas.
-El agente genera el WAV bajo demanda. Tocar `streaming/piper/*`, `streaming/agent/*` o
-`docker-compose.streaming.yml` obliga a **"Actualizar nodo"**.
+La voz principal se configura en **`/admin/settings` → Locución** con una API
+key de **ElevenLabs** (encriptada en `app_config`), un Voice ID y el modelo
+(`eleven_v4_turbo` por defecto). ElevenLabs se usa para Clima/Hora y los audios
+se cachean en el volumen `app_uploads`; una frase repetida no se vuelve a
+generar. Si no está configurado o falla, se usa **Piper TTS** como fallback
+(offline, contenedor `piper`, voces `es_MX-ald-medium` y `es_MX-claude-high`).
+Tocar `streaming/piper/*`, `streaming/agent/*` o `docker-compose.streaming.yml`
+obliga a **"Actualizar nodo"**; el panel con ElevenLabs no requiere ese paso.
 
 ### Fallback por silencio
 

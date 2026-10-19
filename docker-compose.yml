@@ -73,6 +73,11 @@ services:
       ICE_PUBLIC_PORT: ${ICE_PUBLIC_PORT:-8000}
       HARBOR_PUBLIC_HOSTNAME: ${HARBOR_PUBLIC_HOSTNAME:-localhost}
       ICE_SOURCE_PASSWORD: ${ICE_SOURCE_PASSWORD:-hackme}
+      # ElevenLabs (locución premium; fallback a env si no está en la DB)
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-}
+      ELEVENLABS_MODEL: ${ELEVENLABS_MODEL:-eleven_v4_turbo}
+      TTS_CACHE_ENABLED: ${TTS_CACHE_ENABLED:-true}
       # Email (Resend)
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-no-reply@ipstream.cl}

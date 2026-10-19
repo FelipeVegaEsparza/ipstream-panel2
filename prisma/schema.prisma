@@ -529,6 +529,13 @@ model AppConfig {
   clientSitesIp        String? // IP para el wildcard A de subdominios
   cloudflareApiTokenEnc String? @db.Text // token de Cloudflare (encriptado AES-256-GCM)
 
+  // Locución premium (ElevenLabs). La API key se guarda encriptada.
+  elevenLabsApiKeyEnc  String? @db.Text // API key de ElevenLabs (AES-256-GCM)
+  elevenLabsVoiceId    String? // Voice ID de la voz de la emisora
+  elevenLabsModel      String? // eleven_v4_turbo | eleven_v4 | eleven_v3 | ...
+  elevenLabsEnabled    Boolean @default(false)
+  ttsCacheEnabled      Boolean @default(true) // cache de audios generados (app_uploads)
+
   @@map("app_config")
 }
 

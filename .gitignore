@@ -53,3 +53,5 @@ pwa/.vite/
 # Bundle único de la PWA servido por el panel y caché de iconos por cliente
 public/client-site/
 public/client-icons/
+# Cache de locuciones generadas (volumen app_uploads en Docker)
+public/uploads/tts-cache/

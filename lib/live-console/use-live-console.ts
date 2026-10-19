@@ -125,7 +125,7 @@ export interface PlayerApi {
 }
 
 export type AnnouncementType = 'weather' | 'time'
-export type AnnouncementVoice = 'male' | 'female'
+export type AnnouncementVoice = 'male' | 'female' | 'premium'
 
 export interface AnnouncementsApi {
   announce: (type: AnnouncementType) => Promise<void>
@@ -218,7 +218,10 @@ export interface UseLiveConsoleResult {
   current: { title: string | null; artist: string | null; nextTitle: string | null; nextArtist: string | null }
 }
 
-export function useLiveConsole(): UseLiveConsoleResult {
+export function useLiveConsole(
+  options: { premiumVoiceAvailable?: boolean } = {}
+): UseLiveConsoleResult {
+  const premiumVoiceAvailable = Boolean(options.premiumVoiceAvailable)
   const engineRef = useRef<LiveAudioEngine | null>(null)
   const [engineReady, setEngineReady] = useState(false)
   const [snapshot, setSnapshot] = useState<EngineSnapshot>({
@@ -252,11 +255,14 @@ export function useLiveConsole(): UseLiveConsoleResult {
   const [announcementLoading, setAnnouncementLoading] = useState<AnnouncementType | null>(null)
   const [announcementError, setAnnouncementError] = useState<string | null>(null)
   const [announcementVoice, setAnnouncementVoice] = useState<AnnouncementVoice>(() => {
-    if (typeof window === 'undefined') return 'male'
+    if (typeof window === 'undefined') return premiumVoiceAvailable ? 'premium' : 'male'
     try {
-      return window.localStorage.getItem('live-announcement-voice') === 'female' ? 'female' : 'male'
+      const stored = window.localStorage.getItem('live-announcement-voice')
+      if (stored === 'premium' && premiumVoiceAvailable) return 'premium'
+      if (stored === 'female' || stored === 'male') return stored
+      return premiumVoiceAvailable ? 'premium' : 'male'
     } catch {
-      return 'male'
+      return premiumVoiceAvailable ? 'premium' : 'male'
     }
   })
   const effectsRef = useRef<Map<number, SoundEffect>>(new Map())
@@ -498,7 +504,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     } catch (err) {
       setEffectsError(err instanceof Error ? err.message : 'No se pudo reproducir el efecto')
     }
-  }, [announcementVoice])
+  }, [])
 
   const setAnnouncementVoicePersisted = useCallback((voice: AnnouncementVoice) => {
     setAnnouncementVoice(voice)
@@ -541,7 +547,7 @@ export function useLiveConsole(): UseLiveConsoleResult {
     } finally {
       setAnnouncementLoading(null)
     }
-  }, [])
+  }, [announcementVoice])
 
   const setPadSize = useCallback((size: number) => {
     const normalized = (SOUND_EFFECT_PAD_SIZES as readonly number[]).includes(size)

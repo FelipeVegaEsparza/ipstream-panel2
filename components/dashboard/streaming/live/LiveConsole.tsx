@@ -11,8 +11,8 @@ import { SoundEffectsPad } from './SoundEffectsPad'
 import { StereoVuMeter } from './StereoVuMeter'
 import { useLiveConsole } from '@/lib/live-console/use-live-console'
 
-export function LiveConsole() {
-  const live = useLiveConsole()
+export function LiveConsole({ premiumVoiceAvailable = false }: { premiumVoiceAvailable?: boolean }) {
+  const live = useLiveConsole({ premiumVoiceAvailable })
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -142,6 +142,7 @@ export function LiveConsole() {
             loading={live.announcements.loading}
             error={live.announcements.error}
             voice={live.announcements.voice}
+            premiumAvailable={premiumVoiceAvailable}
             onVoice={live.announcements.setVoice}
             onAnnounce={live.announcements.announce}
           />

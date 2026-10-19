@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
-import { encrypt, isEncrypted } from '@/lib/encryption'
+import { encrypt } from '@/lib/encryption'
 import { invalidateClientSitesConfig } from '@/lib/client-sites-config'
+import { getElevenLabsConfig, invalidateElevenLabsConfig } from '@/lib/elevenlabs-config'
+import { ELEVENLABS_MODELS } from '@/lib/elevenlabs-models'
 
 export async function GET() {
   try {
@@ -18,6 +20,8 @@ export async function GET() {
       })
     }
 
+    const eleven = await getElevenLabsConfig()
+
     // Config de sitios: valor efectivo (DB o env). El token nunca se devuelve.
     return NextResponse.json({
       enableGenericNews: config.enableGenericNews,
@@ -27,6 +31,11 @@ export async function GET() {
       clientSitesTarget: config.clientSitesTarget || process.env.CLIENT_SITES_TARGET || '',
       clientSitesIp: config.clientSitesIp || process.env.CLIENT_SITES_IP || '',
       cloudflareTokenSet: Boolean(config.cloudflareApiTokenEnc || process.env.CLOUDFLARE_API_TOKEN),
+      elevenLabsKeySet: Boolean(eleven.apiKey),
+      elevenLabsVoiceId: eleven.voiceId,
+      elevenLabsModel: eleven.model,
+      elevenLabsEnabled: eleven.enabled,
+      ttsCacheEnabled: eleven.cacheEnabled,
     })
   } catch (error) {
     console.error('Error getting app config:', error)
@@ -50,6 +59,12 @@ export async function PUT(request: NextRequest) {
       clientSitesTarget,
       clientSitesIp,
       cloudflareApiToken,
+      elevenLabsApiKey,
+      elevenLabsVoiceId,
+      elevenLabsModel,
+      elevenLabsEnabled,
+      ttsCacheEnabled,
+      clearElevenLabsApiKey,
     } = body
 
     let trialDaysValue: number | undefined
@@ -69,6 +84,33 @@ export async function PUT(request: NextRequest) {
       tokenUpdate = { cloudflareApiTokenEnc: raw ? encrypt(raw) : null }
     }
 
+    let elevenLabsKeyUpdate: { elevenLabsApiKeyEnc: string | null } | undefined
+    if (clearElevenLabsApiKey === true) {
+      elevenLabsKeyUpdate = { elevenLabsApiKeyEnc: null }
+    } else if (elevenLabsApiKey !== undefined) {
+      const raw = typeof elevenLabsApiKey === 'string' ? elevenLabsApiKey.trim() : ''
+      if (raw) elevenLabsKeyUpdate = { elevenLabsApiKeyEnc: encrypt(raw) }
+    }
+
+    let elevenLabsModelValue: string | undefined
+    if (elevenLabsModel !== undefined) {
+      const model = String(elevenLabsModel)
+      if (!ELEVENLABS_MODELS.some((entry) => entry.id === model)) {
+        return NextResponse.json({ error: 'Modelo de ElevenLabs inválido' }, { status: 400 })
+      }
+      elevenLabsModelValue = model
+    }
+
+    const elevenLabsData = {
+      ...(elevenLabsVoiceId !== undefined
+        ? { elevenLabsVoiceId: String(elevenLabsVoiceId).trim() || null }
+        : {}),
+      ...(elevenLabsModelValue !== undefined ? { elevenLabsModel: elevenLabsModelValue } : {}),
+      ...(typeof elevenLabsEnabled === 'boolean' ? { elevenLabsEnabled } : {}),
+      ...(typeof ttsCacheEnabled === 'boolean' ? { ttsCacheEnabled } : {}),
+      ...(elevenLabsKeyUpdate || {}),
+    }
+
     const sitesData = {
       ...(clientSitesDomain !== undefined ? { clientSitesDomain: clientSitesDomain?.trim() || null } : {}),
       ...(clientSitesTarget !== undefined ? { clientSitesTarget: clientSitesTarget?.trim() || null } : {}),
@@ -84,6 +126,7 @@ export async function PUT(request: NextRequest) {
           adminNotifyEmail: adminNotifyEmail ?? null,
           ...(trialDaysValue !== undefined ? { trialDays: trialDaysValue } : {}),
           ...sitesData,
+          ...elevenLabsData,
         },
       })
     } else {
@@ -94,6 +137,7 @@ export async function PUT(request: NextRequest) {
           ...(adminNotifyEmail !== undefined ? { adminNotifyEmail: adminNotifyEmail || null } : {}),
           ...(trialDaysValue !== undefined ? { trialDays: trialDaysValue } : {}),
           ...sitesData,
+          ...elevenLabsData,
         },
       })
     }

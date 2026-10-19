@@ -5,7 +5,8 @@ import { AnnouncementsBar } from './AnnouncementsBar'
 function renderBar(overrides: {
   loading?: 'weather' | 'time' | null
   error?: string | null
-  voice?: 'male' | 'female'
+  voice?: 'male' | 'female' | 'premium'
+  premiumAvailable?: boolean
 } = {}) {
   const handlers = {
     onAnnounce: vi.fn().mockResolvedValue(undefined),
@@ -16,6 +17,7 @@ function renderBar(overrides: {
       loading={overrides.loading ?? null}
       error={overrides.error ?? null}
       voice={overrides.voice ?? 'male'}
+      premiumAvailable={overrides.premiumAvailable ?? false}
       {...handlers}
     />
   )
@@ -35,6 +37,15 @@ describe('AnnouncementsBar', () => {
     const handlers = renderBar()
     fireEvent.change(screen.getByLabelText('Voz de la locución'), { target: { value: 'female' } })
     expect(handlers.onVoice).toHaveBeenCalledWith('female')
+  })
+
+  it('muestra la voz premium y la selecciona', () => {
+    const handlers = renderBar({ premiumAvailable: true, voice: 'premium' })
+    const select = screen.getByLabelText('Voz de la locución') as HTMLSelectElement
+    expect(select.value).toBe('premium')
+    expect(screen.getByRole('option', { name: /Premium/ })).toBeInTheDocument()
+    fireEvent.change(select, { target: { value: 'male' } })
+    expect(handlers.onVoice).toHaveBeenCalledWith('male')
   })
 
   it('bloquea mientras genera y muestra el estado', () => {

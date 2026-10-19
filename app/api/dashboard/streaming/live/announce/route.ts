@@ -1,6 +1,7 @@
 // =====================================================
 // /api/dashboard/streaming/live/announce
 // Genera la locución de clima u hora y devuelve el audio TTS.
+// Usa ElevenLabs (voz premium) si está configurado; si falla, cae a Piper.
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -8,8 +9,22 @@ import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth
 import { prisma } from '@/lib/prisma'
 import { resolveRadioServerTarget } from '@/lib/streaming-servers'
 import { weatherPhrase } from '@/lib/weather-label'
+import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
+import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
 
 export const dynamic = 'force-dynamic'
+
+type RequestedVoice = 'premium' | 'male' | 'female'
+type PiperVoice = 'male' | 'female'
+
+interface AudioResult {
+  audio: Buffer
+  contentType: string
+  provider: 'elevenlabs' | 'piper'
+  cached: boolean
+}
+
+class NoServerError extends Error {}
 
 function currentTimeText(timeZone: string): string {
   let zone = timeZone || 'UTC'
@@ -71,12 +86,44 @@ async function weatherText(clientId: string): Promise<string> {
   return `En ${basic.city}, la temperatura actual es de ${Math.round(current.temperature)} grados ${unitLabel}, con ${condition}.`
 }
 
+async function piperTts(clientId: string, text: string, voice: PiperVoice): Promise<AudioResult> {
+  const target = await resolveRadioServerTarget(clientId)
+  if (!target) throw new NoServerError()
+
+  const ttsRes = await fetch(`${target.baseUrl}/api/live/tts`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${target.token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ text, voice }),
+    signal: AbortSignal.timeout(30000),
+  })
+
+  if (!ttsRes.ok) {
+    let message = 'No se pudo generar la locución con Piper.'
+    try {
+      const data = await ttsRes.json()
+      message = data?.message || data?.error || message
+    } catch {}
+    throw new Error(message)
+  }
+
+  return {
+    audio: Buffer.from(await ttsRes.arrayBuffer()),
+    contentType: ttsRes.headers.get('content-type') || 'audio/wav',
+    provider: 'piper',
+    cached: false,
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ctx = await requireStreamingClient()
     const body = await request.json().catch(() => ({}))
     const type = body?.type
-    const voice = body?.voice === 'female' ? 'female' : 'male'
+    const requestedVoice: RequestedVoice =
+      body?.voice === 'premium' || body?.voice === 'female' ? body.voice : 'male'
 
     if (type !== 'weather' && type !== 'time') {
       return NextResponse.json({ error: 'invalid_type' }, { status: 400 })
@@ -107,39 +154,62 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const target = await resolveRadioServerTarget(ctx.clientId)
-    if (!target) {
-      return NextResponse.json(
-        { error: 'no_streaming_server', message: 'No hay servidor de streaming configurado.' },
-        { status: 503 }
-      )
+    let result: AudioResult | null = null
+
+    if (requestedVoice === 'premium') {
+      const config = await getElevenLabsConfig()
+      if (config.enabled && config.apiKey && config.voiceId) {
+        try {
+          const eleven = await synthesizeElevenLabs({
+            text,
+            apiKey: config.apiKey,
+            voiceId: config.voiceId,
+            model: config.model,
+            cacheEnabled: config.cacheEnabled,
+          })
+          result = {
+            audio: eleven.audio,
+            contentType: eleven.contentType,
+            provider: 'elevenlabs',
+            cached: eleven.cached,
+          }
+        } catch (err) {
+          console.error('[live/announce] ElevenLabs falló; usando Piper:', err)
+        }
+      }
     }
 
-    const ttsRes = await fetch(`${target.baseUrl}/api/live/tts`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${target.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text, voice }),
-      signal: AbortSignal.timeout(30000),
-    })
-
-    if (!ttsRes.ok) {
-      let message = 'No se pudo generar la locución.'
+    if (!result) {
       try {
-        const data = await ttsRes.json()
-        message = data?.message || data?.error || message
-      } catch {}
-      return NextResponse.json({ error: 'tts_failed', message }, { status: 502 })
+        result = await piperTts(
+          ctx.clientId,
+          text,
+          requestedVoice === 'female' ? 'female' : 'male'
+        )
+      } catch (err) {
+        if (err instanceof NoServerError) {
+          return NextResponse.json(
+            { error: 'no_streaming_server', message: 'No hay servidor de streaming configurado.' },
+            { status: 503 }
+          )
+        }
+        return NextResponse.json(
+          {
+            error: 'tts_failed',
+            message: err instanceof Error ? err.message : 'No se pudo generar la locución.',
+          },
+          { status: 502 }
+        )
+      }
     }
 
-    const audio = await ttsRes.arrayBuffer()
-    return new NextResponse(audio, {
+    return new NextResponse(new Uint8Array(result.audio), {
       status: 200,
       headers: {
-        'Content-Type': ttsRes.headers.get('content-type') || 'audio/wav',
+        'Content-Type': result.contentType,
         'Cache-Control': 'no-store',
+        'X-TTS-Provider': result.provider,
+        'X-TTS-Cached': result.cached ? '1' : '0',
       },
     })
   } catch (err) {

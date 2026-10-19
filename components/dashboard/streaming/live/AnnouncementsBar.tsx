@@ -7,17 +7,25 @@ interface Props {
   loading: AnnouncementType | null
   error: string | null
   voice: AnnouncementVoice
+  premiumAvailable?: boolean
   onVoice: (voice: AnnouncementVoice) => void
   onAnnounce: (type: AnnouncementType) => Promise<void>
 }
 
-export function AnnouncementsBar({ loading, error, voice, onVoice, onAnnounce }: Props) {
+export function AnnouncementsBar({
+  loading,
+  error,
+  voice,
+  premiumAvailable = false,
+  onVoice,
+  onAnnounce,
+}: Props) {
   const busy = loading != null
   return (
     <aside className="flex h-full min-h-[180px] flex-col rounded-xl border border-border bg-card p-3 shadow-soft">
       <h2 className="text-sm font-semibold text-foreground">Locución</h2>
       <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
-        Clima y hora con voz latina.
+        Clima y hora con la voz de la emisora.
       </p>
 
       <div className="mt-3 space-y-2">
@@ -47,12 +55,16 @@ export function AnnouncementsBar({ loading, error, voice, onVoice, onAnnounce }:
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Voz</span>
         <select
           value={voice}
-          onChange={(event) => onVoice(event.target.value === 'female' ? 'female' : 'male')}
+          onChange={(event) => {
+            const value = event.target.value
+            onVoice(value === 'premium' || value === 'female' ? value : 'male')
+          }}
           className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-brand"
           aria-label="Voz de la locución"
         >
-          <option value="male">Ald (latino)</option>
-          <option value="female">Claude (latino)</option>
+          {premiumAvailable && <option value="premium">Premium (ElevenLabs)</option>}
+          <option value="male">Ald (Piper)</option>
+          <option value="female">Claude (Piper)</option>
         </select>
       </label>
 
