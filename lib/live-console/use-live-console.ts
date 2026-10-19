@@ -603,7 +603,6 @@ export function useLiveConsole(
   }, [])
 
   const setAiPresenterEnabledPersisted = useCallback((enabled: boolean) => {
-    console.debug('[ai-debug] set enabled', enabled)
     setAiPresenterEnabled(enabled)
     if (!enabled) introPrefetchRef.current = null
     try {
@@ -613,7 +612,6 @@ export function useLiveConsole(
 
   const setPresenterEveryPersisted = useCallback((every: number) => {
     const value = Math.min(10, Math.max(2, Math.round(every)))
-    console.debug('[ai-debug] set every', value)
     setPresenterEvery(value)
     try {
       window.localStorage.setItem('live-ai-presenter-every', String(value))
@@ -820,7 +818,6 @@ export function useLiveConsole(
 
 
   const maybePlayPresenter = useCallback(async (next: LocalTrack | null) => {
-    console.debug('[ai-debug] maybe', 'next=', next?.title ?? null, 'count=', tracksSinceIntroRef.current, 'every=', presenterEvery, 'enabled=', aiEnabled, aiPresenterEnabled)
     if (!aiEnabled || !aiPresenterEnabled) return
     if (next?.kind === 'spot') return
     if (tracksSinceIntroRef.current < presenterEvery) return
@@ -883,11 +880,11 @@ export function useLiveConsole(
         if (ended) pushHistory(ended)
       }
       const next = queueRef.current[0] ?? null
-      console.debug('[ai-debug] ended', 'next=', next?.title ?? null, 'count=', tracksSinceIntroRef.current, 'every=', presenterEvery, 'enabled=', aiEnabled, aiPresenterEnabled)
       void (async () => {
         try {
           await maybePlayPresenter(next)
           if (!next) return
+          if (next.kind !== 'spot') tracksSinceIntroRef.current += 1
           setQueue((prev) => prev.filter((item) => item.id !== next.id))
           const file = await getFileForTrack(next)
           const mode = await engine.loadTrack(id, next, file)
@@ -956,7 +953,6 @@ export function useLiveConsole(
     if (mode === 'buffer' && track.kind !== 'spot') detectBpm(deckId)
     else engine.setDeckBpm(deckId, null, 0)
     if (track.kind !== 'spot') tracksSinceIntroRef.current += 1
-    console.debug('[ai-debug] load', track.title, 'count=', tracksSinceIntroRef.current, 'every=', presenterEvery, 'enabled=', aiEnabled, aiPresenterEnabled)
     setQueue((prev) => prev.filter((item) => item.id !== track.id))
     updateNowPlaying(deckId)
   }, [detectBpm, updateNowPlaying])
