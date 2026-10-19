@@ -151,6 +151,7 @@ export function LiveConsole({
         <div className={panelHeight}>
           <PlaylistPanel
             queue={live.library.queue}
+            history={live.library.history}
             onPlayNow={live.player.playNow}
             onRemove={live.player.removeFromPlaylist}
             onClear={live.player.clearPlaylist}

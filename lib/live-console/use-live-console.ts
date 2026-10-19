@@ -168,6 +168,7 @@ export interface UseLiveConsoleResult {
   library: {
     tracks: LocalTrack[]
     queue: LocalTrack[]
+    history: LocalTrack[]
     scanning: boolean
     restoring: boolean
     progress: { scanned: number; added: number }
@@ -264,7 +265,19 @@ export function useLiveConsole(
   const [queue, setQueue] = useState<LocalTrack[]>([])
   const queueRef = useRef<LocalTrack[]>([])
   const historyRef = useRef<LocalTrack[]>([])
+  const [history, setHistory] = useState<LocalTrack[]>([])
   useEffect(() => { queueRef.current = queue }, [queue])
+
+  const pushHistory = useCallback((track: LocalTrack) => {
+    historyRef.current = [...historyRef.current, track].slice(-50)
+    setHistory(historyRef.current)
+  }, [])
+
+  const popHistory = useCallback((): LocalTrack | null => {
+    const track = historyRef.current.pop() ?? null
+    setHistory([...historyRef.current])
+    return track
+  }, [])
 
   const [scanning, setScanning] = useState(false)
   const [restoring, setRestoring] = useState(false)
@@ -858,10 +871,7 @@ export function useLiveConsole(
     engine.onDeckEnded = (id) => {
       if (id === 'A') {
         const ended = engine.getDeck('A').snapshotTrack
-        if (ended) {
-          historyRef.current.push(ended)
-          if (historyRef.current.length > 50) historyRef.current.shift()
-        }
+        if (ended) pushHistory(ended)
       }
       const next = queueRef.current[0]
       if (!next) return
@@ -884,7 +894,7 @@ export function useLiveConsole(
     return () => {
       engine.onDeckEnded = null
     }
-  }, [detectBpm, updateNowPlaying, maybePlayPresenter])
+  }, [detectBpm, updateNowPlaying, maybePlayPresenter, pushHistory])
 
   const refreshSlots = useCallback(async () => {
     try {
@@ -963,9 +973,8 @@ export function useLiveConsole(
   const rememberCurrent = useCallback(() => {
     const current = engineRef.current?.getDeck('A').snapshotTrack
     if (!current) return
-    historyRef.current.push(current)
-    if (historyRef.current.length > 50) historyRef.current.shift()
-  }, [])
+    pushHistory(current)
+  }, [pushHistory])
 
   const playNow = useCallback(async (track: LocalTrack) => {
     const engine = engineRef.current
@@ -998,7 +1007,7 @@ export function useLiveConsole(
   const playPrevious = useCallback(async () => {
     const engine = engineRef.current
     if (!engine) return
-    const previousTrack = historyRef.current.pop()
+    const previousTrack = popHistory()
     if (!previousTrack) {
       engine.getDeck('A').seek(0)
       return
@@ -1009,7 +1018,7 @@ export function useLiveConsole(
     }
     await loadToDeck('A', previousTrack)
     await playDeck('A')
-  }, [loadToDeck, playDeck])
+  }, [loadToDeck, playDeck, popHistory])
 
   const playerPlay = useCallback(async () => {
     const engine = engineRef.current
@@ -1427,6 +1436,7 @@ export function useLiveConsole(
     library: {
       tracks,
       queue,
+      history,
       scanning,
       restoring,
       progress,

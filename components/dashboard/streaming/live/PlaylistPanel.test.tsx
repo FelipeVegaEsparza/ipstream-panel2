@@ -22,8 +22,9 @@ function track(id: string, title: string): LocalTrack {
 
 const one = track('t2', 'Segundo')
 const two = track('t3', 'Tercero')
+const spot = { ...track('t4', 'Mensaje para los oyentes'), kind: 'spot' as const }
 
-function renderPlaylist() {
+function renderPlaylist(history: LocalTrack[] = [], queue: LocalTrack[] = [one, two]) {
   const handlers = {
     onPlayNow: vi.fn().mockResolvedValue(undefined),
     onRemove: vi.fn(),
@@ -32,7 +33,8 @@ function renderPlaylist() {
   }
   render(
     <PlaylistPanel
-      queue={[one, two]}
+      queue={queue}
+      history={history}
       {...handlers}
     />
   )
@@ -46,13 +48,25 @@ describe('PlaylistPanel', () => {
     expect(screen.getByText('Tercero')).toBeInTheDocument()
   })
 
+  it('mantiene los temas que ya sonaron', () => {
+    renderPlaylist([track('t1', 'Primero')])
+    expect(screen.getByText('Ya sonaron')).toBeInTheDocument()
+    expect(screen.getByText('Primero')).toBeInTheDocument()
+    expect(screen.getByText('1 sonó')).toBeInTheDocument()
+  })
+
+  it('marca las locuciones en la cola y en el historial', () => {
+    renderPlaylist([spot], [spot])
+    expect(screen.getAllByText('Locución')).toHaveLength(2)
+  })
+
   it('reproduce, mueve, quita y vacía', () => {
     const handlers = renderPlaylist()
     fireEvent.click(screen.getByLabelText('Reproducir Segundo'))
     fireEvent.click(screen.getByLabelText('Subir Tercero'))
     fireEvent.click(screen.getByLabelText('Bajar Segundo'))
     fireEvent.click(screen.getByLabelText('Quitar Segundo de la lista'))
-    fireEvent.click(screen.getByText('Vaciar'))
+    fireEvent.click(screen.getByText('Vaciar cola'))
     expect(handlers.onPlayNow).toHaveBeenCalledWith(one)
     expect(handlers.onMove).toHaveBeenCalledWith('t3', -1)
     expect(handlers.onMove).toHaveBeenCalledWith('t2', 1)
