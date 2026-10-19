@@ -11,6 +11,7 @@ import { telnetCommand } from './liquidsoap-telnet.js'
 
 let timer = null
 const lastRun = new Map() // `${clientId}:${type}` -> timestamp
+const pending = new Map() // clientId -> true mientras hay una locución esperando/reproduciéndose
 
 function key(clientId, type) {
   return `${clientId}:${type}`
@@ -23,6 +24,16 @@ function isDue(mapKey, minutes) {
     return false
   }
   return Date.now() - lastRun.get(mapKey) >= minutes * 60_000
+}
+
+async function getRemaining(port) {
+  try {
+    const raw = await telnetCommand(port, 'autodj.remaining')
+    const value = Number(raw)
+    return Number.isFinite(value) ? value : null
+  } catch {
+    return null
+  }
 }
 
 async function tick() {
@@ -44,7 +55,7 @@ async function tick() {
     if (row.status !== 'autodj') continue
     const clientId = row.clientId
     const port = row.liquidsoapTelnetPort
-    if (!clientId || !port) continue
+    if (!clientId || !port || pending.has(clientId)) continue
 
     const jobs = []
     if (isDue(key(clientId, 'time'), Number(row.aiTimeEveryMinutes))) {
@@ -53,6 +64,12 @@ async function tick() {
     if (isDue(key(clientId, 'weather'), Number(row.aiWeatherEveryMinutes))) {
       jobs.push({ type: 'weather', minutes: Number(row.aiWeatherEveryMinutes) })
     }
+    if (jobs.length === 0) continue
+
+    // Generar cerca del final del tema para que la hora grabada sea la que
+    // sonará. La cola de anuncios espera el corte de tema siguiente.
+    const remaining = await getRemaining(port)
+    if (remaining != null && remaining > 12) continue
 
     for (const job of jobs) {
       const mapKey = key(clientId, job.type)
@@ -64,10 +81,14 @@ async function tick() {
         }
         await telnetCommand(port, `announcements.push ${result.path}`)
         lastRun.set(mapKey, Date.now())
+        pending.set(clientId, true)
+        setTimeout(() => pending.delete(clientId), 120_000)
         logger.info(
-          { clientId, type: job.type, cached: result.cached, path: result.path },
+          { clientId, type: job.type, cached: result.cached, path: result.path, remaining },
           'Locución automática encolada en el AutoDJ'
         )
+        // Una locución por cliente: la otra espera al próximo chequeo.
+        break
       } catch (err) {
         lastRun.set(mapKey, Date.now())
         logger.warn({ clientId, type: job.type, err: err.message }, 'AI scheduler: no se pudo encolar')
@@ -81,7 +102,7 @@ export function startAiAnnouncementScheduler() {
   // Arrancar los relojes en el momento del boot para no disparar todo de golpe.
   const now = Date.now()
   lastRun.set('__boot__', now)
-  timer = setInterval(() => { void tick() }, 60_000)
+  timer = setInterval(() => { void tick() }, 5_000)
   logger.info('AI announcement scheduler iniciado')
 }
 
