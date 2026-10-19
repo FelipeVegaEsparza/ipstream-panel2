@@ -30,6 +30,7 @@ interface Plan {
   videoStorageQuotaMB: number | null
   aiLiveEnabled: boolean
   aiMonthlyCharacters: number
+  aiMusicMinutes: number
   menuHiddenKeys: string | null
   defaultServerId: string | null
   imageUrl: string | null
@@ -55,6 +56,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     videoStorageQuotaMB: plan?.videoStorageQuotaMB?.toString() || '',
     aiLiveEnabled: plan?.aiLiveEnabled ?? false,
     aiMonthlyCharacters: plan?.aiMonthlyCharacters?.toString() || '',
+    aiMusicMinutes: plan?.aiMusicMinutes?.toString() || '',
     defaultServerId: plan?.defaultServerId || '',
     imageUrl: plan?.imageUrl || '',
     demoUrl: plan?.demoUrl || '',
@@ -387,10 +389,11 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               />
               Incluir IA en este plan
             </label>
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1">
-                Cuota mensual de caracteres IA (0 = sin acceso)
-              </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  Cuota mensual de caracteres IA (0 = sin acceso)
+                </label>
               <Input
                 type="number"
                 min="0"
@@ -400,10 +403,28 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 placeholder="ej: 100000"
                 className="bg-secondary border-border text-foreground"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Incluye presentador, locuciones libres y clima/hora con voz premium. Los audios
-                cacheados no consumen cuota.
-              </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Incluye presentador, locuciones libres y clima/hora con voz premium. Los audios
+                  cacheados no consumen cuota.
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  Música IA (minutos/mes)
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.aiMusicMinutes}
+                  onChange={(e) => setFormData({ ...formData, aiMusicMinutes: e.target.value })}
+                  placeholder="ej: 10"
+                  className="bg-secondary border-border text-foreground"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Para crear jingles con Eleven Music. 0 = sin acceso.
+                </p>
+              </div>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { showToast } from '@/components/ui/toast'
+import { JingleAiModal } from './JingleAiModal'
 
 import { useEffect, useState, useRef } from 'react'
 
@@ -51,6 +52,7 @@ export default function JinglesPage() {
   const [playingId, setPlayingId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [savingEdit, setSavingEdit] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
 
   const load = async () => {
     try {
@@ -201,11 +203,20 @@ export default function JinglesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Jingles</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Sube cuñas publicitarias que se intercalarán automáticamente en la reproducción.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Jingles</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Sube cuñas publicitarias que se intercalarán automáticamente en la reproducción.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setAiOpen(true)}
+          className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          Crear jingle IA
+        </button>
       </div>
 
       {/* Config card */}
@@ -277,6 +288,8 @@ export default function JinglesPage() {
           className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-brand file:text-white hover:file:bg-brand cursor-pointer"
         />
       </div>
+
+      <JingleAiModal open={aiOpen} onClose={() => setAiOpen(false)} onSaved={() => void load()} />
 
       {/* Table */}
       <div className="bg-card rounded-lg shadow-lg overflow-x-auto">

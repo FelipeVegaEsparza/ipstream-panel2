@@ -409,6 +409,7 @@ model Plan {
   // aiMonthlyCharacters = 0 desactiva la IA aunque el flag esté activo.
   aiLiveEnabled       Boolean @default(false)
   aiMonthlyCharacters Int     @default(0)
+  aiMusicMinutes      Int     @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -524,8 +525,9 @@ model AiTtsUsage {
   id         String   @id @default(cuid())
   clientId   String
   period     String   // YYYY-MM (UTC)
-  characters Int      @default(0)
-  requests   Int      @default(0)
+  characters   Int    @default(0)
+  requests     Int    @default(0)
+  musicSeconds Int    @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

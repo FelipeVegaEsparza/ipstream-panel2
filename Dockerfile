@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         tini \
         curl \
+        ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- 1. Dependencias (con caché de layers — requiere BuildKit) ----------

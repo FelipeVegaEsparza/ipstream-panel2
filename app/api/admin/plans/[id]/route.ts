@@ -50,7 +50,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, prices, onboardingSteps, menuHiddenKeys, defaultServerId, imageUrl, demoUrl, aiLiveEnabled, aiMonthlyCharacters } = body
+    const { name, description, price, currency, interval, features, isActive, radioStorageQuotaMB, videoStorageQuotaMB, maxDjs, services, prices, onboardingSteps, menuHiddenKeys, defaultServerId, imageUrl, demoUrl, aiLiveEnabled, aiMonthlyCharacters, aiMusicMinutes } = body
 
     // Validaciones
     if (!name || !description || price === undefined || !interval) {
@@ -99,6 +99,7 @@ export async function PUT(
         videoStorageQuotaMB: videoStorageQuotaMB ?? null,
         aiLiveEnabled: aiLiveEnabled === true,
         aiMonthlyCharacters: Number.isInteger(Number(aiMonthlyCharacters)) ? Math.max(0, Math.min(10_000_000, Number(aiMonthlyCharacters))) : 0,
+        aiMusicMinutes: Number.isInteger(Number(aiMusicMinutes)) ? Math.max(0, Math.min(10_000, Number(aiMusicMinutes))) : 0,
         maxDjs: typeof maxDjs === 'number' ? maxDjs : 4,
         services: ["radio", "tv", "both"].includes(services) ? services : "both",
         onboardingSteps: Array.isArray(onboardingSteps) ? JSON.stringify(onboardingSteps) : null,

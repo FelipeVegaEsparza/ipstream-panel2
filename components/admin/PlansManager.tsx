@@ -26,6 +26,7 @@ interface Plan {
   videoStorageQuotaMB: number | null
   aiLiveEnabled: boolean
   aiMonthlyCharacters: number
+  aiMusicMinutes: number
   menuHiddenKeys: string | null
   defaultServerId: string | null
   imageUrl: string | null
