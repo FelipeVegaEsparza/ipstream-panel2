@@ -46,6 +46,8 @@ async function loadConfig(clientId: string) {
     aiEnabled: access.enabled,
     remaining: access.remaining,
     limit: access.limit,
+    used: access.used,
+    period: access.period,
     stationName: client?.basicData?.projectName || client?.name || 'la radio',
   }
 }

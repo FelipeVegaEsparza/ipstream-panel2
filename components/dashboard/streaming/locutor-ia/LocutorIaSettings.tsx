@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { showToast } from '@/components/ui/toast'
 import { SparklesIcon, PlusIcon, Trash2Icon, PlayIcon, SaveIcon } from 'lucide-react'
 import { DEFAULT_PRESENTER_PHRASES } from '@/lib/live-console/presenter'
+import { AiCreditsCard } from '@/components/dashboard/AiCreditsCard'
 
 interface Config {
   enabled: boolean
@@ -15,6 +16,8 @@ interface Config {
   aiEnabled: boolean
   remaining: number
   limit: number
+  used: number
+  period: string
   stationName: string
 }
 
@@ -253,7 +256,7 @@ export function LocutorIaSettings() {
             {saving ? 'Guardando…' : 'Guardar'}
           </button>
           <span className="text-xs text-muted-foreground">
-            Cuota IA: {config.remaining.toLocaleString('es-CL')} / {config.limit.toLocaleString('es-CL')} caracteres.
+            {config.remaining.toLocaleString('es-CL')} caracteres disponibles este mes.
           </span>
         </div>
 
@@ -261,6 +264,14 @@ export function LocutorIaSettings() {
       </section>
 
       <aside className="space-y-4">
+        <AiCreditsCard
+          limit={config.limit}
+          used={config.used}
+          remaining={config.remaining}
+          period={config.period}
+          compact
+        />
+
         <section className="card space-y-3">
           <h2 className="text-lg font-semibold text-foreground">Hora y clima</h2>
           <p className="text-sm text-muted-foreground">

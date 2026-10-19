@@ -5,6 +5,8 @@ import { PaymentStatusCard } from '@/components/dashboard/PaymentStatusCard'
 import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDisplay'
 import { NowPlayingTvDisplay } from '@/components/dashboard/NowPlayingTvDisplay'
 import { DashboardOverviewCards } from '@/components/dashboard/DashboardOverviewCards'
+import { AiCreditsCard } from '@/components/dashboard/AiCreditsCard'
+import { getAiLiveAccess } from '@/lib/ai-live'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { getOnboarding } from '@/lib/onboarding'
 import { OnboardingDismiss } from '@/components/dashboard/OnboardingDismiss'
@@ -135,7 +137,10 @@ export default async function DashboardPage() {
     hasTv ? import('@/lib/streaming-helpers').then((m) => m.getVideoStorageUsage(effectiveClient.clientId)) : null,
   ])
 
-  const onboarding = await getOnboarding(effectiveClient.clientId)
+  const [onboarding, aiAccess] = await Promise.all([
+    getOnboarding(effectiveClient.clientId),
+    getAiLiveAccess(effectiveClient.clientId),
+  ])
 
   return (
     <div className="space-y-6">
@@ -219,6 +224,13 @@ export default async function DashboardPage() {
         plan={clientInfo?.plan as any}
         usageRadio={usageRadio}
         usageVideo={usageVideo}
+      />
+
+      <AiCreditsCard
+        limit={aiAccess.limit}
+        used={aiAccess.used}
+        remaining={aiAccess.remaining}
+        period={aiAccess.period}
       />
 
       <NowPlayingDisplay />
