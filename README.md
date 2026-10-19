@@ -579,9 +579,10 @@ locuciones libres se agregan a la lista como pistas tipo `spot`.
 El presentador del AutoDJ usa una **fuente Liquidsoap separada** de los jingles:
 las intros se generan por bloque con el próximo tema y se guardan en
 `ai-intros.m3u`. Los jingles del cliente se mantienen en su propia capa y no
-se modifican. La frecuencia se configura por radio (`aiPresenterEvery`) desde
-la tarjeta **Presentador IA → Aplicar al AutoDJ**; requiere playlist sin
-shuffle. Tocar el agente o el script de Liquidsoap obliga a **“Actualizar nodo”**
+se modifican. La frecuencia y las frases se configuran por radio (`aiPresenterEvery`,
+`aiIntroPhrases`) en **Radio → Locutor IA**. Las frases admiten `{{radio}}`,
+`{{titulo}}` y `{{artista}}` y se eligen al azar; el botón **Aplicar al AutoDJ**
+regenera las intros. Requiere playlist sin shuffle. Tocar el agente o el script de Liquidsoap obliga a **“Actualizar nodo”**
 en los nodos remotos.
 
 ### Fallback por silencio

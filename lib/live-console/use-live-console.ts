@@ -21,7 +21,7 @@ import {
   verifyDirectoryPermission,
 } from './library'
 import { createTransport } from './transport'
-import { buildPresenterText } from './presenter'
+import { buildPresenterText, normalizePhrases } from './presenter'
 import {
   DEFAULT_PAD_SIZE,
   SOUND_EFFECT_PAD_SIZES,
@@ -266,11 +266,15 @@ export function useLiveConsole(
     stationName?: string
     aiRemaining?: number
     aiLimit?: number
+    aiPresenterEnabled?: boolean
+    aiPresenterEvery?: number
+    aiIntroPhrases?: string[]
   } = {}
 ): UseLiveConsoleResult {
   const premiumVoiceAvailable = Boolean(options.premiumVoiceAvailable)
   const aiEnabled = Boolean(options.aiEnabled)
   const stationName = (options.stationName || 'la radio').trim() || 'la radio'
+  const introPhrases = normalizePhrases(options.aiIntroPhrases)
   const engineRef = useRef<LiveAudioEngine | null>(null)
   const [engineReady, setEngineReady] = useState(false)
   const [snapshot, setSnapshot] = useState<EngineSnapshot>({
@@ -327,6 +331,7 @@ export function useLiveConsole(
     }
   })
   const [aiPresenterEnabled, setAiPresenterEnabled] = useState(() => {
+    if (typeof options.aiPresenterEnabled === 'boolean') return aiEnabled && options.aiPresenterEnabled
     if (!aiEnabled || typeof window === 'undefined') return aiEnabled
     try {
       return window.localStorage.getItem('live-ai-presenter-enabled') !== 'false'
@@ -335,6 +340,9 @@ export function useLiveConsole(
     }
   })
   const [presenterEvery, setPresenterEvery] = useState(() => {
+    if (typeof options.aiPresenterEvery === 'number') {
+      return Math.min(10, Math.max(2, Math.round(options.aiPresenterEvery)))
+    }
     if (typeof window === 'undefined') return 3
     try {
       const stored = Number(window.localStorage.getItem('live-ai-presenter-every') || 3)
@@ -824,7 +832,7 @@ export function useLiveConsole(
 
     setPresenterGenerating(true)
     setAiError(null)
-    const introText = buildPresenterText(stationName, next)
+    const introText = buildPresenterText(stationName, next, introPhrases)
     try {
       let blob: Blob | null = null
       const prefetched =
@@ -854,7 +862,7 @@ export function useLiveConsole(
     } finally {
       setPresenterGenerating(false)
     }
-  }, [aiEnabled, aiPresenterEnabled, presenterEvery, stationName, generateSpeech, pushHistory])
+  }, [aiEnabled, aiPresenterEnabled, presenterEvery, stationName, introPhrases, generateSpeech, pushHistory])
 
   // Pre-genera la presentación mientras suena el tema anterior.
   useEffect(() => {
@@ -863,12 +871,12 @@ export function useLiveConsole(
     const next = queue[0]
     if (!next || next.kind === 'spot') return
     if (introPrefetchRef.current?.trackId === next.id) return
-    const promise = generateSpeech(buildPresenterText(stationName, next)).catch((err) => {
+    const promise = generateSpeech(buildPresenterText(stationName, next, introPhrases)).catch((err) => {
       setAiError(err instanceof Error ? err.message : 'No se pudo generar la presentación')
       return null
     })
     introPrefetchRef.current = { trackId: next.id, promise }
-  }, [queue, aiEnabled, aiPresenterEnabled, presenterEvery, stationName, generateSpeech])
+  }, [queue, aiEnabled, aiPresenterEnabled, presenterEvery, stationName, introPhrases, generateSpeech])
 
   // Auto-advance cuando termina un deck
   useEffect(() => {

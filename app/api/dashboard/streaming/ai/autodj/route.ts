@@ -11,16 +11,23 @@ import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
+import { buildPresenterText, normalizePhrases } from '@/lib/live-console/presenter'
 
 export const dynamic = 'force-dynamic'
 
 const MAX_INTROS = 80
 const AI_JINGLE_ARTIST = 'Locutor IA'
 
-function textFor(station: string, title: string, artist: string | null): string {
-  const cleanTitle = title.trim() || 'la siguiente canción'
-  const cleanArtist = (artist || '').trim()
-  return `Estás escuchando ${station}. A continuación, ${cleanTitle}${cleanArtist ? `, de ${cleanArtist}` : ''}.`
+function parsePhrases(raw: string | null | undefined): string[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === 'string')
+      : []
+  } catch {
+    return []
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -31,13 +38,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const every = Number(body?.every)
-    if (!Number.isInteger(every) || every < 2 || every > 10) {
-      return NextResponse.json(
-        { error: 'invalid_every', message: 'La frecuencia debe ser un entero entre 2 y 10.' },
-        { status: 400 }
-      )
-    }
 
     const access = await getAiLiveAccess(ctx.clientId)
     if (!access.enabled) {
@@ -62,7 +62,13 @@ export async function POST(request: NextRequest) {
       }),
       prisma.client.findUnique({
         where: { id: ctx.clientId },
-        select: { name: true, basicData: { select: { projectName: true } } },
+        select: {
+          name: true,
+          basicData: { select: { projectName: true } },
+          radioStream: {
+            select: { aiPresenterEnabled: true, aiPresenterEvery: true, aiIntroPhrases: true },
+          },
+        },
       }),
     ])
 
@@ -83,6 +89,14 @@ export async function POST(request: NextRequest) {
     }
 
     const station = clientInfo?.basicData?.projectName || clientInfo?.name || 'la radio'
+    const every = Number(body?.every) || clientInfo?.radioStream?.aiPresenterEvery || 3
+    if (!Number.isInteger(every) || every < 2 || every > 10) {
+      return NextResponse.json(
+        { error: 'invalid_every', message: 'La frecuencia debe ser un entero entre 2 y 10.' },
+        { status: 400 }
+      )
+    }
+    const phrases = normalizePhrases(parsePhrases(clientInfo?.radioStream?.aiIntroPhrases))
     const entries = playlist.entries
     const count = Math.ceil(entries.length / every)
     if (count > MAX_INTROS) {
@@ -109,7 +123,7 @@ export async function POST(request: NextRequest) {
       targets.push(entries[index].track)
     }
     const texts = targets.map((track) =>
-      textFor(station, track.title || track.fileName.replace(/\.[^.]+$/, ''), track.artist)
+      buildPresenterText(station, track, phrases)
     )
     const totalChars = texts.reduce((sum, text) => sum + text.length, 0)
     if (totalChars > access.remaining) {

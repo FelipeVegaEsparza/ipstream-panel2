@@ -26,6 +26,7 @@ import {
   Bars3BottomLeftIcon,
   RocketLaunchIcon,
   SignalIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline'
 
 export type MenuItemKey =
@@ -60,6 +61,7 @@ export type MenuItemKey =
   | 'streaming-schedule'
   | 'streaming-connection'
   | 'streaming-live'
+  | 'streaming-locutor-ia'
   | 'streaming-stats'
   // Televisión
   | 'television'
@@ -137,6 +139,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   href: '/dashboard/streaming/live',
   section: 'Radio',
   icon: SignalIcon,
+},
+{
+  key: 'streaming-locutor-ia',
+  name: 'Locutor IA',
+  href: '/dashboard/streaming/locutor-ia',
+  section: 'Radio',
+  icon: SparklesIcon,
 },
 {
   key: 'streaming-jingles',

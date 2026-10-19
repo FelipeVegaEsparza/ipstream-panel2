@@ -790,6 +790,7 @@ model RadioStream {
   // Presentador IA del AutoDJ (fuente separada de los jingles)
   aiPresenterEnabled   Boolean   @default(false)
   aiPresenterEvery     Int       @default(3) // cada X temas de música
+  aiIntroPhrases       String?   @db.Text // JSON array de frases del locutor
   // Estado actual
   status               String    @default("off") // "off" | "autodj" | "live"
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)

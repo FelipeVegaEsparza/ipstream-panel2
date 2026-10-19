@@ -33,6 +33,13 @@ export default async function LivePage() {
       select: {
         name: true,
         basicData: { select: { projectName: true } },
+        radioStream: {
+          select: {
+            aiPresenterEnabled: true,
+            aiPresenterEvery: true,
+            aiIntroPhrases: true,
+          },
+        },
       },
     }),
   ])
@@ -41,6 +48,15 @@ export default async function LivePage() {
     elevenLabs.enabled && elevenLabs.apiKey && elevenLabs.voiceId && aiEnabled
   )
   const stationName = clientInfo?.basicData?.projectName || clientInfo?.name || 'la radio'
+  let aiIntroPhrases: string[] = []
+  try {
+    const parsed = clientInfo?.radioStream?.aiIntroPhrases
+      ? JSON.parse(clientInfo.radioStream.aiIntroPhrases)
+      : []
+    if (Array.isArray(parsed)) {
+      aiIntroPhrases = parsed.filter((phrase): phrase is string => typeof phrase === 'string')
+    }
+  } catch {}
 
   return (
     <LiveConsole
@@ -49,6 +65,9 @@ export default async function LivePage() {
       stationName={stationName}
       aiRemaining={aiAccess.remaining}
       aiLimit={aiAccess.limit}
+      aiPresenterEnabled={Boolean(clientInfo?.radioStream?.aiPresenterEnabled)}
+      aiPresenterEvery={clientInfo?.radioStream?.aiPresenterEvery ?? 3}
+      aiIntroPhrases={aiIntroPhrases}
     />
   )
 }

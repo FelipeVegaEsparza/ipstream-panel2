@@ -1,6 +1,6 @@
 'use client'
 
-import { ClockIcon, CloudIcon } from '@heroicons/react/24/outline'
+import { ClockIcon, CloudIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
 import type { AnnouncementType, AnnouncementVoice } from '@/lib/live-console/use-live-console'
 
 interface Props {
@@ -8,8 +8,10 @@ interface Props {
   error: string | null
   voice: AnnouncementVoice
   premiumAvailable?: boolean
+  freeFormAvailable?: boolean
   onVoice: (voice: AnnouncementVoice) => void
   onAnnounce: (type: AnnouncementType) => Promise<void>
+  onOpenComposer?: () => void
 }
 
 export function AnnouncementsBar({
@@ -17,8 +19,10 @@ export function AnnouncementsBar({
   error,
   voice,
   premiumAvailable = false,
+  freeFormAvailable = false,
   onVoice,
   onAnnounce,
+  onOpenComposer,
 }: Props) {
   const busy = loading != null
   return (
@@ -49,6 +53,18 @@ export function AnnouncementsBar({
           <ClockIcon className="h-3.5 w-3.5" />
           Hora
         </button>
+        {freeFormAvailable && onOpenComposer && (
+          <button
+            type="button"
+            onClick={onOpenComposer}
+            disabled={busy}
+            className="flex w-full items-center gap-1.5 rounded-lg border border-brand/40 bg-brand/10 px-3 py-2 text-[11px] font-medium text-brand transition-colors hover:bg-brand/20 disabled:opacity-40"
+            title="Crear una locución libre"
+          >
+            <PencilSquareIcon className="h-3.5 w-3.5" />
+            Libre
+          </button>
+        )}
       </div>
 
       <label className="mt-3 space-y-1">
