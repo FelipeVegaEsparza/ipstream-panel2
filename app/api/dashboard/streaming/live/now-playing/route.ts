@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { liveAgentRequest, LiveAgentError } from '@/lib/live-agent'
+import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,19 +24,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'session_id_required' }, { status: 400 })
     }
 
+    const payload = {
+      sessionId,
+      clientId: ctx.clientId,
+      title: clean(body?.title),
+      artist: clean(body?.artist),
+      nextTitle: clean(body?.nextTitle),
+      nextArtist: clean(body?.nextArtist),
+      coverUrl: clean(body?.coverUrl),
+    }
+
+    // La PWA lee el now-playing público desde radio_streams. Escribimos aquí
+    // también para que título/artista/portada se actualicen aunque el nodo
+    // todavía no tenga el agente nuevo (Actualizar nodo).
+    await prisma.radioStream.updateMany({
+      where: { clientId: ctx.clientId },
+      data: {
+        currentTitle: payload.title,
+        currentArtist: payload.artist,
+        currentCoverUrl: payload.coverUrl,
+      },
+    }).catch((err) => console.error('[live/now-playing] db update', err))
+
     const result = await liveAgentRequest<{ ok: boolean }>(
       ctx.clientId,
       '/api/live/session/now-playing',
       {
         method: 'POST',
-        body: JSON.stringify({
-          sessionId,
-          clientId: ctx.clientId,
-          title: clean(body?.title),
-          artist: clean(body?.artist),
-          nextTitle: clean(body?.nextTitle),
-          nextArtist: clean(body?.nextArtist),
-        }),
+        body: JSON.stringify(payload),
       }
     )
     return NextResponse.json(result)

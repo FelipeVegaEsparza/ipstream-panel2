@@ -19,7 +19,7 @@ export async function GET(
       where: { clientId: params.clientId },
       select: {
         id: true, icecastMount: true, bitrate: true, status: true,
-        currentTitle: true, currentArtist: true,
+        currentTitle: true, currentArtist: true, currentCoverUrl: true,
         jinglePlayEvery: true, jinglePlayCount: true,
         lastStatusAt: true,
         client: { select: { name: true } },
@@ -66,7 +66,19 @@ export async function GET(
     // matchea contra titles largos. icecast.title es lo que liquidsoap
     // realmente reporta a Icecast.
     const rawTitle = icecast?.title || null
-    const track = currentTrack
+    const isLive = radioStream.status === 'live'
+    const liveTrack = isLive
+      ? {
+          title: radioStream.currentTitle || rawTitle || null,
+          artist: radioStream.currentArtist || null,
+          album: null,
+          coverUrl: publicCoverUrl(radioStream.currentCoverUrl),
+          duration: null,
+          elapsed: null,
+          isJingle: false,
+        }
+      : null
+    const track = liveTrack || (currentTrack
       ? {
           // Si hay currentTrack (local), usar su info enriquecida (coverUrl,
           // album) pero preferir el titulo de Icecast si esta disponible.
@@ -82,11 +94,11 @@ export async function GET(
           title: rawTitle ?? radioStream.currentTitle,
           artist: radioStream.currentArtist,
           album: null,
-          coverUrl: null,
+          coverUrl: publicCoverUrl(radioStream.currentCoverUrl),
           duration: null,
           elapsed: null,
           isJingle: false,
-        }
+        })
 
     const icePublicBase = await getRadioPublicBaseUrl(params.clientId)
     const res = createCorsResponse({

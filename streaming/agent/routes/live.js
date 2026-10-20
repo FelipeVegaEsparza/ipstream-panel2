@@ -308,7 +308,7 @@ export default async function liveRoutes(app) {
   })
 
   app.post('/api/live/session/now-playing', async (request, reply) => {
-    const { sessionId, clientId, title, artist, nextTitle, nextArtist } = request.body || {}
+    const { sessionId, clientId, title, artist, nextTitle, nextArtist, coverUrl } = request.body || {}
     if (!sessionId) return reply.code(400).send({ error: 'session_id_required' })
     const session = getSession(sessionId)
     if (!session) return reply.code(404).send({ error: 'session_not_found' })
@@ -319,20 +319,29 @@ export default async function liveRoutes(app) {
     const clean = (value) => (typeof value === 'string' ? value.trim().slice(0, 300) : null)
     const safeTitle = clean(title)
     const safeArtist = clean(artist)
+    const safeCover = clean(coverUrl)
+
+    const [rsRows] = await pool.query(
+      `SELECT icecastMount FROM radio_streams WHERE clientId = ? LIMIT 1`,
+      [session.clientId]
+    )
+    const icecastMount = rsRows[0]?.icecastMount || null
 
     await pool.query(
       `UPDATE radio_streams
-          SET currentTitle = ?, currentArtist = ?, updatedAt = NOW()
+          SET currentTitle = ?, currentArtist = ?, currentCoverUrl = ?, updatedAt = NOW()
         WHERE clientId = ?`,
-      [safeTitle, safeArtist, session.clientId]
+      [safeTitle, safeArtist, safeCover, session.clientId]
     )
 
     if (safeTitle) {
       const song = safeArtist ? `${safeArtist} - ${safeTitle}` : safeTitle
-      try {
-        await updateMetadata(String(session.mount).replace(/^\/+/, ''), song)
-      } catch (err) {
-        logger.debug({ err: err.message, sessionId }, 'No se pudo actualizar metadata de Icecast')
+      if (icecastMount) {
+        try {
+          await updateMetadata(String(icecastMount).replace(/^\/+/, ''), song)
+        } catch (err) {
+          logger.debug({ err: err.message, sessionId }, 'No se pudo actualizar metadata de Icecast')
+        }
       }
     }
 

@@ -22,6 +22,7 @@ import {
 } from './library'
 import { createTransport } from './transport'
 import { buildPresenterText, normalizePhrases } from './presenter'
+import { readLocalTags } from './local-tags'
 import {
   DEFAULT_PAD_SIZE,
   SOUND_EFFECT_PAD_SIZES,
@@ -294,6 +295,7 @@ export function useLiveConsole(
   const queueRef = useRef<LocalTrack[]>([])
   const historyRef = useRef<LocalTrack[]>([])
   const [history, setHistory] = useState<LocalTrack[]>([])
+  const localMetaRef = useRef<Map<string, { title?: string; artist?: string; coverUrl?: string | null } | null>>(new Map())
   useEffect(() => { queueRef.current = queue }, [queue])
 
   const pushHistory = useCallback((track: LocalTrack) => {
@@ -793,6 +795,7 @@ export function useLiveConsole(
     artist: string | null
     nextTitle: string | null
     nextArtist: string | null
+    coverUrl?: string | null
   }) => {
     const id = sessionRef.current?.sessionId
     if (!id) return
@@ -806,6 +809,42 @@ export function useLiveConsole(
     }
   }, [])
 
+  const resolveLocalMetadata = useCallback(async (track: LocalTrack) => {
+    if (!track.file && !track.handle) return null
+    if (localMetaRef.current.has(track.id)) return localMetaRef.current.get(track.id) ?? null
+    try {
+      const file = await getFileForTrack(track)
+      const tags = await readLocalTags(file)
+      let coverUrl: string | null = null
+      if (tags.picture) {
+        try {
+          const form = new FormData()
+          form.append('file', new File([tags.picture], 'cover.jpg', {
+            type: tags.picture.type || 'image/jpeg',
+          }))
+          const res = await fetch('/api/dashboard/streaming/live/cover', {
+            method: 'POST',
+            body: form,
+          })
+          if (res.ok) {
+            const data = await res.json()
+            coverUrl = typeof data?.url === 'string' ? data.url : null
+          }
+        } catch {}
+      }
+      const value = {
+        title: tags.title,
+        artist: tags.artist,
+        coverUrl,
+      }
+      localMetaRef.current.set(track.id, value)
+      return value
+    } catch {
+      localMetaRef.current.set(track.id, null)
+      return null
+    }
+  }, [])
+
   const updateNowPlaying = useCallback((deckId: DeckId) => {
     const engine = engineRef.current
     if (!engine) return
@@ -816,13 +855,34 @@ export function useLiveConsole(
       artist: deck?.artist ?? null,
       nextTitle: next?.title ?? null,
       nextArtist: next?.artist ?? null,
+      coverUrl: null as string | null,
     }
-    setCurrent(payload)
+    setCurrent({ title: payload.title, artist: payload.artist, nextTitle: payload.nextTitle, nextArtist: payload.nextArtist })
     if (nowPlayingTimerRef.current) clearTimeout(nowPlayingTimerRef.current)
     nowPlayingTimerRef.current = setTimeout(() => {
-      void sendNowPlaying(payload)
+      void (async () => {
+        let finalPayload = payload
+        if (deck) {
+          const meta = await resolveLocalMetadata(deck)
+          if (meta) {
+            finalPayload = {
+              ...payload,
+              title: meta.title || payload.title,
+              artist: meta.artist || payload.artist,
+              coverUrl: meta.coverUrl ?? null,
+            }
+            setCurrent({
+              title: finalPayload.title,
+              artist: finalPayload.artist,
+              nextTitle: finalPayload.nextTitle,
+              nextArtist: finalPayload.nextArtist,
+            })
+          }
+        }
+        void sendNowPlaying(finalPayload)
+      })()
     }, 400)
-  }, [sendNowPlaying])
+  }, [sendNowPlaying, resolveLocalMetadata])
 
 
   const maybePlayPresenter = useCallback(async (next: LocalTrack | null) => {

@@ -51,6 +51,9 @@ test('now-playing actualiza la DB y la metadata de Icecast', async () => {
   })
   pool.query = async (sql, params) => {
     queries.push({ sql: String(sql), params })
+    if (String(sql).includes('SELECT icecastMount')) {
+      return [[{ icecastMount: 'radio_test' }]]
+    }
     return [{}]
   }
 
@@ -69,8 +72,8 @@ test('now-playing actualiza la DB y la metadata de Icecast', async () => {
   assert.equal(res.statusCode, 200)
   const update = queries.find((query) => query.sql.includes('UPDATE radio_streams'))
   assert.ok(update)
-  assert.deepEqual(update.params, ['Tema', 'Artista', 'client-1'])
-  assert.ok(fetches.some((url) => url.includes('updatemetadata') && url.includes('Artista%20-%20Tema')))
+  assert.deepEqual(update.params, ['Tema', 'Artista', null, 'client-1'])
+  assert.ok(fetches.some((url) => url.includes('radio_test') && url.includes('updatemetadata') && url.includes('Artista%20-%20Tema')))
 })
 
 test('now-playing rechaza otro cliente', async () => {

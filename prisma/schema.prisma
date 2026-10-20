@@ -803,6 +803,7 @@ model RadioStream {
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)
   currentTitle         String?
   currentArtist        String?
+  currentCoverUrl      String?   @db.VarChar(500)
   lastStatusAt         DateTime?
   // Estado interno del proceso liquidsoap (gestionado por streaming-agent)
   liquidsoapRunning    Boolean   @default(false)
