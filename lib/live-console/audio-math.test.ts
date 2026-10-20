@@ -60,6 +60,10 @@ describe('audio-math', () => {
       artist: null,
       title: 'tema sin artista',
     })
+    expect(parseTrackName('01 - Daft Punk - One More Time.mp3')).toEqual({
+      artist: 'Daft Punk',
+      title: 'One More Time',
+    })
   })
 
   it('calcula loops por BPM y cuantiza', () => {

@@ -1,4 +1,5 @@
 import type { LocalTrack } from './types'
+import { sanitizeArtist, sanitizeTrackTitle } from '@/lib/track-text'
 
 export const DEFAULT_PRESENTER_PHRASES = [
   'Estás escuchando {{radio}}. A continuación, {{titulo}} de {{artista}}.',
@@ -21,9 +22,10 @@ function clean(value: string | null | undefined): string {
 }
 
 function trackTitle(track: PresenterTrack): string {
-  const title = clean(track.title)
+  const title = sanitizeTrackTitle(clean(track.title), track.artist)
   if (title) return title
-  return clean(track.name).replace(/\.[^.]+$/, '') || 'la siguiente canción'
+  const fallback = sanitizeTrackTitle(clean(track.name).replace(/\.[^.]+$/, ''), track.artist)
+  return fallback || 'la siguiente canción'
 }
 
 export function normalizePhrases(phrases: string[] | null | undefined): string[] {
@@ -45,7 +47,7 @@ export function buildPresenterText(
   }
 
   const title = trackTitle(track)
-  const artist = clean(track.artist)
+  const artist = sanitizeArtist(clean(track.artist))
   const list = normalizePhrases(phrases)
   const template = list[Math.floor(Math.random() * list.length)]
 

@@ -55,7 +55,9 @@ export function formatDb(db: number): string {
 
 /** Deriva título/artista de un nombre de archivo tipo "Artista - Tema.mp3". */
 export function parseTrackName(filename: string): { title: string; artist: string | null } {
-  const base = filename.replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[_]+/g, ' ').trim()
+  let base = filename.replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[_]+/g, ' ').trim()
+  // Número de pista al inicio: "01 - Artista - Tema" / "01. Artista - Tema".
+  base = base.replace(/^\s*\d{1,3}\s*[\.\-–—]\s+/, '').trim()
   const separators = [' - ', ' – ', ' — ', '_-_']
   for (const sep of separators) {
     const idx = base.indexOf(sep)
