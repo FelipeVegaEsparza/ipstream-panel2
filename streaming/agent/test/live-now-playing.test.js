@@ -72,7 +72,7 @@ test('now-playing actualiza la DB y la metadata de Icecast', async () => {
   assert.equal(res.statusCode, 200)
   const update = queries.find((query) => query.sql.includes('UPDATE radio_streams'))
   assert.ok(update)
-  assert.deepEqual(update.params, ['Tema', 'Artista', null, 'client-1'])
+  assert.deepEqual(update.params, ['Tema', 'Artista', null, null, null, null, 'client-1'])
   assert.ok(fetches.some((url) => url.includes('radio_test') && url.includes('updatemetadata') && url.includes('Artista%20-%20Tema')))
 })
 

@@ -804,6 +804,9 @@ model RadioStream {
   currentTitle         String?
   currentArtist        String?
   currentCoverUrl      String?   @db.VarChar(500)
+  currentNextTitle     String?   @db.VarChar(300)
+  currentNextArtist    String?   @db.VarChar(300)
+  currentNextCoverUrl  String?   @db.VarChar(500)
   lastStatusAt         DateTime?
   // Estado interno del proceso liquidsoap (gestionado por streaming-agent)
   liquidsoapRunning    Boolean   @default(false)

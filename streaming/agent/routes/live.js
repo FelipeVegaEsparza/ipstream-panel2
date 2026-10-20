@@ -308,7 +308,7 @@ export default async function liveRoutes(app) {
   })
 
   app.post('/api/live/session/now-playing', async (request, reply) => {
-    const { sessionId, clientId, title, artist, nextTitle, nextArtist, coverUrl } = request.body || {}
+    const { sessionId, clientId, title, artist, nextTitle, nextArtist, nextCoverUrl, coverUrl } = request.body || {}
     if (!sessionId) return reply.code(400).send({ error: 'session_id_required' })
     const session = getSession(sessionId)
     if (!session) return reply.code(404).send({ error: 'session_not_found' })
@@ -319,6 +319,9 @@ export default async function liveRoutes(app) {
     const clean = (value) => (typeof value === 'string' ? value.trim().slice(0, 300) : null)
     const safeTitle = clean(title)
     const safeArtist = clean(artist)
+    const safeNextTitle = clean(nextTitle)
+    const safeNextArtist = clean(nextArtist)
+    const safeNextCover = clean(nextCoverUrl)
     const safeCover = clean(coverUrl)
 
     const [rsRows] = await pool.query(
@@ -329,9 +332,11 @@ export default async function liveRoutes(app) {
 
     await pool.query(
       `UPDATE radio_streams
-          SET currentTitle = ?, currentArtist = ?, currentCoverUrl = ?, updatedAt = NOW()
+          SET currentTitle = ?, currentArtist = ?, currentCoverUrl = ?,
+              currentNextTitle = ?, currentNextArtist = ?, currentNextCoverUrl = ?,
+              updatedAt = NOW()
         WHERE clientId = ?`,
-      [safeTitle, safeArtist, safeCover, session.clientId]
+      [safeTitle, safeArtist, safeCover, safeNextTitle, safeNextArtist, safeNextCover, session.clientId]
     )
 
     if (safeTitle) {

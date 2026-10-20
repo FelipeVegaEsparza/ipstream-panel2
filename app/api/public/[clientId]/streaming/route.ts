@@ -20,6 +20,7 @@ export async function GET(
       select: {
         id: true, icecastMount: true, bitrate: true, status: true,
         currentTitle: true, currentArtist: true, currentCoverUrl: true,
+        currentNextTitle: true, currentNextArtist: true, currentNextCoverUrl: true,
         jinglePlayEvery: true, jinglePlayCount: true,
         lastStatusAt: true,
         client: { select: { name: true } },
@@ -100,6 +101,18 @@ export async function GET(
           isJingle: false,
         })
 
+    const liveNextTrack = isLive && radioStream.currentNextTitle
+      ? {
+          title: radioStream.currentNextTitle,
+          artist: radioStream.currentNextArtist,
+          album: null,
+          coverUrl: publicCoverUrl(radioStream.currentNextCoverUrl),
+          duration: null,
+          elapsed: null,
+          isJingle: false,
+        }
+      : null
+
     const icePublicBase = await getRadioPublicBaseUrl(params.clientId)
     const res = createCorsResponse({
       clientId: params.clientId,
@@ -116,7 +129,9 @@ export async function GET(
         playCount: radioStream.jinglePlayCount,
       },
       currentTrack: track,
-      nextTrack: nextTrack
+      nextTrack: isLive
+        ? liveNextTrack
+        : nextTrack
         ? {
             title: nextTrack.title,
             artist: nextTrack.artist,
@@ -126,7 +141,7 @@ export async function GET(
             isJingle: nextTrack.isJingle,
           }
         : null,
-      position: nowPlaying?.position ?? null,
+      position: isLive ? null : nowPlaying?.position ?? null,
       lastUpdate: icecast ? status?.timestamp : radioStream.lastStatusAt,
     })
     // Evitar cache del browser/CDN para que el dashboard vea cambios en vivo.

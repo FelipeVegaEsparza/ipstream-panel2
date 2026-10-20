@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       artist: clean(body?.artist),
       nextTitle: clean(body?.nextTitle),
       nextArtist: clean(body?.nextArtist),
+      nextCoverUrl: clean(body?.nextCoverUrl),
       coverUrl: clean(body?.coverUrl),
     }
 
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
         currentTitle: payload.title,
         currentArtist: payload.artist,
         currentCoverUrl: payload.coverUrl,
+        currentNextTitle: payload.nextTitle,
+        currentNextArtist: payload.nextArtist,
+        currentNextCoverUrl: payload.nextCoverUrl,
       },
     }).catch((err) => console.error('[live/now-playing] db update', err))
 

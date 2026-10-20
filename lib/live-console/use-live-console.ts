@@ -795,6 +795,7 @@ export function useLiveConsole(
     artist: string | null
     nextTitle: string | null
     nextArtist: string | null
+    nextCoverUrl?: string | null
     coverUrl?: string | null
   }) => {
     const id = sessionRef.current?.sessionId
@@ -849,12 +850,13 @@ export function useLiveConsole(
     const engine = engineRef.current
     if (!engine) return
     const deck = engine.getDeck(deckId).snapshotTrack
-    const next = queueRef.current[0] ?? null
+    const next = queueRef.current.find((track) => track.kind !== 'spot') ?? null
     const payload = {
       title: deck?.title ?? null,
       artist: deck?.artist ?? null,
       nextTitle: next?.title ?? null,
       nextArtist: next?.artist ?? null,
+      nextCoverUrl: null as string | null,
       coverUrl: null as string | null,
     }
     setCurrent({ title: payload.title, artist: payload.artist, nextTitle: payload.nextTitle, nextArtist: payload.nextArtist })
@@ -866,23 +868,44 @@ export function useLiveConsole(
           const meta = await resolveLocalMetadata(deck)
           if (meta) {
             finalPayload = {
-              ...payload,
-              title: meta.title || payload.title,
-              artist: meta.artist || payload.artist,
+              ...finalPayload,
+              title: meta.title || finalPayload.title,
+              artist: meta.artist || finalPayload.artist,
               coverUrl: meta.coverUrl ?? null,
             }
-            setCurrent({
-              title: finalPayload.title,
-              artist: finalPayload.artist,
-              nextTitle: finalPayload.nextTitle,
-              nextArtist: finalPayload.nextArtist,
-            })
           }
         }
+        if (next) {
+          const nextMeta = await resolveLocalMetadata(next)
+          if (nextMeta) {
+            finalPayload = {
+              ...finalPayload,
+              nextTitle: nextMeta.title || finalPayload.nextTitle,
+              nextArtist: nextMeta.artist || finalPayload.nextArtist,
+              nextCoverUrl: nextMeta.coverUrl ?? null,
+            }
+          }
+        }
+        setCurrent({
+          title: finalPayload.title,
+          artist: finalPayload.artist,
+          nextTitle: finalPayload.nextTitle,
+          nextArtist: finalPayload.nextArtist,
+        })
         void sendNowPlaying(finalPayload)
       })()
     }, 400)
   }, [sendNowPlaying, resolveLocalMetadata])
+
+  // Si el usuario agrega/quita temas de la cola mientras está al aire,
+  // refresca el "próximo" que consume la PWA.
+  useEffect(() => {
+    if (!sessionRef.current?.sessionId) return
+    const deckId = currentDeckRef.current
+    if (!deckId) return
+    const timer = setTimeout(() => updateNowPlaying(deckId), 800)
+    return () => clearTimeout(timer)
+  }, [queue, updateNowPlaying])
 
 
   const maybePlayPresenter = useCallback(async (next: LocalTrack | null) => {
