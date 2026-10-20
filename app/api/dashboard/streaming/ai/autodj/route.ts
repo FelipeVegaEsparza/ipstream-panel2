@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
       totalCharacters: totalChars,
       remaining,
       playlistTracks: entries.length,
-      message: `AutoDJ preparado: ${generated} intros cada ${every} temas (fuente IA separada).`,
+      message: `AutoDJ preparado: ${generated} intros antes de sus temas.`,
     })
   } catch (err) {
     if (err instanceof StreamingAuthError) {
