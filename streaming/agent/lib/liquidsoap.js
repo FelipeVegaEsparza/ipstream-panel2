@@ -357,7 +357,7 @@ export async function regenerateM3u(clientId) {
 
   const playlistId = activeRows[0].id
   const [entries] = await pool.query(
-    `SELECT t.fileName, t.title, t.artist, t.duration FROM playlist_entries pe
+    `SELECT t.id AS trackId, t.fileName, t.title, t.artist, t.duration FROM playlist_entries pe
      JOIN tracks t ON t.id = pe.trackId
      WHERE pe.playlistId = ?
      ORDER BY pe.\`order\` ASC`,
@@ -372,21 +372,23 @@ export async function regenerateM3u(clientId) {
   const aiFiles = (rs.aiPresenterEnabled && Number(rs.aiPresenterEvery) > 0 && !playlistInfo?.shuffle)
     ? await listAiIntroFiles(clientId)
     : []
-  const every = Number(rs.aiPresenterEvery) || 0
-  let aiIndex = 0
+  // El nombre incluye el id del track destino (ia-0001-<id>.mp3). Así la
+  // intro sigue al tema correcto aunque la playlist se reordene.
+  const aiByTrack = new Map()
+  for (const file of aiFiles) {
+    const match = /^ia-\d+-([A-Za-z0-9_-]+)\.mp3$/i.exec(file)
+    if (match && !aiByTrack.has(match[1])) aiByTrack.set(match[1], file)
+  }
 
   // Incluir #EXTINF con el título/artista para que liquidsoap propague la
   // metadata a Icecast (imprescindible cuando el MP3 no trae tags ID3).
   const lines = ['#EXTM3U']
-  for (let i = 0; i < entries.length; i++) {
-    // La intro se inserta inmediatamente antes del tema que presenta. Así el
-    // próximo tema coincide aunque la playlist no sea divisible por N.
-    if (aiFiles.length > 0 && every > 0 && i > 0 && i % every === 0 && aiIndex < aiFiles.length) {
+  for (const e of entries) {
+    const introFile = aiByTrack.get(e.trackId)
+    if (introFile) {
       lines.push('#EXTINF:-1,Locutor IA')
-      lines.push(join(clientAiIntrosDir(clientId), aiFiles[aiIndex]))
-      aiIndex++
+      lines.push(join(clientAiIntrosDir(clientId), introFile))
     }
-    const e = entries[i]
     const label = e.artist ? `${e.artist} - ${e.title || ''}` : (e.title || '')
     const dur = e.duration ? Math.round(e.duration) : -1
     lines.push(`#EXTINF:${dur},${label}`)

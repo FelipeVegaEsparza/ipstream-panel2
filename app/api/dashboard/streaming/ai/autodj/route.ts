@@ -178,6 +178,7 @@ export async function POST(request: NextRequest) {
     let generated = 0
     for (let i = 0; i < targets.length; i++) {
       const text = texts[i]
+      const track = targets[i]
       const audio = await synthesizeElevenLabs({
         text,
         apiKey: config.apiKey,
@@ -195,7 +196,7 @@ export async function POST(request: NextRequest) {
         remaining = Math.max(0, remaining - text.length)
       }
 
-      const fileName = `ia-${String(i + 1).padStart(4, '0')}.mp3`
+      const fileName = `ia-${String(i + 1).padStart(4, '0')}-${track.id}.mp3`
       const file = new File([new Uint8Array(audio.audio)], fileName, { type: 'audio/mpeg' })
       await streamingClient.uploadAiIntro(ctx.clientId, file)
       generated++

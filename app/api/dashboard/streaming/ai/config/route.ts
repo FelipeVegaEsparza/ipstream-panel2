@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { getAiLiveAccess } from '@/lib/ai-live'
 import { DEFAULT_PRESENTER_PHRASES, normalizePhrases } from '@/lib/live-console/presenter'
 import { getVoiceCatalog } from '@/lib/elevenlabs-voices'
+import { streamingClient } from '@/lib/streaming-client'
 
 export const dynamic = 'force-dynamic'
 
@@ -134,6 +135,10 @@ export async function PUT(request: NextRequest) {
         .slice(0, MAX_PHRASES)
     )
 
+    const previous = await prisma.radioStream.findUnique({
+      where: { clientId: ctx.clientId },
+      select: { aiPresenterEnabled: true },
+    })
     await prisma.radioStream.update({
       where: { clientId: ctx.clientId },
       data: {
@@ -146,6 +151,15 @@ export async function PUT(request: NextRequest) {
         aiVoiceStyle: voiceStyle,
       },
     })
+
+    if (previous?.aiPresenterEnabled && !enabled) {
+      try {
+        await streamingClient.clearAiIntros(ctx.clientId)
+        await streamingClient.restart(ctx.clientId)
+      } catch (err) {
+        console.warn('[ai/config] no se pudieron quitar las intros del AutoDJ', err)
+      }
+    }
 
     const config = await loadConfig(ctx.clientId)
     return NextResponse.json({

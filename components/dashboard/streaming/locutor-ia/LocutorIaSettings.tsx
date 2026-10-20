@@ -27,6 +27,8 @@ interface Config {
 const input =
   'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none'
 
+const INTERVALS = [0, 15, 30, 60, 120, 180, 240]
+
 export function LocutorIaSettings() {
   const [config, setConfig] = useState<Config | null>(null)
   const [enabled, setEnabled] = useState(false)
@@ -86,7 +88,7 @@ export function LocutorIaSettings() {
       if (!res.ok) throw new Error(data?.message || data?.error || 'No se pudo guardar')
       setConfig(data)
       setPhrases(Array.isArray(data.phrases) && data.phrases.length ? data.phrases : clean)
-      showToast({ type: 'success', title: 'Locutor IA guardado' })
+      showToast({ type: 'success', title: 'Cambios guardados' })
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar')
@@ -98,7 +100,7 @@ export function LocutorIaSettings() {
 
   const applyAutoDj = async () => {
     if (!enabled) {
-      setError('Activá el locutor IA antes de aplicarlo al AutoDJ.')
+      setError('Activá el locutor antes de aplicarlo al AutoDJ.')
       return
     }
     setApplying(true)
@@ -114,8 +116,8 @@ export function LocutorIaSettings() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.message || data?.error || 'No se pudo preparar el AutoDJ')
-      setApplyMessage(data.message || 'AutoDJ preparado')
-      showToast({ type: 'success', title: data.message || 'AutoDJ preparado' })
+      setApplyMessage(data.message || 'AutoDJ actualizado')
+      showToast({ type: 'success', title: data.message || 'AutoDJ actualizado' })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo preparar el AutoDJ')
     } finally {
@@ -162,73 +164,40 @@ export function LocutorIaSettings() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
-      <section className="card space-y-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-              <SparklesIcon className="h-5 w-5 text-brand" />
-              Presentador
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Se usa en la consola en vivo y en el AutoDJ. La radio es <strong>{config.stationName}</strong>.
-            </p>
-          </div>
-          <label className="flex items-center gap-2 text-sm text-foreground">
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(event) => setEnabled(event.target.checked)}
-              className="h-4 w-4 rounded border-border bg-secondary"
-            />
-            Activo
-          </label>
-        </div>
+    <div className="max-w-4xl space-y-5">
+      <AiCreditsCard
+        limit={config.limit}
+        used={config.used}
+        remaining={config.remaining}
+        period={config.period}
+      />
 
-        <div className="max-w-xs">
-          <label className="block text-xs font-medium text-muted-foreground mb-1">
-            Presentar cada
-          </label>
-          <select
-            value={every}
-            onChange={(event) => setEvery(Number(event.target.value))}
-            className={input}
-            disabled={!enabled}
-          >
-            {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
-              <option key={value} value={value}>
-                {value} temas
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-muted-foreground">
-            En vivo se aplica al refrescar la consola. En AutoDJ, al pulsar “Aplicar al AutoDJ”.
-          </p>
+      <div className="rounded-xl border border-brand/30 bg-brand/5 p-4">
+        <p className="text-sm font-semibold text-foreground">Cómo funciona</p>
+        <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+          <p><strong className="text-foreground">1.</strong> Elegí la voz y las frases.</p>
+          <p><strong className="text-foreground">2.</strong> Guardá para la consola en vivo.</p>
+          <p><strong className="text-foreground">3.</strong> Aplicá al AutoDJ para regenerar sus intros.</p>
         </div>
+      </div>
 
+      <section className="card space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">1. Voz de la emisora</h2>
+          <p className="text-sm text-muted-foreground">Se usa en vivo, AutoDJ, hora y clima.</p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Voz de la emisora
-            </label>
-            <select
-              value={voiceId}
-              onChange={(event) => setVoiceId(event.target.value)}
-              className={input}
-            >
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Voz</label>
+            <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className={input}>
               <option value="">Voz predeterminada</option>
               {config.voices.map((voice) => (
-                <option key={voice.id} value={voice.id}>
-                  {voice.name}
-                </option>
+                <option key={voice.id} value={voice.id}>{voice.name}</option>
               ))}
             </select>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Cambiar de voz invalida el caché de esa voz; los audios nuevos consumen créditos.
-            </p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
               Expresividad: {voiceStyle}%
             </label>
             <input
@@ -237,159 +206,148 @@ export function LocutorIaSettings() {
               max={100}
               step={5}
               value={voiceStyle}
-              onChange={(event) => setVoiceStyle(Number(event.target.value))}
+              onChange={(e) => setVoiceStyle(Number(e.target.value))}
               className="mt-3 w-full accent-[var(--brand-500)]"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Más expresión en la lectura. No cambia el costo por carácter.
-            </p>
           </div>
         </div>
+        <p className="text-[11px] text-muted-foreground">
+          Cambiar de voz invalida el caché de esa voz.
+        </p>
+      </section>
 
+      <section className="card space-y-4">
         <div>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <label className="block text-sm font-medium text-foreground">Frases del locutor</label>
-              <p className="text-xs text-muted-foreground">
-                Se elige una al azar para cada presentación. Variables: {'{{radio}}'}, {'{{titulo}}'}, {'{{artista}}'}.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={addPhrase}
-              disabled={phrases.length >= 20}
-              className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:border-brand hover:text-brand disabled:opacity-40"
-            >
-              <PlusIcon className="h-3.5 w-3.5" />
-              Agregar
-            </button>
-          </div>
-
-          <div className="mt-3 space-y-2">
-            {phrases.map((phrase, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <textarea
-                  value={phrase}
-                  onChange={(event) => updatePhrase(index, event.target.value)}
-                  rows={2}
-                  className={`${input} resize-none`}
-                  placeholder="Estás escuchando {{radio}}. A continuación, {{titulo}} de {{artista}}."
-                />
-                <button
-                  type="button"
-                  onClick={() => removePhrase(index)}
-                  disabled={phrases.length <= 1}
-                  className="mt-1 rounded-lg border border-border p-2 text-muted-foreground hover:text-red-300 disabled:opacity-30"
-                  title="Quitar frase"
-                  aria-label="Quitar frase"
-                >
-                  <Trash2Icon className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            Si una frase no usa variables, se le agrega automáticamente el nombre de la radio,
-            el título y el artista del próximo tema.
+          <h2 className="text-lg font-semibold text-foreground">2. Cuándo habla</h2>
+          <p className="text-sm text-muted-foreground">
+            La frecuencia es para el presentador de temas. Hora y clima tienen su propio intervalo.
           </p>
         </div>
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+            className="h-4 w-4 rounded border-border bg-secondary"
+          />
+          Activar Locutor IA
+        </label>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Presentar cada</label>
+            <select value={every} onChange={(e) => setEvery(Number(e.target.value))} className={input} disabled={!enabled}>
+              {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
+                <option key={value} value={value}>{value} temas</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Hora cada</label>
+            <select value={timeEveryMinutes} onChange={(e) => setTimeEveryMinutes(Number(e.target.value))} className={input}>
+              {INTERVALS.map((value) => (
+                <option key={value} value={value}>{value === 0 ? 'Desactivada' : `${value} minutos`}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Clima cada</label>
+            <select value={weatherEveryMinutes} onChange={(e) => setWeatherEveryMinutes(Number(e.target.value))} className={input}>
+              {INTERVALS.map((value) => (
+                <option key={value} value={value}>{value === 0 ? 'Desactivado' : `${value} minutos`}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </section>
 
-        <div className="flex flex-wrap items-center gap-3">
+      <section className="card space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">3. Frases</h2>
+            <p className="text-sm text-muted-foreground">
+              Se elige una al azar. Variables: {'{{radio}}'}, {'{{titulo}}'}, {'{{artista}}'}.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={addPhrase}
+            disabled={phrases.length >= 20}
+            className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:border-brand hover:text-brand disabled:opacity-40"
+          >
+            <PlusIcon className="h-3.5 w-3.5" />
+            Agregar
+          </button>
+        </div>
+        <div className="space-y-2">
+          {phrases.map((phrase, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <textarea
+                value={phrase}
+                onChange={(e) => updatePhrase(index, e.target.value)}
+                rows={2}
+                className={`${input} resize-none`}
+                maxLength={240}
+              />
+              <button
+                type="button"
+                onClick={() => removePhrase(index)}
+                disabled={phrases.length <= 1}
+                className="mt-1 rounded-lg border border-border p-2 text-muted-foreground hover:text-red-300 disabled:opacity-30"
+                aria-label="Quitar frase"
+              >
+                <Trash2Icon className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Si una frase no usa variables, se agrega automáticamente la radio, el título y el artista.
+        </p>
+      </section>
+
+      <section className="card space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">4. Guardar y aplicar</h2>
+          <p className="text-sm text-muted-foreground">
+            Guardar actualiza el vivo y las locuciones automáticas. Aplicar al AutoDJ regenera las intros de temas.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => void save()}
             disabled={saving || applying}
-            className="flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:border-brand hover:text-brand disabled:opacity-50"
           >
             <SaveIcon className="h-4 w-4" />
-            {saving ? 'Guardando…' : 'Guardar'}
+            {saving ? 'Guardando…' : 'Guardar cambios'}
           </button>
-          <span className="text-xs text-muted-foreground">
-            {config.remaining.toLocaleString('es-CL')} caracteres disponibles este mes.
-          </span>
-        </div>
-
-        {error && <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
-      </section>
-
-      <aside className="space-y-4">
-        <AiCreditsCard
-          limit={config.limit}
-          used={config.used}
-          remaining={config.remaining}
-          period={config.period}
-          compact
-        />
-
-        <section className="card space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">Hora y clima</h2>
-          <p className="text-sm text-muted-foreground">
-            Locuciones automáticas del AutoDJ. Se emiten en el siguiente corte de tema.
-          </p>
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-muted-foreground">Hora cada</span>
-            <select
-              value={timeEveryMinutes}
-              onChange={(event) => setTimeEveryMinutes(Number(event.target.value))}
-              className={input}
-            >
-              <option value={0}>Desactivado</option>
-              {[15, 30, 60, 120, 180, 240].map((value) => (
-                <option key={value} value={value}>{value} minutos</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-muted-foreground">Clima cada</span>
-            <select
-              value={weatherEveryMinutes}
-              onChange={(event) => setWeatherEveryMinutes(Number(event.target.value))}
-              className={input}
-            >
-              <option value={0}>Desactivado</option>
-              {[15, 30, 60, 120, 180, 240].map((value) => (
-                <option key={value} value={value}>{value} minutos</option>
-              ))}
-            </select>
-          </label>
-          <p className="text-[11px] text-muted-foreground">
-            Usa la ciudad de Datos Básicos y la voz premium. Se aplica al guardar y reiniciar el AutoDJ.
-          </p>
-        </section>
-
-        <section className="card space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">AutoDJ</h2>
-          <p className="text-sm text-muted-foreground">
-            Genera las intros para los próximos temas y las instala en la fuente IA del AutoDJ.
-            Los jingles normales no se modifican.
-          </p>
           <button
             type="button"
             onClick={() => void applyAutoDj()}
             disabled={applying || saving || !enabled}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-brand/40 bg-brand/10 px-4 py-2 text-sm font-medium text-brand hover:bg-brand/20 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
             <PlayIcon className="h-4 w-4" />
-            {applying ? 'Preparando AutoDJ…' : 'Aplicar al AutoDJ'}
+            {applying ? 'Preparando AutoDJ…' : 'Guardar y aplicar al AutoDJ'}
           </button>
-          {applyMessage && <p className="text-xs text-green-300">{applyMessage}</p>}
-          <p className="text-[11px] text-muted-foreground">
-            La playlist debe estar sin shuffle. Si cambiás la playlist, la frecuencia o las frases,
-            volvé a aplicar.
-          </p>
-        </section>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          El AutoDJ debe tener la playlist sin shuffle. Si cambiás la playlist, la frecuencia o las frases, volvé a aplicar.
+        </p>
+        {applyMessage && <p className="text-xs text-green-300">{applyMessage}</p>}
+        {error && <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
+      </section>
 
-        <section className="card space-y-2">
-          <h2 className="text-sm font-semibold text-foreground">Locuciones libres</h2>
-          <p className="text-xs text-muted-foreground">
-            En la consola en vivo usá el botón <strong>Libre</strong> para crear una locución y
-            agregarla a la lista.
-          </p>
-          <Link href="/dashboard/streaming/live" className="text-xs text-brand hover:underline">
-            Ir a la consola en vivo
-          </Link>
-        </section>
-      </aside>
+      <section className="card flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">Locuciones libres</p>
+          <p className="text-xs text-muted-foreground">Creá una locución y agregala a la lista desde la consola en vivo.</p>
+        </div>
+        <Link href="/dashboard/streaming/live" className="text-sm font-medium text-brand hover:underline">
+          Ir a la consola
+        </Link>
+      </section>
     </div>
   )
 }
