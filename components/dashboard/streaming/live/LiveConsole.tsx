@@ -166,6 +166,7 @@ export function LiveConsole({
             onClear={live.player.clearPlaylist}
             onMove={live.player.moveInPlaylist}
             onDropTrack={live.player.addToPlaylist}
+            onReorder={live.player.moveInPlaylistTo}
           />
         </div>
 

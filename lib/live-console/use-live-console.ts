@@ -125,6 +125,7 @@ export interface PlayerApi {
   removeFromPlaylist: (id: string) => void
   clearPlaylist: () => void
   moveInPlaylist: (id: string, direction: -1 | 1) => void
+  moveInPlaylistTo: (fromIndex: number, toIndex: number) => void
 }
 
 export type { AnnouncementType } from './announcements'
@@ -539,6 +540,18 @@ export function useLiveConsole(
       if (nextIndex < 0 || nextIndex >= prev.length) return prev
       const copy = [...prev]
       ;[copy[index], copy[nextIndex]] = [copy[nextIndex], copy[index]]
+      return copy
+    })
+  }, [])
+
+  const moveInPlaylistTo = useCallback((fromIndex: number, toIndex: number) => {
+    setQueue((prev) => {
+      if (fromIndex < 0 || fromIndex >= prev.length) return prev
+      const to = Math.max(0, Math.min(toIndex, prev.length - 1))
+      if (fromIndex === to) return prev
+      const copy = [...prev]
+      const [track] = copy.splice(fromIndex, 1)
+      copy.splice(to, 0, track)
       return copy
     })
   }, [])
@@ -1611,6 +1624,7 @@ export function useLiveConsole(
     removeFromPlaylist: dequeue,
     clearPlaylist: clearQueue,
     moveInPlaylist,
+    moveInPlaylistTo,
   }), [
     decks,
     queue,
@@ -1624,6 +1638,7 @@ export function useLiveConsole(
     dequeue,
     clearQueue,
     moveInPlaylist,
+    moveInPlaylistTo,
   ])
 
   return {

@@ -22,12 +22,21 @@ interface Props {
   onClear: () => void
   onMove: (id: string, direction: -1 | 1) => void
   onDropTrack?: (track: LocalTrack) => void
+  onReorder?: (fromIndex: number, toIndex: number) => void
+}
+
+const QUEUE_DRAG = 'application/x-ipstream-queue-index'
+
+function rowTone(track: LocalTrack): string {
+  if (track.kind === 'jingle') return 'playlist-row-jingle'
+  if (track.kind === 'spot' || track.kind === 'announcement') return 'playlist-row-locution'
+  return ''
 }
 
 function TrackBadge({ track }: { track: LocalTrack }) {
   if (track.kind === 'spot' || track.kind === 'announcement') {
     return (
-      <span className="ml-1 inline-flex shrink-0 items-center gap-0.5 rounded bg-brand/15 px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-brand">
+      <span className="ml-1 inline-flex shrink-0 items-center gap-0.5 rounded bg-[var(--locution-soft)] px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-[color:var(--locution-500)]">
         <SparklesIcon className="h-2.5 w-2.5" />
         Locución
       </span>
@@ -52,9 +61,19 @@ export function PlaylistPanel({
   onClear,
   onMove,
   onDropTrack,
+  onReorder,
 }: Props) {
   const recent = [...history].reverse()
   const [dragOver, setDragOver] = useState(false)
+  const [dragSource, setDragSource] = useState<number | null>(null)
+  const [dropIndex, setDropIndex] = useState<number | null>(null)
+  const [dropAfter, setDropAfter] = useState(false)
+
+  const resetDrag = () => {
+    setDragSource(null)
+    setDropIndex(null)
+    setDropAfter(false)
+  }
 
   return (
     <section
@@ -137,7 +156,7 @@ export function PlaylistPanel({
                   {recent.map((track) => (
                     <li
                       key={`history-${track.id}`}
-                      className="group grid grid-cols-[24px_minmax(0,1fr)_48px_auto] items-center gap-1 px-2 py-1.5 opacity-60"
+                      className={`group grid grid-cols-[24px_minmax(0,1fr)_48px_auto] items-center gap-1 px-2 py-1.5 opacity-60 ${rowTone(track)}`}
                     >
                       <CheckCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
                       <div className="min-w-0">
@@ -176,7 +195,45 @@ export function PlaylistPanel({
                   {queue.map((track, index) => (
                     <li
                       key={track.id}
-                      className="group grid grid-cols-[24px_minmax(0,1fr)_48px_auto] items-center gap-1 px-2 py-1.5 transition-colors hover:bg-brand/5"
+                      draggable={Boolean(onReorder)}
+                      onDragStart={(event) => {
+                        if (!onReorder) return
+                        event.dataTransfer.setData(QUEUE_DRAG, String(index))
+                        event.dataTransfer.effectAllowed = 'move'
+                        setDragSource(index)
+                      }}
+                      onDragEnd={resetDrag}
+                      onDragOver={(event) => {
+                        if (!onReorder || !event.dataTransfer.types.includes(QUEUE_DRAG)) return
+                        event.preventDefault()
+                        event.stopPropagation()
+                        event.dataTransfer.dropEffect = 'move'
+                        const rect = event.currentTarget.getBoundingClientRect()
+                        setDropIndex(index)
+                        setDropAfter(event.clientY > rect.top + rect.height / 2)
+                      }}
+                      onDrop={(event) => {
+                        if (!onReorder) return
+                        const raw = event.dataTransfer.getData(QUEUE_DRAG)
+                        if (!raw) return
+                        event.preventDefault()
+                        event.stopPropagation()
+                        const from = Number(raw)
+                        if (!Number.isInteger(from)) { resetDrag(); return }
+                        const rect = event.currentTarget.getBoundingClientRect()
+                        const after = event.clientY > rect.top + rect.height / 2
+                        let to = index + (after ? 1 : 0)
+                        if (from < to) to -= 1
+                        onReorder(from, to)
+                        resetDrag()
+                      }}
+                      className={`group grid grid-cols-[24px_minmax(0,1fr)_48px_auto] items-center gap-1 px-2 py-1.5 transition-colors ${
+                        onReorder ? 'cursor-grab active:cursor-grabbing' : ''
+                      } ${
+                        dropIndex === index ? (dropAfter ? 'border-b-2 border-brand' : 'border-t-2 border-brand') : ''
+                      } ${
+                        dragSource === index ? 'opacity-40' : ''
+                      } ${rowTone(track) || 'hover:bg-brand/5'}`}
                     >
                       <span className="text-right font-mono text-[9px] tabular-nums text-muted-foreground">
                         {index + 1}

@@ -40,6 +40,8 @@
     --brand-grad: linear-gradient(135deg, #28b4f0, #0050b4);
     --success-500: #5be29b;
     --success-soft: rgba(91, 226, 155, 0.14);
+    --locution-500: #e9b35b;
+    --locution-soft: rgba(233, 179, 91, 0.14);
     --shadow-soft: 0 3px 12px -10px rgba(0, 0, 0, 0.5);
     --sidebar-grad: linear-gradient(180deg, hsl(213 30% 10%), hsl(213 33% 6%));
   }
@@ -77,6 +79,8 @@
     --brand-grad: linear-gradient(135deg, #2b93e6, #0b4c9e);
     --success-500: #1a9e6a;
     --success-soft: rgba(26, 158, 106, 0.12);
+    --locution-500: #a16207;
+    --locution-soft: rgba(161, 98, 7, 0.12);
     --shadow-soft: 0 3px 12px -10px rgba(15, 23, 42, 0.4);
     --sidebar-grad: linear-gradient(180deg, hsl(210 30% 98%), hsl(210 40% 95%));
   }
@@ -125,6 +129,16 @@
 @layer components {
   .bg-brand-grad {
     background-image: var(--brand-grad);
+  }
+
+  .playlist-row-jingle {
+    background-color: var(--brand-soft);
+    box-shadow: inset 2px 0 0 var(--brand-500);
+  }
+
+  .playlist-row-locution {
+    background-color: var(--locution-soft);
+    box-shadow: inset 2px 0 0 var(--locution-500);
   }
 
   /* === BOTONES === */
