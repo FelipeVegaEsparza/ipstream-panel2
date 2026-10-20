@@ -9,7 +9,7 @@ function renderBar(overrides: {
   premiumAvailable?: boolean
 } = {}) {
   const handlers = {
-    onAnnounce: vi.fn().mockResolvedValue(undefined),
+    onAddToQueue: vi.fn(),
     onVoice: vi.fn(),
   }
   render(
@@ -25,12 +25,12 @@ function renderBar(overrides: {
 }
 
 describe('AnnouncementsBar', () => {
-  it('dispara clima y hora', () => {
+  it('agrega clima y hora a la lista', () => {
     const handlers = renderBar()
     fireEvent.click(screen.getByText('Clima'))
     fireEvent.click(screen.getByText('Hora'))
-    expect(handlers.onAnnounce).toHaveBeenNthCalledWith(1, 'weather')
-    expect(handlers.onAnnounce).toHaveBeenNthCalledWith(2, 'time')
+    expect(handlers.onAddToQueue).toHaveBeenNthCalledWith(1, 'weather')
+    expect(handlers.onAddToQueue).toHaveBeenNthCalledWith(2, 'time')
   })
 
   it('permite cambiar la voz', () => {

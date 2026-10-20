@@ -22,6 +22,7 @@ import {
 } from './library'
 import { createTransport } from './transport'
 import { buildPresenterText, normalizePhrases } from './presenter'
+import { createAnnouncementTrack, type AnnouncementType } from './announcements'
 import { readLocalTags } from './local-tags'
 import {
   DEFAULT_PAD_SIZE,
@@ -126,7 +127,7 @@ export interface PlayerApi {
   moveInPlaylist: (id: string, direction: -1 | 1) => void
 }
 
-export type AnnouncementType = 'weather' | 'time'
+export type { AnnouncementType } from './announcements'
 export type AnnouncementVoice = 'male' | 'female' | 'premium'
 
 export interface AnnouncementsApi {
@@ -135,6 +136,7 @@ export interface AnnouncementsApi {
   error: string | null
   voice: AnnouncementVoice
   setVoice: (voice: AnnouncementVoice) => void
+  enqueue: (type: AnnouncementType) => void
 }
 
 export interface AiApi {
@@ -519,6 +521,10 @@ export function useLiveConsole(
     enqueue(createSpotTrack(blob, text))
   }, [enqueue])
 
+  const enqueueAnnouncement = useCallback((type: AnnouncementType) => {
+    enqueue(createAnnouncementTrack(type))
+  }, [enqueue])
+
   const dequeue = useCallback((id: string) => {
     setQueue((prev) => prev.filter((track) => track.id !== id))
   }, [])
@@ -634,16 +640,10 @@ export function useLiveConsole(
     engineRef.current?.stopAllEffects()
   }, [])
 
-  const announce = useCallback(async (type: AnnouncementType) => {
-    const engine = engineRef.current
-    if (!engine) return
+  const generateAnnouncementAudio = useCallback(async (type: AnnouncementType): Promise<Blob> => {
     setAnnouncementLoading(type)
     setAnnouncementError(null)
     try {
-      // La locución va al programa; activamos el monitor para escucharla
-      // localmente y, si hay sesión, también sale al stream.
-      engine.setMonitor(true)
-      await engine.resume()
       const res = await fetch('/api/dashboard/streaming/live/announce', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -665,14 +665,28 @@ export function useLiveConsole(
       if (res.headers.get('X-TTS-Provider') === 'piper') {
         setAnnouncementError('Se usó Piper porque ElevenLabs no pudo generar la locución.')
       }
-      const buffer = await engine.decodeAudio(await res.arrayBuffer())
-      void engine.playAnnouncement(buffer)
+      return await res.blob()
     } catch (err) {
-      setAnnouncementError(err instanceof Error ? err.message : 'No se pudo reproducir la locución')
+      setAnnouncementError(err instanceof Error ? err.message : 'No se pudo generar la locución')
+      throw err
     } finally {
       setAnnouncementLoading(null)
     }
   }, [announcementVoice])
+
+  const announce = useCallback(async (type: AnnouncementType) => {
+    const engine = engineRef.current
+    if (!engine) return
+    try {
+      engine.setMonitor(true)
+      await engine.resume()
+      const blob = await generateAnnouncementAudio(type)
+      const buffer = await engine.decodeAudio(await blob.arrayBuffer())
+      void engine.playAnnouncement(buffer)
+    } catch (err) {
+      setAnnouncementError(err instanceof Error ? err.message : 'No se pudo reproducir la locución')
+    }
+  }, [generateAnnouncementAudio])
 
   const generateSpeech = useCallback(async (text: string): Promise<Blob> => {
     const res = await fetch('/api/dashboard/streaming/live/tts', {
@@ -971,7 +985,7 @@ export function useLiveConsole(
 
   const maybePlayPresenter = useCallback(async (next: LocalTrack | null) => {
     if (!aiEnabled || !aiPresenterEnabled) return
-    if (next?.kind === 'spot' || next?.kind === 'jingle') return
+    if (next?.kind === 'spot' || next?.kind === 'jingle' || next?.kind === 'announcement') return
     if (tracksSinceIntroRef.current < presenterEvery) return
 
     setPresenterGenerating(true)
@@ -1013,7 +1027,7 @@ export function useLiveConsole(
     if (!aiEnabled || !aiPresenterEnabled) return
     if (tracksSinceIntroRef.current < presenterEvery) return
     const next = queue[0]
-    if (!next || next.kind === 'spot' || next.kind === 'jingle') return
+    if (!next || next.kind === 'spot' || next.kind === 'jingle' || next.kind === 'announcement') return
     if (introPrefetchRef.current?.trackId === next.id) return
     const promise = generateSpeech(buildPresenterText(stationName, next, introPhrases)).catch((err) => {
       setAiError(err instanceof Error ? err.message : 'No se pudo generar la presentación')
@@ -1021,6 +1035,26 @@ export function useLiveConsole(
     })
     introPrefetchRef.current = { trackId: next.id, promise }
   }, [queue, aiEnabled, aiPresenterEnabled, presenterEvery, stationName, introPhrases, generateSpeech])
+
+  const prepareTrack = useCallback(async (track: LocalTrack) => {
+    if (track.kind === 'announcement' && track.announcementType) {
+      const blob = await generateAnnouncementAudio(track.announcementType)
+      const file = new File([blob], `locucion-${track.announcementType}-${Date.now()}.mp3`, {
+        type: blob.type || 'audio/mpeg',
+      })
+      return {
+        track: {
+          ...track,
+          file,
+          size: file.size,
+          mimeType: file.type || 'audio/mpeg',
+          available: true,
+        },
+        file,
+      }
+    }
+    return { track, file: await getFileForTrack(track) }
+  }, [generateAnnouncementAudio])
 
   // Auto-advance cuando termina un deck
   useEffect(() => {
@@ -1036,11 +1070,11 @@ export function useLiveConsole(
         try {
           await maybePlayPresenter(next)
           if (!next) return
-          if (next.kind !== 'spot' && next.kind !== 'jingle') tracksSinceIntroRef.current += 1
+          if (next.kind !== 'spot' && next.kind !== 'jingle' && next.kind !== 'announcement') tracksSinceIntroRef.current += 1
+          const prepared = await prepareTrack(next)
           setQueue((prev) => prev.filter((item) => item.id !== next.id))
-          const file = await getFileForTrack(next)
-          const mode = await engine.loadTrack(id, next, file)
-          if (mode === 'buffer' && next.kind !== 'spot') detectBpm(id)
+          const mode = await engine.loadTrack(id, prepared.track, prepared.file)
+          if (mode === 'buffer' && prepared.track.kind !== 'spot' && prepared.track.kind !== 'announcement') detectBpm(id)
           await engine.resume()
           await engine.getDeck(id).play()
           currentDeckRef.current = id
@@ -1053,7 +1087,7 @@ export function useLiveConsole(
     return () => {
       engine.onDeckEnded = null
     }
-  }, [detectBpm, updateNowPlaying, maybePlayPresenter, pushHistory])
+  }, [detectBpm, updateNowPlaying, maybePlayPresenter, pushHistory, prepareTrack])
 
   const refreshSlots = useCallback(async () => {
     try {
@@ -1096,18 +1130,19 @@ export function useLiveConsole(
   // --------------------------------------------------
   // Controles de deck
   // --------------------------------------------------
+
   const loadToDeck = useCallback(async (deckId: DeckId, track: LocalTrack) => {
     const engine = engineRef.current
     if (!engine) return
     await engine.resume()
-    const file = await getFileForTrack(track)
-    const mode = await engine.loadTrack(deckId, track, file)
-    if (mode === 'buffer' && track.kind !== 'spot') detectBpm(deckId)
+    const prepared = await prepareTrack(track)
+    const mode = await engine.loadTrack(deckId, prepared.track, prepared.file)
+    if (mode === 'buffer' && prepared.track.kind !== 'spot' && prepared.track.kind !== 'announcement') detectBpm(deckId)
     else engine.setDeckBpm(deckId, null, 0)
-    if (track.kind !== 'spot' && track.kind !== 'jingle') tracksSinceIntroRef.current += 1
+    if (prepared.track.kind !== 'spot' && prepared.track.kind !== 'jingle' && prepared.track.kind !== 'announcement') tracksSinceIntroRef.current += 1
     setQueue((prev) => prev.filter((item) => item.id !== track.id))
     updateNowPlaying(deckId)
-  }, [detectBpm, updateNowPlaying])
+  }, [detectBpm, prepareTrack, updateNowPlaying])
 
   const playDeck = useCallback(async (deckId: DeckId) => {
     const engine = engineRef.current
@@ -1531,7 +1566,8 @@ export function useLiveConsole(
     error: announcementError,
     voice: announcementVoice,
     setVoice: setAnnouncementVoicePersisted,
-  }), [announce, announcementLoading, announcementError, announcementVoice, setAnnouncementVoicePersisted])
+    enqueue: enqueueAnnouncement,
+  }), [announce, announcementLoading, announcementError, announcementVoice, setAnnouncementVoicePersisted, enqueueAnnouncement])
 
   const ai = useMemo<AiApi>(() => ({
     enabled: aiEnabled,

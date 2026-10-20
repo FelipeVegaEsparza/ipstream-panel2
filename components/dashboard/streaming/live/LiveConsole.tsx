@@ -177,7 +177,7 @@ export function LiveConsole({
             premiumAvailable={premiumVoiceAvailable}
             freeFormAvailable={aiEnabled}
             onVoice={live.announcements.setVoice}
-            onAnnounce={live.announcements.announce}
+            onAddToQueue={live.announcements.enqueue}
             onOpenComposer={() => setComposerOpen(true)}
           />
           <JinglesPanel onAdd={live.player.addToPlaylist} />

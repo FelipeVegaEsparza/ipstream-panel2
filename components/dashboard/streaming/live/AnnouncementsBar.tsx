@@ -2,6 +2,7 @@
 
 import { ClockIcon, CloudIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
 import type { AnnouncementType, AnnouncementVoice } from '@/lib/live-console/use-live-console'
+import { createAnnouncementTrack } from '@/lib/live-console/announcements'
 
 interface Props {
   loading: AnnouncementType | null
@@ -10,7 +11,7 @@ interface Props {
   premiumAvailable?: boolean
   freeFormAvailable?: boolean
   onVoice: (voice: AnnouncementVoice) => void
-  onAnnounce: (type: AnnouncementType) => Promise<void>
+  onAddToQueue: (type: AnnouncementType) => void
   onOpenComposer?: () => void
 }
 
@@ -21,7 +22,7 @@ export function AnnouncementsBar({
   premiumAvailable = false,
   freeFormAvailable = false,
   onVoice,
-  onAnnounce,
+  onAddToQueue,
   onOpenComposer,
 }: Props) {
   const busy = loading != null
@@ -29,26 +30,36 @@ export function AnnouncementsBar({
     <aside className="flex min-h-[180px] flex-col rounded-xl border border-border bg-card p-3 shadow-soft">
       <h2 className="text-sm font-semibold text-foreground">Locución</h2>
       <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
-        Clima y hora con la voz de la emisora.
+        Arrastrá Clima u Hora entre los temas o agregalos con la lista.
       </p>
 
       <div className="mt-3 space-y-2">
         <button
           type="button"
-          onClick={() => void onAnnounce('weather')}
+          onClick={() => onAddToQueue('weather')}
+          onDragStart={(event) => {
+            event.dataTransfer.setData('application/x-ipstream-track', JSON.stringify(createAnnouncementTrack('weather')))
+            event.dataTransfer.effectAllowed = 'copy'
+          }}
+          draggable
           disabled={busy}
-          className="flex w-full items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-[11px] font-medium text-foreground transition-colors hover:text-brand disabled:opacity-40"
-          title="Anunciar el clima de la ciudad configurada"
+          className="flex w-full cursor-grab items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-[11px] font-medium text-foreground transition-colors hover:text-brand active:cursor-grabbing disabled:opacity-40"
+          title="Arrastrar clima a la lista o agregarlo con clic"
         >
           <CloudIcon className="h-3.5 w-3.5" />
           Clima
         </button>
         <button
           type="button"
-          onClick={() => void onAnnounce('time')}
+          onClick={() => onAddToQueue('time')}
+          onDragStart={(event) => {
+            event.dataTransfer.setData('application/x-ipstream-track', JSON.stringify(createAnnouncementTrack('time')))
+            event.dataTransfer.effectAllowed = 'copy'
+          }}
+          draggable
           disabled={busy}
-          className="flex w-full items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-[11px] font-medium text-foreground transition-colors hover:text-brand disabled:opacity-40"
-          title="Anunciar la hora local de la radio"
+          className="flex w-full cursor-grab items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-[11px] font-medium text-foreground transition-colors hover:text-brand active:cursor-grabbing disabled:opacity-40"
+          title="Arrastrar hora a la lista o agregarla con clic"
         >
           <ClockIcon className="h-3.5 w-3.5" />
           Hora
@@ -92,7 +103,7 @@ export function AnnouncementsBar({
       {error && <p className="mt-2 text-[10px] text-red-300">{error}</p>}
 
       <p className="mt-auto pt-3 text-[9px] leading-snug text-muted-foreground">
-        Se mezcla al aire y baja la música durante el anuncio.
+        Se reproduce como un tema más, cuando llegue su turno en la lista.
       </p>
     </aside>
   )

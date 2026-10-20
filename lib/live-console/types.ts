@@ -24,7 +24,7 @@ export interface LocalTrack {
   size: number
   lastModified: number
   mimeType: string
-  source: 'handle' | 'file' | 'jingle'
+  source: 'handle' | 'file' | 'jingle' | 'announcement'
   handle?: FileSystemFileHandle | null
   file?: File | null
   /** Audio remoto del panel (jingles) cuando no hay archivo local. */
@@ -34,7 +34,8 @@ export interface LocalTrack {
   coverFile?: File | null
   available: boolean
   /** 'spot' = locución generada por IA; no cuenta para el presentador. */
-  kind?: 'music' | 'spot' | 'jingle'
+  kind?: 'music' | 'spot' | 'jingle' | 'announcement'
+  announcementType?: 'time' | 'weather'
 }
 
 export interface DeckEq {
