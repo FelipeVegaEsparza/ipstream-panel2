@@ -57,6 +57,7 @@ export function ffmpegArgs(session, mode, harborPort, password) {
     args.push('-c:a', 'copy', '-f', 'adts', '-content_type', 'audio/aac')
   } else {
     args.push(
+      '-af', 'aformat=sample_rates=48000:channel_layouts=stereo',
       '-c:a', 'libmp3lame',
       '-b:a', `${config.live.bitrateKbps}k`,
       '-ar', '48000',

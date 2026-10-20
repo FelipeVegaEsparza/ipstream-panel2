@@ -1274,22 +1274,19 @@ export function useLiveConsole(
       try {
         await startWithTransport(session)
       } catch (primaryError) {
-        if (session.transport === 'whip') {
-          // Liberar el slot del intento WHIP antes de pedir el fallback.
-          const failedTransport = transportRef.current
-          transportRef.current = null
-          if (failedTransport) await failedTransport.stop()
-          const failedId = sessionRef.current?.sessionId
-          sessionRef.current = null
-          setSessionId(null)
-          if (failedId) await endSession(failedId)
+        const fallbackKind = session.transport === 'whip' ? 'websocket' : 'whip'
+        // Liberar el slot del intento fallido antes de pedir el fallback.
+        const failedTransport = transportRef.current
+        transportRef.current = null
+        if (failedTransport) await failedTransport.stop()
+        const failedId = sessionRef.current?.sessionId
+        sessionRef.current = null
+        setSessionId(null)
+        if (failedId) await endSession(failedId)
 
-          // El gate de calidad puede preferir WebSocket; reintentamos una vez.
-          const fallback = await createSession('websocket')
-          await startWithTransport(fallback)
-        } else {
-          throw primaryError
-        }
+        // Reintentamos una vez con el otro transporte.
+        const fallback = await createSession(fallbackKind)
+        await startWithTransport(fallback)
       }
       await acquireWakeLock()
       updateNowPlaying(currentDeckRef.current)

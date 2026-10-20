@@ -64,11 +64,17 @@ export class LiveAudioEngine {
     this.context = new AudioContext({ latencyHint: 'interactive' })
 
     this.streamDestination = this.context.createMediaStreamDestination()
+    this.streamDestination.channelCount = 2
+    this.streamDestination.channelCountMode = 'explicit'
+    this.streamDestination.channelInterpretation = 'speakers'
 
     this.masterGain = this.context.createGain()
     this.masterGain.gain.value = 1
 
     this.limiter = this.context.createDynamicsCompressor()
+    this.limiter.channelCount = 2
+    this.limiter.channelCountMode = 'explicit'
+    this.limiter.channelInterpretation = 'speakers'
     this.limiter.threshold.value = -1
     this.limiter.knee.value = 0
     this.limiter.ratio.value = 20

@@ -46,7 +46,7 @@ function iceServers(): RTCIceServer[] {
 }
 
 function defaultTransport(): 'whip' | 'websocket' {
-  return process.env.LIVE_TRANSPORT_DEFAULT === 'websocket' ? 'websocket' : 'whip'
+  return process.env.LIVE_TRANSPORT_DEFAULT === 'whip' ? 'whip' : 'websocket'
 }
 
 export async function POST(request: NextRequest) {

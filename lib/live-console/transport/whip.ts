@@ -4,6 +4,26 @@
 
 import type { LiveTransport, SessionInfo, TransportStats } from '../types'
 
+function preferStereoOpus(sdp: string, maxBitrate = 192000): string {
+  const match = /a=rtpmap:(\d+) opus\/48000\/2/i.exec(sdp)
+  if (!match) return sdp
+  const pt = match[1]
+  const fmtp = new RegExp(`a=fmtp:${pt} ([^\r\n]*)`)
+  if (fmtp.test(sdp)) {
+    return sdp.replace(fmtp, (_full, params: string) => {
+      const cleaned = params
+        .replace(/;?stereo=\d/gi, '')
+        .replace(/;?sprop-stereo=\d/gi, '')
+        .replace(/;?maxaveragebitrate=\d+/gi, '')
+      return `a=fmtp:${pt} ${cleaned};stereo=1;sprop-stereo=1;maxaveragebitrate=${maxBitrate}`
+    })
+  }
+  return sdp.replace(
+    `a=rtpmap:${pt} opus/48000/2`,
+    `a=rtpmap:${pt} opus/48000/2\r\na=fmtp:${pt} stereo=1;sprop-stereo=1;maxaveragebitrate=${maxBitrate}`
+  )
+}
+
 function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = 4000): Promise<void> {
   if (pc.iceGatheringState === 'complete') return Promise.resolve()
   return new Promise((resolve) => {
@@ -55,6 +75,18 @@ export class WhipTransport implements LiveTransport {
     this.sender = pc.addTrack(audioTrack, stream)
 
     const offer = await pc.createOffer()
+    offer.sdp = preferStereoOpus(offer.sdp ?? '')
+    if (this.sender) {
+      try {
+        const params = this.sender.getParameters()
+        if (params.encodings?.length) {
+          params.encodings[0].maxBitrate = 192000
+          await this.sender.setParameters(params)
+        }
+      } catch {
+        // El navegador puede no permitir cambiar parámetros; el SDP ya pide 192k.
+      }
+    }
     await pc.setLocalDescription(offer)
     await waitForIceGathering(pc)
 

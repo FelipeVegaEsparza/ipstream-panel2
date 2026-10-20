@@ -67,7 +67,7 @@ services:
       LIVE_SESSION_SECRET: ${LIVE_SESSION_SECRET:-}
       LIVE_PUBLIC_BASE_URL: ${LIVE_PUBLIC_BASE_URL:-}
       LIVE_ICE_SERVERS: ${LIVE_ICE_SERVERS:-[]}
-      LIVE_TRANSPORT_DEFAULT: ${LIVE_TRANSPORT_DEFAULT:-whip}
+      LIVE_TRANSPORT_DEFAULT: ${LIVE_TRANSPORT_DEFAULT:-websocket}
     volumes:
       - app_uploads:/app/public/uploads
       # Bundle único de la PWA y caché de iconos por cliente. El deploy publica
