@@ -330,6 +330,14 @@ async function scanOnMainThread(
 export async function getFileForTrack(track: LocalTrack): Promise<File> {
   if (track.file) return track.file
   if (track.handle) return track.handle.getFile()
+  if (track.audioUrl) {
+    const res = await fetch(track.audioUrl, { credentials: 'same-origin', cache: 'no-store' })
+    if (!res.ok) throw new Error('No se pudo descargar el jingle')
+    const blob = await res.blob()
+    return new File([blob], track.name || 'jingle.mp3', {
+      type: track.mimeType || blob.type || 'audio/mpeg',
+    })
+  }
   throw new Error('El archivo ya no está disponible')
 }
 

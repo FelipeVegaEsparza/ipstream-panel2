@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 import { FileBrowser } from './FileBrowser'
 import { AnnouncementsBar } from './AnnouncementsBar'
+import { JinglesPanel } from './JinglesPanel'
 import { AiLocutionModal } from './AiLocutionModal'
 import { BroadcastBar } from './BroadcastBar'
 import { PlayerBar } from './PlayerBar'
@@ -164,6 +165,7 @@ export function LiveConsole({
             onRemove={live.player.removeFromPlaylist}
             onClear={live.player.clearPlaylist}
             onMove={live.player.moveInPlaylist}
+            onDropTrack={live.player.addToPlaylist}
           />
         </div>
 
@@ -178,6 +180,7 @@ export function LiveConsole({
             onAnnounce={live.announcements.announce}
             onOpenComposer={() => setComposerOpen(true)}
           />
+          <JinglesPanel onAdd={live.player.addToPlaylist} />
         </div>
       </div>
 

@@ -971,7 +971,7 @@ export function useLiveConsole(
 
   const maybePlayPresenter = useCallback(async (next: LocalTrack | null) => {
     if (!aiEnabled || !aiPresenterEnabled) return
-    if (next?.kind === 'spot') return
+    if (next?.kind === 'spot' || next?.kind === 'jingle') return
     if (tracksSinceIntroRef.current < presenterEvery) return
 
     setPresenterGenerating(true)
@@ -1013,7 +1013,7 @@ export function useLiveConsole(
     if (!aiEnabled || !aiPresenterEnabled) return
     if (tracksSinceIntroRef.current < presenterEvery) return
     const next = queue[0]
-    if (!next || next.kind === 'spot') return
+    if (!next || next.kind === 'spot' || next.kind === 'jingle') return
     if (introPrefetchRef.current?.trackId === next.id) return
     const promise = generateSpeech(buildPresenterText(stationName, next, introPhrases)).catch((err) => {
       setAiError(err instanceof Error ? err.message : 'No se pudo generar la presentación')
@@ -1036,7 +1036,7 @@ export function useLiveConsole(
         try {
           await maybePlayPresenter(next)
           if (!next) return
-          if (next.kind !== 'spot') tracksSinceIntroRef.current += 1
+          if (next.kind !== 'spot' && next.kind !== 'jingle') tracksSinceIntroRef.current += 1
           setQueue((prev) => prev.filter((item) => item.id !== next.id))
           const file = await getFileForTrack(next)
           const mode = await engine.loadTrack(id, next, file)
@@ -1104,7 +1104,7 @@ export function useLiveConsole(
     const mode = await engine.loadTrack(deckId, track, file)
     if (mode === 'buffer' && track.kind !== 'spot') detectBpm(deckId)
     else engine.setDeckBpm(deckId, null, 0)
-    if (track.kind !== 'spot') tracksSinceIntroRef.current += 1
+    if (track.kind !== 'spot' && track.kind !== 'jingle') tracksSinceIntroRef.current += 1
     setQueue((prev) => prev.filter((item) => item.id !== track.id))
     updateNowPlaying(deckId)
   }, [detectBpm, updateNowPlaying])

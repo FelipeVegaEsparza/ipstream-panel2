@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   CheckCircleIcon,
   ChevronDownIcon,
@@ -19,6 +20,7 @@ interface Props {
   onRemove: (id: string) => void
   onClear: () => void
   onMove: (id: string, direction: -1 | 1) => void
+  onDropTrack?: (track: LocalTrack) => void
 }
 
 function LocutionBadge({ track }: { track: LocalTrack }) {
@@ -38,11 +40,37 @@ export function PlaylistPanel({
   onRemove,
   onClear,
   onMove,
+  onDropTrack,
 }: Props) {
   const recent = [...history].reverse()
+  const [dragOver, setDragOver] = useState(false)
 
   return (
-    <section className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-soft">
+    <section
+      className={`flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border bg-card shadow-soft transition-colors ${
+        dragOver ? 'border-brand ring-2 ring-brand/20' : 'border-border'
+      }`}
+      onDragOver={(event) => {
+        if (!onDropTrack || !event.dataTransfer.types.includes('application/x-ipstream-track')) return
+        event.preventDefault()
+        event.dataTransfer.dropEffect = 'copy'
+        setDragOver(true)
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragOver(false)
+      }}
+      onDrop={(event) => {
+        if (!onDropTrack) return
+        const raw = event.dataTransfer.getData('application/x-ipstream-track')
+        if (!raw) return
+        event.preventDefault()
+        setDragOver(false)
+        try {
+          const track = JSON.parse(raw) as LocalTrack
+          if (track?.id && track?.title) onDropTrack(track)
+        } catch {}
+      }}
+    >
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <QueueListIcon className="h-4 w-4 text-brand" />

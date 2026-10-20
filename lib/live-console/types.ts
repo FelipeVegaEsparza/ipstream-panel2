@@ -24,15 +24,17 @@ export interface LocalTrack {
   size: number
   lastModified: number
   mimeType: string
-  source: 'handle' | 'file'
+  source: 'handle' | 'file' | 'jingle'
   handle?: FileSystemFileHandle | null
   file?: File | null
+  /** Audio remoto del panel (jingles) cuando no hay archivo local. */
+  audioUrl?: string | null
   /** Portada sidecar (cover.jpg/folder.jpg) del directorio. */
   coverHandle?: FileSystemFileHandle | null
   coverFile?: File | null
   available: boolean
   /** 'spot' = locución generada por IA; no cuenta para el presentador. */
-  kind?: 'music' | 'spot'
+  kind?: 'music' | 'spot' | 'jingle'
 }
 
 export interface DeckEq {
