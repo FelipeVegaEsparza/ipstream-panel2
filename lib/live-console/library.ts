@@ -7,6 +7,7 @@
 
 import {
   isAudioFile,
+  isCoverFile,
   mimeForName,
   parseTrackName,
   trackIdFor,
@@ -37,6 +38,7 @@ interface CachedTrack {
   lastModified: number
   mimeType: string
   handle?: FileSystemFileHandle | null
+  coverHandle?: FileSystemFileHandle | null
 }
 
 export function supportsDirectoryPicker(): boolean {
@@ -165,14 +167,31 @@ export function fileToTrack(file: File, path?: string): LocalTrack {
     source: 'file',
     file,
     handle: null,
+    coverHandle: null,
+    coverFile: null,
     available: true,
   }
 }
 
+function directoryOf(path: string): string {
+  const index = path.lastIndexOf('/')
+  return index >= 0 ? path.slice(0, index) : ''
+}
+
 export function filesToTracks(files: FileList | File[]): LocalTrack[] {
-  return Array.from(files)
+  const all = Array.from(files)
+  const covers = new Map<string, File>()
+  for (const file of all) {
+    if (!isCoverFile(file.name)) continue
+    const dir = directoryOf(file.webkitRelativePath || file.name)
+    if (!covers.has(dir)) covers.set(dir, file)
+  }
+  return all
     .filter((file) => isAudioFile(file.name, file.type))
-    .map((file) => fileToTrack(file))
+    .map((file) => {
+      const track = fileToTrack(file)
+      return { ...track, coverFile: covers.get(directoryOf(track.path)) ?? null }
+    })
 }
 
 export interface ScanProgress {
@@ -251,14 +270,27 @@ async function scanOnMainThread(
   const tracks: LocalTrack[] = []
   let scanned = 0
 
-  async function walk(dir: FileSystemDirectoryHandle, prefix: string): Promise<void> {
-    const entries = (dir as unknown as {
+  async function walk(
+    dir: FileSystemDirectoryHandle,
+    prefix: string,
+    inheritedCover: FileSystemFileHandle | null
+  ): Promise<void> {
+    const entries: Array<[string, FileSystemHandle]> = []
+    for await (const entry of (dir as unknown as {
       entries: () => AsyncIterable<[string, FileSystemHandle]>
-    }).entries()
-    for await (const [name, entry] of entries) {
+    }).entries()) {
+      entries.push(entry)
+      if (isCancelled?.()) return
+    }
+    const ownCover = entries.find(
+      ([name, entry]) => entry.kind === 'file' && isCoverFile(name)
+    )?.[1] as FileSystemFileHandle | undefined
+    const coverHandle = ownCover ?? inheritedCover
+
+    for (const [name, entry] of entries) {
       if (isCancelled?.()) return
       if (entry.kind === 'directory') {
-        await walk(entry as FileSystemDirectoryHandle, `${prefix}${name}/`)
+        await walk(entry as FileSystemDirectoryHandle, `${prefix}${name}/`, coverHandle)
         continue
       }
       const fileHandle = entry as FileSystemFileHandle
@@ -281,6 +313,7 @@ async function scanOnMainThread(
           source: 'handle',
           handle: fileHandle,
           file: null,
+          coverHandle,
           available: true,
         })
         onProgress?.({ scanned, added: tracks.length })
@@ -290,7 +323,7 @@ async function scanOnMainThread(
     }
   }
 
-  await walk(handle, '')
+  await walk(handle, '', null)
   return tracks
 }
 
@@ -356,6 +389,7 @@ export async function cacheLibrary(tracks: LocalTrack[]): Promise<void> {
     lastModified: track.lastModified,
     mimeType: track.mimeType,
     handle: track.handle ?? null,
+    coverHandle: track.coverHandle ?? null,
   }))
   await idbSet(STORE_TRACKS, 'index', serializable)
 }

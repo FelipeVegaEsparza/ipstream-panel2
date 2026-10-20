@@ -112,7 +112,7 @@ export function FileBrowser({
         <input
           ref={inputRef}
           type="file"
-          accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.webm"
+          accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.webm,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
           multiple
           className="hidden"
           onChange={(event) => {

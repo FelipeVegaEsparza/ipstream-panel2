@@ -19,13 +19,16 @@ export async function POST(request: NextRequest) {
     const ctx = await requireStreamingClient()
     const form = await request.formData()
     const file = form.get('file')
-    if (!(file instanceof File)) {
+    if (!file || typeof file === 'string' || typeof file.arrayBuffer !== 'function') {
       return NextResponse.json({ error: 'file_required' }, { status: 400 })
     }
+    const type = typeof file.type === 'string' ? file.type.toLowerCase() : ''
     if (file.size > MAX_SIZE) {
       return NextResponse.json({ error: 'file_too_large' }, { status: 413 })
     }
-    const ext = TYPES[file.type.toLowerCase()]
+    const originalName = typeof file.name === 'string' ? file.name.toLowerCase() : ''
+    const ext = TYPES[type] ||
+      (/\.jpe?g$/.test(originalName) ? '.jpg' : /\.png$/.test(originalName) ? '.png' : /\.webp$/.test(originalName) ? '.webp' : '')
     if (!ext) {
       return NextResponse.json({ error: 'invalid_type' }, { status: 415 })
     }

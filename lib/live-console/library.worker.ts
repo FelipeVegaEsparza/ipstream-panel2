@@ -4,7 +4,7 @@
 // Enumera una carpeta autorizada y devuelve tracks con su FileSystemFileHandle.
 // La duración se calcula luego en el hilo principal (requiere decodificar).
 
-import { isAudioFile, mimeForName, parseTrackName, trackIdFor } from './audio-math'
+import { isAudioFile, isCoverFile, mimeForName, parseTrackName, trackIdFor } from './audio-math'
 
 interface ScanRequest {
   type: 'scan'
@@ -24,6 +24,7 @@ interface WorkerTrack {
   mimeType: string
   source: 'handle'
   handle: FileSystemFileHandle
+  coverHandle: FileSystemFileHandle | null
   file: null
   available: boolean
 }
@@ -36,14 +37,25 @@ ctx.onmessage = async (event: MessageEvent<ScanRequest>) => {
   let added = 0
 
   try {
-    async function walk(dir: FileSystemDirectoryHandle, prefix: string): Promise<void> {
-      const entries = (dir as unknown as {
+    async function walk(
+      dir: FileSystemDirectoryHandle,
+      prefix: string,
+      inheritedCover: FileSystemFileHandle | null
+    ): Promise<void> {
+      const entries: Array<[string, FileSystemHandle]> = []
+      for await (const entry of (dir as unknown as {
         entries: () => AsyncIterable<[string, FileSystemHandle]>
-      }).entries()
+      }).entries()) {
+        entries.push(entry)
+      }
+      const ownCover = entries.find(
+        ([name, entry]) => entry.kind === 'file' && isCoverFile(name)
+      )?.[1] as FileSystemFileHandle | undefined
+      const coverHandle = ownCover ?? inheritedCover
 
-      for await (const [name, entry] of entries) {
+      for (const [name, entry] of entries) {
         if (entry.kind === 'directory') {
-          await walk(entry as FileSystemDirectoryHandle, `${prefix}${name}/`)
+          await walk(entry as FileSystemDirectoryHandle, `${prefix}${name}/`, coverHandle)
           continue
         }
         if (!isAudioFile(name)) continue
@@ -67,6 +79,7 @@ ctx.onmessage = async (event: MessageEvent<ScanRequest>) => {
             mimeType: file.type || mimeForName(name),
             source: 'handle',
             handle: fileHandle,
+            coverHandle,
             file: null,
             available: true,
           }
@@ -82,7 +95,7 @@ ctx.onmessage = async (event: MessageEvent<ScanRequest>) => {
       }
     }
 
-    await walk(event.data.handle, '')
+    await walk(event.data.handle, '', null)
     ctx.postMessage({ type: 'done', scanned, added })
   } catch (error) {
     ctx.postMessage({

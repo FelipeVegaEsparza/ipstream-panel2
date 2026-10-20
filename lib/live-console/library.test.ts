@@ -25,6 +25,13 @@ describe('local library', () => {
     expect(track.artist).toBeNull()
   })
 
+  it('asocia cover.jpg del mismo directorio al track', () => {
+    const cover = makeFile('cover.jpg', 'image/jpeg')
+    const tracks = filesToTracks([makeFile('Artista - Tema.mp3'), cover])
+    expect(tracks).toHaveLength(1)
+    expect(tracks[0].coverFile).toBe(cover)
+  })
+
   it('genera ids estables por path/tamaño/fecha', () => {
     const a = trackIdFor('a/b.mp3', 10, 20)
     const b = trackIdFor('a/b.mp3', 10, 20)

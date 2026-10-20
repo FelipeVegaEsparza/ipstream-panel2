@@ -816,13 +816,18 @@ export function useLiveConsole(
     try {
       const file = await getFileForTrack(track)
       const tags = await readLocalTags(file)
+      // Fallback: cover.jpg/folder.jpg junto a los audios, como muestran
+      // los exploradores de escritorio.
+      let cover: Blob | null = tags.picture ?? null
+      if (!cover) {
+        if (track.coverFile) cover = track.coverFile
+        else if (track.coverHandle) cover = await track.coverHandle.getFile()
+      }
       let coverUrl: string | null = null
-      if (tags.picture) {
+      if (cover) {
         try {
           const form = new FormData()
-          form.append('file', new File([tags.picture], 'cover.jpg', {
-            type: tags.picture.type || 'image/jpeg',
-          }))
+          form.append('file', cover, cover instanceof File ? cover.name : 'cover.jpg')
           const res = await fetch('/api/dashboard/streaming/live/cover', {
             method: 'POST',
             body: form,

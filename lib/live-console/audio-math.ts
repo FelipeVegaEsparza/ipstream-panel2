@@ -86,6 +86,13 @@ export function isAudioFile(name: string, mimeType = ''): boolean {
   return /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|webm)$/i.test(name)
 }
 
+/** Archivos de portada que suelen acompañar a la música en disco. */
+export function isCoverFile(name: string): boolean {
+  if (!/\.(jpe?g|png|webp|gif)$/i.test(name)) return false
+  const base = name.replace(/\.[^.]+$/, '').toLowerCase()
+  return ['cover', 'folder', 'front', 'album', 'artwork', 'portada', 'caratula'].includes(base)
+}
+
 export function mimeForName(name: string): string {
   const ext = name.split('.').pop()?.toLowerCase()
   switch (ext) {
