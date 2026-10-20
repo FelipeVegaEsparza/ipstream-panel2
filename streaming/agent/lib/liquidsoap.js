@@ -144,14 +144,11 @@ export async function regenerateScript(clientId) {
     : null
 
   const jinglesM3uPath = `/var/lib/radio/${clientId}/jingles.m3u`
-  const aiIntrosM3uPath = `/var/lib/radio/${clientId}/ai-intros.m3u`
   const [jingleRows] = await pool.query(
     `SELECT COUNT(*) AS cnt FROM jingles WHERE clientId = ?`,
     [clientId]
   )
   const hasJingles = jingleRows[0]?.cnt > 0 && rs.jinglePlayEvery > 0
-  const hasAi = !!rs.aiPresenterEnabled && rs.aiPresenterEvery > 0 &&
-    !(playlist?.shuffle ?? false) && existsSync(aiIntrosM3uPath)
 
   let sourcePassword = config.ice.sourcePassword
   let harborPassword = config.ice.sourcePassword
@@ -194,8 +191,6 @@ export async function regenerateScript(clientId) {
     jinglePlayEvery: hasJingles ? rs.jinglePlayEvery : 0,
     jinglePlayCount: hasJingles ? rs.jinglePlayCount : 0,
     jinglesM3uPath: hasJingles ? jinglesM3uPath : null,
-    aiPresenterEvery: hasAi ? rs.aiPresenterEvery : 0,
-    aiIntrosM3uPath: hasAi ? aiIntrosM3uPath : null,
     agentToken: config.harborCallbackSecret,
     djs: djs.map(d => ({
       mount: d.mount,
@@ -368,11 +363,30 @@ export async function regenerateM3u(clientId) {
      ORDER BY pe.\`order\` ASC`,
     [playlistId]
   )
+  const [rsRows] = await pool.query(
+    `SELECT aiPresenterEnabled, aiPresenterEvery FROM radio_streams WHERE clientId = ? LIMIT 1`,
+    [clientId]
+  )
+  const rs = rsRows[0] || {}
+  const playlistInfo = await getActivePlaylist(clientId)
+  const aiFiles = (rs.aiPresenterEnabled && Number(rs.aiPresenterEvery) > 0 && !playlistInfo?.shuffle)
+    ? await listAiIntroFiles(clientId)
+    : []
+  const every = Number(rs.aiPresenterEvery) || 0
+  let aiIndex = 0
 
   // Incluir #EXTINF con el título/artista para que liquidsoap propague la
   // metadata a Icecast (imprescindible cuando el MP3 no trae tags ID3).
   const lines = ['#EXTM3U']
-  for (const e of entries) {
+  for (let i = 0; i < entries.length; i++) {
+    // La intro se inserta inmediatamente antes del tema que presenta. Así el
+    // próximo tema coincide aunque la playlist no sea divisible por N.
+    if (aiFiles.length > 0 && every > 0 && i > 0 && i % every === 0 && aiIndex < aiFiles.length) {
+      lines.push('#EXTINF:-1,Locutor IA')
+      lines.push(join(clientAiIntrosDir(clientId), aiFiles[aiIndex]))
+      aiIndex++
+    }
+    const e = entries[i]
     const label = e.artist ? `${e.artist} - ${e.title || ''}` : (e.title || '')
     const dur = e.duration ? Math.round(e.duration) : -1
     lines.push(`#EXTINF:${dur},${label}`)

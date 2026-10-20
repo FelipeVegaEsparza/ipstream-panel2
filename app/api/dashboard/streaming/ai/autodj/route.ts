@@ -100,7 +100,13 @@ export async function POST(request: NextRequest) {
     const phrases = normalizePhrases(parsePhrases(clientInfo?.radioStream?.aiIntroPhrases))
     const clientVoice = await getClientVoiceSettings(ctx.clientId)
     const entries = playlist.entries
-    const count = Math.ceil(entries.length / every)
+    const count = Math.floor((entries.length - 1) / every)
+    if (count <= 0) {
+      return NextResponse.json(
+        { error: 'playlist_too_short', message: 'La playlist no tiene suficientes temas para esa frecuencia.' },
+        { status: 400 }
+      )
+    }
     if (count > MAX_INTROS) {
       return NextResponse.json(
         {
@@ -121,8 +127,7 @@ export async function POST(request: NextRequest) {
 
     const targets = []
     for (let k = 1; k <= count; k++) {
-      const index = (k * every) % entries.length
-      targets.push(entries[index].track)
+      targets.push(entries[k * every].track)
     }
     const texts = targets.map((track) =>
       buildPresenterText(station, track, phrases)
