@@ -5,6 +5,7 @@ import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24
 import { FileBrowser } from './FileBrowser'
 import { AnnouncementsBar } from './AnnouncementsBar'
 import { JinglesPanel } from './JinglesPanel'
+import { LiveSessionInfo } from './LiveSessionInfo'
 import { AiLocutionModal } from './AiLocutionModal'
 import { BroadcastBar } from './BroadcastBar'
 import { PlayerBar } from './PlayerBar'
@@ -22,6 +23,7 @@ export function LiveConsole({
   aiPresenterEnabled = false,
   aiPresenterEvery = 3,
   aiIntroPhrases = [],
+  timezone,
 }: {
   premiumVoiceAvailable?: boolean
   aiEnabled?: boolean
@@ -31,6 +33,7 @@ export function LiveConsole({
   aiPresenterEnabled?: boolean
   aiPresenterEvery?: number
   aiIntroPhrases?: string[]
+  timezone?: string | null
 }) {
   const live = useLiveConsole({
     premiumVoiceAvailable,
@@ -108,6 +111,8 @@ export function LiveConsole({
           </button>
         </div>
       </div>
+
+      <LiveSessionInfo timezone={timezone} />
 
       <BroadcastBar
         engineReady={live.engineReady}

@@ -32,6 +32,7 @@ export default async function LivePage() {
       where: { id: client.clientId },
       select: {
         name: true,
+        timezone: true,
         basicData: { select: { projectName: true } },
         radioStream: {
           select: {
@@ -68,6 +69,7 @@ export default async function LivePage() {
       aiPresenterEnabled={Boolean(clientInfo?.radioStream?.aiPresenterEnabled)}
       aiPresenterEvery={clientInfo?.radioStream?.aiPresenterEvery ?? 3}
       aiIntroPhrases={aiIntroPhrases}
+      timezone={clientInfo?.timezone}
     />
   )
 }
