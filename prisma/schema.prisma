@@ -70,6 +70,7 @@ model Client {
   chatBans               ChatBan[]
   contactMessages        ContactMessage[]
   aiTtsUsage             AiTtsUsage[]
+  soundEffects           ClientSoundEffect[]
   // Streaming — Audio (Radio)
   radioStream            RadioStream?
   tracks                 Track[]
@@ -1434,4 +1435,36 @@ model RateLimit {
 
   @@index([resetAt])
   @@map("rate_limits")
+}
+
+
+model SoundEffect {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(120)
+  fileName  String   @db.VarChar(191)
+  mimeType  String   @db.VarChar(100)
+  url       String   @db.VarChar(500)
+  size      Int
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clients ClientSoundEffect[]
+
+  @@map("sound_effects")
+}
+
+model ClientSoundEffect {
+  id        String   @id @default(cuid())
+  clientId  String
+  effectId  String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  client Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  effect SoundEffect @relation(fields: [effectId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, effectId])
+  @@index([clientId, sortOrder])
+  @@map("client_sound_effects")
 }

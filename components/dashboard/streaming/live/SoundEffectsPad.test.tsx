@@ -52,6 +52,31 @@ describe('SoundEffectsPad', () => {
     expect(handlers.onRemove).toHaveBeenCalledWith(0)
   })
 
+  it('en modo biblioteca no permite agregar archivos locales', () => {
+    render(
+      <SoundEffectsPad
+        padSize={4}
+        slots={[effect, null, null, null]}
+        loading={false}
+        error={null}
+        libraryMode
+        manageHref="/dashboard/sound-effects"
+        onPadSize={vi.fn()}
+        onAdd={vi.fn()}
+        onRemove={vi.fn()}
+        onGain={vi.fn()}
+        onPlay={vi.fn()}
+        onStopAll={vi.fn()}
+      />
+    )
+    expect(screen.queryByText('Agregar sonido')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Elegir efectos' })).toHaveAttribute(
+      'href',
+      '/dashboard/sound-effects'
+    )
+    expect(screen.queryByLabelText('Quitar Aplausos')).not.toBeInTheDocument()
+  })
+
   it('cambia el tamaño de la botonera y detiene efectos', () => {
     const handlers = renderPad()
     fireEvent.change(screen.getByRole('combobox'), { target: { value: '12' } })

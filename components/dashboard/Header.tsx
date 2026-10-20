@@ -4,7 +4,7 @@ import { signOut } from 'next-auth/react'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Bars3Icon, SunIcon, MoonIcon, PlayCircleIcon, LifebuoyIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, SunIcon, MoonIcon, PlayCircleIcon, LifebuoyIcon, GlobeAltIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
 import { useImpersonationSession } from '@/lib/useImpersonationSession'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import { getTicketLastRead } from '@/lib/ticket-read-state'
@@ -163,6 +163,19 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
                     </p>
                   )}
                 </div>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      href="/dashboard/sound-effects"
+                      className={`${
+                        active ? 'bg-secondary' : ''
+                      } flex w-full items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors`}
+                    >
+                      <SpeakerWaveIcon className="mr-3 h-4 w-4" />
+                      Efectos de sonido
+                    </Link>
+                  )}
+                </Menu.Item>
                 <Menu.Item>
                   {({ active }) => (
                     <button

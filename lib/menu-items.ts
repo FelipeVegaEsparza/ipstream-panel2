@@ -61,6 +61,7 @@ export type MenuItemKey =
   | 'streaming-schedule'
   | 'streaming-connection'
   | 'streaming-live'
+  | 'streaming-sound-effects'
   | 'streaming-locutor-ia'
   | 'streaming-stats'
   // Televisión
@@ -139,6 +140,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   href: '/dashboard/streaming/live',
   section: 'Radio',
   icon: SignalIcon,
+},
+{
+  key: 'streaming-sound-effects',
+  name: 'Efectos de sonido',
+  href: '/dashboard/sound-effects',
+  section: 'Radio',
+  icon: SpeakerWaveIcon,
 },
 {
   key: 'streaming-locutor-ia',

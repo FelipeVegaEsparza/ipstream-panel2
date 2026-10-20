@@ -25,6 +25,7 @@ import {
   SignalIcon,
   ServerStackIcon,
   EnvelopeIcon,
+  SpeakerWaveIcon,
 } from '@heroicons/react/24/outline'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 
@@ -48,6 +49,7 @@ const navigationGroups = [
     label: 'Streaming',
     items: [
       { name: 'Streaming', href: '/admin/streaming', icon: RadioIcon },
+      { name: 'Efectos de sonido', href: '/admin/sound-effects', icon: SpeakerWaveIcon },
       { name: 'Servidores de Streaming', href: '/admin/servers', icon: ServerStackIcon },
       { name: 'Monitor', href: '/admin/monitor', icon: SignalIcon },
       { name: 'Comunicaciones', href: '/admin/comunicaciones', icon: EnvelopeIcon },

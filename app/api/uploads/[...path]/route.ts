@@ -65,6 +65,32 @@ export async function GET(
       case 'webp':
         contentType = 'image/webp'
         break
+      case 'mp3':
+        contentType = 'audio/mpeg'
+        break
+      case 'wav':
+        contentType = 'audio/wav'
+        break
+      case 'ogg':
+      case 'oga':
+        contentType = 'audio/ogg'
+        break
+      case 'opus':
+        contentType = 'audio/opus'
+        break
+      case 'm4a':
+      case 'mp4':
+        contentType = 'audio/mp4'
+        break
+      case 'aac':
+        contentType = 'audio/aac'
+        break
+      case 'flac':
+        contentType = 'audio/flac'
+        break
+      case 'webm':
+        contentType = 'audio/webm'
+        break
     }
 
     console.log('Content type:', contentType)

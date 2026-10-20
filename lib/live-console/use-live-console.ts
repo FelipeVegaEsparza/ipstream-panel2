@@ -156,6 +156,7 @@ export interface SoundEffectsApi {
   slots: (SoundEffect | null)[]
   loading: boolean
   error: string | null
+  libraryMode: boolean
   addEffect: (slot: number, file: File) => Promise<void>
   removeEffect: (slot: number) => Promise<void>
   setGain: (slot: number, db: number) => Promise<void>
@@ -316,6 +317,7 @@ export function useLiveConsole(
   const [libraryError, setLibraryError] = useState<string | null>(null)
 
   const [soundEffects, setSoundEffects] = useState<Map<number, SoundEffect>>(new Map())
+  const [effectsLibraryMode, setEffectsLibraryMode] = useState(false)
   const [padSize, setPadSizeState] = useState(DEFAULT_PAD_SIZE)
   const [effectsLoading, setEffectsLoading] = useState(true)
   const [effectsError, setEffectsError] = useState<string | null>(null)
@@ -717,16 +719,70 @@ export function useLiveConsole(
     })()
   }, [])
 
-  // Efectos de sonido: Blob en IndexedDB + tamaño de botonera en localStorage.
+  // Efectos de sonido: primero la biblioteca elegida por el cliente;
+  // si no hay selección, se conserva la botonera local histórica.
   useEffect(() => {
     void (async () => {
       try {
-        const [stored, size] = await Promise.all([loadEffects(), Promise.resolve(loadPadSize())])
+        const storedPadSize = loadPadSize()
+        setPadSizeState(storedPadSize)
+        const res = await fetch('/api/dashboard/sound-effects', { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          const effects = Array.isArray(data?.effects) ? data.effects : []
+          const selectedIds: string[] = Array.isArray(data?.selectedIds) ? data.selectedIds : []
+          const byId = new Map<string, Record<string, unknown>>(
+            effects.map((effect: Record<string, unknown>) => [String(effect.id), effect])
+          )
+          const selected = selectedIds
+            .map((id) => byId.get(id))
+            .filter((effect): effect is Record<string, unknown> => Boolean(effect))
+          if (selected.length > 0) {
+            const loaded: SoundEffect[] = []
+            for (const effect of selected) {
+              try {
+                const audioRes = await fetch(String(effect.url))
+                if (!audioRes.ok) continue
+                const blob = await audioRes.blob()
+                loaded.push({
+                  slot: loaded.length,
+                  id: String(effect.id),
+                  name: String(effect.name || 'Efecto'),
+                  fileName: String(effect.fileName || 'efecto'),
+                  mimeType: String(effect.mimeType || blob.type || 'audio/mpeg'),
+                  blob,
+                  gainDb: 0,
+                  createdAt: effect.createdAt ? Date.parse(String(effect.createdAt)) || Date.now() : Date.now(),
+                })
+              } catch {
+                // Un efecto roto no debe bloquear al resto.
+              }
+            }
+            if (loaded.length > 0) {
+              const map = new Map(loaded.map((effect) => [effect.slot, effect]))
+              effectsRef.current = map
+              setSoundEffects(map)
+              setEffectsLibraryMode(true)
+              const neededSize = SOUND_EFFECT_PAD_SIZES.find((size) => size >= loaded.length)
+              if (neededSize && neededSize > storedPadSize) {
+                setPadSizeState(neededSize)
+                savePadSize(neededSize)
+              }
+              return
+            }
+          }
+        }
+        const stored = await loadEffects()
         const map = new Map(stored.map((effect) => [effect.slot, effect]))
         effectsRef.current = map
         setSoundEffects(map)
-        setPadSizeState(size)
       } catch (err) {
+        try {
+          const stored = await loadEffects()
+          const map = new Map(stored.map((effect) => [effect.slot, effect]))
+          effectsRef.current = map
+          setSoundEffects(map)
+        } catch {}
         setEffectsError(err instanceof Error ? err.message : 'No se pudieron cargar los efectos')
       } finally {
         setEffectsLoading(false)
@@ -1448,6 +1504,7 @@ export function useLiveConsole(
     slots: effectSlots,
     loading: effectsLoading,
     error: effectsError,
+    libraryMode: effectsLibraryMode,
     addEffect,
     removeEffect,
     setGain: setEffectGain,
@@ -1459,6 +1516,7 @@ export function useLiveConsole(
     effectSlots,
     effectsLoading,
     effectsError,
+    effectsLibraryMode,
     addEffect,
     removeEffect,
     setEffectGain,

@@ -214,6 +214,8 @@ export function LiveConsole({
         slots={live.effects.slots}
         loading={live.effects.loading}
         error={live.effects.error}
+        libraryMode={live.effects.libraryMode}
+        manageHref="/dashboard/sound-effects"
         onPadSize={live.effects.setPadSize}
         onAdd={live.effects.addEffect}
         onRemove={live.effects.removeEffect}

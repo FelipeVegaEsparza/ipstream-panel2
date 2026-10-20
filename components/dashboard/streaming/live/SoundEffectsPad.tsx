@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { ArrowPathIcon, PlusIcon, SpeakerWaveIcon, StopIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { SOUND_EFFECT_PAD_SIZES, type SoundEffect } from '@/lib/live-console/effects'
@@ -9,6 +10,8 @@ interface Props {
   slots: (SoundEffect | null)[]
   loading: boolean
   error: string | null
+  libraryMode?: boolean
+  manageHref?: string
   onPadSize: (size: number) => void
   onAdd: (slot: number, file: File) => Promise<void>
   onRemove: (slot: number) => Promise<void>
@@ -22,6 +25,8 @@ export function SoundEffectsPad({
   slots,
   loading,
   error,
+  libraryMode = false,
+  manageHref,
   onPadSize,
   onAdd,
   onRemove,
@@ -46,10 +51,20 @@ export function SoundEffectsPad({
             Efectos de sonido
           </h2>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            Se guardan en este navegador y se mezclan en la transmisión al presionar.
+            {libraryMode
+              ? 'Elegidos en tu perfil. Se mezclan en la transmisión al presionar.'
+              : 'Se guardan en este navegador y se mezclan en la transmisión al presionar.'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {manageHref && (
+            <Link
+              href={manageHref}
+              className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand"
+            >
+              Elegir efectos
+            </Link>
+          )}
           {loading && <span className="text-[10px] text-muted-foreground">Cargando…</span>}
           <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
             Botones
@@ -95,6 +110,11 @@ export function SoundEffectsPad({
                 <span className="line-clamp-2 text-[11px] font-semibold leading-tight text-brand">{effect.name}</span>
                 <span className="text-[9px] text-muted-foreground">Botón {slot + 1}</span>
               </button>
+            ) : libraryMode ? (
+              <div className="flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-border bg-background px-1.5 text-center text-muted-foreground">
+                <span className="text-[11px] font-medium">Sin efecto</span>
+                <span className="text-[9px]">Botón {slot + 1}</span>
+              </div>
             ) : (
               <button
                 type="button"
@@ -120,42 +140,48 @@ export function SoundEffectsPad({
                   title={`Volumen: ${effect.gainDb.toFixed(1)} dB`}
                   aria-label={`Volumen de ${effect.name}`}
                 />
-                <button
-                  type="button"
-                  onClick={() => openPicker(slot)}
-                  className="rounded-md p-1 text-muted-foreground hover:text-foreground"
-                  title="Cambiar sonido"
-                  aria-label={`Cambiar ${effect.name}`}
-                >
-                  <ArrowPathIcon className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void onRemove(slot)}
-                  className="rounded-md p-1 text-muted-foreground hover:text-red-400"
-                  title="Quitar efecto"
-                  aria-label={`Quitar ${effect.name}`}
-                >
-                  <XMarkIcon className="h-3.5 w-3.5" />
-                </button>
+                {!libraryMode && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => openPicker(slot)}
+                      className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                      title="Cambiar sonido"
+                      aria-label={`Cambiar ${effect.name}`}
+                    >
+                      <ArrowPathIcon className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void onRemove(slot)}
+                      className="rounded-md p-1 text-muted-foreground hover:text-red-400"
+                      title="Quitar efecto"
+                      aria-label={`Quitar ${effect.name}`}
+                    >
+                      <XMarkIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
         ))}
       </div>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.webm"
-        className="hidden"
-        onChange={(event) => {
-          const file = event.target.files?.[0]
-          if (file && pendingSlot != null) void onAdd(pendingSlot, file)
-          event.target.value = ''
-          setPendingSlot(null)
-        }}
-      />
+      {!libraryMode && (
+        <input
+          ref={inputRef}
+          type="file"
+          accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.webm"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            if (file && pendingSlot != null) void onAdd(pendingSlot, file)
+            event.target.value = ''
+            setPendingSlot(null)
+          }}
+        />
+      )}
     </section>
   )
 }
