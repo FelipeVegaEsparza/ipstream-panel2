@@ -79,7 +79,7 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
       <section className="relative z-10 flex max-h-[100dvh] min-h-[100dvh] w-full flex-col justify-center overflow-y-auto border-border/60 bg-background/80 px-5 py-10 backdrop-blur-xl sm:px-8 lg:border-l lg:px-10 xl:px-16">
         <div className="mx-auto w-full max-w-[480px]">
           <div className="mb-10 flex justify-center">
-            <PanelLogo className="h-20 w-auto" />
+            <PanelLogo className="h-32 w-auto max-w-full" />
           </div>
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold text-foreground">Iniciar Sesión</h2>
