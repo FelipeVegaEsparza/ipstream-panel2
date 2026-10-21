@@ -203,7 +203,7 @@ export function Moderno2Template({ clientData, isLoading }: TemplateProps) {
       <footer className={styles.footer}>
         <div className={`${styles.container} ${styles.footerInner}`}>
           <span className={styles.footerText}>
-            <strong>{displayName}</strong> · IPStream Panel
+            <strong>{displayName}</strong> · CasterFly
           </span>
           {socialLinks.length > 0 && (
             <div className={styles.socials}>

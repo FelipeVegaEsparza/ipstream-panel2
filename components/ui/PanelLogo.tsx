@@ -12,12 +12,15 @@ interface Branding {
 
 export function PanelLogo({
   className = '',
-  alt = 'IPStream Panel',
+  alt = 'CasterFly',
+  themeOverride,
 }: {
   className?: string
   alt?: string
+  themeOverride?: 'dark' | 'light'
 }) {
-  const { theme } = useTheme()
+  const { theme: activeTheme } = useTheme()
+  const theme = themeOverride ?? activeTheme
   const [branding, setBranding] = useState<Branding | null>(null)
 
   useEffect(() => {

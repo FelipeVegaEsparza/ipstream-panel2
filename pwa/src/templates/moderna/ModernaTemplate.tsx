@@ -25,7 +25,7 @@ export function ModernaTemplate({ clientData, isLoading }: TemplateProps) {
   })
 
   const basic = clientData?.basicData
-  const name = basic?.projectName ?? tenant.clientId ?? 'IPStream'
+  const name = basic?.projectName ?? tenant.clientId ?? 'CasterFly'
   const streamUrl = basic?.radioStreamingUrl ?? null
   const currentTrack = streaming?.currentTrack
   const trackCover = currentTrack?.coverUrl ?? null
@@ -117,7 +117,7 @@ export function ModernaTemplate({ clientData, isLoading }: TemplateProps) {
         </div>
       </main>
 
-      <footer className={styles.footer}>{name} · IPStream Panel</footer>
+      <footer className={styles.footer}>{name} · CasterFly</footer>
       {radioEnabled && (
         <PlayerBar fallbackCovers={[basic?.coverUrl, basic?.logoUrl]} />
       )}

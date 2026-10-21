@@ -37,7 +37,7 @@ export function RadioPlayerHero({ clientData }: RadioPlayerHeroProps) {
   ])
   const status = streaming?.status ?? 'off'
   const isLive = streaming?.isLive ?? false
-  const name = basic?.projectName ?? tenant.clientId ?? 'IPStream'
+  const name = basic?.projectName ?? tenant.clientId ?? 'CasterFly'
 
   useMediaSession({
     title: currentTrack?.title,

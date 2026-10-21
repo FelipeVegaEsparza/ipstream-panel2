@@ -66,7 +66,7 @@ export async function createPaypalOrder(input: CreateOrderInput): Promise<{ id: 
         },
       ],
       application_context: {
-        brand_name: 'IPStream',
+        brand_name: 'CasterFly',
         user_action: 'PAY_NOW',
         return_url: input.returnUrl,
         cancel_url: input.cancelUrl,

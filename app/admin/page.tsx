@@ -96,7 +96,7 @@ export default async function AdminDashboardPage() {
           Dashboard Administrativo
         </h1>
         <p className="text-muted-foreground">
-          Bienvenido al panel de administración de IPStream Panel
+          Bienvenido al panel de administración de CasterFly
         </p>
       </div>
 

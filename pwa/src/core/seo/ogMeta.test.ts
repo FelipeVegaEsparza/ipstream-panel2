@@ -50,7 +50,7 @@ describe('injectOgMeta', () => {
   it('reemplaza el marcador y fija el título', () => {
     const html = [
       '<html><head>',
-      '<title>IPStream PWA</title>',
+      '<title>CasterFly</title>',
       '<!-- og-meta -->',
       '</head><body></body></html>'
     ].join('\n')

@@ -32,7 +32,7 @@ export default async function AboutPage() {
           Acerca del Sistema
         </h1>
         <p className="text-muted-foreground">
-          Información técnica, licencias y soporte del IPStream Panel
+          Información técnica, licencias y soporte de CasterFly
         </p>
       </div>
 

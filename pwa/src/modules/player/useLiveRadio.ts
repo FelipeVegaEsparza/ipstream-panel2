@@ -49,7 +49,7 @@ export function useLiveRadio(
   const fallbacks = [basic?.coverUrl, basic?.logoUrl]
   const artwork = firstPublicImageUrl([trackCover, ...fallbacks])
   const status = streaming?.status ?? 'off'
-  const name = basic?.projectName ?? tenant.clientId ?? 'IPStream'
+  const name = basic?.projectName ?? tenant.clientId ?? 'CasterFly'
 
   useEffect(() => {
     if (streamUrl) setStreamUrl(streamUrl)

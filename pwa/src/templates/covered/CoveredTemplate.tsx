@@ -37,7 +37,7 @@ export function CoveredTemplate({ clientData, isLoading }: TemplateProps) {
   })
 
   const basic = clientData?.basicData
-  const name = basic?.projectName ?? tenant.clientId ?? 'IPStream'
+  const name = basic?.projectName ?? tenant.clientId ?? 'CasterFly'
   const streamUrl = basic?.radioStreamingUrl ?? null
   const currentTrack = streaming?.currentTrack
   const trackCover = currentTrack?.coverUrl ?? null
@@ -255,7 +255,7 @@ export function CoveredTemplate({ clientData, isLoading }: TemplateProps) {
 
       <footer className={styles.footer}>
         <div className={styles.container}>
-          {name} · IPStream Panel
+          {name} · CasterFly
         </div>
       </footer>
     </div>

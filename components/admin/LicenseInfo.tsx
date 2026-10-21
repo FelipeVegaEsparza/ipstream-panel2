@@ -17,7 +17,7 @@ import {
 export function LicenseInfo() {
   const licenses = [
     {
-      name: 'IPStream Panel',
+      name: 'CasterFly',
       version: '1.0.0',
       license: 'MIT License',
       status: 'Activa',

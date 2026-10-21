@@ -239,7 +239,7 @@ export default function ApiTestPage() {
     const cid = clientId
     const date = new Date().toLocaleDateString('es-ES')
     const imgBase = `${base}/api/uploads/${cid}`
-    const md = `# API REST IPStream — Especificación Completa
+    const md = `# API REST CasterFly — Especificación Completa
 
 > **Cliente ID:** \`${cid}\`
 > **URL Base:** ${base}

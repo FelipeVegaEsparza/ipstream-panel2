@@ -1,11 +1,12 @@
 import { prisma } from '@/lib/prisma'
+import { PanelLogo } from '@/components/ui/PanelLogo'
 import { SignupForm, PublicPlan } from '@/components/public/SignupForm'
 import { planPriceList } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Crear cuenta | IPStream - Tu Radio Online',
+  title: 'Crear cuenta | CasterFly - Tu Radio Online',
 }
 
 export default async function RegistroPage({
@@ -53,7 +54,7 @@ export default async function RegistroPage({
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <a href="https://ipstream.cl" className="flex items-center">
-            <img src="https://ipstream.cl/images/logos/logo.png" alt="IPStream" className="h-11 w-auto" />
+            <PanelLogo themeOverride="light" className="h-11 w-auto" />
           </a>
           <nav className="flex items-center gap-5">
             <a href="https://ipstream.cl/planes" className="text-sm text-muted-foreground hover:text-brand font-medium transition-colors hidden sm:inline">Planes</a>
@@ -94,7 +95,7 @@ export default async function RegistroPage({
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white py-6">
         <div className="max-w-5xl mx-auto px-4 text-center text-sm text-muted-foreground space-y-1.5">
-          <p>© {new Date().getFullYear()} IPStream · Radio Online y Televisión por streaming</p>
+          <p>© {new Date().getFullYear()} CasterFly · Radio Online y Televisión por streaming</p>
           <p>
             Al crear tu cuenta aceptas nuestros{' '}
             <a href="#" className="text-brand hover:underline">Términos y Condiciones</a> y{' '}

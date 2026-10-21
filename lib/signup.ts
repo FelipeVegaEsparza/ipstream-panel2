@@ -165,7 +165,7 @@ export async function notifyAdminNewSignup(info: {
   const html = `
 <div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
   <div style="max-width:520px;margin:0 auto">
-    <h2 style="margin:0 0 4px">IPStream</h2>
+    <h2 style="margin:0 0 4px">CasterFly</h2>
     <p style="color:#6b7280;margin:0 0 16px">Nuevo registro de cliente 🎉</p>
     <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px">
       <p style="margin:0 0 8px"><strong>Nombre:</strong> ${info.name}</p>

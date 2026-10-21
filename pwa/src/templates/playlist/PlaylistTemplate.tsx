@@ -173,7 +173,7 @@ export function PlaylistTemplate({ clientData, isLoading }: TemplateProps) {
           <footer className={styles.footer}>
             <span className={styles.srOnly}>{displayName}</span>
             <SmartImage className={styles.footerLogo} src={live.basic?.logoUrl} alt="" />
-            <span>IPStream Panel</span>
+            <span>CasterFly</span>
           </footer>
         </div>
       </div>

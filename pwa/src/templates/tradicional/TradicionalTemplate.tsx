@@ -31,7 +31,7 @@ export function TradicionalTemplate({ clientData, isLoading }: TemplateProps) {
           <div className={styles.brandText}>
             <span className={styles.brandName}>{displayName}</span>
             <span className={styles.tagline}>
-              <span className={styles.badge}>Tradicional</span> Radio & Cultura · IPStream
+              <span className={styles.badge}>Tradicional</span> Radio & Cultura · CasterFly
             </span>
           </div>
         </div>
@@ -135,7 +135,7 @@ export function TradicionalTemplate({ clientData, isLoading }: TemplateProps) {
       <footer className={styles.footer}>
         <span>{displayName}</span>
         <span className={styles.footerDot}>·</span>
-        <span>IPStream Panel</span>
+        <span>CasterFly</span>
       </footer>
       {radioEnabled && (
         <PlayerBar fallbackCovers={[live.basic?.coverUrl, live.basic?.logoUrl]} />

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { PanelLogo } from '@/components/ui/PanelLogo'
 import { prisma } from '@/lib/prisma'
 import { planSlug, toPublicPlan } from '@/lib/plans'
 import { SignupForm, PublicPlan } from '@/components/public/SignupForm'
@@ -31,13 +32,13 @@ async function getPlan(slug: string): Promise<{ plan: PublicPlan; index: number;
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   try {
     const data = await getPlan(params.slug)
-    if (!data) return { title: 'Plan no encontrado | IPStream' }
+    if (!data) return { title: 'Plan no encontrado | CasterFly' }
     return {
-      title: `${data.plan.name} | IPStream - Tu Radio Online`,
+      title: `${data.plan.name} | CasterFly - Tu Radio Online`,
       description: data.plan.description,
     }
   } catch {
-    return { title: 'IPStream - Tu Radio Online' }
+    return { title: 'CasterFly - Tu Radio Online' }
   }
 }
 
@@ -75,8 +76,8 @@ export default async function PlanPage({ params }: { params: { slug: string } })
 
       <header className={s.header}>
         <div className={s.headerInner}>
-          <a className={s.brand} href="https://ipstream.cl" aria-label="IPStream inicio">
-            <img src="https://ipstream.cl/images/logos/logo.png" alt="IPStream" />
+          <a className={s.brand} href="https://ipstream.cl" aria-label="CasterFly inicio">
+            <PanelLogo themeOverride="light" />
           </a>
         </div>
       </header>
@@ -178,7 +179,7 @@ export default async function PlanPage({ params }: { params: { slug: string } })
       <footer className={s.footer}>
         <div className={s.footerGrid}>
           <div className={s.footerBrand}>
-            <img src="https://ipstream.cl/images/logos/logo.png" alt="IPStream" />
+            <PanelLogo themeOverride="light" />
             <p className={s.muted}>
               Soluciones profesionales para tu radio online. Transmite, comparte y llega a más oyentes.
             </p>
@@ -202,7 +203,7 @@ export default async function PlanPage({ params }: { params: { slug: string } })
           </div>
         </div>
         <div className={s.footerBottom}>
-          <span>© {new Date().getFullYear()} IPStream. Todos los derechos reservados.</span>
+          <span>© {new Date().getFullYear()} CasterFly. Todos los derechos reservados.</span>
           <span>Hecho en Chile</span>
         </div>
       </footer>

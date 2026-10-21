@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
   // en el entorno del proceso, que tienen prioridad.
   const env = loadEnv(mode, process.cwd(), '')
   const clientName =
-    process.env.VITE_CLIENT_NAME || env.VITE_CLIENT_NAME || 'IPStream PWA'
+    process.env.VITE_CLIENT_NAME || env.VITE_CLIENT_NAME || 'CasterFly'
 
   // Metadatos Open Graph/Twitter. build-client.mjs los arma con los datos de la
   // API pública y los pasa serializados en VITE_OG_JSON. En dev solo hay nombre.

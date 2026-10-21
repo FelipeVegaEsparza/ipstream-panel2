@@ -7,7 +7,7 @@ export default function AboutPage() {
       <div className="text-center">
         <PanelLogo className="h-24 w-auto mx-auto mb-8 filter drop-shadow-2xl" />
         <h1 className="text-4xl font-bold text-foreground mb-4">
-          IPStream Panel
+          CasterFly
         </h1>
         <p className="text-xl text-muted-foreground">
           Panel completo de gestión de contenido para radio y streaming

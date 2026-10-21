@@ -30,7 +30,7 @@ export function MinimalistaTemplate({ clientData, isLoading }: TemplateProps) {
   const isHome = pathname === '/'
 
   const basic = clientData?.basicData
-  const name = basic?.projectName ?? tenant.clientId ?? 'IPStream'
+  const name = basic?.projectName ?? tenant.clientId ?? 'CasterFly'
   const streamUrl = basic?.radioStreamingUrl ?? null
   const tvUrl = getTvStreamUrl(basic)
   const currentTrack = streaming?.currentTrack
@@ -208,7 +208,7 @@ export function MinimalistaTemplate({ clientData, isLoading }: TemplateProps) {
           </main>
         )}
 
-        <footer className={styles.footer}>{name} · IPStream Panel</footer>
+        <footer className={styles.footer}>{name} · CasterFly</footer>
       </div>
 
       {tvOpen && tvUrl && (

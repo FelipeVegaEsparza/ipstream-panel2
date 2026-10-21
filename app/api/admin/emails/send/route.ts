@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     let recipients: { id: string | null; name: string; email: string; projectName: string }[] = []
 
     if (data.test) {
-      recipients = [{ id: null, name: 'Admin', email: session.user.email || '', projectName: 'IPStream' }]
+      recipients = [{ id: null, name: 'Admin', email: session.user.email || '', projectName: 'CasterFly' }]
     } else if (data.recipientType === 'all') {
       const clients = await prisma.client.findMany({
         include: { user: { select: { email: true } }, basicData: { select: { projectName: true } } },

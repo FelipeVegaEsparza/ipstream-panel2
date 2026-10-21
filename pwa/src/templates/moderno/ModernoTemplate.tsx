@@ -195,7 +195,7 @@ export function ModernoTemplate({ clientData, isLoading }: TemplateProps) {
           <div className={styles.footerCol}>
             <span className={styles.footerBrand}>{displayName}</span>
             <p className={styles.footerDesc}>
-              {live.basic?.projectDescription || 'Radio online · IPStream Panel'}
+              {live.basic?.projectDescription || 'Radio online · CasterFly'}
             </p>
           </div>
           <div className={styles.footerCol}>
@@ -225,7 +225,7 @@ export function ModernoTemplate({ clientData, isLoading }: TemplateProps) {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          © {displayName} · Todos los derechos reservados · IPStream Panel
+          © {displayName} · Todos los derechos reservados · CasterFly
         </div>
       </footer>
       {radioEnabled && (

@@ -8,7 +8,7 @@ export default function NewUserPage() {
           Crear Nuevo Cliente
         </h1>
         <p className="text-muted-foreground">
-          Agrega un nuevo cliente al sistema IPStream Panel
+          Agrega un nuevo cliente al sistema CasterFly
         </p>
       </div>
 

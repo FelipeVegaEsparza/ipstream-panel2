@@ -126,7 +126,7 @@ export function AppTemplate({ clientData, isLoading }: TemplateProps) {
         )}
       </main>
 
-      <footer className={styles.footer}>{displayName} · IPStream Panel</footer>
+      <footer className={styles.footer}>{displayName} · CasterFly</footer>
       {radioEnabled && (
         <PlayerBar fallbackCovers={[live.basic?.coverUrl, live.basic?.logoUrl]} />
       )}

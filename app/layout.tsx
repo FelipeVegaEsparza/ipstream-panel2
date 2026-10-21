@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
     if (config?.panelFaviconUrl) favicon = config.panelFaviconUrl
   } catch {}
   return {
-    title: 'IPStream Panel',
+    title: 'CasterFly',
     description: 'Panel de gestión de contenido para radio y streaming',
     icons: {
       icon: favicon,

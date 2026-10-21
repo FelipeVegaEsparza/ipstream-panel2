@@ -157,7 +157,7 @@ export default async function DashboardPage() {
           {effectiveClient.isImpersonating && clientInfo ? (
             <>Viendo como: <strong className="text-foreground">{clientInfo.name}</strong> ({clientInfo.user.email})</>
           ) : (
-            'Bienvenido a IPStream Panel'
+            'Bienvenido a CasterFly'
           )}
         </p>
 

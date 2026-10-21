@@ -143,7 +143,7 @@ export function BlueTemplate({ clientData, isLoading }: TemplateProps) {
         <Outlet />
       </main>
 
-      <footer className={styles.footer}>{displayName} · IPStream Panel</footer>
+      <footer className={styles.footer}>{displayName} · CasterFly</footer>
       {radioEnabled && (
         <PlayerBar fallbackCovers={[live.basic?.coverUrl, live.basic?.logoUrl]} />
       )}

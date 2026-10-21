@@ -223,7 +223,7 @@ export interface TenantManifest {
 export async function buildManifest(clientId: string, origin: string): Promise<TenantManifest | null> {
   const { client, basic } = await loadBranding(clientId)
   if (!client) return null
-  const name = basic?.projectName || client.name || 'IPStream'
+  const name = basic?.projectName || client.name || 'CasterFly'
   const theme = client.accentColor || '#1a1a2e'
   return {
     name,
