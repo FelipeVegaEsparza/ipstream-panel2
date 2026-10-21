@@ -117,6 +117,10 @@ export default function LibraryPage() {
   const [page, setPage] = useState(1)
   const [refreshingCovers, setRefreshingCovers] = useState(false)
   const [coverResult, setCoverResult] = useState('')
+  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set())
+  const [bulkFolderId, setBulkFolderId] = useState('')
+  const [bulkMoving, setBulkMoving] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -128,7 +132,14 @@ export default function LibraryPage() {
       ])
       if (res.ok) {
         const data = await res.json()
-        setTracks(data.tracks || [])
+        const nextTracks = data.tracks || []
+        setTracks(nextTracks)
+        setSelectedTrackIds((prev) => {
+          if (prev.size === 0) return prev
+          const ids = new Set(nextTracks.map((track: Track) => track.id))
+          const next = new Set(Array.from(prev).filter((id) => ids.has(id)))
+          return next.size === prev.size ? prev : next
+        })
       }
       if (storageRes.ok) {
         setStorage(await storageRes.json())
@@ -176,6 +187,7 @@ export default function LibraryPage() {
   const totalPages = Math.max(1, Math.ceil(filteredTracks.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
   const pageTracks = filteredTracks.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const allPageSelected = pageTracks.length > 0 && pageTracks.every((track) => selectedTrackIds.has(track.id))
 
   const rootFolders = folders.filter(f => !f.parentId)
   const childFolders = (parentId: string) => folders.filter(f => f.parentId === parentId)
@@ -221,6 +233,70 @@ export default function LibraryPage() {
       if (selectedFolderId === folderId) setSelectedFolderId(null)
       await load()
     } catch { /* ignore */ }
+  }
+
+  useEffect(() => {
+    setSelectedTrackIds(new Set())
+  }, [selectedFolderId])
+
+  const handleBulkMove = async () => {
+    if (!selectedTrackIds.size || !bulkFolderId) return
+    setBulkMoving(true)
+    try {
+      const res = await fetch('/api/dashboard/streaming/library/folders/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'move',
+          trackIds: Array.from(selectedTrackIds),
+          folderId: bulkFolderId === '__none__' ? null : bulkFolderId,
+        }),
+      })
+      if (!res.ok) throw new Error('No se pudieron mover los tracks')
+      setSelectedTrackIds(new Set())
+      setBulkFolderId('')
+      await load()
+      showToast({ type: 'success', title: 'Tracks movidos' })
+    } catch (err) {
+      showToast({ type: 'error', title: err instanceof Error ? err.message : 'No se pudieron mover los tracks' })
+    } finally {
+      setBulkMoving(false)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (!selectedTrackIds.size) return
+    if (!confirm(`¿Eliminar ${selectedTrackIds.size} track${selectedTrackIds.size === 1 ? '' : 's'}? Esta acción no se puede deshacer.`)) return
+    setBulkDeleting(true)
+    try {
+      const results = await Promise.allSettled(
+        Array.from(selectedTrackIds).map((id) =>
+          fetch(`/api/dashboard/streaming/library/${id}`, { method: 'DELETE' }).then((res) => {
+            if (!res.ok) throw new Error('delete_failed')
+          })
+        )
+      )
+      const failed = results.filter((result) => result.status === 'rejected').length
+      setSelectedTrackIds(new Set())
+      await load()
+      if (failed) showToast({ type: 'error', title: `${failed} track(s) no se pudieron eliminar` })
+      else showToast({ type: 'success', title: 'Tracks eliminados' })
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
+  const toggleTrackSelected = (trackId: string) => {
+    setSelectedTrackIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(trackId)) next.delete(trackId)
+      else next.add(trackId)
+      return next
+    })
+  }
+
+  const selectAllFiltered = () => {
+    setSelectedTrackIds(new Set(filteredTracks.map((track) => track.id)))
   }
 
   const handleMoveTrack = async (trackId: string, folderId: string | null) => {
@@ -566,6 +642,55 @@ export default function LibraryPage() {
               </a>
             </div>
 
+            {selectedTrackIds.size > 0 && (
+              <div className="flex flex-wrap items-center gap-2 border-b border-border bg-brand/5 px-4 py-2.5">
+                <span className="text-xs font-medium text-foreground">
+                  {selectedTrackIds.size} seleccionado{selectedTrackIds.size === 1 ? '' : 's'}
+                </span>
+                {selectedTrackIds.size < filteredTracks.length && (
+                  <button type="button" onClick={selectAllFiltered} className="text-[11px] text-brand hover:underline">
+                    Seleccionar todos ({filteredTracks.length})
+                  </button>
+                )}
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <select
+                    value={bulkFolderId}
+                    onChange={(e) => setBulkFolderId(e.target.value)}
+                    className="rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground"
+                  >
+                    <option value="">Mover a…</option>
+                    <option value="__none__">Sin carpeta</option>
+                    {folders.map((folder) => (
+                      <option key={folder.id} value={folder.id}>{folder.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => void handleBulkMove()}
+                    disabled={!bulkFolderId || bulkMoving}
+                    className="rounded-lg bg-brand px-3 py-1.5 text-[11px] font-medium text-white disabled:opacity-40"
+                  >
+                    {bulkMoving ? 'Moviendo…' : 'Mover'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleBulkDelete()}
+                    disabled={bulkDeleting}
+                    className="rounded-lg border border-red-500/40 px-3 py-1.5 text-[11px] font-medium text-red-300 hover:bg-red-500/10 disabled:opacity-40"
+                  >
+                    {bulkDeleting ? 'Eliminando…' : 'Eliminar'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTrackIds(new Set())}
+                    className="text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    Quitar selección
+                  </button>
+                </div>
+              </div>
+            )}
+
             {filteredTracks.length === 0 && !loading ? (
               <div className="p-12 text-center text-muted-foreground">
                 {selectedFolderId ? 'Esta carpeta está vacía.' : 'No hay tracks todavía. Sube tu primer MP3.'}
@@ -574,6 +699,29 @@ export default function LibraryPage() {
               <table className="w-full text-sm">
                 <thead className="bg-background/50 text-muted-foreground uppercase text-xs">
                   <tr>
+                    <th className="w-10 p-3">
+                      <input
+                        type="checkbox"
+                        checked={allPageSelected}
+                        onChange={() => {
+                          if (allPageSelected) {
+                            setSelectedTrackIds((prev) => {
+                              const next = new Set(prev)
+                              for (const track of pageTracks) next.delete(track.id)
+                              return next
+                            })
+                          } else {
+                            setSelectedTrackIds((prev) => {
+                              const next = new Set(prev)
+                              for (const track of pageTracks) next.add(track.id)
+                              return next
+                            })
+                          }
+                        }}
+                        className="h-4 w-4 accent-[var(--brand-500)]"
+                        aria-label="Seleccionar todos los tracks de esta página"
+                      />
+                    </th>
                     <th className="text-left p-3 w-10">🎵</th>
                     <th className="text-left p-3 w-12">Carátula</th>
                     <th className="text-left p-3">Título</th>
@@ -586,6 +734,15 @@ export default function LibraryPage() {
                 <tbody>
                   {pageTracks.map((t) => (
                     <tr key={t.id} className="border-t border-border/50 hover:bg-secondary/20">
+                      <td className="p-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedTrackIds.has(t.id)}
+                          onChange={() => toggleTrackSelected(t.id)}
+                          className="h-4 w-4 accent-[var(--brand-500)]"
+                          aria-label={`Seleccionar ${t.title}`}
+                        />
+                      </td>
                       <td className="p-3">
                         <button
                           onClick={() => togglePlay(t.id, t.title)}
