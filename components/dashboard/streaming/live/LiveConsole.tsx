@@ -5,6 +5,7 @@ import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24
 import { FileBrowser } from './FileBrowser'
 import { AnnouncementsBar } from './AnnouncementsBar'
 import { JinglesPanel } from './JinglesPanel'
+import { CapsulesPanel } from './CapsulesPanel'
 import { LiveSessionInfo } from './LiveSessionInfo'
 import { AiLocutionModal } from './AiLocutionModal'
 import { BroadcastBar } from './BroadcastBar'
@@ -197,6 +198,7 @@ export function LiveConsole({
             onOpenComposer={() => setComposerOpen(true)}
           />
           <JinglesPanel onAdd={live.player.addToPlaylist} />
+          <CapsulesPanel onAdd={live.player.addToPlaylist} />
         </div>
       </div>
 

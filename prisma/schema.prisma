@@ -71,6 +71,7 @@ model Client {
   contactMessages        ContactMessage[]
   aiTtsUsage             AiTtsUsage[]
   soundEffects           ClientSoundEffect[]
+  infoCapsules           ClientInfoCapsule[]
   // Streaming — Audio (Radio)
   radioStream            RadioStream?
   tracks                 Track[]
@@ -914,7 +915,9 @@ model Track {
   updatedAt     DateTime @updatedAt
 
   folderId    String?
+  capsuleId   String?
   client      Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  capsule     InfoCapsule?    @relation(fields: [capsuleId], references: [id], onDelete: SetNull)
   radioStream RadioStream     @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
   entries     PlaylistEntry[]
   folder      Folder?         @relation(fields: [folderId], references: [id], onDelete: SetNull)
@@ -922,6 +925,7 @@ model Track {
   @@index([clientId])
   @@index([radioStreamId])
   @@index([folderId])
+  @@index([capsuleId])
   @@index([artist])
   @@index([title])
   @@map("tracks")
@@ -1474,4 +1478,56 @@ model ClientSoundEffect {
   @@unique([clientId, effectId])
   @@index([clientId, sortOrder])
   @@map("client_sound_effects")
+}
+
+
+model InfoCapsuleCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique @db.VarChar(120)
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  capsules InfoCapsule[]
+
+  @@map("info_capsule_categories")
+}
+
+model InfoCapsule {
+  id          String   @id @default(cuid())
+  categoryId  String?
+  title       String   @db.VarChar(191)
+  description String?  @db.Text
+  fileName    String   @db.VarChar(191)
+  mimeType    String   @db.VarChar(100)
+  url         String   @db.VarChar(500)
+  size        Int
+  duration    Int?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category InfoCapsuleCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  clients  ClientInfoCapsule[]
+  tracks   Track[]
+
+  @@index([categoryId])
+  @@index([active])
+  @@map("info_capsules")
+}
+
+model ClientInfoCapsule {
+  id        String   @id @default(cuid())
+  clientId  String
+  capsuleId String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  client  Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  capsule InfoCapsule @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, capsuleId])
+  @@index([clientId, sortOrder])
+  @@map("client_info_capsules")
 }

@@ -31,6 +31,7 @@ interface Entry {
   entryId: string
   order: number
   trackId: string
+  capsuleId?: string | null
   title: string
   artist: string | null
   duration: number | null
@@ -83,6 +84,10 @@ export default function PlaylistEditorPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set())
   const [addingBulk, setAddingBulk] = useState(false)
+  const [showCapsules, setShowCapsules] = useState(false)
+  const [capsules, setCapsules] = useState<Array<{ id: string; title: string; description: string | null; category: { name: string } | null }>>([])
+  const [loadingCapsules, setLoadingCapsules] = useState(false)
+  const [addingCapsuleId, setAddingCapsuleId] = useState<string | null>(null)
 
   const togglePlay = (id: string, title: string) => {
     if (playingId === id) {
@@ -242,6 +247,34 @@ export default function PlaylistEditorPage() {
     } finally {
       setAddingBulk(false)
     }
+  }
+
+  const openCapsules = async () => {
+    setShowCapsules(true)
+    setLoadingCapsules(true)
+    try {
+      const res = await fetch('/api/dashboard/info-capsules', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setCapsules(Array.isArray(data.capsules) ? data.capsules : [])
+      }
+    } finally { setLoadingCapsules(false) }
+  }
+
+  const addCapsule = async (capsuleId: string) => {
+    setAddingCapsuleId(capsuleId)
+    try {
+      const res = await fetch(`/api/dashboard/streaming/playlists/${id}/capsules`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ capsuleId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.message || data.error || 'No se pudo agregar la cápsula')
+      setShowCapsules(false)
+      await load()
+    } catch (err) {
+      showToast({ type: 'info', title: err instanceof Error ? err.message : 'No se pudo agregar la cápsula' })
+    } finally { setAddingCapsuleId(null) }
   }
 
   const removeTrack = async (trackId: string, title: string) => {
@@ -428,6 +461,12 @@ export default function PlaylistEditorPage() {
               </button>
             )}
             <button
+              onClick={() => void openCapsules()}
+              className="px-3 py-1.5 border border-border text-foreground text-sm rounded hover:border-brand hover:text-brand"
+            >
+              + Agregar cápsula
+            </button>
+            <button
               onClick={() => {
                 setShowAdd(!showAdd)
                 setSelectedTrackIds(new Set())
@@ -575,6 +614,42 @@ export default function PlaylistEditorPage() {
           </div>
         )}
 
+        {showCapsules && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCapsules(false)} />
+            <div className="relative flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-border bg-card shadow-2xl">
+              <div className="flex items-center justify-between border-b border-border p-4">
+                <h3 className="text-lg font-semibold text-foreground">Agregar cápsula</h3>
+                <button onClick={() => setShowCapsules(false)} className="text-muted-foreground hover:text-foreground" aria-label="Cerrar">×</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2">
+                {loadingCapsules ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Cargando…</p>
+                ) : capsules.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">No hay cápsulas activas.</p>
+                ) : (
+                  capsules.map((capsule) => (
+                    <div key={capsule.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary/50">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm text-foreground">{capsule.title}</p>
+                        <p className="truncate text-[11px] text-muted-foreground">{capsule.category?.name || 'Sin categoría'}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void addCapsule(capsule.id)}
+                        disabled={addingCapsuleId === capsule.id}
+                        className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+                      >
+                        {addingCapsuleId === capsule.id ? 'Agregando…' : 'Agregar'}
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {playlist.entries.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
             Playlist vacía. Agregá tracks desde tu biblioteca.
@@ -622,7 +697,14 @@ export default function PlaylistEditorPage() {
                   {playingId === entry.trackId ? '⏹' : '▶'}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <div className="text-foreground truncate">{entry.title}</div>
+                  <div className="flex items-center gap-2 text-foreground">
+                    <span className="truncate">{entry.title}</span>
+                    {entry.capsuleId && (
+                      <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-foreground">
+                        Cápsula
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground truncate">
                     {entry.artist || 'Sin artista'} · {fmtDuration(entry.duration)}
                   </div>

@@ -51,6 +51,7 @@ const navigationGroups = [
     items: [
       { name: 'Streaming', href: '/admin/streaming', icon: RadioIcon },
       { name: 'Efectos de sonido', href: '/admin/sound-effects', icon: SpeakerWaveIcon },
+      { name: 'Cápsulas informativas', href: '/admin/info-capsules', icon: SpeakerWaveIcon },
       { name: 'Servidores de Streaming', href: '/admin/servers', icon: ServerStackIcon },
       { name: 'Monitor', href: '/admin/monitor', icon: SignalIcon },
       { name: 'Comunicaciones', href: '/admin/comunicaciones', icon: EnvelopeIcon },

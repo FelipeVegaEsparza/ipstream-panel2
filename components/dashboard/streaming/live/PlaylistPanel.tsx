@@ -50,6 +50,13 @@ function TrackBadge({ track }: { track: LocalTrack }) {
       </span>
     )
   }
+  if (track.kind === 'capsule') {
+    return (
+      <span className="ml-1 inline-flex shrink-0 items-center gap-0.5 rounded bg-secondary px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-foreground">
+        Cápsula
+      </span>
+    )
+  }
   return null
 }
 

@@ -40,15 +40,15 @@ async function ensureCoverColumn() {
 async function queryTracks(clientId) {
   if (await ensureCoverColumn()) {
     const [rows] = await pool.query(
-      `SELECT id, title, artist, album, duration, fileName, fileSize, coverUrl, folderId, mimeType, uploadedAt, updatedAt
-       FROM tracks WHERE clientId = ? ORDER BY uploadedAt DESC`,
+      `SELECT id, title, artist, album, duration, fileName, fileSize, coverUrl, folderId, mimeType, capsuleId, uploadedAt, updatedAt
+       FROM tracks WHERE clientId = ? AND capsuleId IS NULL ORDER BY uploadedAt DESC`,
       [clientId]
     )
     return rows
   }
   const [rows] = await pool.query(
-    `SELECT id, title, artist, album, duration, fileName, fileSize, folderId, mimeType, uploadedAt, updatedAt
-     FROM tracks WHERE clientId = ? ORDER BY uploadedAt DESC`,
+    `SELECT id, title, artist, album, duration, fileName, fileSize, folderId, mimeType, capsuleId, uploadedAt, updatedAt
+     FROM tracks WHERE clientId = ? AND capsuleId IS NULL ORDER BY uploadedAt DESC`,
     [clientId]
   )
   return rows.map((r) => ({ ...r, coverUrl: null }))
@@ -190,13 +190,16 @@ export default async function libraryRoutes(app) {
 
   app.patch('/api/streams/:clientId/library/:trackId', async (request, reply) => {
     const { clientId, trackId } = request.params
-    const { title, artist, album } = request.body || {}
+    const { title, artist, album, capsuleId } = request.body || {}
 
     const sets = []
     const params = []
     if (typeof title === 'string' && title.length > 0) { sets.push('title = ?'); params.push(title.slice(0, 200)) }
     if (typeof artist === 'string') { sets.push('artist = ?'); params.push(artist.slice(0, 200)) }
     if (typeof album === 'string') { sets.push('album = ?'); params.push(album.slice(0, 200)) }
+    if (capsuleId === null || (typeof capsuleId === 'string' && capsuleId.length > 0)) {
+      sets.push('capsuleId = ?'); params.push(capsuleId || null)
+    }
     if (sets.length === 0) {
       return reply.code(400).send({ error: 'no_fields', message: 'Envía al menos un campo' })
     }

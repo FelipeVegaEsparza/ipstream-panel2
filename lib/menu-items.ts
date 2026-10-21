@@ -62,6 +62,7 @@ export type MenuItemKey =
   | 'streaming-connection'
   | 'streaming-live'
   | 'streaming-sound-effects'
+  | 'streaming-info-capsules'
   | 'streaming-locutor-ia'
   | 'streaming-stats'
   // Televisión
@@ -145,6 +146,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   key: 'streaming-sound-effects',
   name: 'Efectos de sonido',
   href: '/dashboard/sound-effects',
+  section: 'Radio',
+  icon: SpeakerWaveIcon,
+},
+{
+  key: 'streaming-info-capsules',
+  name: 'Cápsulas informativas',
+  href: '/dashboard/info-capsules',
   section: 'Radio',
   icon: SpeakerWaveIcon,
 },

@@ -137,7 +137,7 @@ export const streamingClient = {
       timeoutMs: UPLOAD_TIMEOUT_MS,
     })
   },
-  updateTrack: async (clientId: string, trackId: string, data: { title?: string; artist?: string; album?: string }) =>
+  updateTrack: async (clientId: string, trackId: string, data: { title?: string; artist?: string; album?: string; capsuleId?: string | null }) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/library/${encodeURIComponent(trackId)}`, {
       method: 'PATCH',
       body: data,
