@@ -1,13 +1,17 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircleIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
+import { CheckCircleIcon, SparklesIcon, SpeakerWaveIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
+import { CapsuleAiModal } from './CapsuleAiModal'
+import { showToast } from '@/components/ui/toast'
 
 interface Capsule {
   id: string; title: string; description: string | null; fileName: string;
   mimeType: string; url: string; size: number; duration: number | null;
   category: { id: string; name: string } | null;
+  source?: string;
+  clientId?: string | null;
 }
 interface Category { id: string; name: string }
 
@@ -21,6 +25,7 @@ export function InfoCapsulesSelector() {
   const [playCount, setPlayCount] = useState(1)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
@@ -67,12 +72,19 @@ export function InfoCapsulesSelector() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Cápsulas informativas</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          Elegí cápsulas de la biblioteca para usarlas en vivo. También podés agregarlas a tu playlist de AutoDJ como un track más.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Cápsulas informativas</h1>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+            Elegí cápsulas para vivo y programalas en AutoDJ. También podés crear una cápsula propia con IA.
+          </p>
+        </div>
+        <button type="button" onClick={() => setAiOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-medium text-white hover:opacity-90">
+          <SparklesIcon className="h-4 w-4" /> Crear cápsula IA
+        </button>
       </div>
+
+      <CapsuleAiModal open={aiOpen} onClose={() => setAiOpen(false)} onSaved={() => void load()} />
 
       {error && <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
       {notice && <p className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"><CheckCircleIcon className="h-4 w-4" />{notice}</p>}
@@ -125,13 +137,32 @@ export function InfoCapsulesSelector() {
                   <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
                     <input type="checkbox" checked={checked} onChange={() => toggle(capsule.id)} className="mt-1 h-4 w-4 accent-[var(--brand-500)]" />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-foreground">{capsule.title}</span>
+                      <span className="flex items-center gap-2 truncate text-sm font-medium text-foreground">
+                        <span className="truncate">{capsule.title}</span>
+                        {capsule.source === 'ai' && <span className="shrink-0 rounded bg-brand/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand">IA</span>}
+                      </span>
                       <span className="block truncate text-[11px] text-muted-foreground">
                         {capsule.category?.name || 'Sin categoría'}{capsule.description ? ` · ${capsule.description}` : ''}
                       </span>
                     </span>
                   </label>
                   <EffectPreviewButton src={capsule.url} name={capsule.title} />
+                  {capsule.source === 'ai' && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!confirm(`¿Eliminar "${capsule.title}"?`)) return
+                        const res = await fetch(`/api/dashboard/info-capsules/${capsule.id}`, { method: 'DELETE' })
+                        if (res.ok) await load()
+                        else showToast({ type: 'error', title: 'No se pudo eliminar la cápsula' })
+                      }}
+                      className="rounded-lg p-1.5 text-muted-foreground hover:text-red-300"
+                      title="Eliminar cápsula IA"
+                      aria-label={`Eliminar ${capsule.title}`}
+                    >
+                      <TrashIcon className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </li>
               )
             })}

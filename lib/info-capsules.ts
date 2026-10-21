@@ -3,6 +3,16 @@ import path from 'path'
 import { prisma } from '@/lib/prisma'
 import { streamingClient } from '@/lib/streaming-client'
 
+export async function removeCapsuleCopies(capsuleId: string): Promise<void> {
+  const tracks = await prisma.track.findMany({
+    where: { capsuleId },
+    select: { id: true, clientId: true },
+  })
+  for (const track of tracks) {
+    await streamingClient.deleteTrack(track.clientId, track.id).catch(() => {})
+  }
+}
+
 export interface AddCapsuleResult {
   ok: true
   playlistId: string

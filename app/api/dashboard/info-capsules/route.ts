@@ -12,11 +12,11 @@ export async function GET() {
   if (!effective) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   const [capsules, selections, radioStream] = await Promise.all([
     prisma.infoCapsule.findMany({
-      where: { active: true, OR: [{ categoryId: null }, { category: { active: true } }] },
+      where: { active: true, OR: [{ clientId: null }, { clientId: effective.clientId }] },
       orderBy: [{ category: { sortOrder: 'asc' } }, { createdAt: 'desc' }],
       select: {
         id: true, title: true, description: true, fileName: true, mimeType: true,
-        url: true, size: true, duration: true, createdAt: true,
+        url: true, size: true, duration: true, source: true, clientId: true, createdAt: true,
         category: { select: { id: true, name: true } },
       },
     }),
@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest) {
   const playCount = Math.max(1, Math.min(20, Math.floor(Number(body?.playCount) || 1)))
   const capsuleIds = Array.from(new Set<string>(rawIds)).slice(0, MAX_SELECTION)
   const valid = await prisma.infoCapsule.findMany({
-    where: { id: { in: capsuleIds }, active: true },
+    where: { id: { in: capsuleIds }, active: true, OR: [{ clientId: null }, { clientId: effective.clientId }] },
     select: { id: true },
   })
   const validSet = new Set(valid.map((capsule) => capsule.id))
