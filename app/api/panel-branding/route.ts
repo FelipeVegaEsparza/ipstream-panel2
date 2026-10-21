@@ -5,12 +5,13 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const config = await prisma.appConfig.findFirst({
-    select: { panelLogoDarkUrl: true, panelLogoLightUrl: true },
+    select: { panelLogoDarkUrl: true, panelLogoLightUrl: true, panelFaviconUrl: true },
   })
   return NextResponse.json(
     {
       logoDarkUrl: config?.panelLogoDarkUrl || null,
       logoLightUrl: config?.panelLogoLightUrl || null,
+      faviconUrl: config?.panelFaviconUrl || null,
     },
     { headers: { 'Cache-Control': 'no-store, must-revalidate' } }
   )

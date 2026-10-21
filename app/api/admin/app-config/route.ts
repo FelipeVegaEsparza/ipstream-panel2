@@ -30,6 +30,7 @@ export async function GET() {
       trialDays: config.trialDays,
       panelLogoDarkUrl: config.panelLogoDarkUrl || '',
       panelLogoLightUrl: config.panelLogoLightUrl || '',
+      panelFaviconUrl: config.panelFaviconUrl || '',
       clientSitesDomain: config.clientSitesDomain || process.env.CLIENT_SITES_DOMAIN || '',
       clientSitesTarget: config.clientSitesTarget || process.env.CLIENT_SITES_TARGET || '',
       clientSitesIp: config.clientSitesIp || process.env.CLIENT_SITES_IP || '',
@@ -61,6 +62,7 @@ export async function PUT(request: NextRequest) {
       trialDays,
       panelLogoDarkUrl,
       panelLogoLightUrl,
+      panelFaviconUrl,
       clientSitesDomain,
       clientSitesTarget,
       clientSitesIp,
@@ -145,13 +147,19 @@ export async function PUT(request: NextRequest) {
       if (raw.startsWith('/api/uploads/') || /^https?:\/\//i.test(raw)) return raw.slice(0, 500)
       throw new Error('URL de logo inválida')
     }
-    let panelLogoData: { panelLogoDarkUrl?: string | null; panelLogoLightUrl?: string | null } = {}
+    let panelLogoData: {
+      panelLogoDarkUrl?: string | null
+      panelLogoLightUrl?: string | null
+      panelFaviconUrl?: string | null
+    } = {}
     try {
       const dark = normalizePanelLogo(panelLogoDarkUrl)
       const light = normalizePanelLogo(panelLogoLightUrl)
+      const favicon = normalizePanelLogo(panelFaviconUrl)
       panelLogoData = {
         ...(dark !== undefined ? { panelLogoDarkUrl: dark } : {}),
         ...(light !== undefined ? { panelLogoLightUrl: light } : {}),
+        ...(favicon !== undefined ? { panelFaviconUrl: favicon } : {}),
       }
     } catch (error) {
       return NextResponse.json(
@@ -203,6 +211,7 @@ export async function PUT(request: NextRequest) {
       trialDays: config.trialDays,
       panelLogoDarkUrl: config.panelLogoDarkUrl || '',
       panelLogoLightUrl: config.panelLogoLightUrl || '',
+      panelFaviconUrl: config.panelFaviconUrl || '',
       clientSitesDomain: config.clientSitesDomain || process.env.CLIENT_SITES_DOMAIN || '',
       clientSitesTarget: config.clientSitesTarget || process.env.CLIENT_SITES_TARGET || '',
       clientSitesIp: config.clientSitesIp || process.env.CLIENT_SITES_IP || '',

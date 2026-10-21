@@ -6,6 +6,7 @@ import AuthSessionProvider from '@/components/providers/AuthSessionProvider'
 import { ToastProvider } from '@/components/ui/toast'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import Script from 'next/script'
+import { prisma } from '@/lib/prisma'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,9 +16,23 @@ const inter = Inter({ subsets: ['latin'] })
 // el build de Next.js.
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'IPStream Panel',
-  description: 'Panel de gestión de contenido para radio y streaming',
+export async function generateMetadata(): Promise<Metadata> {
+  let favicon = '/icon.png'
+  try {
+    const config = await prisma.appConfig.findFirst({
+      select: { panelFaviconUrl: true },
+    })
+    if (config?.panelFaviconUrl) favicon = config.panelFaviconUrl
+  } catch {}
+  return {
+    title: 'IPStream Panel',
+    description: 'Panel de gestión de contenido para radio y streaming',
+    icons: {
+      icon: favicon,
+      shortcut: favicon,
+      apple: favicon,
+    },
+  }
 }
 
 export default function RootLayout({

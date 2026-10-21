@@ -7,6 +7,7 @@ import { showToast } from '@/components/ui/toast'
 export function PanelLogoManager() {
   const [logoDarkUrl, setLogoDarkUrl] = useState('')
   const [logoLightUrl, setLogoLightUrl] = useState('')
+  const [faviconUrl, setFaviconUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -18,6 +19,7 @@ export function PanelLogoManager() {
           const data = await res.json()
           setLogoDarkUrl(data.panelLogoDarkUrl || '')
           setLogoLightUrl(data.panelLogoLightUrl || '')
+          setFaviconUrl(data.panelFaviconUrl || '')
         }
       } catch {}
       setLoading(false)
@@ -30,12 +32,13 @@ export function PanelLogoManager() {
       const res = await fetch('/api/admin/app-config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ panelLogoDarkUrl: logoDarkUrl, panelLogoLightUrl: logoLightUrl }),
+        body: JSON.stringify({ panelLogoDarkUrl: logoDarkUrl, panelLogoLightUrl: logoLightUrl, panelFaviconUrl: faviconUrl }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'No se pudieron guardar los logos')
       setLogoDarkUrl(data.panelLogoDarkUrl || '')
       setLogoLightUrl(data.panelLogoLightUrl || '')
+      setFaviconUrl(data.panelFaviconUrl || '')
       window.dispatchEvent(new Event('panel-branding-updated'))
       showToast({ type: 'success', title: 'Logo del panel actualizado' })
     } catch (err) {
@@ -74,9 +77,26 @@ export function PanelLogoManager() {
         />
       </div>
 
+      <div className="border-t border-border pt-5">
+        <h3 className="text-sm font-semibold text-foreground">Favicon</h3>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Icono de la pestaña del navegador. Se recomienda un PNG cuadrado (se ajusta a 512×512).
+        </p>
+        <div className="mt-3 max-w-md">
+          <ImageUpload
+            label="Favicon del panel"
+            description="PNG, JPG o ICO. Los PNG/JPG se ajustan a 512×512."
+            value={faviconUrl}
+            onChange={setFaviconUrl}
+            onRemove={() => setFaviconUrl('')}
+            preset="favicon"
+          />
+        </div>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <p className="text-[11px] text-muted-foreground">
-          Si falta uno de los dos, se usa el otro o el logo histórico del panel.
+          Si falta un logo, se usa el otro o el histórico del panel. El favicon requiere recargar la pestaña para verse.
         </p>
         <button
           type="button"

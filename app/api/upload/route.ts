@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar tipo de archivo
-    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/x-icon', 'image/vnd.microsoft.icon']
     const audioTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/aac', 'audio/ogg']
     const videoTypes = ['video/mp4', 'video/mov', 'video/avi', 'video/webm', 'video/quicktime']
     
@@ -92,7 +92,21 @@ export async function POST(request: NextRequest) {
     const preset = request.nextUrl.searchParams.get('preset')
     const baseName = originalName.replace(/\.[^.]+$/, '')
 
-    if (imageTypes.includes(file.type) && preset === 'splash') {
+    if (imageTypes.includes(file.type) && preset === 'favicon') {
+      if (file.type === 'image/x-icon' || file.type === 'image/vnd.microsoft.icon') {
+        fileName = `${timestamp}_${baseName}_favicon.ico`
+      } else {
+        try {
+          buffer = await sharp(buffer)
+            .resize(512, 512, { fit: 'cover', position: 'centre' })
+            .png()
+            .toBuffer()
+          fileName = `${timestamp}_${baseName}_favicon.png`
+        } catch (sharpError) {
+          console.error('Error processing favicon with Sharp:', sharpError)
+        }
+      }
+    } else if (imageTypes.includes(file.type) && preset === 'splash') {
       // Fondo de splash: WebP vertical (9:16), recorte centrado.
       try {
         buffer = await sharp(buffer)

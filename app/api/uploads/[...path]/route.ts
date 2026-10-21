@@ -59,6 +59,9 @@ export async function GET(
       case 'png':
         contentType = 'image/png'
         break
+      case 'ico':
+        contentType = 'image/x-icon'
+        break
       case 'gif':
         contentType = 'image/gif'
         break
