@@ -1,0 +1,4 @@
+ALTER TABLE `radio_streams`
+  ADD COLUMN `capsuleAutoDjEnabled` BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN `capsulePlayEvery` INTEGER NOT NULL DEFAULT 8,
+  ADD COLUMN `capsulePlayCount` INTEGER NOT NULL DEFAULT 1;

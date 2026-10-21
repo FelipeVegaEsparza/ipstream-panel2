@@ -461,12 +461,6 @@ export default function PlaylistEditorPage() {
               </button>
             )}
             <button
-              onClick={() => void openCapsules()}
-              className="px-3 py-1.5 border border-border text-foreground text-sm rounded hover:border-brand hover:text-brand"
-            >
-              + Agregar cápsula
-            </button>
-            <button
               onClick={() => {
                 setShowAdd(!showAdd)
                 setSelectedTrackIds(new Set())

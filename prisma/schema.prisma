@@ -807,6 +807,10 @@ model RadioStream {
   aiWeatherEveryMinutes Int      @default(0) // 0 = desactivado
   aiVoiceId            String? // voz elegida por el cliente; null = voz global
   aiVoiceStyle         Int       @default(0) // 0-100 expresividad
+  // Cápsulas informativas programadas en AutoDJ
+  capsuleAutoDjEnabled Boolean   @default(false)
+  capsulePlayEvery     Int       @default(8)
+  capsulePlayCount     Int       @default(1)
   // Estado actual
   status               String    @default("off") // "off" | "autodj" | "live"
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)

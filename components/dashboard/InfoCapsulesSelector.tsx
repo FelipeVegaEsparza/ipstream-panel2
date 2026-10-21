@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircleIcon, PlusIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
+import { CheckCircleIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
 import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
-import { showToast } from '@/components/ui/toast'
 
 interface Capsule {
   id: string; title: string; description: string | null; fileName: string;
@@ -17,9 +16,11 @@ export function InfoCapsulesSelector() {
   const [categories, setCategories] = useState<Category[]>([])
   const [selected, setSelected] = useState<string[]>([])
   const [categoryFilter, setCategoryFilter] = useState<string>('')
+  const [autoDjEnabled, setAutoDjEnabled] = useState(false)
+  const [playEvery, setPlayEvery] = useState(8)
+  const [playCount, setPlayCount] = useState(1)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [addingId, setAddingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
@@ -31,6 +32,9 @@ export function InfoCapsulesSelector() {
       setCapsules(Array.isArray(data.capsules) ? data.capsules : [])
       setCategories(Array.isArray(data.categories) ? data.categories : [])
       setSelected(Array.isArray(data.selectedIds) ? data.selectedIds : [])
+      setAutoDjEnabled(Boolean(data.autoDjEnabled))
+      setPlayEvery(Number(data.playEvery) || 8)
+      setPlayCount(Number(data.playCount) || 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo cargar la biblioteca')
     } finally { setLoading(false) }
@@ -48,28 +52,17 @@ export function InfoCapsulesSelector() {
     try {
       const res = await fetch('/api/dashboard/info-capsules', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ capsuleIds: selected }),
+        body: JSON.stringify({ capsuleIds: selected, autoDjEnabled, playEvery, playCount }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'No se pudo guardar la selección')
       setSelected(Array.isArray(data.selectedIds) ? data.selectedIds : selected)
-      setNotice('Selección guardada. Estas cápsulas aparecerán en tu consola en vivo.')
+      setAutoDjEnabled(Boolean(data.autoDjEnabled))
+      setPlayEvery(Number(data.playEvery) || playEvery)
+      setPlayCount(Number(data.playCount) || playCount)
+      setNotice('Selección y programación guardadas.')
     } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo guardar la selección') }
     finally { setSaving(false) }
-  }
-
-  const addToAutoDj = async (capsule: Capsule) => {
-    setAddingId(capsule.id); setError(null); setNotice(null)
-    try {
-      const res = await fetch(`/api/dashboard/info-capsules/${capsule.id}/auto-dj`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.message || data.error || 'No se pudo agregar al AutoDJ')
-      setNotice(`“${capsule.title}” agregada a la playlist de AutoDJ.`)
-    } catch (err) {
-      showToast({ type: 'error', title: err instanceof Error ? err.message : 'No se pudo agregar al AutoDJ' })
-    } finally { setAddingId(null) }
   }
 
   return (
@@ -83,6 +76,32 @@ export function InfoCapsulesSelector() {
 
       {error && <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
       {notice && <p className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"><CheckCircleIcon className="h-4 w-4" />{notice}</p>}
+
+      <section className="card space-y-4">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Programación en AutoDJ</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Se usan las cápsulas que selecciones abajo. Requiere playlist activa y cápsulas MP3.
+          </p>
+        </div>
+        <label className="flex items-center justify-between gap-4 rounded-lg border border-border bg-secondary/30 px-3 py-3">
+          <span>
+            <span className="block text-sm font-medium text-foreground">Programar automáticamente</span>
+            <span className="block text-[11px] text-muted-foreground">Inserta cápsulas entre los temas del AutoDJ.</span>
+          </span>
+          <input type="checkbox" checked={autoDjEnabled} onChange={(e) => setAutoDjEnabled(e.target.checked)} className="h-4 w-4 accent-[var(--brand-500)]" />
+        </label>
+        <div className={`grid gap-3 sm:grid-cols-2 ${autoDjEnabled ? '' : 'opacity-50'}`}>
+          <label className="block">
+            <span className="mb-1 block text-[11px] text-muted-foreground">Cada cuántos temas</span>
+            <input type="number" min={1} max={100} value={playEvery} disabled={!autoDjEnabled} onChange={(e) => setPlayEvery(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground disabled:opacity-60" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[11px] text-muted-foreground">Cuántas cápsulas</span>
+            <input type="number" min={1} max={20} value={playCount} disabled={!autoDjEnabled} onChange={(e) => setPlayCount(Math.max(1, Math.min(20, Number(e.target.value) || 1)))} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground disabled:opacity-60" />
+          </label>
+        </div>
+      </section>
 
       <section className="card">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -113,9 +132,6 @@ export function InfoCapsulesSelector() {
                     </span>
                   </label>
                   <EffectPreviewButton src={capsule.url} name={capsule.title} />
-                  <button type="button" onClick={() => void addToAutoDj(capsule)} disabled={addingId === capsule.id} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:border-brand hover:text-brand disabled:opacity-50">
-                    <PlusIcon className="h-3.5 w-3.5" />{addingId === capsule.id ? 'Agregando…' : 'Agregar al AutoDJ'}
-                  </button>
                 </li>
               )
             })}
@@ -123,9 +139,9 @@ export function InfoCapsulesSelector() {
         )}
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          <p className="text-[11px] text-muted-foreground">Máximo 200 cápsulas seleccionadas para vivo. Para AutoDJ deben ser MP3 y necesitás una playlist activa.</p>
+          <p className="text-[11px] text-muted-foreground">Máximo 200 cápsulas para vivo. Para AutoDJ deben ser MP3 y necesitás una playlist activa.</p>
           <button type="button" onClick={() => void save()} disabled={saving || loading} className="rounded-lg bg-brand px-4 py-2 text-xs font-medium text-white disabled:opacity-50">
-            {saving ? 'Guardando…' : 'Guardar selección'}
+            {saving ? 'Guardando…' : 'Guardar selección y AutoDJ'}
           </button>
         </div>
       </section>

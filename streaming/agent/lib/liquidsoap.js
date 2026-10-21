@@ -364,7 +364,8 @@ export async function regenerateM3u(clientId) {
     [playlistId]
   )
   const [rsRows] = await pool.query(
-    `SELECT aiPresenterEnabled, aiPresenterEvery FROM radio_streams WHERE clientId = ? LIMIT 1`,
+    `SELECT aiPresenterEnabled, aiPresenterEvery, capsuleAutoDjEnabled, capsulePlayEvery, capsulePlayCount
+       FROM radio_streams WHERE clientId = ? LIMIT 1`,
     [clientId]
   )
   const rs = rsRows[0] || {}
@@ -380,10 +381,29 @@ export async function regenerateM3u(clientId) {
     if (match && !aiByTrack.has(match[1])) aiByTrack.set(match[1], file)
   }
 
+  const capsuleEvery = Number(rs.capsulePlayEvery) || 0
+  const capsuleCount = Number(rs.capsulePlayCount) || 0
+  const capsuleEnabled = Boolean(rs.capsuleAutoDjEnabled) && capsuleEvery > 0 && capsuleCount > 0
+  let capsulePool = []
+  if (capsuleEnabled) {
+    const [capsuleRows] = await pool.query(
+      `SELECT t.fileName, t.title, t.artist, t.duration
+         FROM tracks t
+         JOIN client_info_capsules cic ON cic.clientId = t.clientId AND cic.capsuleId = t.capsuleId
+         JOIN info_capsules c ON c.id = t.capsuleId AND c.active = 1
+        WHERE t.clientId = ? AND t.capsuleId IS NOT NULL
+        ORDER BY cic.sortOrder ASC, t.uploadedAt ASC`,
+      [clientId]
+    )
+    capsulePool = capsuleRows || []
+  }
+  let capsuleCursor = 0
+
   // Incluir #EXTINF con el título/artista para que liquidsoap propague la
   // metadata a Icecast (imprescindible cuando el MP3 no trae tags ID3).
   const lines = ['#EXTM3U']
-  for (const e of entries) {
+  for (let index = 0; index < entries.length; index++) {
+    const e = entries[index]
     const introFile = aiByTrack.get(e.trackId)
     if (introFile) {
       lines.push('#EXTINF:-1,Locutor IA')
@@ -393,6 +413,19 @@ export async function regenerateM3u(clientId) {
     const dur = e.duration ? Math.round(e.duration) : -1
     lines.push(`#EXTINF:${dur},${label}`)
     lines.push(join(mp3Dir, e.fileName))
+
+    if (capsuleEnabled && capsulePool.length > 0 && (index + 1) % capsuleEvery === 0) {
+      for (let c = 0; c < capsuleCount; c++) {
+        const capsule = capsulePool[capsuleCursor % capsulePool.length]
+        capsuleCursor += 1
+        const capLabel = capsule.artist
+          ? `${capsule.artist} - ${capsule.title || ''}`
+          : `Cápsula · ${capsule.title || ''}`
+        const capDur = capsule.duration ? Math.round(capsule.duration) : -1
+        lines.push(`#EXTINF:${capDur},${capLabel}`)
+        lines.push(join(mp3Dir, capsule.fileName))
+      }
+    }
   }
   await writeFile(m3uPath, lines.join('\n') + '\n', { mode: 0o644 })
   logger.info({ clientId, m3uPath, trackCount: entries.length }, 'm3u regenerado')
