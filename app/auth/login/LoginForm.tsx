@@ -46,7 +46,7 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
   }
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden bg-background lg:grid lg:grid-cols-2">
+    <div className="relative min-h-[100dvh] overflow-hidden bg-background lg:grid lg:grid-cols-[3fr_2fr]">
       {/* Fondo: imagen configurada por el admin, o un glow de marca sutil */}
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         {backgroundImage ? (
@@ -76,8 +76,8 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
       <div className="relative hidden lg:block" aria-hidden="true" />
 
       {/* Panel de acceso: ocupa todo el lado derecho */}
-      <section className="relative z-10 flex max-h-[100dvh] min-h-[100dvh] w-full flex-col justify-center overflow-y-auto border-border/60 bg-background/80 px-5 py-10 backdrop-blur-xl sm:px-8 lg:border-l lg:px-12 xl:px-20">
-        <div className="mx-auto w-full max-w-[520px]">
+      <section className="relative z-10 flex max-h-[100dvh] min-h-[100dvh] w-full flex-col justify-center overflow-y-auto border-border/60 bg-background/80 px-5 py-10 backdrop-blur-xl sm:px-8 lg:border-l lg:px-10 xl:px-16">
+        <div className="mx-auto w-full max-w-[480px]">
           <div className="mb-10 flex justify-center">
             <PanelLogo className="h-20 w-auto" />
           </div>
