@@ -12,6 +12,7 @@ interface Props {
   error: string | null
   libraryMode?: boolean
   manageHref?: string
+  compact?: boolean
   onPadSize: (size: number) => void
   onAdd: (slot: number, file: File) => Promise<void>
   onRemove: (slot: number) => Promise<void>
@@ -27,6 +28,7 @@ export function SoundEffectsPad({
   error,
   libraryMode = false,
   manageHref,
+  compact = false,
   onPadSize,
   onAdd,
   onRemove,
@@ -43,18 +45,20 @@ export function SoundEffectsPad({
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-3 shadow-soft">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <section className={`min-h-0 rounded-lg border border-border bg-card shadow-soft ${compact ? 'p-2' : 'p-3'}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between ${compact ? 'gap-1.5' : 'gap-3'}`}>
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <SpeakerWaveIcon className="h-4 w-4 text-brand" />
             Efectos de sonido
           </h2>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {libraryMode
-              ? 'Elegidos en tu perfil. Se mezclan en la transmisión al presionar.'
-              : 'Se guardan en este navegador y se mezclan en la transmisión al presionar.'}
-          </p>
+          {!compact && (
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {libraryMode
+                ? 'Elegidos en tu perfil. Se mezclan en la transmisión al presionar.'
+                : 'Se guardan en este navegador y se mezclan en la transmisión al presionar.'}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {manageHref && (
@@ -96,14 +100,14 @@ export function SoundEffectsPad({
         </p>
       )}
 
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
+      <div className={`mt-2 grid gap-1.5 ${compact ? 'max-h-[92px] grid-cols-4 overflow-y-auto md:grid-cols-8' : 'grid-cols-2 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8'}`}>
         {slots.map((effect, slot) => (
           <div key={slot} className="min-w-0">
             {effect ? (
               <button
                 type="button"
                 onClick={() => void onPlay(slot)}
-                className="flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-lg border border-brand/30 bg-brand/10 px-1.5 text-center transition-colors hover:bg-brand/15"
+                className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-brand/30 bg-brand/10 px-1.5 text-center transition-colors hover:bg-brand/15 ${compact ? 'h-12' : 'h-16'}`}
                 title={`Reproducir ${effect.name}`}
               >
                 <SpeakerWaveIcon className="h-4 w-4 text-brand" />
@@ -111,7 +115,7 @@ export function SoundEffectsPad({
                 <span className="text-[9px] text-muted-foreground">Botón {slot + 1}</span>
               </button>
             ) : libraryMode ? (
-              <div className="flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-border bg-background px-1.5 text-center text-muted-foreground">
+              <div className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-dashed border-border bg-background px-1.5 text-center text-muted-foreground ${compact ? 'h-12' : 'h-16'}`}>
                 <span className="text-[11px] font-medium">Sin efecto</span>
                 <span className="text-[9px]">Botón {slot + 1}</span>
               </div>
@@ -119,7 +123,7 @@ export function SoundEffectsPad({
               <button
                 type="button"
                 onClick={() => openPicker(slot)}
-                className="flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-border bg-background px-1.5 text-center transition-colors hover:border-brand hover:text-brand"
+                className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-dashed border-border bg-background px-1.5 text-center transition-colors hover:border-brand hover:text-brand ${compact ? 'h-12' : 'h-16'}`}
               >
                 <PlusIcon className="h-4 w-4" />
                 <span className="text-[11px] font-medium">Agregar sonido</span>

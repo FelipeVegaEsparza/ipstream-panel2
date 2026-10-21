@@ -57,7 +57,7 @@ export function FileBrowser({
 
   return (
     <section
-      className={`flex h-full min-h-[420px] flex-col overflow-hidden rounded-lg border bg-card shadow-soft ${
+      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-lg border bg-card shadow-soft ${
         dragging ? 'border-brand ring-1 ring-brand/30' : 'border-border'
       }`}
       onDragOver={(event) => {

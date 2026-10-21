@@ -81,15 +81,21 @@ export function LiveConsole({
   return (
     <div
       ref={rootRef}
-      className={isFullscreen ? 'flex min-h-screen flex-col gap-4 overflow-y-auto bg-background p-4' : 'space-y-5'}
+      className={isFullscreen
+        ? 'flex h-[100dvh] w-full flex-col gap-2 overflow-hidden bg-background p-2'
+        : 'space-y-5'}
     >
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className={`shrink-0 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between ${isFullscreen ? 'sm:items-center' : ''}`}>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Reproductor en vivo</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Elegí música de tu equipo, armá la lista y salí al aire. Si la fuente queda en silencio,
-            el AutoDJ retoma el control automáticamente.
-          </p>
+          <h1 className={`font-bold text-foreground ${isFullscreen ? 'text-lg' : 'text-3xl'}`}>
+            Reproductor en vivo
+          </h1>
+          {!isFullscreen && (
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Elegí música de tu equipo, armá la lista y salí al aire. Si la fuente queda en silencio,
+              el AutoDJ retoma el control automáticamente.
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <div className="rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground">
@@ -112,31 +118,35 @@ export function LiveConsole({
         </div>
       </div>
 
-      <LiveSessionInfo timezone={timezone} />
+      <LiveSessionInfo timezone={timezone} hero={isFullscreen} />
 
-      <BroadcastBar
-        engineReady={live.engineReady}
-        state={live.session.state}
-        transport={live.session.transport}
-        stats={live.session.stats}
-        error={live.session.error}
-        slots={live.session.slots}
-        maxDjs={live.session.maxDjs}
-        slotId={live.session.slotId}
-        onSlotId={live.setSlotId}
-        mount={live.session.mount}
-        bitrate={live.session.bitrate}
-        streamBitrate={live.session.streamBitrate}
-        headphonesConfirmed={live.headphonesConfirmed}
-        onHeadphonesConfirmed={live.setHeadphonesConfirmed}
-        onGoLive={live.goLive}
-        onStopLive={live.stopLive}
-        onReconnect={live.reconnect}
-        onRefreshSlots={live.refreshSlots}
-      />
+      <div className="shrink-0">
+        <BroadcastBar
+          engineReady={live.engineReady}
+          state={live.session.state}
+          transport={live.session.transport}
+          stats={live.session.stats}
+          error={live.session.error}
+          slots={live.session.slots}
+          maxDjs={live.session.maxDjs}
+          slotId={live.session.slotId}
+          onSlotId={live.setSlotId}
+          mount={live.session.mount}
+          bitrate={live.session.bitrate}
+          streamBitrate={live.session.streamBitrate}
+          headphonesConfirmed={live.headphonesConfirmed}
+          onHeadphonesConfirmed={live.setHeadphonesConfirmed}
+          onGoLive={live.goLive}
+          onStopLive={live.stopLive}
+          onReconnect={live.reconnect}
+          onRefreshSlots={live.refreshSlots}
+        />
+      </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)_168px]">
-        <div className={panelHeight}>
+      <div className={isFullscreen
+        ? 'grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_84px_minmax(0,1.15fr)_280px] gap-2'
+        : 'grid gap-4 lg:grid-cols-[minmax(0,1fr)_108px_minmax(0,1fr)_168px]'}>
+        <div className={isFullscreen ? 'min-h-0' : panelHeight}>
           <FileBrowser
             tracks={live.library.tracks}
             playlistIds={playlistIds}
@@ -155,14 +165,14 @@ export function LiveConsole({
           />
         </div>
 
-        <div className="h-40 lg:h-auto">
+        <div className={isFullscreen ? 'min-h-0' : 'h-40 lg:h-auto'}>
           <StereoVuMeter
             leftDb={live.masterLevels.left}
             rightDb={live.masterLevels.right}
           />
         </div>
 
-        <div className={panelHeight}>
+        <div className={isFullscreen ? 'min-h-0' : panelHeight}>
           <PlaylistPanel
             queue={live.library.queue}
             history={live.library.history}
@@ -175,7 +185,7 @@ export function LiveConsole({
           />
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className={isFullscreen ? 'flex min-h-0 flex-col gap-2 overflow-y-auto' : 'flex flex-col gap-3'}>
           <AnnouncementsBar
             loading={live.announcements.loading}
             error={live.announcements.error}
@@ -190,24 +200,44 @@ export function LiveConsole({
         </div>
       </div>
 
-      <PlayerBar
-        current={live.player.current}
-        nextTrack={live.player.nextTrack}
-        playing={live.player.playing}
-        position={live.player.position}
-        duration={live.player.duration}
-        onPlay={live.player.play}
-        onPause={live.player.pause}
-        onPrevious={live.player.previous}
-        onNext={live.player.next}
-        onSeek={live.player.seek}
-        mic={live.mic}
-        onEnableMic={live.enableMic}
-        onDisableMic={live.disableMic}
-        onMicGain={live.setMicGain}
-        monitorEnabled={live.monitorEnabled}
-        onMonitor={live.setMonitor}
-      />
+      <div className={isFullscreen
+        ? 'grid shrink-0 grid-cols-[minmax(340px,0.8fr)_minmax(0,2fr)] gap-2'
+        : 'space-y-3'}>
+        <PlayerBar
+          current={live.player.current}
+          nextTrack={live.player.nextTrack}
+          playing={live.player.playing}
+          position={live.player.position}
+          duration={live.player.duration}
+          onPlay={live.player.play}
+          onPause={live.player.pause}
+          onPrevious={live.player.previous}
+          onNext={live.player.next}
+          onSeek={live.player.seek}
+          mic={live.mic}
+          onEnableMic={live.enableMic}
+          onDisableMic={live.disableMic}
+          onMicGain={live.setMicGain}
+          monitorEnabled={live.monitorEnabled}
+          onMonitor={live.setMonitor}
+        />
+
+        <SoundEffectsPad
+          compact={isFullscreen}
+          padSize={live.effects.padSize}
+          slots={live.effects.slots}
+          loading={live.effects.loading}
+          error={live.effects.error}
+          libraryMode={live.effects.libraryMode}
+          manageHref="/dashboard/sound-effects"
+          onPadSize={live.effects.setPadSize}
+          onAdd={live.effects.addEffect}
+          onRemove={live.effects.removeEffect}
+          onGain={live.effects.setGain}
+          onPlay={live.effects.play}
+          onStopAll={live.effects.stopAll}
+        />
+      </div>
 
       {aiEnabled && (
         <AiLocutionModal
@@ -217,21 +247,6 @@ export function LiveConsole({
           onAdd={live.ai.addSpot}
         />
       )}
-
-      <SoundEffectsPad
-        padSize={live.effects.padSize}
-        slots={live.effects.slots}
-        loading={live.effects.loading}
-        error={live.effects.error}
-        libraryMode={live.effects.libraryMode}
-        manageHref="/dashboard/sound-effects"
-        onPadSize={live.effects.setPadSize}
-        onAdd={live.effects.addEffect}
-        onRemove={live.effects.removeEffect}
-        onGain={live.effects.setGain}
-        onPlay={live.effects.play}
-        onStopAll={live.effects.stopAll}
-      />
     </div>
   )
 }
