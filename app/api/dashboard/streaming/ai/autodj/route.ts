@@ -8,11 +8,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { prisma } from '@/lib/prisma'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
-import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
-import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
+import { synthesizePremiumTts, hasConfiguredPremiumTts } from '@/lib/premium-tts'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 import { buildPresenterText, normalizePhrases } from '@/lib/live-console/presenter'
-import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 
 export const dynamic = 'force-dynamic'
 
@@ -98,7 +96,6 @@ export async function POST(request: NextRequest) {
       )
     }
     const phrases = normalizePhrases(parsePhrases(clientInfo?.radioStream?.aiIntroPhrases))
-    const clientVoice = await getClientVoiceSettings(ctx.clientId)
     const entries = playlist.entries
     const count = Math.floor((entries.length - 1) / every)
     if (count <= 0) {
@@ -117,10 +114,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const config = await getElevenLabsConfig()
-    if (!config.enabled || !config.apiKey || !config.voiceId) {
+    if (!(await hasConfiguredPremiumTts())) {
       return NextResponse.json(
-        { error: 'elevenlabs_not_configured', message: 'ElevenLabs no está configurado.' },
+        { error: 'tts_not_configured', message: 'Configurá ElevenLabs o Fish Audio en Locución.' },
         { status: 503 }
       )
     }
@@ -179,14 +175,18 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < targets.length; i++) {
       const text = texts[i]
       const track = targets[i]
-      const audio = await synthesizeElevenLabs({
-        text,
-        apiKey: config.apiKey,
-        voiceId: clientVoice.voiceId || config.voiceId,
-        model: config.model,
-        cacheEnabled: config.cacheEnabled,
-        style: clientVoice.style / 100,
-      })
+      let audio
+      try {
+        audio = await synthesizePremiumTts({ clientId: ctx.clientId, text })
+      } catch (err) {
+        return NextResponse.json(
+          {
+            error: 'tts_failed',
+            message: err instanceof Error ? err.message : 'No se pudo generar la locución.',
+          },
+          { status: 503 }
+        )
+      }
       if (!audio.cached) {
         try {
           await consumeAiCharacters(ctx.clientId, text.length)

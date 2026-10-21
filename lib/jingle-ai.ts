@@ -10,8 +10,7 @@ import { join } from 'path'
 import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
-import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
-import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
+import { synthesizePremiumTts } from '@/lib/premium-tts'
 
 const execFileAsync = promisify(execFile)
 export const JINGLE_DURATIONS = [10, 15] as const
@@ -109,7 +108,7 @@ async function mixMusicAndVoice(
 
 export async function generateJingle(input: GenerateJingleInput): Promise<GeneratedJingle> {
   const config = await getElevenLabsConfig()
-  if (!config.enabled || !config.apiKey) throw new Error('La voz premium no está configurada.' )
+  if (!config.apiKey) throw new Error('La música IA de ElevenLabs no está configurada.' )
   if (!JINGLE_DURATIONS.includes(input.duration as 10 | 15)) {
     throw new Error('Duración inválida.')
   }
@@ -117,19 +116,10 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
   const tagline = input.tagline.replace(/\{\{\s*radio\s*\}\}/gi, station).trim()
   if (!tagline) throw new Error('Escribí la locución del jingle.')
 
-  const [music, voiceSettings] = await Promise.all([
+  const [music, voice] = await Promise.all([
     generateMusic(input.prompt, input.duration, config.apiKey),
-    getClientVoiceSettings(input.clientId),
+    synthesizePremiumTts({ clientId: input.clientId, text: tagline.slice(0, 300) }),
   ])
-
-  const voice = await synthesizeElevenLabs({
-    text: tagline.slice(0, 300),
-    apiKey: config.apiKey,
-    voiceId: voiceSettings.voiceId || config.voiceId,
-    model: config.model,
-    cacheEnabled: config.cacheEnabled,
-    style: voiceSettings.style / 100,
-  })
 
   const audio = await mixMusicAndVoice(music, voice.audio, input.duration)
   return {

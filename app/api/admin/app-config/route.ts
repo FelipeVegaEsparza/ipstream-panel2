@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { encrypt } from '@/lib/encryption'
 import { invalidateClientSitesConfig } from '@/lib/client-sites-config'
 import { getElevenLabsConfig, invalidateElevenLabsConfig } from '@/lib/elevenlabs-config'
+import { getFishAudioConfig, invalidateFishAudioConfig } from '@/lib/fish-audio-config'
+import { validFishAudioModel } from '@/lib/fish-audio-models'
 import { ELEVENLABS_MODELS } from '@/lib/elevenlabs-models'
 import { parseVoiceCatalog } from '@/lib/elevenlabs-voices'
 
@@ -41,6 +43,10 @@ export async function GET() {
       elevenLabsEnabled: eleven.enabled,
       ttsCacheEnabled: eleven.cacheEnabled,
       elevenLabsVoices: parseVoiceCatalog(config.elevenLabsVoices),
+      ttsProvider: config.ttsProvider === 'fish' ? 'fish' : 'elevenlabs',
+      fishAudioKeySet: Boolean(config.fishAudioApiKeyEnc),
+      fishAudioModel: validFishAudioModel(config.fishAudioModel),
+      fishAudioReferenceId: config.fishAudioReferenceId || '',
     })
   } catch (error) {
     console.error('Error getting app config:', error)
@@ -74,6 +80,11 @@ export async function PUT(request: NextRequest) {
       ttsCacheEnabled,
       clearElevenLabsApiKey,
       elevenLabsVoices,
+      ttsProvider,
+      fishAudioApiKey,
+      clearFishAudioApiKey,
+      fishAudioModel,
+      fishAudioReferenceId,
     } = body
 
     let trialDaysValue: number | undefined
@@ -168,6 +179,31 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    let providerValue: 'elevenlabs' | 'fish' | undefined
+    if (ttsProvider !== undefined) {
+      if (ttsProvider !== 'elevenlabs' && ttsProvider !== 'fish') {
+        return NextResponse.json({ error: 'Proveedor de voz inválido' }, { status: 400 })
+      }
+      providerValue = ttsProvider
+    }
+
+    let fishKeyUpdate: { fishAudioApiKeyEnc: string | null } | undefined
+    if (clearFishAudioApiKey === true) {
+      fishKeyUpdate = { fishAudioApiKeyEnc: null }
+    } else if (fishAudioApiKey !== undefined) {
+      const raw = typeof fishAudioApiKey === 'string' ? fishAudioApiKey.trim() : ''
+      if (raw) fishKeyUpdate = { fishAudioApiKeyEnc: encrypt(raw) }
+    }
+
+    const ttsData = {
+      ...(providerValue ? { ttsProvider: providerValue } : {}),
+      ...(fishKeyUpdate || {}),
+      ...(fishAudioModel !== undefined ? { fishAudioModel: validFishAudioModel(String(fishAudioModel)) } : {}),
+      ...(fishAudioReferenceId !== undefined
+        ? { fishAudioReferenceId: String(fishAudioReferenceId).trim().slice(0, 191) || null }
+        : {}),
+    }
+
     const sitesData = {
       ...(clientSitesDomain !== undefined ? { clientSitesDomain: clientSitesDomain?.trim() || null } : {}),
       ...(clientSitesTarget !== undefined ? { clientSitesTarget: clientSitesTarget?.trim() || null } : {}),
@@ -185,6 +221,7 @@ export async function PUT(request: NextRequest) {
           ...panelLogoData,
           ...sitesData,
           ...elevenLabsData,
+          ...ttsData,
         },
       })
     } else {
@@ -197,13 +234,16 @@ export async function PUT(request: NextRequest) {
           ...panelLogoData,
           ...sitesData,
           ...elevenLabsData,
+          ...ttsData,
         },
       })
     }
 
     invalidateClientSitesConfig()
     invalidateElevenLabsConfig()
+    invalidateFishAudioConfig()
     const eleven = await getElevenLabsConfig()
+    const fish = await getFishAudioConfig()
 
     return NextResponse.json({
       enableGenericNews: config.enableGenericNews,
@@ -222,6 +262,10 @@ export async function PUT(request: NextRequest) {
       elevenLabsEnabled: eleven.enabled,
       ttsCacheEnabled: eleven.cacheEnabled,
       elevenLabsVoices: parseVoiceCatalog(config.elevenLabsVoices),
+      ttsProvider: config.ttsProvider === 'fish' ? 'fish' : 'elevenlabs',
+      fishAudioKeySet: Boolean(fish.apiKey),
+      fishAudioModel: fish.model,
+      fishAudioReferenceId: fish.referenceId,
     })
   } catch (error) {
     console.error('Error updating app config:', error)

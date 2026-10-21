@@ -14,6 +14,7 @@ interface Config {
   voiceId: string
   voiceStyle: number
   voices: { id: string; name: string; description?: string }[]
+  provider?: 'elevenlabs' | 'fish'
   timeEveryMinutes: number
   weatherEveryMinutes: number
   aiEnabled: boolean
@@ -184,8 +185,17 @@ export function LocutorIaSettings() {
       <section className="card space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-foreground">1. Voz de la emisora</h2>
-          <p className="text-sm text-muted-foreground">Se usa en vivo, AutoDJ, hora y clima.</p>
+          <p className="text-sm text-muted-foreground">
+            {config.provider === 'fish'
+              ? 'Fish Audio está configurado por el administrador (modelo y voz).'
+              : 'Se usa en vivo, AutoDJ, hora y clima.'}
+          </p>
         </div>
+        {config.provider === 'fish' ? (
+          <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
+            La voz, el modelo y el reference ID de Fish Audio se gestionan en Admin → Configuración → Locución.
+          </p>
+        ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Voz</label>
@@ -211,9 +221,12 @@ export function LocutorIaSettings() {
             />
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          Cambiar de voz invalida el caché de esa voz.
-        </p>
+        )}
+        {config.provider !== 'fish' && (
+          <p className="text-[11px] text-muted-foreground">
+            Cambiar de voz invalida el caché de esa voz.
+          </p>
+        )}
       </section>
 
       <section className="card space-y-4">

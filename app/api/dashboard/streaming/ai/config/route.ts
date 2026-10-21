@@ -9,6 +9,7 @@ import { getAiLiveAccess } from '@/lib/ai-live'
 import { DEFAULT_PRESENTER_PHRASES, normalizePhrases } from '@/lib/live-console/presenter'
 import { getVoiceCatalog } from '@/lib/elevenlabs-voices'
 import { streamingClient } from '@/lib/streaming-client'
+import { getTtsProvider } from '@/lib/tts-provider'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,7 @@ function parsePhrases(raw: string | null | undefined): string[] {
 }
 
 async function loadConfig(clientId: string) {
-  const [rs, access, client, voices] = await Promise.all([
+  const [rs, access, client, voices, provider] = await Promise.all([
     prisma.radioStream.findUnique({
       where: { clientId },
       select: {
@@ -46,6 +47,7 @@ async function loadConfig(clientId: string) {
       select: { name: true, basicData: { select: { projectName: true } } },
     }),
     getVoiceCatalog(),
+    getTtsProvider(),
   ])
   if (!rs) return null
   return {
@@ -57,6 +59,7 @@ async function loadConfig(clientId: string) {
     voiceId: rs.aiVoiceId || '',
     voiceStyle: rs.aiVoiceStyle,
     voices,
+    provider,
     aiEnabled: access.enabled,
     remaining: access.remaining,
     limit: access.limit,

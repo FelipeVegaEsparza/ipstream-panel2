@@ -1,16 +1,14 @@
 // =====================================================
 // /api/dashboard/streaming/live/tts
 // Locución libre / presentador IA. Valida plan y cuota mensual.
-// Usa ElevenLabs si está configurado; si falla, cae a Piper.
+// Usa el proveedor premium elegido (ElevenLabs o Fish Audio); si falla, cae a Piper.
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { resolveRadioServerTarget } from '@/lib/streaming-servers'
-import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
-import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
+import { synthesizePremiumTts } from '@/lib/premium-tts'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
-import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +17,7 @@ const MAX_CHARS = 500
 interface AudioResult {
   audio: Buffer
   contentType: string
-  provider: 'elevenlabs' | 'piper'
+  provider: 'elevenlabs' | 'fish' | 'piper'
   cached: boolean
   remaining: number
 }
@@ -82,36 +80,25 @@ export async function POST(request: NextRequest) {
     }
 
     let result: AudioResult | null = null
-    const config = await getElevenLabsConfig()
 
-    if (config.enabled && config.apiKey && config.voiceId) {
-      try {
-        const clientVoice = await getClientVoiceSettings(ctx.clientId)
-        const eleven = await synthesizeElevenLabs({
-          text,
-          apiKey: config.apiKey,
-          voiceId: clientVoice.voiceId || config.voiceId,
-          model: config.model,
-          cacheEnabled: config.cacheEnabled,
-          style: clientVoice.style / 100,
-        })
-        if (!eleven.cached) {
-          try {
-            await consumeAiCharacters(ctx.clientId, text.length)
-          } catch (err) {
-            console.error('[live/tts] no se pudo registrar la cuota:', err)
-          }
+    try {
+      const premium = await synthesizePremiumTts({ clientId: ctx.clientId, text })
+      if (!premium.cached) {
+        try {
+          await consumeAiCharacters(ctx.clientId, text.length)
+        } catch (err) {
+          console.error('[live/tts] no se pudo registrar la cuota:', err)
         }
-        result = {
-          audio: eleven.audio,
-          contentType: eleven.contentType,
-          provider: 'elevenlabs',
-          cached: eleven.cached,
-          remaining: Math.max(0, access.remaining - (eleven.cached ? 0 : text.length)),
-        }
-      } catch (err) {
-        console.error('[live/tts] ElevenLabs falló; usando Piper:', err)
       }
+      result = {
+        audio: premium.audio,
+        contentType: premium.contentType,
+        provider: premium.provider,
+        cached: premium.cached,
+        remaining: Math.max(0, access.remaining - (premium.cached ? 0 : text.length)),
+      }
+    } catch (err) {
+      console.error('[live/tts] voz premium falló; usando Piper:', err)
     }
 
     if (!result) {

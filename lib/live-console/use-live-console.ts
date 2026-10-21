@@ -676,7 +676,7 @@ export function useLiveConsole(
         if (Number.isFinite(parsed)) setAiRemaining(Math.max(0, parsed))
       }
       if (res.headers.get('X-TTS-Provider') === 'piper') {
-        setAnnouncementError('Se usó Piper porque ElevenLabs no pudo generar la locución.')
+        setAnnouncementError('Se usó Piper porque la voz premium no pudo generar la locución.')
       }
       return await res.blob()
     } catch (err) {
@@ -721,7 +721,7 @@ export function useLiveConsole(
       if (Number.isFinite(parsed)) setAiRemaining(Math.max(0, parsed))
     }
     if (res.headers.get('X-TTS-Provider') === 'piper') {
-      setAiError('Se usó Piper porque ElevenLabs no pudo generar la locución.')
+      setAiError('Se usó Piper porque la voz premium no pudo generar la locución.')
     } else {
       setAiError(null)
     }

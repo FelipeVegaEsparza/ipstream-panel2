@@ -562,6 +562,10 @@ model AppConfig {
   elevenLabsModel      String? // eleven_v4_turbo | eleven_v4 | eleven_v3 | ...
   elevenLabsEnabled    Boolean @default(false)
   elevenLabsVoices     String? @db.Text // JSON [{id,name,description}] para que el cliente elija
+  ttsProvider          String  @default("elevenlabs") // "elevenlabs" | "fish"
+  fishAudioApiKeyEnc   String? @db.Text // API key de Fish Audio (AES-256-GCM)
+  fishAudioModel       String? // modelo de Fish Audio (s2.1-pro-free, s2.1-pro, ...)
+  fishAudioReferenceId String? // voice model / reference ID de Fish Audio
   ttsCacheEnabled      Boolean @default(true) // cache de audios generados (app_uploads)
 
   @@map("app_config")

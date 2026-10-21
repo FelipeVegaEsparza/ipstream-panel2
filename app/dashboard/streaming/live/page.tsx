@@ -1,7 +1,7 @@
 import { LiveConsole } from '@/components/dashboard/streaming/live/LiveConsole'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { getDisabledMenuItems } from '@/lib/menu-permissions'
-import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
+import { hasConfiguredPremiumTts } from '@/lib/premium-tts'
 import { getAiLiveAccess } from '@/lib/ai-live'
 import { prisma } from '@/lib/prisma'
 
@@ -25,8 +25,8 @@ export default async function LivePage() {
     )
   }
 
-  const [elevenLabs, aiAccess, clientInfo] = await Promise.all([
-    getElevenLabsConfig(),
+  const [premiumTtsConfigured, aiAccess, clientInfo] = await Promise.all([
+    hasConfiguredPremiumTts(),
     getAiLiveAccess(client.clientId),
     prisma.client.findUnique({
       where: { id: client.clientId },
@@ -45,9 +45,7 @@ export default async function LivePage() {
     }),
   ])
   const aiEnabled = aiAccess.enabled
-  const premiumVoiceAvailable = Boolean(
-    elevenLabs.enabled && elevenLabs.apiKey && elevenLabs.voiceId && aiEnabled
-  )
+  const premiumVoiceAvailable = Boolean(premiumTtsConfigured && aiEnabled)
   const stationName = clientInfo?.basicData?.projectName || clientInfo?.name || 'la radio'
   let aiIntroPhrases: string[] = []
   try {
