@@ -5,6 +5,7 @@ import { SystemSettings } from '@/components/admin/SystemSettings'
 import { LoginBackgroundSettings } from '@/components/admin/LoginBackgroundSettings'
 import { ClientSitesSettings } from '@/components/admin/ClientSitesSettings'
 import { ElevenLabsSettings } from '@/components/admin/ElevenLabsSettings'
+import { PanelLogoManager } from '@/components/admin/PanelLogoManager'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getLoginBackground } from '@/lib/login-background'
 
@@ -42,12 +43,15 @@ export default async function SettingsPage() {
       </div>
 
       <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-card border-border">
+        <TabsList className="grid w-full grid-cols-5 bg-card border-border">
           <TabsTrigger value="system" className="data-[state=active]:bg-brand">
             Sistema
           </TabsTrigger>
           <TabsTrigger value="sites" className="data-[state=active]:bg-brand">
             Sitios
+          </TabsTrigger>
+          <TabsTrigger value="branding" className="data-[state=active]:bg-brand">
+            Logo
           </TabsTrigger>
           <TabsTrigger value="announce" className="data-[state=active]:bg-brand">
             Locución
@@ -63,6 +67,10 @@ export default async function SettingsPage() {
 
         <TabsContent value="sites" className="space-y-6">
           <ClientSitesSettings />
+        </TabsContent>
+
+        <TabsContent value="branding" className="space-y-6">
+          <PanelLogoManager />
         </TabsContent>
 
         <TabsContent value="announce" className="space-y-6">

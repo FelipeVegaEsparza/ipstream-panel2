@@ -1,14 +1,11 @@
+import { PanelLogo } from '@/components/ui/PanelLogo'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 
 export default function AboutPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <img
-          src="/logo-ipstream.png"
-          alt="IPStream Panel"
-          className="h-24 w-auto mx-auto mb-8 filter drop-shadow-2xl"
-        />
+        <PanelLogo className="h-24 w-auto mx-auto mb-8 filter drop-shadow-2xl" />
         <h1 className="text-4xl font-bold text-foreground mb-4">
           IPStream Panel
         </h1>

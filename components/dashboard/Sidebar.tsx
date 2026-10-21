@@ -13,6 +13,7 @@ import {
 import { filterMenuItems } from '@/lib/menu-permissions'
 
 import { APP_VERSION, APP_NAME } from '@/lib/version'
+import { PanelLogo } from '@/components/ui/PanelLogo'
 
 interface NavSection {
   name: string
@@ -148,11 +149,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
   const renderNavContent = (onLinkClick?: () => void) => (
     <div className="flex min-h-0 grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4 border-r border-border">
       <div className="sticky top-0 z-10 flex h-20 shrink-0 items-center justify-center gradient-bg -mx-6 px-6">
-        <img
-          src="/logo-ipstream.png"
-          alt="IPStream Panel"
-          className="h-12 w-auto filter drop-shadow-lg"
-        />
+        <PanelLogo className="h-12 w-auto filter drop-shadow-lg" />
       </div>
       <nav className="flex flex-1 flex-col">
         <ul role="list" className="flex flex-1 flex-col gap-y-6">

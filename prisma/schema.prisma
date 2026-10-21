@@ -543,6 +543,8 @@ model AppConfig {
   id                   String  @id @default(cuid())
   enableGenericNews    Boolean @default(false)
   loginBackgroundImage String? // URL de la imagen de fondo del login (null = fondo animado por defecto)
+  panelLogoDarkUrl     String? // Logo del panel para el tema oscuro (null = logo por defecto)
+  panelLogoLightUrl    String? // Logo del panel para el tema claro (null = logo por defecto)
   hiddenMenuItems      String? @db.Text // JSON array de MenuItemKey ocultos globalmente (override de per-client)
   adminNotifyEmail     String? // correo que recibe notificaciones del panel (nuevos registros, etc.)
   trialDays            Int     @default(7) // duración (días) de la prueba gratuita del registro público

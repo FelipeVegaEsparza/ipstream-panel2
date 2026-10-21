@@ -28,6 +28,7 @@ import {
   SpeakerWaveIcon,
 } from '@heroicons/react/24/outline'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
+import { PanelLogo } from '@/components/ui/PanelLogo'
 
 const navigationGroups = [
   {
@@ -88,11 +89,7 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4 shadow-2xl border-r border-border">
       <div className="flex h-20 shrink-0 items-center justify-center">
-        <img
-          src="/logo-ipstream.png"
-          alt="IPStream Panel"
-          className="h-12 w-auto filter drop-shadow-lg"
-        />
+        <PanelLogo className="h-12 w-auto filter drop-shadow-lg" />
       </div>
       
       {/* Admin Badge */}

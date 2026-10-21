@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PanelLogo } from '@/components/ui/PanelLogo'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -64,11 +65,7 @@ export default function RegisterPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="card">
           <div className="flex justify-center mb-8">
-            <img
-              src="/logo-ipstream.png"
-              alt="IPStream Panel"
-              className="h-20 w-auto filter drop-shadow-lg"
-            />
+            <PanelLogo className="h-20 w-auto filter drop-shadow-lg" />
           </div>
           <h2 className="text-center text-3xl font-bold text-foreground mb-2">
             Crear Cuenta

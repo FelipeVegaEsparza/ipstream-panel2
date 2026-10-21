@@ -28,6 +28,8 @@ export async function GET() {
       enableGenericNews: config.enableGenericNews,
       adminNotifyEmail: config.adminNotifyEmail,
       trialDays: config.trialDays,
+      panelLogoDarkUrl: config.panelLogoDarkUrl || '',
+      panelLogoLightUrl: config.panelLogoLightUrl || '',
       clientSitesDomain: config.clientSitesDomain || process.env.CLIENT_SITES_DOMAIN || '',
       clientSitesTarget: config.clientSitesTarget || process.env.CLIENT_SITES_TARGET || '',
       clientSitesIp: config.clientSitesIp || process.env.CLIENT_SITES_IP || '',
@@ -57,6 +59,8 @@ export async function PUT(request: NextRequest) {
       enableGenericNews,
       adminNotifyEmail,
       trialDays,
+      panelLogoDarkUrl,
+      panelLogoLightUrl,
       clientSitesDomain,
       clientSitesTarget,
       clientSitesIp,
@@ -133,6 +137,29 @@ export async function PUT(request: NextRequest) {
       ...(elevenLabsKeyUpdate || {}),
     }
 
+    const normalizePanelLogo = (value: unknown) => {
+      if (value === undefined) return undefined
+      if (value === null) return null
+      const raw = typeof value === 'string' ? value.trim() : ''
+      if (!raw) return null
+      if (raw.startsWith('/api/uploads/') || /^https?:\/\//i.test(raw)) return raw.slice(0, 500)
+      throw new Error('URL de logo inválida')
+    }
+    let panelLogoData: { panelLogoDarkUrl?: string | null; panelLogoLightUrl?: string | null } = {}
+    try {
+      const dark = normalizePanelLogo(panelLogoDarkUrl)
+      const light = normalizePanelLogo(panelLogoLightUrl)
+      panelLogoData = {
+        ...(dark !== undefined ? { panelLogoDarkUrl: dark } : {}),
+        ...(light !== undefined ? { panelLogoLightUrl: light } : {}),
+      }
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'URL de logo inválida' },
+        { status: 400 }
+      )
+    }
+
     const sitesData = {
       ...(clientSitesDomain !== undefined ? { clientSitesDomain: clientSitesDomain?.trim() || null } : {}),
       ...(clientSitesTarget !== undefined ? { clientSitesTarget: clientSitesTarget?.trim() || null } : {}),
@@ -147,6 +174,7 @@ export async function PUT(request: NextRequest) {
           enableGenericNews: enableGenericNews ?? false,
           adminNotifyEmail: adminNotifyEmail ?? null,
           ...(trialDaysValue !== undefined ? { trialDays: trialDaysValue } : {}),
+          ...panelLogoData,
           ...sitesData,
           ...elevenLabsData,
         },
@@ -158,6 +186,7 @@ export async function PUT(request: NextRequest) {
           ...(enableGenericNews !== undefined ? { enableGenericNews } : {}),
           ...(adminNotifyEmail !== undefined ? { adminNotifyEmail: adminNotifyEmail || null } : {}),
           ...(trialDaysValue !== undefined ? { trialDays: trialDaysValue } : {}),
+          ...panelLogoData,
           ...sitesData,
           ...elevenLabsData,
         },
@@ -172,6 +201,8 @@ export async function PUT(request: NextRequest) {
       enableGenericNews: config.enableGenericNews,
       adminNotifyEmail: config.adminNotifyEmail,
       trialDays: config.trialDays,
+      panelLogoDarkUrl: config.panelLogoDarkUrl || '',
+      panelLogoLightUrl: config.panelLogoLightUrl || '',
       clientSitesDomain: config.clientSitesDomain || process.env.CLIENT_SITES_DOMAIN || '',
       clientSitesTarget: config.clientSitesTarget || process.env.CLIENT_SITES_TARGET || '',
       clientSitesIp: config.clientSitesIp || process.env.CLIENT_SITES_IP || '',

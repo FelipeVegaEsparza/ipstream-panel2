@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { PanelLogo } from '@/components/ui/PanelLogo'
 
 interface LoginFormProps {
   backgroundImage: string | null
@@ -75,11 +76,7 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
       <div className="max-w-md w-full space-y-8 relative z-10">
         <div className="card">
           <div className="flex justify-center mb-8">
-            <img
-              src="/logo-ipstream.png"
-              alt="IPStream Panel"
-              className="h-20 w-auto"
-            />
+            <PanelLogo className="h-20 w-auto" />
           </div>
           <h2 className="text-center text-3xl font-bold text-foreground mb-2">
             Iniciar Sesión
