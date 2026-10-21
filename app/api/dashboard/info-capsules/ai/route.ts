@@ -11,6 +11,7 @@ import { getTtsProvider } from '@/lib/tts-provider'
 import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 import { getFishAudioConfig } from '@/lib/fish-audio-config'
 import { prisma } from '@/lib/prisma'
+import { addCapsuleIntro } from '@/lib/capsule-ai-audio'
 
 export const dynamic = 'force-dynamic'
 const execFileAsync = promisify(execFile)
@@ -64,12 +65,13 @@ export async function POST(request: NextRequest) {
     if (!tts.cached) {
       await consumeAiCharacters(ctx.clientId, text.length).catch(() => {})
     }
+    const audio = await addCapsuleIntro(ctx.clientId, tts.audio)
 
     const storedName = `${crypto.randomUUID()}.mp3`
     const dir = path.join(process.cwd(), 'public', 'uploads', 'info-capsules')
     await fs.mkdir(dir, { recursive: true })
     const filePath = path.join(dir, storedName)
-    await fs.writeFile(filePath, tts.audio)
+    await fs.writeFile(filePath, audio)
 
     let duration: number | null = null
     try {
@@ -81,16 +83,21 @@ export async function POST(request: NextRequest) {
       if (Number.isFinite(seconds) && seconds > 0) duration = Math.round(seconds)
     } catch {}
 
+    const defaultCategory = await prisma.infoCapsuleCategory.findFirst({
+      where: { active: true, defaultForAi: true },
+      select: { id: true },
+    })
     const capsule = await prisma.infoCapsule.create({
       data: {
         clientId: ctx.clientId,
         source: 'ai',
+        categoryId: defaultCategory?.id || null,
         title: title || 'Cápsula IA',
         description: 'Cápsula informativa creada con IA.',
         fileName: `capsula-ia-${Date.now()}.mp3`,
         mimeType: 'audio/mpeg',
         url: `/api/uploads/info-capsules/${storedName}`,
-        size: tts.audio.length,
+        size: audio.length,
         duration,
         active: true,
       },

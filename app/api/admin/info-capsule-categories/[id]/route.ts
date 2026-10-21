@@ -14,9 +14,15 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (typeof body?.name === 'string' && body.name.trim()) data.name = body.name.trim().slice(0, 120)
   if (typeof body?.active === 'boolean') data.active = body.active
   if (Number.isFinite(Number(body?.sortOrder))) data.sortOrder = Number(body.sortOrder)
+  if (typeof body?.defaultForAi === 'boolean') data.defaultForAi = body.defaultForAi
   if (!Object.keys(data).length) return NextResponse.json({ error: 'no_fields' }, { status: 400 })
   try {
-    const category = await prisma.infoCapsuleCategory.update({ where: { id: params.id }, data })
+    const category = await prisma.$transaction(async (tx) => {
+      if (data.defaultForAi === true) {
+        await tx.infoCapsuleCategory.updateMany({ where: { id: { not: params.id } }, data: { defaultForAi: false } })
+      }
+      return tx.infoCapsuleCategory.update({ where: { id: params.id }, data })
+    })
     return NextResponse.json({ category })
   } catch {
     return NextResponse.json({ error: 'not_found' }, { status: 404 })

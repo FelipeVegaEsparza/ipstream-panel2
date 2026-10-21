@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowUpTrayIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
 
-interface Category { id: string; name: string; active: boolean; sortOrder: number; _count?: { capsules: number } }
+interface Category { id: string; name: string; active: boolean; sortOrder: number; defaultForAi: boolean; _count?: { capsules: number } }
 interface Capsule {
   id: string; title: string; description: string | null; fileName: string; mimeType: string;
   url: string; size: number; duration: number | null; active: boolean; createdAt: string;
@@ -124,13 +124,32 @@ export function InfoCapsulesManager() {
       {notice && <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">{notice}</p>}
 
       <section className="card space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">Categorías</h2>
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Categorías</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Marcá una categoría como <strong className="text-foreground">IA</strong> para que las cápsulas generadas por clientes se guarden ahí automáticamente.
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
             <div key={category.id} className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2">
               <span className={`text-xs ${category.active ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{category.name}</span>
               <button type="button" onClick={() => void updateCategory(category, !category.active)} className="text-[10px] text-muted-foreground hover:text-brand">
                 {category.active ? 'Desactivar' : 'Activar'}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await fetch(`/api/admin/info-capsule-categories/${category.id}`, {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ defaultForAi: !category.defaultForAi }),
+                  })
+                  await load()
+                }}
+                className={`rounded px-1.5 py-0.5 text-[9px] font-medium ${category.defaultForAi ? 'bg-brand/15 text-brand' : 'text-muted-foreground hover:text-brand'}`}
+                title="Categoría predeterminada para cápsulas IA"
+              >
+                {category.defaultForAi ? 'IA' : 'Predeterminar IA'}
               </button>
               <button type="button" onClick={() => void deleteCategory(category)} className="text-muted-foreground hover:text-red-300" aria-label={`Eliminar ${category.name}`}>
                 <TrashIcon className="h-3.5 w-3.5" />

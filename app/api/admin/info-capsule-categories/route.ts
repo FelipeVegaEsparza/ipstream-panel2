@@ -22,8 +22,18 @@ export async function POST(request: NextRequest) {
   const name = typeof body?.name === 'string' ? body.name.trim().slice(0, 120) : ''
   if (!name) return NextResponse.json({ error: 'name_required' }, { status: 400 })
   try {
-    const category = await prisma.infoCapsuleCategory.create({
-      data: { name, sortOrder: Number.isFinite(Number(body?.sortOrder)) ? Number(body.sortOrder) : 0 },
+    const defaultForAi = body?.defaultForAi === true
+    const category = await prisma.$transaction(async (tx) => {
+      if (defaultForAi) {
+        await tx.infoCapsuleCategory.updateMany({ data: { defaultForAi: false } })
+      }
+      return tx.infoCapsuleCategory.create({
+        data: {
+          name,
+          sortOrder: Number.isFinite(Number(body?.sortOrder)) ? Number(body.sortOrder) : 0,
+          defaultForAi,
+        },
+      })
     })
     return NextResponse.json({ category }, { status: 201 })
   } catch {
