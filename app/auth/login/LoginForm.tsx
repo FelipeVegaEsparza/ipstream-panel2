@@ -46,15 +46,15 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-background">
+    <div className="relative min-h-[100dvh] overflow-hidden bg-background lg:grid lg:grid-cols-2">
       {/* Fondo: imagen configurada por el admin, o un glow de marca sutil */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         {backgroundImage ? (
           <>
             <img
               src={backgroundImage}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-black/70"></div>
           </>
@@ -72,18 +72,21 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
         )}
       </div>
 
-      {/* Tarjeta de login */}
-      <div className="max-w-md w-full space-y-8 relative z-10">
-        <div className="card">
-          <div className="flex justify-center mb-8">
+      {/* La mitad izquierda queda libre para mostrar el fondo */}
+      <div className="relative hidden lg:block" aria-hidden="true" />
+
+      {/* Panel de acceso: ocupa todo el lado derecho */}
+      <section className="relative z-10 flex max-h-[100dvh] min-h-[100dvh] w-full flex-col justify-center overflow-y-auto border-border/60 bg-background/80 px-5 py-10 backdrop-blur-xl sm:px-8 lg:border-l lg:px-12 xl:px-20">
+        <div className="mx-auto w-full max-w-[520px]">
+          <div className="mb-10 flex justify-center">
             <PanelLogo className="h-20 w-auto" />
           </div>
-          <h2 className="text-center text-3xl font-bold text-foreground mb-2">
-            Iniciar Sesión
-          </h2>
-          <p className="text-center text-sm text-muted-foreground mb-8">
-            Accede a tu panel de gestión de radio
-          </p>
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold text-foreground">Iniciar Sesión</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Accede a tu panel de gestión de radio
+            </p>
+          </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
@@ -137,7 +140,7 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
             </div>
           </form>
         </div>
-      </div>
+      </section>
 
       <style jsx>{`
         @keyframes shake {
