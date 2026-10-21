@@ -23,6 +23,7 @@ export interface ElevenLabsTtsInput {
   model: string
   cacheEnabled: boolean
   style?: number
+  language?: string
 }
 
 const CACHE_ROOT =
@@ -37,7 +38,7 @@ function safeSegment(value: string): string {
 
 function cacheFile(input: ElevenLabsTtsInput): string {
   const hash = createHash('sha256')
-    .update(`${input.model}\n${input.voiceId}\n${input.style ?? 0}\n${input.text}`)
+    .update(`${input.model}\n${input.voiceId}\n${input.style ?? 0}\n${input.language || 'es'}\n${input.text}`)
     .digest('hex')
   return path.join(CACHE_ROOT, safeSegment(input.model), safeSegment(input.voiceId), `${hash}.mp3`)
 }
@@ -77,6 +78,12 @@ async function generate(input: ElevenLabsTtsInput): Promise<Buffer> {
     body: JSON.stringify({
       text: input.text,
       model_id: input.model,
+      // En los modelos que lo soportan, fuerza español y normalización de
+      // números/fechas para evitar lecturas accidentales en inglés.
+      ...(input.model !== 'eleven_multilingual_v2'
+        ? { language_code: input.language || 'es' }
+        : {}),
+      apply_text_normalization: 'on',
       voice_settings: {
         stability: 0.5,
         similarity_boost: 0.75,

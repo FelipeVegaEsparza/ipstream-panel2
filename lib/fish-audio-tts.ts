@@ -16,6 +16,7 @@ export interface FishAudioTtsInput {
   model: string
   referenceId?: string
   cacheEnabled: boolean
+  language?: string
 }
 
 const CACHE_ROOT =
@@ -30,7 +31,7 @@ function safeSegment(value: string): string {
 
 function cacheFile(input: FishAudioTtsInput): string {
   const hash = createHash('sha256')
-    .update(`fish\n${input.model}\n${input.referenceId || ''}\n${input.text}`)
+    .update(`fish\n${input.model}\n${input.referenceId || ''}\n${input.language || 'es-CL'}\n${input.text}`)
     .digest('hex')
   return path.join(
     CACHE_ROOT,
@@ -66,6 +67,7 @@ async function generate(input: FishAudioTtsInput): Promise<Buffer> {
     format: 'mp3',
     mp3_bitrate: 128,
     normalize: true,
+    language: input.language || 'es-CL',
     chunk_length: 300,
     latency: 'normal',
     prosody: { speed: 1, volume: 0, normalize_loudness: true },
