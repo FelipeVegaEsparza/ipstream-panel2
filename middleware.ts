@@ -93,6 +93,7 @@ export default withAuth(
             pathname.startsWith('/registro') ||
             pathname.startsWith('/planes') ||
             pathname.startsWith('/api/public') ||
+            pathname.startsWith('/api/panel-branding') ||
             pathname.startsWith('/api/domains') ||
             pathname.startsWith('/api/uploads') ||
             pathname.startsWith('/api/auth') ||
@@ -113,6 +114,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|logo-ipstream.png|text-sanitizer.js.bak|api/auth|api/public|api/uploads|api/cron|api/webhook|api/health).*)',
+    '/((?!_next/static|_next/image|favicon.ico|logo-ipstream.png|text-sanitizer.js.bak|api/auth|api/public|api/uploads|api/panel-branding|api/cron|api/webhook|api/health).*)',
   ],
 };
