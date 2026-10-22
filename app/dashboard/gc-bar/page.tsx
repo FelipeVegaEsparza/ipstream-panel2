@@ -1,8 +1,11 @@
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { GcBarManager } from '@/components/dashboard/GcBarManager'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function GcBarPage() {
+  const t = dashboardT(getDashboardLocale())
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
@@ -17,7 +20,7 @@ export default async function GcBarPage() {
   const { getEffectiveClient } = await import('@/lib/getEffectiveClient')
   const effectiveClient = await getEffectiveClient()
   if (!effectiveClient) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('gcbar.noClient')}</div>
   }
 
   const messages = await prisma.gcBarMessage.findMany({
@@ -28,9 +31,9 @@ export default async function GcBarPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Barra GC</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('gcbar.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Administra los mensajes o frases de la Barra GC. Se exponen por la API pública de tu sitio.
+          {t('gcbar.subtitle')}
         </p>
       </div>
       <GcBarManager messages={messages} />

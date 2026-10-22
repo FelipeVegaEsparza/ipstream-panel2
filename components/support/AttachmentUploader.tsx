@@ -10,6 +10,7 @@ import {
 } from '@/lib/ticket-attachments'
 import type { SupportAttachment } from './AttachmentCard'
 import { AttachmentCard } from './AttachmentCard'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface AttachmentUploaderProps {
   ticketId: string
@@ -26,6 +27,7 @@ export function AttachmentUploader({
   onChange,
   disabled,
 }: AttachmentUploaderProps) {
+  const { t } = useDashboardI18n()
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -35,7 +37,7 @@ export function AttachmentUploader({
     async (files: File[]) => {
       if (disabled) return
       if (pending.length + files.length > MAX_FILES_PER_MESSAGE) {
-        setError(`Máximo ${MAX_FILES_PER_MESSAGE} archivos por mensaje`)
+        setError(t('support.attach.maxFiles', { max: MAX_FILES_PER_MESSAGE }))
         return
       }
 
@@ -44,11 +46,11 @@ export function AttachmentUploader({
       const uploaded: SupportAttachment[] = []
       for (const file of files) {
         if (!isAllowedMimeType(file.type)) {
-          setError(`Tipo no permitido: ${file.name}`)
+          setError(t('support.attach.notAllowed', { name: file.name }))
           continue
         }
         if (file.size > MAX_FILE_SIZE) {
-          setError(`"${file.name}" supera el máximo de 10 MB`)
+          setError(t('support.attach.tooLarge', { name: file.name }))
           continue
         }
         try {
@@ -60,19 +62,19 @@ export function AttachmentUploader({
           })
           if (!res.ok) {
             const data = await res.json().catch(() => ({}))
-            throw new Error(data.error || 'Error al subir')
+            throw new Error(data.error || t('support.attach.uploadError'))
           }
           const data = await res.json()
           uploaded.push(data.attachment)
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'Error al subir')
+          setError(err instanceof Error ? err.message : t('support.attach.uploadError'))
         }
       }
       onChange([...pending, ...uploaded])
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     },
-    [ticketId, endpoint, pending, onChange, disabled]
+    [ticketId, endpoint, pending, onChange, disabled, t]
   )
 
   const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,10 +134,10 @@ export function AttachmentUploader({
           ) : (
             <Paperclip className="h-3 w-3" />
           )}
-          Adjuntar
+          {t('support.attach.attach')}
         </button>
         <span className="text-xs text-muted-foreground">
-          {pending.length}/{MAX_FILES_PER_MESSAGE} archivos · máx 10 MB c/u
+          {t('support.attach.info', { count: pending.length, max: MAX_FILES_PER_MESSAGE })}
         </span>
       </div>
 

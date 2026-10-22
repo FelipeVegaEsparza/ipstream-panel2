@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useModal } from '@/components/ui/modal'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface PushNotification {
   id: string
@@ -18,6 +19,7 @@ interface PushNotification {
 }
 
 export function PushNotificationsManager() {
+  const { t, locale } = useDashboardI18n()
   const [notifications, setNotifications] = useState<PushNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -44,7 +46,7 @@ export function PushNotificationsManager() {
         setNotifications(data)
       }
     } catch (error) {
-      console.error('Error al cargar notificaciones:', error)
+      console.error('Error loading notifications:', error)
     } finally {
       setLoading(false)
     }
@@ -71,14 +73,14 @@ export function PushNotificationsManager() {
           // Hubo un error al enviar pero se guardó
           showModal({
             type: 'warning',
-            title: 'Notificación guardada con errores',
-            message: data.message + '\n\nError: ' + data.error
+            title: t('push.savedWithErrors'),
+            message: data.message + '\n\n' + t('push.error') + ': ' + data.error
           })
         } else {
           showModal({
             type: 'success',
-            title: '¡Notificación enviada!',
-            message: data.message || 'La notificación se ha enviado correctamente'
+            title: t('push.sent'),
+            message: data.message || t('push.sentHint')
           })
         }
         setShowForm(false)
@@ -94,15 +96,15 @@ export function PushNotificationsManager() {
       } else {
         showModal({
           type: 'error',
-          title: 'Error',
-          message: data.error || 'No se pudo enviar la notificación'
+          title: t('push.error'),
+          message: data.error || t('push.sendError')
         })
       }
     } catch (error) {
       showModal({
         type: 'error',
-        title: 'Error',
-        message: 'Error al enviar la notificación'
+        title: t('push.error'),
+        message: t('push.sendFailed')
       })
     } finally {
       setSending(false)
@@ -117,10 +119,10 @@ export function PushNotificationsManager() {
       failed: 'bg-red-500/20 text-red-400 border-red-500/30'
     }
     const labels = {
-      pending: 'Pendiente',
-      sending: 'Enviando',
-      sent: 'Enviada',
-      failed: 'Fallida'
+      pending: t('push.status.pending'),
+      sending: t('push.status.sending'),
+      sent: t('push.status.sent'),
+      failed: t('push.status.failed')
     }
     return (
       <span className={`px-2 py-1 rounded-full text-xs border ${badges[status as keyof typeof badges]}`}>
@@ -130,7 +132,7 @@ export function PushNotificationsManager() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('es-CL', {
+    return new Date(dateString).toLocaleString(locale === 'en' ? 'en-US' : 'es-CL', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -140,7 +142,7 @@ export function PushNotificationsManager() {
   }
 
   if (loading) {
-    return <div className="text-foreground">Cargando...</div>
+    return <div className="text-foreground">{t('push.loading')}</div>
   }
 
   return (
@@ -149,10 +151,10 @@ export function PushNotificationsManager() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Notificaciones Push
+            {t('push.title')}
           </h1>
           <p className="text-muted-foreground">
-            Envía notificaciones a los usuarios de tu PWA
+            {t('push.subtitle')}
           </p>
         </div>
         <button
@@ -162,7 +164,7 @@ export function PushNotificationsManager() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Nueva Notificación
+          {t('push.new')}
         </button>
       </div>
 
@@ -170,61 +172,61 @@ export function PushNotificationsManager() {
       {showForm && (
         <div className="card">
           <h3 className="text-xl font-semibold text-foreground mb-6">
-            Crear Notificación
+            {t('push.create')}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-group md:col-span-2">
-                <label className="form-label">Título *</label>
+                <label className="form-label">{t('push.formTitle')}</label>
                 <input
                   type="text"
                   className="form-input"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Ej: Nueva noticia disponible"
+                  placeholder={t('push.formTitlePlaceholder')}
                   required
                   maxLength={50}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {formData.title.length}/50 caracteres
+                  {t('push.characters', { count: formData.title.length, max: 50 })}
                 </p>
               </div>
 
               <div className="form-group md:col-span-2">
-                <label className="form-label">Mensaje *</label>
+                <label className="form-label">{t('push.formMessage')}</label>
                 <textarea
                   className="form-input"
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  placeholder="Ej: Tenemos una nueva noticia para ti. ¡No te la pierdas!"
+                  placeholder={t('push.formMessagePlaceholder')}
                   required
                   rows={3}
                   maxLength={200}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {formData.message.length}/200 caracteres
+                  {t('push.characters', { count: formData.message.length, max: 200 })}
                 </p>
               </div>
 
               <div className="form-group">
-                <label className="form-label">URL de Imagen (opcional)</label>
+                <label className="form-label">{t('push.imageUrl')}</label>
                 <input
                   type="url"
                   className="form-input"
                   value={formData.imageUrl}
                   onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://ejemplo.com/imagen.jpg"
+                  placeholder={t('push.imagePlaceholder')}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">URL de Destino (opcional)</label>
+                <label className="form-label">{t('push.targetUrl')}</label>
                 <input
                   type="url"
                   className="form-input"
                   value={formData.targetUrl}
                   onChange={(e) => setFormData({ ...formData, targetUrl: e.target.value })}
-                  placeholder="https://ejemplo.com/noticia"
+                  placeholder={t('push.targetPlaceholder')}
                 />
               </div>
             </div>
@@ -238,7 +240,7 @@ export function PushNotificationsManager() {
                     onChange={() => setFormData({ ...formData, sendNow: true })}
                     className="text-brand"
                   />
-                  <span className="text-foreground">Enviar ahora</span>
+                  <span className="text-foreground">{t('push.sendNow')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -247,13 +249,13 @@ export function PushNotificationsManager() {
                     onChange={() => setFormData({ ...formData, sendNow: false })}
                     className="text-brand"
                   />
-                  <span className="text-foreground">Programar envío</span>
+                  <span className="text-foreground">{t('push.schedule')}</span>
                 </label>
               </div>
 
               {!formData.sendNow && (
                 <div className="form-group">
-                  <label className="form-label">Fecha y hora de envío</label>
+                  <label className="form-label">{t('push.scheduledFor')}</label>
                   <input
                     type="datetime-local"
                     className="form-input"
@@ -272,14 +274,14 @@ export function PushNotificationsManager() {
                 onClick={() => setShowForm(false)}
                 className="btn-secondary"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={sending}
                 className="btn-primary disabled:opacity-50"
               >
-                {sending ? 'Enviando...' : (formData.sendNow ? 'Enviar Ahora' : 'Programar')}
+                {sending ? t('push.sending') : (formData.sendNow ? t('push.sendNowButton') : t('push.scheduleButton'))}
               </button>
             </div>
           </form>
@@ -289,7 +291,7 @@ export function PushNotificationsManager() {
       {/* Historial */}
       <div className="card">
         <h3 className="text-xl font-semibold text-foreground mb-6">
-          Historial de Notificaciones
+          {t('push.history')}
         </h3>
 
         {notifications.length === 0 ? (
@@ -297,7 +299,7 @@ export function PushNotificationsManager() {
             <svg className="w-16 h-16 text-muted-foreground mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <p className="text-muted-foreground">No has enviado notificaciones aún</p>
+            <p className="text-muted-foreground">{t('push.empty')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -317,20 +319,20 @@ export function PushNotificationsManager() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     {notification.sentAt ? formatDate(notification.sentAt) : 
-                     notification.scheduledFor ? `Programada: ${formatDate(notification.scheduledFor)}` :
+                     notification.scheduledFor ? t('push.scheduled', { date: formatDate(notification.scheduledFor) }) :
                      formatDate(notification.createdAt)}
                   </div>
                   <div className="flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    {notification.recipientsCount} destinatarios
+                    {t('push.recipients', { count: notification.recipientsCount })}
                   </div>
                   <div className="flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                     </svg>
-                    {notification.clicksCount} clics
+                    {t('push.clicks', { count: notification.clicksCount })}
                   </div>
                 </div>
               </div>

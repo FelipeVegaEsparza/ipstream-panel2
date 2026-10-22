@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
 import { User as UserIcon, Trash2, ChevronDown, Mail, Phone, Globe } from 'lucide-react'
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 const PAGE_SIZE = 20
 const STATUSES = ['new', 'read', 'resolved'] as const
@@ -36,12 +37,20 @@ interface ListResponse {
 
 type Filter = 'all' | Status
 
-const FILTER_LABELS: Array<{ key: Filter; label: string }> = [
-  { key: 'all', label: 'Todos' },
-  { key: 'new', label: 'Nuevos' },
-  { key: 'read', label: 'Leídos' },
-  { key: 'resolved', label: 'Resueltos' },
-]
+const FILTER_KEYS: Record<Filter, 'contact.filter.all' | 'contact.filter.new' | 'contact.filter.read' | 'contact.filter.resolved'> = {
+  all: 'contact.filter.all',
+  new: 'contact.filter.new',
+  read: 'contact.filter.read',
+  resolved: 'contact.filter.resolved',
+}
+
+const FILTERS: Filter[] = ['all', 'new', 'read', 'resolved']
+
+const STATUS_KEYS: Record<Status, 'contact.status.new' | 'contact.status.read' | 'contact.status.resolved'> = {
+  new: 'contact.status.new',
+  read: 'contact.status.read',
+  resolved: 'contact.status.resolved',
+}
 
 function statusBadgeClasses(status: Status): string {
   switch (status) {
@@ -54,18 +63,8 @@ function statusBadgeClasses(status: Status): string {
   }
 }
 
-function statusLabel(status: Status): string {
-  switch (status) {
-    case 'new':
-      return 'Nuevo'
-    case 'read':
-      return 'Leído'
-    case 'resolved':
-      return 'Resuelto'
-  }
-}
-
 export function ContactMessagesView() {
+  const { t, locale } = useDashboardI18n()
   const [messages, setMessages] = useState<ContactMessageItem[]>([])
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -90,16 +89,16 @@ export function ContactMessagesView() {
       const res = await fetch(`/api/dashboard/contact-messages?${params.toString()}`, {
         cache: 'no-store',
       })
-      if (!res.ok) throw new Error('Error al cargar los mensajes')
+      if (!res.ok) throw new Error(t('contact.loadError'))
       const data: ListResponse = await res.json()
       setMessages(data.messages)
       setPagination(data.pagination)
     } catch {
-      setError('No se pudieron cargar los mensajes. Inténtalo de nuevo.')
+      setError(t('contact.loadError'))
     } finally {
       setLoading(false)
     }
-  }, [page, filter])
+  }, [page, filter, t])
 
   useEffect(() => {
     load()
@@ -119,11 +118,11 @@ export function ContactMessagesView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      if (!res.ok) throw new Error('Error al actualizar el estado')
-      showToast({ type: 'success', title: 'Estado actualizado' })
+      if (!res.ok) throw new Error(t('contact.updateError'))
+      showToast({ type: 'success', title: t('contact.updated') })
       await load()
     } catch {
-      showToast({ type: 'error', title: 'Error al actualizar el estado' })
+      showToast({ type: 'error', title: t('contact.updateError') })
     } finally {
       setBusyId(null)
     }
@@ -134,13 +133,13 @@ export function ContactMessagesView() {
     setError(null)
     try {
       const res = await fetch(`/api/dashboard/contact-messages/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Error al eliminar el mensaje')
-      showToast({ type: 'success', title: 'Mensaje eliminado' })
+      if (!res.ok) throw new Error(t('contact.deleteError'))
+      showToast({ type: 'success', title: t('contact.deleted') })
       setConfirmId(null)
       if (messages.length === 1 && page > 1) setPage(page - 1)
       else await load()
     } catch {
-      showToast({ type: 'error', title: 'Error al eliminar el mensaje' })
+      showToast({ type: 'error', title: t('contact.deleteError') })
       setConfirmId(null)
     } finally {
       setBusyId(null)
@@ -154,20 +153,20 @@ export function ContactMessagesView() {
     <div className="bg-card/40 border border-border rounded-xl">
       <div className="p-4 border-b border-border flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1 bg-background border border-border rounded-lg p-1">
-          {FILTER_LABELS.map((opt) => (
+          {FILTERS.map((key) => (
             <button
-              key={opt.key}
-              onClick={() => changeFilter(opt.key)}
+              key={key}
+              onClick={() => changeFilter(key)}
               className={`px-3 py-1 text-xs rounded ${
-                filter === opt.key ? 'bg-brand text-white' : 'text-muted-foreground hover:text-white'
+                filter === key ? 'bg-brand text-white' : 'text-muted-foreground hover:text-white'
               }`}
             >
-              {opt.label}
+              {t(FILTER_KEYS[key])}
             </button>
           ))}
         </div>
         <span className="text-xs text-muted-foreground">
-          {pagination.total} mensaje{pagination.total === 1 ? '' : 's'}
+          {t('contact.count', { count: pagination.total })}
         </span>
         <div className="flex-1" />
         {pagination.pages > 1 && (
@@ -177,17 +176,17 @@ export function ContactMessagesView() {
               disabled={page <= 1 || loading}
               className="px-2.5 py-1 rounded bg-background border border-border hover:bg-secondary disabled:opacity-40"
             >
-              Anterior
+              {t('contact.previous')}
             </button>
             <span>
-              Página {pagination.page} de {pagination.pages}
+              {t('contact.page', { page: pagination.page, pages: pagination.pages })}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
               disabled={page >= pagination.pages || loading}
               className="px-2.5 py-1 rounded bg-background border border-border hover:bg-secondary disabled:opacity-40"
             >
-              Siguiente
+              {t('contact.next')}
             </button>
           </div>
         )}
@@ -205,8 +204,7 @@ export function ContactMessagesView() {
         </div>
       ) : messages.length === 0 ? (
         <div className="p-10 text-center text-muted-foreground text-sm">
-          No hay mensajes de contacto
-          {filter !== 'all' ? ' con este estado' : ''}.
+          {filter === 'all' ? t('contact.empty') : t('contact.emptyFiltered')}
         </div>
       ) : (
         <div className="max-h-[700px] overflow-y-auto">
@@ -228,10 +226,10 @@ export function ContactMessagesView() {
                         <span
                           className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border ${statusBadgeClasses(m.status)}`}
                         >
-                          {statusLabel(m.status)}
+                          {t(STATUS_KEYS[m.status])}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(created, { addSuffix: true, locale: es })}
+                          {formatDistanceToNow(created, { addSuffix: true, locale: locale === 'en' ? enUS : es })}
                         </span>
                       </div>
                       <p className="text-sm text-foreground whitespace-pre-wrap break-words line-clamp-3">
@@ -257,7 +255,7 @@ export function ContactMessagesView() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-                            <span>Marcar como:</span>
+                            <span>{t('contact.markAs')}</span>
                             {STATUSES.filter((s) => s !== m.status).map((s) => (
                               <button
                                 key={s}
@@ -265,7 +263,7 @@ export function ContactMessagesView() {
                                 disabled={busyId === m.id}
                                 className="px-2 py-1 rounded bg-card border border-border text-muted-foreground hover:bg-brand hover:text-white disabled:opacity-50"
                               >
-                                {statusLabel(s)}
+                                {t(STATUS_KEYS[s])}
                               </button>
                             ))}
                           </div>
@@ -276,7 +274,7 @@ export function ContactMessagesView() {
                       <button
                         onClick={() => setExpandedId(isExpanded ? null : m.id)}
                         className="p-1.5 rounded text-muted-foreground hover:text-brand hover:bg-brand/10"
-                        title={isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
+                        title={isExpanded ? t('contact.hideDetails') : t('contact.showDetails')}
                       >
                         <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                       </button>
@@ -287,21 +285,21 @@ export function ContactMessagesView() {
                             disabled={busyId === m.id}
                             className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
                           >
-                            {busyId === m.id ? 'Borrando…' : 'Confirmar'}
+                            {busyId === m.id ? t('contact.deleting') : t('contact.confirm')}
                           </button>
                           <button
                             onClick={() => setConfirmId(null)}
                             disabled={busyId === m.id}
                             className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-secondary"
                           >
-                            Cancelar
+                            {t('common.cancel')}
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => setConfirmId(m.id)}
                           className="p-1.5 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
-                          title="Eliminar mensaje"
+                          title={t('contact.deleteMessage')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -318,7 +316,7 @@ export function ContactMessagesView() {
       {pagination.total > 0 && (
         <div className="px-4 py-3 border-t border-border text-xs text-muted-foreground flex justify-between items-center">
           <span>
-            Mostrando {startPage}–{endPage} de {pagination.total}
+            {t('contact.showing', { start: startPage, end: endPage, total: pagination.total })}
           </span>
         </div>
       )}

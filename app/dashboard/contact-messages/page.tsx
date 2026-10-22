@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation'
 import { ContactMessagesView } from '@/components/dashboard/ContactMessagesView'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ContactMessagesPage() {
+  const t = dashboardT(getDashboardLocale())
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
@@ -18,9 +21,9 @@ export default async function ContactMessagesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Mensajes de contacto</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('contact.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Consultas enviadas desde el formulario de contacto de tu sitio web
+          {t('contact.subtitle')}
         </p>
       </div>
       <ContactMessagesView />

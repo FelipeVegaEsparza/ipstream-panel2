@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { showToast } from '@/components/ui/toast'
 import { PlusIcon, PencilIcon, TrashIcon, Bars3BottomLeftIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface GcBarMessage {
   id: string
@@ -17,6 +18,7 @@ interface GcBarManagerProps {
 }
 
 export function GcBarManager({ messages }: GcBarManagerProps) {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [text, setText] = useState('')
@@ -39,7 +41,7 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!text.trim()) {
-      showToast({ type: 'error', title: 'El texto es requerido' })
+      showToast({ type: 'error', title: t('gcbar.required') })
       return
     }
     setSaving(true)
@@ -52,33 +54,33 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
       })
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
-        showToast({ type: 'error', title: data?.error || 'Error al guardar el mensaje' })
+        showToast({ type: 'error', title: data?.error || t('gcbar.saveError') })
         return
       }
-      showToast({ type: 'success', title: editingId ? 'Mensaje actualizado' : 'Mensaje agregado' })
+      showToast({ type: 'success', title: editingId ? t('gcbar.saved') : t('gcbar.added') })
       reset()
       router.refresh()
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar el mensaje' })
+      showToast({ type: 'error', title: t('gcbar.saveError') })
     } finally {
       setSaving(false)
     }
   }
 
   const remove = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este mensaje?')) return
+    if (!confirm(t('gcbar.deleteConfirm'))) return
     setLoading(id)
     try {
       const response = await fetch(`/api/gc-bar/${id}`, { method: 'DELETE' })
       if (response.ok) {
         if (editingId === id) reset()
-        showToast({ type: 'success', title: 'Mensaje eliminado' })
+        showToast({ type: 'success', title: t('gcbar.deleted') })
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar el mensaje' })
+        showToast({ type: 'error', title: t('gcbar.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar el mensaje' })
+      showToast({ type: 'error', title: t('gcbar.deleteError') })
     } finally {
       setLoading(null)
     }
@@ -88,39 +90,39 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
     <div className="space-y-6">
       <form onSubmit={submit} className="card space-y-4">
         <h2 className="text-lg font-semibold text-foreground">
-          {editingId ? 'Editar mensaje' : 'Nuevo mensaje'}
+          {editingId ? t('gcbar.edit') : t('gcbar.new')}
         </h2>
 
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-2">Mensaje o frase *</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-2">{t('gcbar.message')}</label>
           <textarea
             className="form-input w-full resize-none"
             rows={2}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Ej: Escúchanos en vivo todos los días"
+            placeholder={t('gcbar.messagePlaceholder')}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-2">Orden</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-2">{t('gcbar.order')}</label>
           <input
             type="number"
             className="form-input w-full max-w-xs"
             value={order}
             onChange={(e) => setOrder(e.target.value)}
           />
-          <p className="text-xs text-muted-foreground mt-1">El número menor aparece primero en la barra.</p>
+          <p className="text-xs text-muted-foreground mt-1">{t('gcbar.orderHint')}</p>
         </div>
 
         <div className="flex gap-3">
           <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">
             <PlusIcon className="h-4 w-4" />
-            {saving ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Agregar mensaje'}
+            {saving ? t('common.saving') : editingId ? t('gcbar.saveChanges') : t('gcbar.add')}
           </button>
           {editingId && (
             <button type="button" onClick={reset} className="btn-secondary">
-              Cancelar
+              {t('common.cancel')}
             </button>
           )}
         </div>
@@ -129,8 +131,8 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
       {messages.length === 0 ? (
         <div className="text-center py-12">
           <Bars3BottomLeftIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">No hay mensajes</h3>
-          <p className="text-muted-foreground">Agrega el primer mensaje de la Barra GC.</p>
+          <h3 className="text-lg font-medium text-foreground mb-2">{t('gcbar.empty')}</h3>
+          <p className="text-muted-foreground">{t('gcbar.emptyHint')}</p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -148,7 +150,7 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
                   type="button"
                   onClick={() => startEdit(message)}
                   className="action-button action-button-edit"
-                  title="Editar"
+                  title={t('common.edit')}
                 >
                   <PencilIcon className="h-4 w-4" />
                 </button>
@@ -157,7 +159,7 @@ export function GcBarManager({ messages }: GcBarManagerProps) {
                   onClick={() => remove(message.id)}
                   disabled={loading === message.id}
                   className="action-button action-button-delete"
-                  title="Eliminar"
+                  title={t('common.delete')}
                 >
                   <TrashIcon className="h-4 w-4" />
                 </button>

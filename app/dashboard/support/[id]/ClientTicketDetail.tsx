@@ -9,6 +9,7 @@ import { MessageBubble, type SupportMessage } from '@/components/support/Message
 import { AttachmentUploader } from '@/components/support/AttachmentUploader'
 import type { SupportAttachment } from '@/components/support/AttachmentCard'
 import { markTicketRead } from '@/lib/ticket-read-state'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface ClientTicketDetailData {
   id: string
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export function ClientTicketDetail({ ticket: initial }: Props) {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [ticket, setTicket] = useState(initial)
   const [body, setBody] = useState('')
@@ -97,7 +99,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al enviar')
+        throw new Error(data.error || t('support.detail.sendError'))
       }
       const data = await res.json()
       setTicket((prev) => ({
@@ -108,7 +110,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
       setBody('')
       setPending([])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al enviar')
+      setError(err instanceof Error ? err.message : t('support.detail.sendError'))
     } finally {
       setSending(false)
     }
@@ -127,10 +129,10 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
           <h1 className="text-xl font-bold text-foreground truncate">{ticket.subject}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded border ${statusConf.color}`}>
-              {statusConf.label}
+              {t(`support.status.${ticket.status}` as 'support.status.open' | 'support.status.in_progress' | 'support.status.closed')}
             </span>
             <span className={`text-xs px-2 py-0.5 rounded border ${priorityConf.color}`}>
-              Prioridad: {priorityConf.label}
+              {t('support.priorityLabel', { priority: t(`support.priority.${ticket.priority}` as 'support.priority.low' | 'support.priority.normal' | 'support.priority.high' | 'support.priority.urgent') })}
             </span>
           </div>
         </div>
@@ -149,9 +151,9 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
             <div className="flex items-start gap-2 p-3 rounded-lg bg-secondary/30 text-sm text-muted-foreground">
               <LifeBuoy className="h-4 w-4 mt-0.5 text-brand flex-shrink-0" />
               <div>
-                <p className="font-medium text-foreground">Este ticket está cerrado</p>
+                <p className="font-medium text-foreground">{t('support.detail.closed')}</p>
                 <p className="text-muted-foreground text-xs mt-0.5">
-                  Si necesitas ayuda con un tema relacionado, abre uno nuevo.
+                  {t('support.detail.closedHint')}
                 </p>
               </div>
             </div>
@@ -161,7 +163,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Escribe tu respuesta..."
+              placeholder={t('support.detail.replyPlaceholder')}
               rows={3}
               maxLength={5000}
               className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground placeholder-gray-500 resize-none focus:outline-none focus:border-brand"
@@ -188,7 +190,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand disabled:opacity-50 transition-colors"
               >
                 <Send className="h-4 w-4" />
-                {sending ? 'Enviando...' : 'Enviar'}
+                {sending ? t('support.detail.sending') : t('support.detail.send')}
               </button>
             </div>
           </div>
@@ -206,7 +208,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
           >
             <BellRing className="h-5 w-5 text-brand mt-0.5 flex-shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground">Nueva respuesta</p>
+              <p className="text-sm font-semibold text-foreground">{t('support.detail.newReply')}</p>
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{newReply.body}</p>
             </div>
           </button>

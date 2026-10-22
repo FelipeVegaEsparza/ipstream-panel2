@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { socialNetworksSchema, type SocialNetworksInput } from '@/lib/validations'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface SocialNetworksFormProps {
     initialData?: {
@@ -20,6 +21,7 @@ interface SocialNetworksFormProps {
 }
 
 export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
+    const { t } = useDashboardI18n()
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
@@ -55,10 +57,10 @@ export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
                 router.refresh()
             } else {
                 const error = await response.json()
-                showToast({ type: 'error', title: error.error || 'Error al guardar los datos' })
+                showToast({ type: 'error', title: error.error || t('social.saveError') })
             }
         } catch (error) {
-            showToast({ type: 'error', title: 'Error al guardar los datos' })
+            showToast({ type: 'error', title: t('social.saveError') })
         } finally {
             setLoading(false)
         }
@@ -68,13 +70,13 @@ export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="form-group">
                 <label htmlFor="facebook" className="form-label">
-                    Link Facebook
+                    {t('social.facebook')}
                 </label>
                 <input
                     type="url"
                     id="facebook"
                     className="form-input"
-                    placeholder="https://facebook.com/tu-pagina"
+                    placeholder={t('social.facebookPlaceholder')}
                     {...register('facebook')}
                 />
                 {errors.facebook && (
@@ -84,13 +86,13 @@ export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
 
             <div className="form-group">
                 <label htmlFor="youtube" className="form-label">
-                    Link YouTube
+                    {t('social.youtube')}
                 </label>
                 <input
                     type="url"
                     id="youtube"
                     className="form-input"
-                    placeholder="https://youtube.com/@tu-canal"
+                    placeholder={t('social.youtubePlaceholder')}
                     {...register('youtube')}
                 />
                 {errors.youtube && (
@@ -100,13 +102,13 @@ export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
 
             <div className="form-group">
                 <label htmlFor="instagram" className="form-label">
-                    Link Instagram
+                    {t('social.instagram')}
                 </label>
                 <input
                     type="url"
                     id="instagram"
                     className="form-input"
-                    placeholder="https://instagram.com/tu-cuenta"
+                    placeholder={t('social.instagramPlaceholder')}
                     {...register('instagram')}
                 />
                 {errors.instagram && (
@@ -116,13 +118,13 @@ export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
 
             <div className="form-group">
                 <label htmlFor="tiktok" className="form-label">
-                    Link TikTok
+                    {t('social.tiktok')}
                 </label>
                 <input
                     type="url"
                     id="tiktok"
                     className="form-input"
-                    placeholder="https://tiktok.com/@tu-cuenta"
+                    placeholder={t('social.tiktokPlaceholder')}
                     {...register('tiktok')}
                 />
                 {errors.tiktok && (
@@ -132,13 +134,13 @@ export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
 
             <div className="form-group">
                 <label htmlFor="whatsapp" className="form-label">
-                    Link WhatsApp
+                    {t('social.whatsapp')}
                 </label>
                 <input
                     type="text"
                     id="whatsapp"
                     className="form-input"
-                    placeholder="+56912345678 o https://wa.me/56912345678"
+                    placeholder={t('social.whatsappPlaceholder')}
                     {...register('whatsapp')}
                 />
                 {errors.whatsapp && (
@@ -148,13 +150,13 @@ export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
 
             <div className="form-group">
                 <label htmlFor="x" className="form-label">
-                    Link X (Twitter)
+                    {t('social.x')}
                 </label>
                 <input
                     type="url"
                     id="x"
                     className="form-input"
-                    placeholder="https://x.com/tu-cuenta"
+                    placeholder={t('social.xPlaceholder')}
                     {...register('x')}
                 />
                 {errors.x && (
@@ -168,14 +170,14 @@ export function SocialNetworksForm({ initialData }: SocialNetworksFormProps) {
                     onClick={() => router.back()}
                     className="btn-secondary"
                 >
-                    Cancelar
+                    {t('common.cancel')}
                 </button>
                 <button
                     type="submit"
                     disabled={loading}
                     className="btn-primary disabled:opacity-50"
                 >
-                    {loading ? 'Guardando...' : 'Guardar'}
+                    {loading ? t('common.saving') : t('common.save')}
                 </button>
             </div>
         </form>

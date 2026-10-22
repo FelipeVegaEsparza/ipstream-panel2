@@ -3,10 +3,13 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { SupportView } from './SupportView'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SupportPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   if (!session?.user) return null
 
@@ -14,7 +17,7 @@ export default async function SupportPage() {
   if (!effective) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        No tienes un cliente asignado.
+        {t('support.noClient')}
       </div>
     )
   }

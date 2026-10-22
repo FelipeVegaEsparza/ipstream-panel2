@@ -5,8 +5,11 @@ import { redirect } from 'next/navigation'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { ClientPaymentsView } from '@/components/dashboard/ClientPaymentsView'
 import { paypalEnabled, PAYPAL_CURRENCIES } from '@/lib/paypal'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function PaymentsPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user) {
@@ -20,10 +23,10 @@ export default async function PaymentsPage() {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-foreground mb-4">
-          No tienes un cliente asignado
+          {t('payments.noClient')}
         </h2>
         <p className="text-muted-foreground">
-          Contacta al administrador para que te asigne un plan
+          {t('payments.contactAssign')}
         </p>
       </div>
     )
@@ -50,7 +53,7 @@ export default async function PaymentsPage() {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-foreground mb-4">
-          Cliente no encontrado
+          {t('payments.clientNotFound')}
         </h2>
       </div>
     )

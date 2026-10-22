@@ -7,6 +7,7 @@ import {
   isPreviewableImage,
   formatFileSize,
 } from '@/lib/ticket-attachments'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface SupportAttachment {
   id: string
@@ -24,6 +25,7 @@ interface AttachmentCardProps {
 }
 
 export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
+  const { t } = useDashboardI18n()
   const [imgError, setImgError] = useState(false)
   const isImage = isPreviewableImage(attachment.mimeType) && !imgError
   const Icon = getFileIcon(attachment.mimeType)
@@ -69,7 +71,7 @@ export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
         rel="noopener noreferrer"
         download
         className="flex-shrink-0 p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-        title="Descargar"
+        title={t('support.attach.download')}
       >
         <Download className="h-4 w-4" />
       </a>
@@ -79,7 +81,7 @@ export function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
           type="button"
           onClick={() => onRemove(attachment.id)}
           className="flex-shrink-0 p-1.5 rounded hover:bg-red-600/20 text-muted-foreground hover:text-red-400 transition-colors"
-          title="Quitar"
+          title={t('support.attach.remove')}
         >
           <X className="h-4 w-4" />
         </button>

@@ -6,7 +6,21 @@ import Link from 'next/link'
 import { LifeBuoy, Plus, MessageCircle } from 'lucide-react'
 import { TICKET_STATUS, TICKET_PRIORITY, type TicketStatus, type TicketPriority } from '@/lib/ticket-status'
 import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+
+const STATUS_KEYS: Record<TicketStatus, 'support.status.open' | 'support.status.in_progress' | 'support.status.closed'> = {
+  open: 'support.status.open',
+  in_progress: 'support.status.in_progress',
+  closed: 'support.status.closed',
+}
+
+const PRIORITY_KEYS: Record<TicketPriority, 'support.priority.low' | 'support.priority.normal' | 'support.priority.high' | 'support.priority.urgent'> = {
+  low: 'support.priority.low',
+  normal: 'support.priority.normal',
+  high: 'support.priority.high',
+  urgent: 'support.priority.urgent',
+}
 
 export interface SupportTicketListItem {
   id: string
@@ -24,6 +38,7 @@ interface SupportViewProps {
 }
 
 export function SupportView({ initialTickets }: SupportViewProps) {
+  const { t, locale } = useDashboardI18n()
   const router = useRouter()
   const [tickets] = useState(initialTickets)
   const [showNew, setShowNew] = useState(false)
@@ -34,10 +49,10 @@ export function SupportView({ initialTickets }: SupportViewProps) {
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <LifeBuoy className="h-6 w-6 text-brand" />
-            Soporte
+            {t('support.title')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Abre un ticket y te responderemos a la brevedad
+            {t('support.subtitle')}
           </p>
         </div>
         <button
@@ -45,68 +60,67 @@ export function SupportView({ initialTickets }: SupportViewProps) {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand transition-colors"
         >
           <Plus className="h-4 w-4" />
-          Nuevo ticket
+          {t('support.newTicket')}
         </button>
       </div>
 
       {tickets.length === 0 ? (
         <div className="text-center py-16 bg-card/40 rounded-xl border border-dashed border-border">
           <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <h2 className="text-lg font-medium text-foreground mb-1">No tienes tickets</h2>
+          <h2 className="text-lg font-medium text-foreground mb-1">{t('support.empty')}</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Cuando tengas una duda o problema, abre un ticket y te ayudamos.
+            {t('support.emptyHint')}
           </p>
           <button
             onClick={() => setShowNew(true)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand transition-colors"
           >
             <Plus className="h-4 w-4" />
-            Abrir mi primer ticket
+            {t('support.firstTicket')}
           </button>
         </div>
       ) : (
         <ul className="space-y-3">
-          {tickets.map((t) => {
-            const statusConf = TICKET_STATUS[t.status as TicketStatus]
-            const priorityConf = TICKET_PRIORITY[t.priority as TicketPriority]
-            const lastMessage = t.messages[0]
+          {tickets.map((ticket) => {
+            const statusConf = TICKET_STATUS[ticket.status as TicketStatus]
+            const priorityConf = TICKET_PRIORITY[ticket.priority as TicketPriority]
+            const lastMessage = ticket.messages[0]
             const updatedAt =
-              typeof t.updatedAt === 'string' ? new Date(t.updatedAt) : t.updatedAt
+              typeof ticket.updatedAt === 'string' ? new Date(ticket.updatedAt) : ticket.updatedAt
             return (
-              <li key={t.id}>
+              <li key={ticket.id}>
                 <Link
-                  href={`/dashboard/support/${t.id}`}
+                  href={`/dashboard/support/${ticket.id}`}
                   className="block bg-card border border-border rounded-xl p-4 hover:border-brand transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <h3 className="text-foreground font-semibold flex-1">{t.subject}</h3>
+                    <h3 className="text-foreground font-semibold flex-1">{ticket.subject}</h3>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span
                         className={`text-xs px-2 py-0.5 rounded border ${priorityConf.color}`}
                       >
-                        {priorityConf.label}
+                        {t(PRIORITY_KEYS[ticket.priority as TicketPriority])}
                       </span>
                       <span
                         className={`text-xs px-2 py-0.5 rounded border ${statusConf.color}`}
                       >
-                        {statusConf.label}
+                        {t(STATUS_KEYS[ticket.status as TicketStatus])}
                       </span>
                     </div>
                   </div>
                   {lastMessage && (
                     <p className="text-sm text-muted-foreground line-clamp-1">
                       <span className="text-muted-foreground">
-                        {lastMessage.authorType === 'admin' ? 'Soporte' : 'Tú'}:{' '}
+                        {lastMessage.authorType === 'admin' ? t('support.staff') : t('support.you')}:{' '}
                       </span>
                       {lastMessage.body}
                     </p>
                   )}
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                    <span>{t._count.messages} mensaje{t._count.messages === 1 ? '' : 's'}</span>
+                    <span>{ticket._count.messages === 1 ? t('support.message') : t('support.messages', { count: ticket._count.messages })}</span>
                     <span>·</span>
                     <span>
-                      Actualizado{' '}
-                      {formatDistanceToNow(updatedAt, { addSuffix: true, locale: es })}
+                      {t('support.updated', { time: formatDistanceToNow(updatedAt, { addSuffix: true, locale: locale === 'en' ? enUS : es }) })}
                     </span>
                   </div>
                 </Link>
@@ -122,6 +136,7 @@ export function SupportView({ initialTickets }: SupportViewProps) {
 }
 
 function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const { t } = useDashboardI18n()
   const [subject, setSubject] = useState('')
   const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal')
   const [body, setBody] = useState('')
@@ -133,7 +148,7 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (subject.length < 5 || body.length < 10) {
-      setError('Asunto mínimo 5 caracteres, mensaje mínimo 10')
+      setError(t('support.form.minError'))
       return
     }
     setSubmitting(true)
@@ -146,7 +161,7 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al crear')
+        throw new Error(data.error || t('support.form.createError'))
       }
       const data = await res.json()
       const ticketId = data.ticket.id
@@ -164,7 +179,7 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
           })
           if (!uploadRes.ok) {
             const errData = await uploadRes.json().catch(() => ({}))
-            throw new Error(`Error al subir ${file.name}: ${errData.error || 'Error desconocido'}`)
+            throw new Error(t('support.form.uploadFileError', { name: file.name, error: errData.error || t('support.form.unknownError') }))
           }
           const uploadData = await uploadRes.json()
           attachmentIds.push(uploadData.attachment.id)
@@ -183,7 +198,7 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
       onCreated()
       window.location.href = `/dashboard/support/${ticketId}`
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear')
+      setError(err instanceof Error ? err.message : t('support.form.createError'))
     } finally {
       setSubmitting(false)
       setUploadProgress(false)
@@ -200,15 +215,15 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
         onClick={(e) => e.stopPropagation()}
       >
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <h2 className="text-xl font-bold text-foreground">Nuevo ticket</h2>
+          <h2 className="text-xl font-bold text-foreground">{t('support.form.new')}</h2>
 
           <div>
-            <label className="text-sm text-muted-foreground block mb-1">Asunto *</label>
+            <label className="text-sm text-muted-foreground block mb-1">{t('support.form.subject')}</label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Ej: No puedo subir imágenes"
+              placeholder={t('support.form.subjectPlaceholder')}
               maxLength={200}
               className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
               required
@@ -216,25 +231,25 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
           </div>
 
           <div>
-            <label className="text-sm text-muted-foreground block mb-1">Prioridad</label>
+            <label className="text-sm text-muted-foreground block mb-1">{t('support.form.priority')}</label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as 'low' | 'normal' | 'high' | 'urgent')}
               className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
             >
-              <option value="low">Baja</option>
-              <option value="normal">Normal</option>
-              <option value="high">Alta</option>
-              <option value="urgent">Urgente</option>
+              <option value="low">{t('support.priority.low')}</option>
+              <option value="normal">{t('support.priority.normal')}</option>
+              <option value="high">{t('support.priority.high')}</option>
+              <option value="urgent">{t('support.priority.urgent')}</option>
             </select>
           </div>
 
           <div>
-            <label className="text-sm text-muted-foreground block mb-1">Mensaje *</label>
+            <label className="text-sm text-muted-foreground block mb-1">{t('support.form.message')}</label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Describe tu problema o pregunta con el mayor detalle posible"
+              placeholder={t('support.form.messagePlaceholder')}
               rows={5}
               maxLength={5000}
               className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground resize-none"
@@ -244,7 +259,7 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
           </div>
 
           <div>
-            <label className="text-sm text-muted-foreground block mb-1">Archivos adjuntos</label>
+            <label className="text-sm text-muted-foreground block mb-1">{t('support.form.attachments')}</label>
             <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:border-brand cursor-pointer transition-colors text-sm">
               <input
                 type="file"
@@ -256,8 +271,8 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
                 }}
               />
               {files.length === 0
-                ? 'Seleccionar archivos'
-                : `${files.length} archivo${files.length > 1 ? 's' : ''} seleccionado${files.length > 1 ? 's' : ''}`}
+                ? t('support.form.selectFiles')
+                : t('support.form.selectedFiles', { count: files.length })}
             </label>
             {files.length > 0 && (
               <ul className="mt-2 space-y-1">
@@ -272,7 +287,7 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
                       className="text-red-400 hover:text-red-300 ml-auto flex-shrink-0"
                       onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
                     >
-                      Quitar
+                      {t('support.form.remove')}
                     </button>
                   </li>
                 ))}
@@ -292,14 +307,14 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
               onClick={onClose}
               className="flex-1 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-secondary"
             >
-              Cancelar
+              {t('support.form.cancel')}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="flex-1 px-4 py-2 rounded-lg bg-brand text-white font-medium hover:bg-brand disabled:opacity-50"
             >
-              {submitting ? (uploadProgress ? 'Subiendo archivos...' : 'Creando...') : 'Crear ticket'}
+              {submitting ? (uploadProgress ? t('support.form.uploading') : t('support.form.creating')) : t('support.form.create')}
             </button>
           </div>
         </form>

@@ -3,8 +3,11 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SocialNetworksForm } from '@/components/dashboard/SocialNetworksForm'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function SocialNetworksPage() {
+  const t = dashboardT(getDashboardLocale())
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
@@ -19,7 +22,7 @@ export default async function SocialNetworksPage() {
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('gcbar.noClient')}</div>
   }
 
   const socialNetworks = await prisma.socialNetworks.findUnique({
@@ -30,10 +33,10 @@ export default async function SocialNetworksPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Redes Sociales
+          {t('social.title')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configura los enlaces a tus redes sociales
+          {t('social.subtitle')}
         </p>
       </div>
 

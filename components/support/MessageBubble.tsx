@@ -1,9 +1,10 @@
 'use client'
 
 import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
 import { LifeBuoy } from 'lucide-react'
 import { AttachmentCard, type SupportAttachment } from './AttachmentCard'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface SupportMessage {
   id: string
@@ -20,6 +21,7 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ message, showAuthor = true }: MessageBubbleProps) {
+  const { t, locale } = useDashboardI18n()
   const isClient = message.authorType === 'client'
   const isAdmin = message.authorType === 'admin'
 
@@ -28,7 +30,7 @@ export function MessageBubble({ message, showAuthor = true }: MessageBubbleProps
     : message.createdAt
   const timeAgo = formatDistanceToNow(dateValue, {
     addSuffix: true,
-    locale: es,
+    locale: locale === 'en' ? enUS : es,
   })
 
   return (
@@ -51,8 +53,8 @@ export function MessageBubble({ message, showAuthor = true }: MessageBubbleProps
         {showAuthor && (
           <div className={`flex items-center gap-2 mb-1 text-xs text-muted-foreground ${isClient ? '' : 'flex-row-reverse'}`}>
             <span className="font-medium text-muted-foreground">{message.authorName}</span>
-            <span>{isAdmin ? 'Soporte' : 'Cliente'}</span>
-            <span title={dateValue.toLocaleString('es-ES')}>{timeAgo}</span>
+            <span>{isAdmin ? t('support.bubble.staff') : t('support.bubble.client')}</span>
+            <span title={dateValue.toLocaleString(locale === 'en' ? 'en-US' : 'es-ES')}>{timeAgo}</span>
           </div>
         )}
 
