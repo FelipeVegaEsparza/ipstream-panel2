@@ -4,10 +4,13 @@ import { useMemo, useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { GlobalMenuBanner } from './GlobalMenuBanner'
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+import type { DashboardLocale } from '@/lib/dashboard-i18n'
 import type { MenuItemKey } from '@/lib/menu-items'
 
 interface DashboardLayoutClientProps {
   children: React.ReactNode
+  locale: DashboardLocale
   user: {
     name?: string | null
     email: string
@@ -19,6 +22,7 @@ interface DashboardLayoutClientProps {
 
 export function DashboardLayoutClient({
   children,
+  locale,
   user,
   disabledItems,
   globalHiddenItems,
@@ -35,7 +39,7 @@ export function DashboardLayoutClient({
   )
 
   return (
-    <>
+    <DashboardI18nProvider locale={locale}>
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -50,6 +54,6 @@ export function DashboardLayoutClient({
           </div>
         </main>
       </div>
-    </>
+    </DashboardI18nProvider>
   )
 }

@@ -4,20 +4,23 @@ import { useState } from 'react'
 import { AdminSidebar } from './AdminSidebar'
 import { AdminHeader } from './AdminHeader'
 import { ServerAlerts } from './ServerAlerts'
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+import type { DashboardLocale } from '@/lib/dashboard-i18n'
 
 interface AdminLayoutClientProps {
   children: React.ReactNode
+  locale: DashboardLocale
   user: {
     name?: string | null
     email: string
   }
 }
 
-export function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
+export function AdminLayoutClient({ children, locale, user }: AdminLayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <>
+    <DashboardI18nProvider locale={locale}>
       <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="lg:pl-72">
         <AdminHeader user={user} setSidebarOpen={setSidebarOpen} />
@@ -28,6 +31,6 @@ export function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
           </div>
         </main>
       </div>
-    </>
+    </DashboardI18nProvider>
   )
 }

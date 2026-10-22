@@ -8,6 +8,8 @@ import { Bars3Icon, SunIcon, MoonIcon, PlayCircleIcon, LifebuoyIcon, GlobeAltIco
 import { useImpersonationSession } from '@/lib/useImpersonationSession'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import { getTicketLastRead } from '@/lib/ticket-read-state'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { PanelLanguageSwitcher } from './PanelLanguageSwitcher'
 
 interface HeaderProps {
   user: {
@@ -19,6 +21,7 @@ interface HeaderProps {
 }
 
 export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
+  const { t } = useDashboardI18n()
   const { effectiveUser, isImpersonating } = useImpersonationSession()
 
   // Usar el usuario efectivo si hay impersonación activa
@@ -55,7 +58,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
         className="-m-2.5 p-2.5 text-muted-foreground lg:hidden hover:text-foreground transition-colors"
         onClick={() => setSidebarOpen?.(true)}
       >
-        <span className="sr-only">Abrir sidebar</span>
+        <span className="sr-only">{t('header.openSidebar')}</span>
         <Bars3Icon className="h-6 w-6" aria-hidden="true" />
       </button>
 
@@ -72,7 +75,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[color:var(--brand-500)] hover:bg-[color:var(--brand-soft)] border border-[color:var(--brand-500)]/30 transition-colors"
               >
                 <GlobeAltIcon className="h-5 w-5" />
-                <span className="hidden sm:inline">Ir a mi sitio Web</span>
+                <span className="hidden sm:inline">{t('header.myWebsite')}</span>
               </a>
               <div className="hidden sm:block w-px h-5 bg-border" />
             </>
@@ -84,7 +87,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-[color:var(--brand-500)] hover:bg-secondary/50 transition-colors"
           >
             <PlayCircleIcon className="h-5 w-5" />
-            <span className="hidden sm:inline">Tutoriales</span>
+            <span className="hidden sm:inline">{t('header.tutorials')}</span>
           </Link>
           <div className="hidden sm:block w-px h-5 bg-border" />
           <Link
@@ -92,7 +95,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-[color:var(--brand-500)] hover:bg-secondary/50 transition-colors relative"
           >
             <LifebuoyIcon className="h-5 w-5" />
-            <span className="hidden sm:inline">Soporte</span>
+            <span className="hidden sm:inline">{t('header.support')}</span>
             {unread > 0 && (
               <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
                 {unread > 9 ? '9+' : unread}
@@ -101,11 +104,13 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
           </Link>
           <div className="w-px h-5 bg-border" />
 
+          <PanelLanguageSwitcher />
+
           {/* Theme toggle */}
           <button
             onClick={toggle}
             className="p-2 rounded-xl text-muted-foreground hover:text-[color:var(--brand-500)] hover:bg-secondary/50 transition-colors"
-            title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            title={theme === 'dark' ? t('header.lightMode') : t('header.darkMode')}
           >
             {theme === 'dark' ? (
               <SunIcon className="h-5 w-5" />
@@ -117,7 +122,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
           {/* Profile dropdown */}
           <Menu as="div" className="relative">
             <Menu.Button className="flex items-center p-2 rounded-xl hover:bg-secondary/50 transition-colors">
-              <span className="sr-only">Abrir menú de usuario</span>
+              <span className="sr-only">{t('header.openUserMenu')}</span>
               <div className="flex items-center space-x-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                   isImpersonating
@@ -134,7 +139,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
                   </span>
                   {isImpersonating && (
                     <span className="ml-2 px-2 py-1 text-xs bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">
-                      Impersonando
+                      {t('header.impersonating')}
                     </span>
                   )}
                 </span>
@@ -152,14 +157,14 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
               <Menu.Items className="absolute right-0 z-10 mt-2.5 w-48 origin-top-right rounded-xl bg-popover py-2 shadow-soft ring-1 ring-border focus:outline-none border border-border">
                 <div className="px-4 py-3 border-b border-border">
                   <p className="text-sm text-muted-foreground">
-                    {isImpersonating ? 'Impersonando como' : 'Conectado como'}
+                    {isImpersonating ? t('header.impersonatingAs') : t('header.connectedAs')}
                   </p>
                   <p className="text-sm font-medium text-foreground truncate">
                     {displayUser.name || displayUser.email}
                   </p>
                   {isImpersonating && (
                     <p className="text-xs text-amber-400 mt-1">
-                      Modo administrador activo
+                      {t('header.adminModeActive')}
                     </p>
                   )}
                 </div>
@@ -172,7 +177,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
                       } flex w-full items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors`}
                     >
                       <SpeakerWaveIcon className="mr-3 h-4 w-4" />
-                      Efectos de sonido
+                      {t('header.soundEffects')}
                     </Link>
                   )}
                 </Menu.Item>
@@ -187,7 +192,7 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
                       <svg className="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      Cerrar sesión
+                      {t('header.logout')}
                     </button>
                   )}
                 </Menu.Item>

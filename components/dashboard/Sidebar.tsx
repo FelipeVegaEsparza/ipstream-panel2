@@ -14,6 +14,8 @@ import { filterMenuItems } from '@/lib/menu-permissions'
 
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 import { PanelLogo } from '@/components/ui/PanelLogo'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { menuName, sectionName } from '@/lib/dashboard-i18n'
 
 interface NavSection {
   name: string
@@ -53,6 +55,9 @@ interface SidebarProps {
 
 export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: SidebarProps) {
   const pathname = usePathname()
+  const { locale } = useDashboardI18n()
+  const label = (name: string) => menuName(locale, name)
+  const sectionLabel = (name: string) => sectionName(locale, name)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(getInitialOpenSections)
   const [openChildren, setOpenChildren] = useState<Record<string, boolean>>(getInitialOpenChildren)
   const [unreadContact, setUnreadContact] = useState(0)
@@ -161,7 +166,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                   onClick={() => toggleSection(section.name)}
                   className="flex w-full items-center justify-between px-1 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {section.name}
+                  {sectionLabel(section.name)}
                   <ChevronDownIcon
                     className={`h-4 w-4 transition-transform duration-200 ${
                       isOpen ? 'rotate-0' : '-rotate-90'
@@ -205,7 +210,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                       }`}
                                       aria-hidden="true"
                                     />
-                                    <span className="truncate flex-1">{item.name}</span>
+                                    <span className="truncate flex-1">{label(item.name)}</span>
                                     {isActive && (
                                       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-grad rounded-l-full"></div>
                                     )}
@@ -213,7 +218,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                 <button
                                   onClick={(e) => { e.stopPropagation(); toggleChildren(item.key) }}
                                   className="flex items-center justify-center w-8 h-8 mr-1 rounded hover:bg-secondary/50 transition-colors"
-                                  title={isChildGroupOpen ? 'Contraer' : 'Expandir'}
+                                  title={isChildGroupOpen ? (locale === 'en' ? 'Collapse' : 'Contraer') : (locale === 'en' ? 'Expand' : 'Expandir')}
                                 >
                                   <ChevronDownIcon
                                     className={`h-3.5 w-3.5 transition-transform duration-200 ${
@@ -249,7 +254,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                             }`}
                                             aria-hidden="true"
                                           />
-                                          <span className="truncate text-sm">{child.name}</span>
+                                          <span className="truncate text-sm">{label(child.name)}</span>
                                           {childActive && (
                                             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-grad rounded-l-full"></div>
                                           )}
@@ -277,7 +282,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                 }`}
                                 aria-hidden="true"
                               />
-                              <span className="truncate">{item.name}</span>
+                              <span className="truncate">{label(item.name)}</span>
                               {item.key === 'contact-messages' && unreadContact > 0 && (
                                 <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
                                   {unreadContact > 9 ? '9+' : unreadContact}

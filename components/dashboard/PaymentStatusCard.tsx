@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { CreditCardIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface PaymentStatusCardProps {
   nextPaymentDate: Date | null
@@ -11,11 +12,12 @@ interface PaymentStatusCardProps {
 }
 
 export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status }: PaymentStatusCardProps) {
+  const { t, locale } = useDashboardI18n()
   const getStatusConfig = () => {
     switch (status) {
       case 'paid':
         return {
-          title: 'Al Día',
+          title: t('payment.status.paid'),
           icon: CheckCircleIcon,
           gradient: 'from-green-500/20 to-emerald-600/20',
           border: 'border-green-500/30',
@@ -25,7 +27,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
         }
       case 'due-soon':
         return {
-          title: 'Próximo a Vencer',
+          title: t('payment.status.dueSoon'),
           icon: ExclamationTriangleIcon,
           gradient: 'from-yellow-500/20 to-orange-600/20',
           border: 'border-yellow-500/30',
@@ -35,7 +37,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
         }
       case 'overdue':
         return {
-          title: 'Pago Vencido',
+          title: t('payment.status.overdue'),
           icon: XCircleIcon,
           gradient: 'from-red-500/20 to-red-600/20',
           border: 'border-red-500/30',
@@ -45,7 +47,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
         }
       case 'trial':
         return {
-          title: 'Prueba Gratis',
+          title: t('payment.status.trial'),
           icon: SparklesIcon,
           gradient: 'from-brand/20 to-brand/20',
           border: 'border-brand/30',
@@ -55,7 +57,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
         }
       default:
         return {
-          title: 'Sin Plan Activo',
+          title: t('payment.status.noPlan'),
           icon: CreditCardIcon,
           gradient: 'from-secondary/20 to-secondary/20',
           border: 'border-border/30',
@@ -80,7 +82,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
   const daysRemaining = getDaysRemaining()
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       day: '2-digit',
       month: 'long',
       year: 'numeric'
@@ -88,7 +90,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CL', {
+    return new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-CL', {
       style: 'currency',
       currency: 'CLP',
       minimumFractionDigits: 0,
@@ -104,7 +106,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
             <Icon className={`w-6 h-6 ${config.iconColor}`} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Estado de Pago</h3>
+            <h3 className="text-lg font-semibold text-foreground">{t('payment.title')}</h3>
             <p className={`text-sm font-medium ${config.textColor}`}>{config.title}</p>
           </div>
         </div>
@@ -113,21 +115,21 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
       {status === 'no-plan' ? (
         <div className="space-y-4">
           <p className="text-muted-foreground text-sm">
-            No tienes un plan activo. Contacta al administrador para activar tu suscripción.
+            {t('payment.noPlanText')}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {/* Plan Info */}
           <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
-            <span className="text-sm text-muted-foreground">Plan Actual</span>
+            <span className="text-sm text-muted-foreground">{t('payment.currentPlan')}</span>
             <span className="text-sm font-semibold text-foreground">{planName}</span>
           </div>
 
           {/* Next Payment Date */}
           {nextPaymentDate && (
             <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
-              <span className="text-sm text-muted-foreground">{status === 'trial' ? 'Fin de prueba' : 'Próximo Pago'}</span>
+              <span className="text-sm text-muted-foreground">{status === 'trial' ? t('payment.trialEnd') : t('payment.nextPayment')}</span>
               <span className="text-sm font-semibold text-foreground">
                 {formatDate(nextPaymentDate)}
               </span>
@@ -137,7 +139,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
           {/* Amount */}
           {planPrice && (
             <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
-              <span className="text-sm text-muted-foreground">{status === 'trial' ? 'Cobro al finalizar' : 'Monto'}</span>
+              <span className="text-sm text-muted-foreground">{status === 'trial' ? t('payment.trialCharge') : t('payment.amount')}</span>
               <span className="text-sm font-semibold text-foreground">
                 {formatCurrency(planPrice)}
               </span>
@@ -152,11 +154,11 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
                   {daysRemaining > 0 ? daysRemaining : Math.abs(daysRemaining)}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {daysRemaining > 0 
-                    ? `día${daysRemaining !== 1 ? 's' : ''} restante${daysRemaining !== 1 ? 's' : ''}`
+                  {daysRemaining > 0
+                    ? `${daysRemaining} ${daysRemaining === 1 ? t('payment.dayRemaining') : t('payment.daysRemaining')}`
                     : daysRemaining === 0
-                    ? 'Vence hoy'
-                    : `día${daysRemaining !== -1 ? 's' : ''} de retraso`
+                    ? t('payment.dueToday')
+                    : `${Math.abs(daysRemaining)} ${Math.abs(daysRemaining) === 1 ? t('payment.dayLate') : t('payment.daysLate')}`
                   }
                 </div>
               </div>
@@ -168,7 +170,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
             href="/dashboard/payments"
             className="block w-full text-center py-3 px-4 bg-brand hover:bg-brand text-white font-medium rounded-lg transition-colors"
           >
-            Ver Historial de Pagos
+            {t('payment.viewHistory')}
           </Link>
         </div>
       )}

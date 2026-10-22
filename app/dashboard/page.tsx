@@ -12,13 +12,17 @@ import { getOnboarding } from '@/lib/onboarding'
 import { OnboardingDismiss } from '@/components/dashboard/OnboardingDismiss'
 import { RocketLaunchIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function DashboardPage() {
+  const locale = getDashboardLocale()
+  const t = dashboardT(locale)
   const session = await getServerSession(authOptions)
   const effectiveClient = await getEffectiveClient()
   
   if (!session?.user) {
-    return <div>Error: No hay sesión activa</div>
+    return <div>{locale === 'en' ? 'Error: No active session' : 'Error: No hay sesión activa'}</div>
   }
 
   // Verificar que tenemos un cliente efectivo
@@ -31,24 +35,24 @@ export default async function DashboardPage() {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          Error: No se encontró información del cliente
+          {t('dashboard.noClientTitle')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          No se pudo determinar el cliente para mostrar esta página
+          {t('dashboard.noClientText')}
         </p>
         {session.user.role === 'ADMIN' ? (
           <a
             href="/admin"
             className="inline-flex items-center px-4 py-2 bg-brand-grad hover:brightness-[1.07] text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Ir al Dashboard
+            {t('dashboard.goDashboard')}
           </a>
         ) : (
           <a
             href="/auth/login"
             className="inline-flex items-center px-4 py-2 bg-brand-grad hover:brightness-[1.07] text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Iniciar Sesión
+            {t('dashboard.login')}
           </a>
         )}
       </div>
@@ -146,18 +150,18 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Dashboard
+          {t('dashboard.title')}
           {effectiveClient.isImpersonating && (
             <span className="ml-3 px-3 py-1 text-sm bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">
-              Modo Impersonación
+              {t('dashboard.impersonationMode')}
             </span>
           )}
         </h1>
         <p className="text-muted-foreground mb-6">
           {effectiveClient.isImpersonating && clientInfo ? (
-            <>Viendo como: <strong className="text-foreground">{clientInfo.name}</strong> ({clientInfo.user.email})</>
+            <>{t('dashboard.viewingAs')}: <strong className="text-foreground">{clientInfo.name}</strong> ({clientInfo.user.email})</>
           ) : (
-            'Bienvenido a CasterFly'
+            t('dashboard.welcome')
           )}
         </p>
 
@@ -171,11 +175,11 @@ export default async function DashboardPage() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-foreground">Primeros pasos</h3>
+                <h3 className="text-sm font-semibold text-foreground">{t('dashboard.firstSteps')}</h3>
                 <OnboardingDismiss />
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                Te faltan {onboarding.pending} de {onboarding.total} pasos para dejar todo listo.
+                {t('dashboard.firstStepsProgress', { pending: onboarding.pending, total: onboarding.total })}
               </p>
               <div className="mt-3 h-1.5 w-full max-w-sm rounded-full bg-secondary overflow-hidden">
                 <div
@@ -187,7 +191,7 @@ export default async function DashboardPage() {
                 href="/dashboard/primeros-pasos"
                 className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-grad hover:brightness-[1.07] px-3 py-2 text-sm font-medium text-white transition-colors"
               >
-                Continuar <ArrowRightIcon className="h-4 w-4" />
+                {t('dashboard.continue')} <ArrowRightIcon className="h-4 w-4" />
               </a>
             </div>
           </div>
@@ -204,16 +208,16 @@ export default async function DashboardPage() {
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-medium text-amber-300 mb-2">
-                Completa tu información básica
+                {t('dashboard.basicInfoTitle')}
               </h3>
               <p className="text-sm text-amber-200/80 mb-4">
-                Para comenzar, completa la información básica de tu proyecto de radio.
+                {t('dashboard.basicInfoText')}
               </p>
               <a
                 href="/dashboard/basic-data"
                 className="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors"
               >
-                Completar información
+                {t('dashboard.completeInfo')}
               </a>
             </div>
           </div>

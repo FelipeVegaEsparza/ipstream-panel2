@@ -7,6 +7,8 @@ import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { DashboardLayoutClient } from '@/components/dashboard/DashboardLayoutClient'
 import { ModalProvider } from '@/components/ui/modal'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { cookies } from 'next/headers'
+import { DASHBOARD_LOCALE_COOKIE, normalizeDashboardLocale } from '@/lib/dashboard-i18n'
 import { resolveClientSiteUrl } from '@/lib/client-domains'
 import { getDisabledMenuItems, getGloballyHiddenMenuItems } from '@/lib/menu-permissions'
 
@@ -21,6 +23,7 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const session = await getServerSession(authOptions)
+  const locale = normalizeDashboardLocale(cookies().get(DASHBOARD_LOCALE_COOKIE)?.value)
 
   if (!session) {
     redirect('/auth/login')
@@ -68,6 +71,7 @@ export default async function DashboardLayout({
         <div className="min-h-screen bg-background">
           <ImpersonationBanner />
           <DashboardLayoutClient
+            locale={locale}
             user={session.user}
             disabledItems={disabledItems}
             globalHiddenItems={globalHiddenItems}

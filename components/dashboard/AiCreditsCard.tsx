@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import { SparklesIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   limit: number
@@ -9,9 +12,9 @@ interface Props {
   compact?: boolean
 }
 
-function monthLabel(period: string): string {
+function monthLabel(period: string, locale: 'es' | 'en'): string {
   try {
-    return new Date(`${period}-01T00:00:00Z`).toLocaleDateString('es-CL', {
+    return new Date(`${period}-01T00:00:00Z`).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CL', {
       month: 'long',
       year: 'numeric',
       timeZone: 'UTC',
@@ -22,6 +25,8 @@ function monthLabel(period: string): string {
 }
 
 export function AiCreditsCard({ limit, used, remaining, period, compact = false }: Props) {
+  const { t, locale } = useDashboardI18n()
+  const numberLocale = locale === 'en' ? 'en-US' : 'es-CL'
   if (limit <= 0) return null
   const percent = Math.min(100, Math.round((used / limit) * 100))
 
@@ -33,9 +38,9 @@ export function AiCreditsCard({ limit, used, remaining, period, compact = false 
             <SparklesIcon className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Créditos Locutor IA</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t('aiCredits.title')}</h2>
             <p className="text-xs text-muted-foreground">
-              Caracteres de voz premium · {monthLabel(period)}
+              {t('aiCredits.subtitle', { month: monthLabel(period, locale) })}
             </p>
           </div>
         </div>
@@ -43,27 +48,27 @@ export function AiCreditsCard({ limit, used, remaining, period, compact = false 
           href="/dashboard/streaming/locutor-ia"
           className="text-xs font-medium text-brand hover:underline"
         >
-          Configurar
+          {t('aiCredits.configure')}
         </Link>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Asignados</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('aiCredits.assigned')}</p>
           <p className="mt-0.5 font-mono text-lg font-semibold text-foreground">
-            {limit.toLocaleString('es-CL')}
+            {limit.toLocaleString(numberLocale)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Usados</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('aiCredits.used')}</p>
           <p className="mt-0.5 font-mono text-lg font-semibold text-foreground">
-            {used.toLocaleString('es-CL')}
+            {used.toLocaleString(numberLocale)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Disponibles</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('aiCredits.available')}</p>
           <p className="mt-0.5 font-mono text-lg font-semibold text-brand">
-            {remaining.toLocaleString('es-CL')}
+            {remaining.toLocaleString(numberLocale)}
           </p>
         </div>
       </div>
@@ -76,7 +81,7 @@ export function AiCreditsCard({ limit, used, remaining, period, compact = false 
       </div>
       {!compact && (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Los audios repetidos desde el caché no consumen créditos.
+          {t('aiCredits.cacheNote')}
         </p>
       )}
     </section>

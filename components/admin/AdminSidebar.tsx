@@ -29,6 +29,8 @@ import {
 } from '@heroicons/react/24/outline'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 import { PanelLogo } from '@/components/ui/PanelLogo'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { adminMenuName, adminSectionName } from '@/lib/dashboard-i18n'
 
 const navigationGroups = [
   {
@@ -86,6 +88,9 @@ interface AdminSidebarProps {
 
 function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
+  const { locale } = useDashboardI18n()
+  const label = (name: string) => adminMenuName(locale, name)
+  const sectionLabel = (name: string) => adminSectionName(locale, name)
 
   return (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4 shadow-2xl border-r border-border">
@@ -99,7 +104,7 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
           <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
           </svg>
-          <span className="text-amber-300 font-semibold text-sm">ADMINISTRADOR</span>
+          <span className="text-amber-300 font-semibold text-sm">{locale === 'en' ? 'ADMINISTRATOR' : 'ADMINISTRADOR'}</span>
         </div>
       </div>
 
@@ -108,7 +113,7 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
           {navigationGroups.map((group) => (
             <li key={group.label}>
               <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                {group.label}
+                {sectionLabel(group.label)}
               </p>
               <ul role="list" className="space-y-1">
                 {group.items.map((item) => {
@@ -128,7 +133,7 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
                           }`}
                           aria-hidden="true"
                         />
-                        <span className="truncate">{item.name}</span>
+                        <span className="truncate">{label(item.name)}</span>
                         {isActive && (
                           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-brand to-brand rounded-l-full"></div>
                         )}

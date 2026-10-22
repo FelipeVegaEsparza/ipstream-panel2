@@ -6,6 +6,8 @@ import { Fragment } from 'react'
 import Link from 'next/link'
 import { Bars3Icon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 import { useTheme } from '@/components/providers/ThemeProvider'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { PanelLanguageSwitcher } from '@/components/dashboard/PanelLanguageSwitcher'
 
 interface AdminHeaderProps {
   user: {
@@ -17,6 +19,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
   const { theme, toggle } = useTheme()
+  const { t } = useDashboardI18n()
   return (
     <div className="sticky top-0 z-40 flex h-20 shrink-0 items-center gap-x-4 border-b border-border/50 bg-card/80 backdrop-blur-md px-4 shadow-xl sm:gap-x-6 sm:px-6 lg:px-8">
       {/* Mobile menu button */}
@@ -25,7 +28,7 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
         className="-m-2.5 p-2.5 text-muted-foreground lg:hidden hover:text-foreground transition-colors"
         onClick={() => setSidebarOpen?.(true)}
       >
-        <span className="sr-only">Abrir sidebar</span>
+        <span className="sr-only">{t('adminHeader.openSidebar')}</span>
         <Bars3Icon className="h-6 w-6" aria-hidden="true" />
       </button>
 
@@ -34,15 +37,17 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
           {/* Admin indicator */}
           <div className="flex items-center space-x-3">
             <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
-            <span className="text-sm text-amber-300 font-medium">Modo Administrador</span>
+            <span className="text-sm text-amber-300 font-medium">{t('adminHeader.adminMode')}</span>
           </div>
         </div>
         <div className="flex items-center gap-x-4 lg:gap-x-6">
+          <PanelLanguageSwitcher />
+
           {/* Theme toggle */}
           <button
             onClick={toggle}
             className="p-2 rounded-xl text-muted-foreground hover:text-brand hover:bg-secondary/50 transition-colors"
-            title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            title={theme === 'dark' ? t('header.lightMode') : t('header.darkMode')}
           >
             {theme === 'dark' ? (
               <SunIcon className="h-5 w-5" />
@@ -59,13 +64,13 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span>Ver como Cliente</span>
+            <span>{t('adminHeader.viewAsClient')}</span>
           </Link>
 
           {/* Profile dropdown */}
           <Menu as="div" className="relative">
             <Menu.Button className="flex items-center p-2 rounded-xl hover:bg-secondary/50 transition-colors">
-              <span className="sr-only">Abrir menú de usuario</span>
+              <span className="sr-only">{t('adminHeader.openUserMenu')}</span>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
                   <span className="text-foreground font-semibold text-sm">
@@ -90,7 +95,7 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
             >
               <Menu.Items className="absolute right-0 z-10 mt-2.5 w-48 origin-top-right rounded-xl bg-card py-2 shadow-2xl ring-1 ring-gray-700 focus:outline-none border border-border">
                 <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm text-muted-foreground">Administrador</p>
+                  <p className="text-sm text-muted-foreground">{t('adminHeader.administrator')}</p>
                   <p className="text-sm font-medium text-foreground truncate">
                     {user.name || user.email}
                   </p>
@@ -106,7 +111,7 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
                       <svg className="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      Ver como Cliente
+                      {t('adminHeader.viewAsClient')}
                     </Link>
                   )}
                 </Menu.Item>
@@ -121,7 +126,7 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
                       <svg className="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      Cerrar sesión
+                      {t('adminHeader.logout')}
                     </button>
                   )}
                 </Menu.Item>

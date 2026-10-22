@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface TvStatus {
   status: string // "off" | "autodj" | "live"
@@ -23,6 +24,7 @@ function formatDuration(startedAt: string | null | undefined): string | null {
 }
 
 export function NowPlayingTvDisplay() {
+  const { t } = useDashboardI18n()
   const [status, setStatus] = useState<TvStatus | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -84,10 +86,10 @@ export function NowPlayingTvDisplay() {
           <span className="w-3 h-3 rounded-full bg-gradient-to-br from-brand to-brand shadow-lg shadow-cyan-500/20" />
         )}
         <span className={`${isLive ? 'text-green-400' : 'text-muted-foreground'} font-semibold text-sm uppercase tracking-wider`}>
-          {isLive ? 'EN VIVO · TV' : 'AutoDJ · TV'}
+          {isLive ? t('nowPlaying.tvLive') : t('nowPlaying.tvAutodj')}
         </span>
-        {!isLive && duration && <span className="text-muted-foreground text-xs font-mono">{duration} al aire</span>}
-        {isLive && djDuration && <span className="text-muted-foreground text-xs font-mono">desde hace {djDuration}</span>}
+        {!isLive && duration && <span className="text-muted-foreground text-xs font-mono">{t('nowPlaying.onAirFor', { duration })}</span>}
+        {isLive && djDuration && <span className="text-muted-foreground text-xs font-mono">{t('nowPlaying.tvSince', { duration: djDuration })}</span>}
         <Link href="/dashboard/television" className="ml-auto text-xs text-brand hover:text-brand shrink-0">
           Ver TV →
         </Link>
@@ -100,11 +102,11 @@ export function NowPlayingTvDisplay() {
           </svg>
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium mb-1">Ahora en TV</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium mb-1">{t('nowPlaying.tvNow')}</div>
           <p className="text-foreground font-semibold truncate text-sm md:text-base">
-            {currentTrack || (isLive ? 'Transmisión en vivo' : 'Iniciando...')}
+            {currentTrack || (isLive ? t('nowPlaying.liveNow') : t('nowPlaying.tvStarting'))}
           </p>
-          {isLive && <p className="text-muted-foreground text-xs truncate mt-0.5">Señal en vivo (OBS)</p>}
+          {isLive && <p className="text-muted-foreground text-xs truncate mt-0.5">{t('nowPlaying.tvLiveSignal')}</p>}
         </div>
       </div>
     </div>

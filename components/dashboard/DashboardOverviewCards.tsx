@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Headphones, HardDrive, Crown, Smartphone } from 'lucide-react'
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface OverviewPlan {
   name: string
@@ -32,16 +33,16 @@ interface TvStatusWithViewers {
   viewers?: number
 }
 
-function fmtMB(mb: number | null | undefined) {
-  if (mb === null || mb === undefined) return 'Ilimitado'
+function fmtMB(mb: number | null | undefined, unlimited: string) {
+  if (mb === null || mb === undefined) return unlimited
   if (mb < 1) return `${(mb * 1024).toFixed(0)} KB`
   if (mb >= 1024) return `${(mb / 1024).toFixed(2)} GB`
   return `${mb} MB`
 }
 
-function fmtCurrency(price: number, currency: string) {
+function fmtCurrency(price: number, currency: string, locale: 'es' | 'en') {
   try {
-    return new Intl.NumberFormat('es-CL', {
+    return new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-CL', {
       style: 'currency',
       currency,
       maximumFractionDigits: price % 1 === 0 ? 0 : 2,
@@ -52,6 +53,7 @@ function fmtCurrency(price: number, currency: string) {
 }
 
 export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: DashboardOverviewCardsProps) {
+  const { t, locale } = useDashboardI18n()
   const { status } = useStreamingStatus({ pollingMs: 5000 })
   const [tvViewers, setTvViewers] = useState<number>(0)
   const [installedCount, setInstalledCount] = useState<number | null>(null)
@@ -99,10 +101,10 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
   const radioListeners = status?.icecast?.listeners ?? 0
   const planLabel = plan
     ? plan.services === 'radio'
-      ? 'Solo Radio'
+      ? t('overview.radioOnly')
       : plan.services === 'tv'
-        ? 'Solo TV'
-        : 'Radio + TV'
+        ? t('overview.tvOnly')
+        : t('overview.radioTv')
     : null
 
   const storageItems: { label: string; used: OverviewStorage | null; quota: number | null }[] = []
@@ -115,7 +117,7 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
       <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center gap-2 mb-3">
           <Headphones className="h-4 w-4 text-[color:var(--brand-500)]" />
-          <h3 className="font-semibold text-foreground">Oyentes en vivo</h3>
+          <h3 className="font-semibold text-foreground">{t('overview.listeners')}</h3>
         </div>
         <div className="flex items-end gap-6">
           <div>
@@ -129,17 +131,17 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
             </div>
           )}
         </div>
-        {!hasRadio && !hasTv && <p className="text-xs text-muted-foreground mt-1">Tu plan no incluye streaming</p>}
+        {!hasRadio && !hasTv && <p className="text-xs text-muted-foreground mt-1">{t('overview.noStreaming')}</p>}
       </div>
 
       {/* Almacenamiento */}
       <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center gap-2 mb-3">
           <HardDrive className="h-4 w-4 text-[color:var(--brand-500)]" />
-          <h3 className="font-semibold text-foreground">Almacenamiento</h3>
+          <h3 className="font-semibold text-foreground">{t('overview.storage')}</h3>
         </div>
         {storageItems.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Tu plan no incluye almacenamiento</p>
+          <p className="text-xs text-muted-foreground">{t('overview.noStorage')}</p>
         ) : (
           <div className="space-y-3">
             {storageItems.map((item) => {
@@ -151,7 +153,7 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{item.label}</span>
                     <span className="text-foreground font-medium">
-                      {fmtMB(usedMB)} / {fmtMB(quotaMB)}
+                      {fmtMB(usedMB, t('overview.unlimited'))} / {fmtMB(quotaMB, t('overview.unlimited'))}
                     </span>
                   </div>
                   {quotaMB !== null && pct !== null && (
@@ -173,23 +175,23 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
       <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center gap-2 mb-3">
           <Crown className="h-4 w-4 text-[color:var(--brand-500)]" />
-          <h3 className="font-semibold text-foreground">Mi Plan</h3>
+          <h3 className="font-semibold text-foreground">{t('overview.plan')}</h3>
         </div>
         {plan ? (
           <>
             <div className="text-2xl font-bold text-foreground">{plan.name}</div>
             <div className="text-xs text-muted-foreground mt-1">
-              {plan.interval === 'monthly' ? 'Mensual' : 'Anual'}
+              {plan.interval === 'monthly' ? t('overview.monthly') : t('overview.yearly')}
               {planLabel ? ` · ${planLabel}` : ''}
             </div>
             <div className="text-sm text-[color:var(--brand-500)] font-semibold mt-2">
-              {fmtCurrency(plan.price, plan.currency)}
+              {fmtCurrency(plan.price, plan.currency, locale)}
             </div>
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Sin plan asignado.{' '}
-            <span className="text-[color:var(--brand-500)]">Contacta al soporte para activar tu plan.</span>
+            {t('overview.noPlan')}{' '}
+            <span className="text-[color:var(--brand-500)]">{t('overview.contactSupport')}</span>
           </p>
         )}
       </div>
@@ -198,17 +200,17 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
       <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center gap-2 mb-3">
           <Smartphone className="h-4 w-4 text-[color:var(--brand-500)]" />
-          <h3 className="font-semibold text-foreground">PWA instalada</h3>
+          <h3 className="font-semibold text-foreground">{t('overview.pwaInstalled')}</h3>
         </div>
         <div className="text-2xl font-bold text-foreground">
           {installedCount === null ? '—' : installedCount}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
           {installedCount === null
-            ? 'Dispositivos con la app instalada'
+            ? t('overview.devicesInstalled')
             : installedCount === 1
-              ? 'dispositivo con la app instalada'
-              : 'dispositivos con la app instalada'}
+              ? t('overview.deviceInstalled')
+              : t('overview.devicesInstalled')}
         </div>
       </div>
     </div>
