@@ -169,6 +169,27 @@ http://{$LEGACY_PANEL_DOMAIN:panelipstream.cl} {
 }
 
 # ============================================================
+# Sitio público anterior: ipstream.cl (transición)
+# ============================================================
+# El sitio nuevo vive en casterfly.com. El dominio viejo redirige el root y
+# www; los subdominios *.ipstream.cl de clientes siguen en el catch-all.
+{$LEGACY_PUBLIC_DOMAIN:ipstream.cl} {
+	redir https://{$PUBLIC_DOMAIN:casterfly.com}{uri} permanent
+}
+
+www.{$LEGACY_PUBLIC_DOMAIN:ipstream.cl} {
+	redir https://{$PUBLIC_DOMAIN:casterfly.com}{uri} permanent
+}
+
+http://{$LEGACY_PUBLIC_DOMAIN:ipstream.cl} {
+	redir https://{$PUBLIC_DOMAIN:casterfly.com}{uri} permanent
+}
+
+http://www.{$LEGACY_PUBLIC_DOMAIN:ipstream.cl} {
+	redir https://{$PUBLIC_DOMAIN:casterfly.com}{uri} permanent
+}
+
+# ============================================================
 # Stream (Icecast): stream.casterfly.com
 # ============================================================
 # Proxy HTTPS al Icecast interno (puerto 8000).

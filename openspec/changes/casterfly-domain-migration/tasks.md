@@ -9,10 +9,10 @@
 ## 2. Caddy y dominios separados
 
 - [x] 2.1 Reemplazar en `deploy/Caddyfile` el uso de `{$STREAM_DOMAIN}` como dominio del panel por bloques explícitos `{$PUBLIC_DOMAIN}`, `{$PANEL_DOMAIN}` y `{$STREAM_DOMAIN}`; verificar con `docker exec ipstream-caddy caddy validate --config /etc/caddy/Caddyfile`.
-- [ ] 2.2 Agregar el bloque de `www.casterfly.com` con redirección permanente al root; verificar con `curl -I https://www.casterfly.com/planes`.
+- [x] 2.2 Agregar el bloque de `www.casterfly.com` con redirección permanente al root; verificar con `curl -I https://www.casterfly.com/planes`.
 - [x] 2.3 Actualizar `deploy/.env.prod.example`, `deploy/scripts/deploy.sh` y `deploy/scripts/cron-push.sh` con las tres variables y sus valores CasterFly; verificar que `deploy.sh` falla con un mensaje claro si falta alguna y que el `BASE_URL` de cron usa `panel.casterfly.com`.
 - [ ] 2.4 Agregar el bloque del sitio público `casterfly.com` apuntando al contenedor `site:80` y verificar que responde `200` con `curl --resolve casterfly.com:443:<IP> https://casterfly.com/`.
-- [ ] 2.5 Verificar que `casterfly.com` deja de caer en el catch-all de tenants y que el certificado TLS se emite; comprobar con `curl -Iv https://casterfly.com` que no hay error de TLS.
+- [x] 2.5 Verificar que `casterfly.com` deja de caer en el catch-all de tenants y que el certificado TLS se emite; comprobar con `curl -Iv https://casterfly.com` que no hay error de TLS.
 
 ## 3. Panel: entorno y Server Actions
 
@@ -24,10 +24,10 @@
 
 ## 4. Compatibilidad legacy
 
-- [ ] 4.1 Configurar `panelipstream.cl` para redirigir páginas con `308` a `panel.casterfly.com` preservando ruta y query; verificar con `curl -I https://panelipstream.cl/planes/plan-radio-pro` que el `Location` es correcto.
-- [ ] 4.2 Mantener `/api/*` de `panelipstream.cl` proxeado al panel sin redirección; verificar un `GET` y un `POST` con `curl -X POST` y confirmar que el método llega al panel.
-- [ ] 4.3 Mantener `stream.panelipstream.cl` proxeado a Icecast; verificar que una URL de mount antigua sigue devolviendo audio o los headers de Icecast.
-- [ ] 4.4 Verificar que `*.ipstream.cl` sigue sirviendo los sitios de clientes actuales y que no fueron capturados por el nuevo bloque público; probar un host existente con `curl -I`.
+- [x] 4.1 Configurar `panelipstream.cl` para redirigir páginas con `308` a `panel.casterfly.com` preservando ruta y query; verificar con `curl -I https://panelipstream.cl/planes/plan-radio-pro` que el `Location` es correcto.
+- [x] 4.2 Mantener `/api/*` de `panelipstream.cl` proxeado al panel sin redirección; verificar un `GET` y un `POST` con `curl -X POST` y confirmar que el método llega al panel.
+- [x] 4.3 Mantener `stream.panelipstream.cl` proxeado a Icecast; verificar que una URL de mount antigua sigue devolviendo audio o los headers de Icecast.
+- [x] 4.4 Verificar que `*.ipstream.cl` sigue sirviendo los sitios de clientes actuales y que no fueron capturados por el nuevo bloque público; probar un host existente con `curl -I`.
 
 ## 5. Migración de datos de dominios
 
@@ -35,7 +35,7 @@
 - [x] 5.2 Implementar en el script la migración de `client_domains` de tipo `subdomain`: nueva fila `label.casterfly.com` activa y primaria, fila vieja `label.ipstream.cl` activa como alias; verificar con una fila de prueba que el resultado es el esperado y que no se duplica al repetir.
 - [x] 5.3 Actualizar `BasicData.websiteUrl` solo cuando apunte al host viejo migrado; verificar que un dominio custom no se modifica.
 - [x] 5.4 Actualizar `streaming_servers.publicHostname` y `publicUrl` del servidor principal a `stream.casterfly.com`; verificar que `getClientStreamUrls` devuelve la URL nueva.
-- [ ] 5.5 Ejecutar el script en dry-run y luego real; verificar con `curl 'https://panel.casterfly.com/api/public/resolve-domain?host=label.casterfly.com'` y con el host viejo que ambos devuelven el mismo `clientId`.
+- [x] 5.5 Ejecutar el script en dry-run y luego real; verificar con `curl 'https://panel.casterfly.com/api/public/resolve-domain?host=label.casterfly.com'` y con el host viejo que ambos devuelven el mismo `clientId`.
 - [x] 5.6 Agregar `casterfly` a los slugs reservados en `lib/domain-slug.ts` y verificar con un test que `casterfly.casterfly.com` no se asigna a un cliente.
 
 ## 6. PWA
@@ -43,7 +43,7 @@
 - [x] 6.1 Actualizar `pwa/src/core/config/tenant.ts` para que el default de desarrollo sea `https://panel.casterfly.com` y el bundle de producción use `VITE_API_BASE=''`; verificar con los tests de `tenant.test.ts`.
 - [x] 6.2 Actualizar `pwa/src/sw.ts` para cachear la API solo cuando el origen coincida con `self.location.origin` o con el origen configurado; verificar con un test que `panelipstream.cl` ya no se cachea.
 - [x] 6.3 Actualizar `.github/workflows/deploy-site-bundle.yml` o el script de build para inyectar el origen de API de producción; verificar que el workflow publica el bundle y que un sitio de cliente hace `resolve-domain` contra el panel nuevo.
-- [ ] 6.4 Verificar en un navegador que `radio-x.casterfly.com` resuelve el tenant, carga noticias y reproduce audio sin llamadas a `panelipstream.cl` en la pestaña Network.
+- [x] 6.4 Verificar en un navegador que `radio-x.casterfly.com` resuelve el tenant, carga noticias y reproduce audio sin llamadas a `panelipstream.cl` en la pestaña Network.
 
 ## 7. Identidad CasterFly
 
@@ -70,6 +70,6 @@
 
 - [ ] 10.1 Verificar el flujo público completo: `casterfly.com` → planes → `panel.casterfly.com/planes/<slug>` → registro → login → dashboard; confirmar que no hay enlaces a `panelipstream.cl`.
 - [ ] 10.2 Verificar el sitio público: home, planes, características, tutoriales, noticias, clientes, contacto y canonical en `https://casterfly.com`.
-- [ ] 10.3 Verificar los redirects legacy: página del panel viejo, API vieja con POST, stream viejo y un sitio `*.ipstream.cl`; confirmar que ninguno rompe.
+- [x] 10.3 Verificar los redirects legacy: página del panel viejo, API vieja con POST, stream viejo y un sitio `*.ipstream.cl`; confirmar que ninguno rompe.
 - [x] 10.4 Ejecutar `npm test`, `npm run build` y `openspec validate casterfly-domain-migration --strict`; corregir cualquier fallo antes de cerrar.
 - [x] 10.5 Documentar en `AGENTS.md`/`DEPLOY.md` el nuevo mapa de hosts, la obligación de actualizar nodos y el estado de los dominios legacy; verificar que un operador puede seguir el runbook sin ambigüedad.
