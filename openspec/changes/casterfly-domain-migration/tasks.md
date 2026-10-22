@@ -11,7 +11,7 @@
 - [x] 2.1 Reemplazar en `deploy/Caddyfile` el uso de `{$STREAM_DOMAIN}` como dominio del panel por bloques explícitos `{$PUBLIC_DOMAIN}`, `{$PANEL_DOMAIN}` y `{$STREAM_DOMAIN}`; verificar con `docker exec ipstream-caddy caddy validate --config /etc/caddy/Caddyfile`.
 - [x] 2.2 Agregar el bloque de `www.casterfly.com` con redirección permanente al root; verificar con `curl -I https://www.casterfly.com/planes`.
 - [x] 2.3 Actualizar `deploy/.env.prod.example`, `deploy/scripts/deploy.sh` y `deploy/scripts/cron-push.sh` con las tres variables y sus valores CasterFly; verificar que `deploy.sh` falla con un mensaje claro si falta alguna y que el `BASE_URL` de cron usa `panel.casterfly.com`.
-- [ ] 2.4 Agregar el bloque del sitio público `casterfly.com` apuntando al contenedor `site:80` y verificar que responde `200` con `curl --resolve casterfly.com:443:<IP> https://casterfly.com/`.
+- [x] 2.4 Agregar el bloque del sitio público `casterfly.com` apuntando al contenedor `site:80` y verificar que responde `200` con `curl --resolve casterfly.com:443:<IP> https://casterfly.com/`.
 - [x] 2.5 Verificar que `casterfly.com` deja de caer en el catch-all de tenants y que el certificado TLS se emite; comprobar con `curl -Iv https://casterfly.com` que no hay error de TLS.
 
 ## 3. Panel: entorno y Server Actions
@@ -62,14 +62,14 @@
 
 ## 9. Nodos remotos
 
-- [ ] 9.1 Configurar `CORS_ALLOWED_ORIGINS` con `https://panel.casterfly.com` y `https://panelipstream.cl`, y `PANEL_PUBLIC_HOST=panel.casterfly.com`; verificar que un nodo recién provisionado recibe ambos valores en su `.env`.
-- [ ] 9.2 Pulsar **"Actualizar nodo"** en cada nodo remoto o editar su `.env` y reiniciar el agente; verificar que `DB_HOST`/`MYSQL_HOST` apuntan al panel nuevo y que el nodo sigue healthy.
+- [x] 9.1 Configurar `CORS_ALLOWED_ORIGINS` con `https://panel.casterfly.com` y `https://panelipstream.cl`, y `PANEL_PUBLIC_HOST=panel.casterfly.com`; verificar que un nodo recién provisionado recibe ambos valores en su `.env`.
+- [x] 9.2 Pulsar **"Actualizar nodo"** en cada nodo remoto o editar su `.env` y reiniciar el agente; verificar que `DB_HOST`/`MYSQL_HOST` apuntan al panel nuevo y que el nodo sigue healthy.
 - [ ] 9.3 Abrir la consola en vivo desde `panel.casterfly.com` contra un cliente en nodo remoto; verificar que el navegador no bloquea por CORS y que el audio llega.
 
 ## 10. Integración y verificación final
 
-- [ ] 10.1 Verificar el flujo público completo: `casterfly.com` → planes → `panel.casterfly.com/planes/<slug>` → registro → login → dashboard; confirmar que no hay enlaces a `panelipstream.cl`.
-- [ ] 10.2 Verificar el sitio público: home, planes, características, tutoriales, noticias, clientes, contacto y canonical en `https://casterfly.com`.
+- [x] 10.1 Verificar el flujo público completo: `casterfly.com` → planes → `panel.casterfly.com/planes/<slug>` → registro → login → dashboard; confirmar que no hay enlaces a `panelipstream.cl`.
+- [x] 10.2 Verificar el sitio público: home, planes, características, tutoriales, noticias, clientes, contacto y canonical en `https://casterfly.com`.
 - [x] 10.3 Verificar los redirects legacy: página del panel viejo, API vieja con POST, stream viejo y un sitio `*.ipstream.cl`; confirmar que ninguno rompe.
 - [x] 10.4 Ejecutar `npm test`, `npm run build` y `openspec validate casterfly-domain-migration --strict`; corregir cualquier fallo antes de cerrar.
 - [x] 10.5 Documentar en `AGENTS.md`/`DEPLOY.md` el nuevo mapa de hosts, la obligación de actualizar nodos y el estado de los dominios legacy; verificar que un operador puede seguir el runbook sin ambigüedad.
