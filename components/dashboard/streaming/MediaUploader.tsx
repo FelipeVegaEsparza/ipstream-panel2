@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export type MediaUploadStatus = 'pending' | 'uploading' | 'processing' | 'completed' | 'error'
 
@@ -48,6 +49,7 @@ function uploadFile(
   file: File,
   extra: Record<string, string>,
   onProgress: (pct: number) => void,
+  messages: { network: string; cancelled: string },
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     const form = new FormData()
@@ -70,8 +72,8 @@ function uploadFile(
       }
     }
 
-    xhr.onerror = () => reject(new Error('Error de red'))
-    xhr.onabort = () => reject(new Error('Cancelado'))
+    xhr.onerror = () => reject(new Error(messages.network))
+    xhr.onabort = () => reject(new Error(messages.cancelled))
 
     xhr.open('POST', url)
     xhr.send(form)
@@ -80,6 +82,7 @@ function uploadFile(
 
 async function waitForReady(
   url: string,
+  timeoutMessage: string,
   intervalMs = 3000,
   timeoutMs = 60 * 60 * 1000,
 ): Promise<{ status: string; processingError?: string | null }> {
@@ -94,7 +97,7 @@ async function waitForReady(
       }
     } catch { /* reintentar */ }
   }
-  return { status: 'error', processingError: 'Tiempo de espera de procesamiento agotado' }
+  return { status: 'error', processingError: timeoutMessage }
 }
 
 export function MediaUploader({
@@ -108,6 +111,7 @@ export function MediaUploader({
   statusUrl,
   onUploaded,
 }: Props) {
+  const { t } = useDashboardI18n()
   const { toast } = useToast()
   const [queue, setQueue] = useState<QueueItem[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
@@ -131,18 +135,18 @@ export function MediaUploader({
       try {
         const json = await uploadFile(endpoint, item.file, extraFields?.() || {}, (pct) => {
           updateItem(item.id, { progress: pct })
-        })
+        }, { network: t('streaming.uploader.networkError'), cancelled: t('streaming.uploader.cancelled') })
 
         if (statusUrl) {
           const trackId = json?.track?.id
           if (trackId) {
             updateItem(item.id, { status: 'processing', progress: 100 })
-            const result = await waitForReady(statusUrl(trackId))
+            const result = await waitForReady(statusUrl(trackId), t('streaming.uploader.timeout'))
             if (result.status === 'ready') {
               updateItem(item.id, { status: 'completed', progress: 100 })
               successCount++
             } else {
-              throw new Error(result.processingError || 'Error al procesar el video')
+              throw new Error(result.processingError || t('streaming.uploader.videoError'))
             }
           } else {
             updateItem(item.id, { status: 'completed', progress: 100 })
@@ -155,7 +159,7 @@ export function MediaUploader({
       } catch (err: any) {
         updateItem(item.id, { status: 'error', error: err.message })
         errorCount++
-        toast({ type: 'error', title: `Error: ${item.file.name}`, description: err.message })
+        toast({ type: 'error', title: `${t('header.support')}: ${item.file.name}`, description: err.message })
       }
     }
 
@@ -163,7 +167,7 @@ export function MediaUploader({
 
     if (successCount > 0) {
       onUploaded?.()
-      toast({ type: 'success', title: `${successCount} archivo(s) procesado(s)` })
+      toast({ type: 'success', title: t('streaming.uploader.processed', { count: successCount }) })
       setTimeout(() => setQueue([]), 4000)
     } else if (errorCount === 0) {
       setQueue([])
@@ -192,7 +196,7 @@ export function MediaUploader({
       }
 
       if (skipped > 0) {
-        toast({ type: 'info', title: `${skipped} archivo(s) omitido(s)`, description: invalidMessage })
+        toast({ type: 'info', title: t('streaming.uploader.skipped', { count: skipped }), description: invalidMessage })
       }
       if (newItems.length === 0) return
 
@@ -269,7 +273,7 @@ export function MediaUploader({
           {isProcessing ? '⏳' : '⬆️'}
         </div>
         <div className="text-foreground font-medium text-sm">
-          {dropTitle || 'Arrastra archivos aquí o haz clic para seleccionar'}
+          {dropTitle || t('streaming.uploader.dropDefault')}
         </div>
         {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
       </div>
@@ -278,14 +282,14 @@ export function MediaUploader({
         <div className="bg-card/80 rounded-lg border border-border overflow-hidden">
           <div className="px-3 py-2 border-b border-border flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              Cola de subida ({completedCount}/{totalCount})
+              {t('streaming.uploader.queue')} ({completedCount}/{totalCount})
             </span>
             {hasPending && !isProcessing && (
               <button
                 onClick={startUpload}
                 className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
               >
-                Iniciar subida
+                {t('streaming.uploader.start')}
               </button>
             )}
           </div>
@@ -293,7 +297,7 @@ export function MediaUploader({
           {isProcessing && (
             <div className="px-3 py-2 bg-background/50">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                <span>Progreso total</span>
+                <span>{t('streaming.uploader.totalProgress')}</span>
                 <span className="ml-auto">{totalProgress}%</span>
               </div>
               <div className="w-full bg-secondary rounded-full h-1.5">
@@ -326,13 +330,13 @@ export function MediaUploader({
                     <div className="text-xs text-red-400 truncate mt-0.5">{item.error}</div>
                   )}
                   {item.status === 'pending' && (
-                    <div className="text-xs text-muted-foreground mt-0.5">Pendiente</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{t('streaming.uploader.pending')}</div>
                   )}
                   {item.status === 'processing' && (
-                    <div className="text-xs text-brand mt-0.5">Procesando…</div>
+                    <div className="text-xs text-brand mt-0.5">{t('streaming.uploader.processing')}</div>
                   )}
                   {item.status === 'completed' && (
-                    <div className="text-xs text-green-400 mt-0.5">Completado</div>
+                    <div className="text-xs text-green-400 mt-0.5">{t('streaming.uploader.completed')}</div>
                   )}
                 </div>
                 {item.status === 'uploading' && (

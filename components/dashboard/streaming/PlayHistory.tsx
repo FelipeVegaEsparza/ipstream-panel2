@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface HistoryEntry {
   id: string
@@ -19,6 +20,7 @@ interface HistoryResponse {
 }
 
 export function PlayHistory() {
+  const { t, locale } = useDashboardI18n()
   const [data, setData] = useState<HistoryResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -52,7 +54,7 @@ export function PlayHistory() {
   const fmtTime = (iso: string) => {
     const d = new Date(iso)
     if (isNaN(d.getTime())) return iso
-    return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+    return d.toLocaleTimeString(locale === 'en' ? 'en-US' : 'es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: locale === 'en' })
   }
 
   const typeBadge = (type: string) => {
@@ -71,15 +73,15 @@ export function PlayHistory() {
   return (
     <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-foreground">Historial de reproducción</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('streaming.history.title')}</h2>
         <span className="text-xs text-muted-foreground">
-          {data ? `${data.total} registros` : ''}
+          {data ? t('streaming.history.records', { count: data.total }) : ''}
         </span>
       </div>
 
       {!data || data.entries.length === 0 ? (
         <p className="text-muted-foreground text-sm py-8 text-center">
-          {loading ? 'Cargando...' : 'Aún no hay historial de reproducción'}
+          {loading ? t('streaming.history.loading') : t('streaming.history.empty')}
         </p>
       ) : (
         <>
@@ -87,10 +89,10 @@ export function PlayHistory() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground text-xs uppercase border-b border-border">
-                  <th className="text-left py-2 pr-4 font-medium">Hora</th>
-                  <th className="text-left py-2 pr-4 font-medium">Título</th>
-                  <th className="text-left py-2 pr-4 font-medium">Artista</th>
-                  <th className="text-right py-2 font-medium">Tipo</th>
+                  <th className="text-left py-2 pr-4 font-medium">{t('streaming.history.time')}</th>
+                  <th className="text-left py-2 pr-4 font-medium">{t('streaming.history.track')}</th>
+                  <th className="text-left py-2 pr-4 font-medium">{t('streaming.history.artist')}</th>
+                  <th className="text-right py-2 font-medium">{t('streaming.history.type')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,7 +123,7 @@ export function PlayHistory() {
               disabled={page <= 1}
               className="px-3 py-1.5 text-xs bg-secondary hover:bg-secondary disabled:bg-card disabled:text-muted-foreground text-foreground rounded transition-colors"
             >
-              « Anterior
+              {t('streaming.history.previous')}
             </button>
             <div className="flex items-center gap-1">
               {renderPageButtons(page, data.totalPages, (p) => setPage(p))}
@@ -131,7 +133,7 @@ export function PlayHistory() {
               disabled={page >= data.totalPages}
               className="px-3 py-1.5 text-xs bg-secondary hover:bg-secondary disabled:bg-card disabled:text-muted-foreground text-foreground rounded transition-colors"
             >
-              Siguiente »
+              {t('streaming.history.next')}
             </button>
           </div>
         </>

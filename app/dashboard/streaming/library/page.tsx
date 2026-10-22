@@ -1,6 +1,7 @@
 'use client'
 
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { LibraryUploader } from '@/components/dashboard/streaming/LibraryUploader'
@@ -92,6 +93,7 @@ function renderPageButtons(current: number, total: number, goTo: (p: number) => 
 }
 
 export default function LibraryPage() {
+  const { t: tr } = useDashboardI18n()
   const [tracks, setTracks] = useState<Track[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
   const [loading, setLoading] = useState(true)
@@ -165,14 +167,14 @@ export default function LibraryPage() {
       const data = await res.json().catch(() => ({}))
       if (res.ok) {
         setCoverResult(
-          `Carátulas encontradas: ${data.coversFound ?? 0} · Títulos corregidos: ${data.titlesFixed ?? 0} · Revisados: ${data.scanned ?? 0}`
+          tr('streaming.library.coversResult', { covers: data.coversFound ?? 0, titles: data.titlesFixed ?? 0, scanned: data.scanned ?? 0 })
         )
         await load()
       } else {
-        setCoverResult(data.message || 'Error al buscar carátulas')
+        setCoverResult(data.message || tr('streaming.library.coversError'))
       }
     } catch {
-      setCoverResult('Error al buscar carátulas')
+      setCoverResult(tr('streaming.library.coversError'))
     } finally {
       setRefreshingCovers(false)
     }
@@ -227,7 +229,7 @@ export default function LibraryPage() {
   }
 
   const handleDeleteFolder = async (folderId: string) => {
-    if (!confirm('¿Eliminar esta carpeta? Los tracks pasarán a "Sin carpeta".')) return
+    if (!confirm(tr('streaming.library.confirmFolder'))) return
     try {
       await fetch(`/api/dashboard/streaming/library/folders/${folderId}`, { method: 'DELETE' })
       if (selectedFolderId === folderId) setSelectedFolderId(null)
@@ -252,13 +254,13 @@ export default function LibraryPage() {
           folderId: bulkFolderId === '__none__' ? null : bulkFolderId,
         }),
       })
-      if (!res.ok) throw new Error('No se pudieron mover los tracks')
+      if (!res.ok) throw new Error(tr('streaming.library.moveFailed'))
       setSelectedTrackIds(new Set())
       setBulkFolderId('')
       await load()
-      showToast({ type: 'success', title: 'Tracks movidos' })
+      showToast({ type: 'success', title: tr('streaming.library.tracksMoved') })
     } catch (err) {
-      showToast({ type: 'error', title: err instanceof Error ? err.message : 'No se pudieron mover los tracks' })
+      showToast({ type: 'error', title: err instanceof Error ? err.message : tr('streaming.library.moveFailed') })
     } finally {
       setBulkMoving(false)
     }
@@ -266,7 +268,7 @@ export default function LibraryPage() {
 
   const handleBulkDelete = async () => {
     if (!selectedTrackIds.size) return
-    if (!confirm(`¿Eliminar ${selectedTrackIds.size} track${selectedTrackIds.size === 1 ? '' : 's'}? Esta acción no se puede deshacer.`)) return
+    if (!confirm(tr('streaming.library.confirmTracks', { count: selectedTrackIds.size }))) return
     setBulkDeleting(true)
     try {
       const results = await Promise.allSettled(
@@ -279,8 +281,8 @@ export default function LibraryPage() {
       const failed = results.filter((result) => result.status === 'rejected').length
       setSelectedTrackIds(new Set())
       await load()
-      if (failed) showToast({ type: 'error', title: `${failed} track(s) no se pudieron eliminar` })
-      else showToast({ type: 'success', title: 'Tracks eliminados' })
+      if (failed) showToast({ type: 'error', title: tr('streaming.library.bulkDeleteFailed', { count: failed }) })
+      else showToast({ type: 'success', title: tr('streaming.library.tracksDeleted') })
     } finally {
       setBulkDeleting(false)
     }
@@ -312,11 +314,11 @@ export default function LibraryPage() {
   }
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Eliminar "${name}"?`)) return
+    if (!confirm(tr('streaming.library.confirmTrack', { name }))) return
     setDeletingId(id)
     try {
       const res = await fetch(`/api/dashboard/streaming/library/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Error al eliminar')
+      if (!res.ok) throw new Error(tr('streaming.library.errorDelete'))
       await load()
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -340,7 +342,7 @@ export default function LibraryPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: editTitle, artist: editArtist || null }),
       })
-      if (!res.ok) throw new Error('Error al guardar')
+      if (!res.ok) throw new Error(tr('streaming.library.errorSave'))
       setEditingId(null)
       await load()
     } catch (err: any) {
@@ -373,11 +375,11 @@ export default function LibraryPage() {
   }
 
   const handleCoverDelete = async (trackId: string) => {
-    if (!confirm('¿Eliminar carátula?')) return
+    if (!confirm(tr('streaming.library.confirmCover'))) return
     setCoverDeletingId(trackId)
     try {
       const res = await fetch(`/api/dashboard/streaming/library/${trackId}/cover`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Error al eliminar carátula')
+      if (!res.ok) throw new Error(tr('streaming.library.errorCover'))
       await load()
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -470,9 +472,9 @@ export default function LibraryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Biblioteca</h1>
+          <h1 className="text-3xl font-bold text-foreground">{tr('streaming.library.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sube tus MP3s para usar en las playlists de AutoDJ.
+            {tr('streaming.library.subtitle')}
           </p>
         </div>
       </div>
@@ -484,10 +486,10 @@ export default function LibraryPage() {
               <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
-              <span className="text-sm font-semibold text-muted-foreground">Almacenamiento</span>
+              <span className="text-sm font-semibold text-muted-foreground">{tr('streaming.library.storage')}</span>
             </div>
             <span className="text-xs text-muted-foreground font-mono">
-              {storage.totalMB.toFixed(1)} MB {storage.quotaMB ? `/ ${storage.quotaMB} MB` : 'usados'}
+              {storage.quotaMB ? tr('streaming.library.quota', { used: storage.totalMB.toFixed(1), quota: storage.quotaMB }) : tr('streaming.library.used', { used: storage.totalMB.toFixed(1) })}
             </span>
           </div>
           {storage.quotaMB && storage.percentUsed !== null ? (
@@ -502,17 +504,17 @@ export default function LibraryPage() {
               </div>
               <div className="flex items-center justify-between mt-2 text-xs">
                 <span className={storage.exceeded ? 'text-red-400' : 'text-muted-foreground'}>
-                  {storage.percentUsed.toFixed(1)}% usado
+                  {tr('streaming.library.percent', { percent: storage.percentUsed.toFixed(1) })}
                 </span>
                 <span className="text-muted-foreground">
-                  {storage.remainingMB !== null ? `${storage.remainingMB.toFixed(1)} MB libres` : '—'}
+                  {storage.remainingMB !== null ? tr('streaming.library.free', { free: storage.remainingMB.toFixed(1) }) : '—'}
                 </span>
               </div>
             </>
           ) : (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-              Sin límite de almacenamiento configurado
+              {tr('streaming.library.noLimit')}
             </div>
           )}
         </div>
@@ -526,7 +528,7 @@ export default function LibraryPage() {
           disabled={refreshingCovers}
           className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-secondary text-white text-sm font-medium rounded-lg transition-colors"
         >
-          {refreshingCovers ? 'Buscando carátulas...' : '🎵 Buscar carátulas faltantes'}
+          {refreshingCovers ? tr('streaming.library.searchingCovers') : tr('streaming.library.searchCovers')}
         </button>
         {coverResult && (
           <span className="text-xs text-muted-foreground">{coverResult}</span>
@@ -538,11 +540,11 @@ export default function LibraryPage() {
         <div className="w-64 shrink-0">
           <div className="bg-card rounded-lg shadow-lg">
             <div className="p-3 border-b border-border flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Carpetas</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{tr('streaming.library.folders')}</span>
               <button
                 onClick={() => { setCreatingFolder(true); setNewFolderParentId(null); setNewFolderName('') }}
                 className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                title="Nueva carpeta"
+                title={tr('streaming.library.newFolder')}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -558,7 +560,7 @@ export default function LibraryPage() {
                     value={newFolderName}
                     onChange={e => setNewFolderName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') { setCreatingFolder(false); setNewFolderName('') } }}
-                    placeholder="Nombre..."
+                    placeholder={tr('streaming.library.namePlaceholder')}
                     className="flex-1 bg-background text-foreground px-2 py-1 rounded text-sm outline-none"
                     autoFocus
                   />
@@ -581,7 +583,7 @@ export default function LibraryPage() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                <span className="flex-1">Todos</span>
+                <span className="flex-1">{tr('streaming.library.all')}</span>
                 <span className="text-[11px] text-muted-foreground">{tracks.length}</span>
               </div>
 
@@ -597,7 +599,7 @@ export default function LibraryPage() {
                 <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
-                <span className="flex-1">Sin carpeta</span>
+                <span className="flex-1">{tr('streaming.library.uncategorized')}</span>
                 <span className="text-[11px] text-muted-foreground">{tracks.filter(t => !t.folderId).length}</span>
               </div>
 
@@ -616,7 +618,7 @@ export default function LibraryPage() {
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  Subcarpeta
+                  {tr('streaming.library.subfolder')}
                 </button>
               </div>
             )}
@@ -635,21 +637,21 @@ export default function LibraryPage() {
                     <span className="text-muted-foreground font-normal">·</span>
                   </>
                 )}
-                {loading ? 'Cargando...' : `${filteredTracks.length} track${filteredTracks.length !== 1 ? 's' : ''}`}
+                {loading ? tr('streaming.library.loading') : tr('streaming.library.trackCount', { count: filteredTracks.length })}
               </h2>
               <a href="/dashboard/streaming" className="text-sm text-brand hover:text-brand">
-                ← Volver a Streaming
+                {tr('streaming.library.back')}
               </a>
             </div>
 
             {selectedTrackIds.size > 0 && (
               <div className="flex flex-wrap items-center gap-2 border-b border-border bg-brand/5 px-4 py-2.5">
                 <span className="text-xs font-medium text-foreground">
-                  {selectedTrackIds.size} seleccionado{selectedTrackIds.size === 1 ? '' : 's'}
+                  {tr('streaming.library.selectedCount', { count: selectedTrackIds.size })}
                 </span>
                 {selectedTrackIds.size < filteredTracks.length && (
                   <button type="button" onClick={selectAllFiltered} className="text-[11px] text-brand hover:underline">
-                    Seleccionar todos ({filteredTracks.length})
+                    {tr('streaming.library.selectAll', { count: filteredTracks.length })}
                   </button>
                 )}
                 <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -658,8 +660,8 @@ export default function LibraryPage() {
                     onChange={(e) => setBulkFolderId(e.target.value)}
                     className="rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground"
                   >
-                    <option value="">Mover a…</option>
-                    <option value="__none__">Sin carpeta</option>
+                    <option value="">{tr('streaming.library.moveTo')}</option>
+                    <option value="__none__">{tr('streaming.library.uncategorized')}</option>
                     {folders.map((folder) => (
                       <option key={folder.id} value={folder.id}>{folder.name}</option>
                     ))}
@@ -670,7 +672,7 @@ export default function LibraryPage() {
                     disabled={!bulkFolderId || bulkMoving}
                     className="rounded-lg bg-brand px-3 py-1.5 text-[11px] font-medium text-white disabled:opacity-40"
                   >
-                    {bulkMoving ? 'Moviendo…' : 'Mover'}
+                    {bulkMoving ? tr('streaming.library.moving') : tr('streaming.library.move')}
                   </button>
                   <button
                     type="button"
@@ -678,14 +680,14 @@ export default function LibraryPage() {
                     disabled={bulkDeleting}
                     className="rounded-lg border border-red-500/40 px-3 py-1.5 text-[11px] font-medium text-red-300 hover:bg-red-500/10 disabled:opacity-40"
                   >
-                    {bulkDeleting ? 'Eliminando…' : 'Eliminar'}
+                    {bulkDeleting ? tr('streaming.library.deleting') : tr('streaming.library.delete')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedTrackIds(new Set())}
                     className="text-[11px] text-muted-foreground hover:text-foreground"
                   >
-                    Quitar selección
+                    {tr('streaming.library.removeSelection')}
                   </button>
                 </div>
               </div>
@@ -693,7 +695,7 @@ export default function LibraryPage() {
 
             {filteredTracks.length === 0 && !loading ? (
               <div className="p-12 text-center text-muted-foreground">
-                {selectedFolderId ? 'Esta carpeta está vacía.' : 'No hay tracks todavía. Sube tu primer MP3.'}
+                {selectedFolderId ? tr('streaming.library.emptyFolder') : tr('streaming.library.emptyLibrary')}
               </div>
             ) : (
               <table className="w-full text-sm">
@@ -719,16 +721,16 @@ export default function LibraryPage() {
                           }
                         }}
                         className="h-4 w-4 accent-[var(--brand-500)]"
-                        aria-label="Seleccionar todos los tracks de esta página"
+                        aria-label={tr('streaming.library.selectAllPage')}
                       />
                     </th>
                     <th className="text-left p-3 w-10">🎵</th>
-                    <th className="text-left p-3 w-12">Carátula</th>
-                    <th className="text-left p-3">Título</th>
-                    <th className="text-left p-3 hidden sm:table-cell">Artista</th>
-                    <th className="text-left p-3">Duración</th>
-                    <th className="text-left p-3 hidden md:table-cell">Tamaño</th>
-                    <th className="text-right p-3">Acciones</th>
+                    <th className="text-left p-3 w-12">{tr('streaming.library.cover')}</th>
+                    <th className="text-left p-3">{tr('streaming.library.titleCol')}</th>
+                    <th className="text-left p-3 hidden sm:table-cell">{tr('streaming.library.artistCol')}</th>
+                    <th className="text-left p-3">{tr('streaming.library.duration')}</th>
+                    <th className="text-left p-3 hidden md:table-cell">{tr('streaming.library.size')}</th>
+                    <th className="text-right p-3">{tr('streaming.library.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -740,7 +742,7 @@ export default function LibraryPage() {
                           checked={selectedTrackIds.has(t.id)}
                           onChange={() => toggleTrackSelected(t.id)}
                           className="h-4 w-4 accent-[var(--brand-500)]"
-                          aria-label={`Seleccionar ${t.title}`}
+                          aria-label={tr('streaming.library.selectTrack', { title: t.title })}
                         />
                       </td>
                       <td className="p-3">
@@ -751,7 +753,7 @@ export default function LibraryPage() {
                               ? 'bg-green-600 text-white'
                               : 'bg-secondary text-muted-foreground hover:bg-secondary'
                           }`}
-                          title={playingId === t.id ? 'Detener' : 'Previsualizar'}
+                          title={playingId === t.id ? tr('streaming.library.stop') : tr('streaming.library.preview')}
                         >
                           {playingId === t.id ? '⏹' : '▶'}
                         </button>
@@ -779,7 +781,7 @@ export default function LibraryPage() {
                               onClick={() => { setCoverTrackId(t.id); coverInputRef.current?.click() }}
                               disabled={coverUploadingId === t.id || coverDeletingId === t.id}
                               className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand rounded-full flex items-center justify-center text-white text-xs hover:bg-brand disabled:opacity-50"
-                              title="Subir carátula"
+                              title={tr('streaming.library.uploadCover')}
                             >
                               {coverUploadingId === t.id ? '⏳' : '📷'}
                             </button>
@@ -788,7 +790,7 @@ export default function LibraryPage() {
                                 onClick={() => handleCoverDelete(t.id)}
                                 disabled={coverDeletingId === t.id}
                                 className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white text-[8px] hover:bg-red-500 disabled:opacity-50"
-                                title="Eliminar carátula"
+                                title={tr('streaming.library.deleteCover')}
                               >
                                 {coverDeletingId === t.id ? '⏳' : '✕'}
                               </button>
@@ -811,7 +813,7 @@ export default function LibraryPage() {
                       </td>
                       <td className="p-3 text-muted-foreground hidden sm:table-cell">
                         {editingId === t.id ? (
-                          <input value={editArtist} onChange={(e) => setEditArtist(e.target.value)} placeholder="Sin artista" className="bg-background text-foreground px-2 py-1 rounded w-full" />
+                          <input value={editArtist} onChange={(e) => setEditArtist(e.target.value)} placeholder={tr('streaming.library.noArtist')} className="bg-background text-foreground px-2 py-1 rounded w-full" />
                         ) : (
                           t.artist || <span className="text-muted-foreground">—</span>
                         )}
@@ -822,26 +824,26 @@ export default function LibraryPage() {
                         {editingId === t.id ? (
                           <>
                             <button onClick={saveEdit} disabled={savingEdit} className="text-green-400 hover:text-green-300 disabled:text-green-700 mr-3 text-xs">
-                              {savingEdit ? 'Guardando...' : 'Guardar'}
+                              {savingEdit ? tr('streaming.library.saving') : tr('streaming.library.save')}
                             </button>
                             <button onClick={() => { if (!savingEdit) { setEditingId(null); setCoverTrackId(null) } }} className="text-muted-foreground hover:text-muted-foreground text-xs disabled:opacity-50" disabled={savingEdit}>
-                              Cancelar
+                              {tr('streaming.library.cancel')}
                             </button>
                           </>
                         ) : (
                           <>
-                            <button onClick={() => startEdit(t)} className="text-brand hover:text-brand mr-2 text-xs">Editar</button>
+                            <button onClick={() => startEdit(t)} className="text-brand hover:text-brand mr-2 text-xs">{tr('streaming.library.edit')}</button>
                             <button
                               onClick={() => setMoveTrackId(moveTrackId === t.id ? null : t.id)}
                               className="text-amber-400 hover:text-amber-300 mr-2 text-xs"
-                              title="Mover a carpeta"
+                              title={tr('streaming.library.moveToFolder')}
                             >
-                              Mover
+                              {tr('streaming.library.move')}
                             </button>
                             {moveTrackId === t.id && (
                               <div className="absolute mt-1 right-0 z-10 bg-card border border-border rounded-lg shadow-xl p-2 min-w-[180px]">
-                                <div className="text-[11px] text-muted-foreground uppercase px-2 py-1">Mover a...</div>
-                                <button onClick={() => handleMoveTrack(t.id, null)} className="block w-full text-left px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary rounded">Sin carpeta</button>
+                                <div className="text-[11px] text-muted-foreground uppercase px-2 py-1">{tr('streaming.library.moveTo')}</div>
+                                <button onClick={() => handleMoveTrack(t.id, null)} className="block w-full text-left px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary rounded">{tr('streaming.library.uncategorized')}</button>
                                 {folders.map(f => (
                                   <button key={f.id} onClick={() => handleMoveTrack(t.id, f.id)} className="block w-full text-left px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary rounded flex items-center gap-1.5">
                                     <FolderIcon /> {f.name}
@@ -854,7 +856,7 @@ export default function LibraryPage() {
                               disabled={deletingId === t.id}
                               className="text-red-400 hover:text-red-300 text-xs disabled:opacity-50"
                             >
-                              {deletingId === t.id ? 'Borrando...' : 'Eliminar'}
+                              {deletingId === t.id ? tr('streaming.library.deletingTrack') : tr('streaming.library.delete')}
                             </button>
                           </>
                         )}
@@ -873,7 +875,7 @@ export default function LibraryPage() {
                 disabled={currentPage <= 1}
                 className="px-3 py-1.5 text-xs bg-secondary hover:bg-secondary disabled:bg-card disabled:text-muted-foreground text-foreground rounded transition-colors"
               >
-                « Anterior
+                {tr('streaming.library.previous')}
               </button>
               <div className="flex items-center gap-1">
                 {renderPageButtons(currentPage, totalPages, (p) => setPage(p))}
@@ -883,7 +885,7 @@ export default function LibraryPage() {
                 disabled={currentPage >= totalPages}
                 className="px-3 py-1.5 text-xs bg-secondary hover:bg-secondary disabled:bg-card disabled:text-muted-foreground text-foreground rounded transition-colors"
               >
-                Siguiente »
+                {tr('streaming.library.next')}
               </button>
             </div>
           )}

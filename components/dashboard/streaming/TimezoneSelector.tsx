@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface TimezoneSelectorProps {
   onChanged?: () => void
@@ -36,6 +37,7 @@ function getAllTimezones(): string[] {
 }
 
 export default function TimezoneSelector({ onChanged, compact }: TimezoneSelectorProps) {
+  const { t } = useDashboardI18n()
   const [timezone, setTimezone] = useState<string>('UTC')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -67,16 +69,16 @@ export default function TimezoneSelector({ onChanged, compact }: TimezoneSelecto
       })
       if (res.ok) {
         setTimezone(value)
-        showToast({ type: 'success', title: 'Zona horaria guardada' })
-        showToast({ type: 'info', title: 'Las franjas existentes se reinterpretan en la nueva zona.' })
+        showToast({ type: 'success', title: t('timezone.saved') })
+        showToast({ type: 'info', title: t('timezone.reinterpret') })
         onChanged?.()
       } else {
         const err = await res.json()
-        showToast({ type: 'error', title: err.message || 'Error al guardar' })
+        showToast({ type: 'error', title: err.message || t('timezone.error') })
         load()
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al guardar' })
+      showToast({ type: 'error', title: t('timezone.error') })
       load()
     } finally {
       setSaving(false)
@@ -85,19 +87,19 @@ export default function TimezoneSelector({ onChanged, compact }: TimezoneSelecto
 
   return (
     <div className={`flex items-center gap-2 ${compact ? '' : 'flex-col sm:flex-row'}`}>
-      <label className="text-sm text-muted-foreground whitespace-nowrap">Zona horaria</label>
+      <label className="text-sm text-muted-foreground whitespace-nowrap">{t('timezone.label')}</label>
       <select
         value={timezone}
         onChange={(e) => handleSave(e.target.value)}
         disabled={loading || saving}
         className="form-input text-sm"
       >
-        {loading && <option value="">Cargando...</option>}
+        {loading && <option value="">{t('timezone.loading')}</option>}
         {zones.map((z) => (
           <option key={z} value={z}>{z}</option>
         ))}
       </select>
-      {saving && <span className="text-xs text-muted-foreground">Guardando...</span>}
+      {saving && <span className="text-xs text-muted-foreground">{t('timezone.saving')}</span>}
     </div>
   )
 }

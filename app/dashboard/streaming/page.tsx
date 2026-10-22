@@ -10,8 +10,10 @@ import { NowPlayingDisplay } from '@/components/dashboard/streaming/NowPlayingDi
 import { StreamControls } from '@/components/dashboard/streaming/StreamControls'
 import { PlayHistory } from '@/components/dashboard/streaming/PlayHistory'
 import { useToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export default function StreamingPage() {
+  const { t } = useDashboardI18n()
   const { status, refresh } = useStreamingStatus({ pollingMs: 5000 })
   const { toast } = useToast()
   const [copied, setCopied] = useState(false)
@@ -27,16 +29,16 @@ export default function StreamingPage() {
     if (!streamUrl) return
     navigator.clipboard.writeText(streamUrl)
     setCopied(true)
-    toast({ type: 'success', title: 'URL copiada al portapapeles' })
+    toast({ type: 'success', title: t('streaming.urlCopied') })
     setTimeout(() => setCopied(false), 2000)
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Streaming</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('streaming.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Gestiona tu radio en vivo: AutoDJ, playlists, biblioteca musical.
+          {t('streaming.subtitle')}
         </p>
       </div>
 
@@ -48,7 +50,7 @@ export default function StreamingPage() {
             <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
-            <span className="text-sm font-semibold text-muted-foreground">URL de transmisión</span>
+            <span className="text-sm font-semibold text-muted-foreground">{t('streaming.urlTitle')}</span>
           </div>
           <div className="flex flex-col md:flex-row gap-2">
             <input
@@ -64,19 +66,19 @@ export default function StreamingPage() {
               rel="noopener noreferrer"
               className="px-5 py-2.5 bg-brand hover:bg-brand text-white font-medium rounded-lg text-center whitespace-nowrap transition-colors"
             >
-              ▶ Escuchar
+              {t('streaming.listen')}
             </a>
             <button
               onClick={copyUrl}
               className="px-5 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg whitespace-nowrap transition-colors"
             >
-              {copied ? '✓ Copiado' : 'Copiar URL'}
+              {copied ? t('streaming.copied') : t('streaming.copy')}
             </button>
           </div>
           {isRunning && (
             <p className="text-xs text-green-400/80 mt-2.5 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              Stream activo — comparte esta URL para que te escuchen
+              {t('streaming.active')}
             </p>
           )}
         </div>

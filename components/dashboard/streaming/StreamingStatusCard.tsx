@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import type { StreamStatus } from '@/lib/useStreamingStatus'
 import { useToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   status: StreamStatus | null
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
+  const { t } = useDashboardI18n()
   const { toast } = useToast()
   const [copied, setCopied] = useState(false)
 
@@ -30,9 +32,9 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
   if (!status?.hasRadioStream) {
     return (
       <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-6">
-        <h3 className="text-yellow-200 font-semibold mb-2">Sin RadioStream</h3>
+        <h3 className="text-yellow-200 font-semibold mb-2">{t('streaming.noRadioTitle')}</h3>
         <p className="text-yellow-100/80 text-sm">
-          Este cliente no tiene un RadioStream configurado. Contacta al administrador.
+          {t('streaming.noRadioText')}
         </p>
       </div>
     )
@@ -51,7 +53,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
     if (!streamUrl) return
     navigator.clipboard.writeText(streamUrl)
     setCopied(true)
-    toast({ type: 'success', title: 'URL copiada al portapapeles' })
+    toast({ type: 'success', title: t('streaming.urlCopied') })
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -61,7 +63,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
         <div>
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <span className={`inline-block w-3 h-3 rounded-full ${isRunning ? 'bg-red-500 animate-pulse' : 'bg-secondary'}`}></span>
-            {status.clientName || 'Mi Radio'}
+            {status.clientName || t('streaming.myRadio')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             Mount: <code className="text-brand">/{status.mount}</code>
@@ -72,42 +74,42 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
             onClick={onRefresh}
             className="text-sm px-3 py-1 rounded bg-secondary hover:bg-secondary text-foreground"
           >
-            ↻ Refrescar
+            {t('streaming.refresh')}
           </button>
         )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-background/60 rounded p-3">
-          <div className="text-xs text-muted-foreground uppercase">Estado</div>
+          <div className="text-xs text-muted-foreground uppercase">{t('streaming.status')}</div>
           <div className="text-lg font-semibold mt-1">
             {isRunning ? (
               isDjLive ? (
                 <span className="text-green-400 flex items-center gap-1.5">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  {djName ? djName : 'EN VIVO'}
+                  {djName ? djName : t('streaming.live')}
                 </span>
               ) : (
-                <span className="text-brand">ON AIR</span>
+                <span className="text-brand">{t('streaming.onAir')}</span>
               )
             ) : (
-              <span className="text-muted-foreground">OFF</span>
+              <span className="text-muted-foreground">{t('streaming.off')}</span>
             )}
           </div>
         </div>
         <div className="bg-background/60 rounded p-3">
-          <div className="text-xs text-muted-foreground uppercase">Oyentes</div>
+          <div className="text-xs text-muted-foreground uppercase">{t('streaming.listeners')}</div>
           <div className="text-lg font-semibold mt-1 text-foreground">
             {listeners}
-            {listenerPeak > 0 && <span className="text-xs text-muted-foreground ml-1">(peak {listenerPeak})</span>}
+            {listenerPeak > 0 && <span className="text-xs text-muted-foreground ml-1">({t('streaming.peak', { count: listenerPeak })})</span>}
           </div>
         </div>
         <div className="bg-background/60 rounded p-3">
-          <div className="text-xs text-muted-foreground uppercase">Bitrate</div>
+          <div className="text-xs text-muted-foreground uppercase">{t('streaming.bitrate')}</div>
           <div className="text-lg font-semibold mt-1 text-foreground">{bitrate} kbps</div>
         </div>
         <div className="bg-background/60 rounded p-3">
-          <div className="text-xs text-muted-foreground uppercase">PID</div>
+          <div className="text-xs text-muted-foreground uppercase">{t('streaming.pid')}</div>
           <div className="text-lg font-semibold mt-1 text-foreground">
             {status.process?.pid ?? '—'}
           </div>
@@ -117,7 +119,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
       {/* URL de transmisión + acciones */}
       {streamUrl && (
         <div className="bg-background/60 rounded p-4 space-y-2">
-          <div className="text-xs text-muted-foreground uppercase">URL de transmisión</div>
+          <div className="text-xs text-muted-foreground uppercase">{t('streaming.urlTitle')}</div>
           <div className="flex flex-col md:flex-row gap-2">
             <input
               type="text"
@@ -132,18 +134,18 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
               rel="noopener noreferrer"
               className="px-4 py-2 bg-brand hover:bg-brand text-white font-medium rounded text-center whitespace-nowrap"
             >
-              ▶ Escuchar stream
+              {t('streaming.listenStream')}
             </a>
             <button
               onClick={copyUrl}
               className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded whitespace-nowrap"
             >
-              {copied ? '✓ Copiado' : '📋 Copiar URL'}
+              {copied ? t('streaming.copied') : `📋 ${t('streaming.copy')}`}
             </button>
           </div>
           {isRunning && (
             <p className="text-xs text-green-400">
-              ✓ Stream activo. Haz clic en "Escuchar stream" para abrirlo en una nueva pestaña.
+              {t('streaming.streamActive')}
             </p>
           )}
         </div>
@@ -153,13 +155,13 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
         <div className="bg-green-900/30 border border-green-700 rounded p-4 space-y-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase">
             <span className="text-green-400">🔴</span>
-            <span className="text-green-300 font-semibold">Transmitiendo DJ en vivo</span>
+            <span className="text-green-300 font-semibold">{t('streaming.djLive')}</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <div>
-              <p className="text-foreground font-semibold text-lg">{djName || 'DJ en vivo'}</p>
-              <p className="text-muted-foreground text-sm">El AutoDJ se reanudará al desconectar</p>
+              <p className="text-foreground font-semibold text-lg">{djName || t('streaming.djName')}</p>
+              <p className="text-muted-foreground text-sm">{t('streaming.djAutoResume')}</p>
             </div>
           </div>
         </div>
@@ -169,7 +171,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
         <div className="bg-background/60 rounded p-4 space-y-3">
           <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase">
             <span>🎵</span>
-            <span>Ahora suena</span>
+            <span>{t('streaming.nowPlaying')}</span>
             <span className="flex-1"></span>
             <span className="text-brand">{status.nowPlaying.playlist.name}</span>
           </div>
@@ -179,7 +181,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
             {status.nowPlaying.currentTrack?.coverUrl && (
               <img
                 src={status.nowPlaying.currentTrack.coverUrl}
-                alt="Carátula"
+                alt={t('streaming.cover')}
                 className="w-14 h-14 rounded object-cover flex-shrink-0 mt-0.5 shadow-md"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
               />
@@ -188,9 +190,9 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
               {status.nowPlaying.currentTrack ? (
                 <>
                   <p className="text-foreground font-semibold truncate flex items-center gap-2">
-                    {status.nowPlaying.currentTrack.title || 'Sin título'}
+                    {status.nowPlaying.currentTrack.title || t('streaming.noTitle')}
                     {status.nowPlaying.currentTrack.isJingle && (
-                      <span className="text-xs bg-amber-600 text-white px-1.5 py-0.5 rounded font-normal">JINGLE</span>
+                      <span className="text-xs bg-amber-600 text-white px-1.5 py-0.5 rounded font-normal">{t('streaming.jingle')}</span>
                     )}
                   </p>
                   {status.nowPlaying.currentTrack.artist && (
@@ -201,7 +203,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
                   )}
                 </>
               ) : (
-                <p className="text-muted-foreground">Esperando metadata...</p>
+                <p className="text-muted-foreground">{t('streaming.waitingMetadata')}</p>
               )}
             </div>
           </div>
@@ -218,11 +220,11 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground uppercase mb-0.5">⏭ Siguiente</p>
+                <p className="text-xs text-muted-foreground uppercase mb-0.5">⏭ {t('streaming.next')}</p>
                 <p className="text-muted-foreground font-medium truncate flex items-center gap-2">
-                  {status.nowPlaying.nextTrack.title || 'Sin título'}
+                  {status.nowPlaying.nextTrack.title || t('streaming.noTitle')}
                   {status.nowPlaying.nextTrack.isJingle && (
-                    <span className="text-xs bg-amber-600/70 text-white px-1.5 py-0.5 rounded font-normal">JINGLE</span>
+                    <span className="text-xs bg-amber-600/70 text-white px-1.5 py-0.5 rounded font-normal">{t('streaming.jingle')}</span>
                   )}
                 </p>
                 {status.nowPlaying.nextTrack.artist && (
@@ -236,7 +238,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
 
           {status.nowPlaying.position && (
             <p className="text-xs text-muted-foreground">
-              Track {status.nowPlaying.position.index} de {status.nowPlaying.position.total}
+              {t('streaming.trackOf', { index: status.nowPlaying.position.index, total: status.nowPlaying.position.total })}
             </p>
           )}
         </div>
