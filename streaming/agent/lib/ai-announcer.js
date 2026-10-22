@@ -34,18 +34,18 @@ function weatherPhrase(code) {
   return 'condiciones variables'
 }
 
-function timeText(timeZone) {
+function timeText(timeZone, at = new Date()) {
   let zone = timeZone || 'UTC'
   let parts
   try {
     parts = new Intl.DateTimeFormat('es-CL', {
       timeZone: zone, hour: '2-digit', minute: '2-digit', hour12: false,
-    }).formatToParts(new Date())
+    }).formatToParts(at)
   } catch {
     zone = 'UTC'
     parts = new Intl.DateTimeFormat('es-CL', {
       timeZone: zone, hour: '2-digit', minute: '2-digit', hour12: false,
-    }).formatToParts(new Date())
+    }).formatToParts(at)
   }
   const rawHour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0)
   const hour = rawHour === 24 ? 0 : rawHour
@@ -125,14 +125,14 @@ async function consume(clientId, characters) {
   )
 }
 
-export async function generateAnnouncement(clientId, type) {
+export async function generateAnnouncement(clientId, type, { at = new Date() } = {}) {
   const client = await loadClientContext(clientId)
   if (!client?.aiLiveEnabled || !client?.aiMonthlyCharacters) return null
   const tts = await loadTtsConfig()
   if (!tts) return null
 
   let text = null
-  if (type === 'time') text = timeText(client.timezone)
+  if (type === 'time') text = timeText(client.timezone, at)
   if (type === 'weather') text = await weatherText(clientId)
   if (!text) return null
 
