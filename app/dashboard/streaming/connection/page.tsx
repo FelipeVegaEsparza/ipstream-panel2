@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface DjSlotInfo {
   id: string
@@ -31,6 +32,12 @@ const ROLE_LABELS: Record<string, string> = {
   guest: 'Invitado — solo si nadie más conectó',
 }
 
+const ROLE_LABELS_EN: Record<string, string> = {
+  owner: 'Owner — interrupts everyone',
+  host: 'Host — interrupted by owner, interrupts guest',
+  guest: 'Guest — only if nobody else connected',
+}
+
 const ROLE_HIERARCHY: Record<string, number> = {
   owner: 3, host: 2, guest: 1,
 }
@@ -42,6 +49,8 @@ const ROLE_STYLES: Record<string, string> = {
 }
 
 export default function ConnectionPage() {
+  const { t, locale } = useDashboardI18n()
+  const roleLabels = locale === 'en' ? ROLE_LABELS_EN : ROLE_LABELS
   const { status } = useStreamingStatus({ pollingMs: 10000 })
 
   const [connectionInfo, setConnectionInfo] = useState<{
@@ -168,11 +177,11 @@ export default function ConnectionPage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      setError('El nombre es requerido')
+      setError(t('streaming.connection.nameRequired'))
       return
     }
     if (!editId && !form.password) {
-      setError('Nombre y password son requeridos')
+      setError(t('streaming.connection.namePasswordRequired'))
       return
     }
     setSaving(true); setError(null)
@@ -188,15 +197,15 @@ export default function ConnectionPage() {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-        if (!res.ok) throw new Error((await res.json()).error || 'Error al actualizar')
-        setSuccess(`DJ "${form.name}" actualizado`)
+        if (!res.ok) throw new Error((await res.json()).error || t('streaming.connection.errorDelete'))
+        setSuccess(t('streaming.connection.djUpdated', { name: form.name }))
       } else {
         const res = await fetch('/api/dashboard/streaming/djs', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         })
-        if (!res.ok) throw new Error((await res.json()).error || 'Error al crear')
-        setSuccess(`DJ "${form.name}" creado`)
+        if (!res.ok) throw new Error((await res.json()).error || t('streaming.connection.errorDelete'))
+        setSuccess(t('streaming.connection.djCreated', { name: form.name }))
       }
       resetForm()
       await load()
@@ -205,24 +214,24 @@ export default function ConnectionPage() {
   }
 
   const handleDelete = async (dj: DjSlotInfo) => {
-    if (!confirm(`¿Eliminar el DJ "${dj.name}" (${dj.mount})?`)) return
+    if (!confirm(t('streaming.connection.confirmDelete', { name: dj.name, mount: dj.mount }))) return
     try {
       const res = await fetch(`/api/dashboard/streaming/djs/${dj.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
-      setSuccess(`DJ "${dj.name}" eliminado`)
+      setSuccess(t('streaming.connection.djDeleted', { name: dj.name }))
       await load()
-    } catch { setError('Error al eliminar DJ') }
+    } catch { setError(t('streaming.connection.errorDelete')) }
   }
 
   const handleKick = async (dj: DjSlotInfo) => {
     if (!dj.connected) return
-    if (!confirm(`¿Desconectar al DJ "${dj.name}" (${dj.mount})?`)) return
+    if (!confirm(t('streaming.connection.confirmDisconnect', { name: dj.name, mount: dj.mount }))) return
     try {
       const res = await fetch(`/api/dashboard/streaming/djs/${dj.id}/kick`, { method: 'POST' })
       if (!res.ok) throw new Error()
-      setSuccess(`DJ "${dj.name}" desconectado`)
+      setSuccess(t('streaming.connection.djDisconnected', { name: dj.name }))
       await load()
-    } catch { setError('Error al desconectar DJ') }
+    } catch { setError(t('streaming.connection.errorDisconnect')) }
   }
 
   // Mounts que se muestran en el dropdown: los devueltos por el agente (ya libres
@@ -238,9 +247,9 @@ export default function ConnectionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Conexión DJ</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('streaming.connection.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Gestiona los DJs de tu radio y obtén los datos para que se conecten con BUTT, MIXXX u otro software.
+          {t('streaming.connection.subtitle')}
         </p>
       </div>
 
@@ -252,14 +261,14 @@ export default function ConnectionPage() {
           <span className={`inline-block w-3 h-3 rounded-full ${djConnected ? 'bg-green-500 animate-pulse' : 'bg-secondary'}`} />
           <span className={djConnected ? 'text-green-400' : 'text-brand'}>
             {djConnected
-              ? `DJ en vivo${connectedLabel ? ` (${connectedLabel})` : ''}`
-              : 'AutoDJ activo'}
+              ? t('streaming.connection.djLive', { name: connectedLabel ? ` (${connectedLabel})` : '' })
+              : t('streaming.connection.autodjActive')}
           </span>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           {djConnected
-            ? `${connectedSlots.length > 1 ? `${connectedSlots.length} DJs conectados` : 'DJ conectado'}. El AutoDJ se reanudará automáticamente al desconectarse todos.`
-            : 'No hay DJ conectado. Configura tu encoder con los datos de abajo.'}
+            ? `${connectedSlots.length > 1 ? t('streaming.connection.djsConnected', { count: connectedSlots.length }) : t('streaming.connection.djConnected')}. ${t('streaming.connection.autodjResume')}`
+            : t('streaming.connection.noDj')}
         </p>
       </div>
 
@@ -273,8 +282,8 @@ export default function ConnectionPage() {
 
       {/* Jerarquía de roles */}
       <div className="bg-card rounded-lg p-4 text-sm space-y-1">
-        <h3 className="font-semibold text-muted-foreground mb-2">Jerarquía de roles</h3>
-        {Object.entries(ROLE_LABELS).map(([role, desc]) => (
+        <h3 className="font-semibold text-muted-foreground mb-2">{t('streaming.connection.roleHierarchy')}</h3>
+        {Object.entries(roleLabels).map(([role, desc]) => (
           <div key={role} className="flex items-start gap-2 text-muted-foreground">
             <span className={`font-medium px-1.5 py-0.5 rounded text-xs uppercase ${ROLE_STYLES[role]}`}>{role}</span>
             <span>{desc}</span>
@@ -286,24 +295,24 @@ export default function ConnectionPage() {
       <div className="bg-card rounded-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Slots de DJ</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t('streaming.connection.djSlots')}</h2>
             <p className="text-xs text-muted-foreground">
-              Plan máximo: {planMaxDjs} DJs. Cada slot tiene mount y password propio.
+              {t('streaming.connection.planMax', { count: planMaxDjs })}
             </p>
           </div>
           <button
             onClick={startCreate}
             disabled={djSlots.length >= planMaxDjs}
-            title={djSlots.length >= planMaxDjs ? `Plan máximo: ${planMaxDjs} DJs` : 'Crear nuevo slot'}
+            title={djSlots.length >= planMaxDjs ? t('streaming.connection.planMax', { count: planMaxDjs }) : t('streaming.connection.newDj')}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-sm"
           >
-            + Nuevo DJ
+            {t('streaming.connection.newDj')}
           </button>
         </div>
 
         {djSlots.length === 0 ? (
           <div className="text-center text-muted-foreground py-8 text-sm">
-            No hay DJs configurados. Crea el primer slot para que puedan transmitir en vivo.
+            {t('streaming.connection.noSlots')}
           </div>
         ) : (
           <div className="space-y-3">
@@ -316,44 +325,44 @@ export default function ConnectionPage() {
                     <span className={`w-2.5 h-2.5 rounded-full ${slot.connected ? 'bg-green-500 animate-pulse' : 'bg-secondary'}`} />
                     <span className="text-foreground font-medium">{slot.name}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded uppercase ${ROLE_STYLES[slot.role]}`}>{slot.role}</span>
-                    {slot.connected && slot.onAir && <span className="text-xs font-semibold text-green-400">ON AIR</span>}
-                    {slot.connected && !slot.onAir && <span className="text-xs text-yellow-400">Conectado — en espera</span>}
-                    {!slot.connected && slot.isActive && <span className="text-xs text-muted-foreground">Disponible</span>}
-                    {!slot.isActive && <span className="text-xs text-red-400">Inactivo</span>}
+                    {slot.connected && slot.onAir && <span className="text-xs font-semibold text-green-400">{t('streaming.connection.onAir')}</span>}
+                    {slot.connected && !slot.onAir && <span className="text-xs text-yellow-400">{t('streaming.connection.waiting')}</span>}
+                    {!slot.connected && slot.isActive && <span className="text-xs text-muted-foreground">{t('streaming.connection.available')}</span>}
+                    {!slot.isActive && <span className="text-xs text-red-400">{t('streaming.connection.inactive')}</span>}
                   </div>
                   <div className="flex gap-2">
                     {slot.connected && (
                       <button onClick={() => handleKick(slot)} className="text-xs px-2.5 py-1.5 bg-orange-900/50 hover:bg-orange-800 text-orange-300 rounded">
-                        Desconectar
+                        {t('streaming.connection.disconnect')}
                       </button>
                     )}
                     <button onClick={() => startEdit(slot)} className="text-xs px-2.5 py-1.5 bg-secondary hover:bg-secondary text-muted-foreground rounded">
-                      Editar
+                      {t('streaming.connection.edit')}
                     </button>
                     <button onClick={() => handleDelete(slot)} className="text-xs px-2.5 py-1.5 bg-red-900/50 hover:bg-red-800 text-red-300 rounded">
-                      Eliminar
+                      {t('streaming.connection.delete')}
                     </button>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div>
-                    <span className="text-muted-foreground">Mount</span>
+                    <span className="text-muted-foreground">{t('streaming.connection.mount')}</span>
                     <div className="flex items-center gap-1 mt-0.5">
                       <code className="bg-background text-brand px-2 py-1 rounded flex-1 font-mono">{slot.mount}</code>
-                      <button onClick={() => copy(slot.mount, 'Mount')} className="px-1.5 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
+                      <button onClick={() => copy(slot.mount, 'Mount')} className="px-1.5 py-1 bg-secondary hover:bg-secondary text-foreground rounded">{t('streaming.connection.copy')}</button>
                     </div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Prioridad</span>
+                    <span className="text-muted-foreground">{t('streaming.connection.priority')}</span>
                     <div className="mt-0.5 text-foreground">{slot.priority}</div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Rol</span>
-                    <div className="mt-0.5 text-muted-foreground">{ROLE_LABELS[slot.role] || slot.role}</div>
+                    <span className="text-muted-foreground">{t('streaming.connection.role')}</span>
+                    <div className="mt-0.5 text-muted-foreground">{roleLabels[slot.role] || slot.role}</div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Estado</span>
-                    <div className="mt-0.5">{slot.isActive ? (slot.connected ? (slot.onAir ? 'Transmitiendo' : 'En espera') : 'Disponible') : 'Inactivo'}</div>
+                    <span className="text-muted-foreground">{t('streaming.connection.status')}</span>
+                    <div className="mt-0.5">{slot.isActive ? (slot.connected ? (slot.onAir ? t('streaming.connection.broadcasting') : t('streaming.connection.waitingShort')) : t('streaming.connection.available')) : t('streaming.connection.inactive')}</div>
                   </div>
                 </div>
               </div>
@@ -364,51 +373,51 @@ export default function ConnectionPage() {
 
       {/* Server info */}
       <div className="bg-card rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Configuración del servidor</h2>
-        <p className="text-xs text-muted-foreground -mt-2">Datos comunes para todos los DJs.</p>
+        <h2 className="text-lg font-semibold text-foreground">{t('streaming.connection.serverConfig')}</h2>
+        <p className="text-xs text-muted-foreground -mt-2">{t('streaming.connection.serverConfigText')}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-muted-foreground uppercase">Servidor</label>
+            <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.server')}</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">{harborHost}</code>
-              <button onClick={() => copy(harborHost, 'Servidor')} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
+              <button onClick={() => copy(harborHost, t('streaming.connection.server'))} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">{t('streaming.connection.copy')}</button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground uppercase">Puerto (Harbor)</label>
+            <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.harborPort')}</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">{harborPort}</code>
-              <button onClick={() => copy(String(harborPort), 'Puerto')} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
+              <button onClick={() => copy(String(harborPort), t('streaming.connection.harborPort'))} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">{t('streaming.connection.copy')}</button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground uppercase">Usuario</label>
+            <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.username')}</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">source</code>
-              <button onClick={() => copy('source', 'Usuario')} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
+              <button onClick={() => copy('source', t('streaming.connection.username'))} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">{t('streaming.connection.copy')}</button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground uppercase">Password por defecto</label>
+            <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.defaultPassword')}</label>
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">{displayPassword}</code>
-              <button onClick={revealPassword} disabled={loadingPassword} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary disabled:opacity-50 text-foreground rounded" title={showPassword ? 'Ocultar' : 'Mostrar'}>
+              <button onClick={revealPassword} disabled={loadingPassword} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary disabled:opacity-50 text-foreground rounded" title={showPassword ? t('streaming.connection.hide') : t('streaming.connection.show')}>
                 {loadingPassword ? '...' : showPassword ? '🙈' : '👁'}
               </button>
               {livePassword && showPassword && (
-                <button onClick={() => copy(livePassword, 'Password')} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">Copiar</button>
+                <button onClick={() => copy(livePassword, t('streaming.connection.password'))} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">{t('streaming.connection.copy')}</button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Cada DJ tiene su propio password. Este es el global.</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('streaming.connection.globalPasswordText')}</p>
           </div>
         </div>
       </div>
 
       {/* Recent sessions */}
       <div className="bg-card rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Últimas sesiones de DJ</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('streaming.connection.sessions')}</h2>
         {sessions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No hay sesiones recientes.</p>
+          <p className="text-sm text-muted-foreground">{t('streaming.connection.noSessions')}</p>
         ) : (
           <div className="space-y-2">
             {sessions.map(s => (
@@ -418,8 +427,8 @@ export default function ConnectionPage() {
                   <span className="text-xs text-muted-foreground ml-2">({s.role})</span>
                 </div>
                 <div className="text-muted-foreground text-xs">
-                  {new Date(s.startedAt).toLocaleString('es-CL')}
-                  {s.endedAt ? ` — ${formatDuration(s.durationSeconds)}` : ' — en curso'}
+                  {new Date(s.startedAt).toLocaleString(locale === 'en' ? 'en-US' : 'es-CL')}
+                  {s.endedAt ? ` — ${formatDuration(s.durationSeconds)}` : ` — ${t('streaming.connection.inProgress')}`}
                 </div>
               </div>
             ))}
@@ -430,18 +439,18 @@ export default function ConnectionPage() {
       {/* Logs */}
       <div className="bg-card rounded-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Logs de conexión</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('streaming.connection.logs')}</h2>
           <button
             onClick={() => setShowLogs(v => !v)}
             className="text-xs px-3 py-1.5 bg-secondary hover:bg-secondary text-foreground rounded"
           >
-            {showLogs ? 'Ocultar' : 'Ver últimas líneas'}
+            {showLogs ? t('streaming.connection.hide') : t('streaming.connection.viewLogs')}
           </button>
         </div>
         {showLogs && (
           <div className="bg-background rounded p-3 text-xs font-mono text-muted-foreground max-h-64 overflow-y-auto space-y-1">
             {logs.length === 0 ? (
-              <p>No hay logs disponibles.</p>
+              <p>{t('streaming.connection.noLogs')}</p>
             ) : (
               logs.map((line, i) => <p key={i}>{line}</p>)
             )}
@@ -451,16 +460,16 @@ export default function ConnectionPage() {
 
       {/* BUTT example */}
       <div className="bg-card rounded-lg p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Configuración en BUTT (ejemplo)</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('streaming.connection.buttTitle')}</h2>
         <ol className="text-sm text-muted-foreground space-y-2 list-decimal pl-5">
-          <li>Abre BUTT → Settings → Stream</li>
-          <li>Server type: <code className="text-brand">Icecast 2</code></li>
-          <li>Address: <code className="text-brand">{harborHost}</code></li>
-          <li>Port: <code className="text-brand">{harborPort}</code></li>
-          <li>Mount: <code className="text-brand">/dj1</code> (el de tu slot)</li>
-          <li>Username: <code className="text-brand">source</code></li>
-          <li>Password: tu password DJ individual</li>
-          <li>Click <strong>Add</strong> y luego <strong>Play</strong></li>
+          <li>{t('streaming.connection.butt1')}</li>
+          <li>{t('streaming.connection.butt2')} <code className="text-brand">Icecast 2</code></li>
+          <li>{t('streaming.connection.butt3')} <code className="text-brand">{harborHost}</code></li>
+          <li>{t('streaming.connection.butt4')} <code className="text-brand">{harborPort}</code></li>
+          <li>{t('streaming.connection.butt5')} <code className="text-brand">/dj1</code></li>
+          <li>{t('streaming.connection.butt6')} <code className="text-brand">source</code></li>
+          <li>{t('streaming.connection.butt7')}</li>
+          <li>{t('streaming.connection.butt8')}</li>
         </ol>
       </div>
 
@@ -468,17 +477,17 @@ export default function ConnectionPage() {
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-lg p-6 w-full max-w-md space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">{editId ? 'Editar DJ' : 'Nuevo DJ'}</h2>
+            <h2 className="text-lg font-semibold text-foreground">{editId ? t('streaming.connection.editTitle') : t('streaming.connection.newTitle')}</h2>
 
             <div>
-              <label className="text-xs text-muted-foreground uppercase">Nombre del DJ</label>
+              <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.djName')}</label>
               <input value={form.name} onChange={e => setForm({...form, name: e.target.value})}
                 className="w-full mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm"
-                placeholder="Ej: DJ Alex" />
+                placeholder={t('streaming.connection.djNamePlaceholder')} />
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground uppercase">Mountpoint</label>
+              <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.mountpoint')}</label>
               <div className="flex items-center mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm">
                 <span className="text-muted-foreground mr-2">/dj</span>
                 <input
@@ -496,45 +505,45 @@ export default function ConnectionPage() {
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {editId
-                  ? 'El mount no se puede cambiar al editar.'
-                  : `Elige un número entre 1 y ${planMaxDjs}. El próximo libre se sugiere automáticamente.`}
+                  ? t('streaming.connection.mountEdit')
+                  : t('streaming.connection.mountHint', { count: planMaxDjs })}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-muted-foreground uppercase">Prioridad</label>
+                <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.priority')}</label>
                 <input type="number" min={1} max={4} value={form.priority}
                   onChange={e => setForm({...form, priority: parseInt(e.target.value) || 1})}
                   className="w-full mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm" />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground uppercase">Rol</label>
+                <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.role')}</label>
                 <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}
                   className="w-full mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm">
-                  <option value="owner">Dueño</option>
-                  <option value="host">Locutor</option>
-                  <option value="guest">Invitado</option>
+                  <option value="owner">{t('streaming.connection.roleOwner')}</option>
+                  <option value="host">{t('streaming.connection.roleHost')}</option>
+                  <option value="guest">{t('streaming.connection.roleGuest')}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground uppercase">Password {editId ? '(vacío = mantener)' : ''}</label>
+              <label className="text-xs text-muted-foreground uppercase">{t('streaming.connection.password')} {editId ? t('streaming.connection.passwordKeep') : ''}</label>
               <input value={form.password} onChange={e => setForm({...form, password: e.target.value})}
                 className="w-full mt-1 bg-background border border-border rounded px-3 py-2 text-foreground text-sm"
-                placeholder={editId ? 'Dejar vacío = mantener actual' : 'Password para conectar'}
+                placeholder={editId ? t('streaming.connection.passwordKeepPlaceholder') : t('streaming.connection.passwordPlaceholder')}
                 type="password" />
             </div>
 
             {form.role && (
-              <div className="text-xs text-muted-foreground bg-background rounded p-2">{ROLE_LABELS[form.role]}</div>
+              <div className="text-xs text-muted-foreground bg-background rounded p-2">{roleLabels[form.role]}</div>
             )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={resetForm} className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm">Cancelar</button>
+              <button onClick={resetForm} className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm">{t('streaming.connection.cancel')}</button>
               <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded text-sm">
-                {saving ? 'Guardando...' : editId ? 'Guardar' : 'Crear DJ'}
+                {saving ? t('streaming.connection.saving') : editId ? t('streaming.connection.save') : t('streaming.connection.create')}
               </button>
             </div>
           </div>
@@ -543,7 +552,7 @@ export default function ConnectionPage() {
 
       {copyText && (
         <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg">
-          ✓ {copyText} copiado
+          ✓ {t('streaming.connection.copied', { label: copyText })}
         </div>
       )}
 

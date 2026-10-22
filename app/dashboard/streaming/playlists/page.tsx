@@ -9,6 +9,7 @@ import { showToast } from '@/components/ui/toast'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Playlist {
   id: string
@@ -31,6 +32,7 @@ function fmtDuration(seconds: number | null) {
 }
 
 export default function PlaylistsPage() {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,7 +69,7 @@ export default function PlaylistsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName, description: newDesc || undefined }),
       })
-      if (!res.ok) throw new Error('Error creando')
+      if (!res.ok) throw new Error(t('streaming.playlists.errorCreate'))
       const data = await res.json()
       setShowNew(false)
       setNewName('')
@@ -84,7 +86,7 @@ export default function PlaylistsPage() {
     setActivatingId(id)
     try {
       const res = await fetch(`/api/dashboard/streaming/playlists/${id}/activate`, { method: 'POST' })
-      if (!res.ok) throw new Error('Error activando')
+      if (!res.ok) throw new Error(t('streaming.playlists.errorActivate'))
       await load()
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -94,11 +96,11 @@ export default function PlaylistsPage() {
   }
 
   const remove = async (id: string, name: string) => {
-    if (!confirm(`¿Eliminar "${name}"?`)) return
+    if (!confirm(t('streaming.playlists.confirmDelete', { name }))) return
     setDeletingId(id)
     try {
       const res = await fetch(`/api/dashboard/streaming/playlists/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Error eliminando')
+      if (!res.ok) throw new Error(t('streaming.playlists.errorDelete'))
       await load()
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -111,33 +113,33 @@ export default function PlaylistsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Playlists</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('streaming.playlists.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Listas de reproducción para tu AutoDJ. Solo una puede estar activa.
+            {t('streaming.playlists.subtitle')}
           </p>
         </div>
         <button
           onClick={() => setShowNew(true)}
           className="px-4 py-2 bg-brand hover:bg-brand text-white rounded-lg"
         >
-          + Nueva playlist
+          {t('streaming.playlists.new')}
         </button>
       </div>
 
       {showNew && (
         <div className="bg-card rounded-lg p-6 space-y-3 border border-brand">
-          <h3 className="text-lg font-semibold text-foreground">Crear playlist</h3>
+          <h3 className="text-lg font-semibold text-foreground">{t('streaming.playlists.createTitle')}</h3>
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Nombre (ej: Playlist Principal)"
+            placeholder={t('streaming.playlists.namePlaceholder')}
             className="w-full bg-background text-foreground px-3 py-2 rounded border border-border"
             autoFocus
           />
           <textarea
             value={newDesc}
             onChange={(e) => setNewDesc(e.target.value)}
-            placeholder="Descripción (opcional)"
+            placeholder={t('streaming.playlists.descPlaceholder')}
             className="w-full bg-background text-foreground px-3 py-2 rounded border border-border"
             rows={2}
           />
@@ -147,13 +149,13 @@ export default function PlaylistsPage() {
               disabled={creating || !newName.trim()}
               className="px-4 py-2 bg-brand hover:bg-brand disabled:bg-secondary text-white rounded"
             >
-              {creating ? 'Creando...' : 'Crear'}
+              {creating ? t('streaming.playlists.creating') : t('streaming.playlists.create')}
             </button>
             <button
               onClick={() => { setShowNew(false); setNewName(''); setNewDesc('') }}
               className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded"
             >
-              Cancelar
+              {t('streaming.playlists.cancel')}
             </button>
           </div>
         </div>
@@ -161,10 +163,10 @@ export default function PlaylistsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {loading ? (
-          <div className="col-span-2 text-center text-muted-foreground py-12">Cargando...</div>
+          <div className="col-span-2 text-center text-muted-foreground py-12">{t('streaming.playlists.loading')}</div>
         ) : playlists.length === 0 ? (
           <div className="col-span-2 text-center text-muted-foreground py-12">
-            No hay playlists todavía. Crea la primera.
+            {t('streaming.playlists.empty')}
           </div>
         ) : (
           playlists.map((p) => (
@@ -180,7 +182,7 @@ export default function PlaylistsPage() {
                     {p.name}
                     {p.isActive && (
                       <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">
-                        ACTIVA
+                        {t('streaming.playlists.active')}
                       </span>
                     )}
                   </h3>
@@ -188,10 +190,10 @@ export default function PlaylistsPage() {
                     <p className="text-sm text-muted-foreground mt-1">{p.description}</p>
                   )}
                   <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
-                    <span>🎵 {p.entryCount} track{p.entryCount !== 1 ? 's' : ''}</span>
+                    <span>🎵 {t('streaming.playlists.trackCount', { count: p.entryCount })}</span>
                     <span>⏱️ {fmtDuration(p.totalDuration)}</span>
-                    {p.shuffle && <span>🔀 Shuffle</span>}
-                    {p.repeat && <span>🔁 Repeat</span>}
+                    {p.shuffle && <span>🔀 {t('streaming.playlists.shuffle')}</span>}
+                    {p.repeat && <span>🔁 {t('streaming.playlists.repeat')}</span>}
                   </div>
                 </div>
               </div>
@@ -200,7 +202,7 @@ export default function PlaylistsPage() {
                   href={`/dashboard/streaming/playlists/${p.id}`}
                   className="px-3 py-1.5 bg-brand hover:bg-brand text-white text-sm rounded"
                 >
-                  Editar
+                  {t('streaming.playlists.edit')}
                 </Link>
                 {!p.isActive && (
                   <button
@@ -208,7 +210,7 @@ export default function PlaylistsPage() {
                     disabled={activatingId === p.id}
                     className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-secondary text-white text-sm rounded"
                   >
-                    {activatingId === p.id ? '...' : 'Activar'}
+                    {activatingId === p.id ? '...' : t('streaming.playlists.activate')}
                   </button>
                 )}
                 <button
@@ -216,7 +218,7 @@ export default function PlaylistsPage() {
                   disabled={deletingId === p.id}
                   className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-secondary text-white text-sm rounded ml-auto"
                 >
-                  Eliminar
+                  {t('streaming.playlists.delete')}
                 </button>
               </div>
             </div>

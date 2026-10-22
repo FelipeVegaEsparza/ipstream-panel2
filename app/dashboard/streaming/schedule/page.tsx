@@ -3,8 +3,10 @@
 import { showToast } from '@/components/ui/toast'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+const DAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 interface Playlist {
   id: string
@@ -41,6 +43,8 @@ function fmtTime(hhmm: string) {
 }
 
 export default function SchedulePage() {
+  const { t, locale } = useDashboardI18n()
+  const days = locale === 'en' ? DAYS_EN : DAYS
   const [schedules, setSchedules] = useState<ScheduleSlot[]>([])
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [loading, setLoading] = useState(true)
@@ -138,27 +142,27 @@ export default function SchedulePage() {
         load()
       } else {
         const err = await res.json()
-        showToast({ type: 'error', title: err.message || 'Error al guardar' })
+        showToast({ type: 'error', title: err.message || t('streaming.schedule.errorSave') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al guardar' })
+      showToast({ type: 'error', title: t('streaming.schedule.errorSave') })
     } finally {
       setFormSaving(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta franja horaria?')) return
+    if (!confirm(t('streaming.schedule.confirmDelete'))) return
     setDeletingId(id)
     try {
       const res = await fetch(`/api/dashboard/streaming/schedule/${id}`, { method: 'DELETE' })
       if (res.ok) {
         load()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar' })
+        showToast({ type: 'error', title: t('streaming.schedule.errorDelete') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al eliminar' })
+      showToast({ type: 'error', title: t('streaming.schedule.errorDelete') })
     } finally {
       setDeletingId(null)
     }
@@ -167,7 +171,7 @@ export default function SchedulePage() {
   const isNow = (slot: ScheduleSlot) =>
     currentSlot?.id === slot.id
 
-  const schedulesByDay = DAYS.map((_, dayIdx) =>
+  const schedulesByDay = days.map((_, dayIdx) =>
     schedules.filter((s) => s.dayOfWeek === dayIdx)
       .sort((a, b) => a.startTime.localeCompare(b.startTime))
   )
@@ -176,42 +180,42 @@ export default function SchedulePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Programación</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('streaming.schedule.title')}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Asigna playlists a franjas horarias por día de la semana.
-            <span className="ml-2 text-xs text-muted-foreground">Horario: {timezone}</span>
+            {t('streaming.schedule.subtitle')}
+            <span className="ml-2 text-xs text-muted-foreground">{t('streaming.schedule.timezone', { timezone })}</span>
             {currentSlot && (
               <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-brand/20 text-brand border border-brand/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-                Ahora: {currentSlot.playlistName} ({fmtTime(currentSlot.startTime)} - {fmtTime(currentSlot.endTime)})
+                {t('streaming.schedule.now', { name: currentSlot.playlistName, start: fmtTime(currentSlot.startTime), end: fmtTime(currentSlot.endTime) })}
               </span>
             )}
           </p>
         </div>
         <div className="flex items-center gap-4">
           <button onClick={openCreate} className="btn-primary">
-            + Añadir franja
+            {t('streaming.schedule.add')}
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Cargando...</div>
+        <div className="text-center py-12 text-muted-foreground">{t('streaming.schedule.loading')}</div>
       ) : schedules.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
-          <p className="text-lg mb-2">No hay franjas programadas</p>
-          <p className="text-sm">Crea tu primera franja para comenzar a programar tu parrilla</p>
+          <p className="text-lg mb-2">{t('streaming.schedule.emptyTitle')}</p>
+          <p className="text-sm">{t('streaming.schedule.emptyText')}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">Día</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">Inicio</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">Fin</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Playlist</th>
-                <th className="text-right py-3 px-4 text-muted-foreground font-medium w-24">Acciones</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">{t('streaming.schedule.day')}</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">{t('streaming.schedule.start')}</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">{t('streaming.schedule.end')}</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t('streaming.schedule.playlist')}</th>
+                <th className="text-right py-3 px-4 text-muted-foreground font-medium w-24">{t('streaming.schedule.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -231,7 +235,7 @@ export default function SchedulePage() {
                             rowSpan={daySlots.length}
                             className="py-3 px-4 text-muted-foreground font-medium align-top pt-4"
                           >
-                            {DAYS[dayIdx]}
+                            {days[dayIdx]}
                           </td>
                         )}
                         <td className={`py-3 px-4 ${now ? 'text-brand' : 'text-muted-foreground'}`}>
@@ -249,7 +253,7 @@ export default function SchedulePage() {
                               {slot.playlistName}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              ({slot.playlistTrackCount} temas)
+                              {t('streaming.schedule.tracks', { count: slot.playlistTrackCount })}
                             </span>
                           </div>
                         </td>
@@ -259,14 +263,14 @@ export default function SchedulePage() {
                               onClick={() => openEdit(slot)}
                               className="text-xs px-2.5 py-1 rounded-lg bg-secondary hover:bg-secondary text-muted-foreground transition-colors"
                             >
-                              Editar
+                              {t('streaming.schedule.edit')}
                             </button>
                             <button
                               onClick={() => handleDelete(slot.id)}
                               disabled={deletingId === slot.id}
                               className="text-xs px-2.5 py-1 rounded-lg bg-red-900/40 hover:bg-red-800/60 text-red-400 transition-colors disabled:opacity-50"
                             >
-                              {deletingId === slot.id ? '...' : 'Eliminar'}
+                              {deletingId === slot.id ? '...' : t('streaming.schedule.delete')}
                             </button>
                           </div>
                         </td>
@@ -285,7 +289,7 @@ export default function SchedulePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 border border-border">
             <h2 className="text-lg font-semibold text-foreground mb-4">
-              {editId ? 'Editar franja' : 'Nueva franja'}
+              {editId ? t('streaming.schedule.editTitle') : t('streaming.schedule.newTitle')}
             </h2>
             <div className="space-y-4">
               <div>
@@ -295,10 +299,10 @@ export default function SchedulePage() {
                   onChange={(e) => setFormPlaylistId(e.target.value)}
                   className="form-input w-full"
                 >
-                  <option value="">Seleccionar...</option>
+                  <option value="">{t('streaming.schedule.select')}</option>
                   {playlists.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} ({p.trackCount} temas)
+                      {p.name} ({t('streaming.schedule.tracks', { count: p.trackCount })})
                     </option>
                   ))}
                 </select>
@@ -310,7 +314,7 @@ export default function SchedulePage() {
                   onChange={(e) => setFormDayOfWeek(Number(e.target.value))}
                   className="form-input w-full"
                 >
-                  {DAYS.map((day, i) => (
+                  {days.map((day, i) => (
                     <option key={i} value={i}>{day}</option>
                   ))}
                 </select>
@@ -341,14 +345,14 @@ export default function SchedulePage() {
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
               >
-                Cancelar
+                {t('streaming.schedule.cancel')}
               </button>
               <button
                 onClick={handleSave}
                 disabled={formSaving || !formPlaylistId}
                 className="btn-primary disabled:opacity-50"
               >
-                {formSaving ? 'Guardando...' : editId ? 'Guardar cambios' : 'Crear franja'}
+                {formSaving ? t('streaming.schedule.saving') : editId ? t('streaming.schedule.saveChanges') : t('streaming.schedule.create')}
               </button>
             </div>
           </div>
