@@ -8,6 +8,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, TrashIcon, EyeIcon, LinkIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Promotion {
   id: string
@@ -23,11 +24,12 @@ interface PromotionsListProps {
 }
 
 export function PromotionsList({ promotions }: PromotionsListProps) {
+  const { t, locale } = useDashboardI18n()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta promoción?')) {
+    if (!confirm(t('promotions.confirmDelete'))) {
       return
     }
 
@@ -40,17 +42,17 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar la promoción' })
+        showToast({ type: 'error', title: t('promotions.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar la promoción' })
+      showToast({ type: 'error', title: t('promotions.deleteError') })
     } finally {
       setLoading(null)
     }
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -68,13 +70,13 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          No hay promociones
+          {t('promotions.empty')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          Comienza creando tu primera promoción
+          {t('promotions.emptyHintActual')}
         </p>
         <Link href="/dashboard/promotions/new" className="btn-primary">
-          Crear Promoción
+          {t('promotions.create')}
         </Link>
       </div>
     )
@@ -124,7 +126,7 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
             )}
 
             <div className="text-xs text-muted-foreground">
-              Creado: {formatDate(promotion.createdAt)}
+              {t('promotions.created', { date: formatDate(promotion.createdAt) })}
             </div>
             
             {/* Actions */}
@@ -132,14 +134,14 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
               <Link
                 href={`/dashboard/promotions/${promotion.id}`}
                 className="action-button action-button-view"
-                title="Ver promoción"
+                title={t('promotions.view')}
               >
                 <EyeIcon className="h-4 w-4" />
               </Link>
               <Link
                 href={`/dashboard/promotions/${promotion.id}/edit`}
                 className="action-button action-button-edit"
-                title="Editar promoción"
+                title={t('promotions.edit')}
               >
                 <PencilIcon className="h-4 w-4" />
               </Link>
@@ -147,7 +149,7 @@ export function PromotionsList({ promotions }: PromotionsListProps) {
                 onClick={() => handleDelete(promotion.id)}
                 disabled={loading === promotion.id}
                 className="action-button action-button-delete"
-                title="Eliminar promoción"
+                title={t('promotions.delete')}
               >
                 {loading === promotion.id ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

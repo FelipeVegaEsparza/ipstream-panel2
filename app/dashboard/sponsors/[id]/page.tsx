@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, ArrowLeftIcon, GlobeAltIcon, MapPinIcon } from '@heroicons/react/24/outline'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface SponsorDetailPageProps {
   params: {
@@ -13,10 +15,11 @@ interface SponsorDetailPageProps {
 }
 
 export default async function SponsorDetailPage({ params }: SponsorDetailPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const sponsor = await prisma.sponsor.findFirst({
@@ -64,7 +67,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
               {sponsor.name}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Información completa del auspiciador
+              {t('sponsors.detailSubtitle')}
             </p>
           </div>
         </div>
@@ -73,7 +76,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
           className="btn-primary flex items-center gap-2"
         >
           <PencilIcon className="h-5 w-5" />
-          Editar
+          {t('common.edit')}
         </Link>
       </div>
 
@@ -94,7 +97,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
                   />
                 ) : (
                   <div className="h-24 w-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-muted-foreground text-sm">Sin logo</span>
+                    <span className="text-muted-foreground text-sm">{t('sponsors.noLogo')}</span>
                   </div>
                 )}
               </div>
@@ -123,7 +126,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
           {sponsor.website && (
             <div className="card">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Sitio Web
+                {t('sponsors.website')}
               </h3>
               <a
                 href={sponsor.website}
@@ -141,7 +144,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
           {socialNetworks.length > 0 && (
             <div className="card">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Redes Sociales
+                {t('sponsors.social')}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {socialNetworks.map((network) => (
@@ -165,25 +168,25 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
           {/* Stats */}
           <div className="card">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Información
+              {t('sponsors.info')}
             </h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-muted-foreground">Agregado:</span>
+                <span className="text-sm text-muted-foreground">{t('sponsors.added')}</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(sponsor.createdAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Última actualización:</span>
+                <span className="text-sm text-muted-foreground">{t('sponsors.updatedLabel')}</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(sponsor.updatedAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Redes sociales:</span>
+                <span className="text-sm text-muted-foreground">{t('sponsors.socialCount')}</span>
                 <p className="text-sm font-medium text-gray-900">
-                  {socialNetworks.length} configuradas
+                  {t('sponsors.configured', { count: socialNetworks.length })}
                 </p>
               </div>
             </div>
@@ -192,11 +195,11 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
           {/* API Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <h3 className="text-sm font-medium text-blue-800 mb-2">
-              API REST
+              {t('sponsors.apiRest')}
             </h3>
             <div className="space-y-2">
               <div>
-                <span className="text-xs text-blue-600">Todos los auspiciadores:</span>
+                <span className="text-xs text-blue-600">{t('sponsors.all')}</span>
                 <code className="block bg-blue-100 px-3 py-2 rounded text-xs text-blue-900 mt-1 break-all">
                   GET /api/public/{session.user.clientId}/sponsors
                 </code>

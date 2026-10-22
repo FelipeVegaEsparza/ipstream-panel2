@@ -5,8 +5,11 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { SponsorsList } from '@/components/dashboard/SponsorsList'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function SponsorsPage() {
+  const t = dashboardT(getDashboardLocale())
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
@@ -21,7 +24,7 @@ export default async function SponsorsPage() {
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const sponsors = await prisma.sponsor.findMany({
@@ -34,10 +37,10 @@ export default async function SponsorsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Auspiciadores
+            {t('sponsors.title')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Gestiona los sponsors y auspiciadores de tu radio
+            {t('sponsors.subtitleActual')}
           </p>
         </div>
         <Link
@@ -45,7 +48,7 @@ export default async function SponsorsPage() {
           className="btn-primary flex items-center gap-2"
         >
           <PlusIcon className="h-5 w-5" />
-          Nuevo Auspiciador
+          {t('sponsors.new')}
         </Link>
       </div>
 

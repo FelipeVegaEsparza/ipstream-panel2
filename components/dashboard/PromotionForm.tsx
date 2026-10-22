@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { promotionSchema, type PromotionInput } from '@/lib/validations'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface PromotionFormProps {
   initialData?: {
@@ -20,6 +21,7 @@ interface PromotionFormProps {
 }
 
 export function PromotionForm({ initialData }: PromotionFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -61,10 +63,10 @@ export function PromotionForm({ initialData }: PromotionFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar la promoción' })
+        showToast({ type: 'error', title: error.error || t('promotions.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar la promoción' })
+      showToast({ type: 'error', title: t('promotions.saveError') })
     } finally {
       setLoading(false)
     }
@@ -74,13 +76,13 @@ export function PromotionForm({ initialData }: PromotionFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="form-group">
         <label htmlFor="title" className="form-label">
-          Título de la Promoción *
+          {t('promotions.titleLabel')}
         </label>
         <input
           type="text"
           id="title"
           className="form-input"
-          placeholder="Ej: ¡Oferta especial del mes!"
+          placeholder={t('promotions.formTitlePlaceholder')}
           {...register('title')}
         />
         {errors.title && (
@@ -90,13 +92,13 @@ export function PromotionForm({ initialData }: PromotionFormProps) {
 
       <div className="form-group">
         <label htmlFor="description" className="form-label">
-          Descripción *
+          {t('promotions.description')}
         </label>
         <textarea
           id="description"
           rows={4}
           className="form-textarea"
-          placeholder="Describe la promoción, términos y condiciones, fechas de vigencia..."
+          placeholder={t('promotions.descriptionPlaceholder')}
           {...register('description')}
         />
         {errors.description && (
@@ -105,8 +107,8 @@ export function PromotionForm({ initialData }: PromotionFormProps) {
       </div>
 
       <ImageUpload
-        label="Imagen Promocional"
-        description="Imagen que se mostrará en la promoción (recomendado: 400x200px)"
+        label={t('promotions.image')}
+        description={t('promotions.imageHint')}
         value={watch('imageUrl')}
         onChange={(url) => setValue('imageUrl', url)}
         onRemove={() => setValue('imageUrl', '')}
@@ -117,17 +119,17 @@ export function PromotionForm({ initialData }: PromotionFormProps) {
 
       <div className="form-group">
         <label htmlFor="link" className="form-label">
-          Enlace de la Promoción
+          {t('promotions.linkLabel')}
         </label>
         <input
           type="url"
           id="link"
           className="form-input"
-          placeholder="https://ejemplo.com/promocion"
+          placeholder={t('promotions.linkPlaceholder')}
           {...register('link')}
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Enlace donde los usuarios pueden acceder a la promoción (opcional).
+          {t('promotions.linkHint')}
         </p>
         {errors.link && (
           <p className="text-sm text-red-600">{errors.link.message}</p>
@@ -138,15 +140,15 @@ export function PromotionForm({ initialData }: PromotionFormProps) {
         <div className="flex">
           <div className="ml-3">
             <h3 className="text-sm font-medium text-yellow-800">
-              Consejos para promociones efectivas
+              {t('promotions.tipsActual')}
             </h3>
             <div className="mt-2 text-sm text-yellow-700">
               <ul className="list-disc list-inside space-y-1">
-                <li>Usa títulos llamativos y claros</li>
-                <li>Incluye fechas de vigencia en la descripción</li>
-                <li>Agrega términos y condiciones si es necesario</li>
-                <li>Usa imágenes atractivas y de buena calidad</li>
-                <li>Incluye un enlace para más información o para participar</li>
+                <li>{t('promotions.tip1')}</li>
+                <li>{t('promotions.tip2')}</li>
+                <li>{t('promotions.tip3')}</li>
+                <li>{t('promotions.tip4')}</li>
+                <li>{t('promotions.tip5')}</li>
               </ul>
             </div>
           </div>
@@ -159,14 +161,14 @@ export function PromotionForm({ initialData }: PromotionFormProps) {
           onClick={() => router.back()}
           className="btn-secondary"
         >
-          Cancelar
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="btn-primary disabled:opacity-50"
         >
-          {loading ? 'Guardando...' : (initialData ? 'Actualizar' : 'Crear Promoción')}
+          {loading ? t('common.saving') : (initialData ? t('promotions.update') : t('promotions.create'))}
         </button>
       </div>
     </form>

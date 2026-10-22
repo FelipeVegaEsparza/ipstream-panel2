@@ -3,6 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { PromotionForm } from '@/components/dashboard/PromotionForm'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface EditPromotionPageProps {
   params: {
@@ -11,10 +13,11 @@ interface EditPromotionPageProps {
 }
 
 export default async function EditPromotionPage({ params }: EditPromotionPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const promotion = await prisma.promotion.findFirst({
@@ -32,10 +35,10 @@ export default async function EditPromotionPage({ params }: EditPromotionPagePro
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Editar Promoción
+          {t('promotions.edit')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Modifica la información de la promoción
+          {t('promotions.editSubtitle')}
         </p>
       </div>
 

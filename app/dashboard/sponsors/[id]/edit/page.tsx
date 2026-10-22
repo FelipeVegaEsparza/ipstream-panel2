@@ -3,6 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { SponsorForm } from '@/components/dashboard/SponsorForm'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface EditSponsorPageProps {
   params: {
@@ -11,10 +13,11 @@ interface EditSponsorPageProps {
 }
 
 export default async function EditSponsorPage({ params }: EditSponsorPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const sponsor = await prisma.sponsor.findFirst({
@@ -32,10 +35,10 @@ export default async function EditSponsorPage({ params }: EditSponsorPageProps) 
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Editar Auspiciador
+          {t('sponsors.edit')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Modifica la información del auspiciador
+          {t('sponsors.editSubtitleActual')}
         </p>
       </div>
 

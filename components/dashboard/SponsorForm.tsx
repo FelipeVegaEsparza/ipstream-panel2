@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { sponsorSchema, type SponsorInput } from '@/lib/validations'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface SponsorFormProps {
   initialData?: {
@@ -27,6 +28,7 @@ interface SponsorFormProps {
 }
 
 export function SponsorForm({ initialData }: SponsorFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -75,10 +77,10 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar el auspiciador' })
+        showToast({ type: 'error', title: error.error || t('sponsors.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar el auspiciador' })
+      showToast({ type: 'error', title: t('sponsors.saveError') })
     } finally {
       setLoading(false)
     }
@@ -89,19 +91,19 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
       {/* Información Básica */}
       <div className="space-y-6">
         <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
-          Información Básica
+          {t('sponsors.basicInfo')}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="form-group">
             <label htmlFor="name" className="form-label">
-              Nombre del Auspiciador *
+              {t('sponsors.name')}
             </label>
             <input
               type="text"
               id="name"
               className="form-input"
-              placeholder="Ej: Empresa ABC"
+              placeholder={t('sponsors.namePlaceholder')}
               {...register('name')}
             />
             {errors.name && (
@@ -111,13 +113,13 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
 
           <div className="form-group">
             <label htmlFor="address" className="form-label">
-              Dirección
+              {t('sponsors.address')}
             </label>
             <input
               type="text"
               id="address"
               className="form-input"
-              placeholder="Ej: Av. Principal 123, Ciudad"
+              placeholder={t('sponsors.addressPlaceholder')}
               {...register('address')}
             />
             {errors.address && (
@@ -127,8 +129,8 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
         </div>
 
         <ImageUpload
-          label="Logo del Auspiciador"
-          description="Logo de la empresa (recomendado: 200x100px)"
+          label={t('sponsors.logo')}
+          description={t('sponsors.logoHint')}
           value={watch('logoUrl')}
           onChange={(url) => setValue('logoUrl', url)}
           onRemove={() => setValue('logoUrl', '')}
@@ -139,13 +141,13 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
 
         <div className="form-group">
           <label htmlFor="description" className="form-label">
-            Descripción *
+            {t('sponsors.description')}
           </label>
           <textarea
             id="description"
             rows={4}
             className="form-textarea"
-            placeholder="Describe el auspiciador, sus servicios, productos, etc..."
+            placeholder={t('sponsors.descriptionPlaceholder')}
             {...register('description')}
           />
           {errors.description && (
@@ -157,18 +159,18 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
       {/* Sitio Web */}
       <div className="space-y-6">
         <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
-          Sitio Web
+          {t('sponsors.website')}
         </h3>
 
         <div className="form-group">
           <label htmlFor="website" className="form-label">
-            Sitio Web
+            {t('sponsors.website')}
           </label>
           <input
             type="url"
             id="website"
             className="form-input"
-            placeholder="https://www.empresa.com"
+            placeholder={t('sponsors.websitePlaceholder')}
             {...register('website')}
           />
           {errors.website && (
@@ -180,7 +182,7 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
       {/* Redes Sociales */}
       <div className="space-y-6">
         <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
-          Redes Sociales
+          {t('sponsors.social')}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -288,14 +290,14 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
           onClick={() => router.back()}
           className="btn-secondary"
         >
-          Cancelar
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="btn-primary disabled:opacity-50"
         >
-          {loading ? 'Guardando...' : (initialData ? 'Actualizar' : 'Crear Auspiciador')}
+          {loading ? t('common.saving') : (initialData ? t('sponsors.update') : t('sponsors.create'))}
         </button>
       </div>
     </form>

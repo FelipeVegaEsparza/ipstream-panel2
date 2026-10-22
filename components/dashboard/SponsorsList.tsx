@@ -8,6 +8,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, TrashIcon, EyeIcon, GlobeAltIcon, MapPinIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Sponsor {
   id: string
@@ -30,11 +31,12 @@ interface SponsorsListProps {
 }
 
 export function SponsorsList({ sponsors }: SponsorsListProps) {
+  const { t, locale } = useDashboardI18n()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este auspiciador?')) {
+    if (!confirm(t('sponsors.confirmDelete'))) {
       return
     }
 
@@ -47,17 +49,17 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar el auspiciador' })
+        showToast({ type: 'error', title: t('sponsors.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar el auspiciador' })
+      showToast({ type: 'error', title: t('sponsors.deleteError') })
     } finally {
       setLoading(null)
     }
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -84,13 +86,13 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          No hay auspiciadores
+          {t('sponsors.empty')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          Comienza agregando tu primer auspiciador
+          {t('sponsors.emptyHintActual')}
         </p>
         <Link href="/dashboard/sponsors/new" className="btn-primary">
-          Agregar Auspiciador
+          {t('sponsors.add')}
         </Link>
       </div>
     )
@@ -115,7 +117,7 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                 />
               ) : (
                 <div className="h-20 w-32 bg-secondary rounded-lg flex items-center justify-center">
-                  <span className="text-muted-foreground text-sm">Sin logo</span>
+                  <span className="text-muted-foreground text-sm">{t('sponsors.noLogo')}</span>
                 </div>
               )}
             </div>
@@ -171,13 +173,13 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                     className="inline-flex items-center text-sm text-brand hover:text-brand transition-colors"
                   >
                     <GlobeAltIcon className="h-4 w-4 mr-1" />
-                    Sitio Web
+                    {t('sponsors.website')}
                   </a>
                 </div>
               )}
 
               <div className="text-center text-xs text-muted-foreground">
-                Agregado: {formatDate(sponsor.createdAt)}
+                {t('sponsors.added')} {formatDate(sponsor.createdAt)}
               </div>
               
               {/* Actions */}
@@ -185,14 +187,14 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                 <Link
                   href={`/dashboard/sponsors/${sponsor.id}`}
                   className="action-button action-button-view"
-                  title="Ver auspiciador"
+                  title={t('sponsors.view')}
                 >
                   <EyeIcon className="h-4 w-4" />
                 </Link>
                 <Link
                   href={`/dashboard/sponsors/${sponsor.id}/edit`}
                   className="action-button action-button-edit"
-                  title="Editar auspiciador"
+                  title={t('sponsors.edit')}
                 >
                   <PencilIcon className="h-4 w-4" />
                 </Link>
@@ -200,7 +202,7 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
                   onClick={() => handleDelete(sponsor.id)}
                   disabled={loading === sponsor.id}
                   className="action-button action-button-delete"
-                  title="Eliminar auspiciador"
+                  title={t('sponsors.delete')}
                 >
                   {loading === sponsor.id ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

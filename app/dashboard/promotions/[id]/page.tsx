@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, ArrowLeftIcon, LinkIcon } from '@heroicons/react/24/outline'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface PromotionDetailPageProps {
   params: {
@@ -13,10 +15,11 @@ interface PromotionDetailPageProps {
 }
 
 export default async function PromotionDetailPage({ params }: PromotionDetailPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const promotion = await prisma.promotion.findFirst({
@@ -52,10 +55,10 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Vista de Promoción
+              {t('promotions.detailTitle')}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Previsualización de cómo se ve la promoción
+              {t('promotions.detailSubtitle')}
             </p>
           </div>
         </div>
@@ -64,7 +67,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
           className="btn-primary flex items-center gap-2"
         >
           <PencilIcon className="h-5 w-5" />
-          Editar
+          {t('common.edit')}
         </Link>
       </div>
 
@@ -79,9 +82,9 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
                 </h1>
                 
                 <div className="flex items-center text-sm text-muted-foreground mb-6">
-                  <span>Creado: {formatDate(promotion.createdAt)}</span>
+                  <span>{t('promotions.created', { date: formatDate(promotion.createdAt) })}</span>
                   <span className="mx-2">•</span>
-                  <span>Actualizado: {formatDate(promotion.updatedAt)}</span>
+                  <span>{t('promotions.updated', { date: formatDate(promotion.updatedAt) })}</span>
                 </div>
               </header>
 
@@ -109,7 +112,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
                     <LinkIcon className="h-5 w-5 text-primary-600 mr-3" />
                     <div>
                       <h3 className="text-sm font-medium text-primary-800">
-                        Enlace de la promoción
+                        {t('promotions.linkTitle')}
                       </h3>
                       <a
                         href={promotion.link}
@@ -132,37 +135,37 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
           {/* Stats */}
           <div className="card">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Información
+              {t('promotions.info')}
             </h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-muted-foreground">Estado:</span>
+                <span className="text-sm text-muted-foreground">{t('promotions.status')}</span>
                 <p className="text-sm font-medium text-green-600">
-                  Activa
+                  {t('promotions.active')}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Creada:</span>
+                <span className="text-sm text-muted-foreground">{t('promotions.createdLabel')}</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(promotion.createdAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Última actualización:</span>
+                <span className="text-sm text-muted-foreground">{t('promotions.updatedLabel')}</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(promotion.updatedAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Tiene imagen:</span>
+                <span className="text-sm text-muted-foreground">{t('promotions.hasImage')}</span>
                 <p className="text-sm font-medium text-gray-900">
-                  {promotion.imageUrl ? 'Sí' : 'No'}
+                  {promotion.imageUrl ? t('promotions.yes') : t('promotions.no')}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Tiene enlace:</span>
+                <span className="text-sm text-muted-foreground">{t('promotions.hasLink')}</span>
                 <p className="text-sm font-medium text-gray-900">
-                  {promotion.link ? 'Sí' : 'No'}
+                  {promotion.link ? t('promotions.yes') : t('promotions.no')}
                 </p>
               </div>
             </div>
@@ -171,7 +174,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
           {/* Actions */}
           <div className="card">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Acciones
+              {t('promotions.actions')}
             </h3>
             <div className="space-y-3">
               {promotion.link && (
@@ -182,7 +185,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
                   className="w-full btn-secondary flex items-center justify-center gap-2"
                 >
                   <LinkIcon className="h-4 w-4" />
-                  Visitar enlace
+                  {t('promotions.visitLink')}
                 </a>
               )}
               <Link
@@ -190,7 +193,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
                 className="w-full btn-primary flex items-center justify-center gap-2"
               >
                 <PencilIcon className="h-4 w-4" />
-                Editar promoción
+                {t('promotions.edit')}
               </Link>
             </div>
           </div>
@@ -198,11 +201,11 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
           {/* API Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <h3 className="text-sm font-medium text-blue-800 mb-2">
-              API REST
+              {t('promotions.apiRest')}
             </h3>
             <div className="space-y-2">
               <div>
-                <span className="text-xs text-blue-600">Todas las promociones:</span>
+                <span className="text-xs text-blue-600">{t('promotions.all')}</span>
                 <code className="block bg-blue-100 px-3 py-2 rounded text-xs text-blue-900 mt-1 break-all">
                   GET /api/public/{session.user.clientId}/promotions
                 </code>
