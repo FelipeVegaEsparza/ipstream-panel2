@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { DocumentIcon, XMarkIcon, MusicalNoteIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 import { useToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface FileUploadProps {
   value?: string
@@ -21,10 +22,13 @@ export function FileUpload({
   onRemove, 
   accept,
   fileType,
-  label = "Archivo",
-  description = "Sube un archivo",
+  label,
+  description,
   className = ""
 }: FileUploadProps) {
+  const { t } = useDashboardI18n()
+  const finalLabel = label ?? t('common.file')
+  const finalDescription = description ?? t('common.fileHint')
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -48,10 +52,10 @@ export function FileUpload({
         onChange(data.url)
       } else {
         const error = await response.json()
-        toast({ type: 'error', title: error.error || 'Error al subir el archivo' })
+        toast({ type: 'error', title: error.error || t('common.uploadFileError') })
       }
     } catch (error) {
-      toast({ type: 'error', title: 'Error al subir el archivo' })
+      toast({ type: 'error', title: t('common.uploadFileError') })
     } finally {
       setUploading(false)
     }
@@ -132,7 +136,7 @@ export function FileUpload({
   return (
     <div className={`space-y-2 ${className}`}>
       <label className="form-label">
-        {label}
+        {finalLabel}
       </label>
       
       <div className="space-y-3">
@@ -163,17 +167,17 @@ export function FileUpload({
           {uploading ? (
             <div className="space-y-3">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto"></div>
-              <p className="text-sm text-muted-foreground">Subiendo archivo...</p>
+              <p className="text-sm text-muted-foreground">{t('common.uploadingFile')}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {getFileIcon()}
               <div>
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-brand">Haz clic para subir</span> o arrastra un archivo aquí
+                  <span className="font-medium text-brand">{t('common.clickToUpload')}</span> {t('common.dragFileHere')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {description}
+                  {finalDescription}
                 </p>
               </div>
             </div>
@@ -194,7 +198,7 @@ export function FileUpload({
                       {getFileName()}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Archivo {fileType === 'audio' ? 'de audio' : 'de video'} cargado
+                      {fileType === 'audio' ? t('common.audioFileLoaded') : t('common.videoFileLoaded')}
                     </p>
                   </div>
                 </div>
@@ -202,7 +206,7 @@ export function FileUpload({
                   type="button"
                   onClick={handleRemove}
                   className="p-2 bg-red-500/90 backdrop-blur-sm text-white rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg hover:scale-110"
-                  title="Eliminar archivo"
+                  title={t('common.removeFile')}
                 >
                   <XMarkIcon className="h-4 w-4" />
                 </button>

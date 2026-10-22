@@ -3,8 +3,10 @@
 import { ArrowLeftIcon, ShieldExclamationIcon } from '@heroicons/react/24/outline'
 import { useImpersonationSession } from '@/lib/useImpersonationSession'
 import { useEffect, useState } from 'react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export function ImpersonationBanner() {
+  const { t } = useDashboardI18n()
   const { isImpersonating, impersonationData, stopImpersonation, isLoading } = useImpersonationSession()
   const [mounted, setMounted] = useState(false)
 
@@ -20,7 +22,7 @@ export function ImpersonationBanner() {
 
   const handleStopImpersonation = async () => {
     console.log('🎯 [Banner] Stop button clicked!')
-    if (!confirm('¿Estás seguro de que quieres volver a tu sesión de administrador?')) {
+    if (!confirm(t('impersonation.confirmStop'))) {
       console.log('🎯 [Banner] User cancelled')
       return
     }
@@ -45,24 +47,24 @@ export function ImpersonationBanner() {
             <ShieldExclamationIcon className="h-6 w-6 text-foreground" />
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
               <span className="font-semibold">
-                Modo Impersonación Activo
+                {t('impersonation.active')}
               </span>
               <span className="text-sm opacity-90">
-                Cliente: <strong>{impersonationData.clientName}</strong> ({impersonationData.clientEmail})
+                {t('impersonation.client')} <strong>{impersonationData.clientName}</strong> ({impersonationData.clientEmail})
               </span>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
             <div className="hidden sm:block text-sm opacity-90">
-              Admin: {impersonationData.adminEmail}
+              {t('impersonation.admin')} {impersonationData.adminEmail}
             </div>
             <button
               onClick={handleStopImpersonation}
               className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
             >
               <ArrowLeftIcon className="h-4 w-4" />
-              <span className="text-sm font-medium">Volver al Admin</span>
+              <span className="text-sm font-medium">{t('impersonation.backToAdmin')}</span>
             </button>
           </div>
         </div>

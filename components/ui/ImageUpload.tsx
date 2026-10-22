@@ -5,6 +5,7 @@ import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
 import { normalizeImageUrl, getStorageImageUrl } from '@/lib/image-url-helper'
 import { useToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface ImageUploadProps {
   value?: string
@@ -21,11 +22,14 @@ export function ImageUpload({
   value, 
   onChange, 
   onRemove, 
-  label = "Imagen",
-  description = "Sube una imagen (JPG, PNG, GIF, WebP - Máx. 5MB)",
+  label,
+  description,
   className = "",
   preset
 }: ImageUploadProps) {
+  const { t } = useDashboardI18n()
+  const finalLabel = label ?? t('common.image')
+  const finalDescription = description ?? t('common.imageHint')
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -49,10 +53,10 @@ export function ImageUpload({
         onChange(data.url)
       } else {
         const error = await response.json()
-        toast({ type: 'error', title: error.error || 'Error al subir la imagen' })
+        toast({ type: 'error', title: error.error || t('common.uploadImageError') })
       }
     } catch (error) {
-      toast({ type: 'error', title: 'Error al subir la imagen' })
+      toast({ type: 'error', title: t('common.uploadImageError') })
     } finally {
       setUploading(false)
     }
@@ -113,7 +117,7 @@ export function ImageUpload({
   return (
     <div className={`space-y-2 ${className}`}>
       <label className="form-label">
-        {label}
+        {finalLabel}
       </label>
       
       <div className="space-y-3">
@@ -144,17 +148,17 @@ export function ImageUpload({
           {uploading ? (
             <div className="space-y-3">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto"></div>
-              <p className="text-sm text-muted-foreground">Subiendo imagen...</p>
+              <p className="text-sm text-muted-foreground">{t('common.uploadingImage')}</p>
             </div>
           ) : (
             <div className="space-y-3">
               <PhotoIcon className="h-12 w-12 text-muted-foreground mx-auto" />
               <div>
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-brand">Haz clic para subir</span> o arrastra una imagen aquí
+                  <span className="font-medium text-brand">{t('common.clickToUpload')}</span> {t('common.dragImageHere')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {description}
+                  {finalDescription}
                 </p>
               </div>
             </div>
@@ -167,7 +171,7 @@ export function ImageUpload({
             <div className="relative w-full max-w-md mx-auto">
               <Image
                 src={normalizeImageUrl(value)}
-                alt="Vista previa"
+                alt={t('common.preview')}
                 width={400}
                 height={200}
                 className="w-full h-48 object-cover rounded-xl border border-border shadow-lg"
@@ -176,13 +180,13 @@ export function ImageUpload({
                 type="button"
                 onClick={handleRemove}
                 className="absolute top-3 right-3 p-2 bg-red-500/90 backdrop-blur-sm text-white rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg hover:scale-110"
-                title="Eliminar imagen"
+                title={t('common.removeImage')}
               >
                 <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-3">
-              Imagen actual - Haz clic en la X para eliminar
+              {t('common.currentImageHint')}
             </p>
           </div>
         )}

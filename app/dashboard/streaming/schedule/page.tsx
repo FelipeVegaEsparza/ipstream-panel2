@@ -308,7 +308,7 @@ export default function SchedulePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">Día</label>
+                <label className="block text-sm text-muted-foreground mb-1">{t('common.day')}</label>
                 <select
                   value={formDayOfWeek}
                   onChange={(e) => setFormDayOfWeek(Number(e.target.value))}
@@ -321,7 +321,7 @@ export default function SchedulePage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Inicio</label>
+                  <label className="block text-sm text-muted-foreground mb-1">{t('common.start')}</label>
                   <input
                     type="time"
                     value={formStartTime}
@@ -330,7 +330,7 @@ export default function SchedulePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Fin</label>
+                  <label className="block text-sm text-muted-foreground mb-1">{t('common.end')}</label>
                   <input
                     type="time"
                     value={formEndTime}
