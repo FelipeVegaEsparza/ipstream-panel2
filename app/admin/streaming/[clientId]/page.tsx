@@ -9,6 +9,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/toast'
 import { ClientMigrateModal } from '@/components/admin/ClientMigrateModal'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Usage {
   totalBytes: number
@@ -51,14 +52,15 @@ interface RadioStreamData {
   updatedAt: string
 }
 
-function fmtMB(mb: number | null | undefined) {
-  if (mb === null || mb === undefined) return '∞ (sin límite)'
+function fmtMB(mb: number | null | undefined, unlimitedLabel = '∞') {
+  if (mb === null || mb === undefined) return unlimitedLabel
   if (mb < 1) return `${(mb * 1024).toFixed(0)} KB`
   if (mb >= 1024) return `${(mb / 1024).toFixed(2)} GB`
   return `${mb} MB`
 }
 
 export default function AdminStreamingConfigPage() {
+  const { t } = useDashboardI18n()
   const { clientId } = useParams() as { clientId: string }
   const router = useRouter()
   const { toast } = useToast()
@@ -95,7 +97,7 @@ export default function AdminStreamingConfigPage() {
         setMaxTracksPerPlaylist(d.radioStream.maxTracksPerPlaylist?.toString() ?? '')
         setAdminNotes(d.radioStream.adminNotes || '')
       } else if (res.status === 404) {
-        toast({ type: 'error', title: 'Cliente o RadioStream no encontrado' })
+        toast({ type: 'error', title: t('admin.streaming.notFound') })
       }
     } catch (err) {
       console.error(err)
@@ -124,11 +126,11 @@ export default function AdminStreamingConfigPage() {
         body: JSON.stringify(payload),
       })
       const result = await res.json()
-      if (!res.ok) throw new Error(result.message || result.details?.fieldErrors || 'Error guardando')
-      toast({ type: 'success', title: 'Configuración guardada' })
+      if (!res.ok) throw new Error(result.message || result.details?.fieldErrors || t('admin.streaming.saveError'))
+      toast({ type: 'success', title: t('admin.streaming.saved') })
       await load()
     } catch (err: any) {
-      toast({ type: 'error', title: 'Error', description: err.message })
+      toast({ type: 'error', title: t('admin.streaming.genericError'), description: err.message })
     } finally {
       setSaving(false)
     }
@@ -144,20 +146,20 @@ export default function AdminStreamingConfigPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.message || 'Error')
+        throw new Error(err.message || t('admin.streaming.genericError'))
       }
       const data = await res.json()
       setRevealedPwd((prev) => ({ ...prev, [type]: data.password }))
-      toast({ type: 'info', title: `Password ${type} revelado`, description: 'Quedó auditado en el log' })
+      toast({ type: 'info', title: t('admin.streaming.revealedTitle', { type }), description: t('admin.streaming.revealedDesc') })
     } catch (err: any) {
-      toast({ type: 'error', title: 'Error', description: err.message })
+      toast({ type: 'error', title: t('admin.streaming.genericError'), description: err.message })
     } finally {
       setRevealing(null)
     }
   }
 
   if (loading || !data) {
-    return <div className="text-muted-foreground">Cargando...</div>
+    return <div className="text-muted-foreground">{t('admin.streaming.loading')}</div>
   }
 
   const { client, radioStream, usage } = data
@@ -166,7 +168,7 @@ export default function AdminStreamingConfigPage() {
     <div className="space-y-6">
       <div>
         <Link href="/admin/streaming" className="text-sm text-brand hover:text-brand">
-          ← Volver a Streaming
+          {t('admin.streaming.back')}
         </Link>
         <h1 className="text-3xl font-bold text-foreground mt-1">{client.name}</h1>
         <p className="text-sm text-muted-foreground">{client.email}</p>
@@ -176,19 +178,19 @@ export default function AdminStreamingConfigPage() {
       <div className="bg-card rounded-lg p-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <div className="text-xs text-muted-foreground uppercase">Estado</div>
+            <div className="text-xs text-muted-foreground uppercase">{t('admin.streaming.status')}</div>
             <div className="text-lg font-semibold mt-1">
-              {radioStream.status === 'autodj' ? <span className="text-green-400">▶ AutoDJ</span> :
-               radioStream.status === 'live' ? <span className="text-red-400">🔴 EN VIVO</span> :
-               <span className="text-muted-foreground">⏸ OFF</span>}
+              {radioStream.status === 'autodj' ? <span className="text-green-400">{t('admin.streaming.autodj')}</span> :
+               radioStream.status === 'live' ? <span className="text-red-400">{t('admin.streaming.live')}</span> :
+               <span className="text-muted-foreground">{t('admin.streaming.off')}</span>}
             </div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground uppercase">Mount</div>
+            <div className="text-xs text-muted-foreground uppercase">{t('admin.streaming.mount')}</div>
             <div className="text-sm font-mono text-brand mt-1">/{radioStream.icecastMount}</div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground uppercase">Oyentes</div>
+            <div className="text-xs text-muted-foreground uppercase">{t('admin.streaming.listeners')}</div>
             <div className="text-lg font-semibold text-foreground mt-1">{radioStream.listenerCount}</div>
           </div>
           <div>
@@ -200,31 +202,31 @@ export default function AdminStreamingConfigPage() {
 
       {/* Storage usage */}
       <div className="bg-card rounded-lg p-5">
-        <h2 className="text-lg font-semibold text-foreground mb-3">Storage AutoDJ</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-3">{t('admin.streaming.storageTitle')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <div className="text-xs text-muted-foreground uppercase">Usado</div>
+            <div className="text-xs text-muted-foreground uppercase">{t('admin.streaming.used')}</div>
             <div className="text-2xl font-bold text-foreground mt-1">{fmtMB(usage.totalMB)}</div>
             <div className="text-xs text-muted-foreground mt-0.5">{usage.totalGB} GB · {usage.trackCount} tracks</div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground uppercase">Cuota</div>
-            <div className="text-2xl font-bold text-foreground mt-1">{fmtMB(usage.quotaMB)}</div>
+            <div className="text-xs text-muted-foreground uppercase">{t('admin.streaming.quota')}</div>
+            <div className="text-2xl font-bold text-foreground mt-1">{fmtMB(usage.quotaMB, t('admin.streaming.unlimited'))}</div>
             {usage.percentUsed !== null && (
-              <div className="text-xs text-muted-foreground mt-0.5">{usage.percentUsed}% usado</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{t('admin.streaming.percentUsed', { percent: usage.percentUsed })}</div>
             )}
           </div>
           <div>
-            <div className="text-xs text-muted-foreground uppercase">Restante</div>
+            <div className="text-xs text-muted-foreground uppercase">{t('admin.streaming.remaining')}</div>
             <div className={`text-2xl font-bold mt-1 ${
               usage.exceeded ? 'text-red-400' :
               usage.remainingMB !== null && usage.remainingMB < 100 ? 'text-yellow-400' :
               'text-green-400'
             }`}>
-              {fmtMB(usage.remainingMB)}
+              {fmtMB(usage.remainingMB, t('admin.streaming.unlimited'))}
             </div>
             {usage.exceeded && (
-              <div className="text-xs text-red-400 mt-0.5">⚠ Excedido — bloqueado para uploads</div>
+              <div className="text-xs text-red-400 mt-0.5">{t('admin.streaming.exceededWarning')}</div>
             )}
           </div>
         </div>
@@ -245,7 +247,7 @@ export default function AdminStreamingConfigPage() {
 
       {/* Config form */}
       <div className="bg-card rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Configuración</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('admin.streaming.configTitle')}</h2>
 
         {/* Enabled kill switch */}
         <div className="flex items-center gap-3 pb-3 border-b border-border">
@@ -257,9 +259,9 @@ export default function AdminStreamingConfigPage() {
             className="rounded"
           />
           <label htmlFor="enabled" className="text-foreground">
-            Streaming habilitado
+            {t('admin.streaming.enabled')}
             <span className="block text-xs text-muted-foreground">
-              Si está deshabilitado, el cliente no puede hacer start/stop ni subir tracks.
+              {t('admin.streaming.enabledHint')}
             </span>
           </label>
         </div>
@@ -274,77 +276,76 @@ export default function AdminStreamingConfigPage() {
             className="rounded"
           />
           <label htmlFor="autoStart" className="text-foreground">
-            Auto-start al reiniciar
+            {t('admin.streaming.autoStart')}
             <span className="block text-xs text-muted-foreground">
-              Inicia automáticamente el AutoDJ cuando el servidor se reinicie.
+              {t('admin.streaming.autoStartHint')}
             </span>
           </label>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-foreground">Bitrate (kbps)</label>
+            <label className="text-sm text-foreground">{t('admin.streaming.bitrate')}</label>
             <select
               value={bitrate}
               onChange={(e) => setBitrate(Number(e.target.value))}
               className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
             >
-              <option value={64}>64 kbps (baja calidad)</option>
+              <option value={64}>{t('admin.streaming.bitrate64')}</option>
               <option value={96}>96 kbps</option>
-              <option value={128}>128 kbps (estándar)</option>
-              <option value={192}>192 kbps (alta)</option>
-              <option value={256}>256 kbps (muy alta)</option>
-              <option value={320}>320 kbps (máxima)</option>
+              <option value={128}>{t('admin.streaming.bitrate128')}</option>
+              <option value={192}>{t('admin.streaming.bitrate192')}</option>
+              <option value={256}>{t('admin.streaming.bitrate256')}</option>
+              <option value={320}>{t('admin.streaming.bitrate320')}</option>
             </select>
           </div>
           <div>
-            <label className="text-sm text-foreground">Storage quota (MB) — AutoDJ</label>
+            <label className="text-sm text-foreground">{t('admin.streaming.storageQuota')}</label>
             <input
               type="number"
               min="0"
               value={storageQuotaMB}
               onChange={(e) => setStorageQuotaMB(e.target.value)}
-              placeholder="Vacío = ilimitado"
+              placeholder={t('admin.streaming.unlimitedPlaceholder')}
               className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Espacio máximo para biblioteca MP3. 0 o vacío = ilimitado.
-              Mínimo recomendado: 500 MB.
+              {t('admin.streaming.storageHint')}
             </p>
           </div>
           <div>
-            <label className="text-sm text-foreground">Max oyentes simultáneos</label>
+            <label className="text-sm text-foreground">{t('admin.streaming.maxListeners')}</label>
             <input
               type="number"
               min="0"
               value={maxListeners}
               onChange={(e) => setMaxListeners(e.target.value)}
-              placeholder="Vacío = ilimitado"
+              placeholder={t('admin.streaming.unlimitedPlaceholder')}
               className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
             />
-            <p className="text-xs text-muted-foreground mt-1">Cap en Icecast. 0 o vacío = ilimitado.</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('admin.streaming.maxListenersHint')}</p>
           </div>
           <div>
-            <label className="text-sm text-foreground">Max tracks por playlist</label>
+            <label className="text-sm text-foreground">{t('admin.streaming.maxTracks')}</label>
             <input
               type="number"
               min="1"
               value={maxTracksPerPlaylist}
               onChange={(e) => setMaxTracksPerPlaylist(e.target.value)}
-              placeholder="Vacío = ilimitado"
+              placeholder={t('admin.streaming.unlimitedPlaceholder')}
               className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
             />
-            <p className="text-xs text-muted-foreground mt-1">Límite al agregar tracks a una playlist. 0 o vacío = ilimitado.</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('admin.streaming.maxTracksHint')}</p>
           </div>
         </div>
 
         <div>
-          <label className="text-sm text-foreground">Notas internas</label>
+          <label className="text-sm text-foreground">{t('admin.streaming.adminNotes')}</label>
           <textarea
             value={adminNotes}
             onChange={(e) => setAdminNotes(e.target.value)}
             rows={3}
-            placeholder="Notas para el equipo de admin..."
+            placeholder={t('admin.streaming.adminNotesPlaceholder')}
             className="w-full mt-1 bg-background text-foreground px-3 py-2 rounded border border-border"
           />
         </div>
@@ -355,34 +356,34 @@ export default function AdminStreamingConfigPage() {
             disabled={saving}
             className="px-6 py-2 bg-brand hover:bg-brand disabled:bg-secondary text-white rounded"
           >
-            {saving ? 'Guardando...' : 'Guardar configuración'}
+            {saving ? t('admin.streaming.saving') : t('admin.streaming.save')}
           </button>
           <button
             onClick={() => setMigrateOpen(true)}
             disabled={saving}
             className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-secondary text-white rounded"
           >
-            ⇄ Migrar a otro servidor
+            {t('admin.streaming.migrate')}
           </button>
           <button
             onClick={load}
             disabled={saving}
             className="px-6 py-2 bg-secondary hover:bg-secondary disabled:bg-secondary text-foreground rounded"
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
         </div>
       </div>
 
       {/* Passwords (solo admin) */}
       <div className="bg-card rounded-lg p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Credenciales (auditado)</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('admin.streaming.credentialsTitle')}</h2>
         <p className="text-sm text-muted-foreground">
-          Cada reveal queda registrado en <code className="text-brand">streaming_audit_logs</code>.
+          {t('admin.streaming.credentialsHint')}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-foreground">Source password (AutoDJ)</label>
+            <label className="text-sm text-foreground">{t('admin.streaming.sourcePassword')}</label>
             <div className="flex gap-2 mt-1">
               <input
                 type="text"
@@ -395,20 +396,20 @@ export default function AdminStreamingConfigPage() {
                 disabled={revealing === 'source'}
                 className="px-3 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-secondary text-white rounded text-sm"
               >
-                {revealing === 'source' ? '...' : '👁 Revelar'}
+                {revealing === 'source' ? '...' : t('admin.streaming.reveal')}
               </button>
               {revealedPwd.source && (
                 <button
                   onClick={() => navigator.clipboard.writeText(revealedPwd.source!)}
                   className="px-3 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm"
                 >
-                  Copiar
+                  {t('admin.streaming.copy')}
                 </button>
               )}
             </div>
           </div>
           <div>
-            <label className="text-sm text-foreground">Live password (DJ en vivo)</label>
+            <label className="text-sm text-foreground">{t('admin.streaming.livePassword')}</label>
             <div className="flex gap-2 mt-1">
               <input
                 type="text"
@@ -421,14 +422,14 @@ export default function AdminStreamingConfigPage() {
                 disabled={revealing === 'live'}
                 className="px-3 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-secondary text-white rounded text-sm"
               >
-                {revealing === 'live' ? '...' : '👁 Revelar'}
+                {revealing === 'live' ? '...' : t('admin.streaming.reveal')}
               </button>
               {revealedPwd.live && (
                 <button
                   onClick={() => navigator.clipboard.writeText(revealedPwd.live!)}
                   className="px-3 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm"
                 >
-                  Copiar
+                  {t('admin.streaming.copy')}
                 </button>
               )}
             </div>
@@ -438,9 +439,9 @@ export default function AdminStreamingConfigPage() {
 
       {/* Audit log mini-view */}
       <div className="bg-card rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-3">Auditoría reciente</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-3">{t('admin.streaming.auditTitle')}</h2>
         <p className="text-xs text-muted-foreground">
-          Ver todos los logs en <Link href="/admin/logs" className="text-brand hover:text-brand">Logs de Actividad</Link>
+          {t('admin.streaming.auditHint')} <Link href="/admin/logs" className="text-brand hover:text-brand">{t('admin.streaming.activityLogs')}</Link>
         </p>
       </div>
 

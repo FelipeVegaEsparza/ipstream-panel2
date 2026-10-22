@@ -5,12 +5,15 @@ import { StatsOverview } from '@/components/admin/StatsOverview'
 import { StatsCharts } from '@/components/admin/StatsCharts'
 import { StatsModules } from '@/components/admin/StatsModules'
 import { StatsActivity } from '@/components/admin/StatsActivity'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function StatsPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div>Error: Acceso no autorizado</div>
+    return <div>{t('admin.accessDenied')}</div>
   }
 
   // Obtener estadísticas generales
@@ -75,11 +78,11 @@ export default async function StatsPage() {
 
   // Datos para gráficos
   const contentByType = [
-    { name: 'Programas', value: totalPrograms, color: '#3b82f6' },
-    { name: 'Noticias', value: totalNews, color: '#10b981' },
-    { name: 'Videos', value: totalVideos, color: '#8b5cf6' },
-    { name: 'Sponsors', value: totalSponsors, color: '#f59e0b' },
-    { name: 'Promociones', value: totalPromotions, color: '#ec4899' }
+    { name: t('admin.dashboard.totalPrograms'), value: totalPrograms, color: '#3b82f6' },
+    { name: t('admin.dashboard.totalNews'), value: totalNews, color: '#10b981' },
+    { name: t('admin.dashboard.totalVideos'), value: totalVideos, color: '#8b5cf6' },
+    { name: t('admin.dashboard.totalSponsors'), value: totalSponsors, color: '#f59e0b' },
+    { name: t('admin.dashboard.totalPromotions'), value: totalPromotions, color: '#ec4899' }
   ]
 
   // Datos para gráfico de usuarios por día (últimos 30 días)
@@ -155,10 +158,10 @@ export default async function StatsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Estadísticas Globales
+          {t('admin.stats.title')}
         </h1>
         <p className="text-muted-foreground">
-          Métricas y análisis completo del sistema
+          {t('admin.stats.subtitle')}
         </p>
       </div>
 

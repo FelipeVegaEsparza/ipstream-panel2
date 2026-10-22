@@ -35,6 +35,7 @@ import { buildWhatsAppUrl, defaultAccountMessage, normalizeChileanPhone } from '
 import { showToast } from '@/components/ui/toast'
 import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 import { Mail } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface ClienteRowData {
   id: string
@@ -70,6 +71,7 @@ export function ClienteRow({
   onCancelar,
   onMarkPaymentPaid,
 }: ClienteRowProps) {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [expanded, setExpanded] = useState(false)
   const [showPago, setShowPago] = useState(false)
@@ -94,12 +96,12 @@ export function ClienteRow({
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        showToast({ type: 'success', title: 'Boleta enviada', description: `Enviada a ${client.email}` })
+        showToast({ type: 'success', title: t('admin.clientRow.receiptSent'), description: t('admin.clientRow.receiptSentTo', { email: client.email }) })
       } else {
-        showToast({ type: 'error', title: data?.message || 'Error al enviar la boleta' })
+        showToast({ type: 'error', title: data?.message || t('admin.clientRow.receiptError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al enviar la boleta' })
+      showToast({ type: 'error', title: t('admin.clientRow.receiptError') })
     } finally {
       setSendingBoleta(false)
     }
@@ -127,6 +129,30 @@ export function ClienteRow({
     (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
   )
 
+  const statusText = (value: string) =>
+    value === 'overdue'
+      ? t('admin.clients.status.overdue')
+      : value === 'due_soon'
+      ? t('admin.clients.status.due_soon')
+      : value === 'current'
+      ? t('admin.clients.status.current')
+      : value === 'no_plan'
+      ? t('admin.clients.status.no_plan')
+      : value === 'no_subscription'
+      ? t('admin.clients.status.no_subscription')
+      : t('admin.clients.status.trial')
+
+  const methodLabel = (value: string) =>
+    value === 'bank_transfer'
+      ? t('admin.clients.paymentMethod.bank_transfer')
+      : value === 'credit_card'
+      ? t('admin.clients.paymentMethod.credit_card')
+      : value === 'cash'
+      ? t('admin.clients.paymentMethod.cash')
+      : value === 'paypal'
+      ? t('admin.clients.paymentMethod.paypal')
+      : t('admin.clients.paymentMethod.other')
+
   const BadgeIcon =
     badge.icon === 'check'
       ? CheckCircle2
@@ -152,10 +178,10 @@ export function ClienteRow({
               {(client.disabledMenuCount ?? 0) > 0 && (
                 <a
                   href={`/admin/users/${client.id}/menu`}
-                  title="Menú personalizado — click para editar"
+                  title={t('admin.clientRow.customMenu')}
                   className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30"
                 >
-                  ⚙ {client.disabledMenuCount} ocultos
+                  ⚙ {t('admin.clientRow.hidden', { count: client.disabledMenuCount ?? 0 })}
                 </a>
               )}
             </div>
@@ -168,7 +194,7 @@ export function ClienteRow({
               <p className="text-foreground text-sm font-medium">{client.plan.name}</p>
               <p className="text-xs text-muted-foreground">
                 {formatCurrency(client.plan.price, client.plan.currency)}/
-                {client.plan.interval === 'monthly' ? 'mes' : 'año'}
+                {client.plan.interval === 'monthly' ? t('admin.clientRow.perMonth') : t('admin.clientRow.perYear')}
               </p>
             </div>
           ) : (
@@ -178,15 +204,15 @@ export function ClienteRow({
         <td className="px-4 py-3">
           <Badge className={`${badge.color} text-foreground flex items-center gap-1 w-fit`}>
             {BadgeIcon && <BadgeIcon className="h-3 w-3" />}
-            {badge.text}
+            {statusText(status.status)}
           </Badge>
           {status.daysUntilDue !== null && status.status !== 'no_plan' && status.status !== 'no_subscription' && (
             <p className="text-xs text-muted-foreground mt-1">
               {status.daysUntilDue < 0
-                ? `Hace ${Math.abs(status.daysUntilDue)} días`
+                ? t('admin.clientRow.daysAgo', { count: Math.abs(status.daysUntilDue) })
                 : status.daysUntilDue === 0
-                ? 'Vence hoy'
-                : `En ${status.daysUntilDue} días`}
+                ? t('admin.clientRow.dueToday')
+                : t('admin.clientRow.inDays', { count: status.daysUntilDue })}
             </p>
           )}
         </td>
@@ -222,11 +248,11 @@ export function ClienteRow({
                       href={whatsappUrl ?? '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="Abrir conversación de WhatsApp"
+                      title={t('admin.clientRow.whatsappTitle')}
                       className="inline-flex items-center justify-center h-8 px-3 rounded-md text-xs font-medium bg-[#25D366] hover:bg-[#1da851] text-foreground transition-colors"
                     >
                       <MessageCircle className="h-3 w-3 mr-1" />
-                      WhatsApp
+                      {t('admin.clientRow.whatsapp')}
                     </a>
                   )
                 })()}
@@ -236,7 +262,7 @@ export function ClienteRow({
                   className="bg-green-600 hover:bg-green-700 h-8 text-xs"
                 >
                   <CreditCard className="h-3 w-3 mr-1" />
-                  Registrar pago
+                  {t('admin.clientRow.registerPayment')}
                 </Button>
               </>
             ) : (
@@ -245,7 +271,7 @@ export function ClienteRow({
                 onClick={() => onAsignarPlan(client)}
                 className="bg-brand hover:bg-brand h-8 text-xs"
               >
-                Asignar plan
+                {t('admin.clientRow.assignPlan')}
               </Button>
             )}
 
@@ -256,8 +282,8 @@ export function ClienteRow({
                   variant="ghost"
                   onClick={() => setMenuOpen((v) => !v)}
                   className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  title="Más acciones"
-                  aria-label="Más acciones"
+                  title={t('admin.clientRow.moreActions')}
+                  aria-label={t('admin.clientRow.moreActions')}
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -272,7 +298,7 @@ export function ClienteRow({
                       className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                     >
                       <CalendarClock className="h-4 w-4 text-brand" />
-                      Editar fecha de inicio
+                      {t('admin.clientRow.editStartDate')}
                     </button>
                     <button
                       onClick={() => {
@@ -282,7 +308,7 @@ export function ClienteRow({
                       className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                     >
                       <Pencil className="h-4 w-4 text-muted-foreground" />
-                      Cambiar plan
+                      {t('admin.clientRow.changePlan')}
                     </button>
                     <button
                       onClick={() => {
@@ -295,7 +321,7 @@ export function ClienteRow({
                       className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                     >
                       <FileText className="h-4 w-4 text-brand" />
-                      Generar boleta de pago
+                      {t('admin.clientRow.generateReceipt')}
                     </button>
                     <button
                       onClick={() => {
@@ -306,7 +332,7 @@ export function ClienteRow({
                       className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2 disabled:opacity-50"
                     >
                       <Mail className="h-4 w-4 text-brand" />
-                      {sendingBoleta ? 'Enviando...' : 'Enviar boleta por correo'}
+                      {sendingBoleta ? t('admin.clientRow.sending') : t('admin.clientRow.sendReceipt')}
                     </button>
                     {subscriptionActive && (
                       <button
@@ -317,7 +343,7 @@ export function ClienteRow({
                         className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                       >
                         <X className="h-4 w-4 text-muted-foreground" />
-                        Cancelar suscripción
+                        {t('admin.clientRow.cancelSubscription')}
                       </button>
                     )}
                     {subscriptionExpired && (
@@ -329,7 +355,7 @@ export function ClienteRow({
                         className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                       >
                         <RefreshCw className="h-4 w-4 text-brand" />
-                        Renovar
+                        {t('admin.clientRow.renew')}
                       </button>
                     )}
                     <button
@@ -340,7 +366,7 @@ export function ClienteRow({
                       className="w-full text-left px-3 py-2 hover:bg-secondary text-foreground flex items-center gap-2"
                     >
                       <History className="h-4 w-4 text-muted-foreground" />
-                      {expanded ? 'Ocultar historial' : `Ver historial (${client.payments.length})`}
+                      {expanded ? t('admin.clientRow.hideHistory') : t('admin.clientRow.viewHistory', { count: client.payments.length })}
                     </button>
                     <div className="my-1 border-t border-border" />
                     <button
@@ -351,7 +377,7 @@ export function ClienteRow({
                       className="w-full text-left px-3 py-2 hover:bg-red-600/20 text-red-400 flex items-center gap-2"
                     >
                       <UserMinus className="h-4 w-4" />
-                      Quitar plan
+                      {t('admin.clientRow.removePlan')}
                     </button>
                   </div>
                 )}
@@ -367,10 +393,10 @@ export function ClienteRow({
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Receipt className="h-4 w-4 text-brand" />
-                Historial de pagos
+                {t('admin.clientRow.paymentHistory')}
               </h4>
               {sortedPayments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hay pagos registrados.</p>
+                <p className="text-sm text-muted-foreground">{t('admin.clientRow.noPayments')}</p>
               ) : (
                 <div className="space-y-2">
                   {sortedPayments.map((p) => {
@@ -399,23 +425,25 @@ export function ClienteRow({
                                   : 'bg-yellow-600'
                               } text-foreground`}
                             >
-                              {p.status === 'completed'
-                                ? 'Pagado'
-                                : p.status === 'failed'
-                                ? 'Fallido'
-                                : p.status === 'refunded'
-                                ? 'Reembolsado'
-                                : isOverdue
-                                ? 'Vencido'
-                                : 'Pendiente'}
+                              {t(
+                                p.status === 'completed'
+                                  ? 'admin.clientRow.status.paid'
+                                  : p.status === 'failed'
+                                  ? 'admin.clientRow.status.failed'
+                                  : p.status === 'refunded'
+                                  ? 'admin.clientRow.status.refunded'
+                                  : isOverdue
+                                  ? 'admin.clientRow.status.overdue'
+                                  : 'admin.clientRow.status.pending'
+                              )}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
-                              {PAYMENT_METHOD_LABELS[p.paymentMethod] ?? p.paymentMethod}
+                              {methodLabel(p.paymentMethod)}
                             </span>
                             {p.paymentMethod === 'paypal' && p.transactionId && (
                               <span
                                 className="text-xs font-mono text-muted-foreground/80"
-                                title="ID de transacción PayPal"
+                                title={t('admin.clientRow.paypalTx')}
                               >
                                 {p.transactionId}
                               </span>
@@ -424,12 +452,12 @@ export function ClienteRow({
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              Vence: {formatDate(p.dueDate)}
+                              {t('admin.clientRow.due', { date: formatDate(p.dueDate) })}
                             </span>
                             {p.paidAt && (
                               <span className="flex items-center gap-1 text-green-400">
                                 <CheckCircle2 className="h-3 w-3" />
-                                Pagado: {formatDate(p.paidAt)}
+                                {t('admin.clientRow.paidAt', { date: formatDate(p.paidAt) })}
                               </span>
                             )}
                           </div>
@@ -446,7 +474,7 @@ export function ClienteRow({
                               className="border-brand text-brand hover:bg-brand hover:text-white h-8 text-xs"
                             >
                               <Eye className="h-3 w-3 mr-1" />
-                              Comprobante
+                              {t('admin.clientRow.receipt')}
                             </Button>
                           )}
                           {p.status === 'pending' && (
@@ -460,7 +488,7 @@ export function ClienteRow({
                               disabled={markingId === p.id}
                               className="bg-green-600 hover:bg-green-700 h-8 text-xs"
                             >
-                              {markingId === p.id ? '...' : 'Marcar pagado'}
+                              {markingId === p.id ? '...' : t('admin.clientRow.markPaid')}
                             </Button>
                           )}
                         </div>

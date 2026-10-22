@@ -8,6 +8,7 @@ import { TICKET_STATUS, TICKET_PRIORITY, type TicketStatus, type TicketPriority 
 import { MessageBubble, type SupportMessage } from '@/components/support/MessageBubble'
 import { AttachmentUploader } from '@/components/support/AttachmentUploader'
 import type { SupportAttachment } from '@/components/support/AttachmentCard'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface AdminTicketDetailData {
   id: string
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export function AdminTicketDetail({ ticket: initial }: Props) {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [ticket, setTicket] = useState(initial)
   const [body, setBody] = useState('')
@@ -67,7 +69,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al enviar')
+        throw new Error(data.error || t('admin.ticketDetail.sendError'))
       }
       const data = await res.json()
       setTicket((prev) => ({
@@ -78,7 +80,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
       setBody('')
       setPending([])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al enviar')
+      setError(err instanceof Error ? err.message : t('admin.ticketDetail.sendError'))
     } finally {
       setSending(false)
     }
@@ -94,12 +96,12 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al actualizar')
+        throw new Error(data.error || t('admin.ticketDetail.updateError'))
       }
       const data = await res.json()
       setTicket((prev) => ({ ...prev, status: data.ticket.status, closedAt: data.ticket.closedAt?.toString() ?? null }))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar')
+      setError(err instanceof Error ? err.message : t('admin.ticketDetail.updateError'))
     } finally {
       setUpdatingStatus(false)
     }
@@ -118,10 +120,10 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
           <h1 className="text-xl font-bold text-foreground truncate">{ticket.subject}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded border ${statusConf.color}`}>
-              {statusConf.label}
+              {t(`support.status.${ticket.status}` as 'support.status.open' | 'support.status.in_progress' | 'support.status.closed')}
             </span>
             <span className={`text-xs px-2 py-0.5 rounded border ${priorityConf.color}`}>
-              Prioridad: {priorityConf.label}
+              {t('admin.ticketDetail.priority', { priority: t(`support.priority.${ticket.priority}` as 'support.priority.low' | 'support.priority.normal' | 'support.priority.high' | 'support.priority.urgent') })}
             </span>
           </div>
         </div>
@@ -131,9 +133,9 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
           disabled={updatingStatus}
           className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground disabled:opacity-50"
         >
-          <option value="open">Abierto</option>
-          <option value="in_progress">En progreso</option>
-          <option value="closed">Cerrado</option>
+          <option value="open">{t('support.status.open')}</option>
+          <option value="in_progress">{t('support.status.in_progress')}</option>
+          <option value="closed">{t('support.status.closed')}</option>
         </select>
       </div>
 
@@ -150,7 +152,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
             <div className="p-4 border-t border-border bg-background/40">
               <div className="flex items-start gap-2 p-3 rounded-lg bg-secondary/30 text-sm text-muted-foreground">
                 <LifeBuoy className="h-4 w-4 mt-0.5 text-brand flex-shrink-0" />
-                <p>Este ticket está cerrado. Para responder, reabriéndalo desde el selector de estado.</p>
+                <p>{t('admin.ticketDetail.closedNotice')}</p>
               </div>
             </div>
           ) : (
@@ -158,7 +160,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="Escribe tu respuesta al cliente..."
+                placeholder={t('admin.ticketDetail.replyPlaceholder')}
                 rows={3}
                 maxLength={5000}
                 className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground placeholder-gray-500 resize-none focus:outline-none focus:border-brand"
@@ -178,7 +180,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
                   onChange={(e) => setNotifyByEmail(e.target.checked)}
                   className="accent-cyan-500"
                 />
-                <Mail className="h-4 w-4 text-brand" /> Avisar al cliente por correo
+                <Mail className="h-4 w-4 text-brand" /> {t('admin.ticketDetail.notifyEmail')}
               </label>
 
               {error && (
@@ -195,7 +197,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand disabled:opacity-50 transition-colors"
                 >
                   <Send className="h-4 w-4" />
-                  {sending ? 'Enviando...' : 'Enviar respuesta'}
+                  {sending ? t('admin.ticketDetail.sending') : t('admin.ticketDetail.send')}
                 </button>
               </div>
             </div>
@@ -204,7 +206,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
 
         <div className="bg-card border border-border rounded-2xl p-4 space-y-3 h-fit">
           <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            Cliente
+            {t('admin.ticketDetail.client')}
           </h3>
           <div className="flex items-center gap-2 text-foreground font-medium">
             <User className="h-4 w-4 text-muted-foreground" />
@@ -240,14 +242,14 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
           {ticket.client.plan && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CreditCard className="h-4 w-4 flex-shrink-0" />
-              <span>Plan: {ticket.client.plan.name}</span>
+              <span>{t('admin.ticketDetail.plan', { name: ticket.client.plan.name })}</span>
             </div>
           )}
           <Link
             href={`/admin/users/${ticket.client.id}`}
             className="block text-center mt-2 px-3 py-2 rounded-lg bg-secondary text-sm text-foreground hover:bg-secondary transition-colors"
           >
-            Ver perfil completo
+            {t('admin.ticketDetail.viewProfile')}
           </Link>
         </div>
       </div>

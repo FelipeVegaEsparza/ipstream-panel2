@@ -1,14 +1,17 @@
 import { UserForm } from '@/components/admin/UserForm'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default function NewUserPage() {
+  const t = dashboardT(getDashboardLocale())
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Crear Nuevo Cliente
+          {t('admin.users.newTitle')}
         </h1>
         <p className="text-muted-foreground">
-          Agrega un nuevo cliente al sistema CasterFly
+          {t('admin.users.newSubtitle')}
         </p>
       </div>
 

@@ -6,15 +6,18 @@ import Link from 'next/link'
 import { ArrowLeftIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import { MenuConfig, type MenuConfigItem } from '@/components/admin/MenuConfig'
 import { MENU_ITEMS, type MenuItemKey } from '@/lib/menu-items'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface MenuPageProps {
   params: { id: string }
 }
 
 export default async function ClientMenuPage({ params }: MenuPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div className="text-red-400 p-6">Acceso no autorizado</div>
+    return <div className="text-red-400 p-6">{t('admin.accessDeniedShort')}</div>
   }
 
   // La URL es /admin/users/[id] donde [id] es el userId (no el clientId).
@@ -57,16 +60,14 @@ export default async function ClientMenuPage({ params }: MenuPageProps) {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand transition-colors mb-4"
         >
           <ArrowLeftIcon className="h-4 w-4" />
-          Volver a {client.name}
+          {t('admin.users.menu.backTo', { name: client.name })}
         </Link>
         <div className="flex items-center gap-3">
           <Cog6ToothIcon className="h-8 w-8 text-brand" />
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Menú visible</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t('admin.users.menu.title')}</h1>
             <p className="text-muted-foreground">
-              Configura qué secciones del panel puede ver{' '}
-              <span className="text-foreground font-medium">{client.name}</span>
-              {' '}({user.email})
+              {t('admin.users.menu.subtitle', { name: client.name, email: user.email })}
             </p>
           </div>
         </div>

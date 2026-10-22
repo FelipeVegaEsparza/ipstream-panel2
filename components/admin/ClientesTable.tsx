@@ -17,6 +17,7 @@ import {
   type ClienteRowData,
 } from './ClienteRow'
 import { AsignarPlanModal, type PlanOption } from './AsignarPlanModal'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface ClientesTableProps {
   clients: ClienteRowData[]
@@ -27,6 +28,7 @@ type StatusFilter = 'all' | 'overdue' | 'due_soon' | 'current' | 'no_plan' | 'tr
 type IntervalFilter = 'all' | 'monthly' | 'yearly'
 
 export function ClientesTable({ clients, plans }: ClientesTableProps) {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<StatusFilter>('all')
@@ -78,7 +80,7 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
   }
 
   const handleQuitarPlan = async (client: ClienteRowData) => {
-    if (!confirm(`¿Quitar el plan de "${client.name}"? Se eliminarán todas sus suscripciones y pagos.`)) return
+    if (!confirm(t('admin.clients.removePlanConfirm', { name: client.name }))) return
     try {
       const res = await fetch('/api/admin/clients/remove-plan', {
         method: 'POST',
@@ -87,48 +89,48 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al quitar plan')
+        throw new Error(data.error || t('admin.clients.removePlanError'))
       }
-      showFeedback('success', 'Plan quitado')
+      showFeedback('success', t('admin.clients.planRemoved'))
       setTimeout(() => router.refresh(), 800)
     } catch (err) {
-      showFeedback('error', err instanceof Error ? err.message : 'Error al quitar plan')
+      showFeedback('error', err instanceof Error ? err.message : t('admin.clients.removePlanError'))
     }
   }
 
   const handleRenovar = async (client: ClienteRowData) => {
     if (!client.subscription) return
-    if (!confirm(`¿Renovar la suscripción de "${client.name}"? Se creará un nuevo pago pendiente.`)) return
+    if (!confirm(t('admin.clients.renewConfirm', { name: client.name }))) return
     try {
       const res = await fetch(`/api/admin/subscriptions/${client.subscription.id}/renew`, {
         method: 'POST',
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al renovar')
+        throw new Error(data.error || t('admin.clients.renewError'))
       }
-      showFeedback('success', 'Suscripción renovada')
+      showFeedback('success', t('admin.clients.renewed'))
       setTimeout(() => router.refresh(), 800)
     } catch (err) {
-      showFeedback('error', err instanceof Error ? err.message : 'Error al renovar')
+      showFeedback('error', err instanceof Error ? err.message : t('admin.clients.renewError'))
     }
   }
 
   const handleCancelar = async (client: ClienteRowData) => {
     if (!client.subscription) return
-    if (!confirm(`¿Cancelar la suscripción de "${client.name}"?`)) return
+    if (!confirm(t('admin.clients.cancelConfirm', { name: client.name }))) return
     try {
       const res = await fetch(`/api/admin/subscriptions/${client.subscription.id}/cancel`, {
         method: 'POST',
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al cancelar')
+        throw new Error(data.error || t('admin.clients.cancelError'))
       }
-      showFeedback('success', 'Suscripción cancelada')
+      showFeedback('success', t('admin.clients.cancelled'))
       setTimeout(() => router.refresh(), 800)
     } catch (err) {
-      showFeedback('error', err instanceof Error ? err.message : 'Error al cancelar')
+      showFeedback('error', err instanceof Error ? err.message : t('admin.clients.cancelError'))
     }
   }
 
@@ -141,12 +143,12 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al marcar como pagado')
+        throw new Error(data.error || t('admin.clients.markPaidError'))
       }
-      showFeedback('success', 'Pago marcado como pagado')
+      showFeedback('success', t('admin.clients.markedPaid'))
       setTimeout(() => router.refresh(), 800)
     } catch (err) {
-      showFeedback('error', err instanceof Error ? err.message : 'Error')
+      showFeedback('error', err instanceof Error ? err.message : t('admin.clients.error'))
     }
   }
 
@@ -165,36 +167,36 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard icon={AlertTriangle} color="red" label="Vencidos" value={stats.overdue} />
-        <StatCard icon={Sparkles} color="cyan" label="En prueba" value={stats.trial} />
-        <StatCard icon={Clock} color="orange" label="Por vencer" value={stats.dueSoon} />
-        <StatCard icon={CheckCircle2} color="green" label="Al día" value={stats.current} />
-        <StatCard icon={X} color="gray" label="Sin plan" value={stats.noPlan} />
+        <StatCard icon={AlertTriangle} color="red" label={t('admin.clients.overdue')} value={stats.overdue} />
+        <StatCard icon={Sparkles} color="cyan" label={t('admin.clients.trial')} value={stats.trial} />
+        <StatCard icon={Clock} color="orange" label={t('admin.clients.dueSoon')} value={stats.dueSoon} />
+        <StatCard icon={CheckCircle2} color="green" label={t('admin.clients.current')} value={stats.current} />
+        <StatCard icon={X} color="gray" label={t('admin.clients.noPlan')} value={stats.noPlan} />
       </div>
 
       <Card className="bg-card border-border">
         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-3 space-y-0">
-          <CardTitle className="text-foreground">Clientes y pagos</CardTitle>
+          <CardTitle className="text-foreground">{t('admin.clients.title')}</CardTitle>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar cliente o email..."
+              placeholder={t('admin.clients.search')}
               className="bg-secondary border-border text-foreground pl-10 w-full md:w-64"
             />
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap items-center mb-2">
-            <span className="text-xs text-muted-foreground uppercase tracking-wide mr-1">Estado:</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wide mr-1">{t('admin.clients.status')}</span>
             {[
-              { key: 'all' as const, label: 'Todos', count: enriched.length },
-              { key: 'trial' as const, label: 'En prueba', count: stats.trial },
-              { key: 'overdue' as const, label: 'Vencidos', count: stats.overdue },
-              { key: 'due_soon' as const, label: 'Por vencer', count: stats.dueSoon },
-              { key: 'current' as const, label: 'Al día', count: stats.current },
-              { key: 'no_plan' as const, label: 'Sin plan', count: stats.noPlan },
+              { key: 'all' as const, label: t('admin.clients.all'), count: enriched.length },
+              { key: 'trial' as const, label: t('admin.clients.trial'), count: stats.trial },
+              { key: 'overdue' as const, label: t('admin.clients.overdue'), count: stats.overdue },
+              { key: 'due_soon' as const, label: t('admin.clients.dueSoon'), count: stats.dueSoon },
+              { key: 'current' as const, label: t('admin.clients.current'), count: stats.current },
+              { key: 'no_plan' as const, label: t('admin.clients.noPlan'), count: stats.noPlan },
             ].map((f) => (
               <Button
                 key={f.key}
@@ -213,11 +215,11 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
           </div>
 
           <div className="flex gap-2 flex-wrap items-center mb-4">
-            <span className="text-xs text-muted-foreground uppercase tracking-wide mr-1">Plan:</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wide mr-1">{t('admin.clients.planFilter')}</span>
             {[
-              { key: 'all' as const, label: 'Todos', count: enriched.length },
-              { key: 'monthly' as const, label: 'Mensuales', count: stats.monthly },
-              { key: 'yearly' as const, label: 'Anuales', count: stats.yearly },
+              { key: 'all' as const, label: t('admin.clients.all'), count: enriched.length },
+              { key: 'monthly' as const, label: t('admin.clients.monthly'), count: stats.monthly },
+              { key: 'yearly' as const, label: t('admin.clients.yearly'), count: stats.yearly },
             ].map((f) => (
               <Button
                 key={f.key}
@@ -238,20 +240,20 @@ export function ClientesTable({ clients, plans }: ClientesTableProps) {
           {filtered.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">
               {clients.length === 0
-                ? 'No hay clientes registrados todavía.'
-                : 'Ningún cliente coincide con los filtros.'}
+                ? t('admin.clients.empty')
+                : t('admin.clients.noMatches')}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted-foreground border-b border-border">
-                    <th className="px-4 py-2 font-medium">Cliente</th>
-                    <th className="px-4 py-2 font-medium">Plan</th>
-                    <th className="px-4 py-2 font-medium">Estado</th>
-                    <th className="px-4 py-2 font-medium">Próx. pago</th>
-                    <th className="px-4 py-2 font-medium">Últ. pago</th>
-                    <th className="px-4 py-2 font-medium">Acciones</th>
+                    <th className="px-4 py-2 font-medium">{t('admin.clients.client')}</th>
+                    <th className="px-4 py-2 font-medium">{t('admin.clients.plan')}</th>
+                    <th className="px-4 py-2 font-medium">{t('admin.clients.statusLabel')}</th>
+                    <th className="px-4 py-2 font-medium">{t('admin.clients.nextPayment')}</th>
+                    <th className="px-4 py-2 font-medium">{t('admin.clients.lastPayment')}</th>
+                    <th className="px-4 py-2 font-medium">{t('admin.clients.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>

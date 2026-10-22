@@ -4,12 +4,15 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { UsersList } from '@/components/admin/UsersList'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function UsersPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div>Error: Acceso no autorizado</div>
+    return <div>{t('admin.accessDenied')}</div>
   }
 
   const users = await prisma.user.findMany({
@@ -38,10 +41,10 @@ export default async function UsersPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Gestión de Usuarios
+            {t('admin.users.title')}
           </h1>
           <p className="text-muted-foreground">
-            Administra todos los clientes del sistema
+            {t('admin.users.subtitle')}
           </p>
         </div>
         <Link
@@ -49,7 +52,7 @@ export default async function UsersPage() {
           className="btn-primary flex items-center gap-2"
         >
           <PlusIcon className="h-5 w-5" />
-          Nuevo Cliente
+          {t('admin.users.new')}
         </Link>
       </div>
 
@@ -59,7 +62,7 @@ export default async function UsersPage() {
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-brand mb-2">
-                Total Clientes
+                {t('admin.dashboard.totalClients')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
                 {users.length}
@@ -75,7 +78,7 @@ export default async function UsersPage() {
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-green-400 mb-2">
-                Activos Hoy
+                {t('admin.users.activeToday')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
                 {users.filter(u => {
@@ -95,7 +98,7 @@ export default async function UsersPage() {
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-purple-400 mb-2">
-                Nuevos (7 días)
+                {t('admin.users.newLast7')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
                 {users.filter(u => {
@@ -115,7 +118,7 @@ export default async function UsersPage() {
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-amber-400 mb-2">
-                Con Contenido
+                {t('admin.users.withContent')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
                 {users.filter(u => {

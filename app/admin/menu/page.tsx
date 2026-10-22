@@ -2,13 +2,16 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { GlobalMenuConfig } from '@/components/admin/GlobalMenuConfig'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GlobalMenuPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div className="text-red-400 p-6">Acceso no autorizado</div>
+    return <div className="text-red-400 p-6">{t('admin.accessDeniedShort')}</div>
   }
 
   const config = await prisma.appConfig.findFirst()
@@ -27,10 +30,9 @@ export default async function GlobalMenuPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Menú Global</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('admin.menu.title')}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Los items que ocultes aquí no se mostrarán en el menú de <strong className="text-foreground">ningún cliente</strong>,
-          sin importar su configuración individual. El override es absoluto.
+          {t('admin.menu.subtitle')}
         </p>
       </div>
       <GlobalMenuConfig initialHidden={initialHidden} />

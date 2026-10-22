@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { X } from 'lucide-react'
 import { formatCurrency } from '@/lib/billing-format'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface PlanOption {
   id: string
@@ -34,6 +35,7 @@ export function AsignarPlanModal({
   plans,
   currentPlanId,
 }: AsignarPlanModalProps) {
+  const { t } = useDashboardI18n()
   const [planId, setPlanId] = useState<string>(
     plans.find((p) => p.id !== currentPlanId)?.id ?? plans[0]?.id ?? ''
   )
@@ -45,7 +47,7 @@ export function AsignarPlanModal({
 
   const handleSubmit = async () => {
     if (!planId) {
-      setError('Selecciona un plan')
+      setError(t('admin.assignPlan.selectPlan'))
       return
     }
     setLoading(true)
@@ -62,11 +64,11 @@ export function AsignarPlanModal({
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al asignar plan')
+        throw new Error(data.error || t('admin.assignPlan.assignError'))
       }
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al asignar plan')
+      setError(err instanceof Error ? err.message : t('admin.assignPlan.assignError'))
     } finally {
       setLoading(false)
     }
@@ -79,21 +81,21 @@ export function AsignarPlanModal({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
-          aria-label="Cerrar"
+          aria-label={t('common.close')}
         >
           <X className="h-5 w-5" />
         </button>
 
         <div className="p-6 space-y-5">
           <div>
-            <h3 className="text-xl font-bold text-foreground">Asignar plan</h3>
+            <h3 className="text-xl font-bold text-foreground">{t('admin.assignPlan.title')}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Cliente: <span className="text-foreground font-medium">{clientName}</span>
+              {t('admin.assignPlan.client')} <span className="text-foreground font-medium">{clientName}</span>
             </p>
           </div>
 
           <div>
-            <label className="text-sm text-muted-foreground block mb-2">Plan *</label>
+            <label className="text-sm text-muted-foreground block mb-2">{t('admin.assignPlan.planLabel')}</label>
             <div className="space-y-2">
               {plans.map((plan) => {
                 const isCurrent = plan.id === currentPlanId
@@ -119,7 +121,7 @@ export function AsignarPlanModal({
                         <span className="text-foreground font-medium">{plan.name}</span>
                         {isCurrent && (
                           <span className="text-xs px-2 py-0.5 rounded bg-green-600 text-white">
-                            Actual
+                            {t('admin.assignPlan.current')}
                           </span>
                         )}
                       </div>
@@ -130,7 +132,7 @@ export function AsignarPlanModal({
                         {formatCurrency(plan.price, plan.currency)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        /{plan.interval === 'monthly' ? 'mes' : 'año'}
+                        /{plan.interval === 'monthly' ? t('admin.assignPlan.perMonth') : t('admin.assignPlan.perYear')}
                       </p>
                     </div>
                   </label>
@@ -139,13 +141,13 @@ export function AsignarPlanModal({
             </div>
             {plans.length === 0 && (
               <p className="text-sm text-orange-400 p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
-                No hay planes activos. Crea uno en la pestaña "Planes".
+                {t('admin.assignPlan.noPlans')}
               </p>
             )}
           </div>
 
           <div>
-            <label className="text-sm text-muted-foreground block mb-1">Fecha de inicio *</label>
+            <label className="text-sm text-muted-foreground block mb-1">{t('admin.assignPlan.startDate')}</label>
             <Input
               type="date"
               value={startDate}
@@ -153,7 +155,7 @@ export function AsignarPlanModal({
               className="bg-secondary border-border text-foreground"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              La suscripción y los pagos mensuales se generarán a partir de esta fecha.
+              {t('admin.assignPlan.startDateHint')}
             </p>
           </div>
 
@@ -171,7 +173,7 @@ export function AsignarPlanModal({
               className="flex-1 border-border hover:bg-secondary"
               disabled={loading}
             >
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -179,7 +181,7 @@ export function AsignarPlanModal({
               className="flex-1 bg-brand hover:bg-brand"
               disabled={loading || plans.length === 0}
             >
-              {loading ? 'Asignando...' : 'Asignar plan'}
+              {loading ? t('admin.assignPlan.assigning') : t('admin.assignPlan.assign')}
             </Button>
           </div>
         </div>

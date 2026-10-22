@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { X, Upload, FileText, Image as ImageIcon } from 'lucide-react'
 import { formatCurrency, formatDate, PAYMENT_METHODS } from '@/lib/billing-format'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface RegistrarPagoModalProps {
   open: boolean
@@ -27,6 +28,7 @@ export function RegistrarPagoModal({
   amount,
   currency,
 }: RegistrarPagoModalProps) {
+  const { t } = useDashboardI18n()
   const [paidAt, setPaidAt] = useState(new Date().toISOString().split('T')[0])
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer')
   const [description, setDescription] = useState('')
@@ -35,6 +37,19 @@ export function RegistrarPagoModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const methodLabel = (value: string, fallback: string) =>
+    value === 'bank_transfer'
+      ? t('admin.clients.paymentMethod.bank_transfer')
+      : value === 'credit_card'
+      ? t('admin.clients.paymentMethod.credit_card')
+      : value === 'cash'
+      ? t('admin.clients.paymentMethod.cash')
+      : value === 'paypal'
+      ? t('admin.clients.paymentMethod.paypal')
+      : value === 'other'
+      ? t('admin.clients.paymentMethod.other')
+      : fallback
 
   if (!open) return null
 
@@ -68,7 +83,7 @@ export function RegistrarPagoModal({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al registrar pago')
+        throw new Error(data.error || t('admin.registerPayment.registerError'))
       }
 
       const data = await res.json()
@@ -85,7 +100,7 @@ export function RegistrarPagoModal({
 
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al registrar pago')
+      setError(err instanceof Error ? err.message : t('admin.registerPayment.registerError'))
     } finally {
       setLoading(false)
     }
@@ -98,41 +113,41 @@ export function RegistrarPagoModal({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
-          aria-label="Cerrar"
+          aria-label={t('common.close')}
         >
           <X className="h-5 w-5" />
         </button>
 
         <div className="p-6 space-y-5">
           <div>
-            <h3 className="text-xl font-bold text-foreground">Registrar pago</h3>
+            <h3 className="text-xl font-bold text-foreground">{t('admin.registerPayment.title')}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Marca como pagado el ciclo actual y genera el siguiente.
+              {t('admin.registerPayment.subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <p className="text-xs text-muted-foreground">Cliente</p>
+              <p className="text-xs text-muted-foreground">{t('admin.registerPayment.client')}</p>
               <p className="text-foreground font-medium">{clientName}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Plan</p>
+              <p className="text-xs text-muted-foreground">{t('admin.registerPayment.plan')}</p>
               <p className="text-foreground font-medium">{planName}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Monto</p>
+              <p className="text-xs text-muted-foreground">{t('admin.registerPayment.amount')}</p>
               <p className="text-brand font-bold text-lg">{formatCurrency(amount, currency)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Fecha del pago</p>
+              <p className="text-xs text-muted-foreground">{t('admin.registerPayment.paymentDate')}</p>
               <p className="text-foreground font-medium">{formatDate(paidAt)}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Fecha del pago *</label>
+              <label className="text-sm text-muted-foreground block mb-1">{t('admin.registerPayment.paymentDateLabel')}</label>
               <Input
                 type="date"
                 value={paidAt}
@@ -142,7 +157,7 @@ export function RegistrarPagoModal({
               />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Método de pago</label>
+              <label className="text-sm text-muted-foreground block mb-1">{t('admin.registerPayment.method')}</label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
@@ -150,7 +165,7 @@ export function RegistrarPagoModal({
               >
                 {PAYMENT_METHODS.map((m) => (
                   <option key={m.value} value={m.value}>
-                    {m.label}
+                    {methodLabel(m.value, m.label)}
                   </option>
                 ))}
               </select>
@@ -158,17 +173,17 @@ export function RegistrarPagoModal({
           </div>
 
           <div>
-            <label className="text-sm text-muted-foreground block mb-1">Descripción (opcional)</label>
+            <label className="text-sm text-muted-foreground block mb-1">{t('admin.registerPayment.description')}</label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ej: Pago del mes de julio"
+              placeholder={t('admin.registerPayment.descriptionPlaceholder')}
               className="bg-secondary border-border text-foreground"
             />
           </div>
 
           <div>
-            <label className="text-sm text-muted-foreground block mb-1">Comprobante (opcional)</label>
+            <label className="text-sm text-muted-foreground block mb-1">{t('admin.registerPayment.receipt')}</label>
             {!receipt ? (
               <button
                 type="button"
@@ -176,7 +191,7 @@ export function RegistrarPagoModal({
                 className="w-full h-24 border-2 border-dashed border-border rounded-lg hover:border-brand transition-colors flex flex-col items-center justify-center"
               >
                 <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                <span className="text-sm text-muted-foreground">Subir imagen o PDF (máx 10MB)</span>
+                <span className="text-sm text-muted-foreground">{t('admin.registerPayment.uploadHint')}</span>
               </button>
             ) : (
               <div className="border border-border rounded-lg p-3 flex items-center justify-between">
@@ -225,7 +240,7 @@ export function RegistrarPagoModal({
               className="flex-1 border-border hover:bg-secondary"
               disabled={loading}
             >
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -233,7 +248,7 @@ export function RegistrarPagoModal({
               className="flex-1 bg-green-600 hover:bg-green-700"
               disabled={loading}
             >
-              {loading ? 'Registrando...' : 'Registrar pago'}
+              {loading ? t('admin.registerPayment.registering') : t('admin.registerPayment.register')}
             </Button>
           </div>
         </div>

@@ -2,12 +2,16 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AdminStats } from '@/components/admin/AdminStats'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function AdminDashboardPage() {
+  const locale = getDashboardLocale()
+  const t = dashboardT(locale)
   const session = await getServerSession(authOptions)
   
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div>Error: Acceso no autorizado</div>
+    return <div>{t('admin.accessDenied')}</div>
   }
 
   // Obtener estadísticas globales del sistema
@@ -52,37 +56,37 @@ export default async function AdminDashboardPage() {
 
   const stats = [
     {
-      name: 'Total Clientes',
+      name: t('admin.dashboard.totalClients'),
       value: totalClients,
       color: 'bg-brand',
       icon: 'users'
     },
     {
-      name: 'Total Programas',
+      name: t('admin.dashboard.totalPrograms'),
       value: totalPrograms,
       color: 'bg-green-500',
       icon: 'microphone'
     },
     {
-      name: 'Total Noticias',
+      name: t('admin.dashboard.totalNews'),
       value: totalNews,
       color: 'bg-purple-500',
       icon: 'newspaper'
     },
     {
-      name: 'Total Videos',
+      name: t('admin.dashboard.totalVideos'),
       value: totalVideos,
       color: 'bg-red-500',
       icon: 'video'
     },
     {
-      name: 'Total Sponsors',
+      name: t('admin.dashboard.totalSponsors'),
       value: totalSponsors,
       color: 'bg-yellow-500',
       icon: 'building'
     },
     {
-      name: 'Total Promociones',
+      name: t('admin.dashboard.totalPromotions'),
       value: totalPromotions,
       color: 'bg-pink-500',
       icon: 'megaphone'
@@ -93,10 +97,10 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Dashboard Administrativo
+          {t('admin.dashboard.title')}
         </h1>
         <p className="text-muted-foreground">
-          Bienvenido al panel de administración de CasterFly
+          {t('admin.dashboard.subtitle')}
         </p>
       </div>
 
@@ -109,7 +113,7 @@ export default async function AdminDashboardPage() {
             <svg className="w-6 h-6 text-brand mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
             </svg>
-            Clientes Recientes
+            {t('admin.dashboard.recentClients')}
           </h3>
           <div className="space-y-4">
             {recentClients.map((client) => (
@@ -118,12 +122,12 @@ export default async function AdminDashboardPage() {
                   <h4 className="font-medium text-foreground">{client.name}</h4>
                   <p className="text-sm text-muted-foreground">{client.user.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    Registrado: {new Date(client.createdAt).toLocaleDateString('es-ES')}
+                    {t('admin.dashboard.registered', { date: new Date(client.createdAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES') })}
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">
-                    {client._count.programs + client._count.news + client._count.rankingVideos} elementos
+                    {t('admin.dashboard.elements', { count: client._count.programs + client._count.news + client._count.rankingVideos })}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {client._count.programs}P • {client._count.news}N • {client._count.rankingVideos}V
@@ -140,7 +144,7 @@ export default async function AdminDashboardPage() {
             <svg className="w-6 h-6 text-brand mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            Acciones Rápidas
+            {t('admin.dashboard.quickActions')}
           </h3>
           <div className="space-y-3">
             <a
@@ -154,8 +158,8 @@ export default async function AdminDashboardPage() {
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-foreground">Crear Nuevo Cliente</div>
-                  <div className="text-sm text-muted-foreground">Agregar un nuevo usuario al sistema</div>
+                  <div className="font-medium text-foreground">{t('admin.dashboard.createClient')}</div>
+                  <div className="text-sm text-muted-foreground">{t('admin.dashboard.createClientDesc')}</div>
                 </div>
               </div>
             </a>
@@ -170,8 +174,8 @@ export default async function AdminDashboardPage() {
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-foreground">Gestionar Usuarios</div>
-                  <div className="text-sm text-muted-foreground">Ver y administrar todos los clientes</div>
+                  <div className="font-medium text-foreground">{t('admin.dashboard.manageUsers')}</div>
+                  <div className="text-sm text-muted-foreground">{t('admin.dashboard.manageUsersDesc')}</div>
                 </div>
               </div>
             </a>
@@ -186,8 +190,8 @@ export default async function AdminDashboardPage() {
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-foreground">Impersonar Cliente</div>
-                  <div className="text-sm text-muted-foreground">Entrar como cualquier cliente para soporte</div>
+                  <div className="font-medium text-foreground">{t('admin.dashboard.impersonate')}</div>
+                  <div className="text-sm text-muted-foreground">{t('admin.dashboard.impersonateDesc')}</div>
                 </div>
               </div>
             </a>

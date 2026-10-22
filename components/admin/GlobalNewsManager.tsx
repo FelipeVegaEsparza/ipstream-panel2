@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { normalizeImageUrl } from '@/lib/image-url-helper'
 import Image from 'next/image'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import {
   PlusIcon,
   PencilIcon,
@@ -67,6 +68,7 @@ interface GenerateResult {
 }
 
 export function GlobalNewsManager() {
+  const { locale, t } = useDashboardI18n()
   const [published, setPublished] = useState<GlobalNewsItem[]>([])
   const [drafts, setDrafts] = useState<GlobalNewsItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -198,15 +200,15 @@ export function GlobalNewsManager() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta noticia global?')) return
+    if (!confirm(t('admin.globalNews.deleteConfirm'))) return
     try {
       const res = await fetch(`/api/admin/news-global/${id}`, { method: 'DELETE' })
       if (res.ok) {
         fetchPublished(publishedPagination.page)
         fetchDrafts(draftsPagination.page)
-      } else showToast({ type: 'error', title: 'Error al eliminar' })
+      } else showToast({ type: 'error', title: t('admin.globalNews.deleteError') })
     } catch {
-      showToast({ type: 'error', title: 'Error al eliminar' })
+      showToast({ type: 'error', title: t('admin.globalNews.deleteError') })
     }
   }
 
@@ -229,10 +231,10 @@ export function GlobalNewsManager() {
         fetchDrafts(1)
       } else {
         const data = await res.json()
-        showToast({ type: 'error', title: data.error || 'Error al guardar' })
+        showToast({ type: 'error', title: data.error || t('admin.globalNews.saveError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al guardar' })
+      showToast({ type: 'error', title: t('admin.globalNews.saveError') })
     } finally {
       setSaving(false)
     }
@@ -260,14 +262,14 @@ export function GlobalNewsManager() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setGenerateError(data.error || 'Error al generar noticias')
+        setGenerateError(data.error || t('admin.globalNews.generateError'))
         return
       }
       setGenerateResult(data)
       await fetchDrafts(1)
       setTab('drafts')
     } catch {
-      setGenerateError('Error de red al generar noticias')
+      setGenerateError(t('admin.globalNews.networkError'))
     } finally {
       setGenerating(false)
     }
@@ -282,16 +284,16 @@ export function GlobalNewsManager() {
         setSelectedDraftIds((prev) => prev.filter((x) => x !== id))
       } else {
         const data = await res.json()
-        showToast({ type: 'error', title: data.error || 'Error al aprobar' })
+        showToast({ type: 'error', title: data.error || t('admin.globalNews.approveError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al aprobar' })
+      showToast({ type: 'error', title: t('admin.globalNews.approveError') })
     }
   }
 
   const handleApproveBatch = async (ids: string[]) => {
     if (ids.length === 0) return
-    if (!confirm(`¿Aprobar ${ids.length} borrador(es)? Quedarán publicados.`)) return
+    if (!confirm(t('admin.globalNews.approveBatchConfirm', { count: ids.length }))) return
     setBulkApproving(true)
     try {
       const res = await fetch('/api/admin/news-global/approve-batch', {
@@ -304,12 +306,12 @@ export function GlobalNewsManager() {
         fetchDrafts(draftsPagination.page)
         fetchPublished(publishedPagination.page)
         setSelectedDraftIds([])
-        showToast({ type: 'success', title: `${data.approved} borrador(es) aprobado(s)` })
+        showToast({ type: 'success', title: t('admin.globalNews.approveBatchSuccess', { count: data.approved }) })
       } else {
-        showToast({ type: 'error', title: data.error || 'Error al aprobar' })
+        showToast({ type: 'error', title: data.error || t('admin.globalNews.approveError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al aprobar' })
+      showToast({ type: 'error', title: t('admin.globalNews.approveError') })
     } finally {
       setBulkApproving(false)
     }
@@ -317,26 +319,26 @@ export function GlobalNewsManager() {
 
   const handleDiscardRun = async (runId: string) => {
     if (runId === '__manual__') {
-      if (!confirm('¿Eliminar todos los borradores sin run asignado?')) return
+      if (!confirm(t('admin.globalNews.discardManualConfirm'))) return
       for (const d of (draftsByRun.get('__manual__') ?? [])) {
         await fetch(`/api/admin/news-global/${d.id}`, { method: 'DELETE' })
       }
       fetchDrafts(1)
       return
     }
-    if (!confirm('¿Descartar todos los borradores de este lote?')) return
+    if (!confirm(t('admin.globalNews.discardBatchConfirm'))) return
     try {
       const res = await fetch(`/api/admin/news-global/run/${runId}`, { method: 'DELETE' })
       const data = await res.json()
       if (res.ok) {
-        showToast({ type: 'success', title: `${data.deleted} borrador(es) eliminado(s)` })
+        showToast({ type: 'success', title: t('admin.globalNews.discardBatchSuccess', { count: data.deleted }) })
         fetchDrafts(1)
         setSelectedDraftIds([])
       } else {
-        showToast({ type: 'error', title: data.error || 'Error al descartar' })
+        showToast({ type: 'error', title: data.error || t('admin.globalNews.discardError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al descartar' })
+      showToast({ type: 'error', title: t('admin.globalNews.discardError') })
     }
   }
 
@@ -347,7 +349,7 @@ export function GlobalNewsManager() {
   }
 
   const formatDate = (date: string) =>
-    new Intl.DateTimeFormat('es-ES', {
+    new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -356,22 +358,22 @@ export function GlobalNewsManager() {
     }).format(new Date(date))
 
   const formatContextDate = (date: string) =>
-    new Intl.DateTimeFormat('es-ES', {
+    new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       day: '2-digit',
       month: 'short',
       hour: '2-digit',
       minute: '2-digit',
     }).format(new Date(date))
 
-  if (loading) return <p className="text-muted-foreground">Cargando noticias globales...</p>
+  if (loading) return <p className="text-muted-foreground">{t('admin.globalNews.loading')}</p>
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Noticias Genéricas</h2>
+          <h2 className="text-xl font-bold text-foreground">{t('admin.globalNews.title')}</h2>
           <p className="text-sm text-muted-foreground">
-            {publishedPagination.total} publicadas · {draftsPagination.total} borradores
+            {t('admin.globalNews.counts', { published: publishedPagination.total, drafts: draftsPagination.total })}
           </p>
         </div>
         {!showForm && (
@@ -380,9 +382,9 @@ export function GlobalNewsManager() {
               onClick={openGenerateModal}
               className="bg-purple-600 hover:bg-purple-700"
               disabled={categories.length === 0}
-              title={categories.length === 0 ? 'Crea categorías primero' : 'Generar borradores con IA'}
+              title={categories.length === 0 ? t('admin.globalNews.createCategoriesFirst') : t('admin.globalNews.generateDraftsHint')}
             >
-              <SparklesIcon className="h-4 w-4 mr-2" /> Generar con IA
+              <SparklesIcon className="h-4 w-4 mr-2" /> {t('admin.globalNews.generateAi')}
             </Button>
             <Button
               onClick={() => {
@@ -392,7 +394,7 @@ export function GlobalNewsManager() {
               }}
               className="bg-brand hover:bg-brand"
             >
-              <PlusIcon className="h-4 w-4 mr-2" /> Nueva Noticia
+              <PlusIcon className="h-4 w-4 mr-2" /> {t('admin.globalNews.new')}
             </Button>
           </div>
         )}
@@ -404,7 +406,7 @@ export function GlobalNewsManager() {
           onChange={(e) => setFilterCategory(e.target.value)}
           className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 text-sm"
         >
-          <option value="">Todas las categorías</option>
+          <option value="">{t('admin.globalNews.allCategories')}</option>
           {categories.map((cat) => (
             <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
@@ -416,7 +418,7 @@ export function GlobalNewsManager() {
             onClick={() => setFilterCategory('')}
             className="border-border hover:bg-secondary"
           >
-            <XMarkIcon className="h-4 w-4 mr-1" /> Limpiar filtro
+            <XMarkIcon className="h-4 w-4 mr-1" /> {t('admin.globalNews.clearFilter')}
           </Button>
         )}
       </div>
@@ -424,18 +426,18 @@ export function GlobalNewsManager() {
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-4">
           <h3 className="text-lg font-medium text-foreground">
-            {editingId ? 'Editar Noticia Genérica' : 'Nueva Noticia Genérica'}
+            {editingId ? t('admin.globalNews.edit') : t('admin.globalNews.newTitle')}
           </h3>
 
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-2">Categoría</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.globalNews.category')}</label>
             <select
               value={form.categoryId}
               onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
               className="bg-secondary border border-border text-foreground rounded-lg px-3 py-2 w-full"
               required
             >
-              <option value="">Seleccionar categoría...</option>
+              <option value="">{t('admin.globalNews.selectCategory')}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
@@ -444,7 +446,7 @@ export function GlobalNewsManager() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">Título</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.globalNews.titleLabel')}</label>
               <Input
                 value={form.name}
                 onChange={(e) => handleNameChange(e.target.value)}
@@ -453,7 +455,7 @@ export function GlobalNewsManager() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">Slug</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.globalNews.slug')}</label>
               <Input
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
@@ -465,8 +467,8 @@ export function GlobalNewsManager() {
 
           <div>
             <ImageUpload
-              label="Imagen de la Noticia"
-              description="Imagen principal de la noticia (JPG, PNG, GIF, WebP - Máx. 5MB)"
+              label={t('admin.globalNews.imageLabel')}
+              description={t('admin.globalNews.imageDescription')}
               value={form.imageUrl}
               onChange={(url) => setForm({ ...form, imageUrl: url })}
               onRemove={() => setForm({ ...form, imageUrl: '' })}
@@ -474,7 +476,7 @@ export function GlobalNewsManager() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-2">Texto Corto</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.globalNews.shortText')}</label>
             <textarea
               value={form.shortText}
               onChange={(e) => setForm({ ...form, shortText: e.target.value })}
@@ -484,7 +486,7 @@ export function GlobalNewsManager() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-2">Texto Largo</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.globalNews.longText')}</label>
             <textarea
               value={form.longText}
               onChange={(e) => setForm({ ...form, longText: e.target.value })}
@@ -495,7 +497,7 @@ export function GlobalNewsManager() {
 
           <div className="flex gap-3">
             <Button type="submit" disabled={saving} className="bg-brand hover:bg-brand">
-              {saving ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear'}
+              {saving ? t('common.saving') : editingId ? t('admin.globalNews.update') : t('admin.globalNews.create')}
             </Button>
             <Button
               type="button"
@@ -503,7 +505,7 @@ export function GlobalNewsManager() {
               onClick={() => { setShowForm(false); setEditingId(null) }}
               className="border-border hover:bg-secondary"
             >
-              Cancelar
+              {t('common.cancel')}
             </Button>
           </div>
         </form>
@@ -516,10 +518,10 @@ export function GlobalNewsManager() {
               <div>
                 <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <SparklesIcon className="h-5 w-5 text-purple-400" />
-                  Generar borradores con IA
+                  {t('admin.globalNews.generateModalTitle')}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  DeepSeek generará borradores en español, inspirados en titulares actuales de GNews. Si GNews no responde, no se creará ningún borrador.
+                  {t('admin.globalNews.generateModalHint')}
                 </p>
               </div>
               <button
@@ -535,11 +537,11 @@ export function GlobalNewsManager() {
               <div className="space-y-3">
                 <div className="p-4 rounded-lg bg-secondary/50 border border-border">
                   <p className="text-foreground font-medium">
-                    {generateResult.totalCreated} borrador(es) creado(s)
+                    {t('admin.globalNews.createdCount', { count: generateResult.totalCreated })}
                   </p>
                   {generateResult.newsContext && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Contexto: {generateResult.newsContext.count} titulares de {generateResult.newsContext.source === 'gnews' ? 'GNews' : generateResult.newsContext.source} · {formatContextDate(generateResult.newsContext.firstPublishedAt)} – {formatContextDate(generateResult.newsContext.lastPublishedAt)}
+                      {t('admin.globalNews.context', { count: generateResult.newsContext.count, source: generateResult.newsContext.source === 'gnews' ? 'GNews' : generateResult.newsContext.source, from: formatContextDate(generateResult.newsContext.firstPublishedAt), to: formatContextDate(generateResult.newsContext.lastPublishedAt) })}
                     </p>
                   )}
                   <ul className="text-sm text-muted-foreground mt-2 space-y-1">
@@ -552,7 +554,7 @@ export function GlobalNewsManager() {
                         )}
                         <span className="text-muted-foreground">{r.categoryName}:</span>
                         <span>
-                          {r.created}/{r.requested} borradores
+                          {t('admin.globalNews.draftsCount', { created: r.created, requested: r.requested })}
                         </span>
                       </li>
                     ))}
@@ -563,7 +565,7 @@ export function GlobalNewsManager() {
                     onClick={() => { setShowGenerateModal(false); setGenerateResult(null) }}
                     className="bg-brand hover:bg-brand"
                   >
-                    Ir a revisar borradores
+                    {t('admin.globalNews.reviewDrafts')}
                   </Button>
                 </div>
               </div>
@@ -573,10 +575,10 @@ export function GlobalNewsManager() {
                   <div className="flex items-start gap-2">
                     <XMarkIcon className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-foreground font-medium">No se pudo generar</p>
+                      <p className="text-foreground font-medium">{t('admin.globalNews.generateFailed')}</p>
                       <p className="text-sm text-red-300 mt-1">{generateError}</p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        No se creó ningún borrador. Verifica la conexión con GNews e inténtalo de nuevo.
+                        {t('admin.globalNews.generateFailedHint')}
                       </p>
                     </div>
                   </div>
@@ -587,7 +589,7 @@ export function GlobalNewsManager() {
                     variant="outline"
                     className="border-border hover:bg-secondary"
                   >
-                    Volver
+                    {t('admin.globalNews.back')}
                   </Button>
                 </div>
               </div>
@@ -595,14 +597,14 @@ export function GlobalNewsManager() {
               <>
                 {categoriesWithCount.length === 0 ? (
                   <p className="text-yellow-400 text-sm p-3 bg-yellow-500/10 rounded border border-yellow-500/20">
-                    No hay categorías creadas. Crea al menos una antes de generar con IA.
+                    {t('admin.globalNews.noCategories')}
                   </p>
                 ) : (
                   <>
                     <div className="mb-4">
                       <div className="flex justify-between items-center mb-2">
                         <label className="text-sm font-medium text-muted-foreground">
-                          Categorías a procesar
+                          {t('admin.globalNews.categoriesToProcess')}
                         </label>
                         <div className="flex gap-2 text-xs">
                           <button
@@ -610,7 +612,7 @@ export function GlobalNewsManager() {
                             onClick={() => setSelectedCategoryIds(categoriesWithCount.map((c) => c.id))}
                             className="text-brand hover:underline"
                           >
-                            Todas
+                            {t('admin.globalNews.all')}
                           </button>
                           <span className="text-muted-foreground">·</span>
                           <button
@@ -618,7 +620,7 @@ export function GlobalNewsManager() {
                             onClick={() => setSelectedCategoryIds([])}
                             className="text-brand hover:underline"
                           >
-                            Ninguna
+                            {t('admin.globalNews.none')}
                           </button>
                         </div>
                       </div>
@@ -644,12 +646,12 @@ export function GlobalNewsManager() {
                               <div className="flex gap-1 flex-shrink-0">
                                 {cat.newsCount === 0 && (
                                   <span className="text-[10px] text-yellow-400/80 uppercase tracking-wide">
-                                    sin referencia
+                                    {t('admin.globalNews.noReference')}
                                   </span>
                                 )}
                                 {!cat.description && (
                                   <span className="text-[10px] text-orange-400/80 uppercase tracking-wide">
-                                    sin descripción
+                                    {t('admin.globalNews.noDescription')}
                                   </span>
                                 )}
                               </div>
@@ -666,7 +668,7 @@ export function GlobalNewsManager() {
 
                     <div className="mb-4">
                       <label className="text-sm font-medium text-muted-foreground block mb-2">
-                        Noticias por categoría: <span className="text-purple-400 font-bold">{countPerCategory}</span>
+                        {t('admin.globalNews.newsPerCategory')} <span className="text-purple-400 font-bold">{countPerCategory}</span>
                       </label>
                       <input
                         type="range"
@@ -677,7 +679,7 @@ export function GlobalNewsManager() {
                         className="w-full"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Total estimado: {selectedCategoryIds.length * countPerCategory} borradores · se basarán en titulares actuales de GNews en español
+                        {t('admin.globalNews.estimatedTotal', { count: selectedCategoryIds.length * countPerCategory })}
                       </p>
                     </div>
 
@@ -689,7 +691,7 @@ export function GlobalNewsManager() {
                         className="border-border hover:bg-secondary"
                         disabled={generating}
                       >
-                        Cancelar
+                        {t('common.cancel')}
                       </Button>
                       <Button
                         type="button"
@@ -700,12 +702,12 @@ export function GlobalNewsManager() {
                         {generating ? (
                           <>
                             <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
-                            Generando...
+                            {t('admin.globalNews.generating')}
                           </>
                         ) : (
                           <>
                             <SparklesIcon className="h-4 w-4 mr-2" />
-                            Generar
+                            {t('admin.globalNews.generate')}
                           </>
                         )}
                       </Button>
@@ -721,13 +723,13 @@ export function GlobalNewsManager() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'published' | 'drafts')}>
         <TabsList className="bg-card border border-border">
           <TabsTrigger value="published" className="data-[state=active]:bg-secondary data-[state=active]:text-foreground text-muted-foreground">
-            Publicadas
+            {t('admin.globalNews.publishedTab')}
             <span className="ml-2 text-xs bg-secondary px-1.5 py-0.5 rounded">
               {publishedPagination.total}
             </span>
           </TabsTrigger>
           <TabsTrigger value="drafts" className="data-[state=active]:bg-secondary data-[state=active]:text-foreground text-muted-foreground">
-            Borradores
+            {t('admin.globalNews.draftsTab')}
             {draftsPagination.total > 0 && (
               <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">
                 {draftsPagination.total}
@@ -738,7 +740,7 @@ export function GlobalNewsManager() {
 
         <TabsContent value="published" className="mt-4 space-y-3">
           {published.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No hay noticias publicadas</p>
+            <p className="text-muted-foreground text-center py-8">{t('admin.globalNews.noPublished')}</p>
           ) : (
             published.map((item) => (
               <div key={item.id} className="flex gap-4 p-4 rounded-lg bg-card border border-border">
@@ -763,12 +765,12 @@ export function GlobalNewsManager() {
                         </Badge>
                         {item.source === 'ai' && (
                           <Badge className="bg-brand/20 text-brand border-brand/30 text-xs">
-                            IA
+                            {t('admin.globalNews.ai')}
                           </Badge>
                         )}
                         {item.imageSource && (
                           <Badge className="bg-secondary/50 text-muted-foreground border-border text-xs">
-                            Fuente: {item.imageSource}
+                            {t('admin.globalNews.source', { source: item.imageSource })}
                           </Badge>
                         )}
                         <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
@@ -779,14 +781,14 @@ export function GlobalNewsManager() {
                       <button
                         onClick={() => handleEdit(item)}
                         className="p-2 text-muted-foreground hover:text-brand transition-colors"
-                        title="Editar"
+                        title={t('admin.globalNews.editAction')}
                       >
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
                         className="p-2 text-muted-foreground hover:text-red-400 transition-colors"
-                        title="Eliminar"
+                        title={t('admin.globalNews.deleteAction')}
                       >
                         <TrashIcon className="h-4 w-4" />
                       </button>
@@ -802,9 +804,9 @@ export function GlobalNewsManager() {
           {drafts.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               <SparklesIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-              <p>No hay borradores pendientes.</p>
+              <p>{t('admin.globalNews.noDrafts')}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Usa &quot;Generar con IA&quot; para crear borradores con DeepSeek.
+                {t('admin.globalNews.noDraftsHint')}
               </p>
             </div>
           ) : (
@@ -825,8 +827,8 @@ export function GlobalNewsManager() {
                   />
                   <span className="text-sm text-muted-foreground">
                     {selectedDraftIds.length > 0
-                      ? `${selectedDraftIds.length} seleccionado(s)`
-                      : 'Seleccionar todos'}
+                      ? `t('admin.globalNews.selected', { count: selectedDraftIds.length })`
+                      : t('admin.globalNews.selectAll')}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -837,7 +839,7 @@ export function GlobalNewsManager() {
                     className="bg-green-600 hover:bg-green-700"
                   >
                     <CheckIcon className="h-4 w-4 mr-2" />
-                    Aprobar seleccionados
+                    {t('admin.globalNews.approveSelected')}
                   </Button>
                   <Button
                     type="button"
@@ -846,7 +848,7 @@ export function GlobalNewsManager() {
                     className="bg-emerald-600 hover:bg-emerald-700"
                   >
                     <CheckIcon className="h-4 w-4 mr-2" />
-                    Aprobar todos los borradores
+                    {t('admin.globalNews.approveAllDrafts')}
                   </Button>
                 </div>
               </div>
@@ -856,8 +858,8 @@ export function GlobalNewsManager() {
                   <div className="flex items-center justify-between px-2">
                     <h4 className="text-sm font-semibold text-muted-foreground">
                       {runId === '__manual__'
-                        ? 'Borradores manuales'
-                        : `Lote IA · ${items.length} borrador(es)`}
+                        ? t('admin.globalNews.manualDrafts')
+                        : t('admin.globalNews.aiBatch', { count: items.length })}
                     </h4>
                     {items.length > 0 && (
                       <div className="flex gap-2">
@@ -869,7 +871,7 @@ export function GlobalNewsManager() {
                           className="border-green-600 text-green-400 hover:bg-green-600/10 text-xs px-2 py-1"
                         >
                           <CheckIcon className="h-3 w-3 mr-1" />
-                          Aprobar todos los del lote
+                          {t('admin.globalNews.approveBatch')}
                         </Button>
                         <Button
                           type="button"
@@ -878,7 +880,7 @@ export function GlobalNewsManager() {
                           className="border-red-600 text-red-400 hover:bg-red-600/10 text-xs px-2 py-1"
                         >
                           <TrashIcon className="h-3 w-3 mr-1" />
-                          Descartar lote
+                          {t('admin.globalNews.discardBatch')}
                         </Button>
                       </div>
                     )}
@@ -909,7 +911,7 @@ export function GlobalNewsManager() {
                         </div>
                       ) : (
                         <div className="flex-shrink-0 w-24 h-16 rounded bg-secondary/50 border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground">
-                          sin imagen
+                          {t('admin.globalNews.noImage')}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
@@ -921,16 +923,16 @@ export function GlobalNewsManager() {
                                 {item.category.name}
                               </Badge>
                               <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                                borrador
+                                {t('admin.globalNews.draftBadge')}
                               </Badge>
                               {item.source === 'ai' && (
                                 <Badge className="bg-brand/20 text-brand border-brand/30 text-xs">
-                                  IA
+                                  {t('admin.globalNews.ai')}
                                 </Badge>
                               )}
                               {item.imageSource && (
                                 <Badge className="bg-secondary/50 text-muted-foreground border-border text-xs">
-                                  Fuente: {item.imageSource}
+                                  {t('admin.globalNews.source', { source: item.imageSource })}
                                 </Badge>
                               )}
                               <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
@@ -941,21 +943,21 @@ export function GlobalNewsManager() {
                             <button
                               onClick={() => handleApprove(item.id)}
                               className="p-2 text-muted-foreground hover:text-green-400 transition-colors"
-                              title="Aprobar y publicar"
+                              title={t('admin.globalNews.approvePublish')}
                             >
                               <CheckIcon className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleEdit(item)}
                               className="p-2 text-muted-foreground hover:text-brand transition-colors"
-                              title="Editar (puedes añadir imagen)"
+                              title={t('admin.globalNews.editAddImage')}
                             >
                               <PencilIcon className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDelete(item.id)}
                               className="p-2 text-muted-foreground hover:text-red-400 transition-colors"
-                              title="Eliminar borrador"
+                              title={t('admin.globalNews.deleteDraft')}
                             >
                               <TrashIcon className="h-4 w-4" />
                             </button>

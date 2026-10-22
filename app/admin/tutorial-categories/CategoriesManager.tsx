@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Plus, Edit, Trash2, Save, X, Tag } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface AdminTutorialCategory {
   id: string
@@ -18,6 +19,7 @@ interface CategoriesManagerProps {
 }
 
 export function CategoriesManager({ initialCategories }: CategoriesManagerProps) {
+  const { t } = useDashboardI18n()
   const [categories, setCategories] = useState(initialCategories)
   const [editing, setEditing] = useState<AdminTutorialCategory | null>(null)
   const [creating, setCreating] = useState(false)
@@ -68,7 +70,7 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al guardar')
+        throw new Error(data.error || t('admin.tutorialCategories.manager.saveError'))
       }
       const data = await res.json()
       if (editing) {
@@ -76,12 +78,12 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
       } else {
         setCategories((prev) => [...prev, data.category])
       }
-      setFeedback({ type: 'success', message: 'Categoría guardada' })
+      setFeedback({ type: 'success', message: t('admin.tutorialCategories.manager.saved') })
       cancel()
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Error al guardar',
+        message: err instanceof Error ? err.message : t('admin.tutorialCategories.manager.saveError'),
       })
     } finally {
       setSaving(false)
@@ -91,7 +93,7 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
   const handleDelete = async (c: AdminTutorialCategory) => {
     if (
       !confirm(
-        `¿Eliminar la categoría "${c.name}"? Los ${c._count?.tutorials ?? 0} tutorial(es) asociado(s) también se eliminarán.`
+        t('admin.tutorialCategories.manager.confirmDelete', { name: c.name, count: c._count?.tutorials ?? 0 })
       )
     )
       return
@@ -102,14 +104,14 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al eliminar')
+        throw new Error(data.error || t('admin.tutorialCategories.manager.deleteError'))
       }
       setCategories((prev) => prev.filter((x) => x.id !== c.id))
-      setFeedback({ type: 'success', message: 'Categoría eliminada' })
+      setFeedback({ type: 'success', message: t('admin.tutorialCategories.manager.deleted') })
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Error al eliminar',
+        message: err instanceof Error ? err.message : t('admin.tutorialCategories.manager.deleteError'),
       })
     }
   }
@@ -118,15 +120,15 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Categorías de tutoriales</h2>
+          <h2 className="text-xl font-bold text-foreground">{t('admin.tutorialCategories.manager.title')}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Organiza los tutoriales en categorías como &quot;Primeros pasos&quot;, &quot;Contenido&quot;, &quot;Pagos&quot;, etc.
+            {t('admin.tutorialCategories.manager.subtitle')}
           </p>
         </div>
         {!creating && !editing && (
           <Button onClick={startCreate} className="bg-brand hover:bg-brand">
             <Plus className="h-4 w-4 mr-2" />
-            Nueva categoría
+            {t('admin.tutorialCategories.manager.new')}
           </Button>
         )}
       </div>
@@ -147,32 +149,32 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
         <Card className="bg-card border-brand/50">
           <CardContent className="p-6 space-y-4">
             <h3 className="text-lg font-semibold text-foreground">
-              {editing ? 'Editar categoría' : 'Nueva categoría'}
+              {editing ? t('admin.tutorialCategories.manager.edit') : t('admin.tutorialCategories.manager.new')}
             </h3>
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Nombre *</label>
+              <label className="text-sm text-muted-foreground block mb-1">{t('admin.tutorialCategories.manager.name')}</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
-                placeholder="Ej: Primeros pasos"
+                placeholder={t('admin.tutorialCategories.manager.namePlaceholder')}
                 maxLength={100}
               />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Descripción</label>
+              <label className="text-sm text-muted-foreground block mb-1">{t('admin.tutorialCategories.manager.description')}</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
                 rows={3}
-                placeholder="Describe brevemente esta categoría"
+                placeholder={t('admin.tutorialCategories.manager.descriptionPlaceholder')}
                 maxLength={1000}
               />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Orden</label>
+              <label className="text-sm text-muted-foreground block mb-1">{t('admin.tutorialCategories.manager.order')}</label>
               <input
                 type="number"
                 min="0"
@@ -180,7 +182,7 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
                 onChange={(e) => setForm({ ...form, order: parseInt(e.target.value) || 0 })}
                 className="w-32 bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
               />
-              <p className="text-xs text-muted-foreground mt-1">Menor número aparece primero</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('admin.tutorialCategories.manager.orderHint')}</p>
             </div>
             <div className="flex gap-2 pt-2">
               <Button
@@ -189,11 +191,11 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
                 className="bg-brand hover:bg-brand"
               >
                 <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Guardando...' : 'Guardar'}
+                {saving ? t('common.saving') : t('common.save')}
               </Button>
               <Button onClick={cancel} variant="outline" className="border-border">
                 <X className="h-4 w-4 mr-2" />
-                Cancelar
+                {t('common.cancel')}
               </Button>
             </div>
           </CardContent>
@@ -204,7 +206,7 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
         <CardContent className="p-0">
           {categories.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">
-              No hay categorías creadas todavía.
+              {t('admin.tutorialCategories.manager.empty')}
             </p>
           ) : (
             <ul className="divide-y divide-border">
@@ -218,10 +220,11 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
                       <Tag className="h-4 w-4 text-brand flex-shrink-0" />
                       <h3 className="text-foreground font-semibold">{c.name}</h3>
                       <span className="text-xs px-2 py-0.5 rounded bg-secondary text-muted-foreground">
-                        {c._count?.tutorials ?? 0} tutorial
-                        {(c._count?.tutorials ?? 0) === 1 ? '' : 'es'}
+                        {(c._count?.tutorials ?? 0) === 1
+                          ? t('admin.tutorialCategories.manager.tutorial', { count: c._count?.tutorials ?? 0 })
+                          : t('admin.tutorialCategories.manager.tutorials', { count: c._count?.tutorials ?? 0 })}
                       </span>
-                      <span className="text-xs text-muted-foreground">orden: {c.order}</span>
+                      <span className="text-xs text-muted-foreground">{t('admin.tutorialCategories.manager.orderLabel', { order: c.order })}</span>
                     </div>
                     {c.description && (
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">

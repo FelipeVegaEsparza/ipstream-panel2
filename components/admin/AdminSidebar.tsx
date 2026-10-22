@@ -88,7 +88,7 @@ interface AdminSidebarProps {
 
 function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
-  const { locale } = useDashboardI18n()
+  const { locale, t } = useDashboardI18n()
   const label = (name: string) => adminMenuName(locale, name)
   const sectionLabel = (name: string) => adminSectionName(locale, name)
 
@@ -157,6 +157,7 @@ function AdminSidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
 }
 
 export function AdminSidebar({ sidebarOpen = false, setSidebarOpen }: AdminSidebarProps) {
+  const { t } = useDashboardI18n()
   return (
     <>
       {/* Mobile sidebar */}
@@ -200,7 +201,7 @@ export function AdminSidebar({ sidebarOpen = false, setSidebarOpen }: AdminSideb
                       className="-m-2.5 p-2.5"
                       onClick={() => setSidebarOpen?.(false)}
                     >
-                      <span className="sr-only">Cerrar sidebar</span>
+                      <span className="sr-only">{t('adminSidebar.close')}</span>
                       <XMarkIcon className="h-6 w-6 text-foreground" aria-hidden="true" />
                     </button>
                   </div>

@@ -4,12 +4,15 @@ import { prisma } from '@/lib/prisma'
 import { PlansManager } from '@/components/admin/PlansManager'
 import { ClientesTable, type ClientesTableProps } from '@/components/admin/ClientesTable'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function BillingPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
 
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div className="text-red-400 p-6">Acceso no autorizado</div>
+    return <div className="text-red-400 p-6">{t('admin.accessDeniedShort')}</div>
   }
 
   const [plans, clients] = await Promise.all([
@@ -95,19 +98,19 @@ export default async function BillingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Planes y Pagos</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('admin.billing.title')}</h1>
         <p className="text-muted-foreground mt-1">
-          Gestiona los planes que ofreces y los pagos de tus clientes.
+          {t('admin.billing.subtitle')}
         </p>
       </div>
 
       <Tabs defaultValue="clientes" className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-2 bg-card border border-border">
           <TabsTrigger value="clientes" className="data-[state=active]:bg-brand">
-            Clientes y pagos
+            {t('admin.billing.tabClients')}
           </TabsTrigger>
           <TabsTrigger value="planes" className="data-[state=active]:bg-brand">
-            Planes
+            {t('admin.billing.tabPlans')}
           </TabsTrigger>
         </TabsList>
 

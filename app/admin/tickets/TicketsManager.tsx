@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { LifeBuoy, Search, Filter, AlertTriangle } from 'lucide-react'
 import { TICKET_STATUS, TICKET_PRIORITY, type TicketStatus, type TicketPriority } from '@/lib/ticket-status'
 import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface AdminTicketListItem {
   id: string
@@ -26,6 +27,7 @@ interface TicketsManagerProps {
 }
 
 export function TicketsManager({ initialTickets, initialSummary }: TicketsManagerProps) {
+  const { t, locale } = useDashboardI18n()
   const router = useRouter()
   const [tickets] = useState(initialTickets)
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -50,11 +52,11 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Abiertos" value={initialSummary.open} color="green" />
-        <StatCard label="En progreso" value={initialSummary.in_progress} color="orange" />
-        <StatCard label="Cerrados" value={initialSummary.closed} color="gray" />
+        <StatCard label={t('admin.tickets.open')} value={initialSummary.open} color="green" />
+        <StatCard label={t('admin.tickets.inProgress')} value={initialSummary.in_progress} color="orange" />
+        <StatCard label={t('admin.tickets.closed')} value={initialSummary.closed} color="gray" />
         <StatCard
-          label="Urgentes (abiertos)"
+          label={t('admin.tickets.urgentOpen')}
           value={initialSummary.urgent}
           color="red"
           icon
@@ -68,7 +70,7 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por asunto, cliente o email..."
+            placeholder={t('admin.tickets.search')}
             className="bg-transparent text-foreground placeholder-gray-500 outline-none flex-1 text-sm"
           />
         </div>
@@ -79,21 +81,21 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
             onChange={(e) => setStatusFilter(e.target.value)}
             className="bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground"
           >
-            <option value="all">Todos los estados</option>
-            <option value="open">Abiertos</option>
-            <option value="in_progress">En progreso</option>
-            <option value="closed">Cerrados</option>
+            <option value="all">{t('admin.tickets.allStatuses')}</option>
+            <option value="open">{t('admin.tickets.open')}</option>
+            <option value="in_progress">{t('admin.tickets.inProgress')}</option>
+            <option value="closed">{t('admin.tickets.closed')}</option>
           </select>
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
             className="bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground"
           >
-            <option value="all">Todas las prioridades</option>
-            <option value="urgent">Urgente</option>
-            <option value="high">Alta</option>
-            <option value="normal">Normal</option>
-            <option value="low">Baja</option>
+            <option value="all">{t('admin.tickets.allPriorities')}</option>
+            <option value="urgent">{t('support.priority.urgent')}</option>
+            <option value="high">{t('support.priority.high')}</option>
+            <option value="normal">{t('support.priority.normal')}</option>
+            <option value="low">{t('support.priority.low')}</option>
           </select>
         </div>
       </div>
@@ -102,7 +104,7 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
         <div className="text-center py-12 bg-card/40 rounded-xl border border-dashed border-border">
           <LifeBuoy className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground">
-            {tickets.length === 0 ? 'No hay tickets aún.' : 'No hay tickets que coincidan con los filtros.'}
+            {tickets.length === 0 ? t('admin.tickets.empty') : t('admin.tickets.noMatch')}
           </p>
         </div>
       ) : (
@@ -110,36 +112,36 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
           <table className="w-full text-sm">
             <thead className="bg-background/40 text-left text-muted-foreground border-b border-border">
               <tr>
-                <th className="px-4 py-3 font-medium">Cliente</th>
-                <th className="px-4 py-3 font-medium">Asunto</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
-                <th className="px-4 py-3 font-medium">Prioridad</th>
-                <th className="px-4 py-3 font-medium">Último mensaje</th>
-                <th className="px-4 py-3 font-medium">Actualizado</th>
+                <th className="px-4 py-3 font-medium">{t('admin.tickets.client')}</th>
+                <th className="px-4 py-3 font-medium">{t('admin.tickets.subject')}</th>
+                <th className="px-4 py-3 font-medium">{t('admin.tickets.status')}</th>
+                <th className="px-4 py-3 font-medium">{t('admin.tickets.priority')}</th>
+                <th className="px-4 py-3 font-medium">{t('admin.tickets.lastMessage')}</th>
+                <th className="px-4 py-3 font-medium">{t('admin.tickets.updated')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map((t) => {
-                const statusConf = TICKET_STATUS[t.status as TicketStatus]
-                const priorityConf = TICKET_PRIORITY[t.priority as TicketPriority]
-                const lastMessage = t.messages[0]
+              {filtered.map((ticket) => {
+                const statusConf = TICKET_STATUS[ticket.status as TicketStatus]
+                const priorityConf = TICKET_PRIORITY[ticket.priority as TicketPriority]
+                const lastMessage = ticket.messages[0]
                 const updatedAt =
-                  typeof t.updatedAt === 'string' ? new Date(t.updatedAt) : t.updatedAt
+                  typeof ticket.updatedAt === 'string' ? new Date(ticket.updatedAt) : ticket.updatedAt
                 return (
                   <tr
-                    key={t.id}
-                    onClick={() => router.push(`/admin/tickets/${t.id}`)}
+                    key={ticket.id}
+                    onClick={() => router.push(`/admin/tickets/${ticket.id}`)}
                     className="hover:bg-secondary/30 cursor-pointer"
                   >
                     <td className="px-4 py-3">
-                      <p className="text-foreground font-medium">{t.client.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.client.user.email}</p>
+                      <p className="text-foreground font-medium">{ticket.client.name}</p>
+                      <p className="text-xs text-muted-foreground">{ticket.client.user.email}</p>
                     </td>
                     <td className="px-4 py-3 text-foreground max-w-md truncate">
-                      {t.subject}
-                      {t._count.messages > 1 && (
+                      {ticket.subject}
+                      {ticket._count.messages > 1 && (
                         <span className="text-xs text-muted-foreground ml-2">
-                          ({t._count.messages})
+                          ({ticket._count.messages})
                         </span>
                       )}
                     </td>
@@ -147,24 +149,24 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
                       <span
                         className={`text-xs px-2 py-0.5 rounded border ${statusConf.color}`}
                       >
-                        {statusConf.label}
+                        {t(`support.status.${ticket.status}` as 'support.status.open' | 'support.status.in_progress' | 'support.status.closed')}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={`text-xs px-2 py-0.5 rounded border inline-flex items-center gap-1 ${priorityConf.color}`}
                       >
-                        {t.priority === 'urgent' && (
+                        {ticket.priority === 'urgent' && (
                           <AlertTriangle className="h-3 w-3" />
                         )}
-                        {priorityConf.label}
+                        {t(`support.priority.${ticket.priority}` as 'support.priority.low' | 'support.priority.normal' | 'support.priority.high' | 'support.priority.urgent')}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
                       {lastMessage ? (
                         <span className="text-xs">
                           <span className="text-muted-foreground">
-                            {lastMessage.authorType === 'admin' ? 'Tú' : 'Cliente'}:
+                            {lastMessage.authorType === 'admin' ? t('admin.tickets.you') : t('admin.tickets.clientAuthor')}:
                           </span>{' '}
                           {lastMessage.body}
                         </span>
@@ -173,7 +175,7 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDistanceToNow(updatedAt, { addSuffix: true, locale: es })}
+                      {formatDistanceToNow(updatedAt, { addSuffix: true, locale: locale === 'en' ? enUS : es })}
                     </td>
                   </tr>
                 )

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Edit, Trash2, Users, DollarSign, CreditCard, Layout, Copy, Check } from 'lucide-react'
 import { PlanForm } from './PlanForm'
 import { planSlug } from '@/lib/plans'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Plan {
   id: string
@@ -43,6 +44,7 @@ interface PlansManagerProps {
 }
 
 export function PlansManager({ plans }: PlansManagerProps) {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
@@ -56,10 +58,10 @@ export function PlansManager({ plans }: PlansManagerProps) {
     try {
       await navigator.clipboard.writeText(url)
       setCopiedId(plan.id)
-      showToast({ type: 'success', title: 'URL copiada' })
+      showToast({ type: 'success', title: t('admin.plans.urlCopied') })
       setTimeout(() => setCopiedId((current) => (current === plan.id ? null : current)), 2000)
     } catch {
-      showToast({ type: 'error', title: 'No se pudo copiar la URL' })
+      showToast({ type: 'error', title: t('admin.plans.urlCopyError') })
     }
   }
 
@@ -69,7 +71,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
   }
 
   const handleDelete = async (planId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este plan?')) return
+    if (!confirm(t('admin.plans.deleteConfirm'))) return
     
     try {
       const response = await fetch(`/api/admin/plans/${planId}`, {
@@ -79,10 +81,10 @@ export function PlansManager({ plans }: PlansManagerProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar el plan' })
+        showToast({ type: 'error', title: t('admin.plans.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar el plan' })
+      showToast({ type: 'error', title: t('admin.plans.deleteError') })
     }
   }
 
@@ -91,7 +93,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
       ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(price)
       : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
     
-    return `${formattedAmount}/${interval === 'monthly' ? 'mes' : 'año'}`
+    return `${formattedAmount}/${interval === 'monthly' ? t('admin.plans.perMonth') : t('admin.plans.perYear')}`
   }
 
   const parseFeatures = (features: string) => {
@@ -105,7 +107,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-foreground">Gestión de Planes</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('admin.plans.title')}</h2>
         <Button 
           onClick={() => {
             setEditingPlan(null)
@@ -114,7 +116,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
           className="bg-brand hover:bg-brand"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo Plan
+          {t('admin.plans.new')}
         </Button>
       </div>
 
@@ -146,10 +148,10 @@ export function PlansManager({ plans }: PlansManagerProps) {
                       variant={plan.isActive ? "default" : "secondary"}
                       className={plan.isActive ? "bg-green-600" : "bg-secondary"}
                     >
-                      {plan.isActive ? 'Activo' : 'Inactivo'}
+                      {plan.isActive ? t('admin.plans.active') : t('admin.plans.inactive')}
                     </Badge>
                     <Badge variant="secondary" className="bg-brand">
-                      {plan.services === 'radio' ? 'Solo Radio' : plan.services === 'tv' ? 'Solo TV' : 'Radio + TV'}
+                      {plan.services === 'radio' ? t('admin.plans.radioOnly') : plan.services === 'tv' ? t('admin.plans.tvOnly') : t('admin.plans.both')}
                     </Badge>
                   </CardTitle>
                   <p className="text-muted-foreground text-sm mt-1">
@@ -183,12 +185,12 @@ export function PlansManager({ plans }: PlansManagerProps) {
                   {formatPrice(plan.price, plan.currency, plan.interval)}
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  Facturación {plan.interval === 'monthly' ? 'mensual' : 'anual'}
+                  {plan.interval === 'monthly' ? t('admin.plans.billingMonthly') : t('admin.plans.billingYearly')}
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <p className="text-sm font-medium text-muted-foreground">Página de contratación:</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('admin.plans.contractPage')}</p>
                 <div className="flex items-center gap-2">
                   <code
                     className="flex-1 min-w-0 truncate rounded-md bg-background border border-border px-2 py-1.5 text-xs text-muted-foreground"
@@ -201,7 +203,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
                     variant="outline"
                     onClick={() => copyPlanUrl(plan)}
                     className="border-border hover:bg-secondary shrink-0"
-                    title="Copiar URL"
+                    title={t('admin.plans.copyUrl')}
                   >
                     {copiedId === plan.id ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
                   </Button>
@@ -212,7 +214,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
                   rel="noreferrer"
                   className="text-xs text-brand hover:underline"
                 >
-                  Abrir página
+                  {t('admin.plans.openPage')}
                 </a>
               </div>
 
@@ -222,24 +224,24 @@ export function PlansManager({ plans }: PlansManagerProps) {
                   {(plan.menuHiddenKeys ? (() => {
                     try { const arr = JSON.parse(plan.menuHiddenKeys); return Array.isArray(arr) ? arr.length : 0 } catch { return 0 }
                   })() : 0) === 0
-                    ? 'Todas las secciones'
-                    : `${(() => { try { return JSON.parse(plan.menuHiddenKeys!).length } catch { return 0 } })()} secciones ocultas`}
+                    ? t('admin.plans.allSections')
+                    : t('admin.plans.hiddenSections', { count: (() => { try { return JSON.parse(plan.menuHiddenKeys!).length } catch { return 0 } })() })}
                 </div>
               </div>
 
               <div className="flex justify-between text-sm">
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Users className="h-4 w-4" />
-                  {plan._count.clients} clientes
+                  {t('admin.plans.clients', { count: plan._count.clients })}
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <DollarSign className="h-4 w-4" />
-                  {plan._count.subscriptions} suscripciones
+                  {t('admin.plans.subscriptions', { count: plan._count.subscriptions })}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Características:</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('admin.plans.features')}</p>
                 <ul className="space-y-1">
                   {parseFeatures(plan.features).slice(0, 3).map((feature: string, index: number) => (
                     <li key={index} className="text-sm text-muted-foreground flex items-center gap-2">
@@ -249,7 +251,7 @@ export function PlansManager({ plans }: PlansManagerProps) {
                   ))}
                   {parseFeatures(plan.features).length > 3 && (
                     <li className="text-sm text-muted-foreground">
-                      +{parseFeatures(plan.features).length - 3} más...
+                      {t('admin.plans.more', { count: parseFeatures(plan.features).length - 3 })}
                     </li>
                   )}
                 </ul>
@@ -263,17 +265,17 @@ export function PlansManager({ plans }: PlansManagerProps) {
         <div className="text-center py-12">
           <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            No hay planes creados
+            {t('admin.plans.emptyTitle')}
           </h3>
           <p className="text-muted-foreground mb-4">
-            Crea tu primer plan para empezar a gestionar suscripciones
+            {t('admin.plans.emptyHint')}
           </p>
           <Button 
             onClick={() => setShowForm(true)}
             className="bg-brand hover:bg-brand"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Crear Primer Plan
+            {t('admin.plans.createFirst')}
           </Button>
         </div>
       )}

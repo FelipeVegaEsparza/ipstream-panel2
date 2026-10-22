@@ -3,12 +3,15 @@ import { authOptions } from '@/lib/auth'
 import { LogsViewer } from '@/components/admin/LogsViewer'
 import { LogsFilters } from '@/components/admin/LogsFilters'
 import { LogsStats } from '@/components/admin/LogsStats'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function LogsPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div>Error: Acceso no autorizado</div>
+    return <div>{t('admin.accessDenied')}</div>
   }
 
   // Simular logs para demostración (en producción vendrían de una base de datos o archivos)
@@ -90,10 +93,10 @@ export default async function LogsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Logs de Actividad
+          {t('admin.logs.title')}
         </h1>
         <p className="text-muted-foreground">
-          Monitorea y analiza toda la actividad del sistema
+          {t('admin.logs.subtitle')}
         </p>
       </div>
 

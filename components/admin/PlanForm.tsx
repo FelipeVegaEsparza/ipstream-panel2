@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { X, Plus, Trash2 } from 'lucide-react'
 import { MENU_ITEMS, MENU_SECTIONS } from '@/lib/menu-items'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { adminMenuName, adminSectionName } from '@/lib/dashboard-i18n'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 
 interface Plan {
@@ -43,6 +45,7 @@ interface PlanFormProps {
 }
 
 export function PlanForm({ plan, onClose }: PlanFormProps) {
+  const { locale, t } = useDashboardI18n()
   const router = useRouter()
   const [formData, setFormData] = useState({
     name: plan?.name || '',
@@ -143,14 +146,29 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
       } else {
         const error = await response.json().catch(() => ({}))
         console.error('[PlanForm] save error', response.status, error)
-        showToast({ type: 'error', title: error.message || error.error || 'Error al guardar el plan' })
+        showToast({ type: 'error', title: error.message || error.error || t('admin.planForm.saveError') })
       }
     } catch (error) {
       console.error('[PlanForm] save exception', error)
-      showToast({ type: 'error', title: 'Error al guardar el plan' })
+      showToast({ type: 'error', title: t('admin.planForm.saveError') })
     } finally {
       setLoading(false)
     }
+  }
+
+  const stepTitle = (key: string, fallback: string) => {
+    const map: Record<string, string> = {
+      brand: t('admin.planForm.onboarding.brand'),
+      programs: t('admin.planForm.onboarding.programs'),
+      'radio-library': t('admin.planForm.onboarding.radio-library'),
+      'radio-autodj': t('admin.planForm.onboarding.radio-autodj'),
+      'tv-library': t('admin.planForm.onboarding.tv-library'),
+      'tv-autodj': t('admin.planForm.onboarding.tv-autodj'),
+      news: t('admin.planForm.onboarding.news'),
+      site: t('admin.planForm.onboarding.site'),
+      'gc-bar': t('admin.planForm.onboarding.gc-bar'),
+    }
+    return locale === 'en' ? map[key] ?? fallback : fallback
   }
 
   const addFeature = () => {
@@ -171,7 +189,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     <Card className="bg-card border-border">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-foreground">
-          {plan ? 'Editar Plan' : 'Nuevo Plan'}
+          {plan ? t('admin.planForm.edit') : t('admin.planForm.new')}
         </CardTitle>
         <Button
           variant="outline"
@@ -188,12 +206,12 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-2">
-                Nombre del Plan *
+                {t('admin.planForm.name')}
               </label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ej: Plan Básico"
+                placeholder={t('admin.planForm.namePlaceholder')}
                 required
                 className="bg-secondary border-border text-foreground"
               />
@@ -201,7 +219,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-2">
-                Precio *
+                {t('admin.planForm.price')}
               </label>
               <div className="flex gap-2">
                 <Input
@@ -228,10 +246,10 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Precios por moneda (opcional)
+              {t('admin.planForm.pricesByCurrency')}
             </label>
             <p className="text-xs text-muted-foreground mb-2">
-              El cliente podrá elegir entre las monedas que definas aquí. El precio de arriba es el base.
+              {t('admin.planForm.pricesByCurrencyHint')}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -263,12 +281,12 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Descripción *
+              {t('admin.planForm.description')}
             </label>
             <Textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Describe las características principales del plan"
+              placeholder={t('admin.planForm.descriptionPlaceholder')}
               required
               className="bg-secondary border-border text-foreground"
               rows={3}
@@ -277,20 +295,20 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Imagen del plan (para la página de registro)
+              {t('admin.planForm.image')}
             </label>
             <ImageUpload
               value={formData.imageUrl}
               onChange={(url) => setFormData({ ...formData, imageUrl: url })}
               onRemove={() => setFormData({ ...formData, imageUrl: '' })}
-              label="Imagen del plan"
-              description="Sube una imagen (JPG, PNG - Máx. 5MB)"
+              label={t('admin.planForm.imageLabel')}
+              description={t('admin.planForm.imageDescription')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Link de ejemplo del plan
+              {t('admin.planForm.demoUrl')}
             </label>
             <Input
               type="url"
@@ -300,27 +318,27 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               className="bg-secondary border-border text-foreground"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Se muestra como botón "Ver ejemplo" en la página pública del plan. Déjalo vacío si no aplica.
+              {t('admin.planForm.demoUrlHint')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Intervalo de Facturación *
+              {t('admin.planForm.interval')}
             </label>
             <select
               value={formData.interval}
               onChange={(e) => setFormData({ ...formData, interval: e.target.value })}
               className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
             >
-              <option value="monthly">Mensual</option>
-              <option value="yearly">Anual</option>
+              <option value="monthly">{t('admin.planForm.monthly')}</option>
+              <option value="yearly">{t('admin.planForm.yearly')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Servicios incluidos *
+              {t('admin.planForm.services')}
             </label>
             <select
               value={formData.services}
@@ -328,20 +346,20 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
             >
               <option value="both">Radio + TV</option>
-              <option value="radio">Solo Radio</option>
-              <option value="tv">Solo TV</option>
+              <option value="radio">{t('admin.plans.radioOnly')}</option>
+              <option value="tv">{t('admin.plans.tvOnly')}</option>
             </select>
             <p className="text-xs text-muted-foreground mt-1">
-              Determina qué servicios se crean al contratar este plan.
+              {t('admin.planForm.servicesHint')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Tareas de &quot;Primeros pasos&quot;
+              {t('admin.planForm.onboarding')}
             </label>
             <p className="text-xs text-muted-foreground mb-2">
-              Elige qué tareas ve el cliente en su onboarding. Las de Radio/TV solo se muestran si el plan incluye ese servicio.
+              {t('admin.planForm.onboardingHint')}
             </p>
             <div className="space-y-2 rounded-md border border-border bg-card/40 p-3">
               {ONBOARDING_STEP_DEFS.map((s) => (
@@ -353,7 +371,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                     className="mt-0.5 h-4 w-4 rounded border-border bg-secondary text-brand"
                   />
                   <span className="text-sm text-muted-foreground">
-                    {s.title}
+                    {stepTitle(s.key, s.title)}
                     {s.service !== 'common' && (
                       <span className="ml-2 text-[10px] uppercase tracking-wide rounded bg-secondary px-1.5 py-0.5 text-muted-foreground">
                         {s.service === 'radio' ? 'Radio' : 'TV'}
@@ -367,9 +385,9 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
 
           <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-3">
             <div>
-              <p className="text-sm font-medium text-foreground">IA en vivo</p>
+              <p className="text-sm font-medium text-foreground">{t('admin.planForm.aiLive')}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Presentador automático cada N temas, locuciones libres y voz premium para clima/hora.
+                {t('admin.planForm.aiLiveHint')}
               </p>
             </div>
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -387,12 +405,12 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 }
                 className="rounded border-border bg-secondary"
               />
-              Incluir IA en este plan
+              {t('admin.planForm.aiInclude')}
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-xs text-muted-foreground mb-1">
-                  Cuota mensual de caracteres IA (0 = sin acceso)
+                  {t('admin.planForm.aiCharacters')}
                 </label>
               <Input
                 type="number"
@@ -400,17 +418,16 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 step="1000"
                 value={formData.aiMonthlyCharacters}
                 onChange={(e) => setFormData({ ...formData, aiMonthlyCharacters: e.target.value })}
-                placeholder="ej: 100000"
+                placeholder={t('admin.planForm.aiCharactersPlaceholder')}
                 className="bg-secondary border-border text-foreground"
               />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Incluye presentador, locuciones libres y clima/hora con voz premium. Los audios
-                  cacheados no consumen cuota.
+                  {t('admin.planForm.aiCharactersHint')}
                 </p>
               </div>
               <div>
                 <label className="block text-xs text-muted-foreground mb-1">
-                  Música IA (minutos/mes)
+                  {t('admin.planForm.aiMusic')}
                 </label>
                 <Input
                   type="number"
@@ -418,11 +435,11 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                   step="1"
                   value={formData.aiMusicMinutes}
                   onChange={(e) => setFormData({ ...formData, aiMusicMinutes: e.target.value })}
-                  placeholder="ej: 10"
+                  placeholder={t('admin.planForm.aiCharactersPlaceholder')}
                   className="bg-secondary border-border text-foreground"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Para crear jingles con Eleven Music. 0 = sin acceso.
+                  {t('admin.planForm.aiMusicHint')}
                 </p>
               </div>
             </div>
@@ -430,14 +447,14 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Servidor de streaming por defecto
+              {t('admin.planForm.defaultServer')}
             </label>
             <select
               value={formData.defaultServerId}
               onChange={(e) => setFormData({ ...formData, defaultServerId: e.target.value })}
               className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
             >
-              <option value="">Servidor principal (global)</option>
+              <option value="">{t('admin.planForm.defaultServerOption')}</option>
               {servers.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} ({s.type === 'radio' ? 'Radio' : s.type === 'tv' ? 'TV' : 'Radio+TV'})
@@ -445,17 +462,17 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               ))}
             </select>
             <p className="text-xs text-muted-foreground mt-1">
-              Los streams de los clientes que contraten este plan se crean en este servidor (ej. gratis → servidor A).
+              {t('admin.planForm.defaultServerHint')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Cuota de almacenamiento (vacío = ilimitado)
+              {t('admin.planForm.storageQuota')}
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Radio (MB)</label>
+                <label className="block text-xs text-muted-foreground mb-1">{t('admin.planForm.radioMB')}</label>
                 <Input
                   type="number"
                   min="0"
@@ -466,7 +483,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">TV / Video (MB)</label>
+                <label className="block text-xs text-muted-foreground mb-1">{t('admin.planForm.videoMB')}</label>
                 <Input
                   type="number"
                   min="0"
@@ -478,14 +495,14 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Se aplica automáticamente a la biblioteca del cliente al contratar este plan (o al asignarlo).
+              {t('admin.planForm.storageHint')}
             </p>
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-3">
               <label className="block text-sm font-medium text-muted-foreground">
-                Características del Plan
+                {t('admin.planForm.features')}
               </label>              <Button
                 type="button"
                 onClick={addFeature}
@@ -493,7 +510,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 className="bg-brand hover:bg-brand"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Agregar
+                {t('admin.planForm.addFeature')}
               </Button>
             </div>
             
@@ -503,7 +520,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                   <Input
                     value={feature}
                     onChange={(e) => updateFeature(index, e.target.value)}
-                    placeholder="Ej: Hasta 10 programas"
+                    placeholder={t('admin.planForm.featurePlaceholder')}
                     className="bg-secondary border-border text-foreground"
                   />
                   {features.length > 1 && (
@@ -524,11 +541,10 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Secciones del dashboard incluidas en el plan
+              {t('admin.planForm.sections')}
             </label>
             <p className="text-xs text-muted-foreground mb-3">
-              Desmarcá las secciones que este plan NO incluye (para diferenciar precios). El resto se oculta
-              automáticamente para los clientes de este plan.
+              {t('admin.planForm.sectionsHint')}
             </p>
             <div className="space-y-4">
               {MENU_SECTIONS.map((section) => {
@@ -536,7 +552,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 if (items.length === 0) return null
                 return (
                   <div key={section} className="rounded-lg bg-secondary/40 border border-border p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{section}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{adminSectionName(locale, section)}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {items.map((item) => {
                         const checked = !hiddenKeys.has(item.key)
@@ -557,7 +573,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                               }}
                               className="rounded border-border bg-card"
                             />
-                            <span className={checked ? 'text-foreground' : 'text-muted-foreground line-through'}>{item.name}</span>
+                            <span className={checked ? 'text-foreground' : 'text-muted-foreground line-through'}>{adminMenuName(locale, item.name)}</span>
                           </label>
                         )
                       })}
@@ -577,7 +593,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               className="rounded border-border bg-secondary"
             />
             <label htmlFor="isActive" className="text-sm text-muted-foreground">
-              Plan activo (disponible para nuevas suscripciones)
+              {t('admin.planForm.active')}
             </label>
           </div>
 
@@ -587,7 +603,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               disabled={loading}
               className="bg-brand hover:bg-brand flex-1"
             >
-              {loading ? 'Guardando...' : (plan ? 'Actualizar Plan' : 'Crear Plan')}
+              {loading ? t('common.saving') : (plan ? t('admin.planForm.update') : t('admin.planForm.create'))}
             </Button>
             <Button
               type="button"
@@ -595,7 +611,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               variant="outline"
               className="border-border hover:bg-secondary"
             >
-              Cancelar
+              {t('common.cancel')}
             </Button>
           </div>
         </form>

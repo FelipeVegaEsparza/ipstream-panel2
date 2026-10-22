@@ -3,13 +3,16 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { LifeBuoy } from 'lucide-react'
 import { TicketsManager } from './TicketsManager'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminTicketsPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div className="text-red-400 p-6">Acceso no autorizado</div>
+    return <div className="text-red-400 p-6">{t('admin.accessDeniedShort')}</div>
   }
 
   const [tickets, grouped] = await Promise.all([
@@ -44,10 +47,10 @@ export default async function AdminTicketsPage() {
       <div>
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
           <LifeBuoy className="h-7 w-7 text-brand" />
-          Tickets de soporte
+          {t('admin.tickets.title')}
         </h1>
         <p className="text-muted-foreground mt-1">
-          Gestiona los tickets de soporte de todos tus clientes
+          {t('admin.tickets.subtitle')}
         </p>
       </div>
       <TicketsManager

@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { UserForm } from '@/components/admin/UserForm'
 import { DomainManager } from '@/components/admin/DomainManager'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface EditUserPageProps {
   params: {
@@ -12,10 +14,11 @@ interface EditUserPageProps {
 }
 
 export default async function EditUserPage({ params }: EditUserPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div>Error: Acceso no autorizado</div>
+    return <div>{t('admin.accessDenied')}</div>
   }
 
   const user = await prisma.user.findUnique({
@@ -42,7 +45,7 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
     client: user.client ? {
       id: user.client.id,
       name: user.client.name,
-      plan: user.client.plan?.name || 'Sin plan',
+      plan: user.client.plan?.name || t('admin.users.noPlan'),
       phone: user.client.phone,
       websiteUrl: user.client.basicData?.websiteUrl,
       oneSignalAppId: user.client.oneSignalAppId,
@@ -55,10 +58,10 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Editar Usuario
+          {t('admin.users.editTitle')}
         </h1>
         <p className="text-muted-foreground">
-          Modifica la información del usuario y su proyecto
+          {t('admin.users.editSubtitle')}
         </p>
       </div>
 

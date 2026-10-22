@@ -3,6 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { AdminTicketDetail } from './AdminTicketDetail'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,9 +13,10 @@ export default async function AdminTicketDetailPage({
 }: {
   params: { id: string }
 }) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div className="text-red-400 p-6">Acceso no autorizado</div>
+    return <div className="text-red-400 p-6">{t('admin.accessDeniedShort')}</div>
   }
 
   const ticket = await prisma.supportTicket.findUnique({

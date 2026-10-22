@@ -4,12 +4,15 @@ import { SystemInfo } from '@/components/admin/SystemInfo'
 import { LicenseInfo } from '@/components/admin/LicenseInfo'
 import { SupportInfo } from '@/components/admin/SupportInfo'
 import { ChangelogInfo } from '@/components/admin/ChangelogInfo'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function AboutPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div>Error: Acceso no autorizado</div>
+    return <div>{t('admin.accessDenied')}</div>
   }
 
   // Información del sistema
@@ -29,10 +32,10 @@ export default async function AboutPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Acerca del Sistema
+          {t('admin.about.title')}
         </h1>
         <p className="text-muted-foreground">
-          Información técnica, licencias y soporte de CasterFly
+          {t('admin.about.subtitle')}
         </p>
       </div>
 

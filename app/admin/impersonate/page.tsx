@@ -2,12 +2,15 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ImpersonateList } from '@/components/admin/ImpersonateList'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function ImpersonatePage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user || session.user.role !== 'ADMIN') {
-    return <div>Error: Acceso no autorizado</div>
+    return <div>{t('admin.accessDenied')}</div>
   }
 
   const clients = await prisma.client.findMany({
@@ -52,10 +55,10 @@ export default async function ImpersonatePage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Impersonar Cliente
+          {t('admin.impersonate.title')}
         </h1>
         <p className="text-muted-foreground">
-          Entra como cualquier cliente para brindar soporte técnico
+          {t('admin.impersonate.subtitle')}
         </p>
       </div>
 
@@ -65,7 +68,7 @@ export default async function ImpersonatePage() {
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-brand mb-2">
-                Total Clientes
+                {t('admin.dashboard.totalClients')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
                 {clients.length}
@@ -81,7 +84,7 @@ export default async function ImpersonatePage() {
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-green-400 mb-2">
-                Con Contenido
+                {t('admin.impersonate.withContent')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
                 {clients.filter(c => {
@@ -100,7 +103,7 @@ export default async function ImpersonatePage() {
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-purple-400 mb-2">
-                Activos Hoy
+                {t('admin.users.activeToday')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
                 {clients.filter(c => {
@@ -120,7 +123,7 @@ export default async function ImpersonatePage() {
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-brand mb-2">
-                Con Logo
+                {t('admin.impersonate.withLogo')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
                 {clients.filter(c => c.basicData?.logoUrl).length}

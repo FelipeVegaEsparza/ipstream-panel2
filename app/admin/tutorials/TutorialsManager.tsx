@@ -10,6 +10,7 @@ import {
   getYouTubeThumbnailUrl,
   getYouTubeThumbnailFallbackUrl,
 } from '@/lib/youtube'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface AdminTutorial {
   id: string
@@ -36,6 +37,7 @@ export function TutorialsManager({
   initialTutorials,
   initialCategories,
 }: TutorialsManagerProps) {
+  const { t } = useDashboardI18n()
   const [tutorials, setTutorials] = useState(initialTutorials)
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [editing, setEditing] = useState<AdminTutorial | null>(null)
@@ -60,7 +62,7 @@ export function TutorialsManager({
 
   const filtered = useMemo(() => {
     if (filterCategory === 'all') return tutorials
-    return tutorials.filter((t) => t.categoryId === filterCategory)
+    return tutorials.filter((tutorial) => tutorial.categoryId === filterCategory)
   }, [filterCategory, tutorials])
 
   const startCreate = () => {
@@ -76,16 +78,16 @@ export function TutorialsManager({
     })
   }
 
-  const startEdit = (t: AdminTutorial) => {
+  const startEdit = (tutorial: AdminTutorial) => {
     setCreating(false)
-    setEditing(t)
+    setEditing(tutorial)
     setForm({
-      title: t.title,
-      description: t.description ?? '',
-      youtubeUrl: t.youtubeUrl,
-      categoryId: t.categoryId,
-      order: t.order,
-      isPublished: t.isPublished,
+      title: tutorial.title,
+      description: tutorial.description ?? '',
+      youtubeUrl: tutorial.youtubeUrl,
+      categoryId: tutorial.categoryId,
+      order: tutorial.order,
+      isPublished: tutorial.isPublished,
     })
   }
 
@@ -105,7 +107,7 @@ export function TutorialsManager({
 
   const handleSave = async () => {
     if (!isValidUrl) {
-      setFeedback({ type: 'error', message: 'URL de YouTube inválida' })
+      setFeedback({ type: 'error', message: t('admin.tutorials.manager.invalidUrl') })
       return
     }
     setSaving(true)
@@ -127,41 +129,41 @@ export function TutorialsManager({
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al guardar')
+        throw new Error(data.error || t('admin.tutorials.manager.saveError'))
       }
       const data = await res.json()
       if (editing) {
-        setTutorials((prev) => prev.map((t) => (t.id === editing.id ? data.tutorial : t)))
+        setTutorials((prev) => prev.map((tutorial) => (tutorial.id === editing.id ? data.tutorial : tutorial)))
       } else {
         setTutorials((prev) => [data.tutorial, ...prev])
       }
-      setFeedback({ type: 'success', message: 'Tutorial guardado' })
+      setFeedback({ type: 'success', message: t('admin.tutorials.manager.saved') })
       cancel()
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Error al guardar',
+        message: err instanceof Error ? err.message : t('admin.tutorials.manager.saveError'),
       })
     } finally {
       setSaving(false)
     }
   }
 
-  const handleDelete = async (t: AdminTutorial) => {
-    if (!confirm(`¿Eliminar el tutorial "${t.title}"?`)) return
+  const handleDelete = async (tutorial: AdminTutorial) => {
+    if (!confirm(t('admin.tutorials.manager.confirmDelete', { title: tutorial.title }))) return
     setFeedback(null)
     try {
-      const res = await fetch(`/api/admin/tutorials/${t.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/tutorials/${tutorial.id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al eliminar')
+        throw new Error(data.error || t('admin.tutorials.manager.deleteError'))
       }
-      setTutorials((prev) => prev.filter((x) => x.id !== t.id))
-      setFeedback({ type: 'success', message: 'Tutorial eliminado' })
+      setTutorials((prev) => prev.filter((x) => x.id !== tutorial.id))
+      setFeedback({ type: 'success', message: t('admin.tutorials.manager.deleted') })
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Error al eliminar',
+        message: err instanceof Error ? err.message : t('admin.tutorials.manager.deleteError'),
       })
     }
   }
@@ -169,15 +171,15 @@ export function TutorialsManager({
   if (initialCategories.length === 0) {
     return (
       <div className="text-center py-12 bg-card/40 rounded-xl border border-dashed border-border">
-        <p className="text-foreground font-medium mb-2">No hay categorías creadas</p>
+        <p className="text-foreground font-medium mb-2">{t('admin.tutorials.manager.noCategories')}</p>
         <p className="text-sm text-muted-foreground mb-4">
-          Crea al menos una categoría antes de agregar tutoriales.
+          {t('admin.tutorials.manager.noCategoriesHint')}
         </p>
         <a
           href="/admin/tutorial-categories"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand"
         >
-          Ir a Categorías
+          {t('admin.tutorials.manager.goCategories')}
         </a>
       </div>
     )
@@ -187,15 +189,15 @@ export function TutorialsManager({
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Tutoriales</h2>
+          <h2 className="text-xl font-bold text-foreground">{t('admin.tutorials.manager.title')}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Crea tutoriales con videos de YouTube para tus clientes
+            {t('admin.tutorials.manager.subtitle')}
           </p>
         </div>
         {!creating && !editing && (
           <Button onClick={startCreate} className="bg-brand hover:bg-brand">
             <Plus className="h-4 w-4 mr-2" />
-            Nuevo tutorial
+            {t('admin.tutorials.manager.new')}
           </Button>
         )}
       </div>
@@ -216,23 +218,23 @@ export function TutorialsManager({
         <Card className="bg-card border-brand/50">
           <CardContent className="p-6 space-y-4">
             <h3 className="text-lg font-semibold text-foreground">
-              {editing ? 'Editar tutorial' : 'Nuevo tutorial'}
+              {editing ? t('admin.tutorials.manager.edit') : t('admin.tutorials.manager.new')}
             </h3>
 
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Título *</label>
+              <label className="text-sm text-muted-foreground block mb-1">{t('admin.tutorials.manager.titleLabel')}</label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
-                placeholder="Ej: Cómo crear tu primera noticia"
+                placeholder={t('admin.tutorials.manager.titlePlaceholder')}
                 maxLength={200}
               />
             </div>
 
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">URL de YouTube *</label>
+              <label className="text-sm text-muted-foreground block mb-1">{t('admin.tutorials.manager.youtubeUrl')}</label>
               <input
                 type="url"
                 value={form.youtubeUrl}
@@ -248,19 +250,19 @@ export function TutorialsManager({
               />
               {form.youtubeUrl && !isValidUrl && (
                 <p className="text-red-400 text-xs mt-1">
-                  URL de YouTube inválida. Usa un enlace válido de youtube.com o youtu.be
+                  {t('admin.tutorials.manager.invalidUrlHint')}
                 </p>
               )}
               {isValidUrl && (
                 <p className="text-green-400 text-xs mt-1">
-                  ✓ Video detectado (ID: {videoId})
+                  {t('admin.tutorials.manager.detected', { id: videoId ?? '' })}
                 </p>
               )}
             </div>
 
             {isValidUrl && (
               <div>
-                <label className="text-sm text-muted-foreground block mb-2">Vista previa</label>
+                <label className="text-sm text-muted-foreground block mb-2">{t('admin.tutorials.manager.preview')}</label>
                 {previewOpen && (
                   <div className="aspect-video bg-black rounded-lg overflow-hidden mb-2">
                     <iframe
@@ -295,20 +297,20 @@ export function TutorialsManager({
             )}
 
             <div>
-              <label className="text-sm text-muted-foreground block mb-1">Descripción</label>
+              <label className="text-sm text-muted-foreground block mb-1">{t('admin.tutorials.manager.description')}</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground"
                 rows={3}
-                placeholder="Describe brevemente el contenido del tutorial"
+                placeholder={t('admin.tutorials.manager.descriptionPlaceholder')}
                 maxLength={2000}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-muted-foreground block mb-1">Categoría *</label>
+                <label className="text-sm text-muted-foreground block mb-1">{t('admin.tutorials.manager.category')}</label>
                 <select
                   value={form.categoryId}
                   onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
@@ -322,7 +324,7 @@ export function TutorialsManager({
                 </select>
               </div>
               <div>
-                <label className="text-sm text-muted-foreground block mb-1">Orden</label>
+                <label className="text-sm text-muted-foreground block mb-1">{t('admin.tutorials.manager.order')}</label>
                 <input
                   type="number"
                   min="0"
@@ -340,7 +342,7 @@ export function TutorialsManager({
                 onChange={(e) => setForm({ ...form, isPublished: e.target.checked })}
                 className="rounded border-border bg-secondary"
               />
-              Publicado (visible para los clientes)
+              {t('admin.tutorials.manager.publishedHint')}
             </label>
 
             <div className="flex gap-2 pt-2">
@@ -350,11 +352,11 @@ export function TutorialsManager({
                 className="bg-brand hover:bg-brand"
               >
                 <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Guardando...' : 'Guardar'}
+                {saving ? t('common.saving') : t('common.save')}
               </Button>
               <Button onClick={cancel} variant="outline" className="border-border">
                 <X className="h-4 w-4 mr-2" />
-                Cancelar
+                {t('common.cancel')}
               </Button>
             </div>
           </CardContent>
@@ -365,16 +367,16 @@ export function TutorialsManager({
         <CardContent className="p-0">
           <div className="p-4 border-b border-border flex items-center gap-2 flex-wrap">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Filtrar:</span>
+            <span className="text-sm text-muted-foreground">{t('admin.tutorials.manager.filter')}</span>
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className="bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground"
             >
-              <option value="all">Todas las categorías ({tutorials.length})</option>
+              <option value="all">{t('admin.tutorials.manager.allCategories', { count: tutorials.length })}</option>
               {initialCategories.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} ({tutorials.filter((t) => t.categoryId === c.id).length})
+                  {c.name} ({tutorials.filter((tutorial) => tutorial.categoryId === c.id).length})
                 </option>
               ))}
             </select>
@@ -383,30 +385,30 @@ export function TutorialsManager({
           {filtered.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">
               {tutorials.length === 0
-                ? 'No hay tutoriales creados.'
-                : 'No hay tutoriales en esta categoría.'}
+                ? t('admin.tutorials.manager.noTutorials')
+                : t('admin.tutorials.manager.noInCategory')}
             </p>
           ) : (
             <ul className="divide-y divide-border">
-              {filtered.map((t) => {
-                const tVideoId = extractYouTubeId(t.youtubeUrl)
+              {filtered.map((tutorial) => {
+                const tVideoId = extractYouTubeId(tutorial.youtubeUrl)
                 const thumb = tVideoId
-                  ? thumbErrors[t.id]
+                  ? thumbErrors[tutorial.id]
                     ? getYouTubeThumbnailFallbackUrl(tVideoId)
                     : getYouTubeThumbnailUrl(tVideoId)
                   : null
                 return (
                   <li
-                    key={t.id}
+                    key={tutorial.id}
                     className="flex items-start gap-3 p-4 hover:bg-secondary/30"
                   >
                     {thumb ? (
                       <img
                         src={thumb}
-                        alt={t.title}
+                        alt={tutorial.title}
                         className="w-32 h-20 object-cover rounded flex-shrink-0"
                         onError={() =>
-                          setThumbErrors((prev) => ({ ...prev, [t.id]: true }))
+                          setThumbErrors((prev) => ({ ...prev, [tutorial.id]: true }))
                         }
                       />
                     ) : (
@@ -416,8 +418,8 @@ export function TutorialsManager({
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-foreground font-semibold">{t.title}</h3>
-                        {t.isPublished ? (
+                        <h3 className="text-foreground font-semibold">{tutorial.title}</h3>
+                        {tutorial.isPublished ? (
                           <span className="text-xs px-2 py-0.5 rounded bg-green-600/20 text-green-300 border border-green-600/30 inline-flex items-center gap-1">
                             <Eye className="h-3 w-3" />
                             Publicado
@@ -429,10 +431,10 @@ export function TutorialsManager({
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-brand mt-0.5">{t.category.name}</p>
-                      {t.description && (
+                      <p className="text-xs text-brand mt-0.5">{tutorial.category.name}</p>
+                      {tutorial.description && (
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {t.description}
+                          {tutorial.description}
                         </p>
                       )}
                     </div>
@@ -440,7 +442,7 @@ export function TutorialsManager({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => startEdit(t)}
+                        onClick={() => startEdit(tutorial)}
                         className="border-border"
                       >
                         <Edit className="h-3 w-3" />
@@ -448,7 +450,7 @@ export function TutorialsManager({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDelete(t)}
+                        onClick={() => handleDelete(tutorial)}
                         className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
                       >
                         <Trash2 className="h-3 w-3" />
