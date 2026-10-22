@@ -3,8 +3,9 @@
 import { useState, useMemo } from 'react'
 import { Trash2, Search, ShieldCheck, User as UserIcon } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
 import type { ChatMessage } from './ChatView'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface MessagesTableProps {
   messages: ChatMessage[]
@@ -12,6 +13,7 @@ interface MessagesTableProps {
 }
 
 export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
+  const { t, locale } = useDashboardI18n()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'listener' | 'staff'>('all')
   const [confirmId, setConfirmId] = useState<string | null>(null)
@@ -48,15 +50,15 @@ export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nombre, email o mensaje…"
+            placeholder={t('chat.searchPlaceholder')}
             className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground focus:border-brand focus:outline-none"
           />
         </div>
         <div className="flex items-center gap-1 bg-background border border-border rounded-lg p-1">
           {[
-            { key: 'all', label: 'Todos' },
-            { key: 'listener', label: 'Oyentes' },
-            { key: 'staff', label: 'Staff' },
+            { key: 'all', label: t('chat.filter.all') },
+            { key: 'listener', label: t('chat.filter.listener') },
+            { key: 'staff', label: t('chat.filter.staff') },
           ].map((opt) => (
             <button
               key={opt.key}
@@ -72,14 +74,14 @@ export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
           ))}
         </div>
         <span className="text-xs text-muted-foreground">
-          {filtered.length} mensaje{filtered.length === 1 ? '' : 's'}
+          {t('chat.count', { count: filtered.length })}
         </span>
       </div>
 
       <div className="max-h-[600px] overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground text-sm">
-            No hay mensajes para mostrar.
+            {t('chat.empty')}
           </div>
         ) : (
           <ul className="divide-y divide-border/50">
@@ -103,11 +105,11 @@ export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
                         </span>
                         {isStaff && (
                           <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-brand/20 text-brand border border-brand/30">
-                            Staff
+                            {t('chat.staffBadge')}
                           </span>
                         )}
                         <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(created, { addSuffix: true, locale: es })}
+                          {formatDistanceToNow(created, { addSuffix: true, locale: locale === 'en' ? enUS : es })}
                         </span>
                         {m.email && !isStaff && (
                           <span className="text-xs text-muted-foreground truncate" title={m.email}>
@@ -132,21 +134,21 @@ export function MessagesTable({ messages, onDelete }: MessagesTableProps) {
                             disabled={deleting}
                             className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
                           >
-                            {deleting ? 'Borrando…' : 'Confirmar'}
+                            {deleting ? t('chat.deleting') : t('chat.confirm')}
                           </button>
                           <button
                             onClick={() => setConfirmId(null)}
                             disabled={deleting}
                             className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-secondary"
                           >
-                            Cancelar
+                            {t('common.cancel')}
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => setConfirmId(m.id)}
                           className="p-1.5 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
-                          title="Borrar mensaje"
+                          title={t('chat.deleteMessage')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

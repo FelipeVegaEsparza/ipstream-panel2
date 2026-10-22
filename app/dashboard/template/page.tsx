@@ -4,8 +4,11 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { TemplateSelector } from '@/components/dashboard/TemplateSelector'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function TemplatePage() {
+  const t = dashboardT(getDashboardLocale())
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
@@ -29,10 +32,10 @@ export default async function TemplatePage() {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-foreground mb-4">
-          No tienes un cliente asignado
+          {t('template.noClient')}
         </h2>
         <p className="text-muted-foreground">
-          Contacta al administrador
+          {t('template.contactAdmin')}
         </p>
       </div>
     )

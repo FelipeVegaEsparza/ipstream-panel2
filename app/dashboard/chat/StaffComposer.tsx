@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Send, Megaphone } from 'lucide-react'
 import type { ChatMessage } from './ChatView'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface StaffComposerProps {
   staffName: string
@@ -11,6 +12,7 @@ interface StaffComposerProps {
 }
 
 export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps) {
+  const { t } = useDashboardI18n()
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
 
@@ -28,7 +30,7 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
       })
       if (!res.ok) {
         const d = await res.json().catch(() => ({}))
-        onError(d.error || 'No se pudo enviar')
+        onError(d.error || t('chat.composer.couldNotSend'))
         return
       }
       const data = await res.json()
@@ -40,7 +42,7 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
       })
       setBody('')
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Error al enviar')
+      onError(err instanceof Error ? err.message : t('chat.composer.sendError'))
     } finally {
       setSending(false)
     }
@@ -61,16 +63,16 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
       <div className="flex items-center gap-2 mb-2">
         <Megaphone className="h-4 w-4 text-brand" />
         <span className="text-xs uppercase tracking-wide text-brand font-semibold">
-          Mensaje de Staff
+          {t('chat.composer.label')}
         </span>
-        <span className="text-xs text-muted-foreground">se mostrará como: {staffName}</span>
+        <span className="text-xs text-muted-foreground">{t('chat.composer.showingAs', { name: staffName })}</span>
       </div>
       <div className="flex items-end gap-2">
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Escribe un mensaje para los oyentes…"
+          placeholder={t('chat.composer.placeholder')}
           rows={2}
           maxLength={500}
           className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-foreground text-sm resize-none focus:border-brand focus:outline-none"
@@ -82,11 +84,11 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
           className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send className="h-4 w-4" />
-          {sending ? 'Enviando…' : 'Enviar'}
+          {sending ? t('chat.composer.sending') : t('chat.composer.send')}
         </button>
       </div>
       <div className="flex items-center justify-between mt-1">
-        <p className="text-xs text-muted-foreground">Enter para enviar · Shift+Enter para nueva línea</p>
+        <p className="text-xs text-muted-foreground">{t('chat.composer.hint')}</p>
         <p className="text-xs text-muted-foreground">{body.length}/500</p>
       </div>
     </form>

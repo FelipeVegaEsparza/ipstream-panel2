@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { X, PlayCircle, Play } from 'lucide-react'
 import { extractYouTubeId, getYouTubeEmbedUrl, getYouTubeThumbnailUrl, getYouTubeThumbnailFallbackUrl } from '@/lib/youtube'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface TutorialCategory {
   id: string
@@ -26,6 +27,7 @@ interface TutorialsViewProps {
 }
 
 export function TutorialsView({ initialCategories, initialTutorials }: TutorialsViewProps) {
+  const { t } = useDashboardI18n()
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [openTutorial, setOpenTutorial] = useState<Tutorial | null>(null)
   const [thumbErrors, setThumbErrors] = useState<Record<string, boolean>>({})
@@ -61,9 +63,9 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
     return (
       <div className="text-center py-16">
         <PlayCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-foreground mb-2">No hay tutoriales aún</h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">{t('tutorials.empty')}</h2>
         <p className="text-muted-foreground">
-          Vuelve pronto, estamos preparando contenido para ti.
+          {t('tutorials.emptyHint')}
         </p>
       </div>
     )
@@ -72,15 +74,15 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Tutoriales</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('tutorials.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Aprende a usar la plataforma con nuestros videos paso a paso
+          {t('tutorials.subtitle')}
         </p>
       </div>
 
       <div className="flex gap-2 flex-wrap border-b border-border pb-3">
         <CategoryTab
-          label="Todos"
+          label={t('tutorials.all')}
           count={initialTutorials.length}
           active={activeCategory === 'all'}
           onClick={() => setActiveCategory('all')}
@@ -98,7 +100,7 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
 
       {filtered.length === 0 ? (
         <p className="text-center text-muted-foreground py-12">
-          No hay tutoriales en esta categoría.
+          {t('tutorials.emptyCategory')}
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -175,7 +177,7 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
               <button
                 onClick={() => setOpenTutorial(null)}
                 className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                aria-label="Cerrar"
+                aria-label={t('tutorials.close')}
               >
                 <X className="h-6 w-6" />
               </button>

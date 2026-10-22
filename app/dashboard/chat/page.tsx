@@ -4,10 +4,13 @@ import { prisma } from '@/lib/prisma'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { ChatView } from './ChatView'
 import { getChatStats } from '@/lib/chat-helpers'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ChatPage() {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   if (!session?.user) return null
 
@@ -42,7 +45,7 @@ export default async function ChatPage() {
 
   return (
     <ChatView
-      staffName={basicData?.projectName || 'Estación'}
+      staffName={basicData?.projectName || t('chat.stationFallback')}
       initialMessages={initialMessages.map((m) => ({
         ...m,
         createdAt: m.createdAt.toISOString(),

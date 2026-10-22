@@ -6,6 +6,7 @@ import { StaffComposer } from './StaffComposer'
 import { MessagesTable } from './MessagesTable'
 import { BansPanel } from './BansPanel'
 import { StatsCards, type ChatStats } from './StatsCards'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface ChatMessage {
   id: string
@@ -36,6 +37,7 @@ interface ChatViewProps {
 const POLL_INTERVAL_MS = 3000
 
 export function ChatView({ staffName, initialMessages, initialBans, initialStats }: ChatViewProps) {
+  const { t } = useDashboardI18n()
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     [...initialMessages].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
   )
@@ -91,9 +93,9 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
       setError(null)
     } catch (err) {
       console.error('Chat poll error', err)
-      setError('Error de conexión. Reintentando…')
+      setError(t('chat.connectionError'))
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (initialMessages.length > 0) {
@@ -121,13 +123,13 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
     const res = await fetch(`/api/dashboard/chat/messages/${id}`, { method: 'DELETE' })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || 'No se pudo borrar')
+      setError(data.error || t('chat.deleteError'))
       return false
     }
     setMessages((prev) => prev.filter((m) => m.id !== id))
     setStats((s) => ({ ...s, last24hMessages: Math.max(0, s.last24hMessages - 1) }))
     return true
-  }, [])
+  }, [t])
 
   const handleAddBan = useCallback(async (data: { email?: string; ipAddress?: string; reason?: string }) => {
     const res = await fetch('/api/dashboard/chat/bans', {
@@ -137,7 +139,7 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
     })
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
-      setError(d.error || 'No se pudo crear el ban')
+      setError(d.error || t('chat.banError'))
       return null
     }
     const json = await res.json()
@@ -145,19 +147,19 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
     setBans((prev) => [ban, ...prev])
     setStats((s) => ({ ...s, activeBans: s.activeBans + 1 }))
     return ban
-  }, [])
+  }, [t])
 
   const handleRemoveBan = useCallback(async (id: string) => {
     const res = await fetch(`/api/dashboard/chat/bans/${id}`, { method: 'DELETE' })
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
-      setError(d.error || 'No se pudo quitar el ban')
+      setError(d.error || t('chat.unbanError'))
       return false
     }
     setBans((prev) => prev.filter((b) => b.id !== id))
     setStats((s) => ({ ...s, activeBans: Math.max(0, s.activeBans - 1) }))
     return true
-  }, [])
+  }, [t])
 
   return (
     <div className="space-y-6">
@@ -165,15 +167,15 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <MessagesSquare className="h-6 w-6 text-brand" />
-            Chat en Vivo
+            {t('chat.title')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Modera el chat de tu radio y participa como staff
+            {t('chat.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          Actualizando cada {POLL_INTERVAL_MS / 1000}s
+          {t('chat.updating', { seconds: POLL_INTERVAL_MS / 1000 })}
         </div>
       </div>
 

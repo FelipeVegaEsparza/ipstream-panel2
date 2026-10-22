@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { ShieldOff, Plus, Ban as BanIcon, Trash2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
 import type { ChatBan } from './ChatView'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface BansPanelProps {
   bans: ChatBan[]
@@ -14,6 +15,7 @@ interface BansPanelProps {
 }
 
 export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
+  const { t, locale } = useDashboardI18n()
   const [email, setEmail] = useState('')
   const [ipAddress, setIpAddress] = useState('')
   const [reason, setReason] = useState('')
@@ -24,7 +26,7 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
     e.preventDefault()
     if (submitting) return
     if (!email.trim() && !ipAddress.trim()) {
-      onError('Ingresa al menos un email o una IP')
+      onError(t('chat.bans.required'))
       return
     }
     setSubmitting(true)
@@ -52,28 +54,28 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
       <div className="p-4 border-b border-border">
         <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
           <BanIcon className="h-4 w-4 text-red-400" />
-          Bans
+          {t('chat.bans.title')}
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
-          Los usuarios baneados no pueden enviar mensajes.
+          {t('chat.bans.subtitle')}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 border-b border-border space-y-2">
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Email</label>
+          <label className="text-xs text-muted-foreground block mb-1">{t('chat.bans.email')}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="usuario@ejemplo.com"
+            placeholder={t('chat.bans.emailPlaceholder')}
             maxLength={120}
             className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:border-brand focus:outline-none"
             disabled={submitting}
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">IP (opcional)</label>
+          <label className="text-xs text-muted-foreground block mb-1">{t('chat.bans.ip')}</label>
           <input
             type="text"
             value={ipAddress}
@@ -85,12 +87,12 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Motivo (opcional)</label>
+          <label className="text-xs text-muted-foreground block mb-1">{t('chat.bans.reason')}</label>
           <input
             type="text"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Spam, insultos, etc."
+            placeholder={t('chat.bans.reasonPlaceholder')}
             maxLength={200}
             className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:border-brand focus:outline-none"
             disabled={submitting}
@@ -102,14 +104,14 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
           className="w-full inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-4 w-4" />
-          {submitting ? 'Baneando…' : 'Banear'}
+          {submitting ? t('chat.bans.banning') : t('chat.bans.ban')}
         </button>
       </form>
 
       <div className="max-h-[400px] overflow-y-auto">
         {bans.length === 0 ? (
           <div className="p-6 text-center text-muted-foreground text-xs">
-            No hay bans activos.
+            {t('chat.bans.empty')}
           </div>
         ) : (
           <ul className="divide-y divide-border/50">
@@ -129,7 +131,7 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
                       <p className="text-xs text-muted-foreground truncate">{b.reason}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatDistanceToNow(new Date(b.createdAt), { addSuffix: true, locale: es })}
+                      {formatDistanceToNow(new Date(b.createdAt), { addSuffix: true, locale: locale === 'en' ? enUS : es })}
                     </p>
                   </div>
                   <div>
@@ -139,20 +141,20 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
                           onClick={() => handleRemove(b.id)}
                           className="text-xs px-1.5 py-0.5 rounded bg-red-600 text-white hover:bg-red-700"
                         >
-                          Quitar
+                          {t('chat.bans.remove')}
                         </button>
                         <button
                           onClick={() => setConfirmId(null)}
                           className="text-xs px-1.5 py-0.5 rounded bg-secondary text-foreground hover:bg-secondary"
                         >
-                          No
+                          {t('chat.bans.no')}
                         </button>
                       </div>
                     ) : (
                       <button
                         onClick={() => setConfirmId(b.id)}
                         className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
-                        title="Quitar ban"
+                        title={t('chat.bans.removeTitle')}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

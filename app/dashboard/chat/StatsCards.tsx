@@ -1,6 +1,7 @@
 'use client'
 
 import { MessageSquare, Users, Ban, Clock } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface ChatStats {
   lastHourMessages: number
@@ -14,30 +15,31 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ stats }: StatsCardsProps) {
+  const { t } = useDashboardI18n()
   const cards = [
     {
-      label: 'Mensajes última hora',
+      label: t('chat.stats.lastHour'),
       value: stats.lastHourMessages,
       icon: Clock,
       color: 'text-brand',
       bg: 'bg-brand/10',
     },
     {
-      label: 'Mensajes últimas 24h',
+      label: t('chat.stats.last24h'),
       value: stats.last24hMessages,
       icon: MessageSquare,
       color: 'text-purple-300',
       bg: 'bg-purple-500/10',
     },
     {
-      label: 'Oyentes activos (1h)',
+      label: t('chat.stats.activeUsers'),
       value: stats.activeUsersLastHour,
       icon: Users,
       color: 'text-green-300',
       bg: 'bg-green-500/10',
     },
     {
-      label: 'Bans activos',
+      label: t('chat.stats.activeBans'),
       value: stats.activeBans,
       icon: Ban,
       color: 'text-red-300',

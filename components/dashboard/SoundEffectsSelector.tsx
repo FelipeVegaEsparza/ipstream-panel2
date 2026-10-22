@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { CheckCircleIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
 import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface LibraryEffect {
   id: string
@@ -15,6 +16,7 @@ interface LibraryEffect {
 }
 
 export function SoundEffectsSelector() {
+  const { t } = useDashboardI18n()
   const [effects, setEffects] = useState<LibraryEffect[]>([])
   const [selected, setSelected] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,17 +28,17 @@ export function SoundEffectsSelector() {
     void (async () => {
       try {
         const res = await fetch('/api/dashboard/sound-effects', { cache: 'no-store' })
-        if (!res.ok) throw new Error('No se pudo cargar la biblioteca de efectos')
+        if (!res.ok) throw new Error(t('soundEffects.loadError'))
         const data = await res.json()
         setEffects(Array.isArray(data.effects) ? data.effects : [])
         setSelected(Array.isArray(data.selectedIds) ? data.selectedIds : [])
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudo cargar la biblioteca')
+        setError(err instanceof Error ? err.message : t('soundEffects.loadError'))
       } finally {
         setLoading(false)
       }
     })()
-  }, [])
+  }, [t])
 
   const selectedSet = new Set(selected)
 
@@ -56,11 +58,11 @@ export function SoundEffectsSelector() {
         body: JSON.stringify({ effectIds: selected }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'No se pudo guardar la selección')
+      if (!res.ok) throw new Error(data.error || t('soundEffects.saveError'))
       if (Array.isArray(data.selectedIds)) setSelected(data.selectedIds)
-      setNotice('Selección guardada. Se usará en tu consola de transmisión en vivo.')
+      setNotice(t('soundEffects.saved'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar la selección')
+      setError(err instanceof Error ? err.message : t('soundEffects.saveError'))
     } finally {
       setSaving(false)
     }
@@ -69,10 +71,9 @@ export function SoundEffectsSelector() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Efectos de sonido</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('soundEffects.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Elegí los efectos de la biblioteca que querés tener en la botonera de
-          “Transmitir en vivo”. Podés escucharlos antes de seleccionarlos.
+          {t('soundEffects.subtitle')}
         </p>
       </div>
 
@@ -92,18 +93,18 @@ export function SoundEffectsSelector() {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <SpeakerWaveIcon className="h-4 w-4 text-brand" />
-            Biblioteca
+            {t('soundEffects.library')}
           </h2>
           <span className="rounded-full bg-secondary px-2 py-1 text-[10px] text-muted-foreground">
-            {selected.length} seleccionado{selected.length === 1 ? '' : 's'}
+            {t('soundEffects.selected', { count: selected.length })}
           </span>
         </div>
 
         {loading ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">Cargando efectos…</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{t('soundEffects.loading')}</p>
         ) : effects.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
-            Todavía no hay efectos disponibles en la biblioteca.
+            {t('soundEffects.empty')}
           </p>
         ) : (
           <ul className="divide-y divide-border">
@@ -121,7 +122,7 @@ export function SoundEffectsSelector() {
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium text-foreground">{effect.name}</span>
                       <span className="block truncate text-[11px] text-muted-foreground">
-                        {checked ? 'Seleccionado' : 'Disponible'}
+                        {checked ? t('soundEffects.checked') : t('soundEffects.available')}
                       </span>
                     </span>
                   </label>
@@ -134,7 +135,7 @@ export function SoundEffectsSelector() {
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
           <p className="text-[11px] text-muted-foreground">
-            Los efectos elegidos reemplazan a los locales en la botonera; si no elegís ninguno, se mantienen los locales.
+            {t('soundEffects.hint')}
           </p>
           <button
             type="button"
@@ -142,7 +143,7 @@ export function SoundEffectsSelector() {
             disabled={saving || loading}
             className="rounded-lg bg-brand px-4 py-2 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {saving ? 'Guardando…' : 'Guardar selección'}
+            {saving ? t('soundEffects.saving') : t('soundEffects.save')}
           </button>
         </div>
       </section>
