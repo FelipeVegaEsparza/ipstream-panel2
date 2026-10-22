@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SessionProvider } from '@/components/providers/SessionProvider'
-import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { DashboardLayoutClient } from '@/components/dashboard/DashboardLayoutClient'
 import { ModalProvider } from '@/components/ui/modal'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
@@ -69,7 +68,6 @@ export default async function DashboardLayout({
     <SessionProvider session={session}>
       <ModalProvider>
         <div className="min-h-screen bg-background">
-          <ImpersonationBanner />
           <DashboardLayoutClient
             locale={locale}
             user={session.user}

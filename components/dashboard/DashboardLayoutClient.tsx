@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { GlobalMenuBanner } from './GlobalMenuBanner'
+import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
 import type { DashboardLocale } from '@/lib/dashboard-i18n'
 import type { MenuItemKey } from '@/lib/menu-items'
@@ -40,6 +41,7 @@ export function DashboardLayoutClient({
 
   return (
     <DashboardI18nProvider locale={locale}>
+      <ImpersonationBanner />
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
