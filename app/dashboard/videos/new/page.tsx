@@ -1,14 +1,17 @@
 import { VideoForm } from '@/components/dashboard/VideoForm'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default function NewVideoPage() {
+  const t = dashboardT(getDashboardLocale())
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Nuevo Video
+          {t('videos.new')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Agrega un nuevo video al ranking
+          {t('videos.newSubtitle')}
         </p>
       </div>
 

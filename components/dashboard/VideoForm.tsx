@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { rankingVideoSchema, type RankingVideoInput } from '@/lib/validations'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface VideoFormProps {
   initialData?: {
@@ -19,6 +20,7 @@ interface VideoFormProps {
 }
 
 export function VideoForm({ initialData }: VideoFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -76,10 +78,10 @@ export function VideoForm({ initialData }: VideoFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar el video' })
+        showToast({ type: 'error', title: error.error || t('videos.form.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar el video' })
+      showToast({ type: 'error', title: t('videos.form.saveError') })
     } finally {
       setLoading(false)
     }
@@ -91,13 +93,13 @@ export function VideoForm({ initialData }: VideoFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="form-group">
         <label htmlFor="name" className="form-label">
-          Nombre del Video *
+          {t('videos.form.name')}
         </label>
         <input
           type="text"
           id="name"
           className="form-input"
-          placeholder="Ej: Canción del momento - Artista"
+          placeholder={t('videos.form.namePlaceholder')}
           {...register('name')}
         />
         {errors.name && (
@@ -107,7 +109,7 @@ export function VideoForm({ initialData }: VideoFormProps) {
 
       <div className="form-group">
         <label htmlFor="videoUrl" className="form-label">
-          URL del Video *
+          {t('videos.form.url')}
         </label>
         <input
           type="url"
@@ -117,7 +119,7 @@ export function VideoForm({ initialData }: VideoFormProps) {
           {...register('videoUrl')}
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Soporta URLs de YouTube, Vimeo y otros servicios de video
+          {t('videos.form.urlHint')}
         </p>
         {errors.videoUrl && (
           <p className="text-sm text-red-600">{errors.videoUrl.message}</p>
@@ -126,10 +128,10 @@ export function VideoForm({ initialData }: VideoFormProps) {
         {/* Preview thumbnail */}
         {thumbnail && (
           <div className="mt-3">
-            <p className="text-xs text-muted-foreground mb-2">Vista previa:</p>
+            <p className="text-xs text-muted-foreground mb-2">{t('videos.form.preview')}</p>
             <img
               src={thumbnail}
-              alt="Vista previa del video"
+              alt={t('videos.form.previewAlt')}
               className="w-48 h-28 object-cover rounded-lg border"
             />
           </div>
@@ -138,13 +140,13 @@ export function VideoForm({ initialData }: VideoFormProps) {
 
       <div className="form-group">
         <label htmlFor="description" className="form-label">
-          Descripción *
+          {t('videos.form.description')}
         </label>
         <textarea
           id="description"
           rows={4}
           className="form-textarea"
-          placeholder="Describe el video, artista, género, por qué está en el ranking..."
+          placeholder={t('videos.form.descriptionPlaceholder')}
           {...register('description')}
         />
         {errors.description && (
@@ -157,12 +159,11 @@ export function VideoForm({ initialData }: VideoFormProps) {
           <div className="flex">
             <div className="ml-3">
               <h3 className="text-sm font-medium text-blue-800">
-                Posición en el ranking
+                {t('videos.form.positionTitle')}
               </h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>
-                  El video se agregará automáticamente al final del ranking. 
-                  Podrás cambiar su posición después usando las flechas de ordenamiento.
+                  {t('videos.form.positionHint')}
                 </p>
               </div>
             </div>
@@ -176,14 +177,14 @@ export function VideoForm({ initialData }: VideoFormProps) {
           onClick={() => router.back()}
           className="btn-secondary"
         >
-          Cancelar
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="btn-primary disabled:opacity-50"
         >
-          {loading ? 'Guardando...' : (initialData ? 'Actualizar' : 'Agregar al Ranking')}
+          {loading ? t('common.saving') : (initialData ? t('videos.form.update') : t('videos.form.add'))}
         </button>
       </div>
     </form>

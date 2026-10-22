@@ -7,6 +7,7 @@ import { showToast } from '@/components/ui/toast'
 import { useState } from 'react'
 import Link from 'next/link'
 import { PencilIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, PlayIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Video {
   id: string
@@ -22,11 +23,12 @@ interface VideosListProps {
 }
 
 export function VideosList({ videos }: VideosListProps) {
+  const { t, locale } = useDashboardI18n()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este video?')) {
+    if (!confirm(t('videos.deleteConfirm'))) {
       return
     }
 
@@ -39,10 +41,10 @@ export function VideosList({ videos }: VideosListProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar el video' })
+        showToast({ type: 'error', title: t('videos.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar el video' })
+      showToast({ type: 'error', title: t('videos.deleteError') })
     } finally {
       setLoading(null)
     }
@@ -62,10 +64,10 @@ export function VideosList({ videos }: VideosListProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al reordenar el video' })
+        showToast({ type: 'error', title: t('videos.reorderError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al reordenar el video' })
+      showToast({ type: 'error', title: t('videos.reorderError') })
     } finally {
       setLoading(null)
     }
@@ -88,7 +90,7 @@ export function VideosList({ videos }: VideosListProps) {
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -104,13 +106,13 @@ export function VideosList({ videos }: VideosListProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          No hay videos
+          {t('videos.empty')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          Comienza agregando tu primer video al ranking
+          {t('videos.emptyHint')}
         </p>
         <Link href="/dashboard/videos/new" className="btn-primary">
-          Agregar Video
+          {t('videos.add')}
         </Link>
       </div>
     )
@@ -162,7 +164,7 @@ export function VideosList({ videos }: VideosListProps) {
                       onClick={() => handleReorder(video.id, 'up')}
                       disabled={index === 0 || loading === video.id}
                       className="p-1 text-muted-foreground hover:text-brand disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      title="Subir en el ranking"
+                      title={t('videos.moveUp')}
                     >
                       <ArrowUpIcon className="h-4 w-4" />
                     </button>
@@ -170,7 +172,7 @@ export function VideosList({ videos }: VideosListProps) {
                       onClick={() => handleReorder(video.id, 'down')}
                       disabled={index === videos.length - 1 || loading === video.id}
                       className="p-1 text-muted-foreground hover:text-brand disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      title="Bajar en el ranking"
+                      title={t('videos.moveDown')}
                     >
                       <ArrowDownIcon className="h-4 w-4" />
                     </button>
@@ -179,7 +181,7 @@ export function VideosList({ videos }: VideosListProps) {
                     <Link
                       href={`/dashboard/videos/${video.id}/edit`}
                       className="action-button action-button-edit"
-                      title="Editar video"
+                      title={t('videos.editTitle')}
                     >
                       <PencilIcon className="h-4 w-4" />
                     </Link>
@@ -187,7 +189,7 @@ export function VideosList({ videos }: VideosListProps) {
                       onClick={() => handleDelete(video.id)}
                       disabled={loading === video.id}
                       className="action-button action-button-delete"
-                      title="Eliminar video"
+                      title={t('videos.deleteTitle')}
                     >
                       {loading === video.id ? (
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -211,7 +213,7 @@ export function VideosList({ videos }: VideosListProps) {
                   >
                     {video.videoUrl}
                   </a>
-                  <span>Agregado: {formatDate(video.createdAt)}</span>
+                  <span>{t('videos.added', { date: formatDate(video.createdAt) })}</span>
                 </div>
               </div>
             </div>

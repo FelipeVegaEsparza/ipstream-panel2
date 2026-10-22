@@ -3,6 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { VideoForm } from '@/components/dashboard/VideoForm'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface EditVideoPageProps {
   params: {
@@ -11,10 +13,11 @@ interface EditVideoPageProps {
 }
 
 export default async function EditVideoPage({ params }: EditVideoPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('videos.noClient')}</div>
   }
 
   const video = await prisma.rankingVideo.findFirst({
@@ -32,10 +35,10 @@ export default async function EditVideoPage({ params }: EditVideoPageProps) {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Editar Video
+          {t('videos.edit')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Modifica la información del video (posición #{video.order})
+          {t('videos.editSubtitle', { position: video.order })}
         </p>
       </div>
 

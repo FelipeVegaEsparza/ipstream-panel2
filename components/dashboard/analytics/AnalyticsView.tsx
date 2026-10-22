@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 type Service = 'radio' | 'tv'
 type Period = 'day' | 'week' | 'month'
@@ -43,21 +44,19 @@ interface RankItem {
   seconds?: number
 }
 
-const PERIODS: { key: Period; label: string }[] = [
-  { key: 'day', label: '24 horas' },
-  { key: 'week', label: '7 días' },
-  { key: 'month', label: '30 días' },
+const PERIODS: { key: Period; label: 'analytics.period.day' | 'analytics.period.week' | 'analytics.period.month' }[] = [
+  { key: 'day', label: 'analytics.period.day' },
+  { key: 'week', label: 'analytics.period.week' },
+  { key: 'month', label: 'analytics.period.month' },
 ]
 
-const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-
-function fmtBucket(bucket: string, granularity: 'hour' | 'day') {
+function fmtBucket(bucket: string, granularity: 'hour' | 'day', locale: string) {
   const d = new Date(bucket)
   if (isNaN(d.getTime())) return bucket
   if (granularity === 'hour') {
-    return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleTimeString(locale === 'en' ? 'en-US' : 'es-CL', { hour: '2-digit', minute: '2-digit' })
   }
-  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CL', { day: 'numeric', month: 'short' })
 }
 
 function fmtMinutes(min: number) {
@@ -79,6 +78,8 @@ function delta(cur: number, prev: number) {
 }
 
 export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; hasTv: boolean }) {
+  const { t, locale } = useDashboardI18n()
+  const dayLabels = Array.from({ length: 7 }, (_, i) => t(`analytics.day.${i}` as 'analytics.day.0' | 'analytics.day.1' | 'analytics.day.2' | 'analytics.day.3' | 'analytics.day.4' | 'analytics.day.5' | 'analytics.day.6'))
   const defaultService: Service = hasRadio ? 'radio' : 'tv'
   const [service, setService] = useState<Service>(defaultService)
   const [period, setPeriod] = useState<Period>('week')
@@ -113,10 +114,10 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
 
       const kinds = service === 'radio' ? ['tracks', 'artists', 'djs'] : ['videos']
       const titles: Record<string, string> = {
-        tracks: 'Canciones más reproducidas',
-        artists: 'Artistas más reproducidos',
-        djs: 'DJ en vivo (por tiempo)',
-        videos: 'Videos más reproducidos',
+        tracks: t('analytics.rank.tracks'),
+        artists: t('analytics.rank.artists'),
+        djs: t('analytics.rank.djs'),
+        videos: t('analytics.rank.videos'),
       }
       const rks = await Promise.all(
         kinds.map(async (kind) => {
@@ -131,7 +132,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
     } finally {
       setLoading(false)
     }
-  }, [query, service])
+  }, [query, service, t])
 
   useEffect(() => {
     load()
@@ -148,7 +149,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-foreground">Estadísticas</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('analytics.title')}</h1>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-2">
             {PERIODS.map((p) => (
@@ -159,7 +160,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
                   period === p.key ? 'bg-brand text-white' : 'bg-secondary text-muted-foreground hover:bg-secondary/70'
                 }`}
               >
-                {p.label}
+                {t(p.label)}
               </button>
             ))}
           </div>
@@ -167,7 +168,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
             onClick={exportCsv}
             className="px-3 py-1.5 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-secondary"
           >
-            Exportar CSV
+            {t('analytics.export')}
           </button>
         </div>
       </div>
@@ -180,7 +181,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
               service === 'radio' ? 'border-brand text-brand' : 'border-border text-muted-foreground'
             }`}
           >
-            Radio
+            {t('analytics.service.radio')}
           </button>
         )}
         {hasTv && (
@@ -190,7 +191,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
               service === 'tv' ? 'border-brand text-brand' : 'border-border text-muted-foreground'
             }`}
           >
-            Televisión
+            {t('analytics.service.tv')}
           </button>
         )}
       </div>
@@ -207,30 +208,30 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
 
       {empty && !error && (
         <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
-          Aún no hay datos para este período. Las estadísticas empiezan a recolectarse desde el momento del despliegue.
+          {t('analytics.empty')}
         </div>
       )}
 
       {s && !empty && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Kpi title="Promedio" value={String(s.listenersAvg)} delta={delta(s.listenersAvg, prev?.listenersAvg || 0)} />
-            <Kpi title="Pico" value={String(s.listenersMax)} />
-            <Kpi title="Únicos" value={String(s.uniqueListeners)} />
-            <Kpi title="Tiempo" value={fmtMinutes(s.listenerMinutes)} sub="de escucha" />
-            <Kpi title="Sesiones" value={String(s.sessions)} />
+            <Kpi title={t('analytics.kpi.avg')} value={String(s.listenersAvg)} delta={delta(s.listenersAvg, prev?.listenersAvg || 0)} />
+            <Kpi title={t('analytics.kpi.peak')} value={String(s.listenersMax)} />
+            <Kpi title={t('analytics.kpi.unique')} value={String(s.uniqueListeners)} />
+            <Kpi title={t('analytics.kpi.time')} value={fmtMinutes(s.listenerMinutes)} sub={t('analytics.kpi.timeSub')} />
+            <Kpi title={t('analytics.kpi.sessions')} value={String(s.sessions)} />
             <Kpi title="Uptime" value={fmtUptime(s.airtimeSeconds, summary!.from, summary!.to)} />
           </div>
 
           <div className="bg-card rounded-xl p-5 border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">Audiencia</h2>
-              <span className="text-xs text-muted-foreground">Zona: {summary!.timezone}</span>
+              <h2 className="text-lg font-semibold text-foreground">{t('analytics.audience')}</h2>
+              <span className="text-xs text-muted-foreground">{t('analytics.timezone', { timezone: summary!.timezone })}</span>
             </div>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={points}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="bucket" tickFormatter={(v) => fmtBucket(v, summary!.granularity)} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <XAxis dataKey="bucket" tickFormatter={(v) => fmtBucket(v, summary!.granularity, locale)} stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <Tooltip
                   contentStyle={{
@@ -239,11 +240,11 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
                     borderRadius: '8px',
                     color: 'hsl(var(--popover-foreground))',
                   }}
-                  labelFormatter={(v) => fmtBucket(String(v), summary!.granularity)}
+                  labelFormatter={(v) => fmtBucket(String(v), summary!.granularity, locale)}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="listenersAvg" name="Promedio" stroke="var(--brand-500)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="listenersMax" name="Pico" stroke="var(--brand-300)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="listenersAvg" name={t('analytics.kpi.avg')} stroke="var(--brand-500)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="listenersMax" name={t('analytics.kpi.peak')} stroke="var(--brand-300)" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -256,16 +257,16 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
 
           {heatmap && heatmap.max > 0 && (
             <div className="bg-card rounded-xl p-5 border border-border">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Audiencia por día y hora</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">{t('analytics.heatmap')}</h2>
               <div className="overflow-x-auto">
                 <div className="inline-block">
                   {heatmap.matrix.map((row, d) => (
                     <div key={d} className="flex items-center gap-1 mb-1">
-                      <span className="w-9 text-xs text-muted-foreground">{DAY_LABELS[d]}</span>
+                      <span className="w-9 text-xs text-muted-foreground">{dayLabels[d]}</span>
                       {row.map((v, h) => (
                         <div
                           key={h}
-                          title={`${DAY_LABELS[d]} ${h}:00 — ${Math.round(v)} min`}
+                          title={`${dayLabels[d]} ${h}:00 — ${Math.round(v)} min`}
                           className="w-5 h-4 rounded-sm"
                           style={{ backgroundColor: `rgba(40, 180, 240, ${heatmap.max ? Math.min(1, v / heatmap.max) : 0})` }}
                         />
