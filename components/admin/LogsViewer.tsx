@@ -1,5 +1,7 @@
 'use client'
 
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -36,6 +38,7 @@ interface LogsViewerProps {
 }
 
 export function LogsViewer({ logs }: LogsViewerProps) {
+  const { t } = useDashboardI18n()
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
   const logsPerPage = 10
@@ -190,30 +193,30 @@ export function LogsViewer({ logs }: LogsViewerProps) {
               
               {expandedLogs.has(log.id) && (
                 <div className="border-t border-border p-4 bg-card/50">
-                  <h4 className="text-foreground font-medium mb-3">Detalles Técnicos</h4>
+                  <h4 className="text-foreground font-medium mb-3">{t('admin.logsViewer.technicalDetails')}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-muted-foreground mb-1">ID del Log:</p>
+                      <p className="text-muted-foreground mb-1">{t('admin.logsViewer.logId')}</p>
                       <p className="text-foreground font-mono">{log.id}</p>
                     </div>
                     
                     {log.userId && (
                       <div>
-                        <p className="text-muted-foreground mb-1">ID del Usuario:</p>
+                        <p className="text-muted-foreground mb-1">{t('admin.logsViewer.userId')}</p>
                         <p className="text-foreground font-mono">{log.userId}</p>
                       </div>
                     )}
                     
                     {log.ip && (
                       <div>
-                        <p className="text-muted-foreground mb-1">Dirección IP:</p>
+                        <p className="text-muted-foreground mb-1">{t('admin.logsViewer.ip')}</p>
                         <p className="text-foreground font-mono">{log.ip}</p>
                       </div>
                     )}
                     
                     {log.userAgent && (
                       <div className="md:col-span-2">
-                        <p className="text-muted-foreground mb-1">User Agent:</p>
+                        <p className="text-muted-foreground mb-1">{t('admin.logsViewer.userAgent')}</p>
                         <p className="text-foreground font-mono text-xs break-all">{log.userAgent}</p>
                       </div>
                     )}
@@ -221,7 +224,7 @@ export function LogsViewer({ logs }: LogsViewerProps) {
                   
                   {log.metadata && Object.keys(log.metadata).length > 0 && (
                     <div className="mt-4">
-                      <p className="text-muted-foreground mb-2">Metadata:</p>
+                      <p className="text-muted-foreground mb-2">{t('admin.logsViewer.metadata')}</p>
                       <pre className="bg-background p-3 rounded text-xs text-green-400 overflow-x-auto">
                         {JSON.stringify(log.metadata, null, 2)}
                       </pre>
@@ -237,10 +240,10 @@ export function LogsViewer({ logs }: LogsViewerProps) {
           <div className="text-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              No hay logs disponibles
+              {t('admin.logsViewer.noLogs')}
             </h3>
             <p className="text-muted-foreground">
-              Los logs aparecerán aquí cuando haya actividad en el sistema
+              {t('admin.logsViewer.noLogsHint')}
             </p>
           </div>
         )}

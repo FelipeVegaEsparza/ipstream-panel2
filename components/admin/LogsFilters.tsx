@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Filter, Search, Calendar, Download, RefreshCw } from 'lucide-react'
 
 export function LogsFilters() {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [filters, setFilters] = useState({
     level: 'all',
@@ -70,10 +72,10 @@ export function LogsFilters() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        showToast({ type: 'error', title: 'Error al exportar logs' })
+        showToast({ type: 'error', title: t('admin.logsFilters.errorExport') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al exportar logs' })
+      showToast({ type: 'error', title: t('admin.logsFilters.errorExport') })
     }
   }
 
@@ -82,21 +84,21 @@ export function LogsFilters() {
       <CardHeader>
         <CardTitle className="text-foreground flex items-center gap-2">
           <Filter className="h-5 w-5" />
-          Filtros
+          {t('admin.logsFilters.filters')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Búsqueda */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Buscar
+            {t('admin.logsFilters.search')}
           </label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              placeholder="Buscar en logs..."
+              placeholder={t('admin.logsFilters.searchPlaceholder')}
               className="bg-secondary border-border text-foreground pl-10"
             />
           </div>
@@ -105,17 +107,17 @@ export function LogsFilters() {
         {/* Nivel de Log */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Nivel
+            {t('admin.logsFilters.level')}
           </label>
           <select
             value={filters.level}
             onChange={(e) => handleFilterChange('level', e.target.value)}
             className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
           >
-            <option value="all">Todos los niveles</option>
-            <option value="ERROR">Error</option>
-            <option value="WARN">Advertencia</option>
-            <option value="INFO">Información</option>
+            <option value="all">{t('admin.logsFilters.allLevels')}</option>
+            <option value="ERROR">{t('admin.logsFilters.levelError')}</option>
+            <option value="WARN">{t('admin.logsFilters.levelWarn')}</option>
+            <option value="INFO">{t('admin.logsFilters.levelInfo')}</option>
             <option value="DEBUG">Debug</option>
           </select>
         </div>
@@ -123,27 +125,27 @@ export function LogsFilters() {
         {/* Categoría */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Categoría
+            {t('admin.logsFilters.category')}
           </label>
           <select
             value={filters.category}
             onChange={(e) => handleFilterChange('category', e.target.value)}
             className="w-full bg-secondary border border-border text-foreground rounded-md px-3 py-2"
           >
-            <option value="all">Todas las categorías</option>
-            <option value="AUTH">Autenticación</option>
-            <option value="SECURITY">Seguridad</option>
-            <option value="BILLING">Facturación</option>
-            <option value="CONTENT">Contenido</option>
-            <option value="SYSTEM">Sistema</option>
-            <option value="API">API</option>
+            <option value="all">{t('admin.logsFilters.allCategories')}</option>
+            <option value="AUTH">{t('admin.logsFilters.catAuth')}</option>
+            <option value="SECURITY">{t('admin.logsFilters.catSecurity')}</option>
+            <option value="BILLING">{t('admin.logsFilters.catBilling')}</option>
+            <option value="CONTENT">{t('admin.logsFilters.catContent')}</option>
+            <option value="SYSTEM">{t('admin.logsFilters.catSystem')}</option>
+            <option value="API">{t('admin.logsFilters.catApi')}</option>
           </select>
         </div>
 
         {/* Rango de Fechas */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Fecha Desde
+            {t('admin.logsFilters.dateFrom')}
           </label>
           <Input
             type="datetime-local"
@@ -155,7 +157,7 @@ export function LogsFilters() {
 
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Fecha Hasta
+            {t('admin.logsFilters.dateTo')}
           </label>
           <Input
             type="datetime-local"
@@ -168,12 +170,12 @@ export function LogsFilters() {
         {/* Usuario ID */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Usuario ID
+            {t('admin.logsFilters.userId')}
           </label>
           <Input
             value={filters.userId}
             onChange={(e) => handleFilterChange('userId', e.target.value)}
-            placeholder="ID del usuario"
+            placeholder={t('admin.logsFilters.userIdPlaceholder')}
             className="bg-secondary border-border text-foreground"
           />
         </div>
@@ -181,12 +183,12 @@ export function LogsFilters() {
         {/* IP Address */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Dirección IP
+            {t('admin.logsFilters.ip')}
           </label>
           <Input
             value={filters.ip}
             onChange={(e) => handleFilterChange('ip', e.target.value)}
-            placeholder="192.168.1.1"
+            placeholder={t('admin.logsFilters.ipPlaceholder')}
             className="bg-secondary border-border text-foreground"
           />
         </div>
@@ -195,7 +197,7 @@ export function LogsFilters() {
         {activeFilters.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Filtros Activos
+              {t('admin.logsFilters.activeFilters')}
             </label>
             <div className="flex flex-wrap gap-2">
               {activeFilters.map((filter) => (
@@ -214,7 +216,7 @@ export function LogsFilters() {
             className="w-full bg-brand hover:bg-brand"
           >
             <Search className="h-4 w-4 mr-2" />
-            Aplicar Filtros
+            {t('admin.logsFilters.apply')}
           </Button>
           
           <Button
@@ -223,7 +225,7 @@ export function LogsFilters() {
             className="w-full border-border hover:bg-secondary"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Limpiar Filtros
+            {t('admin.logsFilters.clear')}
           </Button>
           
           <Button
@@ -232,7 +234,7 @@ export function LogsFilters() {
             className="w-full border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
           >
             <Download className="h-4 w-4 mr-2" />
-            Exportar CSV
+            {t('admin.logsFilters.export')}
           </Button>
         </div>
       </CardContent>

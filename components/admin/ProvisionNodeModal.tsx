@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { X, Rocket, KeyRound, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface ProvisionNodeModalProps {
   open: boolean
   onClose: () => void
   onStarted: () => void
 }
-
-const TYPE_LABEL: Record<string, string> = { radio: 'Solo Radio', tv: 'Solo TV', both: 'Radio + TV' }
 
 const EMPTY = {
   name: '',
@@ -26,6 +25,8 @@ const EMPTY = {
 }
 
 export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeModalProps) {
+  const { t } = useDashboardI18n()
+  const TYPE_LABEL: Record<string, string> = { radio: t('admin.serverForm.typeRadio'), tv: t('admin.serverForm.typeTv'), both: t('admin.serverForm.typeBoth') }
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,15 +45,15 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
   const handleSubmit = async () => {
     const f = form
     if (!f.name.trim() || !f.publicHostname.trim() || !f.sshHost.trim()) {
-      setError('Completa nombre, hostname público y host SSH')
+      setError(t('admin.provisionNode.incomplete'))
       return
     }
     if (f.sshAuthType === 'key' && !f.sshPrivateKey.trim()) {
-      setError('Pega la clave privada SSH')
+      setError(t('admin.provisionNode.keyRequired'))
       return
     }
     if (f.sshAuthType === 'password' && !f.sshPassword.trim()) {
-      setError('Ingresa el password SSH')
+      setError(t('admin.provisionNode.passwordRequired'))
       return
     }
     setSaving(true)
@@ -75,14 +76,14 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        showToast({ type: 'success', title: 'Provisioning iniciado', description: 'Se ejecuta en segundo plano' })
+        showToast({ type: 'success', title: t('admin.provisionNode.started'), description: t('admin.provisionNode.startedHint') })
         onStarted()
         onClose()
       } else {
-        setError(data?.message || data?.error || 'Error al iniciar provisioning')
+        setError(data?.message || data?.error || t('admin.provisionNode.startError'))
       }
     } catch {
-      setError('Error al iniciar provisioning')
+      setError(t('admin.provisionNode.startError'))
     } finally {
       setSaving(false)
     }
@@ -95,7 +96,7 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
-          aria-label="Cerrar"
+          aria-label={t('admin.provisionNode.close')}
         >
           <X className="h-5 w-5" />
         </button>
@@ -106,27 +107,26 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
               <Rocket className="h-5 w-5 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-foreground">Provisionar nodo de streaming</h3>
-              <p className="text-sm text-muted-foreground mt-0.5">El panel configura el VPS nuevo automáticamente por SSH</p>
+              <h3 className="text-xl font-bold text-foreground">{t('admin.provisionNode.title')}</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">{t('admin.provisionNode.subtitle')}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2 text-xs text-brand/90 bg-brand/10 border border-brand/30 rounded-lg p-3">
             <Rocket className="h-4 w-4 mt-0.5 shrink-0" />
             <span>
-              Se instalará Docker, se subirá el código, se escribirá el .env y se levantará el stack.
-              La clave SSH se guarda encriptada. Después puedes quitarla desde este panel.
+              {t('admin.provisionNode.info')}
             </span>
           </div>
 
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label">Nombre del servidor</label>
+                <label className="form-label">{t('admin.provisionNode.serverName')}</label>
                 <input className="form-input" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Radio VPS 1" />
               </div>
               <div className="form-group">
-                <label className="form-label">Tipo</label>
+                <label className="form-label">{t('admin.provisionNode.type')}</label>
                 <select className="form-input" value={form.type} onChange={(e) => set('type', e.target.value)}>
                   {Object.entries(TYPE_LABEL).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
@@ -134,28 +134,28 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Hostname público (oyentes)</label>
+                <label className="form-label">{t('admin.provisionNode.publicHostname')}</label>
                 <input className="form-input" value={form.publicHostname} onChange={(e) => set('publicHostname', e.target.value)} placeholder="radio1.midominio.cl" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div className="form-group col-span-2">
-                  <label className="form-label">Host SSH (IP)</label>
+                  <label className="form-label">{t('admin.provisionNode.sshHost')}</label>
                   <input className="form-input" value={form.sshHost} onChange={(e) => set('sshHost', e.target.value)} placeholder="1.2.3.4" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Puerto</label>
+                  <label className="form-label">{t('admin.provisionNode.port')}</label>
                   <input className="form-input" type="number" value={form.sshPort} onChange={(e) => set('sshPort', e.target.value)} />
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Usuario SSH</label>
+                <label className="form-label">{t('admin.provisionNode.sshUser')}</label>
                 <input className="form-input" value={form.sshUser} onChange={(e) => set('sshUser', e.target.value)} />
               </div>
               <div className="form-group">
-                <label className="form-label">Autenticación</label>
+                <label className="form-label">{t('admin.provisionNode.auth')}</label>
                 <select className="form-input" value={form.sshAuthType} onChange={(e) => set('sshAuthType', e.target.value)}>
-                  <option value="key">Clave privada</option>
-                  <option value="password">Password</option>
+                  <option value="key">{t('admin.provisionNode.keyOption')}</option>
+                  <option value="password">{t('admin.provisionNode.passwordOption')}</option>
                 </select>
               </div>
             </div>
@@ -163,7 +163,7 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
             {form.sshAuthType === 'key' ? (
               <div className="form-group">
                 <label className="form-label flex items-center gap-1">
-                  <KeyRound className="h-3.5 w-3.5 text-muted-foreground" /> Clave privada SSH
+                  <KeyRound className="h-3.5 w-3.5 text-muted-foreground" /> {t('admin.provisionNode.privateKey')}
                 </label>
                 <textarea
                   className="form-textarea font-mono text-xs h-32"
@@ -171,12 +171,12 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
                   onChange={(e) => set('sshPrivateKey', e.target.value)}
                   placeholder={`-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----`}
                 />
-                <p className="text-xs text-muted-foreground mt-1">Sin passphrase (SSH no puede pedirla interactivamente)</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('admin.provisionNode.noPassphrase')}</p>
               </div>
             ) : (
               <div className="form-group">
                 <label className="form-label flex items-center gap-1">
-                  <Lock className="h-3.5 w-3.5 text-muted-foreground" /> Password SSH
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" /> {t('admin.provisionNode.password')}
                 </label>
                 <input className="form-input" type="password" value={form.sshPassword} onChange={(e) => set('sshPassword', e.target.value)} />
               </div>
@@ -187,10 +187,10 @@ export function ProvisionNodeModal({ open, onClose, onStarted }: ProvisionNodeMo
 
           <div className="flex gap-3 pt-2">
             <Button variant="secondary" className="flex-1" onClick={onClose}>
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white" disabled={saving} onClick={handleSubmit}>
-              {saving ? 'Iniciando...' : 'Provisionar nodo'}
+              {saving ? t('admin.provisionNode.starting') : t('admin.provisionNode.submit')}
             </Button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 interface StatsChartsProps {
@@ -9,10 +10,11 @@ interface StatsChartsProps {
 }
 
 export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
+  const { locale, t } = useDashboardI18n()
   // Formatear datos para el gráfico de líneas
   const formattedUserData = usersByDay.map(item => ({
     ...item,
-    date: new Date(item.date).toLocaleDateString('es-ES', { 
+    date: new Date(item.date).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES', {
       month: 'short', 
       day: 'numeric' 
     })
@@ -23,7 +25,7 @@ export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
       {/* Gráfico de Usuarios por Día */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-foreground">Nuevos Usuarios (Últimos 30 días)</CardTitle>
+          <CardTitle className="text-foreground">{t('admin.statsCharts.newUsers')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-80">
@@ -64,7 +66,7 @@ export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
       {/* Gráfico de Contenido por Tipo */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-foreground">Distribución de Contenido</CardTitle>
+          <CardTitle className="text-foreground">{t('admin.statsCharts.contentDistribution')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-80">

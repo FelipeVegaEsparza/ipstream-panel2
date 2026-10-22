@@ -4,6 +4,7 @@ import { showToast } from '@/components/ui/toast'
 
 import { useState } from 'react'
 import { ArrowPathRoundedSquareIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Client {
   id: string
@@ -40,8 +41,9 @@ interface ImpersonateListProps {
 }
 
 function PlanBadge({ name }: { name?: string | null }) {
+  const { t } = useDashboardI18n()
   if (!name) {
-    return <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">Sin Plan</span>
+    return <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{t('admin.impersonate.noPlan')}</span>
   }
   const cls = name.toLowerCase().includes('pro')
     ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
@@ -52,11 +54,12 @@ function PlanBadge({ name }: { name?: string | null }) {
 }
 
 export function ImpersonateList({ clients }: ImpersonateListProps) {
+  const { locale, t } = useDashboardI18n()
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleImpersonate = async (clientId: string, clientName: string) => {
-    if (!confirm(`¿Estás seguro de que quieres impersonar al cliente "${clientName}"?`)) {
+    if (!confirm(t('admin.impersonate.confirm', { name: clientName }))) {
       return
     }
 
@@ -77,17 +80,17 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
         window.location.href = data.redirectUrl || '/dashboard'
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al impersonar cliente' })
+        showToast({ type: 'error', title: error.error || t('admin.impersonate.error') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al impersonar cliente' })
+      showToast({ type: 'error', title: t('admin.impersonate.error') })
     } finally {
       setLoading(null)
     }
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -110,10 +113,10 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          No hay clientes
+          {t('admin.impersonate.empty')}
         </h3>
         <p className="text-muted-foreground">
-          No hay clientes disponibles para impersonar
+          {t('admin.impersonate.emptyHint')}
         </p>
       </div>
     )
@@ -129,7 +132,7 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Buscar por nombre, email o proyecto..."
+                placeholder={t('admin.impersonate.searchPlaceholder')}
                 className="form-input pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -137,7 +140,7 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
             </div>
           </div>
           <div className="text-sm text-muted-foreground">
-            {filteredClients.length} de {clients.length} clientes
+            {t('admin.impersonate.count', { filtered: filteredClients.length, total: clients.length })}
           </div>
         </div>
       </div>
@@ -147,14 +150,14 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
         <table className="w-full text-sm">
           <thead className="bg-background/60 text-muted-foreground uppercase text-xs">
             <tr>
-              <th className="text-left p-3">Cliente</th>
-              <th className="text-left p-3">Email</th>
-              <th className="text-left p-3">Usuario</th>
-              <th className="text-left p-3">Plan</th>
-              <th className="text-center p-3">Contenido</th>
-              <th className="text-left p-3">Registrado</th>
-              <th className="text-left p-3">Última actividad</th>
-              <th className="text-right p-3">Acción</th>
+              <th className="text-left p-3">{t('admin.impersonate.client')}</th>
+              <th className="text-left p-3">{t('admin.impersonate.email')}</th>
+              <th className="text-left p-3">{t('admin.impersonate.user')}</th>
+              <th className="text-left p-3">{t('admin.impersonate.plan')}</th>
+              <th className="text-center p-3">{t('admin.impersonate.content')}</th>
+              <th className="text-left p-3">{t('admin.impersonate.registered')}</th>
+              <th className="text-left p-3">{t('admin.impersonate.lastActivity')}</th>
+              <th className="text-right p-3">{t('admin.impersonate.action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -194,13 +197,13 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
                   {/* Contenido */}
                   <td className="p-3">
                     <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-                      <span title="Programas"><span className="font-medium text-brand">{client._count.programs}</span> Prog</span>
-                      <span title="Noticias"><span className="font-medium text-green-400">{client._count.news}</span> News</span>
-                      <span title="Videos"><span className="font-medium text-purple-400">{client._count.rankingVideos}</span> Vids</span>
-                      <span title="Sponsors"><span className="font-medium text-yellow-400">{client._count.sponsors}</span> Spons</span>
-                      <span title="Promociones"><span className="font-medium text-pink-400">{client._count.promotions}</span> Proms</span>
+                      <span title={t('admin.impersonate.programs')}><span className="font-medium text-brand">{client._count.programs}</span> Prog</span>
+                      <span title={t('admin.impersonate.news')}><span className="font-medium text-green-400">{client._count.news}</span> News</span>
+                      <span title={t('admin.impersonate.videos')}><span className="font-medium text-purple-400">{client._count.rankingVideos}</span> Vids</span>
+                      <span title={t('admin.impersonate.sponsors')}><span className="font-medium text-yellow-400">{client._count.sponsors}</span> Spons</span>
+                      <span title={t('admin.impersonate.promotions')}><span className="font-medium text-pink-400">{client._count.promotions}</span> Proms</span>
                     </div>
-                    <div className="text-center text-[10px] text-muted-foreground mt-0.5">{totalContent} total</div>
+                    <div className="text-center text-[10px] text-muted-foreground mt-0.5">{t('admin.impersonate.total', { count: totalContent })}</div>
                   </td>
 
                   <td className="p-3 text-muted-foreground whitespace-nowrap">{formatDate(client.user.createdAt)}</td>
@@ -216,12 +219,12 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
                       {loading === client.id ? (
                         <>
                           <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></div>
-                          Impersonando...
+                          {t('admin.impersonate.impersonating')}
                         </>
                       ) : (
                         <>
                           <ArrowPathRoundedSquareIcon className="h-4 w-4" />
-                          Entrar
+                          {t('admin.impersonate.enter')}
                         </>
                       )}
                     </button>
@@ -236,7 +239,7 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
       {filteredClients.length === 0 && searchTerm && (
         <div className="text-center py-8">
           <p className="text-muted-foreground">
-            No se encontraron clientes que coincidan con "{searchTerm}"
+            {t('admin.impersonate.noMatches', { term: searchTerm })}
           </p>
         </div>
       )}

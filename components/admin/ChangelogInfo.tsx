@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { 
   GitBranch, 
   Plus, 
@@ -13,47 +14,48 @@ import {
 } from 'lucide-react'
 
 export function ChangelogInfo() {
+  const { t } = useDashboardI18n()
   const changelog = [
     {
       version: '1.0.0',
       date: '2024-07-16',
       type: 'release',
-      title: 'Lanzamiento Inicial',
+      title: t('admin.changelog.initialRelease'),
       changes: [
-        { type: 'feature', text: 'Panel de administración completo' },
-        { type: 'feature', text: 'Gestión de usuarios y clientes' },
-        { type: 'feature', text: 'Sistema de autenticación con NextAuth' },
-        { type: 'feature', text: 'Módulo de facturación y planes' },
-        { type: 'feature', text: 'Estadísticas globales del sistema' },
-        { type: 'feature', text: 'Sistema de impersonación de clientes' },
-        { type: 'feature', text: 'Configuración del sistema' },
-        { type: 'feature', text: 'Logs de actividad' },
-        { type: 'feature', text: 'Información del sistema y soporte' }
+        { type: 'feature', text: t('admin.changelog.adminPanel') },
+        { type: 'feature', text: t('admin.changelog.userManagement') },
+        { type: 'feature', text: t('admin.changelog.authSystem') },
+        { type: 'feature', text: t('admin.changelog.billingModule') },
+        { type: 'feature', text: t('admin.changelog.globalStats') },
+        { type: 'feature', text: t('admin.changelog.impersonation') },
+        { type: 'feature', text: t('admin.changelog.systemConfig') },
+        { type: 'feature', text: t('admin.changelog.activityLogs') },
+        { type: 'feature', text: t('admin.changelog.systemInfoSupport') }
       ]
     },
     {
       version: '0.9.0',
       date: '2024-07-10',
       type: 'beta',
-      title: 'Versión Beta',
+      title: t('admin.changelog.betaVersion'),
       changes: [
-        { type: 'feature', text: 'Implementación de base de datos con Prisma' },
-        { type: 'feature', text: 'Diseño responsive con Tailwind CSS' },
-        { type: 'feature', text: 'Componentes UI reutilizables' },
-        { type: 'fix', text: 'Corrección de problemas de autenticación' },
-        { type: 'improvement', text: 'Optimización de rendimiento' }
+        { type: 'feature', text: t('admin.changelog.prismaDb') },
+        { type: 'feature', text: t('admin.changelog.responsiveDesign') },
+        { type: 'feature', text: t('admin.changelog.reusableUi') },
+        { type: 'fix', text: t('admin.changelog.authFixes') },
+        { type: 'improvement', text: t('admin.changelog.perfOptimization') }
       ]
     },
     {
       version: '0.5.0',
       date: '2024-07-01',
       type: 'alpha',
-      title: 'Versión Alpha',
+      title: t('admin.changelog.alphaVersion'),
       changes: [
-        { type: 'feature', text: 'Estructura inicial del proyecto' },
-        { type: 'feature', text: 'Configuración de Next.js 14' },
-        { type: 'feature', text: 'Implementación básica de rutas' },
-        { type: 'feature', text: 'Diseño inicial de la interfaz' }
+        { type: 'feature', text: t('admin.changelog.initialStructure') },
+        { type: 'feature', text: t('admin.changelog.nextSetup') },
+        { type: 'feature', text: t('admin.changelog.basicRoutes') },
+        { type: 'feature', text: t('admin.changelog.initialDesign') }
       ]
     }
   ]
@@ -91,13 +93,13 @@ export function ChangelogInfo() {
 
   const getChangeTypeText = (type: string) => {
     const typeText = {
-      feature: 'Nueva Funcionalidad',
-      fix: 'Corrección de Error',
-      improvement: 'Mejora',
-      security: 'Seguridad'
+      feature: t('admin.changelog.newFeature'),
+      fix: t('admin.changelog.bugFix'),
+      improvement: t('admin.changelog.improvement'),
+      security: t('admin.changelog.security')
     }
 
-    return typeText[type as keyof typeof typeText] || 'Cambio'
+    return typeText[type as keyof typeof typeText] || t('admin.changelog.change')
   }
 
   return (
@@ -105,7 +107,7 @@ export function ChangelogInfo() {
       <CardHeader>
         <CardTitle className="text-foreground flex items-center gap-2">
           <GitBranch className="h-5 w-5" />
-          Historial de Cambios
+          {t('admin.changelog.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -161,20 +163,19 @@ export function ChangelogInfo() {
         <div className="mt-8 p-4 rounded-lg bg-brand/10 border border-brand/30">
           <div className="flex items-center gap-2 mb-2">
             <GitBranch className="h-5 w-5 text-brand" />
-            <h4 className="text-foreground font-semibold">Próximas Actualizaciones</h4>
+            <h4 className="text-foreground font-semibold">{t('admin.changelog.upcoming')}</h4>
           </div>
           <p className="text-sm text-muted-foreground mb-3">
-            Estamos trabajando constantemente en nuevas funcionalidades y mejoras. 
-            Mantente al día con las últimas actualizaciones.
+            {t('admin.changelog.upcomingHint')}
           </p>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1 text-green-400">
               <Plus className="h-4 w-4" />
-              <span>Nuevas funcionalidades en desarrollo</span>
+              <span>{t('admin.changelog.inDevelopment')}</span>
             </div>
             <div className="flex items-center gap-1 text-brand">
               <Wrench className="h-4 w-4" />
-              <span>Mejoras continuas de rendimiento</span>
+              <span>{t('admin.changelog.continuousImprovements')}</span>
             </div>
           </div>
         </div>

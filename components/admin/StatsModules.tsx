@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tv, Newspaper, Play, Award, Megaphone, Crown } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Client {
   id: string
@@ -38,37 +39,38 @@ export function StatsModules({
   promotions,
   topClients
 }: StatsModulesProps) {
+  const { t } = useDashboardI18n()
   const modules = [
     {
-      name: 'Programas',
+      name: t('admin.statsWidgets.programs'),
       count: programs,
       icon: Tv,
       color: 'text-brand',
       bgColor: 'bg-brand/10'
     },
     {
-      name: 'Noticias',
+      name: t('admin.statsWidgets.news'),
       count: news,
       icon: Newspaper,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10'
     },
     {
-      name: 'Videos',
+      name: t('admin.statsWidgets.videos'),
       count: videos,
       icon: Play,
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/10'
     },
     {
-      name: 'Sponsors',
+      name: t('admin.statsWidgets.sponsors'),
       count: sponsors,
       icon: Award,
       color: 'text-orange-400',
       bgColor: 'bg-orange-500/10'
     },
     {
-      name: 'Promociones',
+      name: t('admin.statsWidgets.promotions'),
       count: promotions,
       icon: Megaphone,
       color: 'text-pink-400',
@@ -83,7 +85,7 @@ export function StatsModules({
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <Award className="h-5 w-5 text-yellow-400" />
-            Contenido por Módulo
+            {t('admin.statsWidgets.contentByModule')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -115,7 +117,7 @@ export function StatsModules({
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <Crown className="h-5 w-5 text-yellow-400" />
-            Top Clientes Activos
+            {t('admin.statsWidgets.topClients')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -141,14 +143,14 @@ export function StatsModules({
                       {client.totalContent}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      contenidos
+                      {t('admin.statsWidgets.contents')}
                     </p>
                   </div>
                 </div>
               ))
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No hay clientes con contenido aún</p>
+                <p className="text-muted-foreground">{t('admin.statsWidgets.noClientsContent')}</p>
               </div>
             )}
           </div>

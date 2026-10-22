@@ -7,15 +7,17 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import type { DashboardTranslationKey } from '@/lib/dashboard-i18n'
 
 // Esquema para crear usuario (contraseña requerida)
 const createUserSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  clientName: z.string().min(1, 'El nombre del proyecto es requerido'),
+  name: z.string().min(1, 'admin.userForm.nameRequired'),
+  email: z.string().email('admin.userForm.invalidEmail'),
+  password: z.string().min(6, 'admin.userForm.passwordMin'),
+  clientName: z.string().min(1, 'admin.userForm.clientNameRequired'),
   phone: z.string().optional().transform(val => val?.trim() || undefined),
-  websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
+  websiteUrl: z.string().url('admin.userForm.invalidUrl').optional().or(z.literal('')),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalSafariWebId: z.string().optional().transform(val => val?.trim() || undefined),
@@ -25,15 +27,15 @@ const createUserSchema = z.object({
 
 // Esquema para editar usuario (contraseña opcional)
 const editUserSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  email: z.string().email('Email inválido'),
+  name: z.string().min(1, 'admin.userForm.nameRequired'),
+  email: z.string().email('admin.userForm.invalidEmail'),
   password: z.string().optional().refine(
     (val) => !val || val.length >= 6,
-    'La contraseña debe tener al menos 6 caracteres'
+    'admin.userForm.passwordMin'
   ),
-  clientName: z.string().min(1, 'El nombre del proyecto es requerido'),
+  clientName: z.string().min(1, 'admin.userForm.clientNameRequired'),
   phone: z.string().optional().transform(val => val?.trim() || undefined),
-  websiteUrl: z.string().url('URL inválida').optional().or(z.literal('')),
+  websiteUrl: z.string().url('admin.userForm.invalidUrl').optional().or(z.literal('')),
   oneSignalAppId: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalApiKey: z.string().optional().transform(val => val?.trim() || undefined),
   oneSignalSafariWebId: z.string().optional().transform(val => val?.trim() || undefined),
@@ -66,6 +68,7 @@ interface ServerOption {
 }
 
 export function UserForm({ initialData }: UserFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const [servers, setServers] = useState<ServerOption[]>([])
   const router = useRouter()
@@ -121,10 +124,10 @@ export function UserForm({ initialData }: UserFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar el usuario' })
+        showToast({ type: 'error', title: error.error || t('admin.userForm.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar el usuario' })
+      showToast({ type: 'error', title: t('admin.userForm.saveError') })
     } finally {
       setLoading(false)
     }
@@ -135,23 +138,23 @@ export function UserForm({ initialData }: UserFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="form-group">
           <label htmlFor="name" className="form-label">
-            Nombre Completo *
+            {t('admin.userForm.fullName')}
           </label>
           <input
             type="text"
             id="name"
             className="form-input"
-            placeholder="Ej: Juan Pérez"
+            placeholder={t('admin.userForm.fullNamePlaceholder')}
             {...register('name')}
           />
           {errors.name && (
-            <p className="text-sm text-red-400">{errors.name.message}</p>
+            <p className="text-sm text-red-400">{t(errors.name.message as DashboardTranslationKey)}</p>
           )}
         </div>
 
         <div className="form-group">
           <label htmlFor="email" className="form-label">
-            Email *
+            {t('admin.userForm.email')}
           </label>
           <input
             type="email"
@@ -161,14 +164,14 @@ export function UserForm({ initialData }: UserFormProps) {
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-sm text-red-400">{errors.email.message}</p>
+            <p className="text-sm text-red-400">{t(errors.email.message as DashboardTranslationKey)}</p>
           )}
         </div>
       </div>
 
       <div className="form-group">
         <label htmlFor="password" className="form-label">
-          Contraseña {initialData ? '(dejar vacío para mantener actual)' : '*'}
+          {t('admin.userForm.password', { hint: initialData ? t('admin.userForm.keepCurrent') : '*' })}
         </label>
         <input
           type="password"
@@ -178,35 +181,35 @@ export function UserForm({ initialData }: UserFormProps) {
           {...register('password')}
         />
         {errors.password && (
-          <p className="text-sm text-red-400">{errors.password.message}</p>
+          <p className="text-sm text-red-400">{t(errors.password.message as DashboardTranslationKey)}</p>
         )}
       </div>
 
       <div className="border-t border-border pt-6">
         <h3 className="text-lg font-medium text-foreground mb-4">
-          Información del Proyecto
+          {t('admin.userForm.projectInfo')}
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="form-group">
             <label htmlFor="clientName" className="form-label">
-              Nombre del Proyecto *
+              {t('admin.userForm.projectName')}
             </label>
             <input
               type="text"
               id="clientName"
               className="form-input"
-              placeholder="Ej: Radio Ejemplo FM"
+              placeholder={t('admin.userForm.projectNamePlaceholder')}
               {...register('clientName')}
             />
             {errors.clientName && (
-              <p className="text-sm text-red-400">{errors.clientName.message}</p>
+              <p className="text-sm text-red-400">{t(errors.clientName.message as DashboardTranslationKey)}</p>
             )}
           </div>
 
           <div className="form-group">
             <label htmlFor="phone" className="form-label">
-              WhatsApp (con código de país)
+              {t('admin.userForm.whatsapp')}
             </label>
             <input
               type="tel"
@@ -216,13 +219,13 @@ export function UserForm({ initialData }: UserFormProps) {
               {...register('phone')}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Formato: 56 9 XXXX XXXX (sin +). Se usa para enviar la cuenta del mes.
+              {t('admin.userForm.whatsappHint')}
             </p>
           </div>
 
           <div className="form-group">
             <label htmlFor="websiteUrl" className="form-label">
-              Sitio web del cliente
+              {t('admin.userForm.website')}
             </label>
             <input
               type="url"
@@ -232,23 +235,23 @@ export function UserForm({ initialData }: UserFormProps) {
               {...register('websiteUrl')}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              URL del sitio web público del cliente. Se muestra el botón "Ir a mi sitio Web" en su dashboard.
+              {t('admin.userForm.websiteHint')}
             </p>
             {errors.websiteUrl && (
-              <p className="text-sm text-red-400">{errors.websiteUrl.message}</p>
+              <p className="text-sm text-red-400">{t(errors.websiteUrl.message as DashboardTranslationKey)}</p>
             )}
           </div>
         </div>
 
         <div className="form-group mt-6">
           <label className="form-label">
-            Plan
+            {t('admin.userForm.plan')}
           </label>
           <div className="form-input bg-secondary text-muted-foreground cursor-not-allowed">
-            Se asignará después de crear el usuario
+            {t('admin.userForm.planAfterCreate')}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Los planes se gestionan desde el módulo de facturación
+            {t('admin.userForm.planHint')}
           </p>
         </div>
 
@@ -256,10 +259,10 @@ export function UserForm({ initialData }: UserFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div className="form-group">
               <label htmlFor="radioServerId" className="form-label">
-                Servidor de Radio
+                {t('admin.userForm.radioServer')}
               </label>
               <select id="radioServerId" className="form-input" {...register('radioServerId')}>
-                <option value="">Auto (servidor principal)</option>
+                <option value="">{t('admin.userForm.autoServer')}</option>
                 {servers.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.type === 'radio' ? 'Radio' : s.type === 'tv' ? 'TV' : 'Radio+TV'})
@@ -267,16 +270,16 @@ export function UserForm({ initialData }: UserFormProps) {
                 ))}
               </select>
               <p className="text-xs text-muted-foreground mt-1">
-                Servidor donde se hospedará la radio de este cliente
+                {t('admin.userForm.radioServerHint')}
               </p>
             </div>
 
             <div className="form-group">
               <label htmlFor="videoServerId" className="form-label">
-                Servidor de TV
+                {t('admin.userForm.videoServer')}
               </label>
               <select id="videoServerId" className="form-input" {...register('videoServerId')}>
-                <option value="">Auto (servidor principal)</option>
+                <option value="">{t('admin.userForm.autoServer')}</option>
                 {servers.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.type === 'radio' ? 'Radio' : s.type === 'tv' ? 'TV' : 'Radio+TV'})
@@ -284,7 +287,7 @@ export function UserForm({ initialData }: UserFormProps) {
                 ))}
               </select>
               <p className="text-xs text-muted-foreground mt-1">
-                Servidor donde se hospedará la televisión de este cliente
+                {t('admin.userForm.videoServerHint')}
               </p>
             </div>
           </div>
@@ -296,10 +299,10 @@ export function UserForm({ initialData }: UserFormProps) {
           <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
-          Configuración OneSignal (Notificaciones Push)
+          {t('admin.userForm.oneSignal')}
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Configura las credenciales de OneSignal para habilitar notificaciones push en la PWA del cliente
+          {t('admin.userForm.oneSignalHint')}
         </p>
         
         <div className="grid grid-cols-1 gap-6">
@@ -315,13 +318,13 @@ export function UserForm({ initialData }: UserFormProps) {
               {...register('oneSignalAppId')}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              ID de la aplicación en OneSignal (formato UUID). Ejemplo: 12345678-1234-1234-1234-123456789012
+              {t('admin.userForm.appIdHint')}
             </p>
           </div>
 
           <div className="form-group">
             <label htmlFor="oneSignalSafariWebId" className="form-label">
-              Safari Web ID (opcional, iOS/Safari)
+              {t('admin.userForm.safariId')}
             </label>
             <input
               type="text"
@@ -331,13 +334,13 @@ export function UserForm({ initialData }: UserFormProps) {
               {...register('oneSignalSafariWebId')}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Requerido para push en iOS/Safari (la PWA debe estar instalada). Settings → Keys &amp; IDs en OneSignal.
+              {t('admin.userForm.safariIdHint')}
             </p>
           </div>
 
           <div className="form-group">
             <label htmlFor="oneSignalApiKey" className="form-label">
-              OneSignal REST API Key
+              {t('admin.userForm.apiKey')}
             </label>
             <div className="relative">
               <input
@@ -365,7 +368,7 @@ export function UserForm({ initialData }: UserFormProps) {
               </button>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Clave de API REST para enviar notificaciones. Se almacena encriptada.
+              {t('admin.userForm.apiKeyHint')}
             </p>
           </div>
         </div>
@@ -377,13 +380,13 @@ export function UserForm({ initialData }: UserFormProps) {
             </svg>
             <div>
               <h4 className="text-sm font-medium text-purple-300 mb-1">
-                ¿Cómo obtener estas credenciales?
+                {t('admin.userForm.howToGet')}
               </h4>
               <ol className="text-sm text-purple-200/80 space-y-1 list-decimal list-inside">
-                <li>Crea una cuenta en <a href="https://onesignal.com" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">OneSignal.com</a></li>
-                <li>Crea una nueva aplicación (App)</li>
-                <li>Ve a Settings → Keys & IDs</li>
-                <li>Copia el "App ID" y "REST API Key"</li>
+                <li>{t('admin.userForm.howTo1')} <a href="https://onesignal.com" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">OneSignal.com</a></li>
+                <li>{t('admin.userForm.howTo2')}</li>
+                <li>{t('admin.userForm.howTo3')}</li>
+                <li>{t('admin.userForm.howTo4')}</li>
               </ol>
             </div>
           </div>
@@ -397,12 +400,12 @@ export function UserForm({ initialData }: UserFormProps) {
           </svg>
           <div>
             <h4 className="text-sm font-medium text-brand mb-1">
-              Información importante
+              {t('admin.userForm.important')}
             </h4>
             <p className="text-sm text-brand/80">
               {initialData 
-                ? 'Al actualizar este usuario, los cambios se aplicarán inmediatamente. Si cambias la contraseña, el usuario deberá usar la nueva para iniciar sesión.'
-                : 'Se creará automáticamente una cuenta de cliente asociada al usuario. El usuario podrá iniciar sesión inmediatamente con las credenciales proporcionadas.'
+                ? t('admin.userForm.importantEdit')
+                : t('admin.userForm.importantCreate')
               }
             </p>
           </div>
@@ -415,14 +418,14 @@ export function UserForm({ initialData }: UserFormProps) {
           onClick={() => router.back()}
           className="btn-secondary"
         >
-          Cancelar
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="btn-primary disabled:opacity-50"
         >
-          {loading ? 'Guardando...' : (initialData ? 'Actualizar Usuario' : 'Crear Usuario')}
+          {loading ? t('common.saving') : (initialData ? t('admin.userForm.updateUser') : t('admin.userForm.createUser'))}
         </button>
       </div>
     </form>

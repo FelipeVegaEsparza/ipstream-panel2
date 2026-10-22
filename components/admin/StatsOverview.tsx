@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Building2, FileText, Activity, TrendingUp, Target } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface StatsOverviewProps {
   totalUsers: number
@@ -20,44 +21,45 @@ export function StatsOverview({
   newLastWeek,
   clientsWithContent
 }: StatsOverviewProps) {
+  const { t } = useDashboardI18n()
   const stats = [
     {
-      title: 'Total Usuarios',
+      title: t('admin.statsWidgets.totalUsers'),
       value: totalUsers,
       icon: Users,
       color: 'text-brand',
       bgColor: 'bg-brand/10'
     },
     {
-      title: 'Total Clientes',
+      title: t('admin.statsWidgets.totalClients'),
       value: totalClients,
       icon: Building2,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10'
     },
     {
-      title: 'Total Contenido',
+      title: t('admin.statsWidgets.totalContent'),
       value: totalContent,
       icon: FileText,
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/10'
     },
     {
-      title: 'Activos Hoy',
+      title: t('admin.statsWidgets.activeToday'),
       value: activeToday,
       icon: Activity,
       color: 'text-orange-400',
       bgColor: 'bg-orange-500/10'
     },
     {
-      title: 'Nuevos (7 días)',
+      title: t('admin.statsWidgets.newLastWeek'),
       value: newLastWeek,
       icon: TrendingUp,
       color: 'text-pink-400',
       bgColor: 'bg-pink-500/10'
     },
     {
-      title: 'Clientes con Contenido',
+      title: t('admin.statsWidgets.clientsWithContent'),
       value: clientsWithContent,
       icon: Target,
       color: 'text-brand',

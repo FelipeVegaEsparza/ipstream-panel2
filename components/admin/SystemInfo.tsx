@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { 
   Server, 
   Cpu, 
@@ -37,6 +38,7 @@ interface SystemInfoProps {
 }
 
 export function SystemInfo({ info }: SystemInfoProps) {
+  const { t } = useDashboardI18n()
   const formatBytes = (bytes: number) => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     if (bytes === 0) return '0 Bytes'
@@ -53,10 +55,10 @@ export function SystemInfo({ info }: SystemInfoProps) {
 
   const getEnvironmentBadge = (env: string) => {
     const envConfig = {
-      production: { color: 'bg-green-600', text: 'Producción' },
-      development: { color: 'bg-brand', text: 'Desarrollo' },
-      staging: { color: 'bg-orange-600', text: 'Staging' },
-      test: { color: 'bg-purple-600', text: 'Pruebas' }
+      production: { color: 'bg-green-600', text: t('admin.systemInfo.production') },
+      development: { color: 'bg-brand', text: t('admin.systemInfo.development') },
+      staging: { color: 'bg-orange-600', text: t('admin.systemInfo.staging') },
+      test: { color: 'bg-purple-600', text: t('admin.systemInfo.test') }
     }
 
     const config = envConfig[env as keyof typeof envConfig] || envConfig.development
@@ -70,19 +72,19 @@ export function SystemInfo({ info }: SystemInfoProps) {
 
   const systemSpecs = [
     {
-      label: 'Versión del Sistema',
+      label: t('admin.systemInfo.version'),
       value: `v${info.version}`,
       icon: Code,
       color: 'text-brand'
     },
     {
-      label: 'Fecha de Compilación',
+      label: t('admin.systemInfo.buildDate'),
       value: info.buildDate,
       icon: Clock,
       color: 'text-green-400'
     },
     {
-      label: 'Entorno',
+      label: t('admin.systemInfo.environment'),
       value: getEnvironmentBadge(info.environment),
       icon: Monitor,
       color: 'text-purple-400'
@@ -94,13 +96,13 @@ export function SystemInfo({ info }: SystemInfoProps) {
       color: 'text-orange-400'
     },
     {
-      label: 'Plataforma',
+      label: t('admin.systemInfo.platform'),
       value: `${info.platform} (${info.architecture})`,
       icon: Cpu,
       color: 'text-brand'
     },
     {
-      label: 'Tiempo Activo',
+      label: t('admin.systemSettings.uptime'),
       value: formatUptime(info.uptime),
       icon: Zap,
       color: 'text-pink-400'
@@ -109,24 +111,24 @@ export function SystemInfo({ info }: SystemInfoProps) {
 
   const memoryStats = [
     {
-      label: 'Memoria RSS',
+      label: t('admin.systemInfo.memoryRss'),
       value: formatBytes(info.memoryUsage.rss),
-      description: 'Memoria física total utilizada'
+      description: t('admin.systemInfo.memoryRssDesc')
     },
     {
-      label: 'Heap Usado',
+      label: t('admin.systemInfo.heapUsed'),
       value: formatBytes(info.memoryUsage.heapUsed),
-      description: 'Memoria heap actualmente en uso'
+      description: t('admin.systemInfo.heapUsedDesc')
     },
     {
-      label: 'Heap Total',
+      label: t('admin.systemInfo.heapTotal'),
       value: formatBytes(info.memoryUsage.heapTotal),
-      description: 'Memoria heap total asignada'
+      description: t('admin.systemInfo.heapTotalDesc')
     },
     {
-      label: 'Externa',
+      label: t('admin.systemInfo.external'),
       value: formatBytes(info.memoryUsage.external),
-      description: 'Memoria externa utilizada'
+      description: t('admin.systemInfo.externalDesc')
     }
   ]
 
@@ -137,7 +139,7 @@ export function SystemInfo({ info }: SystemInfoProps) {
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <Server className="h-5 w-5" />
-            Información del Sistema
+            {t('admin.systemInfo.systemInfo')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -165,7 +167,7 @@ export function SystemInfo({ info }: SystemInfoProps) {
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <MemoryStick className="h-5 w-5" />
-            Uso de Memoria
+            {t('admin.systemInfo.memoryUsage')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -188,17 +190,17 @@ export function SystemInfo({ info }: SystemInfoProps) {
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <Cpu className="h-5 w-5" />
-            Uso de CPU
+            {t('admin.systemInfo.cpuUsage')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-              <span className="text-muted-foreground">Tiempo de Usuario</span>
+              <span className="text-muted-foreground">{t('admin.systemInfo.userTime')}</span>
               <span className="text-green-400 font-bold">{(info.cpuUsage.user / 1000).toFixed(2)}ms</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-              <span className="text-muted-foreground">Tiempo de Sistema</span>
+              <span className="text-muted-foreground">{t('admin.systemInfo.systemTime')}</span>
               <span className="text-orange-400 font-bold">{(info.cpuUsage.system / 1000).toFixed(2)}ms</span>
             </div>
           </div>

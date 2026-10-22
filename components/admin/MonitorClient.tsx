@@ -8,6 +8,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { ClientMigrateModal } from '@/components/admin/ClientMigrateModal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface HostStats {
   loadAvg?: { one: number; five: number; fifteen: number }
@@ -75,22 +76,24 @@ function fmtUptime(secs: number | undefined) {
 }
 
 function StatusBadge({ status, has, unavailable }: { status: string | null; has: boolean; unavailable?: boolean }) {
+  const { t } = useDashboardI18n()
   if (!has) {
-    return <span className="text-xs px-2 py-0.5 rounded bg-card text-muted-foreground">Sin servicio</span>
+    return <span className="text-xs px-2 py-0.5 rounded bg-card text-muted-foreground">{t('admin.monitor.statusNoService')}</span>
   }
   if (unavailable) {
-    return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-red-900 text-red-300">⚠ Sin respuesta</span>
+    return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-red-900 text-red-300">{t('admin.monitor.statusNoResponse')}</span>
   }
   if (status === 'autodj') {
-    return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">● AutoDJ</span>
+    return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">{t('admin.monitor.statusAutodj')}</span>
   }
   if (status === 'live') {
-    return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 animate-pulse">● EN VIVO</span>
+    return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 animate-pulse">{t('admin.monitor.statusLive')}</span>
   }
-  return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-secondary text-muted-foreground">⏸ OFF</span>
+  return <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-secondary text-muted-foreground">{t('admin.monitor.statusOff')}</span>
 }
 
 export function MonitorClient() {
+  const { locale, t } = useDashboardI18n()
   const [host, setHost] = useState<HostStats | null>(null)
   const [clients, setClients] = useState<ClientStatus[]>([])
   const [servers, setServers] = useState<ServerHealthRow[]>([])
@@ -127,7 +130,7 @@ export function MonitorClient() {
       setLastUpdate(new Date())
       setError(null)
     } catch (err) {
-      setError('Error al cargar el monitoreo')
+      setError(t('admin.monitor.loadError'))
       console.error('[monitor] error:', err)
     } finally {
       setRefreshing(false)
@@ -160,12 +163,12 @@ export function MonitorClient() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Monitor</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('admin.monitor.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Estado del servidor y de los streams de audio y video. Actualiza cada 10s.
+            {t('admin.monitor.subtitle')}
             {lastUpdate && (
               <span className="ml-2 text-xs text-muted-foreground">
-                Última actualización: {lastUpdate.toLocaleTimeString('es-ES')}
+                {t('admin.monitor.lastUpdate', { time: lastUpdate.toLocaleTimeString(locale === 'en' ? 'en-US' : 'es-ES') })}
               </span>
             )}
           </p>
@@ -175,7 +178,7 @@ export function MonitorClient() {
           disabled={refreshing}
           className="px-4 py-2 bg-secondary hover:bg-secondary disabled:bg-card text-foreground rounded-lg"
         >
-          {refreshing ? '↻ Actualizando...' : '↻ Refrescar'}
+          {refreshing ? t('admin.monitor.refreshing') : t('admin.monitor.refresh')}
         </button>
       </div>
 
@@ -186,22 +189,22 @@ export function MonitorClient() {
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Cargando...</div>
+        <div className="text-center py-12 text-muted-foreground">{t('admin.monitor.loading')}</div>
       ) : (
         <Tabs defaultValue="servidores" className="space-y-6">
           <TabsList className="grid w-full md:w-auto grid-cols-2 bg-card border-border">
-            <TabsTrigger value="servidores" className="data-[state=active]:bg-brand">Servidores</TabsTrigger>
-            <TabsTrigger value="clientes" className="data-[state=active]:bg-brand">Clientes</TabsTrigger>
+            <TabsTrigger value="servidores" className="data-[state=active]:bg-brand">{t('admin.monitor.serversTab')}</TabsTrigger>
+            <TabsTrigger value="clientes" className="data-[state=active]:bg-brand">{t('admin.monitor.clientsTab')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="servidores" className="space-y-5">
             {/* ====== SERVIDORES DE STREAMING ====== */}
             <div className="bg-card rounded-lg p-5">
-              <h2 className="text-lg font-semibold text-foreground mb-3">Servidores de Streaming</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-3">{t('admin.monitor.streamingServers')}</h2>
               {servers.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No hay servidores de streaming registrados. Agregalos en{' '}
-                  <a href="/admin/servers" className="text-brand hover:text-brand">Servidores de Streaming</a>.
+                  {t('admin.monitor.noServers')}{' '}
+                  <a href="/admin/servers" className="text-brand hover:text-brand">{t('admin.monitor.serversLink')}</a>.
                 </p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -210,17 +213,17 @@ export function MonitorClient() {
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-foreground">{s.server.name}</span>
                         {s.online ? (
-                          <span className="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">● En línea</span>
+                          <span className="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">{t('admin.monitor.online')}</span>
                         ) : (
-                          <span className="text-xs px-2 py-0.5 rounded bg-red-900 text-red-300">⚠ Caído</span>
+                          <span className="text-xs px-2 py-0.5 rounded bg-red-900 text-red-300">{t('admin.monitor.down')}</span>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {s.server.type === 'radio' ? 'Radio' : s.server.type === 'tv' ? 'TV' : 'Radio+TV'} ·{' '}
-                        {s.accounts} {s.accounts === 1 ? 'cuenta' : 'cuentas'} · {s.radioClients} radios · {s.videoClients} TV
+                        {s.accounts === 1 ? t('admin.monitor.accountsOne', { count: s.accounts }) : t('admin.monitor.accountsMany', { count: s.accounts })} · {s.radioClients} radios · {s.videoClients} TV
                       </div>
                       {!s.online && s.server.isActive && (
-                        <div className="text-xs text-red-400 mt-1">{s.affectedClients} clientes afectados</div>
+                        <div className="text-xs text-red-400 mt-1">{t('admin.monitor.affectedClients', { count: s.affectedClients })}</div>
                       )}
                     </div>
                   ))}
@@ -244,39 +247,39 @@ export function MonitorClient() {
                           <p className="text-xs text-muted-foreground">{srv.type === 'radio' ? 'Radio' : srv.type === 'tv' ? 'TV' : 'Radio + TV'}</p>
                         </div>
                         {srv.online ? (
-                          <span className="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">● En línea</span>
+                          <span className="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">{t('admin.monitor.online')}</span>
                         ) : (
-                          <span className="text-xs px-2 py-0.5 rounded bg-red-900 text-red-300">⚠ Sin datos</span>
+                          <span className="text-xs px-2 py-0.5 rounded bg-red-900 text-red-300">{t('admin.monitor.noData')}</span>
                         )}
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                         <div>
-                          <div className="text-xs text-muted-foreground uppercase">CPU Load (1m)</div>
+                          <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.cpuLoad')}</div>
                           <div className={`text-xl font-bold mt-1 ${pct !== null && pct > 80 ? 'text-red-400' : pct !== null && pct > 50 ? 'text-yellow-400' : 'text-foreground'}`}>
                             {st?.loadAvg?.one?.toFixed(2) ?? '—'}
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5">{st?.cpuCount ?? '—'} cores · {pct !== null ? `${pct}%` : '—'}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">{t('admin.monitor.cores', { count: st?.cpuCount ?? '—' })} · {pct !== null ? `${pct}%` : '—'}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground uppercase">Load 5m / 15m</div>
+                          <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.load5m15m')}</div>
                           <div className="text-xl font-bold text-foreground mt-1">{st?.loadAvg?.five?.toFixed(2) ?? '—'} / {st?.loadAvg?.fifteen?.toFixed(2) ?? '—'}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground uppercase">Memoria</div>
+                          <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.memory')}</div>
                           <div className={`text-xl font-bold mt-1 ${st?.memory?.percentUsed && st.memory.percentUsed > 90 ? 'text-red-400' : 'text-foreground'}`}>{st?.memory?.percentUsed ?? '—'}%</div>
                           <div className="text-xs text-muted-foreground mt-0.5">{fmtBytesMB(st?.memory?.usedMB)} / {fmtBytesMB(st?.memory?.totalMB)}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground uppercase">Disco</div>
+                          <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.disk')}</div>
                           <div className={`text-xl font-bold mt-1 ${st?.disk?.percentUsed && st.disk.percentUsed > 85 ? 'text-red-400' : 'text-foreground'}`}>{st?.disk?.percentUsed ?? '—'}%</div>
                           <div className="text-xs text-muted-foreground mt-0.5">{fmtBytesMB(st?.disk?.usedMB)} / {fmtBytesMB(st?.disk?.totalMB)}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground uppercase">Uptime</div>
+                          <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.uptime')}</div>
                           <div className="text-xl font-bold text-foreground mt-1">{fmtUptime(st?.uptime)}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground uppercase">Contenedores</div>
+                          <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.containers')}</div>
                           <div className="text-xl font-bold text-foreground mt-1">{st?.containers ?? '—'}</div>
                         </div>
                       </div>
@@ -288,32 +291,32 @@ export function MonitorClient() {
               // Fallback: un solo servidor (env legacy, sin registro en DB)
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="bg-card rounded-lg p-4">
-                  <div className="text-xs text-muted-foreground uppercase">CPU Load (1m)</div>
+                  <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.cpuLoad')}</div>
                   <div className={`text-2xl font-bold mt-1 ${loadAvgPct !== null && loadAvgPct > 80 ? 'text-red-400' : loadAvgPct !== null && loadAvgPct > 50 ? 'text-yellow-400' : 'text-foreground'}`}>
                     {host?.loadAvg?.one?.toFixed(2) ?? '—'}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">{host?.cpuCount ?? '—'} cores · {loadAvgPct !== null ? `${loadAvgPct}%` : '—'}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{t('admin.monitor.cores', { count: host?.cpuCount ?? '—' })} · {loadAvgPct !== null ? `${loadAvgPct}%` : '—'}</div>
                 </div>
                 <div className="bg-card rounded-lg p-4">
-                  <div className="text-xs text-muted-foreground uppercase">Load 5m / 15m</div>
+                  <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.load5m15m')}</div>
                   <div className="text-2xl font-bold text-foreground mt-1">{host?.loadAvg?.five?.toFixed(2) ?? '—'} / {host?.loadAvg?.fifteen?.toFixed(2) ?? '—'}</div>
                 </div>
                 <div className="bg-card rounded-lg p-4">
-                  <div className="text-xs text-muted-foreground uppercase">Memoria</div>
+                  <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.memory')}</div>
                   <div className={`text-2xl font-bold mt-1 ${host?.memory?.percentUsed && host.memory.percentUsed > 90 ? 'text-red-400' : 'text-foreground'}`}>{host?.memory?.percentUsed ?? '—'}%</div>
                   <div className="text-xs text-muted-foreground mt-1">{fmtBytesMB(host?.memory?.usedMB)} / {fmtBytesMB(host?.memory?.totalMB)}</div>
                 </div>
                 <div className="bg-card rounded-lg p-4">
-                  <div className="text-xs text-muted-foreground uppercase">Disco</div>
+                  <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.disk')}</div>
                   <div className={`text-2xl font-bold mt-1 ${host?.disk?.percentUsed && host.disk.percentUsed > 85 ? 'text-red-400' : 'text-foreground'}`}>{host?.disk?.percentUsed ?? '—'}%</div>
                   <div className="text-xs text-muted-foreground mt-1">{fmtBytesMB(host?.disk?.usedMB)} / {fmtBytesMB(host?.disk?.totalMB)}</div>
                 </div>
                 <div className="bg-card rounded-lg p-4">
-                  <div className="text-xs text-muted-foreground uppercase">Uptime</div>
+                  <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.uptime')}</div>
                   <div className="text-2xl font-bold text-foreground mt-1">{fmtUptime(host?.uptime)}</div>
                 </div>
                 <div className="bg-card rounded-lg p-4">
-                  <div className="text-xs text-muted-foreground uppercase">Contenedores</div>
+                  <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.containers')}</div>
                   <div className="text-2xl font-bold text-foreground mt-1">{host?.containers ?? '—'}</div>
                 </div>
               </div>
@@ -324,19 +327,19 @@ export function MonitorClient() {
             {/* ====== RESUMEN CLIENTES ====== */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-card rounded-lg p-4">
-                <div className="text-xs text-muted-foreground uppercase">Radios online</div>
+                <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.radiosOnline')}</div>
                 <div className="text-2xl font-bold text-green-400 mt-1">{onlineRadio} / {clients.filter(c => c.hasRadio).length}</div>
               </div>
               <div className="bg-card rounded-lg p-4">
-                <div className="text-xs text-muted-foreground uppercase">Videos online</div>
+                <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.videosOnline')}</div>
                 <div className="text-2xl font-bold text-green-400 mt-1">{onlineVideo} / {clients.filter(c => c.hasVideo).length}</div>
               </div>
               <div className="bg-card rounded-lg p-4">
-                <div className="text-xs text-muted-foreground uppercase">Oyentes</div>
+                <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.listeners')}</div>
                 <div className="text-2xl font-bold text-brand mt-1">{totalListeners}</div>
               </div>
               <div className="bg-card rounded-lg p-4">
-                <div className="text-xs text-muted-foreground uppercase">Espectadores</div>
+                <div className="text-xs text-muted-foreground uppercase">{t('admin.monitor.viewers')}</div>
                 <div className="text-2xl font-bold text-brand mt-1">{totalViewers}</div>
               </div>
             </div>
@@ -346,14 +349,14 @@ export function MonitorClient() {
               <table className="w-full text-sm">
                 <thead className="bg-background/50 text-muted-foreground uppercase text-xs">
                   <tr>
-                    <th className="text-left p-3">Cliente</th>
-                    <th className="text-left p-3">Servidor Audio</th>
-                    <th className="text-left p-3">Audio</th>
-                    <th className="text-left p-3">Servidor Video</th>
-                    <th className="text-left p-3">Video</th>
-                    <th className="text-right p-3">Oyentes</th>
-                    <th className="text-right p-3">Espectadores</th>
-                    <th className="text-right p-3">Acción</th>
+                    <th className="text-left p-3">{t('admin.monitor.client')}</th>
+                    <th className="text-left p-3">{t('admin.monitor.audioServer')}</th>
+                    <th className="text-left p-3">{t('admin.monitor.audio')}</th>
+                    <th className="text-left p-3">{t('admin.monitor.videoServer')}</th>
+                    <th className="text-left p-3">{t('admin.monitor.video')}</th>
+                    <th className="text-right p-3">{t('admin.monitor.listeners')}</th>
+                    <th className="text-right p-3">{t('admin.monitor.viewers')}</th>
+                    <th className="text-right p-3">{t('admin.monitor.action')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -390,7 +393,7 @@ export function MonitorClient() {
                           onClick={() => setMigrateClient({ id: c.clientId, name: c.clientName })}
                           className="text-xs px-2 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white"
                         >
-                          ⇄ Migrar
+                          {t('admin.monitor.migrate')}
                         </button>
                       </td>
                     </tr>
@@ -398,7 +401,7 @@ export function MonitorClient() {
                 </tbody>
               </table>
               {clients.length === 0 && (
-                <div className="p-8 text-center text-muted-foreground">No hay clientes</div>
+                <div className="p-8 text-center text-muted-foreground">{t('admin.monitor.noClients')}</div>
               )}
             </div>
 

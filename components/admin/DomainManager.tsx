@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface ClientDomain {
   id: string
@@ -24,6 +25,7 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export function DomainManager({ userId }: DomainManagerProps) {
+  const { t } = useDashboardI18n()
   const [domains, setDomains] = useState<ClientDomain[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +40,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
     try {
       const res = await fetch(`/api/admin/users/${userId}/domains`)
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al cargar dominios')
+      if (!res.ok) throw new Error(data.error || t('admin.domains.loadError'))
       setDomains(data.domains || [])
     } catch (err) {
       setError((err as Error).message)
@@ -63,7 +65,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
         body: JSON.stringify({ hostname: hostname.trim(), kind, isPrimary }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al crear el dominio')
+      if (!res.ok) throw new Error(data.error || t('admin.domains.createError'))
       setHostname('')
       setIsPrimary(false)
       await load()
@@ -84,7 +86,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al actualizar el dominio')
+      if (!res.ok) throw new Error(data.error || t('admin.domains.updateError'))
       await load()
     } catch (err) {
       setError((err as Error).message)
@@ -103,7 +105,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
         body: JSON.stringify({ action: 'provision' }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al provisionar el dominio')
+      if (!res.ok) throw new Error(data.error || t('admin.domains.provisionError'))
       // El job corre en background: recargamos en unos segundos para ver el estado.
       setTimeout(() => void load(), 2500)
     } catch (err) {
@@ -114,7 +116,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
   }
 
   async function remove(domainId: string) {
-    if (!confirm('¿Eliminar este dominio?')) return
+    if (!confirm(t('admin.domains.deleteConfirm'))) return
     setBusy(true)
     setError(null)
     try {
@@ -122,7 +124,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
         method: 'DELETE',
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al eliminar el dominio')
+      if (!res.ok) throw new Error(data.error || t('admin.domains.deleteError'))
       await load()
     } catch (err) {
       setError((err as Error).message)
@@ -133,10 +135,9 @@ export function DomainManager({ userId }: DomainManagerProps) {
 
   return (
     <div className="card max-w-2xl">
-      <h2 className="text-xl font-semibold text-foreground mb-1">Dominios del sitio</h2>
+      <h2 className="text-xl font-semibold text-foreground mb-1">{t('admin.domains.title')}</h2>
       <p className="text-sm text-muted-foreground mb-4">
-        Dominios por los que se sirve el sitio del cliente (bundle único). El
-        subdominio de plataforma puede abreviarse (p. ej. <code>radio-x</code>).
+        {t('admin.domains.subtitle')}
       </p>
 
       {error && (
@@ -146,9 +147,9 @@ export function DomainManager({ userId }: DomainManagerProps) {
       )}
 
       {loading ? (
-        <p className="text-muted-foreground text-sm">Cargando dominios…</p>
+        <p className="text-muted-foreground text-sm">{t('admin.domains.loading')}</p>
       ) : domains.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Sin dominios registrados.</p>
+        <p className="text-muted-foreground text-sm">{t('admin.domains.empty')}</p>
       ) : (
         <ul className="divide-y divide-border mb-4">
           {domains.map((d) => (
@@ -158,7 +159,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
                   <span className="text-foreground truncate">{d.hostname}</span>
                   {d.isPrimary && (
                     <span className="text-[10px] uppercase tracking-wide rounded bg-brand/15 text-brand border border-brand/30 px-1.5 py-0.5">
-                      Primario
+                      {t('admin.domains.primary')}
                     </span>
                   )}
                 </div>
@@ -180,7 +181,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
                   onClick={() => runProvision(d.id)}
                   className="text-xs rounded border border-brand/40 px-2 py-1 text-brand hover:bg-brand/10 disabled:opacity-50"
                 >
-                  Proveer
+                  {t('admin.domains.provision')}
                 </button>
                 {!d.isPrimary && (
                   <button
@@ -189,7 +190,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
                     onClick={() => patch(d.id, { isPrimary: true })}
                     className="text-xs rounded border border-border px-2 py-1 text-muted-foreground hover:bg-card disabled:opacity-50"
                   >
-                    Hacer primario
+                    {t('admin.domains.makePrimary')}
                   </button>
                 )}
                 <button
@@ -198,7 +199,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
                   onClick={() => patch(d.id, { status: d.status === 'active' ? 'pending' : 'active' })}
                   className="text-xs rounded border border-border px-2 py-1 text-muted-foreground hover:bg-card disabled:opacity-50"
                 >
-                  {d.status === 'active' ? 'Desactivar' : 'Activar'}
+                  {d.status === 'active' ? t('admin.domains.deactivate') : t('admin.domains.activate')}
                 </button>
                 <button
                   type="button"
@@ -206,7 +207,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
                   onClick={() => remove(d.id)}
                   className="text-xs rounded border border-red-500/40 px-2 py-1 text-red-400 hover:bg-red-500/10 disabled:opacity-50"
                 >
-                  Eliminar
+                  {t('admin.domains.delete')}
                 </button>
               </div>
             </li>
@@ -217,7 +218,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
       <form onSubmit={addDomain} className="flex flex-wrap items-end gap-3 border-t border-border pt-4">
         <div className="flex-1 min-w-[12rem]">
           <label htmlFor="domain-hostname" className="block text-xs text-muted-foreground mb-1">
-            Dominio
+            {t('admin.domains.domain')}
           </label>
           <input
             id="domain-hostname"
@@ -229,7 +230,7 @@ export function DomainManager({ userId }: DomainManagerProps) {
         </div>
         <div>
           <label htmlFor="domain-kind" className="block text-xs text-muted-foreground mb-1">
-            Tipo
+            {t('admin.domains.kind')}
           </label>
           <select
             id="domain-kind"
@@ -237,8 +238,8 @@ export function DomainManager({ userId }: DomainManagerProps) {
             onChange={(e) => setKind(e.target.value as 'subdomain' | 'custom')}
             className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand focus:outline-none"
           >
-            <option value="subdomain">Subdominio</option>
-            <option value="custom">Dominio propio</option>
+            <option value="subdomain">{t('admin.domains.subdomain')}</option>
+            <option value="custom">{t('admin.domains.custom')}</option>
           </select>
         </div>
         <label className="flex items-center gap-2 text-sm text-muted-foreground pb-2">
@@ -248,14 +249,14 @@ export function DomainManager({ userId }: DomainManagerProps) {
             onChange={(e) => setIsPrimary(e.target.checked)}
             className="rounded border-border bg-background"
           />
-          Primario
+          {t('admin.domains.primary')}
         </label>
         <button
           type="submit"
           disabled={busy || !hostname.trim()}
           className="rounded bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand disabled:opacity-50"
         >
-          Agregar
+          {t('admin.domains.add')}
         </button>
       </form>
     </div>

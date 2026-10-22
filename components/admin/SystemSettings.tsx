@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Server, Users, FileText, Clock, Save, Newspaper } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface SystemStats {
   totalUsers: number
@@ -21,6 +22,7 @@ interface SystemSettingsProps {
 }
 
 export function SystemSettings({ stats }: SystemSettingsProps) {
+  const { t } = useDashboardI18n()
   const [enableGenericNews, setEnableGenericNews] = useState(false)
   const [adminNotifyEmail, setAdminNotifyEmail] = useState('')
   const [trialDays, setTrialDays] = useState(7)
@@ -63,22 +65,22 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
       })
 
       if (response.ok) {
-        showToast({ type: 'success', title: 'Configuración guardada exitosamente' })
+        showToast({ type: 'success', title: t('admin.systemSettings.saved') })
       } else {
-        showToast({ type: 'error', title: 'Error al guardar la configuración' })
+        showToast({ type: 'error', title: t('admin.systemSettings.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar la configuración' })
+      showToast({ type: 'error', title: t('admin.systemSettings.saveError') })
     } finally {
       setLoading(false)
     }
   }
 
   const systemInfo = [
-    { label: 'Total Usuarios', value: stats.totalUsers, icon: Users, color: 'text-brand' },
-    { label: 'Total Clientes', value: stats.totalClients, icon: Users, color: 'text-green-400' },
-    { label: 'Total Contenido', value: stats.totalContent, icon: FileText, color: 'text-purple-400' },
-    { label: 'Tiempo Activo', value: formatUptime(stats.uptime), icon: Clock, color: 'text-brand' },
+    { label: t('admin.systemSettings.totalUsers'), value: stats.totalUsers, icon: Users, color: 'text-brand' },
+    { label: t('admin.systemSettings.totalClients'), value: stats.totalClients, icon: Users, color: 'text-green-400' },
+    { label: t('admin.systemSettings.totalContent'), value: stats.totalContent, icon: FileText, color: 'text-purple-400' },
+    { label: t('admin.systemSettings.uptime'), value: formatUptime(stats.uptime), icon: Clock, color: 'text-brand' },
     { label: 'Node.js', value: stats.nodeVersion, icon: Server, color: 'text-pink-400' }
   ]
 
@@ -87,7 +89,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
       <div className="space-y-6">
         <Card className="bg-card border-border">
           <CardContent className="p-6">
-            <p className="text-muted-foreground">Cargando configuración...</p>
+            <p className="text-muted-foreground">{t('admin.systemSettings.loading')}</p>
           </CardContent>
         </Card>
       </div>
@@ -101,7 +103,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <Server className="h-5 w-5" />
-            Información del Sistema
+            {t('admin.systemSettings.systemInfo')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -127,7 +129,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <Newspaper className="h-5 w-5" />
-            Configuración General
+            {t('admin.systemSettings.general')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -135,10 +137,10 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
             <div>
               <p className="text-foreground font-medium flex items-center gap-2">
                 <Newspaper className="h-4 w-4" />
-                Noticias Genéricas
+                {t('admin.systemSettings.genericNews')}
               </p>
               <p className="text-sm text-muted-foreground">
-                Habilita la opción para que los clientes usen noticias globales del sistema
+                {t('admin.systemSettings.genericNewsHint')}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -149,14 +151,14 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
                 className="rounded border-border bg-secondary"
               />
               <Badge className={enableGenericNews ? "bg-green-600" : "bg-secondary"}>
-                {enableGenericNews ? 'Activado' : 'Desactivado'}
+                {enableGenericNews ? t('admin.systemSettings.enabled') : t('admin.systemSettings.disabled')}
               </Badge>
             </div>
           </div>
 
           <div className="p-3 rounded-lg bg-secondary/50">
             <label className="block text-foreground font-medium mb-1">
-              Email de notificaciones del panel
+              {t('admin.systemSettings.notifyEmail')}
             </label>
             <input
               type="email"
@@ -166,13 +168,13 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
               className="w-full bg-background border border-border text-foreground rounded-md px-3 py-2 text-sm"
             />
             <p className="text-sm text-muted-foreground mt-1">
-              Recibe avisos de nuevos registros de clientes y otras notificaciones del sistema.
+              {t('admin.systemSettings.notifyEmailHint')}
             </p>
           </div>
 
           <div className="p-3 rounded-lg bg-secondary/50">
             <label className="block text-foreground font-medium mb-1">
-              Días de prueba gratuita
+              {t('admin.systemSettings.trialDays')}
             </label>
             <input
               type="number"
@@ -183,7 +185,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
               className="w-full bg-background border border-border text-foreground rounded-md px-3 py-2 text-sm"
             />
             <p className="text-sm text-muted-foreground mt-1">
-              Días de prueba que reciben los clientes al registrarse desde las páginas públicas. 0 desactiva la prueba.
+              {t('admin.systemSettings.trialDaysHint')}
             </p>
           </div>
 
@@ -194,7 +196,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
               className="bg-brand hover:bg-brand"
             >
               <Save className="h-4 w-4 mr-2" />
-              {loading ? 'Guardando...' : 'Guardar Configuración'}
+              {loading ? t('common.saving') : t('admin.systemSettings.save')}
             </Button>
           </div>
         </CardContent>

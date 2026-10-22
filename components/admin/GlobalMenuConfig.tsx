@@ -4,12 +4,15 @@ import { useState } from 'react'
 import { Save, Check, X, Lock, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MENU_ITEMS, MENU_SECTIONS, type MenuItemKey } from '@/lib/menu-items'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { adminMenuName, adminSectionName } from '@/lib/dashboard-i18n'
 
 interface GlobalMenuConfigProps {
   initialHidden: string[]
 }
 
 export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
+  const { locale, t } = useDashboardI18n()
   const [hidden, setHidden] = useState<Set<MenuItemKey>>(
     () => new Set(initialHidden as MenuItemKey[])
   )
@@ -57,13 +60,13 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
       })
       if (!res.ok) {
         const d = await res.json().catch(() => ({}))
-        throw new Error(d.error || `Error ${res.status}`)
+        throw new Error(d.error || t('admin.globalMenu.error', { status: res.status }))
       }
-      setFeedback({ type: 'success', message: 'Configuración guardada' })
+      setFeedback({ type: 'success', message: t('admin.globalMenu.saved') })
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Error al guardar',
+        message: err instanceof Error ? err.message : t('admin.globalMenu.saveError'),
       })
     } finally {
       setSaving(false)
@@ -78,12 +81,11 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
         <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
         <div>
           <p>
-            <strong>Override absoluto:</strong> los items ocultos globalmente no pueden ser re-mostrados por la
-            configuración individual de un cliente.
+            <strong>{t('admin.globalMenu.overrideTitle')}</strong> {t('admin.globalMenu.overrideHint')}
           </p>
           {hiddenCount > 0 && (
             <p className="mt-1">
-              {hiddenCount} item{hiddenCount === 1 ? '' : 's'} oculto{hiddenCount === 1 ? '' : 's'} para todos los clientes.
+              {hiddenCount === 1 ? t('admin.globalMenu.hiddenOne', { count: hiddenCount }) : t('admin.globalMenu.hiddenMany', { count: hiddenCount })}
             </p>
           )}
         </div>
@@ -94,21 +96,21 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
         return (
           <div key={section} className="bg-card/40 border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm uppercase tracking-wide text-muted-foreground">{section}</h3>
+              <h3 className="text-sm uppercase tracking-wide text-muted-foreground">{locale === 'en' ? adminSectionName(locale, section) : section}</h3>
               <div className="flex gap-1">
                 <button
                   type="button"
                   onClick={() => setAllInSection(section, true)}
                   className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-red-600/30 hover:text-red-200 transition-colors"
                 >
-                  Ocultar todos
+                  {t('admin.globalMenu.hideAll')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setAllInSection(section, false)}
                   className="text-xs px-2 py-1 rounded bg-secondary text-foreground hover:bg-green-600/30 hover:text-green-200 transition-colors"
                 >
-                  Mostrar todos
+                  {t('admin.globalMenu.showAll')}
                 </button>
               </div>
             </div>
@@ -120,10 +122,10 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
                   <li key={item.key}>
                     <div className="flex items-center justify-between p-2.5 rounded hover:bg-secondary/30">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-foreground text-sm">{item.name}</span>
+                        <span className="text-foreground text-sm">{locale === 'en' ? adminMenuName(locale, item.name) : item.name}</span>
                         {isLocked && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1" title="Siempre visible">
-                            <Lock className="h-3 w-3" /> siempre visible
+                          <span className="text-xs text-muted-foreground flex items-center gap-1" title={t('admin.globalMenu.alwaysVisibleTitle')}>
+                            <Lock className="h-3 w-3" /> {t('admin.globalMenu.alwaysVisible')}
                           </span>
                         )}
                       </div>
@@ -147,7 +149,7 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
                           const childHidden = hidden.has(child.key)
                           return (
                             <div key={child.key} className="flex items-center justify-between p-2 rounded hover:bg-secondary/20">
-                              <span className="text-muted-foreground text-sm">{child.name}</span>
+                              <span className="text-muted-foreground text-sm">{locale === 'en' ? adminMenuName(locale, child.name) : child.name}</span>
                               <button
                                 type="button"
                                 onClick={() => toggle(child.key)}
@@ -175,7 +177,7 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Guardando…' : 'Guardar cambios'}
+          {saving ? t('admin.globalMenu.saving') : t('admin.globalMenu.saveChanges')}
         </Button>
         {feedback && (
           <span

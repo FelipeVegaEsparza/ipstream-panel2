@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AlertTriangle, X } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface DownServer {
   server: { id: string; name: string; isActive: boolean }
@@ -12,6 +13,7 @@ interface DownServer {
 const POLL_MS = 30000
 
 export function ServerAlerts() {
+  const { t } = useDashboardI18n()
   const [down, setDown] = useState<DownServer[]>([])
   const [dismissed, setDismissed] = useState(false)
 
@@ -48,21 +50,21 @@ export function ServerAlerts() {
           <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-semibold text-red-300">
-              {down.length === 1 ? '1 servidor de streaming sin respuesta' : `${down.length} servidores de streaming sin respuesta`}
+              {down.length === 1 ? t('admin.serverAlerts.oneDown') : t('admin.serverAlerts.manyDown', { count: down.length })}
             </p>
             <ul className="mt-1 text-xs text-red-200/90 space-y-0.5">
               {down.map((d) => (
                 <li key={d.server.id}>
-                  {d.server.name} — {d.affectedClients} cliente{d.affectedClients === 1 ? '' : 's'} afectado{d.affectedClients === 1 ? '' : 's'}
+                  {d.server.name} — {d.affectedClients === 1 ? t('admin.serverAlerts.affectedOne', { count: d.affectedClients }) : t('admin.serverAlerts.affectedMany', { count: d.affectedClients })}
                 </li>
               ))}
             </ul>
             <p className="mt-1 text-xs text-red-200/70">
-              El panel no migra clientes automáticamente. Revisa{' '}
+              {t('admin.serverAlerts.noAutoMigration')}{' '}
               <Link href="/admin/servers" className="underline underline-offset-2 hover:text-foreground">
-                Servidores de Streaming
+                {t('admin.serverAlerts.serversLink')}
               </Link>{' '}
-              para migrarlos manualmente.
+              {t('admin.serverAlerts.manualMigration')}
             </p>
           </div>
         </div>
@@ -70,7 +72,7 @@ export function ServerAlerts() {
           type="button"
           onClick={() => setDismissed(true)}
           className="text-red-300 hover:text-foreground shrink-0"
-          aria-label="Cerrar alerta"
+          aria-label={t('admin.serverAlerts.close')}
         >
           <X className="h-4 w-4" />
         </button>

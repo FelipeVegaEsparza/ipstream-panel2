@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Category {
   id: string
@@ -18,6 +19,7 @@ interface Category {
 }
 
 export function NewsCategoriesManager() {
+  const { t } = useDashboardI18n()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -57,13 +59,13 @@ export function NewsCategoriesManager() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta categoría? Las noticias asociadas también se eliminarán.')) return
+    if (!confirm(t('admin.newsCategories.deleteConfirm'))) return
     try {
       const res = await fetch(`/api/admin/news-categories/${id}`, { method: 'DELETE' })
       if (res.ok) fetchCategories()
-      else showToast({ type: 'error', title: 'Error al eliminar' })
+      else showToast({ type: 'error', title: t('admin.newsCategories.deleteError') })
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar' })
+      showToast({ type: 'error', title: t('admin.newsCategories.deleteError') })
     }
   }
 
@@ -89,28 +91,28 @@ export function NewsCategoriesManager() {
         fetchCategories()
       } else {
         const data = await res.json()
-        showToast({ type: 'error', title: data.error || 'Error al guardar' })
+        showToast({ type: 'error', title: data.error || t('admin.newsCategories.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar' })
+      showToast({ type: 'error', title: t('admin.newsCategories.saveError') })
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) return <p className="text-muted-foreground">Cargando categorías...</p>
+  if (loading) return <p className="text-muted-foreground">{t('admin.newsCategories.loading')}</p>
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Categorías de Noticias Genéricas</h2>
-          <p className="text-sm text-muted-foreground">Crea y gestiona las categorías disponibles</p>
+          <h2 className="text-xl font-bold text-foreground">{t('admin.newsCategories.title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('admin.newsCategories.subtitle')}</p>
         </div>
         {!showForm && (
           <Button onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: '', slug: '', description: '' }) }}
             className="bg-brand hover:bg-brand">
-            <PlusIcon className="h-4 w-4 mr-2" /> Nueva Categoría
+            <PlusIcon className="h-4 w-4 mr-2" /> {t('admin.newsCategories.new')}
           </Button>
         )}
       </div>
@@ -118,11 +120,11 @@ export function NewsCategoriesManager() {
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-4">
           <h3 className="text-lg font-medium text-foreground">
-            {editingId ? 'Editar Categoría' : 'Nueva Categoría'}
+            {editingId ? t('admin.newsCategories.edit') : t('admin.newsCategories.new')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">Nombre</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.newsCategories.name')}</label>
               <Input
                 value={form.name}
                 onChange={(e) => handleNameChange(e.target.value)}
@@ -131,7 +133,7 @@ export function NewsCategoriesManager() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">Slug</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.newsCategories.slug')}</label>
               <Input
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
@@ -141,7 +143,7 @@ export function NewsCategoriesManager() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-2">Descripción (opcional)</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">{t('admin.newsCategories.description')}</label>
             <Input
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -150,11 +152,11 @@ export function NewsCategoriesManager() {
           </div>
           <div className="flex gap-3">
             <Button type="submit" disabled={saving} className="bg-brand hover:bg-brand">
-              {saving ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear'}
+              {saving ? t('common.saving') : editingId ? t('admin.newsCategories.update') : t('admin.newsCategories.create')}
             </Button>
             <Button type="button" variant="outline" onClick={() => { setShowForm(false); setEditingId(null) }}
               className="border-border hover:bg-secondary">
-              Cancelar
+              {t('common.cancel')}
             </Button>
           </div>
         </form>
@@ -162,7 +164,7 @@ export function NewsCategoriesManager() {
 
       <div className="space-y-3">
         {categories.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No hay categorías creadas</p>
+          <p className="text-muted-foreground text-center py-8">{t('admin.newsCategories.empty')}</p>
         ) : (
           categories.map((cat) => (
             <div key={cat.id} className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
@@ -172,7 +174,7 @@ export function NewsCategoriesManager() {
                   <code className="text-xs text-brand bg-secondary px-2 py-0.5 rounded">/{cat.slug}</code>
                   {cat.description && <span className="text-sm text-muted-foreground">{cat.description}</span>}
                   <Badge className="bg-brand/20 text-brand border-brand/30">
-                    {cat._count?.news || 0} noticias
+                    {t('admin.newsCategories.newsCount', { count: cat._count?.news || 0 })}
                   </Badge>
                 </div>
               </div>

@@ -1,5 +1,7 @@
 'use client'
 
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   FileText, 
@@ -24,51 +26,52 @@ interface LogsStatsProps {
 }
 
 export function LogsStats({ stats }: LogsStatsProps) {
+  const { t } = useDashboardI18n()
   const statsData = [
     {
-      title: 'Total Logs',
+      title: t('admin.logsStats.total'),
       value: stats.totalLogs,
       icon: FileText,
       color: 'text-brand',
       bgColor: 'bg-brand/10'
     },
     {
-      title: 'Errores',
+      title: t('admin.logsStats.errors'),
       value: stats.errorLogs,
       icon: XCircle,
       color: 'text-red-400',
       bgColor: 'bg-red-500/10'
     },
     {
-      title: 'Advertencias',
+      title: t('admin.logsStats.warnings'),
       value: stats.warningLogs,
       icon: AlertTriangle,
       color: 'text-orange-400',
       bgColor: 'bg-orange-500/10'
     },
     {
-      title: 'Información',
+      title: t('admin.logsStats.info'),
       value: stats.infoLogs,
       icon: Info,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10'
     },
     {
-      title: 'Eventos Seguridad',
+      title: t('admin.logsStats.securityEvents'),
       value: stats.securityEvents,
       icon: Shield,
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/10'
     },
     {
-      title: 'Usuarios Únicos',
+      title: t('admin.logsStats.uniqueUsers'),
       value: stats.uniqueUsers,
       icon: Users,
       color: 'text-brand',
       bgColor: 'bg-brand/10'
     },
     {
-      title: 'IPs Únicas',
+      title: t('admin.logsStats.uniqueIPs'),
       value: stats.uniqueIPs,
       icon: Globe,
       color: 'text-pink-400',

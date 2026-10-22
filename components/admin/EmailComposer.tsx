@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { showToast } from '@/components/ui/toast'
 import { Send, Paperclip, FileText, MailWarning } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Recipient {
   id: string
@@ -19,6 +20,7 @@ interface TemplateOption {
 }
 
 export function EmailComposer() {
+  const { t } = useDashboardI18n()
   const [clients, setClients] = useState<Recipient[]>([])
   const [templates, setTemplates] = useState<TemplateOption[]>([])
   const [search, setSearch] = useState('')
@@ -56,15 +58,15 @@ export function EmailComposer() {
 
   const doSend = async (test: boolean) => {
     if (!test && recipientType !== 'all' && selected.length === 0) {
-      showToast({ type: 'error', title: 'Elige al menos un destinatario' })
+      showToast({ type: 'error', title: t('admin.emailComposer.chooseRecipient') })
       return
     }
     if (!templateKey && !subject.trim()) {
-      showToast({ type: 'error', title: 'Indicá una plantilla o un asunto' })
+      showToast({ type: 'error', title: t('admin.emailComposer.chooseTemplateOrSubject') })
       return
     }
     if (!test && recipientType === 'all') {
-      const ok = confirm(`¿Enviar a TODOS los clientes con correo (${clients.filter((c) => c.email).length})?`)
+      const ok = confirm(t('admin.emailComposer.sendAllConfirm', { count: clients.filter((c) => c.email).length }))
       if (!ok) return
     }
 
@@ -88,16 +90,16 @@ export function EmailComposer() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast({ type: 'error', title: data?.message || data?.error || 'Error al enviar' })
+        showToast({ type: 'error', title: data?.message || data?.error || t('admin.emailComposer.sendError') })
       } else {
         showToast({
           type: 'success',
-          title: test ? 'Correo de prueba enviado' : 'Correos enviados',
-          description: `${data.sent ?? 0} enviados · ${data.skipped ?? 0} omitidos · ${data.failed ?? 0} fallidos`,
+          title: test ? t('admin.emailComposer.testSent') : t('admin.emailComposer.sent'),
+          description: t('admin.emailComposer.sentSummary', { sent: data.sent ?? 0, skipped: data.skipped ?? 0, failed: data.failed ?? 0 }),
         })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al enviar' })
+      showToast({ type: 'error', title: t('admin.emailComposer.sendError') })
     } finally {
       setBusy(false)
     }
@@ -107,12 +109,12 @@ export function EmailComposer() {
     <div className="space-y-5">
       {/* Destinatarios */}
       <div>
-        <label className="form-label">Destinatarios</label>
+        <label className="form-label">{t('admin.emailComposer.recipients')}</label>
         <div className="flex gap-4 mb-3">
-          {(['single', 'selected', 'all'] as const).map((t) => (
-            <label key={t} className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-              <input type="radio" checked={recipientType === t} onChange={() => setRecipientType(t)} className="accent-cyan-500" />
-              {t === 'single' ? 'Un cliente' : t === 'selected' ? 'Varios' : 'Todos'}
+          {(['single', 'selected', 'all'] as const).map((type) => (
+            <label key={type} className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input type="radio" checked={recipientType === type} onChange={() => setRecipientType(type)} className="accent-cyan-500" />
+              {type === 'single' ? t('admin.emailComposer.single') : type === 'selected' ? t('admin.emailComposer.selected') : t('admin.emailComposer.all')}
             </label>
           ))}
         </div>
@@ -121,7 +123,7 @@ export function EmailComposer() {
           <>
             <input
               className="form-input mb-2"
-              placeholder="Buscar por nombre, correo o proyecto..."
+              placeholder={t('admin.emailComposer.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -140,52 +142,52 @@ export function EmailComposer() {
                   </div>
                 </label>
               ))}
-              {filtered.length === 0 && <p className="p-3 text-sm text-muted-foreground">Sin resultados</p>}
+              {filtered.length === 0 && <p className="p-3 text-sm text-muted-foreground">{t('admin.emailComposer.noResults')}</p>}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">{selected.length} seleccionado{selected.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-muted-foreground mt-1">{selected.length === 1 ? t('admin.emailComposer.selectedCount', { count: selected.length }) : t('admin.emailComposer.selectedCountPlural', { count: selected.length })}</p>
           </>
         )}
       </div>
 
       {/* Contenido */}
       <div>
-        <label className="form-label">Plantilla (opcional)</label>
+        <label className="form-label">{t('admin.emailComposer.template')}</label>
         <select className="form-input" value={templateKey} onChange={(e) => setTemplateKey(e.target.value)}>
-          <option value="">Texto libre</option>
-          {templates.map((t) => (
-            <option key={t.key} value={t.key} disabled={!t.isActive}>
-              {t.name} {!t.isActive && '(desactivada)'}
+          <option value="">{t('admin.emailComposer.freeText')}</option>
+          {templates.map((tpl) => (
+            <option key={tpl.key} value={tpl.key} disabled={!tpl.isActive}>
+              {tpl.name} {!tpl.isActive && t('admin.emailComposer.disabled')}
             </option>
           ))}
         </select>
       </div>
 
       <div>
-        <label className="form-label">Asunto {!templateKey && '*'}</label>
-        <input className="form-input" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Asunto del correo" />
+        <label className="form-label">{t('admin.emailComposer.subject', { hint: !templateKey ? '*' : '' })}</label>
+        <input className="form-input" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={t('admin.emailComposer.subjectPlaceholder')} />
       </div>
 
       <div>
-        <label className="form-label">Mensaje</label>
+        <label className="form-label">{t('admin.emailComposer.message')}</label>
         <textarea
           className="form-textarea h-40"
           value={html}
           onChange={(e) => setHtml(e.target.value)}
-          placeholder="Cuerpo del mensaje (puede incluir HTML). Con plantilla 'aviso' se inserta en {{mensaje}}."
+          placeholder={t('admin.emailComposer.messagePlaceholder')}
         />
       </div>
 
       <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
         <input type="checkbox" checked={attachBoleta} onChange={(e) => setAttachBoleta(e.target.checked)} className="accent-cyan-500" />
-        <Paperclip className="h-4 w-4 text-brand" /> Adjuntar boleta (PDF de la cuenta del mes) de cada destinatario
+        <Paperclip className="h-4 w-4 text-brand" /> {t('admin.emailComposer.attachReceipt')}
       </label>
 
       <div className="flex flex-wrap gap-3 pt-2">
         <Button variant="outline" size="sm" disabled={sending || testing} onClick={() => doSend(true)}>
-          <MailWarning className="h-4 w-4 mr-1" /> {testing ? 'Enviando prueba...' : 'Correo de prueba'}
+          <MailWarning className="h-4 w-4 mr-1" /> {testing ? t('admin.emailComposer.sendingTest') : t('admin.emailComposer.test')}
         </Button>
         <Button size="sm" disabled={sending || testing} onClick={() => doSend(false)}>
-          <Send className="h-4 w-4 mr-1" /> {sending ? 'Enviando...' : 'Enviar'}
+          <Send className="h-4 w-4 mr-1" /> {sending ? t('admin.emailComposer.sending') : t('admin.emailComposer.send')}
         </Button>
       </div>
     </div>

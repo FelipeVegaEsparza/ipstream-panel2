@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { showToast } from '@/components/ui/toast'
 import { MailWarning, Save, Pencil, X, Plus, Sparkles } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Template {
   id: string
@@ -19,6 +20,7 @@ interface Template {
 const VARIABLE_HINT = 'Variables: {{nombre}} {{proyecto}} {{plan}} {{monto}} {{moneda}} {{fecha}} {{descripcion}} {{vence}} {{link}} {{mensaje}} {{respuesta}} {{asunto}}'
 
 export function EmailTemplatesManager() {
+  const { t } = useDashboardI18n()
   const [templates, setTemplates] = useState<Template[]>([])
   const [editing, setEditing] = useState<Template | null>(null)
   const [creating, setCreating] = useState(false)
@@ -56,7 +58,7 @@ export function EmailTemplatesManager() {
 
   const save = async () => {
     if (!form.key || !form.name || !form.subject || !form.htmlBody) {
-      showToast({ type: 'error', title: 'Completa key, nombre, asunto y cuerpo' })
+      showToast({ type: 'error', title: t('admin.emailTemplates.incomplete') })
       return
     }
     setSaving(true)
@@ -69,51 +71,51 @@ export function EmailTemplatesManager() {
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        showToast({ type: 'success', title: creating ? 'Plantilla creada' : 'Plantilla actualizada' })
+        showToast({ type: 'success', title: creating ? t('admin.emailTemplates.created') : t('admin.emailTemplates.updated') })
         reset()
         await load()
       } else {
-        showToast({ type: 'error', title: data?.message || data?.error || 'Error al guardar' })
+        showToast({ type: 'error', title: data?.message || data?.error || t('admin.emailTemplates.saveError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al guardar' })
+      showToast({ type: 'error', title: t('admin.emailTemplates.saveError') })
     } finally {
       setSaving(false)
     }
   }
 
-  const test = async (t: Template) => {
-    setTesting(t.key)
+  const test = async (tpl: Template) => {
+    setTesting(tpl.key)
     try {
       const res = await fetch('/api/admin/emails/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipientType: 'single', templateKey: t.key, test: true }),
+        body: JSON.stringify({ recipientType: 'single', templateKey: tpl.key, test: true }),
       })
       const data = await res.json().catch(() => ({}))
-      if (res.ok) showToast({ type: 'success', title: 'Correo de prueba enviado' })
+      if (res.ok) showToast({ type: 'success', title: t('admin.emailTemplates.testSent') })
       else showToast({ type: 'error', title: data?.message || 'Error' })
     } catch {
-      showToast({ type: 'error', title: 'Error al enviar prueba' })
+      showToast({ type: 'error', title: t('admin.emailTemplates.sendTestError') })
     } finally {
       setTesting(null)
     }
   }
 
-  const remove = async (t: Template) => {
-    if (!confirm(`¿Eliminar la plantilla "${t.name}"?`)) return
-    const res = await fetch(`/api/admin/emails/templates/${t.id}`, { method: 'DELETE' })
+  const remove = async (tpl: Template) => {
+    if (!confirm(t('admin.emailTemplates.deleteConfirm', { name: tpl.name }))) return
+    const res = await fetch(`/api/admin/emails/templates/${tpl.id}`, { method: 'DELETE' })
     if (res.ok) {
-      showToast({ type: 'success', title: 'Plantilla eliminada' })
+      showToast({ type: 'success', title: t('admin.emailTemplates.deleted') })
       await load()
     }
   }
 
-  const toggleActive = async (t: Template) => {
-    const res = await fetch(`/api/admin/emails/templates/${t.id}`, {
+  const toggleActive = async (tpl: Template) => {
+    const res = await fetch(`/api/admin/emails/templates/${tpl.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: !t.isActive }),
+      body: JSON.stringify({ isActive: !tpl.isActive }),
     })
     if (res.ok) await load()
   }
@@ -123,43 +125,43 @@ export function EmailTemplatesManager() {
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{VARIABLE_HINT}</p>
         <Button size="sm" onClick={startCreate}>
-          <Plus className="h-4 w-4 mr-1" /> Nueva plantilla
+          <Plus className="h-4 w-4 mr-1" /> {t('admin.emailTemplates.new')}
         </Button>
       </div>
 
       {(creating || editing) && (
         <div className="rounded-xl border border-brand/30 bg-card/60 p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">{creating ? 'Nueva plantilla' : `Editar: ${editing?.name}`}</h3>
+            <h3 className="font-semibold text-foreground">{creating ? t('admin.emailTemplates.new') : t('admin.emailTemplates.editing', { name: editing?.name })}</h3>
             <Button variant="ghost" size="sm" onClick={reset}><X className="h-4 w-4" /></Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-group">
-              <label className="form-label">Key (única, minúsculas y guiones)</label>
+              <label className="form-label">{t('admin.emailTemplates.key')}</label>
               <input className="form-input" value={form.key || ''} disabled={!creating} onChange={(e) => setForm({ ...form, key: e.target.value })} placeholder="aviso" />
             </div>
             <div className="form-group">
-              <label className="form-label">Nombre</label>
+              <label className="form-label">{t('admin.emailTemplates.name')}</label>
               <input className="form-input" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Asunto (con {"{{variables}}"})</label>
+            <label className="form-label">{t('admin.emailTemplates.subject')}</label>
             <input className="form-input" value={form.subject || ''} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
           </div>
           <div className="form-group">
-            <label className="form-label">Cuerpo HTML (con {"{{variables}}"})</label>
+            <label className="form-label">{t('admin.emailTemplates.body')}</label>
             <textarea className="form-textarea h-52 font-mono text-xs" value={form.htmlBody || ''} onChange={(e) => setForm({ ...form, htmlBody: e.target.value })} />
           </div>
           <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
             <input type="checkbox" checked={!!form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="accent-cyan-500" />
-            Activa (se usa en envíos automáticos)
+            {t('admin.emailTemplates.activeHint')}
           </label>
           <div className="flex gap-2">
             <Button size="sm" disabled={saving} onClick={save}>
-              <Save className="h-4 w-4 mr-1" /> {saving ? 'Guardando...' : 'Guardar'}
+              <Save className="h-4 w-4 mr-1" /> {saving ? t('common.saving') : t('admin.emailTemplates.save')}
             </Button>
-            <Button size="sm" variant="outline" onClick={reset}>Cancelar</Button>
+            <Button size="sm" variant="outline" onClick={reset}>{t('common.cancel')}</Button>
           </div>
         </div>
       )}
@@ -171,43 +173,43 @@ export function EmailTemplatesManager() {
             if (b.key === 'bienvenida') return 1
             return a.key.localeCompare(b.key)
           })
-          .map((t) => (
-          <div key={t.id} className={`rounded-xl border p-4 flex items-start justify-between gap-4 ${t.key === 'bienvenida' ? 'border-brand/40 bg-brand/5' : 'border-border bg-card/60'}`}>
+          .map((tpl) => (
+          <div key={tpl.id} className={`rounded-xl border p-4 flex items-start justify-between gap-4 ${tpl.key === 'bienvenida' ? 'border-brand/40 bg-brand/5' : 'border-border bg-card/60'}`}>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-foreground">{t.name}</p>
-                <code className="text-xs text-muted-foreground">/{t.key}</code>
-                {t.key === 'bienvenida' && (
+                <p className="font-semibold text-foreground">{tpl.name}</p>
+                <code className="text-xs text-muted-foreground">/{tpl.key}</code>
+                {tpl.key === 'bienvenida' && (
                   <Badge className="bg-brand/15 text-brand">
-                    <Sparkles className="h-3 w-3 mr-1" /> Al contratar un plan
+                    <Sparkles className="h-3 w-3 mr-1" /> {t('admin.emailTemplates.onPlanPurchase')}
                   </Badge>
                 )}
-                {t.isActive ? (
-                  <Badge className="bg-green-500/15 text-green-400">Activa</Badge>
+                {tpl.isActive ? (
+                  <Badge className="bg-green-500/15 text-green-400">{t('admin.emailTemplates.active')}</Badge>
                 ) : (
-                  <Badge className="bg-secondary/30 text-muted-foreground">Desactivada</Badge>
+                  <Badge className="bg-secondary/30 text-muted-foreground">{t('admin.emailTemplates.inactive')}</Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mt-1 truncate">Asunto: {t.subject}</p>
-              {t.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>}
+              <p className="text-sm text-muted-foreground mt-1 truncate">{t('admin.emailTemplates.subjectLine', { subject: tpl.subject })}</p>
+              {tpl.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tpl.description}</p>}
             </div>
             <div className="flex gap-2 shrink-0">
-              <Button size="sm" variant="outline" onClick={() => test(t)} disabled={testing === t.key}>
-                <MailWarning className="h-3.5 w-3.5 mr-1" /> {testing === t.key ? '...' : 'Probar'}
+              <Button size="sm" variant="outline" onClick={() => test(tpl)} disabled={testing === tpl.key}>
+                <MailWarning className="h-3.5 w-3.5 mr-1" /> {testing === tpl.key ? '...' : t('admin.emailTemplates.test')}
               </Button>
-              <Button size="sm" variant="outline" onClick={() => toggleActive(t)}>
-                {t.isActive ? 'Desactivar' : 'Activar'}
+              <Button size="sm" variant="outline" onClick={() => toggleActive(tpl)}>
+                {tpl.isActive ? t('admin.emailTemplates.deactivate') : t('admin.emailTemplates.activate')}
               </Button>
-              <Button size="sm" variant="outline" onClick={() => startEdit(t)}>
-                <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+              <Button size="sm" variant="outline" onClick={() => startEdit(tpl)}>
+                <Pencil className="h-3.5 w-3.5 mr-1" /> {t('admin.emailTemplates.edit')}
               </Button>
-              <Button size="sm" variant="outline" className="text-red-400" onClick={() => remove(t)}>
-                Eliminar
+              <Button size="sm" variant="outline" className="text-red-400" onClick={() => remove(tpl)}>
+                {t('admin.emailTemplates.delete')}
               </Button>
             </div>
           </div>
         ))}
-        {templates.length === 0 && <p className="text-sm text-muted-foreground">No hay plantillas. Crea una nueva.</p>}
+        {templates.length === 0 && <p className="text-sm text-muted-foreground">{t('admin.emailTemplates.empty')}</p>}
       </div>
     </div>
   )

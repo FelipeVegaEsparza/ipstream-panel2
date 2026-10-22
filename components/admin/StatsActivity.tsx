@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Activity, User, Clock } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface User {
   id: string
@@ -21,20 +22,21 @@ interface StatsActivityProps {
 }
 
 export function StatsActivity({ recentActivity }: StatsActivityProps) {
+  const { locale, t } = useDashboardI18n()
   const formatTimeAgo = (date: Date) => {
     const now = new Date()
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
     
-    if (diffInMinutes < 1) return 'Hace un momento'
-    if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`
+    if (diffInMinutes < 1) return t('admin.statsWidgets.momentAgo')
+    if (diffInMinutes < 60) return t('admin.statsWidgets.minutesAgo', { count: diffInMinutes })
     
     const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `Hace ${diffInHours}h`
+    if (diffInHours < 24) return t('admin.statsWidgets.hoursAgo', { count: diffInHours })
     
     const diffInDays = Math.floor(diffInHours / 24)
-    if (diffInDays < 7) return `Hace ${diffInDays}d`
+    if (diffInDays < 7) return t('admin.statsWidgets.daysAgo', { count: diffInDays })
     
-    return date.toLocaleDateString('es-ES')
+    return date.toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES')
   }
 
   const getRoleBadgeColor = (role: string) => {
@@ -53,7 +55,7 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
       <CardHeader>
         <CardTitle className="text-foreground flex items-center gap-2">
           <Activity className="h-5 w-5 text-green-400" />
-          Actividad Reciente
+          {t('admin.statsWidgets.recentActivity')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -69,7 +71,7 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-foreground font-medium">
-                        {user.name || 'Usuario sin nombre'}
+                        {user.name || t('admin.statsWidgets.noName')}
                       </p>
                       <Badge 
                         variant="outline" 
@@ -85,7 +87,7 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
                     
                     {user.client && (
                       <p className="text-muted-foreground text-xs mt-1">
-                        Cliente: {user.client.name}
+                        {t('admin.statsWidgets.client')} {user.client.name}
                       </p>
                     )}
                   </div>
@@ -102,7 +104,7 @@ export function StatsActivity({ recentActivity }: StatsActivityProps) {
           ) : (
             <div className="text-center py-8">
               <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No hay actividad reciente</p>
+              <p className="text-muted-foreground">{t('admin.statsWidgets.noRecentActivity')}</p>
             </div>
           )}
         </div>

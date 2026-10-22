@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface DnsResult {
   ok: boolean
@@ -13,6 +14,7 @@ interface DnsResult {
 }
 
 export function ClientSitesSettings() {
+  const { t } = useDashboardI18n()
   const [domain, setDomain] = useState('')
   const [target, setTarget] = useState('')
   const [ip, setIp] = useState('')
@@ -31,7 +33,7 @@ export function ClientSitesSettings() {
         setIp(d.clientSitesIp || '')
         setTokenSet(Boolean(d.cloudflareTokenSet))
       })
-      .catch(() => showToast({ type: 'error', title: 'No se pudo cargar la configuración' }))
+      .catch(() => showToast({ type: 'error', title: t('admin.clientSites.loadError') }))
       .finally(() => setLoadingCfg(false))
   }, [])
 
@@ -51,10 +53,10 @@ export function ClientSitesSettings() {
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al guardar')
+      if (!res.ok) throw new Error(data.error || t('admin.clientSites.saveError'))
       setToken('')
       setTokenSet(Boolean(data.cloudflareTokenSet))
-      showToast({ type: 'success', title: 'Configuración de sitios guardada' })
+      showToast({ type: 'success', title: t('admin.clientSites.saved') })
     } catch (e) {
       showToast({ type: 'error', title: (e as Error).message })
     } finally {
@@ -67,12 +69,12 @@ export function ClientSitesSettings() {
     try {
       const res = await fetch('/api/admin/client-sites/dns', { method: 'POST' })
       const data: DnsResult = await res.json()
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Error al asegurar el DNS')
+      if (!res.ok || !data.ok) throw new Error(data.error || t('admin.clientSites.ensureError'))
       showToast({
         type: 'success',
         title: data.created
-          ? `DNS base creado: ${data.name} ${data.type} → ${data.content}`
-          : `DNS base ya existía: ${data.name} ${data.type} → ${data.content}`,
+          ? t('admin.clientSites.dnsCreated', { name: data.name, type: data.type, content: data.content })
+          : t('admin.clientSites.dnsExisting', { name: data.name, type: data.type, content: data.content }),
       })
     } catch (e) {
       showToast({ type: 'error', title: (e as Error).message })
@@ -87,42 +89,41 @@ export function ClientSitesSettings() {
   return (
     <div className="card max-w-2xl space-y-4">
       <div>
-        <h2 className="text-xl font-semibold text-foreground">Sitios de clientes</h2>
+        <h2 className="text-xl font-semibold text-foreground">{t('admin.clientSites.title')}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Dominios por los que se sirve el sitio (bundle único) de cada cliente. El
-          wildcard DNS base hace que los subdominios resuelvan a la plataforma.
+          {t('admin.clientSites.subtitle')}
         </p>
       </div>
 
       {loadingCfg ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <p className="text-sm text-muted-foreground">{t('admin.clientSites.loading')}</p>
       ) : (
         <>
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Dominio base de los sitios</label>
+            <label className="block text-xs text-muted-foreground mb-1">{t('admin.clientSites.baseDomain')}</label>
             <input className={input} value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="casterfly.com" />
-            <p className="text-[11px] text-muted-foreground mt-1">Los clientes se sirven como <code>&lt;cliente&gt;.{domain || 'casterfly.com'}</code>.</p>
+            <p className="text-[11px] text-muted-foreground mt-1">{t('admin.clientSites.baseDomainHint', { domain: domain || 'casterfly.com' })}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Target CNAME (dominios propios)</label>
+              <label className="block text-xs text-muted-foreground mb-1">{t('admin.clientSites.cnameTarget')}</label>
               <input className={input} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="clientes.casterfly.com" />
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">IP de la plataforma (wildcard A)</label>
+              <label className="block text-xs text-muted-foreground mb-1">{t('admin.clientSites.ip')}</label>
               <input className={input} value={ip} onChange={(e) => setIp(e.target.value)} placeholder="1.2.3.4" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Token de Cloudflare (Zone:DNS:Edit)</label>
+            <label className="block text-xs text-muted-foreground mb-1">{t('admin.clientSites.token')}</label>
             <input
               type="password"
               className={input}
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              placeholder={tokenSet ? '•••••••• (ya configurado — deja vacío para conservarlo)' : 'cfat_…'}
+              placeholder={tokenSet ? t('admin.clientSites.tokenPlaceholder') : 'cfat_…'}
               autoComplete="off"
             />
           </div>
@@ -134,7 +135,7 @@ export function ClientSitesSettings() {
               disabled={loading}
               className="rounded bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand disabled:opacity-50"
             >
-              Guardar
+              {t('admin.clientSites.save')}
             </button>
             <button
               type="button"
@@ -142,13 +143,13 @@ export function ClientSitesSettings() {
               disabled={ensuring}
               className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-card disabled:opacity-50"
             >
-              {ensuring ? 'Asegurando…' : 'Asegurar DNS base (wildcard)'}
+              {ensuring ? t('admin.clientSites.ensuring') : t('admin.clientSites.ensureDns')}
             </button>
           </div>
 
           <p className="text-[11px] text-muted-foreground">
-            &quot;Asegurar DNS base&quot; crea (idempotente) el registro <code>*.{domain || 'casterfly.com'}</code>{' '}
-            apuntando a la IP de la plataforma. Requiere el token de Cloudflare y la IP.
+            {t('admin.clientSites.ensureHint1')} <code>*.{domain || 'casterfly.com'}</code>{' '}
+            {t('admin.clientSites.ensureHint2')}
           </p>
         </>
       )}

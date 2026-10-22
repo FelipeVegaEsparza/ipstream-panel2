@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/toast'
 import { X, ArrowRightLeft, Radio, MonitorPlay, AlertTriangle } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface MigrateOptions {
   client: { id: string; name: string }
@@ -22,9 +23,9 @@ interface ClientMigrateModalProps {
   onMigrated?: () => void
 }
 
-const TYPE_LABEL: Record<string, string> = { radio: 'Radio', tv: 'TV', both: 'Radio+TV' }
-
 export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigrated }: ClientMigrateModalProps) {
+  const { t } = useDashboardI18n()
+  const TYPE_LABEL: Record<string, string> = { radio: t('admin.migrate.typeRadio'), tv: t('admin.migrate.typeTv'), both: t('admin.migrate.typeBoth') }
   const [options, setOptions] = useState<MigrateOptions | null>(null)
   const [services, setServices] = useState<string[]>([])
   const [targetServerId, setTargetServerId] = useState('')
@@ -50,12 +51,12 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
         if (d.hasVideo) available.push('video')
         setServices(available)
       })
-      .catch(() => setError('No se pudo cargar la información del cliente'))
+      .catch(() => setError(t('admin.migrate.loadError')))
   }, [open, clientId])
 
   const serverName = (id: string | null) => {
     if (!id) return '—'
-    return options?.servers.find((s) => s.id === id)?.name || 'Servidor desconocido'
+    return options?.servers.find((s) => s.id === id)?.name || t('admin.migrate.unknownServer')
   }
 
   const targetOptions = options?.servers || []
@@ -66,18 +67,18 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
 
   const run = async () => {
     if (!targetServerId) {
-      setError('Elige un servidor destino')
+      setError(t('admin.migrate.chooseTarget'))
       return
     }
     if (services.length === 0) {
-      setError('Elige al menos un servicio (radio y/o TV)')
+      setError(t('admin.migrate.chooseService'))
       return
     }
-    if (!confirm('La migración detiene el stream en el origen y lo inicia en el destino. ¿Continuar?')) return
+    if (!confirm(t('admin.migrate.confirm'))) return
 
     setRunning(true)
     setError(null)
-    setProgress('Copiando archivos de biblioteca al destino...')
+    setProgress(t('admin.migrate.copying'))
     try {
       const res = await fetch(`/api/admin/clients/${clientId}/migrate`, {
         method: 'POST',
@@ -86,14 +87,14 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        throw new Error(data?.message || data?.error || 'Error en la migración')
+        throw new Error(data?.message || data?.error || t('admin.migrate.error'))
       }
       setProgress('')
-      showToast({ type: 'success', title: 'Migración completada', description: `${data.copied ?? 0} archivos copiados` })
+      showToast({ type: 'success', title: t('admin.migrate.completed'), description: t('admin.migrate.copied', { count: data.copied ?? 0 }) })
       onMigrated?.()
       onClose()
     } catch (err: any) {
-      setError(err.message || 'Error en la migración')
+      setError(err.message || t('admin.migrate.error'))
       setProgress('')
     } finally {
       setRunning(false)
@@ -108,7 +109,7 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
       <div className="relative w-full max-w-lg rounded-xl border border-border bg-background p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <ArrowRightLeft className="h-5 w-5 text-brand" /> Migrar {clientName}
+            <ArrowRightLeft className="h-5 w-5 text-brand" /> {t('admin.migrate.title', { name: clientName })}
           </h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="h-5 w-5" />
@@ -116,21 +117,21 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
         </div>
 
         {!options ? (
-          <div className="text-muted-foreground py-6 text-center">{error || 'Cargando...'}</div>
+          <div className="text-muted-foreground py-6 text-center">{error || t('admin.migrate.loading')}</div>
         ) : !options.canMigrate ? (
           <div className="text-muted-foreground py-6 text-center">
-            Este cliente no tiene streams de radio ni de TV para migrar.
+            {t('admin.migrate.notPossible')}
           </div>
         ) : (
           <div className="space-y-5">
             <div className="text-sm text-muted-foreground">
-              Servidor actual de radio: <span className="text-brand">{serverName(options.radioServerId)}</span>
+              {t('admin.migrate.currentRadio')} <span className="text-brand">{serverName(options.radioServerId)}</span>
               <br />
-              Servidor actual de TV: <span className="text-brand">{serverName(options.videoServerId)}</span>
+              {t('admin.migrate.currentTv')} <span className="text-brand">{serverName(options.videoServerId)}</span>
             </div>
 
             <div>
-              <p className="text-sm text-foreground font-medium mb-2">Servicios a migrar</p>
+              <p className="text-sm text-foreground font-medium mb-2">{t('admin.migrate.services')}</p>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <input
@@ -140,7 +141,7 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
                     onChange={() => toggleService('radio')}
                     className="rounded"
                   />
-                  <Radio className="h-4 w-4 text-brand" /> Radio {!options.hasRadio && '(no tiene)'}
+                  <Radio className="h-4 w-4 text-brand" /> Radio {!options.hasRadio && t('admin.migrate.noRadio')}
                 </label>
                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <input
@@ -150,19 +151,19 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
                     onChange={() => toggleService('video')}
                     className="rounded"
                   />
-                  <MonitorPlay className="h-4 w-4 text-brand" /> TV {!options.hasVideo && '(no tiene)'}
+                  <MonitorPlay className="h-4 w-4 text-brand" /> TV {!options.hasVideo && t('admin.migrate.noTv')}
                 </label>
               </div>
             </div>
 
             <div>
-              <p className="text-sm text-foreground font-medium mb-2">Servidor destino</p>
+              <p className="text-sm text-foreground font-medium mb-2">{t('admin.migrate.target')}</p>
               <select
                 value={targetServerId}
                 onChange={(e) => setTargetServerId(e.target.value)}
                 className="w-full form-input"
               >
-                <option value="">Seleccionar servidor...</option>
+                <option value="">{t('admin.migrate.selectServer')}</option>
                 {targetOptions.map((s) => (
                   <option key={s.id} value={s.id} disabled={s.id === options.radioServerId && s.id === options.videoServerId}>
                     {s.name} ({TYPE_LABEL[s.type] || s.type})
@@ -174,8 +175,7 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
             <div className="flex items-start gap-2 text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
-                Habrá un breve corte y el DJ que transmita en vivo deberá reconectar con el nuevo host.
-                La migración es manual: el panel nunca mueve clientes automáticamente.
+                {t('admin.migrate.warning')}
               </span>
             </div>
 
@@ -184,14 +184,14 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
 
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={onClose} disabled={running} className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm">
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 onClick={run}
                 disabled={running}
                 className="px-4 py-2 bg-brand hover:bg-brand disabled:bg-secondary text-white rounded text-sm"
               >
-                {running ? 'Migrando...' : 'Migrar'}
+                {running ? t('admin.migrate.migrating') : t('admin.migrate.submit')}
               </button>
             </div>
           </div>

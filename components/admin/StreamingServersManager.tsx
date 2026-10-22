@@ -12,6 +12,7 @@ import {
 import { ServerFormModal, EditableServer } from './ServerFormModal'
 import { ProvisionNodeModal } from './ProvisionNodeModal'
 import { formatDate } from '@/lib/billing-format'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface ServerRow {
   id: string
@@ -39,9 +40,9 @@ interface HealthInfo {
 }
 
 const TYPE_ICON: Record<string, typeof Radio> = { radio: Radio, tv: MonitorPlay, both: Server }
-const TYPE_LABEL: Record<string, string> = { radio: 'Radio', tv: 'TV', both: 'Radio + TV' }
 
 export function StreamingServersManager() {
+  const { t } = useDashboardI18n()
   const [servers, setServers] = useState<ServerRow[]>([])
   const [health, setHealth] = useState<Record<string, HealthInfo>>({})
   const [loading, setLoading] = useState(true)
@@ -50,6 +51,13 @@ export function StreamingServersManager() {
   const [showProvision, setShowProvision] = useState(false)
   const [showLog, setShowLog] = useState<Record<string, boolean>>({})
   const mountedRef = useRef(true)
+
+  const typeLabel = (type: string) =>
+    type === 'radio'
+      ? t('admin.servers.typeRadio')
+      : type === 'tv'
+      ? t('admin.servers.typeTv')
+      : t('admin.servers.typeBoth')
 
   const provisioningActive = servers.some((s) => s.provisionStatus === 'provisioning' || s.provisionStatus === 'updating')
 
@@ -102,39 +110,39 @@ export function StreamingServersManager() {
   }
 
   const retryProvision = async (server: ServerRow) => {
-    if (!confirm(`¿Reintentar el provisioning de "${server.name}"?`)) return
+    if (!confirm(t('admin.servers.retryConfirm', { name: server.name }))) return
     try {
       const res = await fetch(`/api/admin/servers/${server.id}/provision/retry`, { method: 'POST' })
       if (res.ok) {
-        showToast({ type: 'success', title: 'Provisioning reiniciado' })
+        showToast({ type: 'success', title: t('admin.servers.retryStarted') })
         await load()
       } else {
         const d = await res.json().catch(() => ({}))
-        showToast({ type: 'error', title: d?.message || 'Error al reintentar' })
+        showToast({ type: 'error', title: d?.message || t('admin.servers.retryError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al reintentar' })
+      showToast({ type: 'error', title: t('admin.servers.retryError') })
     }
   }
 
   const updateNode = async (server: ServerRow) => {
-    if (!confirm(`¿Actualizar el código del nodo "${server.name}"?\n\nRe-descarga el streaming/agente del repo y levanta el stack con --build. Puede tardar varios minutos.`)) return
+    if (!confirm(t('admin.servers.updateConfirm', { name: server.name }))) return
     try {
       const res = await fetch(`/api/admin/servers/${server.id}/update`, { method: 'POST' })
       const d = await res.json().catch(() => ({}))
       if (res.ok) {
-        showToast({ type: 'success', title: 'Actualización iniciada' })
+        showToast({ type: 'success', title: t('admin.servers.updateStarted') })
         await load()
       } else {
-        showToast({ type: 'error', title: d?.message || 'Error al actualizar' })
+        showToast({ type: 'error', title: d?.message || t('admin.servers.updateError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al actualizar' })
+      showToast({ type: 'error', title: t('admin.servers.updateError') })
     }
   }
 
   const revokeSsh = async (server: ServerRow) => {
-    if (!confirm(`¿Quitar el acceso SSH de "${server.name}"? No podrá re-provisionarse automáticamente.`)) return
+    if (!confirm(t('admin.servers.revokeConfirm', { name: server.name }))) return
     try {
       const res = await fetch(`/api/admin/servers/${server.id}`, {
         method: 'PATCH',
@@ -142,40 +150,40 @@ export function StreamingServersManager() {
         body: JSON.stringify({ revokeSsh: true }),
       })
       if (res.ok) {
-        showToast({ type: 'success', title: 'Acceso SSH eliminado' })
+        showToast({ type: 'success', title: t('admin.servers.revoked') })
         await load()
       } else {
-        showToast({ type: 'error', title: 'No se pudo quitar el acceso SSH' })
+        showToast({ type: 'error', title: t('admin.servers.revokeError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al quitar acceso SSH' })
+      showToast({ type: 'error', title: t('admin.servers.revokeErrorGeneric') })
     }
   }
 
   const handleDelete = async (server: ServerRow) => {
-    if (!confirm(`¿Dar de baja "${server.name}"?`)) return
+    if (!confirm(t('admin.servers.deleteConfirm', { name: server.name }))) return
     try {
       const res = await fetch(`/api/admin/servers/${server.id}`, { method: 'DELETE' })
       const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        showToast({ type: 'success', title: 'Servidor eliminado' })
+        showToast({ type: 'success', title: t('admin.servers.deleted') })
         await load()
       } else {
-        showToast({ type: 'error', title: data?.message || 'No se pudo eliminar' })
+        showToast({ type: 'error', title: data?.message || t('admin.servers.deleteError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al eliminar' })
+      showToast({ type: 'error', title: t('admin.servers.deleteErrorGeneric') })
     }
   }
 
   const StatusDot = ({ online }: { online: boolean }) => (
     online ? (
       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-400">
-        <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" /> En línea
+        <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" /> {t('admin.servers.online')}
       </span>
     ) : (
       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-red-400">
-        <span className="h-2 w-2 rounded-full bg-red-400" /> Sin respuesta
+        <span className="h-2 w-2 rounded-full bg-red-400" /> {t('admin.servers.offline')}
       </span>
     )
   )
@@ -185,17 +193,17 @@ export function StreamingServersManager() {
       {/* Header actions */}
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="outline" size="sm" onClick={load}>
-          <RefreshCw className="h-4 w-4 mr-1" /> Refrescar
+          <RefreshCw className="h-4 w-4 mr-1" /> {t('admin.servers.refresh')}
         </Button>
         <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4 mr-1" /> Agregar servidor
+          <Plus className="h-4 w-4 mr-1" /> {t('admin.servers.add')}
         </Button>
         <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setShowProvision(true)}>
-          <Rocket className="h-4 w-4 mr-1" /> Provisionar nodo (SSH)
+          <Rocket className="h-4 w-4 mr-1" /> {t('admin.servers.provision')}
         </Button>
         {provisioningActive && (
           <span className="inline-flex items-center gap-2 text-sm text-brand">
-            <Loader2 className="h-4 w-4 animate-spin" /> Provisionando...
+            <Loader2 className="h-4 w-4 animate-spin" /> {t('admin.servers.provisioning')}
           </span>
         )}
       </div>
@@ -205,69 +213,69 @@ export function StreamingServersManager() {
         <CardContent className="p-5 space-y-3">
           <div className="flex items-center gap-2">
             <Network className="h-5 w-5 text-brand" />
-            <h3 className="font-semibold text-foreground">Puertos y firewall</h3>
-            <span className="text-xs text-muted-foreground font-normal">Requisitos de red para que un nodo quede operativo</span>
+            <h3 className="font-semibold text-foreground">{t('admin.servers.portsTitle')}</h3>
+            <span className="text-xs text-muted-foreground font-normal">{t('admin.servers.portsSubtitle')}</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="rounded-lg bg-card/70 border border-border p-4 space-y-2">
-              <p className="font-medium text-brand flex items-center gap-1.5"><Database className="h-4 w-4" /> VPS central (panel)</p>
+              <p className="font-medium text-brand flex items-center gap-1.5"><Database className="h-4 w-4" /> {t('admin.servers.centralVps')}</p>
               <ul className="space-y-1.5 text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400 shrink-0" />
-                  <span><code className="text-brand">3307</code> — MySQL (DB central): abrir <b>al IP del nodo</b> para que el agente del nodo lea/escriba la DB.</span>
+                  <span><code className="text-brand">3307</code> — {t('admin.servers.centralMysql')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400 shrink-0" />
-                  <span>SSH <code className="text-brand">22</code> saliente (el panel ya se conecta a los nodos para provisionarlos).</span>
+                  <span>{t('admin.servers.centralSsh')}</span>
                 </li>
               </ul>
             </div>
             <div className="rounded-lg bg-card/70 border border-border p-4 space-y-2">
-              <p className="font-medium text-purple-300 flex items-center gap-1.5"><Server className="h-4 w-4" /> Nodo de streaming</p>
+              <p className="font-medium text-purple-300 flex items-center gap-1.5"><Server className="h-4 w-4" /> {t('admin.servers.streamingNode')}</p>
               <ul className="space-y-1.5 text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400 shrink-0" />
-                  <span><code className="text-brand">4000</code> — agente: abrir <b>solo a la IP del panel</b> (control).</span>
+                  <span><code className="text-brand">4000</code> — {t('admin.servers.nodeAgent')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400 shrink-0" />
-                  <span><code className="text-brand">8000</code> — Icecast: oyentes de radio (público).</span>
+                  <span><code className="text-brand">8000</code> — {t('admin.servers.nodeIcecast')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Clapperboard className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                  <span><code className="text-brand">1935</code> (RTMP) y <code className="text-brand">8080</code> (HLS) — TV, solo si el nodo es <b>TV</b>.</span>
+                  <span><code className="text-brand">1935</code> {t('admin.servers.nodeTv')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Mic className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                  <span><code className="text-brand">22340-22350</code> — harbor (DJs en vivo), solo si el nodo es <b>radio</b>.</span>
+                  <span><code className="text-brand">22340-22350</code> — {t('admin.servers.nodeHarbor')}</span>
                 </li>
               </ul>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Consejo: usa WireGuard/VPN para el tráfico privado (panel ↔ nodo ↔ MySQL) y exponé solo lo público (8000, 1935, 8080).
+            {t('admin.servers.portsTip')}
           </p>
         </CardContent>
       </Card>
 
       {loading ? (
         <div className="flex items-center justify-center py-16 text-muted-foreground">
-          <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Cargando servidores...
+          <Loader2 className="h-5 w-5 mr-2 animate-spin" /> {t('admin.servers.loading')}
         </div>
       ) : servers.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <Server className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-muted-foreground font-medium">No hay servidores de streaming registrados</p>
+            <p className="text-muted-foreground font-medium">{t('admin.servers.empty')}</p>
             <p className="text-sm text-muted-foreground mt-1 mb-5">
-              Agrega uno ya configurado o provisiona un VPS nuevo automáticamente
+              {t('admin.servers.emptyHint')}
             </p>
             <div className="flex gap-3">
               <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4 mr-1" /> Agregar servidor
+                <Plus className="h-4 w-4 mr-1" /> {t('admin.servers.add')}
               </Button>
               <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setShowProvision(true)}>
-                <Rocket className="h-4 w-4 mr-1" /> Provisionar nodo
+                <Rocket className="h-4 w-4 mr-1" /> {t('admin.servers.provision')}
               </Button>
             </div>
           </CardContent>
@@ -299,18 +307,18 @@ export function StreamingServersManager() {
                       </div>
                       <div>
                         <p className="font-semibold text-foreground leading-tight">{server.name}</p>
-                        <p className="text-xs text-muted-foreground">{TYPE_LABEL[server.type] || server.type}</p>
+                        <p className="text-xs text-muted-foreground">{typeLabel(server.type)}</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {isProvisioningNow ? (
-                        <Badge className="bg-brand/15 text-brand"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Provisionando</Badge>
+                        <Badge className="bg-brand/15 text-brand"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> {t('admin.servers.provisioningBadge')}</Badge>
                       ) : isUpdatingNow ? (
-                        <Badge className="bg-amber-500/15 text-amber-400"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Actualizando</Badge>
+                        <Badge className="bg-amber-500/15 text-amber-400"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> {t('admin.servers.updatingBadge')}</Badge>
                       ) : isFailed ? (
-                        <Badge className="bg-red-500/15 text-red-400"><RotateCw className="h-3 w-3 mr-1" /> Falló</Badge>
+                        <Badge className="bg-red-500/15 text-red-400"><RotateCw className="h-3 w-3 mr-1" /> {t('admin.servers.failedBadge')}</Badge>
                       ) : server.provisionStatus === 'done' ? (
-                        <Badge className="bg-purple-500/15 text-purple-400"><Rocket className="h-3 w-3 mr-1" /> Nodo</Badge>
+                        <Badge className="bg-purple-500/15 text-purple-400"><Rocket className="h-3 w-3 mr-1" /> {t('admin.servers.nodeBadge')}</Badge>
                       ) : null}
                       {!isProvisioningNow && !isUpdatingNow && <StatusDot online={online} />}
                     </div>
@@ -320,14 +328,14 @@ export function StreamingServersManager() {
                   {isProvisioningNow && (
                     <div className="bg-brand/10 border border-brand/30 rounded-lg px-3 py-2.5">
                       <p className="text-sm text-brand flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin shrink-0" /> {server.provisionStep || 'Provisionando...'}
+                        <Loader2 className="h-4 w-4 animate-spin shrink-0" /> {server.provisionStep || t('admin.servers.provisioning')}
                       </p>
                     </div>
                   )}
                   {isUpdatingNow && (
                     <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2.5">
                       <p className="text-sm text-amber-300 flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin shrink-0" /> {server.provisionStep || 'Actualizando...'}
+                        <Loader2 className="h-4 w-4 animate-spin shrink-0" /> {server.provisionStep || t('admin.servers.updatingBadge')}
                       </p>
                     </div>
                   )}
@@ -340,19 +348,19 @@ export function StreamingServersManager() {
                   {/* Details */}
                   <div className="text-xs text-muted-foreground space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Agente</span>
+                      <span className="text-muted-foreground">{t('admin.servers.agent')}</span>
                       <span className="font-mono text-brand truncate pl-3">{server.baseUrl.replace(/^https?:\/\//, '')}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">URL oyentes</span>
+                      <span className="text-muted-foreground">{t('admin.servers.publicUrl')}</span>
                       <span className="font-mono text-brand truncate pl-3">{server.publicUrl || server.publicHostname}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Clientes</span>
-                      <span>{server._count.radioStreams} radio · {server._count.videoStreams} TV</span>
+                      <span className="text-muted-foreground">{t('admin.servers.clients')}</span>
+                      <span>{t('admin.servers.radioCount', { count: server._count.radioStreams })} · {t('admin.servers.tvCount', { count: server._count.videoStreams })}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Última actualización</span>
+                      <span className="text-muted-foreground">{t('admin.servers.lastUpdate')}</span>
                       <span>{server.provisionedAt ? formatDate(server.provisionedAt, true) : '—'}</span>
                     </div>
                     {server.sshHost && (
@@ -362,9 +370,9 @@ export function StreamingServersManager() {
                       </div>
                     )}
                     {h && !online && !isProvisioningNow && (
-                      <p className="text-red-400 font-medium">{h.affectedClients} clientes afectados</p>
+                      <p className="text-red-400 font-medium">{t('admin.servers.affectedClients', { count: h.affectedClients })}</p>
                     )}
-                    {!server.isActive && <p className="text-amber-400">Inactivo — no acepta asignaciones</p>}
+                    {!server.isActive && <p className="text-amber-400">{t('admin.servers.inactive')}</p>}
                   </div>
 
                   {/* Log */}
@@ -374,7 +382,7 @@ export function StreamingServersManager() {
                         onClick={() => setShowLog((p) => ({ ...p, [server.id]: !logOpen }))}
                         className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                       >
-                        {logOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />} Log de provisioning
+                        {logOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />} {t('admin.servers.provisionLog')}
                       </button>
                       {logOpen && (
                         <pre className="mt-1.5 max-h-48 overflow-auto rounded-lg bg-background border border-border p-2.5 text-[11px] text-muted-foreground font-mono">
@@ -387,25 +395,25 @@ export function StreamingServersManager() {
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 pt-1 border-t border-border/60">
                     <Button size="sm" variant="outline" disabled={isProvisioningNow || isUpdatingNow} onClick={() => openEdit(server)}>
-                      <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                      <Pencil className="h-3.5 w-3.5 mr-1" /> {t('admin.servers.edit')}
                     </Button>
                     {isFailed && (
                       <Button size="sm" variant="outline" className="text-brand border-brand/30 hover:bg-brand/10" onClick={() => retryProvision(server)}>
-                        <RotateCw className="h-3.5 w-3.5 mr-1" /> Reintentar
+                        <RotateCw className="h-3.5 w-3.5 mr-1" /> {t('admin.servers.retry')}
                       </Button>
                     )}
                     {server.provisionStatus === 'done' && server.sshHost && !isProvisioningNow && !isUpdatingNow && (
                       <Button size="sm" variant="outline" className="text-green-400 border-green-500/30 hover:bg-green-500/10" onClick={() => updateNode(server)}>
-                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> Actualizar nodo
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> {t('admin.servers.updateNode')}
                       </Button>
                     )}
                     {server.sshHost && !isProvisioningNow && !isUpdatingNow && (
                       <Button size="sm" variant="outline" className="text-amber-400 border-amber-500/30 hover:bg-amber-500/10" onClick={() => revokeSsh(server)}>
-                        <KeyRound className="h-3.5 w-3.5 mr-1" /> Quitar SSH
+                        <KeyRound className="h-3.5 w-3.5 mr-1" /> {t('admin.servers.revokeSsh')}
                       </Button>
                     )}
                     <Button size="sm" variant="outline" className="text-red-400 border-red-500/30 hover:bg-red-500/10" disabled={isProvisioningNow || isUpdatingNow} onClick={() => handleDelete(server)}>
-                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Eliminar
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> {t('admin.servers.delete')}
                     </Button>
                   </div>
                 </CardContent>

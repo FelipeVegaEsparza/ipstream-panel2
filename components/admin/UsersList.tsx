@@ -7,6 +7,7 @@ import { showToast } from '@/components/ui/toast'
 import { useState } from 'react'
 import Link from 'next/link'
 import { PencilIcon, TrashIcon, EyeIcon, ArrowPathRoundedSquareIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface User {
   id: string
@@ -35,12 +36,13 @@ interface UsersListProps {
 }
 
 export function UsersList({ users }: UsersListProps) {
+  const { locale, t } = useDashboardI18n()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
 
   const handleDelete = async (id: string, userName: string) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) {
+    if (!confirm(t('admin.usersList.deleteConfirm', { name: userName }))) {
       return
     }
 
@@ -54,17 +56,17 @@ export function UsersList({ users }: UsersListProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al eliminar el usuario' })
+        showToast({ type: 'error', title: error.error || t('admin.usersList.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar el usuario' })
+      showToast({ type: 'error', title: t('admin.usersList.deleteError') })
     } finally {
       setLoading(null)
     }
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -88,13 +90,13 @@ export function UsersList({ users }: UsersListProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          No hay usuarios
+          {t('admin.usersList.empty')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          Comienza creando tu primer cliente
+          {t('admin.usersList.emptyHint')}
         </p>
         <Link href="/admin/users/new" className="btn-primary">
-          Crear Cliente
+          {t('admin.usersList.createClient')}
         </Link>
       </div>
     )
@@ -112,7 +114,7 @@ export function UsersList({ users }: UsersListProps) {
               </svg>
               <input
                 type="text"
-                placeholder="Buscar por nombre, email o proyecto..."
+                placeholder={t('admin.usersList.search')}
                 className="form-input pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -120,7 +122,7 @@ export function UsersList({ users }: UsersListProps) {
             </div>
           </div>
           <div className="text-sm text-muted-foreground">
-            {filteredUsers.length} de {users.length} usuarios
+            {t('admin.usersList.count', { filtered: filteredUsers.length, total: users.length })}
           </div>
         </div>
       </div>
@@ -147,7 +149,7 @@ export function UsersList({ users }: UsersListProps) {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-1">
                       <h3 className="text-lg font-semibold text-foreground">
-                        {user.name || 'Sin nombre'}
+                        {user.name || t('admin.usersList.noName')}
                       </h3>
                       <span className="px-2 py-1 text-xs rounded-full bg-brand/20 text-brand border border-brand/30">
                         {user.client?.plan?.name || 'basic'}
@@ -156,7 +158,7 @@ export function UsersList({ users }: UsersListProps) {
                     <p className="text-muted-foreground text-sm mb-1">{user.email}</p>
                     {user.client && (
                       <p className="text-muted-foreground text-sm">
-                        Proyecto: <span className="text-muted-foreground">{user.client.name}</span>
+                        {t('admin.usersList.project')} <span className="text-muted-foreground">{user.client.name}</span>
                       </p>
                     )}
                   </div>
@@ -164,7 +166,7 @@ export function UsersList({ users }: UsersListProps) {
                   {/* Estadísticas */}
                   <div className="hidden md:block text-right">
                     <div className="text-sm text-muted-foreground mb-1">
-                      <span className="font-medium">{totalContent}</span> elementos
+                      <span className="font-medium">{totalContent}</span> {t('admin.usersList.elements', { count: totalContent })}
                     </div>
                     <div className="text-xs text-muted-foreground space-x-2">
                       <span>{user.client?._count.programs || 0}P</span>
@@ -177,8 +179,8 @@ export function UsersList({ users }: UsersListProps) {
 
                   {/* Fechas */}
                   <div className="hidden lg:block text-right text-xs text-muted-foreground">
-                    <div>Creado: {formatDate(user.createdAt)}</div>
-                    <div>Actualizado: {formatDate(user.updatedAt)}</div>
+                    <div>{t('admin.usersList.created', { date: formatDate(user.createdAt) })}</div>
+                    <div>{t('admin.usersList.updated', { date: formatDate(user.updatedAt) })}</div>
                   </div>
                 </div>
 
@@ -187,21 +189,21 @@ export function UsersList({ users }: UsersListProps) {
                   <Link
                     href={`/admin/users/${user.id}`}
                     className="p-2 text-muted-foreground hover:text-brand transition-colors"
-                    title="Ver detalles"
+                    title={t('admin.usersList.viewDetails')}
                   >
                     <EyeIcon className="h-5 w-5" />
                   </Link>
                   <Link
                     href={`/admin/impersonate?userId=${user.id}`}
                     className="p-2 text-muted-foreground hover:text-purple-400 transition-colors"
-                    title="Impersonar usuario"
+                    title={t('admin.usersList.impersonate')}
                   >
                     <ArrowPathRoundedSquareIcon className="h-5 w-5" />
                   </Link>
                   <Link
                     href={`/admin/users/${user.id}/edit`}
                     className="p-2 text-muted-foreground hover:text-brand transition-colors"
-                    title="Editar usuario"
+                    title={t('admin.usersList.editUser')}
                   >
                     <PencilIcon className="h-5 w-5" />
                   </Link>
@@ -209,7 +211,7 @@ export function UsersList({ users }: UsersListProps) {
                     onClick={() => handleDelete(user.id, user.name || user.email)}
                     disabled={loading === user.id}
                     className="p-2 text-muted-foreground hover:text-red-400 disabled:opacity-50 transition-colors"
-                    title="Eliminar usuario"
+                    title={t('admin.usersList.deleteUser')}
                   >
                     <TrashIcon className="h-5 w-5" />
                   </button>
@@ -223,7 +225,7 @@ export function UsersList({ users }: UsersListProps) {
       {filteredUsers.length === 0 && searchTerm && (
         <div className="text-center py-8">
           <p className="text-muted-foreground">
-            No se encontraron usuarios que coincidan con "{searchTerm}"
+            {t('admin.usersList.noMatches', { term: searchTerm })}
           </p>
         </div>
       )}

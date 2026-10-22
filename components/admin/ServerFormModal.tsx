@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, Plus, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export interface EditableServer {
   id: string
@@ -21,9 +22,9 @@ interface ServerFormModalProps {
   editing?: EditableServer | null
 }
 
-const TYPE_LABEL: Record<string, string> = { radio: 'Solo Radio', tv: 'Solo TV', both: 'Radio + TV' }
-
 export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormModalProps) {
+  const { t } = useDashboardI18n()
+  const TYPE_LABEL: Record<string, string> = { radio: t('admin.serverForm.typeRadio'), tv: t('admin.serverForm.typeTv'), both: t('admin.serverForm.typeBoth') }
   const [name, setName] = useState('')
   const [type, setType] = useState('both')
   const [baseUrl, setBaseUrl] = useState('')
@@ -49,11 +50,11 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
 
   const handleSubmit = async () => {
     if (!name.trim() || !baseUrl.trim() || !publicHostname.trim()) {
-      setError('Completa nombre, URL del agente y hostname público')
+      setError(t('admin.serverForm.incomplete'))
       return
     }
     if (!editing && !token.trim()) {
-      setError('El token es requerido al crear un servidor')
+      setError(t('admin.serverForm.tokenRequired'))
       return
     }
     setSaving(true)
@@ -75,14 +76,14 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        showToast({ type: 'success', title: editing ? 'Servidor actualizado' : 'Servidor creado' })
+        showToast({ type: 'success', title: editing ? t('admin.serverForm.updated') : t('admin.serverForm.created') })
         onSaved()
         onClose()
       } else {
-        setError(data?.message || data?.error || 'Error al guardar')
+        setError(data?.message || data?.error || t('admin.serverForm.saveError'))
       }
     } catch {
-      setError('Error al guardar')
+      setError(t('admin.serverForm.saveError'))
     } finally {
       setSaving(false)
     }
@@ -95,7 +96,7 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
-          aria-label="Cerrar"
+          aria-label={t('admin.serverForm.close')}
         >
           <X className="h-5 w-5" />
         </button>
@@ -106,9 +107,9 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
               {editing ? <Pencil className="h-5 w-5 text-brand" /> : <Plus className="h-5 w-5 text-brand" />}
             </div>
             <div>
-              <h3 className="text-xl font-bold text-foreground">{editing ? 'Editar servidor' : 'Agregar servidor (manual)'}</h3>
+              <h3 className="text-xl font-bold text-foreground">{editing ? t('admin.serverForm.editTitle') : t('admin.serverForm.addTitle')}</h3>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {editing ? `Editando: ${editing.name}` : 'Registra un nodo de streaming ya configurado'}
+                {editing ? t('admin.serverForm.editing', { name: editing.name }) : t('admin.serverForm.addHint')}
               </p>
             </div>
           </div>
@@ -116,12 +117,12 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
               <div className="form-group">
-                <label className="form-label">Nombre</label>
+                <label className="form-label">{t('admin.serverForm.name')}</label>
                 <input className="form-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Radio VPS 1" />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Tipo</label>
+                <label className="form-label">{t('admin.serverForm.type')}</label>
                 <select className="form-input" value={type} onChange={(e) => setType(e.target.value)}>
                   {Object.entries(TYPE_LABEL).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
@@ -130,30 +131,30 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
               </div>
 
               <div className="form-group">
-                <label className="form-label">URL del agente</label>
+                <label className="form-label">{t('admin.serverForm.agentUrl')}</label>
                 <input className="form-input" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="http://node1.example.com:4000" />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Hostname público</label>
+                <label className="form-label">{t('admin.serverForm.publicHostname')}</label>
                 <input className="form-input" value={publicHostname} onChange={(e) => setPublicHostname(e.target.value)} placeholder="stream1.example.com" />
-                <p className="text-xs text-muted-foreground mt-1">Lo usan los oyentes/espectadores para conectarse</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('admin.serverForm.publicHostnameHint')}</p>
               </div>
 
               <div className="form-group">
                 <label className="form-label">
-                  URL pública para oyentes <span className="text-muted-foreground">(opcional)</span>
+                  {t('admin.serverForm.publicUrl')} <span className="text-muted-foreground">{t('admin.serverForm.optional')}</span>
                 </label>
                 <input className="form-input" value={publicUrl} onChange={(e) => setPublicUrl(e.target.value)} placeholder="https://stream.midominio.cl" />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Base que verán los oyentes. Ej: <code className="text-brand">https://stream.midominio.cl</code> (vía Caddy con TLS)
-                  o <code className="text-brand">http://ip:8000</code> (icecast directo). Vacío = se deriva del hostname.
+                  {t('admin.serverForm.publicUrlHint1')} <code className="text-brand">https://stream.example.com</code> {t('admin.serverForm.publicUrlHint2')}
+                  <code className="text-brand">http://ip:8000</code> {t('admin.serverForm.publicUrlHint3')}
                 </p>
               </div>
 
               <div className="form-group">
                 <label className="form-label">
-                  Token del agente {editing && <span className="text-muted-foreground">(vacío = no cambiar)</span>}
+                  {t('admin.serverForm.token')} {editing && <span className="text-muted-foreground">{t('admin.serverForm.tokenUnchanged')}</span>}
                 </label>
                 <input className="form-input" type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="token del STREAMING_AGENT_TOKEN" />
               </div>
@@ -164,10 +165,10 @@ export function ServerFormModal({ open, onClose, onSaved, editing }: ServerFormM
 
           <div className="flex gap-3 pt-2">
             <Button variant="secondary" className="flex-1" onClick={onClose}>
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button className="flex-1" disabled={saving} onClick={handleSubmit}>
-              {saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear servidor'}
+              {saving ? t('common.saving') : editing ? t('admin.serverForm.saveChanges') : t('admin.serverForm.create')}
             </Button>
           </div>
         </div>

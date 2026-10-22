@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, MailOpen, MousePointerClick, AlertTriangle } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface LogRow {
   id: string
@@ -29,12 +30,13 @@ const STATUS_STYLE: Record<string, string> = {
   skipped: 'bg-secondary/30 text-muted-foreground',
 }
 
-function fmt(dt: string | null) {
+function fmt(dt: string | null, locale: string) {
   if (!dt) return '—'
-  return new Date(dt).toLocaleString('es-CL')
+  return new Date(dt).toLocaleString(locale)
 }
 
 export function EmailLogsViewer() {
+  const { locale, t } = useDashboardI18n()
   const [logs, setLogs] = useState<LogRow[]>([])
   const [total, setTotal] = useState(0)
   const [stats, setStats] = useState<{ status: string; _count: { _all: number } }[]>([])
@@ -72,16 +74,16 @@ export function EmailLogsViewer() {
       <div className="flex items-center justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <select className="form-input !py-1.5 !w-44" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}>
-            <option value="all">Todos los estados</option>
+            <option value="all">{t('admin.emailLogs.allStatuses')}</option>
             {[...new Set(['sent', 'delivered', 'opened', 'clicked', 'bounced', 'complained', 'failed', 'skipped'])].map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
           <Button size="sm" variant="outline" onClick={load}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Refrescar
+            <RefreshCw className="h-4 w-4 mr-1" /> {t('admin.emailLogs.refresh')}
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground">{total} envíos</p>
+        <p className="text-sm text-muted-foreground">{t('admin.emailLogs.total', { count: total })}</p>
       </div>
 
       <div className="flex flex-wrap gap-2 text-xs">
@@ -96,14 +98,14 @@ export function EmailLogsViewer() {
         <table className="w-full text-sm">
           <thead className="bg-background/60 text-muted-foreground uppercase text-xs">
             <tr>
-              <th className="text-left p-3">Cliente</th>
-              <th className="text-left p-3">Destinatario</th>
-              <th className="text-left p-3">Asunto</th>
-              <th className="text-left p-3">Plantilla</th>
-              <th className="text-left p-3">Estado</th>
-              <th className="text-left p-3">Abierto</th>
-              <th className="text-left p-3">Clic</th>
-              <th className="text-left p-3">Fecha</th>
+              <th className="text-left p-3">{t('admin.emailLogs.client')}</th>
+              <th className="text-left p-3">{t('admin.emailLogs.recipient')}</th>
+              <th className="text-left p-3">{t('admin.emailLogs.subject')}</th>
+              <th className="text-left p-3">{t('admin.emailLogs.template')}</th>
+              <th className="text-left p-3">{t('admin.emailLogs.status')}</th>
+              <th className="text-left p-3">{t('admin.emailLogs.opened')}</th>
+              <th className="text-left p-3">{t('admin.emailLogs.clicked')}</th>
+              <th className="text-left p-3">{t('admin.emailLogs.date')}</th>
             </tr>
           </thead>
           <tbody>
@@ -118,17 +120,17 @@ export function EmailLogsViewer() {
                   {l.error && <p className="text-[10px] text-red-400 mt-0.5 max-w-[160px] truncate" title={l.error}>{l.error}</p>}
                 </td>
                 <td className="p-3 text-muted-foreground flex items-center gap-1">
-                  <MailOpen className="h-3.5 w-3.5" /> {fmt(l.openedAt)}
+                  <MailOpen className="h-3.5 w-3.5" /> {fmt(l.openedAt, locale === 'en' ? 'en-US' : 'es-CL')}
                 </td>
                 <td className="p-3 text-muted-foreground flex items-center gap-1">
-                  <MousePointerClick className="h-3.5 w-3.5" /> {fmt(l.clickedAt)}
+                  <MousePointerClick className="h-3.5 w-3.5" /> {fmt(l.clickedAt, locale === 'en' ? 'en-US' : 'es-CL')}
                 </td>
-                <td className="p-3 text-muted-foreground">{fmt(l.createdAt)}</td>
+                <td className="p-3 text-muted-foreground">{fmt(l.createdAt, locale === 'en' ? 'en-US' : 'es-CL')}</td>
               </tr>
             ))}
             {logs.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-muted-foreground">Sin envíos {statusFilter !== 'all' ? 'con ese estado' : ''}</td>
+                <td colSpan={8} className="p-8 text-center text-muted-foreground">{statusFilter !== 'all' ? t('admin.emailLogs.emptyFiltered') : t('admin.emailLogs.empty')}</td>
               </tr>
             )}
           </tbody>
@@ -136,9 +138,9 @@ export function EmailLogsViewer() {
       </div>
 
       <div className="flex items-center justify-between">
-        <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Anterior</Button>
-        <span className="text-sm text-muted-foreground">Página {page} de {totalPages}</span>
-        <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Siguiente →</Button>
+        <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>{t('admin.emailLogs.previous')}</Button>
+        <span className="text-sm text-muted-foreground">{t('admin.emailLogs.page', { page, total: totalPages })}</span>
+        <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>{t('admin.emailLogs.next')}</Button>
       </div>
     </div>
   )

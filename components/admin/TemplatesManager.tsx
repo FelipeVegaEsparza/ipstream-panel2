@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Edit, Trash2, Image as ImageIcon, Users } from 'lucide-react'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { Modal } from '@/components/ui/modal'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Template {
   id: string
@@ -29,6 +30,7 @@ interface TemplatesManagerProps {
 }
 
 export function TemplatesManager({ templates: initialTemplates }: TemplatesManagerProps) {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [templates, setTemplates] = useState<Template[]>(initialTemplates)
   const [showForm, setShowForm] = useState(false)
@@ -109,19 +111,19 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
 
       if (response.ok) {
         showModalMessage('success', 
-          editingTemplate ? 'Plantilla actualizada' : 'Plantilla creada',
+          editingTemplate ? t('admin.templatesManager.updatedTitle') : t('admin.templatesManager.createdTitle'),
           editingTemplate 
-            ? 'La plantilla se actualizó correctamente' 
-            : 'La plantilla se creó correctamente'
+            ? t('admin.templatesManager.updatedMessage')
+            : t('admin.templatesManager.createdMessage')
         )
         resetForm()
         setTimeout(() => router.refresh(), 1500)
       } else {
         const error = await response.json()
-        showModalMessage('error', 'Error', error.error || 'Error al guardar la plantilla')
+        showModalMessage('error', 'Error', error.error || t('admin.templatesManager.saveError'))
       }
     } catch (error) {
-      showModalMessage('error', 'Error', 'Error al guardar la plantilla')
+      showModalMessage('error', 'Error', t('admin.templatesManager.saveError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -129,8 +131,8 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
 
   const handleDelete = async (template: Template) => {
     showModalMessage('confirm', 
-      'Eliminar plantilla',
-      `¿Estás seguro de que deseas eliminar la plantilla "${template.displayName}"?`,
+      t('admin.templatesManager.deleteTitle'),
+      t('admin.templatesManager.deleteConfirm', { name: template.displayName }),
       async () => {
         try {
           const response = await fetch(`/api/admin/templates/${template.id}`, {
@@ -138,14 +140,14 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
           })
 
           if (response.ok) {
-            showModalMessage('success', 'Plantilla eliminada', 'La plantilla se eliminó correctamente')
+            showModalMessage('success', t('admin.templatesManager.deletedTitle'), t('admin.templatesManager.deletedMessage'))
             setTemplates(templates.filter(t => t.id !== template.id))
           } else {
             const error = await response.json()
-            showModalMessage('error', 'Error', error.error || 'Error al eliminar la plantilla')
+            showModalMessage('error', 'Error', error.error || t('admin.templatesManager.deleteError'))
           }
         } catch (error) {
-          showModalMessage('error', 'Error', 'Error al eliminar la plantilla')
+          showModalMessage('error', 'Error', t('admin.templatesManager.deleteError'))
         }
       }
     )
@@ -164,9 +166,9 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
       />
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Plantillas de Sitio</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t('admin.templatesManager.title')}</h2>
           <p className="text-muted-foreground text-sm">
-            Gestiona las plantillas disponibles para los clientes
+            {t('admin.templatesManager.subtitle')}
           </p>
         </div>
         <Button
@@ -174,7 +176,7 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
           className="bg-brand hover:bg-brand"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Nueva Plantilla
+          {t('admin.templatesManager.new')}
         </Button>
       </div>
 
@@ -183,7 +185,7 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="text-foreground">
-              {editingTemplate ? 'Editar Plantilla' : 'Nueva Plantilla'}
+              {editingTemplate ? t('admin.templatesManager.edit') : t('admin.templatesManager.new')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -191,28 +193,28 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-muted-foreground block mb-2">
-                    Nombre Técnico <span className="text-red-400">*</span>
+                    {t('admin.templatesManager.technicalName')} <span className="text-red-400">*</span>
                   </label>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="plantilla-moderna"
+                    placeholder={t('admin.templatesManager.technicalNamePlaceholder')}
                     className="bg-secondary border-border text-foreground"
                     required
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Nombre único sin espacios (ej: plantilla-moderna)
+                    {t('admin.templatesManager.technicalNameHint')}
                   </p>
                 </div>
 
                 <div>
                   <label className="text-sm text-muted-foreground block mb-2">
-                    Nombre para Mostrar <span className="text-red-400">*</span>
+                    {t('admin.templatesManager.displayName')} <span className="text-red-400">*</span>
                   </label>
                   <Input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Plantilla Moderna"
+                    placeholder={t('admin.templatesManager.displayNamePlaceholder')}
                     className="bg-secondary border-border text-foreground"
                     required
                   />
@@ -221,19 +223,19 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
 
               <div>
                 <label className="text-sm text-muted-foreground block mb-2">
-                  Descripción
+                  {t('admin.templatesManager.description')}
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Descripción de la plantilla..."
+                  placeholder={t('admin.templatesManager.descriptionPlaceholder')}
                   className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground min-h-[100px]"
                 />
               </div>
 
               <div>
                 <label className="text-sm text-muted-foreground block mb-2">
-                  Imagen de Preview
+                  {t('admin.templatesManager.previewImage')}
                 </label>
                 <ImageUpload
                   value={imageUrl}
@@ -251,7 +253,7 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
                   className="w-4 h-4"
                 />
                 <label htmlFor="isActive" className="text-sm text-muted-foreground">
-                  Plantilla activa (visible para clientes)
+                  {t('admin.templatesManager.activeHint')}
                 </label>
               </div>
 
@@ -263,14 +265,14 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
                   className="flex-1 border-border hover:bg-secondary"
                   disabled={isSubmitting}
                 >
-                  Cancelar
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   type="submit"
                   className="flex-1 bg-brand hover:bg-brand"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Guardando...' : editingTemplate ? 'Actualizar' : 'Crear'}
+                  {isSubmitting ? t('common.saving') : editingTemplate ? t('admin.templatesManager.update') : t('admin.templatesManager.create')}
                 </Button>
               </div>
             </form>
@@ -308,7 +310,7 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
                   </p>
                 </div>
                 <Badge className={template.isActive ? 'bg-green-600' : 'bg-secondary'}>
-                  {template.isActive ? 'Activa' : 'Inactiva'}
+                  {template.isActive ? t('admin.templatesManager.active') : t('admin.templatesManager.inactive')}
                 </Badge>
               </div>
 
@@ -320,7 +322,7 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
 
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                 <Users className="h-3 w-3" />
-                <span>{template._count?.clients || 0} cliente(s) usando</span>
+                <span>{t('admin.templatesManager.clientsUsing', { count: template._count?.clients || 0 })}</span>
               </div>
 
               <div className="flex gap-2">
@@ -330,7 +332,7 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
                   className="flex-1 bg-brand hover:bg-brand"
                 >
                   <Edit className="h-3 w-3 mr-1" />
-                  Editar
+                  {t('admin.templatesManager.editAction')}
                 </Button>
                 <Button
                   size="sm"
@@ -349,17 +351,17 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
           <div className="col-span-full text-center py-12">
             <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              No hay plantillas creadas
+              {t('admin.templatesManager.empty')}
             </h3>
             <p className="text-muted-foreground mb-4">
-              Crea tu primera plantilla para que los clientes puedan seleccionarla
+              {t('admin.templatesManager.emptyHint')}
             </p>
             <Button
               onClick={() => setShowForm(true)}
               className="bg-brand hover:bg-brand"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Crear Primera Plantilla
+              {t('admin.templatesManager.createFirst')}
             </Button>
           </div>
         )}

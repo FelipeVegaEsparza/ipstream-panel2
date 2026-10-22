@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { showToast } from '@/components/ui/toast'
 import { ELEVENLABS_MODELS, DEFAULT_ELEVENLABS_MODEL } from '@/lib/elevenlabs-models'
 import { FISH_AUDIO_MODELS, DEFAULT_FISH_AUDIO_MODEL } from '@/lib/fish-audio-models'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface VoiceOption {
   id: string
@@ -25,6 +26,7 @@ interface Config {
 }
 
 export function ElevenLabsSettings() {
+  const { t } = useDashboardI18n()
   const [apiKey, setApiKey] = useState('')
   const [voiceId, setVoiceId] = useState('')
   const [model, setModel] = useState(DEFAULT_ELEVENLABS_MODEL)
@@ -55,7 +57,7 @@ export function ElevenLabsSettings() {
         setFishModel(data.fishAudioModel || DEFAULT_FISH_AUDIO_MODEL)
         setFishReferenceId(data.fishAudioReferenceId || '')
       })
-      .catch(() => showToast({ type: 'error', title: 'No se pudo cargar la configuración' }))
+      .catch(() => showToast({ type: 'error', title: t('admin.tts.loadError') }))
       .finally(() => setLoadingCfg(false))
   }, [])
 
@@ -81,13 +83,13 @@ export function ElevenLabsSettings() {
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al guardar')
+      if (!res.ok) throw new Error(data.error || t('admin.tts.saveError'))
       setApiKey('')
       setFishApiKey('')
       setKeySet(Boolean(data.elevenLabsKeySet))
       setFishKeySet(Boolean(data.fishAudioKeySet))
       setProvider(data.ttsProvider === 'fish' ? 'fish' : 'elevenlabs')
-      showToast({ type: 'success', title: 'Configuración de locución guardada' })
+      showToast({ type: 'success', title: t('admin.tts.saved') })
     } catch (e) {
       showToast({ type: 'error', title: (e as Error).message })
     } finally {
@@ -96,7 +98,7 @@ export function ElevenLabsSettings() {
   }
 
   async function clearKey() {
-    if (!confirm('¿Quitar la API key de ElevenLabs? La locución premium quedará desactivada.')) return
+    if (!confirm(t('admin.tts.removeElevenKeyConfirm'))) return
     setLoading(true)
     try {
       const res = await fetch('/api/admin/app-config', {
@@ -105,11 +107,11 @@ export function ElevenLabsSettings() {
         body: JSON.stringify({ clearElevenLabsApiKey: true, elevenLabsEnabled: false }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al quitar la API key')
+      if (!res.ok) throw new Error(data.error || t('admin.tts.keyError'))
       setApiKey('')
       setKeySet(Boolean(data.elevenLabsKeySet))
       setEnabled(Boolean(data.elevenLabsEnabled))
-      showToast({ type: 'success', title: 'API key eliminada' })
+      showToast({ type: 'success', title: t('admin.tts.keyRemoved') })
     } catch (e) {
       showToast({ type: 'error', title: (e as Error).message })
     } finally {
@@ -118,7 +120,7 @@ export function ElevenLabsSettings() {
   }
 
   async function clearFishKey() {
-    if (!confirm('¿Quitar la API key de Fish Audio?')) return
+    if (!confirm(t('admin.tts.removeFishKeyConfirm'))) return
     setLoading(true)
     try {
       const res = await fetch('/api/admin/app-config', {
@@ -127,10 +129,10 @@ export function ElevenLabsSettings() {
         body: JSON.stringify({ clearFishAudioApiKey: true }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al quitar la API key')
+      if (!res.ok) throw new Error(data.error || t('admin.tts.keyError'))
       setFishApiKey('')
       setFishKeySet(Boolean(data.fishAudioKeySet))
-      showToast({ type: 'success', title: 'API key de Fish eliminada' })
+      showToast({ type: 'success', title: t('admin.tts.fishKeyRemoved') })
     } catch (e) {
       showToast({ type: 'error', title: (e as Error).message })
     } finally {
@@ -144,19 +146,18 @@ export function ElevenLabsSettings() {
   return (
     <div className="card max-w-2xl space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-foreground">Locución IA</h2>
+        <h2 className="text-xl font-semibold text-foreground">{t('admin.tts.title')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Elegí el proveedor de voz. Se usa en Locutor IA, clima/hora y jingles; si el elegido falla,
-          se intenta el otro y Piper queda como último fallback.
+          {t('admin.tts.subtitle')}
         </p>
       </div>
 
       <div>
-        <label className="mb-2 block text-xs font-medium text-muted-foreground">Proveedor de voz</label>
+        <label className="mb-2 block text-xs font-medium text-muted-foreground">{t('admin.tts.provider')}</label>
         <div className="grid gap-2 sm:grid-cols-2">
           {([
-            { id: 'elevenlabs', name: 'ElevenLabs', detail: 'Voces y catálogo existente' },
-            { id: 'fish', name: 'Fish Audio', detail: 'Voz/reference ID y modelo Fish' },
+            { id: 'elevenlabs', name: 'ElevenLabs', detail: t('admin.tts.providerElevenDetail') },
+            { id: 'fish', name: 'Fish Audio', detail: t('admin.tts.providerFishDetail') },
           ] as const).map((item) => (
             <button
               key={item.id}
@@ -178,14 +179,14 @@ export function ElevenLabsSettings() {
       </div>
 
       {loadingCfg ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <p className="text-sm text-muted-foreground">{t('admin.tts.loading')}</p>
       ) : (
         <>
           <div className="flex items-center justify-between gap-4 rounded-lg bg-secondary/50 p-3">
             <div>
-              <p className="text-sm font-medium text-foreground">Habilitar ElevenLabs</p>
+              <p className="text-sm font-medium text-foreground">{t('admin.tts.enableEleven')}</p>
               <p className="text-xs text-muted-foreground">
-                Se usa si es el proveedor elegido o como respaldo si Fish Audio falla.
+                {t('admin.tts.enableElevenHint')}
               </p>
             </div>
             <input
@@ -197,44 +198,44 @@ export function ElevenLabsSettings() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">API key</label>
+            <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.apiKey')}</label>
             <input
               type="password"
               className={input}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder={keySet ? '•••••••• (ya configurada — deja vacío para conservarla)' : 'xi-…'}
+              placeholder={keySet ? t('admin.tts.keyConfiguredPlaceholder') : 'xi-…'}
               autoComplete="off"
             />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Se guarda encriptada. Nunca se muestra de vuelta en el panel.
+              {t('admin.tts.encryptedHint')}
             </p>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Voice ID</label>
+            <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.voiceId')}</label>
             <input
               className={input}
               value={voiceId}
               onChange={(e) => setVoiceId(e.target.value)}
-              placeholder="ID de la voz de tu emisora"
+              placeholder={t('admin.tts.voiceIdPlaceholder')}
             />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Copiá el ID desde{' '}
+              {t('admin.tts.voiceIdHint')}{' '}
               <a
                 href="https://elevenlabs.io/app/voice-library"
                 target="_blank"
                 rel="noreferrer"
                 className="text-brand hover:underline"
               >
-                ElevenLabs → Voces
+                {t('admin.tts.voiceIdLink')}
               </a>
-              . Para una voz propia, creá un clon profesional y usá su ID.
+              {t('admin.tts.voiceIdHintEnd')}
             </p>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Modelo</label>
+            <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.model')}</label>
             <select
               className={input}
               value={model}
@@ -247,17 +248,16 @@ export function ElevenLabsSettings() {
               ))}
             </select>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              v4 Turbo cuesta USD 0,04 por 1.000 caracteres. Para locución de clima/hora es el
-              equilibrio recomendado.
+              {t('admin.tts.modelHint')}
             </p>
           </div>
 
           <div>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <label className="block text-xs text-muted-foreground">Voces disponibles para los clientes</label>
+                <label className="block text-xs text-muted-foreground">{t('admin.tts.clientVoices')}</label>
                 <p className="text-[11px] text-muted-foreground">
-                  El cliente elige una en Locutor IA. La voz global se usa si no hay selección.
+                  {t('admin.tts.clientVoicesHint')}
                 </p>
               </div>
               <button
@@ -266,7 +266,7 @@ export function ElevenLabsSettings() {
                 disabled={voices.length >= 30}
                 className="rounded border border-border px-2.5 py-1.5 text-xs text-foreground hover:border-brand hover:text-brand disabled:opacity-40"
               >
-                Agregar voz
+                {t('admin.tts.addVoice')}
               </button>
             </div>
             <div className="mt-2 space-y-2">
@@ -278,7 +278,7 @@ export function ElevenLabsSettings() {
                     onChange={(e) =>
                       setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, name: e.target.value } : v)))
                     }
-                    placeholder="Nombre (ej. Locutor chileno)"
+                    placeholder={t('admin.tts.voiceNamePlaceholder')}
                   />
                   <input
                     className={input}
@@ -286,13 +286,13 @@ export function ElevenLabsSettings() {
                     onChange={(e) =>
                       setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, id: e.target.value } : v)))
                     }
-                    placeholder="Voice ID de ElevenLabs"
+                    placeholder={t('admin.tts.voiceIdFieldPlaceholder')}
                   />
                   <button
                     type="button"
                     onClick={() => setVoices((prev) => prev.filter((_, i) => i !== index))}
                     className="rounded border border-border px-2 text-muted-foreground hover:text-red-300"
-                    aria-label="Quitar voz"
+                    aria-label={t('admin.tts.removeVoice')}
                   >
                     ×
                   </button>
@@ -300,7 +300,7 @@ export function ElevenLabsSettings() {
               ))}
               {voices.length === 0 && (
                 <p className="text-[11px] text-muted-foreground">
-                  No hay voces alternativas. Los clientes usarán la voz global.
+                  {t('admin.tts.noVoices')}
                 </p>
               )}
             </div>
@@ -308,37 +308,36 @@ export function ElevenLabsSettings() {
 
           <div className="space-y-3 rounded-lg border border-border bg-secondary/20 p-3">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Fish Audio</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t('admin.tts.fishTitle')}</h3>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
-                API compatible con el endpoint <code>/v1/tts</code>. La voz se define con un
-                reference ID de Fish Audio; si se deja vacío se usa la voz predeterminada de la cuenta.
+                {t('admin.tts.fishHint')}
               </p>
             </div>
 
             <div>
-              <label className="mb-1 block text-xs text-muted-foreground">API key de Fish Audio</label>
+              <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.fishApiKey')}</label>
               <input
                 type="password"
                 className={input}
                 value={fishApiKey}
                 onChange={(e) => setFishApiKey(e.target.value)}
-                placeholder={fishKeySet ? '•••••••• (ya configurada — deja vacío para conservarla)' : 'API key de fish.audio'}
+                placeholder={fishKeySet ? t('admin.tts.keyConfiguredPlaceholder') : t('admin.tts.fishKeyPlaceholder')}
                 autoComplete="off"
               />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Reference ID / voz</label>
+                <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.fishReference')}</label>
                 <input
                   className={input}
                   value={fishReferenceId}
                   onChange={(e) => setFishReferenceId(e.target.value)}
-                  placeholder="ID del modelo de voz (opcional)"
+                  placeholder={t('admin.tts.fishReferencePlaceholder')}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Modelo</label>
+                <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.model')}</label>
                 <select
                   className={input}
                   value={fishModel}
@@ -352,17 +351,16 @@ export function ElevenLabsSettings() {
             </div>
 
             <p className="text-[11px] text-muted-foreground">
-              Copiá el reference ID desde{' '}
+              {t('admin.tts.fishReferenceHint')}{' '}
               <a
                 href="https://fish.audio/"
                 target="_blank"
                 rel="noreferrer"
                 className="text-brand hover:underline"
               >
-                Fish Audio
+                {t('admin.tts.fishTitle')}
               </a>
-              . El modelo se envía en el header <code>model</code>. La música de los jingles IA
-              sigue usando ElevenLabs; Fish Audio aplica a la locución.
+              {t('admin.tts.fishReferenceHintEnd')}
             </p>
             {fishKeySet && (
               <button
@@ -371,17 +369,16 @@ export function ElevenLabsSettings() {
                 disabled={loading}
                 className="rounded border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-red-300 disabled:opacity-40"
               >
-                Quitar API key de Fish
+                {t('admin.tts.removeFishKey')}
               </button>
             )}
           </div>
 
           <div className="flex items-start justify-between gap-4 rounded-lg bg-secondary/50 p-3">
             <div>
-              <p className="text-sm font-medium text-foreground">Guardar audios generados</p>
+              <p className="text-sm font-medium text-foreground">{t('admin.tts.saveAudios')}</p>
               <p className="text-xs text-muted-foreground">
-                Evita pagar dos veces la misma frase y baja la latencia. Se guardan en el volumen
-                de uploads y sobreviven a los deploys.
+                {t('admin.tts.saveAudiosHint')}
               </p>
             </div>
             <input
@@ -399,7 +396,7 @@ export function ElevenLabsSettings() {
               disabled={loading}
               className="rounded bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand disabled:opacity-50"
             >
-              {loading ? 'Guardando…' : 'Guardar'}
+              {loading ? t('admin.tts.saving') : t('admin.tts.save')}
             </button>
             {keySet && (
               <button
@@ -408,14 +405,13 @@ export function ElevenLabsSettings() {
                 disabled={loading}
                 className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-card disabled:opacity-50"
               >
-                Quitar API key
+                {t('admin.tts.removeKey')}
               </button>
             )}
           </div>
 
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Con caché activado, una frase se paga una sola vez. A USD 0,04/1K, una radio con
-            ~100 anuncios diarios ronda USD 12/mes sin caché; con caché, los repetidos son gratis.
+            {t('admin.tts.cacheNote')}
           </p>
         </>
       )}

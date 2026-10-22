@@ -5,6 +5,7 @@ import { showToast } from '@/components/ui/toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { 
   Shield, 
   FileText, 
@@ -15,71 +16,72 @@ import {
 } from 'lucide-react'
 
 export function LicenseInfo() {
+  const { t } = useDashboardI18n()
   const licenses = [
     {
       name: 'CasterFly',
       version: '1.0.0',
       license: 'MIT License',
-      status: 'Activa',
-      description: 'Panel de administración principal',
+      status: 'active',
+      description: t('admin.licenseInfo.mainPanel'),
       url: 'https://opensource.org/licenses/MIT'
     },
     {
       name: 'Next.js',
       version: '14.0.4',
       license: 'MIT License',
-      status: 'Activa',
-      description: 'Framework de React para aplicaciones web',
+      status: 'active',
+      description: t('admin.licenseInfo.reactFramework'),
       url: 'https://github.com/vercel/next.js/blob/canary/license.md'
     },
     {
       name: 'Prisma',
       version: '5.22.0',
       license: 'Apache 2.0',
-      status: 'Activa',
-      description: 'ORM para base de datos',
+      status: 'active',
+      description: t('admin.licenseInfo.databaseOrm'),
       url: 'https://github.com/prisma/prisma/blob/main/LICENSE'
     },
     {
       name: 'NextAuth.js',
       version: '4.24.5',
       license: 'ISC License',
-      status: 'Activa',
-      description: 'Autenticación para Next.js',
+      status: 'active',
+      description: t('admin.licenseInfo.nextAuthDesc'),
       url: 'https://github.com/nextauthjs/next-auth/blob/main/LICENSE'
     },
     {
       name: 'Tailwind CSS',
       version: '3.3.6',
       license: 'MIT License',
-      status: 'Activa',
-      description: 'Framework de CSS utilitario',
+      status: 'active',
+      description: t('admin.licenseInfo.cssFramework'),
       url: 'https://github.com/tailwindlabs/tailwindcss/blob/master/LICENSE'
     },
     {
       name: 'Lucide React',
       version: '0.294.0',
       license: 'ISC License',
-      status: 'Activa',
-      description: 'Iconos para React',
+      status: 'active',
+      description: t('admin.licenseInfo.reactIcons'),
       url: 'https://github.com/lucide-icons/lucide/blob/main/LICENSE'
     }
   ]
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      'Activa': { color: 'bg-green-600', icon: CheckCircle },
-      'Expirada': { color: 'bg-red-600', icon: AlertTriangle },
-      'Por Vencer': { color: 'bg-orange-600', icon: AlertTriangle }
+    const statusConfig: Record<string, { color: string; icon: typeof CheckCircle; label: string }> = {
+      active: { color: 'bg-green-600', icon: CheckCircle, label: t('admin.licenseInfo.active') },
+      expired: { color: 'bg-red-600', icon: AlertTriangle, label: t('admin.licenseInfo.expired') },
+      expiring: { color: 'bg-orange-600', icon: AlertTriangle, label: t('admin.licenseInfo.expiring') },
     }
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig['Activa']
+    const config = statusConfig[status] || statusConfig.active
     const Icon = config.icon
 
     return (
       <Badge className={`${config.color} text-foreground flex items-center gap-1`}>
         <Icon className="h-3 w-3" />
-        {status}
+        {config.label}
       </Badge>
     )
   }
@@ -116,10 +118,10 @@ export function LicenseInfo() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        showToast({ type: 'error', title: 'Error al generar reporte de licencias' })
+        showToast({ type: 'error', title: t('admin.licenseInfo.reportError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al generar reporte de licencias' })
+      showToast({ type: 'error', title: t('admin.licenseInfo.reportError') })
     }
   }
 
@@ -128,7 +130,7 @@ export function LicenseInfo() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Información de Licencias
+          {t('admin.licenseInfo.title')}
         </CardTitle>
         <Button
           onClick={generateLicenseReport}
@@ -137,7 +139,7 @@ export function LicenseInfo() {
           className="border-brand text-brand hover:bg-brand hover:text-white"
         >
           <Download className="h-4 w-4 mr-2" />
-          Generar Reporte
+          {t('admin.licenseInfo.generateReport')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -165,7 +167,7 @@ export function LicenseInfo() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <FileText className="h-4 w-4" />
-                  <span>Licencia: {license.license}</span>
+                  <span>{t('admin.licenseInfo.license', { license: license.license })}</span>
                 </div>
                 <Button
                   size="sm"
@@ -174,7 +176,7 @@ export function LicenseInfo() {
                   className="border-border hover:bg-secondary"
                 >
                   <ExternalLink className="h-4 w-4 mr-1" />
-                  Ver Licencia
+                  {t('admin.licenseInfo.viewLicense')}
                 </Button>
               </div>
             </div>
@@ -185,20 +187,19 @@ export function LicenseInfo() {
         <div className="mt-6 p-4 rounded-lg bg-brand/10 border border-brand/30">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-5 w-5 text-brand" />
-            <h4 className="text-foreground font-semibold">Resumen de Cumplimiento</h4>
+            <h4 className="text-foreground font-semibold">{t('admin.licenseInfo.compliance')}</h4>
           </div>
           <p className="text-sm text-muted-foreground mb-3">
-            Todas las dependencias utilizadas en este proyecto cumplen con licencias de código abierto compatibles. 
-            El sistema está en pleno cumplimiento con las obligaciones de licencia.
+            {t('admin.licenseInfo.complianceHint')}
           </p>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1 text-green-400">
               <CheckCircle className="h-4 w-4" />
-              <span>{licenses.filter(l => l.status === 'Activa').length} Licencias Activas</span>
+              <span>{t('admin.licenseInfo.activeCount', { count: licenses.filter(l => l.status === 'active').length })}</span>
             </div>
             <div className="flex items-center gap-1 text-brand">
               <FileText className="h-4 w-4" />
-              <span>{licenses.length} Total de Componentes</span>
+              <span>{t('admin.licenseInfo.componentsCount', { count: licenses.length })}</span>
             </div>
           </div>
         </div>
