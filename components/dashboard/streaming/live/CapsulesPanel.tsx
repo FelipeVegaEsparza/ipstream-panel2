@@ -19,13 +19,13 @@ interface Capsule {
 
 const DRAG_TYPE = 'application/x-ipstream-track'
 
-function capsuleToTrack(capsule: Capsule): LocalTrack {
+function capsuleToTrack(capsule: Capsule, defaults: { name: string; artist: string }): LocalTrack {
   return {
     id: capsule.id,
-    name: capsule.title || capsule.fileName || 'Cápsula',
+    name: capsule.title || capsule.fileName || defaults.name,
     path: `capsule:${capsule.id}`,
-    title: capsule.title || capsule.fileName || 'Cápsula',
-    artist: capsule.category?.name || 'Cápsula informativa',
+    title: capsule.title || capsule.fileName || defaults.name,
+    artist: capsule.category?.name || defaults.artist,
     album: null,
     duration: capsule.duration,
     size: 0,
@@ -92,7 +92,7 @@ export function CapsulesPanel({ onAdd }: { onAdd: (track: LocalTrack) => void })
         {loading ? <p className="py-3 text-[10px] text-muted-foreground">{t('live.capsules.loading')}</p> : error ? <p className="py-3 text-[10px] text-red-300">{error}</p> : capsules.length === 0 ? <p className="py-3 text-[10px] text-muted-foreground">{t('live.capsules.empty')}</p> : (
           <ul className="space-y-1">
             {capsules.map((capsule) => {
-              const track = capsuleToTrack(capsule)
+              const track = capsuleToTrack(capsule, { name: t('live.capsules.defaultName'), artist: t('live.capsules.defaultArtist') })
               return (
                 <li key={capsule.id} draggable
                   onDragStart={(event) => {

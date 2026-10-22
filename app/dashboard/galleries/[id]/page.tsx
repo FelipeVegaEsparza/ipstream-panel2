@@ -15,7 +15,8 @@ interface GalleryDetailPageProps {
 }
 
 export default async function GalleryDetailPage({ params }: GalleryDetailPageProps) {
-  const t = dashboardT(getDashboardLocale())
+  const locale = getDashboardLocale()
+  const t = dashboardT(locale)
   const session = await getServerSession(authOptions)
 
   if (!session?.user.clientId) {
@@ -39,7 +40,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -87,9 +88,9 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
                 </h1>
 
                 <div className="flex items-center text-sm text-muted-foreground mb-6">
-                  <span>Creado: {formatDate(gallery.createdAt)}</span>
+                  <span>{t('galleries.detail.created', { date: formatDate(gallery.createdAt) })}</span>
                   <span className="mx-2">&bull;</span>
-                  <span>Actualizado: {formatDate(gallery.updatedAt)}</span>
+                  <span>{t('galleries.detail.updated', { date: formatDate(gallery.updatedAt) })}</span>
                 </div>
               </header>
 
@@ -101,14 +102,14 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
               {gallery.images.length > 0 ? (
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 mb-4">
-                    Imágenes ({gallery.images.length})
+                    {t('galleries.detail.images', { count: gallery.images.length })}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {gallery.images.map((img, index) => (
                       <div key={img.id} className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
                         <Image
                           src={img.imageUrl}
-                          alt={`${gallery.title} - Imagen ${index + 1}`}
+                          alt={t('galleries.detail.imageAlt', { title: gallery.title, index: index + 1 })}
                           fill
                           className="object-cover hover:scale-105 transition-transform duration-300"
                         />
@@ -120,7 +121,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
                   <PhotoIcon className="mx-auto h-12 w-12 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Esta galería no tiene imágenes
+                    {t('galleries.detail.noImages')}
                   </p>
                 </div>
               )}
@@ -132,27 +133,27 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
         <div className="space-y-6">
           <div className="card">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Información
+              {t('galleries.detail.info')}
             </h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-muted-foreground">Estado:</span>
-                <p className="text-sm font-medium text-green-600">Activa</p>
+                <span className="text-sm text-muted-foreground">{t('galleries.detail.status')}</span>
+                <p className="text-sm font-medium text-green-600">{t('galleries.detail.active')}</p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Cantidad de imágenes:</span>
+                <span className="text-sm text-muted-foreground">{t('galleries.detail.imageCount')}</span>
                 <p className="text-sm font-medium text-gray-900">
                   {gallery.images.length}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Creada:</span>
+                <span className="text-sm text-muted-foreground">{t('galleries.detail.createdLabel')}</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(gallery.createdAt)}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Última actualización:</span>
+                <span className="text-sm text-muted-foreground">{t('galleries.detail.lastUpdated')}</span>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(gallery.updatedAt)}
                 </p>
@@ -162,7 +163,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
 
           <div className="card">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Acciones
+              {t('galleries.detail.actions')}
             </h3>
             <div className="space-y-3">
               <Link
@@ -170,18 +171,18 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
                 className="w-full btn-primary flex items-center justify-center gap-2"
               >
                 <PencilIcon className="h-4 w-4" />
-                Editar galería
+                {t('galleries.detail.editGallery')}
               </Link>
             </div>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <h3 className="text-sm font-medium text-blue-800 mb-2">
-              API REST
+              {t('galleries.detail.apiRest')}
             </h3>
             <div className="space-y-2">
               <div>
-                <span className="text-xs text-blue-600">Todas las galerías:</span>
+                <span className="text-xs text-blue-600">{t('galleries.detail.allGalleries')}</span>
                 <code className="block bg-blue-100 px-3 py-2 rounded text-xs text-blue-900 mt-1 break-all">
                   GET /api/public/{session.user.clientId}/galleries
                 </code>

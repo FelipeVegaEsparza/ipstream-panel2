@@ -1,10 +1,21 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { StereoVuMeter } from './StereoVuMeter'
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
+
+function renderMeter(leftDb: number, rightDb: number) {
+  return render(
+    <DashboardI18nProvider locale="es">
+      <StereoVuMeter leftDb={leftDb} rightDb={rightDb} />
+    </DashboardI18nProvider>
+  )
+}
 
 describe('StereoVuMeter', () => {
   it('muestra canales L/R y niveles', () => {
-    render(<StereoVuMeter leftDb={-10} rightDb={-3} />)
+    renderMeter(-10, -3)
     const left = screen.getByLabelText('Canal izquierdo')
     const right = screen.getByLabelText('Canal derecho')
     expect(left).toBeInTheDocument()
@@ -14,7 +25,7 @@ describe('StereoVuMeter', () => {
   })
 
   it('ilumina segmentos según la señal y cambia de color por intensidad', () => {
-    render(<StereoVuMeter leftDb={-6} rightDb={-30} />)
+    renderMeter(-6, -30)
     const left = screen.getByLabelText('Canal izquierdo')
     const right = screen.getByLabelText('Canal derecho')
     expect(left.querySelectorAll('[data-active="true"]').length).toBeGreaterThan(
@@ -25,7 +36,7 @@ describe('StereoVuMeter', () => {
   })
 
   it('maneja silencio', () => {
-    render(<StereoVuMeter leftDb={-Infinity} rightDb={-Infinity} />)
+    renderMeter(-Infinity, -Infinity)
     expect(screen.getAllByText('-∞')).toHaveLength(2)
   })
 })

@@ -2,6 +2,7 @@
 
 import { useImpersonationSession } from '@/lib/useImpersonationSession'
 import { ReactNode } from 'react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface DashboardWrapperProps {
   children: (clientId: string) => ReactNode
@@ -9,13 +10,14 @@ interface DashboardWrapperProps {
 }
 
 export function DashboardWrapper({ children, fallback }: DashboardWrapperProps) {
+  const { t } = useDashboardI18n()
   const { effectiveUser, isImpersonating, isLoading } = useImpersonationSession()
 
   if (isLoading) {
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-4"></div>
-        <p className="text-muted-foreground">Cargando...</p>
+        <p className="text-muted-foreground">{t('wrapper.loading')}</p>
       </div>
     )
   }
@@ -29,24 +31,24 @@ export function DashboardWrapper({ children, fallback }: DashboardWrapperProps) 
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          Error: No se encontró información del cliente
+          {t('wrapper.noClient')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          No se pudo determinar el cliente para mostrar esta página
+          {t('wrapper.noClientHint')}
         </p>
         {isImpersonating ? (
           <button
             onClick={() => window.location.href = '/admin'}
             className="inline-flex items-center px-4 py-2 bg-brand hover:bg-brand text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Volver al Admin
+            {t('wrapper.backAdmin')}
           </button>
         ) : (
           <button
             onClick={() => window.location.href = '/dashboard'}
             className="inline-flex items-center px-4 py-2 bg-brand hover:bg-brand text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Ir al Dashboard
+            {t('wrapper.goDashboard')}
           </button>
         )}
       </div>

@@ -5,14 +5,18 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, ArrowLeftIcon, MicrophoneIcon } from '@heroicons/react/24/outline'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface AnnouncerDetailPageProps {
   params: { id: string }
 }
 
 export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPageProps) {
+  const locale = getDashboardLocale()
+  const t = dashboardT(locale)
   const session = await getServerSession(authOptions)
-  if (!session?.user.clientId) return <div>Error: No se encontró información del cliente</div>
+  if (!session?.user.clientId) return <div>{t('news.noClient')}</div>
 
   const announcer = await prisma.announcer.findFirst({
     where: { id: params.id, clientId: session.user.clientId },
@@ -21,7 +25,7 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
   if (!announcer) notFound()
 
   const formatDate = (date: Date) =>
-    new Intl.DateTimeFormat('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date)
+    new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date)
 
   return (
     <div className="space-y-6">
@@ -31,12 +35,12 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Vista de Locutor</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Información del locutor</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('announcers.detail.title')}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t('announcers.detail.subtitle')}</p>
           </div>
         </div>
         <Link href={`/dashboard/announcers/${announcer.id}/edit`} className="btn-primary flex items-center gap-2">
-          <PencilIcon className="h-5 w-5" /> Editar
+          <PencilIcon className="h-5 w-5" /> {t('common.edit')}
         </Link>
       </div>
 
@@ -55,9 +59,9 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
                 <h1 className="text-3xl font-bold text-gray-900">{announcer.name}</h1>
                 <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">{announcer.description}</div>
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <span>Creado: {formatDate(announcer.createdAt)}</span>
+                  <span>{t('common.created', { date: formatDate(announcer.createdAt) })}</span>
                   <span className="mx-2">&bull;</span>
-                  <span>Actualizado: {formatDate(announcer.updatedAt)}</span>
+                  <span>{t('common.updated', { date: formatDate(announcer.updatedAt) })}</span>
                 </div>
               </div>
             </div>
@@ -66,9 +70,9 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
 
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Acciones</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('common.actions')}</h3>
             <Link href={`/dashboard/announcers/${announcer.id}/edit`} className="w-full btn-primary flex items-center justify-center gap-2">
-              <PencilIcon className="h-4 w-4" /> Editar locutor
+              <PencilIcon className="h-4 w-4" /> {t('announcers.edit')}
             </Link>
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">

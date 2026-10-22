@@ -72,7 +72,7 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="form-group">
         <label htmlFor="title" className="form-label">
-          Título de la Galería *
+          {t('galleries.form.title')}
         </label>
         <input
           type="text"
@@ -88,7 +88,7 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
 
       <div className="form-group">
         <label htmlFor="description" className="form-label">
-          Descripción *
+          {t('galleries.form.description')}
         </label>
         <textarea
           id="description"
@@ -114,7 +114,7 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
         <div className="flex">
           <div className="ml-3">
             <h3 className="text-sm font-medium text-yellow-800">
-              Consejos para tu galería
+              {t('galleries.form.tips')}
             </h3>
             <div className="mt-2 text-sm text-yellow-700">
               <ul className="list-disc list-inside space-y-1">
@@ -143,10 +143,10 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
           className="btn-primary disabled:opacity-50"
         >
           {loading
-            ? 'Guardando...'
+            ? t('galleries.form.saving')
             : initialData
-              ? 'Actualizar Galería'
-              : 'Crear Galería'}
+              ? t('galleries.form.update')
+              : t('galleries.form.create')}
         </button>
       </div>
     </form>

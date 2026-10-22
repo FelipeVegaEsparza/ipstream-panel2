@@ -1,6 +1,7 @@
 'use client'
 
 import { clamp } from '@/lib/live-console/audio-math'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   leftDb: number
@@ -29,7 +30,7 @@ function formatLevel(db: number): string {
   return `${Math.round(clamp(db, MIN_DB, MAX_DB))}`
 }
 
-function Channel({ label, db, ariaLabel }: { label: string; db: number; ariaLabel: string }) {
+function Channel({ label, db, ariaLabel, silenceLabel }: { label: string; db: number; ariaLabel: string; silenceLabel: string }) {
   const level = Number.isFinite(db) ? db : MIN_DB - 1
   const activeColor = levelColor(level)
 
@@ -38,7 +39,7 @@ function Channel({ label, db, ariaLabel }: { label: string; db: number; ariaLabe
       <span className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
       <div
         className="flex min-h-0 w-5 flex-1 flex-col-reverse gap-[2px] rounded bg-secondary/40 p-[2px]"
-        title={`${label}: ${Number.isFinite(db) ? `${db.toFixed(1)} dB` : 'silencio'}`}
+        title={`${label}: ${Number.isFinite(db) ? `${db.toFixed(1)} dB` : silenceLabel}`}
       >
         {Array.from({ length: SEGMENTS }, (_, index) => {
           const active = level >= segmentDb(index)
@@ -60,17 +61,18 @@ function Channel({ label, db, ariaLabel }: { label: string; db: number; ariaLabe
 }
 
 export function StereoVuMeter({ leftDb, rightDb }: Props) {
+  const { t } = useDashboardI18n()
   return (
     <section
       className="flex h-full min-h-[120px] flex-col rounded-xl border border-border bg-card p-2 shadow-soft"
-      aria-label="VU estéreo de programa"
+      aria-label={t('live.vu.ariaLabel')}
     >
       <p className="text-center text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Programa
+        {t('live.vu.program')}
       </p>
       <div className="mt-1 flex min-h-0 flex-1 items-stretch justify-center gap-3">
-        <Channel label="L" db={leftDb} ariaLabel="Canal izquierdo" />
-        <Channel label="R" db={rightDb} ariaLabel="Canal derecho" />
+        <Channel label="L" db={leftDb} ariaLabel={t('live.vu.left')} silenceLabel={t('live.vu.silence')} />
+        <Channel label="R" db={rightDb} ariaLabel={t('live.vu.right')} silenceLabel={t('live.vu.silence')} />
       </div>
       <div className="mt-1 flex justify-between px-1 text-[8px] font-mono text-muted-foreground">
         <span>-60</span>

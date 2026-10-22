@@ -73,13 +73,13 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
           <PhotoIcon className="mx-auto h-12 w-12" />
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          No hay galerías
+          {t('galleries.empty')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          Comienza creando tu primera galería de imágenes
+          {t('galleries.emptyHint')}
         </p>
         <Link href="/dashboard/galleries/new" className="btn-primary">
-          Crear Galería
+          {t('galleries.create')}
         </Link>
       </div>
     )
@@ -102,8 +102,7 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
                   className="object-cover"
                 />
                 <div className="absolute top-2 right-2 bg-black/60 text-foreground text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                  {gallery.images.length}{' '}
-                  {gallery.images.length === 1 ? 'imagen' : 'imágenes'}
+                  {t('galleries.images', { count: gallery.images.length, plural: gallery.images.length === 1 ? '' : (locale === 'en' ? 's' : 'es') })}
                 </div>
               </div>
             ) : (
@@ -149,7 +148,7 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
               )}
 
               <div className="text-xs text-muted-foreground">
-                Creado: {formatDate(gallery.createdAt)}
+                {t('galleries.list.created', { date: formatDate(gallery.createdAt) })}
               </div>
 
               {/* Actions */}

@@ -3,6 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { ProgramForm } from '@/components/dashboard/ProgramForm'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface EditProgramPageProps {
   params: {
@@ -11,10 +13,11 @@ interface EditProgramPageProps {
 }
 
 export default async function EditProgramPage({ params }: EditProgramPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const program = await prisma.program.findFirst({
@@ -32,10 +35,10 @@ export default async function EditProgramPage({ params }: EditProgramPageProps) 
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Editar Programa
+          {t('programs.editPage.title')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Modifica la información del programa
+          {t('programs.editPage.subtitle')}
         </p>
       </div>
 

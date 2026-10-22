@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { X, Palette, Check } from 'lucide-react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface TemplateActivationModalProps {
   isOpen: boolean
@@ -22,6 +23,7 @@ export function TemplateActivationModal({
   onConfirm,
   onClose
 }: TemplateActivationModalProps) {
+  const { t } = useDashboardI18n()
   const [useTemplate, setUseTemplate] = useState(initialAccentColor === null)
   const [hex, setHex] = useState(initialAccentColor ?? '#000000')
 
@@ -69,17 +71,17 @@ export function TemplateActivationModal({
           </div>
 
           <h3 className="text-xl font-bold text-foreground text-center mb-1">
-            Activar {templateName}
+            {t('templateActivation.title', { name: templateName })}
           </h3>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            Elige un color destacado para tu sitio o usa el color propio de la plantilla.
+            {t('templateActivation.subtitle')}
           </p>
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <input
                 type="color"
-                aria-label="Color destacado"
+                aria-label={t('templateActivation.accentColor')}
                 value={previewColor ?? '#000000'}
                 disabled={isSubmitting}
                 onChange={(e) => {
@@ -103,7 +105,7 @@ export function TemplateActivationModal({
 
             {!useTemplate && hex.length > 0 && !isHexValid && (
               <p className="text-sm text-red-400">
-                Ingresa un color hexadecimal de 6 dígitos, por ejemplo #ff6b00.
+                {t('templateActivation.invalidHex')}
               </p>
             )}
 
@@ -112,7 +114,7 @@ export function TemplateActivationModal({
                 className="inline-block h-4 w-4 rounded-full border border-border"
                 style={{ backgroundColor: previewColor ?? 'transparent' }}
               />
-              {useTemplate ? 'Usando el color de la plantilla' : (isHexValid ? hex.toLowerCase() : 'Color inválido')}
+              {useTemplate ? t('templateActivation.usingTemplate') : (isHexValid ? hex.toLowerCase() : t('templateActivation.invalidColor'))}
             </div>
 
             <button
@@ -126,7 +128,7 @@ export function TemplateActivationModal({
               } disabled:opacity-50`}
             >
               {useTemplate && <Check className="h-4 w-4" />}
-              Usar color de la plantilla
+              {t('templateActivation.useTemplateColor')}
             </button>
           </div>
 
@@ -137,7 +139,7 @@ export function TemplateActivationModal({
               disabled={isSubmitting}
               className="flex-1 px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg font-medium transition-colors disabled:opacity-50"
             >
-              Cancelar
+              {t('templateActivation.cancel')}
             </button>
             <button
               type="button"
@@ -145,7 +147,7 @@ export function TemplateActivationModal({
               disabled={!canConfirm || isSubmitting}
               className="flex-1 px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Guardando...' : 'Activar'}
+              {isSubmitting ? t('templateActivation.activating') : t('templateActivation.activate')}
             </button>
           </div>
         </div>

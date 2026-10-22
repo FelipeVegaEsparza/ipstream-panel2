@@ -18,10 +18,12 @@ interface GalleryImageUploadProps {
 export function GalleryImageUpload({
   images,
   onChange,
-  label = 'Galería de Imágenes',
-  description = 'Sube las imágenes de la galería (JPG, PNG, WebP - Máx. 5MB c/u)',
+  label,
+  description,
 }: GalleryImageUploadProps) {
   const { t } = useDashboardI18n()
+  const resolvedLabel = label ?? t('galleries.form.imageSection')
+  const resolvedDescription = description ?? t('galleries.form.uploadHint')
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -113,7 +115,7 @@ export function GalleryImageUpload({
 
   return (
     <div className="space-y-3">
-      <label className="form-label">{label}</label>
+      <label className="form-label">{resolvedLabel}</label>
 
       {/* Upload Area */}
       <div
@@ -156,9 +158,9 @@ export function GalleryImageUpload({
             <PhotoIcon className="h-12 w-12 text-muted-foreground mx-auto" />
             <div>
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-brand">{t('galleries.form.uploadTitle')}</span> o arrastra imágenes aquí
+                <span className="font-medium text-brand">{t('galleries.form.uploadTitle')}</span> {t('galleries.image.dragHint')}
               </p>
-              <p className="text-xs text-muted-foreground mt-2">{description}</p>
+              <p className="text-xs text-muted-foreground mt-2">{resolvedDescription}</p>
             </div>
           </div>
         )}
@@ -169,16 +171,16 @@ export function GalleryImageUpload({
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-muted-foreground">
-              {images.length} {images.length === 1 ? 'imagen' : 'imágenes'} seleccionada{images.length !== 1 ? 's' : ''}
+              {images.length === 1 ? t('galleries.image.selectedOne') : t('galleries.image.selectedMany', { count: images.length })}
             </p>
-            <p className="text-xs text-muted-foreground">Arrastra para reordenar</p>
+            <p className="text-xs text-muted-foreground">{t('galleries.image.reorderHint')}</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {images.map((url, index) => (
               <div key={url} className="relative group aspect-square">
                 <Image
                   src={normalizeImageUrl(url)}
-                  alt={`Imagen ${index + 1}`}
+                  alt={t('galleries.image.alt', { index: index + 1 })}
                   fill
                   className="object-cover rounded-lg border border-border"
                 />
@@ -222,7 +224,7 @@ export function GalleryImageUpload({
                     handleRemove(index)
                   }}
                   className="absolute top-2 right-2 p-1.5 bg-red-500/90 text-white rounded-full hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100 shadow-lg"
-                  title="Eliminar imagen"
+                  title={t('galleries.image.remove')}
                 >
                   <XMarkIcon className="h-3.5 w-3.5" />
                 </button>

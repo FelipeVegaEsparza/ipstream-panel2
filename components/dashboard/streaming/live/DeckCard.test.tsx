@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { DeckCard } from './DeckCard'
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 import type { DeckSnapshot } from '@/lib/live-console/types'
 
 function deck(overrides: Partial<DeckSnapshot> = {}): DeckSnapshot {
@@ -45,7 +48,11 @@ function renderDeck(overrides: Partial<DeckSnapshot> = {}) {
     onClearLoop: vi.fn(),
     onToggleCue: vi.fn(),
   }
-  render(<DeckCard deck={deck(overrides)} cue={false} {...handlers} />)
+  render(
+    <DashboardI18nProvider locale="es">
+      <DeckCard deck={deck(overrides)} cue={false} {...handlers} />
+    </DashboardI18nProvider>
+  )
   return handlers
 }
 

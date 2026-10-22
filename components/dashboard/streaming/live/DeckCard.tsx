@@ -2,6 +2,7 @@
 
 import { formatTime, loopSecondsFromBpm } from '@/lib/live-console/audio-math'
 import type { DeckEq, DeckId, DeckLoop, DeckSnapshot } from '@/lib/live-console/types'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   deck: DeckSnapshot
@@ -56,6 +57,7 @@ export function DeckCard({
   onClearLoop,
   onToggleCue,
 }: Props) {
+  const { t } = useDashboardI18n()
   const track = deck.track
   const position = Math.min(deck.position, deck.duration || deck.position)
   const canControl = Boolean(track) && !disabled
@@ -93,7 +95,7 @@ export function DeckCard({
           <div>
             <h2 className="text-sm font-semibold text-foreground">Deck {deck.id}</h2>
             <p className="text-[11px] text-muted-foreground">
-              {deck.mode === 'buffer' ? 'RAM · loops precisos' : deck.mode === 'element' ? 'Streaming · loops aproximados' : 'Sin track'}
+              {deck.mode === 'buffer' ? t('live.deck.ramLoops') : deck.mode === 'element' ? t('live.deck.streamLoops') : t('live.deck.noTrack')}
             </p>
           </div>
         </div>
@@ -112,7 +114,7 @@ export function DeckCard({
                 ? 'border-brand bg-brand/15 text-brand'
                 : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
             }`}
-            title="Escuchar solo este deck por auriculares"
+            title={t('live.deck.cueTitle')}
           >
             CUE
           </button>
@@ -121,10 +123,10 @@ export function DeckCard({
 
       <div className="mt-4 rounded-xl border border-border bg-background p-3">
         <p className="truncate text-sm font-medium text-foreground">
-          {track ? track.title : 'Elegí un track de la biblioteca'}
+          {track ? track.title : t('live.deck.chooseTrack')}
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          {track?.artist || (track ? 'Artista desconocido' : '—')}
+          {track?.artist || (track ? t('live.deck.unknownArtist') : '—')}
         </p>
         <div className="mt-3 flex items-center gap-2">
           <button
@@ -132,7 +134,7 @@ export function DeckCard({
             onClick={deck.playing ? onPause : onPlay}
             disabled={!canControl}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-            aria-label={deck.playing ? 'Pausar' : 'Reproducir'}
+            aria-label={deck.playing ? t('live.deck.pause') : t('live.deck.play')}
           >
             {deck.playing ? (
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
@@ -202,7 +204,7 @@ export function DeckCard({
           </div>
           <div className="flex flex-wrap gap-1.5 border-t border-border pt-2">
             <span className="w-full text-[10px] uppercase tracking-wide text-muted-foreground">
-              {deck.bpm ? 'Por beat' : 'Beat loop requiere BPM'}
+              {deck.bpm ? t('live.deck.byBeat') : t('live.deck.beatRequiresBpm')}
             </span>
             {[0.25, 0.5, 1, 2, 4].map((beats) => (
               <button

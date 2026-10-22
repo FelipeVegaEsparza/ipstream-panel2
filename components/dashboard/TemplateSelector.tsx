@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Check, Image as ImageIcon } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 import { TemplateActivationModal } from '@/components/dashboard/TemplateActivationModal'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Template {
   id: string
@@ -23,6 +24,7 @@ interface TemplateSelectorProps {
 }
 
 export function TemplateSelector({ templates, currentTemplateId, currentAccentColor }: TemplateSelectorProps) {
+  const { t } = useDashboardI18n()
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(currentTemplateId)
   const [accentColor, setAccentColor] = useState<string | null>(currentAccentColor)
   const [activationTemplate, setActivationTemplate] = useState<Template | null>(null)
@@ -75,15 +77,15 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
         setSelectedTemplateId(activationTemplate.id)
         setAccentColor(newAccentColor)
         setActivationTemplate(null)
-        showModalMessage('success', 'Plantilla activada', 'La plantilla y el color destacado se aplicaron a tu sitio web')
+        showModalMessage('success', t('templateSelector.activatedTitle'), t('templateSelector.activatedMessage'))
       } else {
         const error = await response.json().catch(() => ({}))
         setActivationTemplate(null)
-        showModalMessage('error', 'Error', error.error || 'Error al activar la plantilla')
+        showModalMessage('error', t('common.error'), error.error || t('templateSelector.activateError'))
       }
     } catch {
       setActivationTemplate(null)
-      showModalMessage('error', 'Error', 'Error al activar la plantilla')
+      showModalMessage('error', t('common.error'), t('templateSelector.activateError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -110,10 +112,10 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
       />
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Plantilla del Sitio
+          {t('templateSelector.title')}
         </h1>
         <p className="text-muted-foreground">
-          Selecciona la plantilla que deseas usar para tu sitio web
+          {t('templateSelector.subtitle')}
         </p>
       </div>
 
@@ -126,10 +128,10 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
               </div>
               <div>
                 <p className="text-sm font-medium text-brand">
-                  Plantilla Actual
+                  {t('templateSelector.current')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {templates.find(t => t.id === selectedTemplateId)?.displayName || 'Sin plantilla'}
+                  {templates.find(tpl => tpl.id === selectedTemplateId)?.displayName || t('templateSelector.noTemplate')}
                 </p>
               </div>
             </div>
@@ -161,7 +163,7 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
                     <div className="absolute top-2 right-2">
                       <Badge className="bg-brand text-white">
                         <Check className="h-3 w-3 mr-1" />
-                        Seleccionada
+                        {t('templateSelector.selected')}
                       </Badge>
                     </div>
                   )}
@@ -174,7 +176,7 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
                     <div className="absolute top-2 right-2">
                       <Badge className="bg-brand text-white">
                         <Check className="h-3 w-3 mr-1" />
-                        Seleccionada
+                        {t('templateSelector.selected')}
                       </Badge>
                     </div>
                   )}
@@ -204,10 +206,10 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
                   {isSelected ? (
                     <>
                       <Check className="h-4 w-4 mr-2" />
-                      Color destacado
+                      {t('templateSelector.accentColor')}
                     </>
                   ) : (
-                    'Seleccionar Plantilla'
+                    t('templateSelector.select')
                   )}
                 </Button>
               </CardContent>
@@ -219,10 +221,10 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
           <div className="col-span-full text-center py-12">
             <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              No hay plantillas disponibles
+              {t('templateSelector.emptyTitle')}
             </h3>
             <p className="text-muted-foreground">
-              Contacta al administrador para que agregue plantillas
+              {t('templateSelector.emptyHint')}
             </p>
           </div>
         )}

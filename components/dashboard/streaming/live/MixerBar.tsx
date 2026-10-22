@@ -2,6 +2,7 @@
 
 import type { MicSnapshot } from '@/lib/live-console/types'
 import { VuMeter } from './VuMeter'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   crossfader: number
@@ -34,6 +35,7 @@ export function MixerBar({
   onTalkover,
   onMicCue,
 }: Props) {
+  const { t } = useDashboardI18n()
   return (
     <section className="grid gap-4 rounded-2xl border border-border bg-card p-4 shadow-soft md:grid-cols-[1.2fr_1fr]">
       <div className="space-y-4">
@@ -72,13 +74,13 @@ export function MixerBar({
             className="mt-2 h-1.5 w-full cursor-pointer accent-[var(--brand-500)]"
           />
           <div className="mt-3">
-            <VuMeter db={masterLevelDb} label="Nivel de programa" />
+            <VuMeter db={masterLevelDb} label={t('live.mixer.programLevel')} />
           </div>
           <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-2">
             <div>
-              <p className="text-[11px] font-medium text-foreground">Monitor programa</p>
+              <p className="text-[11px] font-medium text-foreground">{t('live.mixer.monitorTitle')}</p>
               <p className="text-[10px] text-muted-foreground">
-                {monitorEnabled ? 'Escuchás la mezcla por auriculares' : 'Silenciado en la salida local'}
+                {monitorEnabled ? t('live.mixer.monitorOn') : t('live.mixer.monitorOff')}
               </p>
             </div>
             <button
@@ -92,8 +94,7 @@ export function MixerBar({
             </button>
           </div>
           <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-            Si no escuchás, activá <strong>Monitor</strong> o el <strong>CUE</strong> del deck.
-            El programa no se reproduce por parlantes para evitar acoples.
+            {t('live.mixer.monitorHint')}
           </p>
         </div>
       </div>
@@ -101,15 +102,15 @@ export function MixerBar({
       <div className="rounded-xl border border-border bg-background p-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xs font-semibold text-foreground">Micrófono</h3>
+            <h3 className="text-xs font-semibold text-foreground">{t('live.mixer.microphone')}</h3>
             <p className="text-[10px] text-muted-foreground">
               {mic.permission === 'denied'
-                ? 'Permiso denegado'
+                ? t('live.mixer.permissionDenied')
                 : mic.permission === 'unavailable'
-                  ? 'No disponible'
+                  ? t('live.mixer.unavailable')
                   : mic.enabled
-                    ? 'Activo'
-                    : 'Apagado'}
+                    ? t('live.mixer.active')
+                    : t('live.mixer.off')}
             </p>
           </div>
           <button
@@ -122,13 +123,13 @@ export function MixerBar({
               mic.enabled ? 'bg-red-500/15 text-red-300' : 'bg-secondary text-foreground hover:text-brand'
             }`}
           >
-            {mic.enabled ? 'Apagar' : 'Encender'}
+            {mic.enabled ? t('live.mixer.turnOff') : t('live.mixer.turnOn')}
           </button>
         </div>
 
         <div className="mt-3 space-y-1">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Ganancia</span>
+            <span>{t('live.mixer.gain')}</span>
             <span className="font-mono text-foreground">{mic.gain > 0 ? '+' : ''}{mic.gain.toFixed(1)} dB</span>
           </div>
           <input
@@ -143,12 +144,12 @@ export function MixerBar({
         </div>
 
         <div className="mt-3">
-          <VuMeter db={mic.levelDb} label="Nivel de micrófono" compact />
+          <VuMeter db={mic.levelDb} label={t('live.mixer.micLevel')} compact />
         </div>
 
         <div className="mt-3 space-y-2 text-[11px] text-muted-foreground">
           <label className="flex items-center justify-between gap-2">
-            <span>Talkover automático</span>
+            <span>{t('live.mixer.talkover')}</span>
             <input
               type="checkbox"
               checked={mic.talkover}
@@ -157,7 +158,7 @@ export function MixerBar({
             />
           </label>
           <label className="flex items-center justify-between gap-2">
-            <span>Sidetone en auriculares</span>
+            <span>{t('live.mixer.sidetone')}</span>
             <input
               type="checkbox"
               onChange={(event) => onMicCue(event.target.checked)}
@@ -167,7 +168,7 @@ export function MixerBar({
         </div>
 
         <p className="mt-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-2.5 py-2 text-[10px] leading-relaxed text-yellow-200/80">
-          Usá auriculares. El programa no se reproduce por los parlantes para evitar acoples.
+          {t('live.mixer.headphoneWarning')}
         </p>
       </div>
     </section>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { DashboardStats } from './DashboardStats'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface ClientData {
   id: string
@@ -11,6 +12,7 @@ interface ClientData {
 }
 
 export function DashboardImpersonated() {
+  const { t } = useDashboardI18n()
   const [clientData, setClientData] = useState<ClientData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +24,7 @@ export function DashboardImpersonated() {
         const clientInfo = localStorage.getItem('impersonation_client')
         
         if (!clientInfo) {
-          setError('No se encontró información del cliente')
+          setError(t('impersonated.loadError'))
           setLoading(false)
           return
         }
@@ -39,13 +41,13 @@ export function DashboardImpersonated() {
         setLoading(false)
       } catch (error) {
         console.error('Error loading client data:', error)
-        setError('Error al cargar datos del cliente')
+        setError(t('impersonated.loadFailed'))
         setLoading(false)
       }
     }
 
     loadClientData()
-  }, [])
+  }, [t])
 
   if (loading) {
     return (
@@ -53,10 +55,10 @@ export function DashboardImpersonated() {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Cargando datos del cliente...
+            {t('impersonated.loading')}
           </h3>
           <p className="text-muted-foreground">
-            Configurando la sesión de impersonación
+            {t('impersonated.settingUp')}
           </p>
         </div>
       </div>
@@ -73,7 +75,7 @@ export function DashboardImpersonated() {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Error de Impersonación
+            {t('impersonated.error')}
           </h3>
           <p className="text-muted-foreground mb-4">
             {error}
@@ -82,7 +84,7 @@ export function DashboardImpersonated() {
             onClick={() => window.location.href = '/admin'}
             className="inline-flex items-center px-4 py-2 bg-brand hover:bg-brand text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Volver al Admin
+            {t('wrapper.backAdmin')}
           </button>
         </div>
       </div>
@@ -94,10 +96,10 @@ export function DashboardImpersonated() {
       <div className="space-y-6">
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-foreground mb-2">
-            No se encontraron datos del cliente
+            {t('impersonated.notFound')}
           </h3>
           <p className="text-muted-foreground">
-            No se pudieron cargar los datos del cliente impersonado
+            {t('impersonated.notFoundHint')}
           </p>
         </div>
       </div>
@@ -107,31 +109,31 @@ export function DashboardImpersonated() {
   // Datos de ejemplo para mostrar el dashboard funcionando
   const stats = [
     {
-      name: 'Programas',
+      name: t('impersonated.statPrograms'),
       value: 0,
       href: '/dashboard/programs',
       color: 'bg-brand'
     },
     {
-      name: 'Noticias',
+      name: t('impersonated.statNews'),
       value: 0,
       href: '/dashboard/news',
       color: 'bg-green-500'
     },
     {
-      name: 'Videos',
+      name: t('impersonated.statVideos'),
       value: 0,
       href: '/dashboard/videos',
       color: 'bg-purple-500'
     },
     {
-      name: 'Auspiciadores',
+      name: t('impersonated.statSponsors'),
       value: 0,
       href: '/dashboard/sponsors',
       color: 'bg-yellow-500'
     },
     {
-      name: 'Promociones',
+      name: t('impersonated.statPromotions'),
       value: 0,
       href: '/dashboard/promotions',
       color: 'bg-red-500'
@@ -145,14 +147,14 @@ export function DashboardImpersonated() {
           Dashboard - {clientData.projectName}
         </h1>
         <p className="text-muted-foreground mb-6">
-          Impersonando cliente: {clientData.email}
+          {t('impersonated.asClient', { email: clientData.email })}
         </p>
         <div className="glass-effect rounded-xl p-4 mb-6">
           <p className="text-sm text-brand">
             <strong>Client ID:</strong> <code className="bg-secondary/50 px-3 py-1 rounded-lg text-xs font-mono text-brand ml-2">{clientData.id}</code>
           </p>
           <p className="text-xs text-muted-foreground mt-2">
-            Modo impersonación activo - Todos los cambios se aplicarán a este cliente
+            {t('impersonated.activeHint')}
           </p>
         </div>
       </div>
@@ -166,24 +168,23 @@ export function DashboardImpersonated() {
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-medium text-green-300 mb-2">
-              ¡Impersonación Exitosa!
+              {t('impersonated.success')}
             </h3>
             <p className="text-sm text-green-200/80 mb-4">
-              Estás viendo el dashboard como el cliente <strong>{clientData.name}</strong>. 
-              Puedes navegar por todas las secciones y realizar cambios como si fueras este cliente.
+              {t('impersonated.successHint', { name: clientData.name })}
             </p>
             <div className="flex gap-3">
               <a
                 href="/dashboard/basic-data"
                 className="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
               >
-                Ver Datos Básicos
+                {t('impersonated.viewBasic')}
               </a>
               <a
                 href="/dashboard/programs"
                 className="inline-flex items-center px-4 py-2 bg-brand hover:bg-brand text-white text-sm font-medium rounded-lg transition-colors"
               >
-                Ver Programas
+                {t('impersonated.viewPrograms')}
               </a>
             </div>
           </div>
@@ -198,7 +199,7 @@ export function DashboardImpersonated() {
             <svg className="w-5 h-5 text-brand mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            Acciones Rápidas
+            {t('impersonated.quickActions')}
           </h3>
           <div className="space-y-3">
             <a
@@ -212,8 +213,8 @@ export function DashboardImpersonated() {
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-foreground">Agregar Programa</div>
-                  <div className="text-sm text-muted-foreground">Crear un nuevo programa de radio</div>
+                  <div className="font-medium text-foreground">{t('impersonated.addProgram')}</div>
+                  <div className="text-sm text-muted-foreground">{t('impersonated.addProgramHint')}</div>
                 </div>
               </div>
             </a>
@@ -228,8 +229,8 @@ export function DashboardImpersonated() {
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-foreground">Publicar Noticia</div>
-                  <div className="text-sm text-muted-foreground">Agregar una nueva noticia</div>
+                  <div className="font-medium text-foreground">{t('impersonated.publishNews')}</div>
+                  <div className="text-sm text-muted-foreground">{t('impersonated.publishNewsHint')}</div>
                 </div>
               </div>
             </a>
@@ -244,8 +245,8 @@ export function DashboardImpersonated() {
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-foreground">Agregar Video</div>
-                  <div className="text-sm text-muted-foreground">Añadir video al ranking</div>
+                  <div className="font-medium text-foreground">{t('impersonated.addVideo')}</div>
+                  <div className="text-sm text-muted-foreground">{t('impersonated.addVideoHint')}</div>
                 </div>
               </div>
             </a>
@@ -257,11 +258,11 @@ export function DashboardImpersonated() {
             <svg className="w-5 h-5 text-brand mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            Información del Cliente
+            {t('impersonated.clientInfo')}
           </h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-lg">
-              <span className="text-sm text-muted-foreground">Nombre del Cliente</span>
+              <span className="text-sm text-muted-foreground">{t('impersonated.clientName')}</span>
               <span className="text-sm font-medium text-foreground">
                 {clientData.name}
               </span>
@@ -273,15 +274,15 @@ export function DashboardImpersonated() {
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-lg">
-              <span className="text-sm text-muted-foreground">Proyecto</span>
+              <span className="text-sm text-muted-foreground">{t('impersonated.project')}</span>
               <span className="text-sm font-medium text-foreground">
                 {clientData.projectName}
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-green-500/20 rounded-lg border border-green-500/30">
-              <span className="text-sm text-green-300">Estado</span>
+              <span className="text-sm text-green-300">{t('impersonated.status')}</span>
               <span className="text-sm font-medium text-green-400">
-                Impersonación Activa
+                {t('impersonated.active')}
               </span>
             </div>
           </div>

@@ -10,6 +10,7 @@ import { showToast } from '@/components/ui/toast'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Track {
   id: string
@@ -59,6 +60,7 @@ function fmtDuration(seconds: number | null) {
 }
 
 export default function PlaylistEditorPage() {
+  const { t } = useDashboardI18n()
   const { id } = useParams() as { id: string }
   const router = useRouter()
   const [playlist, setPlaylist] = useState<Playlist | null>(null)
@@ -103,11 +105,11 @@ export default function PlaylistEditorPage() {
       audio.onended = () => setPlayingId(null)
       audio.onerror = () => {
         setPlayingId(null)
-        showToast({ type: 'error', title: `Error al reproducir "${title}"` })
+        showToast({ type: 'error', title: t('streaming.playlistDetail.playError', { title }) })
       }
       audio.play().catch(() => {
         setPlayingId(null)
-        showToast({ type: 'error', title: `Error al reproducir "${title}"` })
+        showToast({ type: 'error', title: t('streaming.playlistDetail.playError', { title }) })
       })
       audioRef.current = audio
       setPlayingId(id)
@@ -165,7 +167,7 @@ export default function PlaylistEditorPage() {
           repeat,
         }),
       })
-      if (!res.ok) throw new Error('Error guardando')
+      if (!res.ok) throw new Error(t('streaming.playlistDetail.saveError'))
       setEditing(false)
       await load()
     } catch (err: any) {
@@ -179,7 +181,7 @@ export default function PlaylistEditorPage() {
     setActivating(true)
     try {
       const res = await fetch(`/api/dashboard/streaming/playlists/${id}/activate`, { method: 'POST' })
-      if (!res.ok) throw new Error('Error activando')
+      if (!res.ok) throw new Error(t('streaming.playlistDetail.activateError'))
       await load()
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -197,7 +199,7 @@ export default function PlaylistEditorPage() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data?.message || 'Error agregando')
+        throw new Error(data?.message || t('streaming.playlistDetail.addError'))
       }
       setShowAdd(false)
       setSearch('')
@@ -236,7 +238,7 @@ export default function PlaylistEditorPage() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data?.message || 'Error agregando tracks')
+        throw new Error(data?.message || t('streaming.playlistDetail.addTracksError'))
       }
       setShowAdd(false)
       setSearch('')
@@ -269,19 +271,19 @@ export default function PlaylistEditorPage() {
         body: JSON.stringify({ capsuleId }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.message || data.error || 'No se pudo agregar la cápsula')
+      if (!res.ok) throw new Error(data.message || data.error || t('streaming.playlistDetail.addCapsuleError'))
       setShowCapsules(false)
       await load()
     } catch (err) {
-      showToast({ type: 'info', title: err instanceof Error ? err.message : 'No se pudo agregar la cápsula' })
+      showToast({ type: 'info', title: err instanceof Error ? err.message : t('streaming.playlistDetail.addCapsuleError') })
     } finally { setAddingCapsuleId(null) }
   }
 
   const removeTrack = async (trackId: string, title: string) => {
-    if (!confirm(`¿Quitar "${title}" de la playlist?`)) return
+    if (!confirm(t('streaming.playlistDetail.confirmRemove', { title }))) return
     try {
       const res = await fetch(`/api/dashboard/streaming/playlists/${id}/tracks/${trackId}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Error quitando')
+      if (!res.ok) throw new Error(t('streaming.playlistDetail.removeError'))
       await load()
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -320,7 +322,7 @@ export default function PlaylistEditorPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trackIds: playlist.entries.map((e) => e.trackId) }),
       })
-      if (!res.ok) throw new Error('Error guardando orden')
+      if (!res.ok) throw new Error(t('streaming.playlistDetail.saveOrderError'))
       setLoadedTrackIds(playlist.entries.map((e) => e.trackId).join(','))
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -331,7 +333,7 @@ export default function PlaylistEditorPage() {
   }
 
   if (loading || !playlist) {
-    return <div className="text-muted-foreground">Cargando...</div>
+    return <div className="text-muted-foreground">{t('streaming.playlistDetail.loading')}</div>
   }
 
   const folderLibrary = folderFilter
@@ -353,13 +355,13 @@ export default function PlaylistEditorPage() {
       <div className="flex items-center justify-between">
         <div>
           <Link href="/dashboard/streaming/playlists" className="text-sm text-brand hover:text-brand">
-            ← Playlists
+            {t('streaming.playlistDetail.back')}
           </Link>
           {!editing ? (
             <h1 className="text-3xl font-bold text-foreground mt-1 flex items-center gap-2">
               {playlist.name}
               {playlist.isActive && (
-                <span className="text-sm bg-green-600 text-white px-2 py-0.5 rounded">ACTIVA</span>
+                <span className="text-sm bg-green-600 text-white px-2 py-0.5 rounded">{t('streaming.playlistDetail.active')}</span>
               )}
             </h1>
           ) : (
@@ -373,15 +375,15 @@ export default function PlaylistEditorPage() {
         <div className="flex gap-2">
           {!editing ? (
             <button onClick={startEdit} className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded">
-              ✏️ Editar
+              {t('streaming.playlistDetail.edit')}
             </button>
           ) : (
             <>
               <button onClick={saveEdit} disabled={savingEdit} className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white rounded">
-                {savingEdit ? 'Guardando...' : 'Guardar'}
+                {savingEdit ? t('streaming.playlistDetail.saving') : t('streaming.playlistDetail.save')}
               </button>
               <button onClick={() => { if (!savingEdit) { setEditing(false); load() } }} className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded disabled:opacity-50" disabled={savingEdit}>
-                Cancelar
+                {t('common.cancel')}
               </button>
             </>
           )}
@@ -391,7 +393,7 @@ export default function PlaylistEditorPage() {
               disabled={activating}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-secondary text-white rounded"
             >
-              {activating ? '...' : 'Activar'}
+              {activating ? '...' : t('streaming.playlistDetail.activate')}
             </button>
           )}
         </div>
@@ -402,13 +404,13 @@ export default function PlaylistEditorPage() {
         {!editing ? (
           <>
             <div className="text-muted-foreground text-sm">
-              {playlist.description || <em className="text-muted-foreground">Sin descripción</em>}
+              {playlist.description || <em className="text-muted-foreground">{t('streaming.playlistDetail.noDescription')}</em>}
             </div>
             <div className="flex gap-4 text-sm text-muted-foreground">
               <span>🎵 {playlist.entries.length} tracks</span>
               <span>⏱️ {fmtDuration(playlist.totalDuration)}</span>
-              <span>{playlist.shuffle ? '🔀 Shuffle ON' : '— Shuffle off'}</span>
-              <span>{playlist.repeat ? '🔁 Repeat ON' : '— Repeat off'}</span>
+              <span>{playlist.shuffle ? t('streaming.playlistDetail.shuffleOn') : t('streaming.playlistDetail.shuffleOff')}</span>
+              <span>{playlist.repeat ? t('streaming.playlistDetail.repeatOn') : t('streaming.playlistDetail.repeatOff')}</span>
             </div>
           </>
         ) : (
@@ -416,7 +418,7 @@ export default function PlaylistEditorPage() {
             <textarea
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              placeholder="Descripción"
+              placeholder={t('streaming.playlistDetail.descriptionPlaceholder')}
               className="w-full bg-background text-foreground px-3 py-2 rounded border border-border"
               rows={2}
             />
@@ -448,7 +450,7 @@ export default function PlaylistEditorPage() {
       <div className="bg-card rounded-lg overflow-hidden">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">
-            Tracks ({playlist.entries.length})
+            {t('streaming.playlistDetail.tracks', { count: playlist.entries.length })}
           </h2>
           <div className="flex gap-2">
             {orderChanged && (
@@ -457,7 +459,7 @@ export default function PlaylistEditorPage() {
                 disabled={savingOrder}
                 className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white text-sm rounded"
               >
-                {savingOrder ? 'Guardando...' : 'Guardar orden'}
+                {savingOrder ? t('streaming.playlistDetail.saving') : t('streaming.playlistDetail.saveOrder')}
               </button>
             )}
             <button
@@ -467,7 +469,7 @@ export default function PlaylistEditorPage() {
               }}
               className="px-3 py-1.5 bg-brand hover:bg-brand text-white text-sm rounded"
             >
-              {showAdd ? 'Cerrar' : '+ Agregar tracks'}
+              {showAdd ? t('streaming.playlistDetail.close') : t('streaming.playlistDetail.addTracks')}
             </button>
           </div>
         </div>
@@ -479,7 +481,7 @@ export default function PlaylistEditorPage() {
             <div className="relative bg-card rounded-2xl shadow-2xl border border-border w-full max-w-lg max-h-[80vh] flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border">
-                <h3 className="text-lg font-semibold text-foreground">Agregar tracks</h3>
+                <h3 className="text-lg font-semibold text-foreground">{t('streaming.playlistDetail.addTracksTitle')}</h3>
                 <button
                   onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }}
                   className="text-muted-foreground hover:text-foreground"
@@ -500,8 +502,8 @@ export default function PlaylistEditorPage() {
                       onChange={e => setFolderFilter(e.target.value || null)}
                       className="flex-1 bg-background text-foreground text-sm px-2 py-1.5 rounded border border-border outline-none"
                     >
-                      <option value="">Todas las carpetas</option>
-                      <option value="__none__">Sin carpeta</option>
+                      <option value="">{t('streaming.playlistDetail.allFolders')}</option>
+                      <option value="__none__">{t('streaming.playlistDetail.noFolder')}</option>
                       {folders.map(f => (
                         <option key={f.id} value={f.id}>{f.name}</option>
                       ))}
@@ -515,7 +517,7 @@ export default function PlaylistEditorPage() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="🔍 Buscar en biblioteca..."
+                  placeholder={t('streaming.playlistDetail.searchPlaceholder')}
                   className="w-full bg-background text-foreground px-3 py-2 rounded border border-border"
                 />
               </div>
@@ -530,7 +532,7 @@ export default function PlaylistEditorPage() {
                   className="rounded"
                 />
                 <span className="text-sm text-muted-foreground">
-                  {allSelected ? 'Deseleccionar todos' : `Seleccionar todos (${selectableTracks.length} disponibles)`}
+                  {allSelected ? t('streaming.playlistDetail.deselectAll') : t('streaming.playlistDetail.selectAll', { count: selectableTracks.length })}
                 </span>
               </div>
 
@@ -538,15 +540,15 @@ export default function PlaylistEditorPage() {
               <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {filteredLibrary.length === 0 ? (
                   <div className="text-muted-foreground text-sm py-8 text-center">
-                    {library.length === 0 ? 'Biblioteca vacía. Sube MP3s primero.' : 'Sin resultados.'}
+                    {library.length === 0 ? t('streaming.playlistDetail.libraryEmpty') : t('streaming.playlistDetail.noResults')}
                   </div>
                 ) : (
-                  filteredLibrary.map((t) => {
-                    const inPlaylist = inPlaylistIds.has(t.id)
-                    const isSelected = selectedTrackIds.has(t.id)
+                  filteredLibrary.map((track) => {
+                    const inPlaylist = inPlaylistIds.has(track.id)
+                    const isSelected = selectedTrackIds.has(track.id)
                     return (
                       <div
-                        key={t.id}
+                        key={track.id}
                         className={`flex items-center gap-2 p-2 rounded ${
                           inPlaylist ? 'bg-card/50 opacity-40' : isSelected ? 'bg-indigo-900/40 border border-indigo-700' : 'bg-card/50 hover:bg-secondary'
                         }`}
@@ -555,31 +557,31 @@ export default function PlaylistEditorPage() {
                           type="checkbox"
                           checked={isSelected}
                           disabled={inPlaylist}
-                          onChange={() => toggleSelectTrack(t.id)}
+                          onChange={() => toggleSelectTrack(track.id)}
                           className="rounded flex-shrink-0"
                         />
                         <div className="flex-shrink-0 w-8 h-8">
-                          {t.coverUrl ? (
-                            <img src={t.coverUrl} alt="" className="w-8 h-8 rounded object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                          {track.coverUrl ? (
+                            <img src={track.coverUrl} alt="" className="w-8 h-8 rounded object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                           ) : (
                             <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center text-muted-foreground text-xs">🎵</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-foreground text-sm truncate">{t.title}</div>
-                          <div className="text-xs text-muted-foreground truncate">{t.artist || 'Sin artista'} · {fmtDuration(t.duration)}</div>
+                          <div className="text-foreground text-sm truncate">{track.title}</div>
+                          <div className="text-xs text-muted-foreground truncate">{track.artist || t('streaming.playlistDetail.noArtist')} · {fmtDuration(track.duration)}</div>
                         </div>
                         {inPlaylist ? (
-                          <span className="text-xs text-muted-foreground flex-shrink-0">En playlist</span>
+                          <span className="text-xs text-muted-foreground flex-shrink-0">{t('streaming.playlistDetail.inPlaylist')}</span>
                         ) : (
                           <button
-                            onClick={() => togglePlay(t.id, t.title)}
+                            onClick={() => togglePlay(track.id, track.title)}
                             className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                              playingId === t.id ? 'bg-green-600 text-white' : 'bg-secondary text-muted-foreground hover:bg-secondary'
+                              playingId === track.id ? 'bg-green-600 text-white' : 'bg-secondary text-muted-foreground hover:bg-secondary'
                             }`}
-                            title={playingId === t.id ? 'Detener' : 'Previsualizar'}
+                            title={playingId === track.id ? t('streaming.playlistDetail.stop') : t('streaming.playlistDetail.preview')}
                           >
-                            {playingId === t.id ? '⏹' : '▶'}
+                            {playingId === track.id ? '⏹' : '▶'}
                           </button>
                         )}
                       </div>
@@ -594,14 +596,14 @@ export default function PlaylistEditorPage() {
                   onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }}
                   className="flex-1 px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded-lg font-medium"
                 >
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={bulkAddTracks}
                   disabled={selectedTrackIds.size === 0 || addingBulk}
                   className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 text-white rounded-lg font-medium"
                 >
-                  {addingBulk ? 'Agregando...' : `Agregar seleccionados (${selectedTrackIds.size})`}
+                  {addingBulk ? t('streaming.playlistDetail.adding') : t('streaming.playlistDetail.addSelected', { count: selectedTrackIds.size })}
                 </button>
               </div>
             </div>
@@ -613,20 +615,20 @@ export default function PlaylistEditorPage() {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCapsules(false)} />
             <div className="relative flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-border bg-card shadow-2xl">
               <div className="flex items-center justify-between border-b border-border p-4">
-                <h3 className="text-lg font-semibold text-foreground">Agregar cápsula</h3>
-                <button onClick={() => setShowCapsules(false)} className="text-muted-foreground hover:text-foreground" aria-label="Cerrar">×</button>
+                <h3 className="text-lg font-semibold text-foreground">{t('streaming.playlistDetail.addCapsule')}</h3>
+                <button onClick={() => setShowCapsules(false)} className="text-muted-foreground hover:text-foreground" aria-label={t('streaming.playlistDetail.close')}>×</button>
               </div>
               <div className="flex-1 overflow-y-auto p-2">
                 {loadingCapsules ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">Cargando…</p>
+                  <p className="py-8 text-center text-sm text-muted-foreground">{t('streaming.playlistDetail.loadingCapsules')}</p>
                 ) : capsules.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">No hay cápsulas activas.</p>
+                  <p className="py-8 text-center text-sm text-muted-foreground">{t('streaming.playlistDetail.noCapsules')}</p>
                 ) : (
                   capsules.map((capsule) => (
                     <div key={capsule.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary/50">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm text-foreground">{capsule.title}</p>
-                        <p className="truncate text-[11px] text-muted-foreground">{capsule.category?.name || 'Sin categoría'}</p>
+                        <p className="truncate text-[11px] text-muted-foreground">{capsule.category?.name || t('streaming.playlistDetail.noCategory')}</p>
                       </div>
                       <button
                         type="button"
@@ -634,7 +636,7 @@ export default function PlaylistEditorPage() {
                         disabled={addingCapsuleId === capsule.id}
                         className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
                       >
-                        {addingCapsuleId === capsule.id ? 'Agregando…' : 'Agregar'}
+                        {addingCapsuleId === capsule.id ? t('streaming.playlistDetail.adding') : t('streaming.playlistDetail.add')}
                       </button>
                     </div>
                   ))
@@ -646,7 +648,7 @@ export default function PlaylistEditorPage() {
 
         {playlist.entries.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
-            Playlist vacía. Agregá tracks desde tu biblioteca.
+            {t('streaming.playlistDetail.emptyPlaylist')}
           </div>
         ) : (
           <div>
@@ -686,7 +688,7 @@ export default function PlaylistEditorPage() {
                       ? 'bg-green-600 text-white'
                       : 'bg-secondary text-muted-foreground hover:bg-secondary'
                   }`}
-                  title={playingId === entry.trackId ? 'Detener' : 'Previsualizar'}
+                  title={playingId === entry.trackId ? t('streaming.playlistDetail.stop') : t('streaming.playlistDetail.preview')}
                 >
                   {playingId === entry.trackId ? '⏹' : '▶'}
                 </button>
@@ -695,19 +697,19 @@ export default function PlaylistEditorPage() {
                     <span className="truncate">{entry.title}</span>
                     {entry.capsuleId && (
                       <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-foreground">
-                        Cápsula
+                        {t('streaming.playlistDetail.capsule')}
                       </span>
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {entry.artist || 'Sin artista'} · {fmtDuration(entry.duration)}
+                    {entry.artist || t('streaming.playlistDetail.noArtist')} · {fmtDuration(entry.duration)}
                   </div>
                 </div>
                 <button
                   onClick={() => removeTrack(entry.trackId, entry.title)}
                   className="text-red-400 hover:text-red-300 text-sm px-2"
                 >
-                  Quitar
+                  {t('streaming.playlistDetail.remove')}
                 </button>
               </div>
             ))}
