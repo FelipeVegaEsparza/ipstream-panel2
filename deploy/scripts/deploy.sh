@@ -58,6 +58,24 @@ for var in PUBLIC_DOMAIN PANEL_DOMAIN STREAM_DOMAIN MYSQL_USER MYSQL_PASSWORD MY
   fi
 done
 
+# Limpieza de imágenes taggeadas de deploys anteriores. El registry genera
+# una imagen de ~2GB por deploy; retener 7 días puede llenar el disco antes
+# de que termine el build. Mantenemos las últimas 6 de panel/video-encoder.
+cleanup_tagged_images() {
+  local keep="${1:-6}"
+  local repo
+  for repo in \
+    "ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-panel" \
+    "ghcr.io/${GITHUB_REPOSITORY_OWNER}/ipstream-video-encoder"; do
+    docker images "$repo" --format '{{.ID}}' 2>/dev/null \
+      | awk '!seen[$0]++' \
+      | tail -n +$((keep + 1)) \
+      | while read -r image_id; do
+          [[ -n "$image_id" ]] && docker rmi -f "$image_id" >/dev/null 2>&1 || true
+        done
+  done
+}
+
 echo "=================================================="
 echo "  CasterFly Panel — Deploy"
 echo "=================================================="
@@ -69,6 +87,15 @@ echo "  Panel:         https://$PANEL_DOMAIN"
 echo "  Stream:        https://$STREAM_DOMAIN"
 echo "=================================================="
 echo
+
+# === 0. Limpieza preventiva ===
+# Si el disco ya está lleno, el build de los servicios locales falla antes
+# de llegar a la limpieza final. Liberamos imágenes viejas antes de empezar.
+echo "🧹 0/9 — Limpieza preventiva de imágenes Docker..."
+df -h / | tail -1
+cleanup_tagged_images 6
+docker image prune -f 2>&1 || true
+df -h / | tail -1
 
 # === 1. Pull del código ===
 echo "📥 1/9 — Pull del código..."
@@ -230,16 +257,16 @@ while true; do
 done
 
 # === 11. Limpieza de imágenes viejas y caché ===
-# Mantiene imágenes de los últimos 7 días (para rollback) y elimina el resto
-# (imágenes taggeadas de deploys anteriores + caché de build). Sin `-a` docker
-# system prune solo borra imágenes sin tag, por eso se acumulaba el disco.
-echo "🧹 Limpieza — Eliminando imágenes y caché Docker no utilizados (>7 días)..."
+# Mantiene las últimas 6 imágenes de panel/video-encoder (rollback), elimina
+# las imágenes locales viejas (dangling) y la caché de build.
+echo "🧹 Limpieza — Eliminando imágenes y caché Docker no utilizados..."
 # Sin `| tail -1`: la limpieza puede tardar minutos y, al no emitir salida
 # hasta el final, la sesión SSH quedaba inactiva y se cortaba ("Broken pipe").
 # Ahora el progreso fluye y mantiene vivo el canal.
 # `|| true`: la limpieza es best-effort; un fallo acá no debe marcar el deploy
 # como fallido (ya pasó el health check OK).
-docker image prune -af --filter "until=168h" 2>&1 || true
+cleanup_tagged_images 6
+docker image prune -f 2>&1 || true
 docker builder prune -af 2>&1 || true
 df -h / | tail -1
 
