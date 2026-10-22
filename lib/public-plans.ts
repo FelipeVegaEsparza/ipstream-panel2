@@ -12,6 +12,9 @@ export interface PublicPlanApi {
   currency: 'USD'
   features: string[]
   maxDjs: number
+  aiLiveEnabled: boolean
+  aiMonthlyCharacters: number
+  aiMusicMinutes: number
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
   imageUrl: string | null
@@ -60,6 +63,9 @@ export function toPublicPlanApi(
     currency: 'USD',
     features: parsePlanFeatures(plan.features),
     maxDjs: plan.maxDjs,
+    aiLiveEnabled: plan.aiLiveEnabled,
+    aiMonthlyCharacters: plan.aiMonthlyCharacters,
+    aiMusicMinutes: plan.aiMusicMinutes,
     radioStorageQuotaMB: plan.radioStorageQuotaMB,
     videoStorageQuotaMB: plan.videoStorageQuotaMB,
     imageUrl: absoluteImageUrl(plan.imageUrl, base),

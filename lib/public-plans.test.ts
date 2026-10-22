@@ -53,6 +53,9 @@ describe('public plans API', () => {
       imageUrl: 'https://panel.casterfly.com/uploads/plan.png',
       contractUrl: 'https://panel.casterfly.com/planes/plan-radio-basico',
       features: ['AutoDJ', 'PWA'],
+      aiLiveEnabled: false,
+      aiMonthlyCharacters: 0,
+      aiMusicMinutes: 0,
     })
   })
 })
