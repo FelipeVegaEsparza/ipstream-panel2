@@ -36,10 +36,12 @@ const SERVICES_META: Record<string, { label: string; icon: any; chip: string }> 
 function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
   const meta = SERVICES_META[plan.services] || SERVICES_META.both
   const ServiceIcon = meta.icon
+  const defaultCurrency = defaultCurrencyFor(plan)
+  const amount = plan.prices?.find((item) => item.currency === defaultCurrency)?.amount ?? plan.price
   const price =
-    plan.currency === 'CLP'
-      ? `$${Math.round(plan.price).toLocaleString('es-CL')}`
-      : `${plan.currency} ${plan.price.toLocaleString('es-CL')}`
+    defaultCurrency === 'CLP'
+      ? `$${Math.round(amount).toLocaleString('es-CL')}`
+      : `US$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   const fmtMB = (mb: number | null) =>
     mb && mb > 0 ? `${mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'}` : '—'
 
