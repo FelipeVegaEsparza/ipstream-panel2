@@ -14,6 +14,7 @@ import { PlaylistPanel } from './PlaylistPanel'
 import { SoundEffectsPad } from './SoundEffectsPad'
 import { StereoVuMeter } from './StereoVuMeter'
 import { useLiveConsole } from '@/lib/live-console/use-live-console'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export function LiveConsole({
   premiumVoiceAvailable = false,
@@ -36,6 +37,7 @@ export function LiveConsole({
   aiIntroPhrases?: string[]
   timezone?: string | null
 }) {
+  const { t } = useDashboardI18n()
   const live = useLiveConsole({
     premiumVoiceAvailable,
     aiEnabled,
@@ -89,32 +91,31 @@ export function LiveConsole({
       <div className={`shrink-0 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between ${isFullscreen ? 'sm:items-center' : ''}`}>
         <div>
           <h1 className={`font-bold text-foreground ${isFullscreen ? 'text-lg' : 'text-3xl'}`}>
-            Reproductor en vivo
+            {t('live.title')}
           </h1>
           {!isFullscreen && (
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Elegí música de tu equipo, armá la lista y salí al aire. Si la fuente queda en silencio,
-              el AutoDJ retoma el control automáticamente.
+              {t('live.subtitle')}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2">
           <div className="rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground">
-            Calidad objetivo: <span className="font-mono text-foreground">192 kbps</span>
+            {t('live.targetQuality')} <span className="font-mono text-foreground">192 kbps</span>
           </div>
           <button
             type="button"
             onClick={() => void toggleFullscreen()}
             className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
-            title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-            aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            title={isFullscreen ? t('live.exitFullscreen') : t('live.fullscreen')}
+            aria-label={isFullscreen ? t('live.exitFullscreen') : t('live.fullscreen')}
           >
             {isFullscreen ? (
               <ArrowsPointingInIcon className="h-3.5 w-3.5" />
             ) : (
               <ArrowsPointingOutIcon className="h-3.5 w-3.5" />
             )}
-            <span className="hidden sm:inline">{isFullscreen ? 'Salir' : 'Pantalla completa'}</span>
+            <span className="hidden sm:inline">{isFullscreen ? t('live.exit') : t('live.fullscreen')}</span>
           </button>
         </div>
       </div>

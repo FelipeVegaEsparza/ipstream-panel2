@@ -1,3 +1,6 @@
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { BroadcastBar } from './BroadcastBar'
@@ -38,6 +41,7 @@ function renderBar(overrides: {
     onRefreshSlots: vi.fn().mockResolvedValue(undefined),
   }
   render(
+    <DashboardI18nProvider locale="es">
     <BroadcastBar
       engineReady
       state={overrides.state ?? 'idle'}
@@ -58,6 +62,7 @@ function renderBar(overrides: {
       onReconnect={handlers.onReconnect}
       onRefreshSlots={handlers.onRefreshSlots}
     />
+    </DashboardI18nProvider>
   )
   return handlers
 }

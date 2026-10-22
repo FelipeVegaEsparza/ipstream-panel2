@@ -2,6 +2,7 @@
 
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import type { SessionState, SlotOption, TransportKind, TransportStats } from '@/lib/live-console/types'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   engineReady: boolean
@@ -24,14 +25,14 @@ interface Props {
   onRefreshSlots: () => Promise<void>
 }
 
-const STATUS: Record<SessionState, { label: string; className: string }> = {
-  idle: { label: 'Fuera del aire', className: 'bg-secondary text-muted-foreground' },
-  preparing: { label: 'Preparando', className: 'bg-yellow-500/10 text-yellow-300' },
-  connecting: { label: 'Conectando', className: 'bg-yellow-500/10 text-yellow-300' },
-  live: { label: 'EN VIVO', className: 'bg-red-500/15 text-red-300' },
-  reconnecting: { label: 'Reconectando', className: 'bg-yellow-500/10 text-yellow-300' },
-  ended: { label: 'Fuera del aire', className: 'bg-secondary text-muted-foreground' },
-  error: { label: 'Error', className: 'bg-red-500/15 text-red-300' },
+const STATUS: Record<SessionState, { labelKey: 'live.broadcast.offAir' | 'live.broadcast.preparing' | 'live.broadcast.connecting' | 'live.broadcast.live' | 'live.broadcast.reconnecting' | 'live.broadcast.error'; className: string }> = {
+  idle: { labelKey: 'live.broadcast.offAir', className: 'bg-secondary text-muted-foreground' },
+  preparing: { labelKey: 'live.broadcast.preparing', className: 'bg-yellow-500/10 text-yellow-300' },
+  connecting: { labelKey: 'live.broadcast.connecting', className: 'bg-yellow-500/10 text-yellow-300' },
+  live: { labelKey: 'live.broadcast.live', className: 'bg-red-500/15 text-red-300' },
+  reconnecting: { labelKey: 'live.broadcast.reconnecting', className: 'bg-yellow-500/10 text-yellow-300' },
+  ended: { labelKey: 'live.broadcast.offAir', className: 'bg-secondary text-muted-foreground' },
+  error: { labelKey: 'live.broadcast.error', className: 'bg-red-500/15 text-red-300' },
 }
 
 export function BroadcastBar({
@@ -54,6 +55,7 @@ export function BroadcastBar({
   onReconnect,
   onRefreshSlots,
 }: Props) {
+  const { t } = useDashboardI18n()
   const status = STATUS[state]
   const busy = state === 'preparing' || state === 'connecting'
   const live = state === 'live' || state === 'reconnecting'
@@ -66,21 +68,21 @@ export function BroadcastBar({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${status.className}`}>
           {live && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />}
-          {status.label}
+          {t(status.labelKey)}
         </span>
 
         <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <span className="hidden sm:inline">Slot</span>
+          <span className="hidden sm:inline">{t('live.broadcast.slot')}</span>
           <select
             value={slotId ?? '__live__'}
             onChange={(event) => onSlotId(event.target.value === '__live__' ? null : event.target.value)}
             disabled={live || busy}
             className="max-w-[190px] rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-brand disabled:opacity-50"
           >
-            {slots.length === 0 && <option value="__live__">DJ en vivo</option>}
+            {slots.length === 0 && <option value="__live__">{t('live.broadcast.liveDj')}</option>}
             {slots.map((slot) => (
               <option key={slot.id ?? '__live__'} value={slot.id ?? '__live__'}>
-                {slot.name} · {slot.mount}{slot.connected ? ' · conectado' : ''}
+                {slot.name} · {slot.mount}{slot.connected ? ` · ${t('live.broadcast.connected')}` : ''}
               </option>
             ))}
           </select>
@@ -93,11 +95,11 @@ export function BroadcastBar({
             onChange={(event) => onHeadphonesConfirmed(event.target.checked)}
             className="h-3.5 w-3.5 accent-[var(--brand-500)]"
           />
-          Auriculares
+          {t('live.broadcast.headphones')}
         </label>
 
         <span className="hidden rounded-full bg-secondary px-2 py-1 text-[10px] text-muted-foreground sm:inline">
-          Plan {maxDjs} DJ{maxDjs === 1 ? '' : 's'}
+          {t('live.broadcast.planDjs', { count: maxDjs, plural: maxDjs === 1 ? '' : 's' })}
         </span>
         {mount && (
           <span className="hidden rounded-full bg-secondary px-2 py-1 font-mono text-[10px] text-muted-foreground md:inline">
@@ -118,8 +120,8 @@ export function BroadcastBar({
             onClick={() => void onRefreshSlots()}
             disabled={busy || live}
             className="rounded-lg border border-border p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-            title="Refrescar slots"
-            aria-label="Refrescar slots"
+            title={t('live.broadcast.refreshSlots')}
+            aria-label={t('live.broadcast.refreshSlots')}
           >
             <ArrowPathIcon className="h-3.5 w-3.5" />
           </button>
@@ -129,7 +131,7 @@ export function BroadcastBar({
               onClick={() => void onStopLive()}
               className="rounded-lg bg-red-500/15 px-3 py-1.5 text-[11px] font-semibold text-red-300 transition-colors hover:bg-red-500/20"
             >
-              Terminar transmisión
+              {t('live.broadcast.end')}
             </button>
           ) : (
             <button
@@ -138,7 +140,7 @@ export function BroadcastBar({
               disabled={!canGoLive}
               className="rounded-lg bg-brand px-3 py-1.5 text-[11px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {busy ? 'Conectando…' : 'Salir al aire'}
+              {busy ? t('live.broadcast.connectingAction') : t('live.broadcast.goLive')}
             </button>
           )}
         </div>
@@ -147,14 +149,14 @@ export function BroadcastBar({
       {(slotOccupied || !headphonesConfirmed || streamBitrate < bitrate || error) && (
         <div className="mt-2 space-y-1 border-t border-border pt-2">
           {slotOccupied && (
-            <p className="text-[10px] text-yellow-300/80">Ese slot ya está conectado. Elegí otro o desconectá al DJ actual.</p>
+            <p className="text-[10px] text-yellow-300/80">{t('live.broadcast.slotOccupied')}</p>
           )}
           {!headphonesConfirmed && (
-            <p className="text-[10px] text-muted-foreground">Confirmá el uso de auriculares para habilitar la salida al aire.</p>
+            <p className="text-[10px] text-muted-foreground">{t('live.broadcast.confirmHeadphones')}</p>
           )}
           {streamBitrate < bitrate && (
             <p className="text-[10px] text-yellow-200/80">
-              La salida de la radio está en {streamBitrate} kbps; el objetivo es {bitrate} kbps.
+              {t('live.broadcast.bitrateWarning', { actual: streamBitrate, target: bitrate })}
             </p>
           )}
           {error && (
@@ -162,7 +164,7 @@ export function BroadcastBar({
               <span>{error}</span>
               {state === 'error' && (
                 <button type="button" onClick={() => void onReconnect()} className="underline underline-offset-2 hover:text-red-200">
-                  Reintentar
+                  {t('live.broadcast.retry')}
                 </button>
               )}
             </div>

@@ -4,22 +4,25 @@ import { getDisabledMenuItems } from '@/lib/menu-permissions'
 import { hasConfiguredPremiumTts } from '@/lib/premium-tts'
 import { getAiLiveAccess } from '@/lib/ai-live'
 import { prisma } from '@/lib/prisma'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function LivePage() {
+  const t = dashboardT(getDashboardLocale())
   const client = await getEffectiveClient()
   if (!client) {
-    return <div className="p-6 text-sm text-muted-foreground">No autorizado.</div>
+    return <div className="p-6 text-sm text-muted-foreground">{t('live.pageUnauthorized')}</div>
   }
 
   const disabled = await getDisabledMenuItems(client.clientId)
   if (disabled.has('streaming-live')) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6">
-        <h1 className="text-xl font-semibold text-foreground">Transmitir en vivo</h1>
+        <h1 className="text-xl font-semibold text-foreground">{t('live.pageDisabledTitle')}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Esta sección no está incluida en tu plan actual. Contactá al administrador para habilitarla.
+          {t('live.pageDisabledText')}
         </p>
       </div>
     )
@@ -46,7 +49,7 @@ export default async function LivePage() {
   ])
   const aiEnabled = aiAccess.enabled
   const premiumVoiceAvailable = Boolean(premiumTtsConfigured && aiEnabled)
-  const stationName = clientInfo?.basicData?.projectName || clientInfo?.name || 'la radio'
+  const stationName = clientInfo?.basicData?.projectName || clientInfo?.name || t('live.defaultStation')
   let aiIntroPhrases: string[] = []
   try {
     const parsed = clientInfo?.radioStream?.aiIntroPhrases

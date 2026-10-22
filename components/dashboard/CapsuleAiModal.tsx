@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface AiInfo {
   ttsEnabled: boolean
@@ -19,8 +20,9 @@ interface Props {
 const input = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none'
 
 export function CapsuleAiModal({ open, onClose, onSaved }: Props) {
+  const { t, locale } = useDashboardI18n()
   const [info, setInfo] = useState<AiInfo | null>(null)
-  const [title, setTitle] = useState('Cápsula informativa')
+  const [title, setTitle] = useState(() => t('capsules.ai.defaultTitle'))
   const [text, setText] = useState('')
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,13 +35,13 @@ export function CapsuleAiModal({ open, onClose, onSaved }: Props) {
     fetch('/api/dashboard/info-capsules/ai', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => setInfo(data))
-      .catch(() => setError('No se pudo cargar la configuración de IA'))
+      .catch(() => setError(t('capsules.ai.loadError')))
   }, [open])
 
   if (!open) return null
 
   const generate = async () => {
-    if (!text.trim()) return setError('Escribí el texto de la cápsula.')
+    if (!text.trim()) return setError(t('capsules.ai.emptyText'))
     setGenerating(true)
     setError(null)
     try {
@@ -49,12 +51,12 @@ export function CapsuleAiModal({ open, onClose, onSaved }: Props) {
         body: JSON.stringify({ title, text }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.message || data.error || 'No se pudo generar la cápsula')
+      if (!res.ok) throw new Error(data.message || data.error || t('capsules.ai.generateError'))
       setCreated({ title: data.capsule?.title || title, url: data.capsule?.url || '' })
       setInfo((prev) => prev ? { ...prev, ttsRemaining: Number(data.remaining ?? prev.ttsRemaining) } : prev)
       onSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo generar la cápsula')
+      setError(err instanceof Error ? err.message : t('capsules.ai.generateError'))
     } finally { setGenerating(false) }
   }
 
@@ -65,13 +67,13 @@ export function CapsuleAiModal({ open, onClose, onSaved }: Props) {
           <div>
             <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
               <SparklesIcon className="h-5 w-5 text-brand" />
-              Crear cápsula informativa con IA
+              {t('capsules.ai.title')}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Escribí el guion y la IA lo convierte en una cápsula de audio para tu radio.
+              {t('capsules.ai.subtitle')}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary" aria-label="Cerrar">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary" aria-label={t('capsules.ai.close')}>
             <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
@@ -79,11 +81,11 @@ export function CapsuleAiModal({ open, onClose, onSaved }: Props) {
         {info && (
           <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-secondary/50 p-3 text-xs">
             <div>
-              <p className="text-muted-foreground">Locución disponible</p>
-              <p className="font-mono text-foreground">{info.ttsRemaining.toLocaleString('es-CL')} caracteres</p>
+              <p className="text-muted-foreground">{t('capsules.ai.voiceAvailable')}</p>
+              <p className="font-mono text-foreground">{t('capsules.ai.characters', { count: info.ttsRemaining.toLocaleString(locale === 'en' ? 'en-US' : 'es-CL') })}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Voz</p>
+              <p className="text-muted-foreground">{t('capsules.ai.voice')}</p>
               <p className="text-foreground">{info.voiceName}</p>
             </div>
           </div>
@@ -91,17 +93,17 @@ export function CapsuleAiModal({ open, onClose, onSaved }: Props) {
 
         <div className="mt-4 space-y-4">
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Título</label>
+            <label className="mb-1 block text-xs text-muted-foreground">{t('capsules.ai.name')}</label>
             <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={180} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Guion de la cápsula</label>
+            <label className="mb-1 block text-xs text-muted-foreground">{t('capsules.ai.script')}</label>
             <textarea
               className={`${input} resize-none`}
               rows={7}
               value={text}
               onChange={(e) => setText(e.target.value.slice(0, 1000))}
-              placeholder="Escribí la información que querés que lea la locutora o locutor…"
+              placeholder={t('capsules.ai.scriptPlaceholder')}
             />
             <p className="mt-1 text-right text-[10px] text-muted-foreground">{text.length}/1000</p>
           </div>
@@ -110,14 +112,14 @@ export function CapsuleAiModal({ open, onClose, onSaved }: Props) {
         {error && <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
         {created && (
           <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
-            <p className="text-xs font-medium text-emerald-300">“{created.title}” creada y agregada a tus cápsulas.</p>
+            <p className="text-xs font-medium text-emerald-300">{t('capsules.ai.created', { title: created.title })}</p>
             {created.url && <audio src={created.url} controls className="mt-2 w-full" preload="metadata" />}
           </div>
         )}
 
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-secondary">
-            Cerrar
+            {t('capsules.ai.close')}
           </button>
           <button
             type="button"
@@ -126,7 +128,7 @@ export function CapsuleAiModal({ open, onClose, onSaved }: Props) {
             className="flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
           >
             <SparklesIcon className="h-4 w-4" />
-            {generating ? 'Generando…' : 'Generar y guardar cápsula'}
+            {generating ? t('capsules.ai.generating') : t('capsules.ai.generate')}
           </button>
         </div>
       </div>

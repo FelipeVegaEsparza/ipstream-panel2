@@ -1,3 +1,6 @@
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { PlaylistPanel } from './PlaylistPanel'
@@ -32,11 +35,13 @@ function renderPlaylist(history: LocalTrack[] = [], queue: LocalTrack[] = [one, 
     onMove: vi.fn(),
   }
   render(
+    <DashboardI18nProvider locale="es">
     <PlaylistPanel
       queue={queue}
       history={history}
       {...handlers}
     />
+    </DashboardI18nProvider>
   )
   return handlers
 }

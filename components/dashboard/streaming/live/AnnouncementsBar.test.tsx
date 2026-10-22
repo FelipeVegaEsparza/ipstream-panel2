@@ -1,3 +1,6 @@
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { AnnouncementsBar } from './AnnouncementsBar'
@@ -13,6 +16,7 @@ function renderBar(overrides: {
     onVoice: vi.fn(),
   }
   render(
+    <DashboardI18nProvider locale="es">
     <AnnouncementsBar
       loading={overrides.loading ?? null}
       error={overrides.error ?? null}
@@ -20,6 +24,7 @@ function renderBar(overrides: {
       premiumAvailable={overrides.premiumAvailable ?? false}
       {...handlers}
     />
+    </DashboardI18nProvider>
   )
   return handlers
 }

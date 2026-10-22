@@ -6,6 +6,7 @@ import { showToast } from '@/components/ui/toast'
 import { SparklesIcon, PlusIcon, Trash2Icon, PlayIcon, SaveIcon } from 'lucide-react'
 import { DEFAULT_PRESENTER_PHRASES } from '@/lib/live-console/presenter'
 import { AiCreditsCard } from '@/components/dashboard/AiCreditsCard'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Config {
   enabled: boolean
@@ -31,6 +32,7 @@ const input =
 const INTERVALS = [0, 15, 30, 60, 120, 180, 240]
 
 export function LocutorIaSettings() {
+  const { t } = useDashboardI18n()
   const [config, setConfig] = useState<Config | null>(null)
   const [enabled, setEnabled] = useState(false)
   const [every, setEvery] = useState(3)
@@ -49,7 +51,7 @@ export function LocutorIaSettings() {
     try {
       const res = await fetch('/api/dashboard/streaming/ai/config', { cache: 'no-store' })
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.message || data?.error || 'No se pudo cargar la configuración')
+      if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.locutor.loadError'))
       setConfig(data)
       setEnabled(Boolean(data.enabled))
       setEvery(Number(data.every) || 3)
@@ -59,7 +61,7 @@ export function LocutorIaSettings() {
       setTimeEveryMinutes(Number(data.timeEveryMinutes) || 0)
       setWeatherEveryMinutes(Number(data.weatherEveryMinutes) || 0)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cargar la configuración')
+      setError(err instanceof Error ? err.message : t('streaming.locutor.loadError'))
     } finally {
       setLoading(false)
     }
@@ -86,13 +88,13 @@ export function LocutorIaSettings() {
         }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.message || data?.error || 'No se pudo guardar')
+      if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.locutor.saveError'))
       setConfig(data)
       setPhrases(Array.isArray(data.phrases) && data.phrases.length ? data.phrases : clean)
-      showToast({ type: 'success', title: 'Cambios guardados' })
+      showToast({ type: 'success', title: t('streaming.locutor.saveSuccess') })
       return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar')
+      setError(err instanceof Error ? err.message : t('streaming.locutor.saveError'))
       return false
     } finally {
       setSaving(false)
@@ -101,7 +103,7 @@ export function LocutorIaSettings() {
 
   const applyAutoDj = async () => {
     if (!enabled) {
-      setError('Activá el locutor antes de aplicarlo al AutoDJ.')
+      setError(t('streaming.locutor.enableBeforeApply'))
       return
     }
     setApplying(true)
@@ -116,11 +118,11 @@ export function LocutorIaSettings() {
         body: '{}',
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.message || data?.error || 'No se pudo preparar el AutoDJ')
-      setApplyMessage(data.message || 'AutoDJ actualizado')
-      showToast({ type: 'success', title: data.message || 'AutoDJ actualizado' })
+      if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.locutor.autodjError'))
+      setApplyMessage(data.message || t('streaming.locutor.autodjUpdated'))
+      showToast({ type: 'success', title: data.message || t('streaming.locutor.autodjUpdated') })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo preparar el AutoDJ')
+      setError(err instanceof Error ? err.message : t('streaming.locutor.autodjError'))
     } finally {
       setApplying(false)
     }
@@ -132,7 +134,7 @@ export function LocutorIaSettings() {
 
   const addPhrase = () => {
     if (phrases.length >= 20) return
-    setPhrases((prev) => [...prev, 'Estás escuchando {{radio}}. A continuación, {{titulo}} de {{artista}}.'])
+    setPhrases((prev) => [...prev, t('streaming.locutor.defaultPhrase')])
   }
 
   const removePhrase = (index: number) => {
@@ -140,11 +142,11 @@ export function LocutorIaSettings() {
   }
 
   if (loading) {
-    return <div className="card text-sm text-muted-foreground">Cargando configuración…</div>
+    return <div className="card text-sm text-muted-foreground">{t('streaming.locutor.loading')}</div>
   }
 
   if (!config) {
-    return <div className="card text-sm text-red-300">{error || 'No se pudo cargar la configuración.'}</div>
+    return <div className="card text-sm text-red-300">{error || t('streaming.locutor.loadErrorShort')}</div>
   }
 
   if (!config.aiEnabled) {
@@ -152,13 +154,13 @@ export function LocutorIaSettings() {
       <div className="card max-w-2xl space-y-3">
         <h2 className="flex items-center gap-2 text-xl font-semibold text-foreground">
           <SparklesIcon className="h-5 w-5 text-brand" />
-          Locutor IA
+          {t('streaming.locutor.requirePlanTitle')}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Esta función requiere un plan con IA en vivo. Contactá al administrador para habilitarla.
+          {t('streaming.locutor.requirePlanText')}
         </p>
         <Link href="/dashboard/streaming/live" className="text-sm text-brand hover:underline">
-          Ir a la consola en vivo
+          {t('streaming.locutor.goLive')}
         </Link>
       </div>
     )
@@ -174,33 +176,33 @@ export function LocutorIaSettings() {
       />
 
       <div className="rounded-xl border border-brand/30 bg-brand/5 p-4">
-        <p className="text-sm font-semibold text-foreground">Cómo funciona</p>
+        <p className="text-sm font-semibold text-foreground">{t('streaming.locutor.howItWorks')}</p>
         <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-          <p><strong className="text-foreground">1.</strong> Elegí la voz y las frases.</p>
-          <p><strong className="text-foreground">2.</strong> Guardá para la consola en vivo.</p>
-          <p><strong className="text-foreground">3.</strong> Aplicá al AutoDJ para regenerar sus intros.</p>
+          <p><strong className="text-foreground">1.</strong> {t('streaming.locutor.step1')}</p>
+          <p><strong className="text-foreground">2.</strong> {t('streaming.locutor.step2')}</p>
+          <p><strong className="text-foreground">3.</strong> {t('streaming.locutor.step3')}</p>
         </div>
       </div>
 
       <section className="card space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">1. Voz de la emisora</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('streaming.locutor.voiceSection')}</h2>
           <p className="text-sm text-muted-foreground">
             {config.provider === 'fish'
-              ? 'Fish Audio está configurado por el administrador (modelo y voz).'
-              : 'Se usa en vivo, AutoDJ, hora y clima.'}
+              ? t('streaming.locutor.fishConfigured')
+              : t('streaming.locutor.voiceUsage')}
           </p>
         </div>
         {config.provider === 'fish' ? (
           <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
-            La voz, el modelo y el reference ID de Fish Audio se gestionan en Admin → Configuración → Locución.
+            {t('streaming.locutor.fishNote')}
           </p>
         ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Voz</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.voice')}</label>
             <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className={input}>
-              <option value="">Voz predeterminada</option>
+              <option value="">{t('streaming.locutor.defaultVoice')}</option>
               {config.voices.map((voice) => (
                 <option key={voice.id} value={voice.id}>{voice.name}</option>
               ))}
@@ -208,7 +210,7 @@ export function LocutorIaSettings() {
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">
-              Expresividad: {voiceStyle}%
+              {t('streaming.locutor.expressivity', { value: voiceStyle })}
             </label>
             <input
               type="range"
@@ -224,16 +226,16 @@ export function LocutorIaSettings() {
         )}
         {config.provider !== 'fish' && (
           <p className="text-[11px] text-muted-foreground">
-            Cambiar de voz invalida el caché de esa voz.
+            {t('streaming.locutor.voiceCacheNote')}
           </p>
         )}
       </section>
 
       <section className="card space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">2. Cuándo habla</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('streaming.locutor.whenSection')}</h2>
           <p className="text-sm text-muted-foreground">
-            La frecuencia es para el presentador de temas. Hora y clima tienen su propio intervalo.
+            {t('streaming.locutor.frequencyNote')}
           </p>
         </div>
         <label className="flex items-center gap-2 text-sm text-foreground">
@@ -243,30 +245,30 @@ export function LocutorIaSettings() {
             onChange={(e) => setEnabled(e.target.checked)}
             className="h-4 w-4 rounded border-border bg-secondary"
           />
-          Activar Locutor IA
+          {t('streaming.locutor.enable')}
         </label>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Presentar cada</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.presentEvery')}</label>
             <select value={every} onChange={(e) => setEvery(Number(e.target.value))} className={input} disabled={!enabled}>
               {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
-                <option key={value} value={value}>{value} temas</option>
+                <option key={value} value={value}>{t('streaming.locutor.tracksCount', { count: value })}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Hora cada</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.timeEvery')}</label>
             <select value={timeEveryMinutes} onChange={(e) => setTimeEveryMinutes(Number(e.target.value))} className={input}>
               {INTERVALS.map((value) => (
-                <option key={value} value={value}>{value === 0 ? 'Desactivada' : `${value} minutos`}</option>
+                <option key={value} value={value}>{value === 0 ? t('streaming.locutor.disabledF') : t('streaming.locutor.minutes', { count: value })}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Clima cada</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.weatherEvery')}</label>
             <select value={weatherEveryMinutes} onChange={(e) => setWeatherEveryMinutes(Number(e.target.value))} className={input}>
               {INTERVALS.map((value) => (
-                <option key={value} value={value}>{value === 0 ? 'Desactivado' : `${value} minutos`}</option>
+                <option key={value} value={value}>{value === 0 ? t('streaming.locutor.disabledM') : t('streaming.locutor.minutes', { count: value })}</option>
               ))}
             </select>
           </div>
@@ -276,9 +278,9 @@ export function LocutorIaSettings() {
       <section className="card space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">3. Frases</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t('streaming.locutor.phrasesSection')}</h2>
             <p className="text-sm text-muted-foreground">
-              Se elige una al azar. Variables: {'{{radio}}'}, {'{{titulo}}'}, {'{{artista}}'}.
+              {t('streaming.locutor.phrasesNote')}
             </p>
           </div>
           <button
@@ -288,7 +290,7 @@ export function LocutorIaSettings() {
             className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:border-brand hover:text-brand disabled:opacity-40"
           >
             <PlusIcon className="h-3.5 w-3.5" />
-            Agregar
+            {t('streaming.locutor.add')}
           </button>
         </div>
         <div className="space-y-2">
@@ -306,7 +308,7 @@ export function LocutorIaSettings() {
                 onClick={() => removePhrase(index)}
                 disabled={phrases.length <= 1}
                 className="mt-1 rounded-lg border border-border p-2 text-muted-foreground hover:text-red-300 disabled:opacity-30"
-                aria-label="Quitar frase"
+                aria-label={t('streaming.locutor.removePhrase')}
               >
                 <Trash2Icon className="h-4 w-4" />
               </button>
@@ -314,15 +316,15 @@ export function LocutorIaSettings() {
           ))}
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Si una frase no usa variables, se agrega automáticamente la radio, el título y el artista.
+          {t('streaming.locutor.phraseFallbackNote')}
         </p>
       </section>
 
       <section className="card space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">4. Guardar y aplicar</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('streaming.locutor.saveSection')}</h2>
           <p className="text-sm text-muted-foreground">
-            Guardar actualiza el vivo y las locuciones automáticas. Aplicar al AutoDJ regenera las intros de temas.
+            {t('streaming.locutor.saveSectionNote')}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -333,7 +335,7 @@ export function LocutorIaSettings() {
             className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:border-brand hover:text-brand disabled:opacity-50"
           >
             <SaveIcon className="h-4 w-4" />
-            {saving ? 'Guardando…' : 'Guardar cambios'}
+            {saving ? t('streaming.locutor.saving') : t('streaming.locutor.saveChanges')}
           </button>
           <button
             type="button"
@@ -342,11 +344,11 @@ export function LocutorIaSettings() {
             className="flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
             <PlayIcon className="h-4 w-4" />
-            {applying ? 'Preparando AutoDJ…' : 'Guardar y aplicar al AutoDJ'}
+            {applying ? t('streaming.locutor.preparing') : t('streaming.locutor.saveApply')}
           </button>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          El AutoDJ debe tener la playlist sin shuffle. Si cambiás la playlist, la frecuencia o las frases, volvé a aplicar.
+          {t('streaming.locutor.autodjNote')}
         </p>
         {applyMessage && <p className="text-xs text-green-300">{applyMessage}</p>}
         {error && <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
@@ -354,11 +356,11 @@ export function LocutorIaSettings() {
 
       <section className="card flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-foreground">Locuciones libres</p>
-          <p className="text-xs text-muted-foreground">Creá una locución y agregala a la lista desde la consola en vivo.</p>
+          <p className="text-sm font-semibold text-foreground">{t('streaming.locutor.freeSection')}</p>
+          <p className="text-xs text-muted-foreground">{t('streaming.locutor.freeNote')}</p>
         </div>
         <Link href="/dashboard/streaming/live" className="text-sm font-medium text-brand hover:underline">
-          Ir a la consola
+          {t('streaming.locutor.goConsole')}
         </Link>
       </section>
     </div>

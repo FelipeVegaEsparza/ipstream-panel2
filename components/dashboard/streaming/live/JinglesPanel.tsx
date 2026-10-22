@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MusicalNoteIcon, PlayIcon, PlusIcon, StopIcon } from '@heroicons/react/24/outline'
 import { formatTime, mimeForName } from '@/lib/live-console/audio-math'
 import type { LocalTrack } from '@/lib/live-console/types'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Jingle {
   id: string
@@ -43,6 +44,7 @@ export function JinglesPanel({
 }: {
   onAdd: (track: LocalTrack) => void
 }) {
+  const { t } = useDashboardI18n()
   const [jingles, setJingles] = useState<Jingle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -53,11 +55,11 @@ export function JinglesPanel({
     void (async () => {
       try {
         const res = await fetch('/api/dashboard/streaming/jingles', { cache: 'no-store' })
-        if (!res.ok) throw new Error('No se pudieron cargar los jingles')
+        if (!res.ok) throw new Error(t('live.jingles.error'))
         const data = await res.json()
         setJingles(Array.isArray(data.jingles) ? data.jingles : [])
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudieron cargar los jingles')
+        setError(err instanceof Error ? err.message : t('live.jingles.error'))
       } finally {
         setLoading(false)
       }
@@ -99,17 +101,17 @@ export function JinglesPanel({
         </span>
       </div>
       <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
-        Arrastrá un jingle a la lista o usá “+”.
+        {t('live.jingles.subtitle')}
       </p>
 
       <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
         {loading ? (
-          <p className="py-3 text-[10px] text-muted-foreground">Cargando…</p>
+          <p className="py-3 text-[10px] text-muted-foreground">{t('live.jingles.loading')}</p>
         ) : error ? (
           <p className="py-3 text-[10px] text-red-300">{error}</p>
         ) : jingles.length === 0 ? (
           <p className="py-3 text-[10px] text-muted-foreground">
-            No hay jingles cargados.
+            {t('live.jingles.empty')}
           </p>
         ) : (
           <ul className="space-y-1">
@@ -124,14 +126,14 @@ export function JinglesPanel({
                     event.dataTransfer.effectAllowed = 'copy'
                   }}
                   className="group flex cursor-grab items-center gap-1.5 rounded-lg border border-transparent px-1.5 py-1.5 transition-colors hover:border-border hover:bg-secondary/60 active:cursor-grabbing"
-                  title="Arrastrar a la lista de reproducción"
+                  title={t('live.jingles.drag')}
                 >
                   <button
                     type="button"
                     onClick={() => togglePreview(jingle)}
                     className="rounded-md p-1 text-muted-foreground transition-colors hover:text-brand"
-                    title={playingId === jingle.id ? `Detener ${jingle.title}` : `Escuchar ${jingle.title}`}
-                    aria-label={playingId === jingle.id ? `Detener ${jingle.title}` : `Escuchar ${jingle.title}`}
+                    title={playingId === jingle.id ? t('live.jingles.stop', { name: jingle.title }) : t('live.jingles.listen', { name: jingle.title })}
+                    aria-label={playingId === jingle.id ? t('live.jingles.stop', { name: jingle.title }) : t('live.jingles.listen', { name: jingle.title })}
                   >
                     {playingId === jingle.id
                       ? <StopIcon className="h-3.5 w-3.5" />
@@ -147,8 +149,8 @@ export function JinglesPanel({
                     type="button"
                     onClick={() => onAdd(track)}
                     className="rounded-md p-1 text-muted-foreground opacity-70 transition-colors hover:text-brand group-hover:opacity-100"
-                    title={`Agregar ${jingle.title} a la lista`}
-                    aria-label={`Agregar ${jingle.title} a la lista`}
+                    title={t('live.jingles.add', { name: jingle.title })}
+                    aria-label={t('live.jingles.add', { name: jingle.title })}
                   >
                     <PlusIcon className="h-3.5 w-3.5" />
                   </button>

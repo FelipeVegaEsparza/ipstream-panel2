@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { ArrowPathIcon, PlusIcon, SpeakerWaveIcon, StopIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { SOUND_EFFECT_PAD_SIZES, type SoundEffect } from '@/lib/live-console/effects'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   padSize: number
@@ -36,6 +37,7 @@ export function SoundEffectsPad({
   onPlay,
   onStopAll,
 }: Props) {
+  const { t } = useDashboardI18n()
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [pendingSlot, setPendingSlot] = useState<number | null>(null)
 
@@ -50,13 +52,13 @@ export function SoundEffectsPad({
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <SpeakerWaveIcon className="h-4 w-4 text-brand" />
-            Efectos de sonido
+            {t('live.effects.title')}
           </h2>
           {!compact && (
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               {libraryMode
-                ? 'Elegidos en tu perfil. Se mezclan en la transmisión al presionar.'
-                : 'Se guardan en este navegador y se mezclan en la transmisión al presionar.'}
+                ? t('live.effects.subtitleLibrary')
+                : t('live.effects.subtitleBrowser')}
             </p>
           )}
         </div>
@@ -66,12 +68,12 @@ export function SoundEffectsPad({
               href={manageHref}
               className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand"
             >
-              Elegir efectos
+              {t('live.effects.choose')}
             </Link>
           )}
-          {loading && <span className="text-[10px] text-muted-foreground">Cargando…</span>}
+          {loading && <span className="text-[10px] text-muted-foreground">{t('live.effects.loading')}</span>}
           <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            Botones
+            {t('live.effects.buttons')}
             <select
               value={padSize}
               onChange={(event) => onPadSize(Number(event.target.value))}
@@ -86,10 +88,10 @@ export function SoundEffectsPad({
             type="button"
             onClick={onStopAll}
             className="flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-            title="Detener todos los efectos"
+            title={t('live.effects.stopAll')}
           >
             <StopIcon className="h-3.5 w-3.5" />
-            Detener
+            {t('live.effects.stop')}
           </button>
         </div>
       </div>
@@ -108,16 +110,16 @@ export function SoundEffectsPad({
                 type="button"
                 onClick={() => void onPlay(slot)}
                 className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-brand/30 bg-brand/10 px-1.5 text-center transition-colors hover:bg-brand/15 ${compact ? 'h-12' : 'h-16'}`}
-                title={`Reproducir ${effect.name}`}
+                title={t('live.effects.play', { name: effect.name })}
               >
                 <SpeakerWaveIcon className="h-4 w-4 text-brand" />
                 <span className="line-clamp-2 text-[11px] font-semibold leading-tight text-brand">{effect.name}</span>
-                <span className="text-[9px] text-muted-foreground">Botón {slot + 1}</span>
+                <span className="text-[9px] text-muted-foreground">{t('live.effects.button', { n: slot + 1 })}</span>
               </button>
             ) : libraryMode ? (
               <div className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-dashed border-border bg-background px-1.5 text-center text-muted-foreground ${compact ? 'h-12' : 'h-16'}`}>
-                <span className="text-[11px] font-medium">Sin efecto</span>
-                <span className="text-[9px]">Botón {slot + 1}</span>
+                <span className="text-[11px] font-medium">{t('live.effects.empty')}</span>
+                <span className="text-[9px]">{t('live.effects.button', { n: slot + 1 })}</span>
               </div>
             ) : (
               <button
@@ -126,8 +128,8 @@ export function SoundEffectsPad({
                 className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-dashed border-border bg-background px-1.5 text-center transition-colors hover:border-brand hover:text-brand ${compact ? 'h-12' : 'h-16'}`}
               >
                 <PlusIcon className="h-4 w-4" />
-                <span className="text-[11px] font-medium">Agregar sonido</span>
-                <span className="text-[9px] text-muted-foreground">Botón {slot + 1}</span>
+                <span className="text-[11px] font-medium">{t('live.effects.add')}</span>
+                <span className="text-[9px] text-muted-foreground">{t('live.effects.button', { n: slot + 1 })}</span>
               </button>
             )}
 
@@ -141,8 +143,8 @@ export function SoundEffectsPad({
                   value={effect.gainDb}
                   onChange={(event) => void onGain(slot, Number(event.target.value))}
                   className="h-1.5 min-w-0 flex-1 cursor-pointer accent-[var(--brand-500)]"
-                  title={`Volumen: ${effect.gainDb.toFixed(1)} dB`}
-                  aria-label={`Volumen de ${effect.name}`}
+                  title={t('live.effects.volume', { db: effect.gainDb.toFixed(1) })}
+                  aria-label={t('live.effects.volumeLabel', { name: effect.name })}
                 />
                 {!libraryMode && (
                   <>
@@ -150,8 +152,8 @@ export function SoundEffectsPad({
                       type="button"
                       onClick={() => openPicker(slot)}
                       className="rounded-md p-1 text-muted-foreground hover:text-foreground"
-                      title="Cambiar sonido"
-                      aria-label={`Cambiar ${effect.name}`}
+                      title={t('live.effects.change')}
+                      aria-label={`${t('live.effects.change')} ${effect.name}`}
                     >
                       <ArrowPathIcon className="h-3.5 w-3.5" />
                     </button>
@@ -159,8 +161,8 @@ export function SoundEffectsPad({
                       type="button"
                       onClick={() => void onRemove(slot)}
                       className="rounded-md p-1 text-muted-foreground hover:text-red-400"
-                      title="Quitar efecto"
-                      aria-label={`Quitar ${effect.name}`}
+                      title={t('live.effects.remove')}
+                      aria-label={t('live.effects.removeLabel', { name: effect.name })}
                     >
                       <XMarkIcon className="h-3.5 w-3.5" />
                     </button>

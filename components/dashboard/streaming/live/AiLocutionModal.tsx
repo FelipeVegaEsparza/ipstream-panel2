@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { XMarkIcon, SparklesIcon, PlayIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 const MAX_CHARS = 300
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
+  const { t } = useDashboardI18n()
   const [text, setText] = useState('')
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +56,7 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
       const generated = await generate(text.trim())
       setBlob(generated)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo generar la locución')
+      setError(err instanceof Error ? err.message : t('live.locution.error'))
     } finally {
       setGenerating(false)
     }
@@ -63,7 +65,7 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
   function handleAdd() {
     if (!blob || !text.trim()) return
     onAdd(blob, text.trim())
-    showToast({ type: 'success', title: 'Locución agregada a la lista' })
+    showToast({ type: 'success', title: t('live.locution.added') })
     onClose()
   }
 
@@ -72,7 +74,7 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Crear locución libre"
+      aria-label={t('live.locution.create')}
       onClick={onClose}
     >
       <div
@@ -83,17 +85,17 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
           <div>
             <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
               <SparklesIcon className="h-5 w-5 text-brand" />
-              Locución libre
+              {t('live.locution.title')}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              Escribí el texto, generá la voz y agregala a la lista de reproducción.
+              {t('live.locution.subtitle')}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-            aria-label="Cerrar"
+            aria-label={t('live.locution.close')}
           >
             <XMarkIcon className="h-5 w-5" />
           </button>
@@ -104,11 +106,11 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
           onChange={(event) => setText(event.target.value.slice(0, MAX_CHARS))}
           rows={5}
           autoFocus
-          placeholder="Ej: Estás escuchando Radio X. A continuación, un mensaje para nuestros oyentes…"
+          placeholder={t('live.locution.placeholder')}
           className="mt-4 w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-brand"
         />
         <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>{remaining} caracteres disponibles</span>
+          <span>{t('live.locution.remaining', { count: remaining })}</span>
           <span>≈ {estimated} s</span>
         </div>
 
@@ -130,7 +132,7 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
             onClick={onClose}
             className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-secondary"
           >
-            Cancelar
+            {t('live.locution.cancel')}
           </button>
           <button
             type="button"
@@ -139,7 +141,7 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
             className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-foreground hover:text-brand disabled:opacity-40"
           >
             <PlayIcon className="h-4 w-4" />
-            {generating ? 'Generando…' : 'Generar'}
+            {generating ? t('live.locution.generating') : t('live.locution.generate')}
           </button>
           <button
             type="button"
@@ -148,7 +150,7 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
             className="flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
           >
             <PlusIcon className="h-4 w-4" />
-            Agregar a la lista
+            {t('live.locution.add')}
           </button>
         </div>
       </div>

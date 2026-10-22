@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import { ArrowPathIcon, FolderPlusIcon, PlayIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { formatTime } from '@/lib/live-console/audio-math'
 import type { LocalTrack } from '@/lib/live-console/types'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   tracks: LocalTrack[]
@@ -43,6 +44,7 @@ export function FileBrowser({
   onAddToPlaylist,
   onPlayNow,
 }: Props) {
+  const { t } = useDashboardI18n()
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [search, setSearch] = useState('')
   const [dragging, setDragging] = useState(false)
@@ -75,10 +77,10 @@ export function FileBrowser({
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              Biblioteca local
+              {t('live.library.title')}
             </h2>
             <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-              {tracks.length} archivo{tracks.length === 1 ? '' : 's'} · no se sube al servidor
+              {t('live.library.filesCount', { count: tracks.length, plural: tracks.length === 1 ? '' : 's' })}
             </p>
           </div>
           <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-medium ${
@@ -86,7 +88,7 @@ export function FileBrowser({
               ? 'border-brand/30 bg-brand/10 text-brand'
               : 'border-border bg-background text-muted-foreground'
           }`}>
-            {persisted ? 'Fija' : 'Sesión'}
+            {persisted ? t('live.library.pinned') : t('live.library.session')}
           </span>
         </div>
 
@@ -96,7 +98,7 @@ export function FileBrowser({
             onClick={() => inputRef.current?.click()}
             className="rounded bg-brand px-2 py-1.5 text-[10px] font-medium text-white transition-opacity hover:opacity-90"
           >
-            + Archivos
+            {t('live.library.files')}
           </button>
           {supportsPersistence ? (
             <button
@@ -105,11 +107,11 @@ export function FileBrowser({
               className="flex items-center justify-center gap-1 rounded border border-border bg-background px-2 py-1.5 text-[10px] font-medium text-foreground transition-colors hover:border-brand hover:text-brand"
             >
               <FolderPlusIcon className="h-3.5 w-3.5" />
-              Carpeta
+              {t('live.library.folder')}
             </button>
           ) : (
             <div className="flex items-center justify-center rounded border border-dashed border-border px-1 text-center text-[9px] text-muted-foreground">
-              Carpeta solo Chromium
+              {t('live.library.chromiumOnly')}
             </div>
           )}
           <button
@@ -117,8 +119,8 @@ export function FileBrowser({
             onClick={() => void onRestoreDirectory()}
             disabled={!persisted || !supportsPersistence || restoring || scanning}
             className="rounded border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-30"
-            title="Actualizar carpeta recordada"
-            aria-label="Actualizar carpeta recordada"
+            title={t('live.library.refreshFolder')}
+            aria-label={t('live.library.refreshFolder')}
           >
             <ArrowPathIcon className={`h-3.5 w-3.5 ${restoring ? 'animate-spin' : ''}`} />
           </button>
@@ -141,7 +143,7 @@ export function FileBrowser({
             <div className="h-1 flex-1 overflow-hidden rounded-full bg-secondary">
               <div className="h-full w-1/3 animate-pulse rounded-full bg-brand" />
             </div>
-            <span>{progress.scanned} archivos · {progress.added} temas</span>
+            <span>{t('live.library.scanProgress', { scanned: progress.scanned, added: progress.added })}</span>
           </div>
         )}
 
@@ -155,23 +157,23 @@ export function FileBrowser({
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Buscar tema, artista o archivo…"
+          placeholder={t('live.library.search')}
           className="mt-2 w-full rounded border border-border bg-background px-2 py-1.5 text-[11px] text-foreground outline-none placeholder:text-muted-foreground focus:border-brand"
         />
       </div>
 
       <div className="grid grid-cols-[minmax(0,1fr)_46px_72px] items-center gap-1 border-b border-border bg-background/60 px-3 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <span>Tema / Artista</span>
-        <span className="text-right">Dur.</span>
-        <span className="text-right">Acciones</span>
+        <span>{t('live.library.trackArtist')}</span>
+        <span className="text-right">{t('live.library.durationShort')}</span>
+        <span className="text-right">{t('live.library.actions')}</span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="flex h-full min-h-[200px] flex-col items-center justify-center px-6 text-center">
-            <p className="text-xs font-medium text-foreground">Arrastrá música acá</p>
+            <p className="text-xs font-medium text-foreground">{t('live.library.emptyTitle')}</p>
             <p className="mt-1 text-[10px] text-muted-foreground">
-              MP3, AAC/M4A, WAV, OGG, Opus o FLAC. Después agregala a la lista.
+              {t('live.library.emptyHint')}
             </p>
           </div>
         ) : (
@@ -197,8 +199,8 @@ export function FileBrowser({
                       type="button"
                       onClick={() => void onPlayNow(track)}
                       className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-brand"
-                      title="Reproducir ahora"
-                      aria-label={`Reproducir ${track.title}`}
+                      title={t('live.library.playNow')}
+                      aria-label={`${t('live.library.playNow')} ${track.title}`}
                     >
                       <PlayIcon className="h-3.5 w-3.5" />
                     </button>
@@ -207,8 +209,8 @@ export function FileBrowser({
                       onClick={() => onAddToPlaylist(track)}
                       disabled={inPlaylist}
                       className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-brand disabled:opacity-30"
-                      title={inPlaylist ? 'Ya está en la lista' : 'Agregar a la lista'}
-                      aria-label={`Agregar ${track.title} a la lista`}
+                      title={inPlaylist ? t('live.library.alreadyInPlaylist') : t('live.library.addToPlaylist')}
+                      aria-label={`${t('live.library.addToPlaylist')} ${track.title}`}
                     >
                       <PlusIcon className="h-3.5 w-3.5" />
                     </button>
@@ -216,8 +218,8 @@ export function FileBrowser({
                       type="button"
                       onClick={() => onRemoveTrack(track.id)}
                       className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
-                      title="Quitar de la biblioteca"
-                      aria-label={`Quitar ${track.title} de la biblioteca`}
+                      title={t('live.library.removeFromLibrary')}
+                      aria-label={`${t('live.library.removeFromLibrary')} ${track.title}`}
                     >
                       <XMarkIcon className="h-3.5 w-3.5" />
                     </button>
@@ -230,8 +232,8 @@ export function FileBrowser({
       </div>
 
       <div className="flex items-center justify-between border-t border-border bg-secondary/30 px-3 py-1.5 text-[9px] text-muted-foreground">
-        <span>{filtered.length} visibles / {tracks.length} total</span>
-        <span className="font-mono">{playlistIds.size} en lista</span>
+        <span>{t('live.library.visibleTotal', { visible: filtered.length, total: tracks.length })}</span>
+        <span className="font-mono">{t('live.library.inPlaylist', { count: playlistIds.size })}</span>
       </div>
     </section>
   )

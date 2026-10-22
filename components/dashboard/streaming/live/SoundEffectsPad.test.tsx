@@ -1,3 +1,6 @@
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { SoundEffectsPad } from './SoundEffectsPad'
@@ -24,6 +27,7 @@ function renderPad() {
     onStopAll: vi.fn(),
   }
   render(
+    <DashboardI18nProvider locale="es">
     <SoundEffectsPad
       padSize={4}
       slots={[effect, null, null, null]}
@@ -31,6 +35,7 @@ function renderPad() {
       error={null}
       {...handlers}
     />
+    </DashboardI18nProvider>
   )
   return handlers
 }
@@ -54,6 +59,7 @@ describe('SoundEffectsPad', () => {
 
   it('en modo biblioteca no permite agregar archivos locales', () => {
     render(
+      <DashboardI18nProvider locale="es">
       <SoundEffectsPad
         padSize={4}
         slots={[effect, null, null, null]}
@@ -68,6 +74,7 @@ describe('SoundEffectsPad', () => {
         onPlay={vi.fn()}
         onStopAll={vi.fn()}
       />
+      </DashboardI18nProvider>
     )
     expect(screen.queryByText('Agregar sonido')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Elegir efectos' })).toHaveAttribute(

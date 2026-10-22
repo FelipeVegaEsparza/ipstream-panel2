@@ -3,6 +3,7 @@
 import { ClockIcon, CloudIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
 import type { AnnouncementType, AnnouncementVoice } from '@/lib/live-console/use-live-console'
 import { createAnnouncementTrack } from '@/lib/live-console/announcements'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   loading: AnnouncementType | null
@@ -25,12 +26,13 @@ export function AnnouncementsBar({
   onAddToQueue,
   onOpenComposer,
 }: Props) {
+  const { t } = useDashboardI18n()
   const busy = loading != null
   return (
     <aside className="flex min-h-[180px] flex-col rounded-xl border border-border bg-card p-3 shadow-soft">
-      <h2 className="text-sm font-semibold text-foreground">Locución</h2>
+      <h2 className="text-sm font-semibold text-foreground">{t('live.announce.title')}</h2>
       <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
-        Arrastrá Clima u Hora entre los temas o agregalos con la lista.
+        {t('live.announce.subtitle')}
       </p>
 
       <div className="mt-3 space-y-2">
@@ -44,10 +46,10 @@ export function AnnouncementsBar({
           draggable
           disabled={busy}
           className="flex w-full cursor-grab items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-[11px] font-medium text-foreground transition-colors hover:text-brand active:cursor-grabbing disabled:opacity-40"
-          title="Arrastrar clima a la lista o agregarlo con clic"
+          title={t('live.announce.dragWeather')}
         >
           <CloudIcon className="h-3.5 w-3.5" />
-          Clima
+          {t('live.announce.weather')}
         </button>
         <button
           type="button"
@@ -59,10 +61,10 @@ export function AnnouncementsBar({
           draggable
           disabled={busy}
           className="flex w-full cursor-grab items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-[11px] font-medium text-foreground transition-colors hover:text-brand active:cursor-grabbing disabled:opacity-40"
-          title="Arrastrar hora a la lista o agregarla con clic"
+          title={t('live.announce.dragTime')}
         >
           <ClockIcon className="h-3.5 w-3.5" />
-          Hora
+          {t('live.announce.time')}
         </button>
         {freeFormAvailable && onOpenComposer && (
           <button
@@ -70,16 +72,16 @@ export function AnnouncementsBar({
             onClick={onOpenComposer}
             disabled={busy}
             className="flex w-full items-center gap-1.5 rounded-lg border border-brand/40 bg-brand/10 px-3 py-2 text-[11px] font-medium text-brand transition-colors hover:bg-brand/20 disabled:opacity-40"
-            title="Crear una locución libre"
+            title={t('live.announce.createFree')}
           >
             <PencilSquareIcon className="h-3.5 w-3.5" />
-            Libre
+            {t('live.announce.free')}
           </button>
         )}
       </div>
 
       <label className="mt-3 space-y-1">
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Voz</span>
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('live.announce.voice')}</span>
         <select
           value={voice}
           onChange={(event) => {
@@ -87,9 +89,9 @@ export function AnnouncementsBar({
             onVoice(value === 'premium' || value === 'female' ? value : 'male')
           }}
           className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-brand"
-          aria-label="Voz de la locución"
+          aria-label={t('live.announce.voiceLabel')}
         >
-          {premiumAvailable && <option value="premium">Voz premium</option>}
+          {premiumAvailable && <option value="premium">{t('live.announce.premiumVoice')}</option>}
           <option value="male">Ald (Piper)</option>
           <option value="female">Claude (Piper)</option>
         </select>
@@ -97,13 +99,13 @@ export function AnnouncementsBar({
 
       {loading && (
         <p className="mt-2 text-[10px] text-muted-foreground">
-          Generando {loading === 'weather' ? 'clima' : 'hora'}…
+          {t('live.announce.generating', { type: loading === 'weather' ? t('live.announce.weatherLower') : t('live.announce.timeLower') })}
         </p>
       )}
       {error && <p className="mt-2 text-[10px] text-red-300">{error}</p>}
 
       <p className="mt-auto pt-3 text-[9px] leading-snug text-muted-foreground">
-        Se reproduce como un tema más, cuando llegue su turno en la lista.
+        {t('live.announce.footer')}
       </p>
     </aside>
   )

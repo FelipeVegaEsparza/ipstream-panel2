@@ -1,6 +1,7 @@
 'use client'
 
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { JingleAiModal } from './JingleAiModal'
 
 import { useEffect, useState, useRef } from 'react'
@@ -35,6 +36,7 @@ function fmtSize(bytes: number) {
 }
 
 export default function JinglesPage() {
+  const { t } = useDashboardI18n()
   const [jingles, setJingles] = useState<Jingle[]>([])
   const [loading, setLoading] = useState(true)
   const [config, setConfig] = useState<JingleConfig>({ jinglePlayEvery: 5, jinglePlayCount: 1 })
@@ -90,7 +92,7 @@ export default function JinglesPage() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data?.message || 'Error al guardar configuración')
+        throw new Error(data?.message || t('streaming.jingles.errorSaveConfig'))
       }
       const data = await res.json()
       setConfig({ jinglePlayEvery: data.jinglePlayEvery, jinglePlayCount: data.jinglePlayCount })
@@ -102,11 +104,11 @@ export default function JinglesPage() {
   }
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Eliminar jingle "${name}"?`)) return
+    if (!confirm(t('streaming.jingles.confirmDelete', { name }))) return
     setDeletingId(id)
     try {
       const res = await fetch(`/api/dashboard/streaming/jingles/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Error al eliminar')
+      if (!res.ok) throw new Error(t('streaming.jingles.errorDelete'))
       await load()
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -130,7 +132,7 @@ export default function JinglesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: editTitle, artist: editArtist || null }),
       })
-      if (!res.ok) throw new Error('Error al guardar')
+      if (!res.ok) throw new Error(t('streaming.jingles.errorSave'))
       setEditingId(null)
       await load()
     } catch (err: any) {
@@ -163,11 +165,11 @@ export default function JinglesPage() {
   }
 
   const handleCoverDelete = async (jingleId: string) => {
-    if (!confirm('¿Eliminar carátula?')) return
+    if (!confirm(t('streaming.jingles.confirmDeleteCover'))) return
     setCoverDeletingId(jingleId)
     try {
       const res = await fetch(`/api/dashboard/streaming/jingles/${jingleId}/cover`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Error al eliminar carátula')
+      if (!res.ok) throw new Error(t('streaming.jingles.errorDeleteCover'))
       await load()
     } catch (err: any) {
       showToast({ type: 'info', title: err.message })
@@ -190,11 +192,11 @@ export default function JinglesPage() {
       audio.onended = () => setPlayingId(null)
       audio.onerror = () => {
         setPlayingId(null)
-        showToast({ type: 'error', title: `Error al reproducir "${title}"` })
+        showToast({ type: 'error', title: t('streaming.jingles.errorPlay', { name: title }) })
       }
       audio.play().catch(() => {
         setPlayingId(null)
-        showToast({ type: 'error', title: `Error al reproducir "${title}"` })
+        showToast({ type: 'error', title: t('streaming.jingles.errorPlay', { name: title }) })
       })
       audioRef.current = audio
       setPlayingId(id)
@@ -205,9 +207,9 @@ export default function JinglesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Jingles</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('streaming.jingles.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sube cuñas publicitarias que se intercalarán automáticamente en la reproducción.
+            {t('streaming.jingles.subtitle')}
           </p>
         </div>
         <button
@@ -215,16 +217,16 @@ export default function JinglesPage() {
           onClick={() => setAiOpen(true)}
           className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
-          Crear jingle IA
+          {t('streaming.jingles.createAi')}
         </button>
       </div>
 
       {/* Config card */}
       <div className="bg-card/60 border border-border rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Regla de inserción</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">{t('streaming.jingles.insertRule')}</h2>
         <div className="flex flex-wrap items-end gap-4">
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">Cada X canciones</label>
+            <label className="block text-sm text-muted-foreground mb-1">{t('streaming.jingles.everySongs')}</label>
             <input
               type="number"
               min={1}
@@ -235,7 +237,7 @@ export default function JinglesPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">Reproducir Y jingles</label>
+            <label className="block text-sm text-muted-foreground mb-1">{t('streaming.jingles.playJingles')}</label>
             <input
               type="number"
               min={1}
@@ -250,18 +252,18 @@ export default function JinglesPage() {
             disabled={configSaving}
             className="bg-brand hover:bg-brand text-white px-4 py-2 rounded text-sm disabled:opacity-50"
           >
-            {configSaving ? 'Guardando...' : 'Guardar regla'}
+            {configSaving ? t('streaming.jingles.savingRule') : t('streaming.jingles.saveRule')}
           </button>
           <p className="text-xs text-muted-foreground ml-2">
-            Ej: cada {configEvery} canciones → {configCount} jingle{configCount !== 1 ? 's' : ''}
-            {config.jinglePlayEvery !== configEvery || config.jinglePlayCount !== configCount ? ' (sin guardar)' : ''}
+            {t('streaming.jingles.example', { every: configEvery, count: configCount, plural: configCount !== 1 ? 's' : '' })}
+            {config.jinglePlayEvery !== configEvery || config.jinglePlayCount !== configCount ? ` ${t('streaming.jingles.unsaved')}` : ''}
           </p>
         </div>
       </div>
 
       {/* Upload zone */}
       <div className="bg-card/60 border border-border rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-foreground mb-3">Subir jingle</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-3">{t('streaming.jingles.uploadTitle')}</h2>
         <input
           type="file"
           accept=".mp3,audio/mpeg"
@@ -295,27 +297,27 @@ export default function JinglesPage() {
       <div className="bg-card rounded-lg shadow-lg overflow-x-auto">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">
-            {loading ? 'Cargando...' : `${jingles.length} jingle${jingles.length !== 1 ? 's' : ''}`}
+            {loading ? t('streaming.jingles.loading') : t('streaming.jingles.count', { count: jingles.length, plural: jingles.length !== 1 ? 's' : '' })}
           </h2>
           <a href="/dashboard/streaming" className="text-sm text-brand hover:text-brand">
-            ← Volver a Streaming
+            {t('streaming.jingles.back')}
           </a>
         </div>
         {jingles.length === 0 && !loading ? (
           <div className="p-12 text-center text-muted-foreground">
-            No hay jingles todavía. Sube tu primer MP3 publicitario.
+            {t('streaming.jingles.empty')}
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-background/50 text-muted-foreground uppercase text-xs">
               <tr>
                 <th className="text-left p-3 w-10">🎵</th>
-                <th className="text-left p-3 w-12">Carátula</th>
-                <th className="text-left p-3">Título</th>
-                <th className="text-left p-3 hidden sm:table-cell">Artista</th>
-                <th className="text-left p-3">Duración</th>
-                <th className="text-left p-3 hidden md:table-cell">Tamaño</th>
-                <th className="text-right p-3">Acciones</th>
+                <th className="text-left p-3 w-12">{t('streaming.jingles.cover')}</th>
+                <th className="text-left p-3">{t('streaming.jingles.songTitle')}</th>
+                <th className="text-left p-3 hidden sm:table-cell">{t('streaming.jingles.artist')}</th>
+                <th className="text-left p-3">{t('streaming.jingles.duration')}</th>
+                <th className="text-left p-3 hidden md:table-cell">{t('streaming.jingles.size')}</th>
+                <th className="text-right p-3">{t('streaming.jingles.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -329,7 +331,7 @@ export default function JinglesPage() {
                           ? 'bg-green-600 text-white'
                           : 'bg-secondary text-muted-foreground hover:bg-secondary'
                       }`}
-                      title={playingId === j.id ? 'Detener' : 'Previsualizar'}
+                      title={playingId === j.id ? t('streaming.jingles.stop') : t('streaming.jingles.preview')}
                     >
                       {playingId === j.id ? '⏹' : '▶'}
                     </button>
@@ -365,7 +367,7 @@ export default function JinglesPage() {
                           }}
                           disabled={coverUploadingId === j.id || coverDeletingId === j.id}
                           className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand rounded-full flex items-center justify-center text-white text-xs hover:bg-brand disabled:opacity-50"
-                          title="Subir carátula"
+                          title={t('streaming.jingles.uploadCover')}
                         >
                           {coverUploadingId === j.id ? '⏳' : '📷'}
                         </button>
@@ -374,7 +376,7 @@ export default function JinglesPage() {
                             onClick={() => handleCoverDelete(j.id)}
                             disabled={coverDeletingId === j.id}
                             className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white text-[8px] hover:bg-red-500 disabled:opacity-50"
-                            title="Eliminar carátula"
+                            title={t('streaming.jingles.deleteCover')}
                           >
                             {coverDeletingId === j.id ? '⏳' : '✕'}
                           </button>
@@ -411,7 +413,7 @@ export default function JinglesPage() {
                       <input
                         value={editArtist}
                         onChange={(e) => setEditArtist(e.target.value)}
-                        placeholder="Sin artista"
+                        placeholder={t('streaming.jingles.noArtist')}
                         className="bg-background text-foreground px-2 py-1 rounded w-full"
                       />
                     ) : (
@@ -424,21 +426,21 @@ export default function JinglesPage() {
                     {editingId === j.id ? (
                       <>
                         <button onClick={saveEdit} disabled={savingEdit} className="text-green-400 hover:text-green-300 disabled:text-green-700 mr-3 text-xs">
-                          {savingEdit ? 'Guardando...' : 'Guardar'}
+                          {savingEdit ? t('streaming.jingles.saving') : t('streaming.jingles.save')}
                         </button>
                         <button onClick={() => { if (!savingEdit) setEditingId(null) }} className="text-muted-foreground hover:text-muted-foreground text-xs disabled:opacity-50" disabled={savingEdit}>
-                          Cancelar
+                          {t('streaming.jingles.cancel')}
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => startEdit(j)} className="text-brand hover:text-brand mr-3 text-xs">Editar</button>
+                        <button onClick={() => startEdit(j)} className="text-brand hover:text-brand mr-3 text-xs">{t('streaming.jingles.edit')}</button>
                         <button
                           onClick={() => handleDelete(j.id, j.title)}
                           disabled={deletingId === j.id}
                           className="text-red-400 hover:text-red-300 text-xs disabled:opacity-50"
                         >
-                          {deletingId === j.id ? 'Borrando...' : 'Eliminar'}
+                          {deletingId === j.id ? t('streaming.jingles.deleting') : t('streaming.jingles.delete')}
                         </button>
                       </>
                     )}

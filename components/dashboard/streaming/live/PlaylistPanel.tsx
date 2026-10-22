@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { formatTime } from '@/lib/live-console/audio-math'
 import type { LocalTrack } from '@/lib/live-console/types'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   queue: LocalTrack[]
@@ -34,11 +35,12 @@ function rowTone(track: LocalTrack): string {
 }
 
 function TrackBadge({ track }: { track: LocalTrack }) {
+  const { t } = useDashboardI18n()
   if (track.kind === 'spot' || track.kind === 'announcement') {
     return (
       <span className="ml-1 inline-flex shrink-0 items-center gap-0.5 rounded bg-[var(--locution-soft)] px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-[color:var(--locution-500)]">
         <SparklesIcon className="h-2.5 w-2.5" />
-        Locución
+        {t('live.playlist.locution')}
       </span>
     )
   }
@@ -53,7 +55,7 @@ function TrackBadge({ track }: { track: LocalTrack }) {
   if (track.kind === 'capsule') {
     return (
       <span className="ml-1 inline-flex shrink-0 items-center gap-0.5 rounded bg-secondary px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-foreground">
-        Cápsula
+        {t('live.playlist.capsule')}
       </span>
     )
   }
@@ -70,6 +72,7 @@ export function PlaylistPanel({
   onDropTrack,
   onReorder,
 }: Props) {
+  const { t } = useDashboardI18n()
   const recent = [...history].reverse()
   const [dragOver, setDragOver] = useState(false)
   const [dragSource, setDragSource] = useState<number | null>(null)
@@ -112,16 +115,16 @@ export function PlaylistPanel({
         <div className="flex items-center gap-1.5">
           <QueueListIcon className="h-4 w-4 text-brand" />
           <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-            Lista de reproducción
+            {t('live.playlist.title')}
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">
-            {queue.length} en cola
+            {t('live.playlist.inQueue', { count: queue.length })}
           </span>
           {history.length > 0 && (
             <span className="font-mono text-[9px] text-muted-foreground">
-              {history.length} {history.length === 1 ? 'sonó' : 'sonaron'}
+              {t('live.playlist.playedCount', { count: history.length, label: history.length === 1 ? t('live.playlist.playedOne') : t('live.playlist.playedMany') })}
             </span>
           )}
           {queue.length > 0 && (
@@ -129,9 +132,9 @@ export function PlaylistPanel({
               type="button"
               onClick={onClear}
               className="text-[9px] text-muted-foreground transition-colors hover:text-red-400"
-              title="Vaciar solo la cola; el historial se conserva"
+              title={t('live.playlist.clearTitle')}
             >
-              Vaciar cola
+              {t('live.playlist.clear')}
             </button>
           )}
         </div>
@@ -139,17 +142,17 @@ export function PlaylistPanel({
 
       <div className="grid grid-cols-[24px_minmax(0,1fr)_48px_auto] items-center gap-1 border-b border-border bg-background/60 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
         <span className="text-right">#</span>
-        <span>Tema / Artista</span>
-        <span className="text-right">Dur.</span>
-        <span className="text-right">Acciones</span>
+        <span>{t('live.playlist.trackArtist')}</span>
+        <span className="text-right">{t('live.playlist.durationShort')}</span>
+        <span className="text-right">{t('live.playlist.actions')}</span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {queue.length === 0 && history.length === 0 ? (
           <div className="flex h-full min-h-[200px] flex-col items-center justify-center px-6 text-center">
-            <p className="text-xs font-medium text-foreground">La lista está vacía</p>
+            <p className="text-xs font-medium text-foreground">{t('live.playlist.emptyTitle')}</p>
             <p className="mt-1 text-[10px] text-muted-foreground">
-              Agregá canciones desde la biblioteca con “+”.
+              {t('live.playlist.emptyHint')}
             </p>
           </div>
         ) : (
@@ -157,7 +160,7 @@ export function PlaylistPanel({
             {recent.length > 0 && (
               <div>
                 <p className="border-b border-border/60 bg-background/40 px-3 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Ya sonaron
+                  {t('live.playlist.playedSection')}
                 </p>
                 <ul className="divide-y divide-border/40">
                   {recent.map((track) => (
@@ -180,8 +183,8 @@ export function PlaylistPanel({
                         type="button"
                         onClick={() => void onPlayNow(track)}
                         className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-brand group-hover:opacity-100"
-                        title="Volver a reproducir"
-                        aria-label={`Volver a reproducir ${track.title}`}
+                        title={t('live.playlist.replay')}
+                        aria-label={`${t('live.playlist.replay')} ${track.title}`}
                       >
                         <PlayIcon className="h-3.5 w-3.5" />
                       </button>
@@ -195,7 +198,7 @@ export function PlaylistPanel({
               <div>
                 {recent.length > 0 && (
                   <p className="border-b border-border/60 bg-background/40 px-3 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    A continuación
+                    {t('live.playlist.nextSection')}
                   </p>
                 )}
                 <ul className="divide-y divide-border/40">
@@ -260,8 +263,8 @@ export function PlaylistPanel({
                           type="button"
                           onClick={() => void onPlayNow(track)}
                           className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-brand"
-                          title="Reproducir ahora"
-                          aria-label={`Reproducir ${track.title}`}
+                          title={t('live.playlist.play')}
+                          aria-label={t('live.playlist.playLabel', { name: track.title })}
                         >
                           <PlayIcon className="h-3.5 w-3.5" />
                         </button>
@@ -270,8 +273,8 @@ export function PlaylistPanel({
                           onClick={() => onMove(track.id, -1)}
                           disabled={index === 0}
                           className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-20"
-                          title="Subir"
-                          aria-label={`Subir ${track.title}`}
+                          title={t('live.playlist.moveUp')}
+                          aria-label={`${t('live.playlist.moveUp')} ${track.title}`}
                         >
                           <ChevronUpIcon className="h-3.5 w-3.5" />
                         </button>
@@ -280,8 +283,8 @@ export function PlaylistPanel({
                           onClick={() => onMove(track.id, 1)}
                           disabled={index === queue.length - 1}
                           className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-20"
-                          title="Bajar"
-                          aria-label={`Bajar ${track.title}`}
+                          title={t('live.playlist.moveDown')}
+                          aria-label={`${t('live.playlist.moveDown')} ${track.title}`}
                         >
                           <ChevronDownIcon className="h-3.5 w-3.5" />
                         </button>
@@ -289,8 +292,8 @@ export function PlaylistPanel({
                           type="button"
                           onClick={() => onRemove(track.id)}
                           className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
-                          title="Quitar de la lista"
-                          aria-label={`Quitar ${track.title} de la lista`}
+                          title={t('live.playlist.remove')}
+                          aria-label={t('live.playlist.removeLabel', { name: track.title })}
                         >
                           <XMarkIcon className="h-3.5 w-3.5" />
                         </button>

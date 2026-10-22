@@ -1,3 +1,6 @@
+import { DashboardI18nProvider } from '@/components/providers/DashboardI18nProvider'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { PlayerBar } from './PlayerBar'
@@ -34,6 +37,7 @@ function renderBar(overrides: { playing?: boolean } = {}) {
     onMonitor: vi.fn(),
   }
   render(
+    <DashboardI18nProvider locale="es">
     <PlayerBar
       current={current}
       nextTrack={next}
@@ -44,6 +48,7 @@ function renderBar(overrides: { playing?: boolean } = {}) {
       monitorEnabled={false}
       {...handlers}
     />
+    </DashboardI18nProvider>
   )
   return handlers
 }

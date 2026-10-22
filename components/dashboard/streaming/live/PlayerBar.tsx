@@ -12,6 +12,7 @@ import {
 import { formatTime } from '@/lib/live-console/audio-math'
 import type { LocalTrack, MicSnapshot } from '@/lib/live-console/types'
 import { VuMeter } from './VuMeter'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   current: LocalTrack | null
@@ -50,6 +51,7 @@ export function PlayerBar({
   monitorEnabled,
   onMonitor,
 }: Props) {
+  const { t } = useDashboardI18n()
   const progress = Math.max(0, Math.min(position, duration || 0))
 
   return (
@@ -64,8 +66,8 @@ export function PlayerBar({
             type="button"
             onClick={() => void onPrevious()}
             className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground"
-            title="Tema anterior"
-            aria-label="Tema anterior"
+            title={t('live.player.previous')}
+            aria-label={t('live.player.previous')}
           >
             <BackwardIcon className="h-4 w-4" />
           </button>
@@ -73,8 +75,8 @@ export function PlayerBar({
             type="button"
             onClick={() => (playing ? onPause() : void onPlay())}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white transition-opacity hover:opacity-90"
-            title={playing ? 'Pausar' : 'Reproducir'}
-            aria-label={playing ? 'Pausar' : 'Reproducir'}
+            title={playing ? t('live.player.pause') : t('live.player.play')}
+            aria-label={playing ? t('live.player.pause') : t('live.player.play')}
           >
             {playing ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />}
           </button>
@@ -82,8 +84,8 @@ export function PlayerBar({
             type="button"
             onClick={() => void onNext()}
             className="rounded-full border border-border p-2 text-muted-foreground transition-colors hover:text-foreground"
-            title="Tema siguiente"
-            aria-label="Tema siguiente"
+            title={t('live.player.nextTrack')}
+            aria-label={t('live.player.nextTrack')}
           >
             <ForwardIcon className="h-4 w-4" />
           </button>
@@ -93,13 +95,13 @@ export function PlayerBar({
           <div className="flex items-baseline justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">
-                {current?.title || 'Sin tema en reproducción'}
+                {current?.title || t('live.player.noTrack')}
               </p>
               <p className="truncate text-[11px] text-muted-foreground">
-                {current?.artist || (current ? 'Artista desconocido' : 'Elegí un archivo o armá la lista')}
+                {current?.artist || (current ? t('live.player.unknownArtist') : t('live.player.chooseFile'))}
                 {nextTrack && (
                   <span className="ml-2 text-muted-foreground/70">
-                    · Siguiente: <span className="text-foreground/80">{nextTrack.title}</span>
+                    · {t('live.player.next')} <span className="text-foreground/80">{nextTrack.title}</span>
                   </span>
                 )}
               </p>
@@ -117,7 +119,7 @@ export function PlayerBar({
             onChange={(event) => onSeek(Number(event.target.value))}
             disabled={!current}
             className="mt-2 h-1.5 w-full cursor-pointer accent-[var(--brand-500)] disabled:opacity-40"
-            aria-label="Posición del tema"
+            aria-label={t('live.player.position')}
           />
         </div>
 
@@ -131,10 +133,10 @@ export function PlayerBar({
             className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
               mic.enabled ? 'bg-red-500/15 text-red-300' : 'bg-secondary text-foreground hover:text-brand'
             }`}
-            title={mic.enabled ? 'Apagar micrófono' : 'Encender micrófono'}
+            title={mic.enabled ? t('live.player.micOff') : t('live.player.micOn')}
           >
             <MicrophoneIcon className="h-3.5 w-3.5" />
-            {mic.enabled ? 'Mic ON' : 'Mic OFF'}
+            {mic.enabled ? t('live.player.micOn') : t('live.player.micOff')}
           </button>
           <input
             type="range"
@@ -144,8 +146,8 @@ export function PlayerBar({
             value={mic.gain}
             onChange={(event) => onMicGain(Number(event.target.value))}
             className="h-1.5 w-16 cursor-pointer accent-[var(--brand-500)]"
-            title="Ganancia del micrófono"
-            aria-label="Ganancia del micrófono"
+            title={t('live.player.micGain')}
+            aria-label={t('live.player.micGain')}
           />
           <div className="w-24">
             <VuMeter db={mic.levelDb} label="Mic" compact />
@@ -156,7 +158,7 @@ export function PlayerBar({
             className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
               monitorEnabled ? 'bg-brand/15 text-brand' : 'bg-secondary text-muted-foreground hover:text-foreground'
             }`}
-            title="Escuchar el programa por auriculares"
+            title={t('live.player.monitorTitle')}
           >
             <SpeakerWaveIcon className="h-3.5 w-3.5" />
             Monitor {monitorEnabled ? 'ON' : 'OFF'}
