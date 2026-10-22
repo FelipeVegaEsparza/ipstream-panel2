@@ -76,7 +76,7 @@ export default async function PlanPage({ params }: { params: { slug: string } })
 
       <header className={s.header}>
         <div className={s.headerInner}>
-          <a className={s.brand} href="https://ipstream.cl" aria-label="CasterFly inicio">
+          <a className={s.brand} href="https://casterfly.com" aria-label="CasterFly inicio">
             <PanelLogo themeOverride="light" />
           </a>
         </div>
@@ -187,16 +187,16 @@ export default async function PlanPage({ params }: { params: { slug: string } })
           <div className={s.footerCol}>
             <h2 className={s.footerTitle}>Enlaces</h2>
             <ul>
-              <li><a href="https://ipstream.cl/">Inicio</a></li>
-              <li><a href="https://ipstream.cl/planes">Planes</a></li>
-              <li><a href="https://ipstream.cl/caracteristicas">Características</a></li>
-              <li><a href="https://ipstream.cl/tutoriales">Tutoriales</a></li>
+              <li><a href="https://casterfly.com/">Inicio</a></li>
+              <li><a href="https://casterfly.com/planes">Planes</a></li>
+              <li><a href="https://casterfly.com/caracteristicas">Características</a></li>
+              <li><a href="https://casterfly.com/tutoriales">Tutoriales</a></li>
             </ul>
           </div>
           <div className={s.footerCol}>
             <h2 className={s.footerTitle}>Ayuda</h2>
             <ul>
-              <li><a href="mailto:contacto@ipstream.cl">contacto@ipstream.cl</a></li>
+              <li><a href="mailto:contacto@casterfly.com">contacto@casterfly.com</a></li>
               <li><a href="/registro">Ver todos los planes</a></li>
               <li><a href="/auth/login">Ingresar al panel</a></li>
             </ul>

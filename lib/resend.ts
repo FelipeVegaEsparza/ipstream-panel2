@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { renderTemplate } from './email-templates'
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
-const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'no-reply@ipstream.cl'
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'no-reply@casterfly.com'
 const RESEND_API_URL = 'https://api.resend.com/emails'
 
 export interface EmailAttachment {

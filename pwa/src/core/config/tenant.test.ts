@@ -21,7 +21,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 describe('tenant', () => {
   it('construye la base URL pública de la API (origen por defecto)', () => {
     expect(getPublicApiBase('cmtezi0ci00014raq8hrhhwfp')).toBe(
-      'https://panelipstream.cl/api/public/cmtezi0ci00014raq8hrhhwfp'
+      'https://panel.casterfly.com/api/public/cmtezi0ci00014raq8hrhhwfp'
     )
   })
 

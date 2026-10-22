@@ -19,7 +19,7 @@ vi.mock('@/core/config/tenant', async (importOriginal) => {
 })
 
 const TEST_CLIENT_ID = 'cmtezi0ci00014raq8hrhhwfp'
-const API_BASE = `https://panelipstream.cl/api/public/${TEST_CLIENT_ID}`
+const API_BASE = `https://panel.casterfly.com/api/public/${TEST_CLIENT_ID}`
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {

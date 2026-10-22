@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const SRS_INTERNAL_URL = process.env.SRS_INTERNAL_URL || 'http://srs:8080'
 
+// Dominio público del panel. Se incluye de forma explícita junto con el
+// dominio legacy porque `PANEL_PUBLIC_URL` no siempre está disponible en el
+// build de Docker (las Server Actions se validan contra esta allowlist).
+const PANEL_PUBLIC_URL = process.env.PANEL_PUBLIC_URL || 'https://panel.casterfly.com'
+const PANEL_PUBLIC_HOST = PANEL_PUBLIC_URL.replace(/^https?:\/\//, '')
+
 const nextConfig = {
   images: {
     domains: ['localhost', 'uploadthing.com'],
@@ -32,8 +38,11 @@ const nextConfig = {
       // con "Failed to find Server Action" / "Missing origin header".
       allowedOrigins: [
         'localhost:3000',
-        process.env.PANEL_PUBLIC_URL?.replace(/^https?:\/\//, '') || 'panelipstream.cl',
-        process.env.PANEL_PUBLIC_URL || 'https://panelipstream.cl',
+        PANEL_PUBLIC_HOST,
+        PANEL_PUBLIC_URL,
+        // Dominio legacy durante la transición (PWA y enlaces guardados).
+        'panelipstream.cl',
+        'https://panelipstream.cl',
       ],
     },
   },

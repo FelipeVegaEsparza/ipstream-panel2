@@ -7,7 +7,7 @@ async function createAdmin() {
   try {
     // Datos del administrador
     const adminData = {
-      email: 'admin@ipstream.com',
+      email: 'admin@casterfly.com',
       password: 'admin123456', // Cambia esta contraseña
       name: 'Administrador Principal'
     }

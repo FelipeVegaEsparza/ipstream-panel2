@@ -100,14 +100,14 @@ export function ClientSitesSettings() {
         <>
           <div>
             <label className="block text-xs text-muted-foreground mb-1">Dominio base de los sitios</label>
-            <input className={input} value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="ipstream.cl" />
-            <p className="text-[11px] text-muted-foreground mt-1">Los clientes se sirven como <code>&lt;cliente&gt;.{domain || 'ipstream.cl'}</code>.</p>
+            <input className={input} value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="casterfly.com" />
+            <p className="text-[11px] text-muted-foreground mt-1">Los clientes se sirven como <code>&lt;cliente&gt;.{domain || 'casterfly.com'}</code>.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-muted-foreground mb-1">Target CNAME (dominios propios)</label>
-              <input className={input} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="clientes.ipstream.cl" />
+              <input className={input} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="clientes.casterfly.com" />
             </div>
             <div>
               <label className="block text-xs text-muted-foreground mb-1">IP de la plataforma (wildcard A)</label>
@@ -147,7 +147,7 @@ export function ClientSitesSettings() {
           </div>
 
           <p className="text-[11px] text-muted-foreground">
-            &quot;Asegurar DNS base&quot; crea (idempotente) el registro <code>*.{domain || 'ipstream.cl'}</code>{' '}
+            &quot;Asegurar DNS base&quot; crea (idempotente) el registro <code>*.{domain || 'casterfly.com'}</code>{' '}
             apuntando a la IP de la plataforma. Requiere el token de Cloudflare y la IP.
           </p>
         </>

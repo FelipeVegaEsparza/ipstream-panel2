@@ -35,6 +35,10 @@ jobs:
 
       - name: Build PWA (bundle único)
         working-directory: pwa
+        env:
+          # Bundle de producción: la API pública se consume same-origin desde
+          # el dominio del cliente (Caddy enruta /api/* al panel).
+          VITE_API_BASE: ''
         run: |
           npm ci
           npm run build

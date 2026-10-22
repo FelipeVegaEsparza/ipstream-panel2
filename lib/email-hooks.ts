@@ -9,7 +9,7 @@ import { sendTemplateEmail, getClientEmailContext } from './resend'
 import { generateAccountPdf } from './account-pdf'
 import { formatCurrency, formatDate } from './billing-format'
 
-const panelUrl = () => process.env.NEXTAUTH_URL || 'https://panelipstream.cl'
+const panelUrl = () => process.env.NEXTAUTH_URL || 'https://panel.casterfly.com'
 
 export interface PaymentEmailInfo {
   amount: number

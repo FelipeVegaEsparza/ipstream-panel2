@@ -162,7 +162,7 @@ export async function generateAccountPdf(
     const logoPath = path.join(process.cwd(), 'public', 'logo-ipstream.png')
     if (fs.existsSync(logoPath)) {
       const logoData = fs.readFileSync(logoPath).toString('base64')
-      doc.addImage(`data:image/png;base64,${logoData}`, 'PNG', PDF_LAYOUT.margin + 6, y, 130, 33)
+      doc.addImage(`data:image/png;base64,${logoData}`, 'PNG', PDF_LAYOUT.margin + 6, y, 130, 29)
     }
   } catch (e) {
     console.warn('No se pudo cargar el logo:', e)
@@ -171,7 +171,7 @@ export async function generateAccountPdf(
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(...COL_INK_MUTED)
-  doc.text('contacto@ipstream.cl', PDF_LAYOUT.pageWidth - PDF_LAYOUT.margin, y + 12, { align: 'right' })
+  doc.text('contacto@casterfly.com', PDF_LAYOUT.pageWidth - PDF_LAYOUT.margin, y + 12, { align: 'right' })
   doc.text('Panel de Clientes', PDF_LAYOUT.pageWidth - PDF_LAYOUT.margin, y + 24, { align: 'right' })
 
   y += 50
@@ -386,8 +386,8 @@ export async function generateAccountPdf(
       }
     })() : []
     const contactInfo = [
-      { label: 'Email', value: 'contacto@ipstream.cl' },
-      { label: 'Web', value: 'www.ipstream.cl' },
+      { label: 'Email', value: 'contacto@casterfly.com' },
+      { label: 'Web', value: 'www.casterfly.com' },
     ]
 
     const blockH = 110

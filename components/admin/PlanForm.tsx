@@ -296,7 +296,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               type="url"
               value={formData.demoUrl}
               onChange={(e) => setFormData({ ...formData, demoUrl: e.target.value })}
-              placeholder="https://demo.ipstream.cl/mi-radio"
+              placeholder="https://radio.casterfly.com"
               className="bg-secondary border-border text-foreground"
             />
             <p className="text-xs text-muted-foreground mt-1">

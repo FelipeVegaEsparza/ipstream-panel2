@@ -1,6 +1,6 @@
 #!/bin/bash
 # =====================================================
-# IPStream Panel — deploy.sh
+# CasterFly Panel — deploy.sh
 # =====================================================
 # Script idempotente. Puede correrse múltiples veces sin efecto.
 # Llamado desde GitHub Actions via SSH después de push a main.
@@ -51,7 +51,7 @@ source .env
 set +a
 
 # Verificamos variables críticas
-for var in STREAM_DOMAIN MYSQL_USER MYSQL_PASSWORD MYSQL_DATABASE NEXTAUTH_SECRET ENCRYPTION_KEY STREAMING_AGENT_TOKEN HARBOR_CALLBACK_SECRET HARBOR_PUBLIC_HOSTNAME ICE_ADMIN_PASSWORD ICE_SOURCE_PASSWORD ICE_RELAY_PASSWORD ICE_HOSTNAME; do
+for var in PUBLIC_DOMAIN PANEL_DOMAIN STREAM_DOMAIN MYSQL_USER MYSQL_PASSWORD MYSQL_DATABASE NEXTAUTH_SECRET ENCRYPTION_KEY STREAMING_AGENT_TOKEN HARBOR_CALLBACK_SECRET HARBOR_PUBLIC_HOSTNAME ICE_ADMIN_PASSWORD ICE_SOURCE_PASSWORD ICE_RELAY_PASSWORD ICE_HOSTNAME; do
   if [[ -z "${!var:-}" ]]; then
     echo "❌ ERROR: variable $var no está definida en .env"
     exit 1
@@ -59,12 +59,14 @@ for var in STREAM_DOMAIN MYSQL_USER MYSQL_PASSWORD MYSQL_DATABASE NEXTAUTH_SECRE
 done
 
 echo "=================================================="
-echo "  IPStream Panel — Deploy"
+echo "  CasterFly Panel — Deploy"
 echo "=================================================="
 echo "  Project dir:   $PROJECT_DIR"
 echo "  Image tag:     $IMAGE_TAG"
 echo "  GitHub owner:  $GITHUB_REPOSITORY_OWNER"
-echo "  Domain:        $STREAM_DOMAIN"
+echo "  Sitio público: https://$PUBLIC_DOMAIN"
+echo "  Panel:         https://$PANEL_DOMAIN"
+echo "  Stream:        https://$STREAM_DOMAIN"
 echo "=================================================="
 echo
 
@@ -245,10 +247,11 @@ echo
 echo "=================================================="
 echo "  ✅ Deploy exitoso"
 echo "=================================================="
-echo "  Panel:     https://${STREAM_DOMAIN}"
-echo "  Radio:     ${ICE_PUBLIC_URL}"
-echo "  Televisión: rtmp://${STREAM_DOMAIN}:1935/live/{stream_key}"
-echo "  HLS:       http://${STREAM_DOMAIN}:8080/live/{stream_key}.m3u8"
+echo "  Sitio:      https://${PUBLIC_DOMAIN}"
+echo "  Panel:      https://${PANEL_DOMAIN}"
+echo "  Radio:      ${ICE_PUBLIC_URL}"
+echo "  Televisión: rtmp://${PANEL_DOMAIN}:1935/live/{stream_key}"
+echo "  HLS:        https://${PANEL_DOMAIN}/live/{stream_key}.m3u8"
 echo
 echo "  Para ver logs:"
 echo "    docker compose ${COMPOSE_FILES#-f } logs -f app"

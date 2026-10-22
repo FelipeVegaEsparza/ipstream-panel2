@@ -25,12 +25,21 @@ export async function generateMetadata(): Promise<Metadata> {
     if (config?.panelFaviconUrl) favicon = config.panelFaviconUrl
   } catch {}
   return {
+    metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://panel.casterfly.com'),
+    applicationName: 'CasterFly',
     title: 'CasterFly',
     description: 'Panel de gestión de contenido para radio y streaming',
     icons: {
       icon: favicon,
       shortcut: favicon,
-      apple: favicon,
+      apple: '/apple-touch-icon.png',
+    },
+    openGraph: {
+      type: 'website',
+      siteName: 'CasterFly',
+      title: 'CasterFly',
+      description: 'Panel de gestión de contenido para radio y streaming',
+      images: ['/og-casterfly.png'],
     },
   }
 }

@@ -18,9 +18,9 @@ export default async function LogsPage() {
       timestamp: new Date('2024-07-16T10:30:00'),
       level: 'INFO',
       category: 'AUTH',
-      message: 'Usuario admin@ipstream.com inició sesión exitosamente',
+      message: 'Usuario admin@casterfly.com inició sesión exitosamente',
       userId: session.user.id,
-      userEmail: 'admin@ipstream.com',
+      userEmail: 'admin@casterfly.com',
       ip: '192.168.1.100',
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       metadata: { action: 'login', success: true }

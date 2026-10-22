@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no_recipients', message: 'No hay destinatarios con correo' }, { status: 400 })
     }
 
-    const panelUrl = process.env.NEXTAUTH_URL || 'https://panelipstream.cl'
+    const panelUrl = process.env.NEXTAUTH_URL || 'https://panel.casterfly.com'
     let sent = 0
     let skipped = 0
     let failed = 0

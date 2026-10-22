@@ -19,7 +19,7 @@ read_env() {
 }
 
 CRON_SECRET="${CRON_SECRET:-$(read_env CRON_SECRET)}"
-STREAM_DOMAIN="${STREAM_DOMAIN:-$(read_env STREAM_DOMAIN)}"
+PANEL_DOMAIN="${PANEL_DOMAIN:-$(read_env PANEL_DOMAIN)}"
 PANEL_PUBLIC_URL="${PANEL_PUBLIC_URL:-$(read_env PANEL_PUBLIC_URL)}"
 
 if [[ -z "${CRON_SECRET:-}" ]]; then
@@ -27,7 +27,7 @@ if [[ -z "${CRON_SECRET:-}" ]]; then
   exit 1
 fi
 
-BASE_URL="${PANEL_PUBLIC_URL:-https://${STREAM_DOMAIN:-panelipstream.cl}}"
+BASE_URL="${PANEL_PUBLIC_URL:-https://${PANEL_DOMAIN:-panel.casterfly.com}}"
 
 curl -fsS -X POST \
   -H "Authorization: Bearer ${CRON_SECRET}" \

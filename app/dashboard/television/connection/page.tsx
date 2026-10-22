@@ -24,7 +24,7 @@ export default function TvConnectionPage() {
   const [loading, setLoading] = useState(true)
   const [copiedRelay, setCopiedRelay] = useState(false)
   const [copiedRelayKey, setCopiedRelayKey] = useState(false)
-  const [host, setHost] = useState('panelipstream.cl')
+  const [host, setHost] = useState('panel.casterfly.com')
   // La Conexión Universal entra por el app 'relay' de SRS del servidor asignado al cliente.
   const relayHost = info?.publicHost || host
   const relayServerUrl = `rtmp://${relayHost}:1935/relay`

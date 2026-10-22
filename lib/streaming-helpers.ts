@@ -237,7 +237,7 @@ export async function getVideoPublicHost(clientId: string): Promise<string> {
 /**
  * Base URL pública para HLS de un cliente (TV), derivada del servidor asignado.
  * - Servidor principal (el panel): HLS sale por el rewrite /live/* del panel con TLS
- *   → usa el origin del panel (NEXTAUTH_URL), ej: https://panelipstream.cl
+ *   → usa el origin del panel (NEXTAUTH_URL), ej: https://panel.casterfly.com
  * - Nodo: si tiene publicUrl (TLS/nginx propio), se usa; si no, http://<host>:8080 (SRS directo).
  */
 /** Origin del panel (para URLs públicas estables servidas por el panel). */

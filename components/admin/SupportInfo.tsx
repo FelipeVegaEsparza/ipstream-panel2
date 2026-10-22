@@ -21,22 +21,22 @@ export function SupportInfo() {
     {
       name: 'Email de Soporte',
       description: 'Contacto directo para problemas técnicos',
-      contact: 'soporte@ipstream.com',
+      contact: 'soporte@casterfly.com',
       responseTime: '24 horas',
       availability: '24/7',
       icon: Mail,
       color: 'text-brand',
-      action: () => window.open('mailto:soporte@ipstream.com', '_blank')
+      action: () => window.open('mailto:soporte@casterfly.com', '_blank')
     },
     {
       name: 'Chat en Vivo',
       description: 'Asistencia inmediata durante horario laboral',
-      contact: 'chat.ipstream.com',
+      contact: 'casterfly.com/comunidad',
       responseTime: '5 minutos',
       availability: 'Lun-Vie 9:00-18:00',
       icon: MessageCircle,
       color: 'text-green-400',
-      action: () => window.open('https://chat.ipstream.com', '_blank')
+      action: () => window.open('https://casterfly.com/comunidad', '_blank')
     },
     {
       name: 'Teléfono',
@@ -51,12 +51,12 @@ export function SupportInfo() {
     {
       name: 'Centro de Ayuda',
       description: 'Documentación y guías completas',
-      contact: 'help.ipstream.com',
+      contact: 'casterfly.com/tutoriales',
       responseTime: 'Autoservicio',
       availability: '24/7',
       icon: Book,
       color: 'text-purple-400',
-      action: () => window.open('https://help.ipstream.com', '_blank')
+      action: () => window.open('https://casterfly.com/tutoriales', '_blank')
     }
   ]
 
@@ -64,28 +64,28 @@ export function SupportInfo() {
     {
       title: 'Documentación API',
       description: 'Guía completa para desarrolladores',
-      url: 'https://docs.ipstream.com/api',
+      url: 'https://casterfly.com/soporte',
       icon: FileText,
       color: 'text-brand'
     },
     {
       title: 'Tutoriales en Video',
       description: 'Aprende paso a paso con videos',
-      url: 'https://videos.ipstream.com',
+      url: 'https://casterfly.com/tutoriales',
       icon: Video,
       color: 'text-red-400'
     },
     {
       title: 'Foro de Comunidad',
       description: 'Conecta con otros usuarios',
-      url: 'https://community.ipstream.com',
+      url: 'https://casterfly.com/comunidad',
       icon: MessageCircle,
       color: 'text-green-400'
     },
     {
       title: 'Estado del Servicio',
       description: 'Monitorea el estado de nuestros servicios',
-      url: 'https://status.ipstream.com',
+      url: 'https://casterfly.com/soporte',
       icon: Globe,
       color: 'text-orange-400'
     }

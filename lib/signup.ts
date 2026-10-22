@@ -154,7 +154,7 @@ export async function notifyAdminNewSignup(info: {
   const to = config?.adminNotifyEmail || process.env.ADMIN_NOTIFY_EMAIL || 'felipevegaesparza@gmail.com'
   if (!to) return
 
-  const panelUrl = process.env.NEXTAUTH_URL || 'https://panelipstream.cl'
+  const panelUrl = process.env.NEXTAUTH_URL || 'https://panel.casterfly.com'
   const planLabel = info.planName ? ` · Plan: <strong>${info.planName}</strong>` : ' · Sin plan'
   const seedLabel = info.seed
     ? info.seed.ok

@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useTheme } from '@/components/providers/ThemeProvider'
 
-const DEFAULT_LOGO = '/logo-ipstream.png'
+const DEFAULT_LOGO_LIGHT = '/logo-casterfly.png'
+const DEFAULT_LOGO_DARK = '/logo-casterfly-dark.png'
 
 interface Branding {
   logoDarkUrl: string | null
@@ -47,8 +48,8 @@ export function PanelLogo({
   }, [])
 
   const src = theme === 'dark'
-    ? branding?.logoDarkUrl || branding?.logoLightUrl || DEFAULT_LOGO
-    : branding?.logoLightUrl || branding?.logoDarkUrl || DEFAULT_LOGO
+    ? branding?.logoDarkUrl || branding?.logoLightUrl || DEFAULT_LOGO_DARK
+    : branding?.logoLightUrl || branding?.logoDarkUrl || DEFAULT_LOGO_LIGHT
 
   return <img src={src} alt={alt} className={className} />
 }

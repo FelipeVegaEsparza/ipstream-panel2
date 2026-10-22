@@ -1,14 +1,16 @@
 export const API_PUBLIC_PREFIX = '/api/public'
 
-// Origen por defecto del panel/API. Se puede sobrescribir con VITE_API_BASE
-// (por ejemplo vacío para same-origin, cuando el sitio y el API comparten
-// dominio). El build de sitio de cliente deja VITE_API_BASE vacío.
-export const DEFAULT_API_ORIGIN = 'https://panelipstream.cl'
+// Origen por defecto del panel/API en desarrollo. Se puede sobrescribir con
+// VITE_API_BASE (por ejemplo vacío para same-origin, cuando el sitio y el API
+// comparten dominio).
+export const DEFAULT_API_ORIGIN = 'https://panel.casterfly.com'
 
 export function getApiOrigin(): string {
   const raw = import.meta.env.VITE_API_BASE as string | undefined
-  const origin = raw === undefined ? DEFAULT_API_ORIGIN : raw
-  return origin.trim().replace(/\/+$/, '')
+  if (raw !== undefined) return raw.trim().replace(/\/+$/, '')
+  // En el bundle de producción servimos la API desde el mismo host del sitio
+  // del cliente (Caddy enruta /api/* al panel). En dev usamos el panel.
+  return import.meta.env.PROD ? '' : DEFAULT_API_ORIGIN
 }
 
 export function getPublicApiBase(clientId: string): string {

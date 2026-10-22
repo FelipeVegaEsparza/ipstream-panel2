@@ -1,6 +1,8 @@
-# IPStream Panel
+# CasterFly Panel
 
 Panel completo de gestión de contenido para radio y streaming con API REST pública.
+
+**Dominios de producción:** `casterfly.com` (sitio público), `panel.casterfly.com` (panel) y `stream.casterfly.com` (Icecast). Ver `DEPLOY.md` para el mapa completo y la migración desde `panelipstream.cl`.
 **Incluye módulo de streaming propio** con Icecast 2 + liquidsoap (AutoDJ, playlists, biblioteca MP3, DJ en vivo).
 
 ## Características
@@ -48,7 +50,7 @@ docker compose logs -f app
 - App: <http://localhost:3000>
 - MySQL: `localhost:3307` (usuario `ipstream`, password `ipstream_secret`, db `ipstream_panel`)
 - Health check: <http://localhost:3000/api/health>
-- Admin seed automático: `admin@ipstream.com` / `admin123456` (cambialo en `.env.docker`)
+- Admin seed automático: `admin@casterfly.com` / `admin123456` (cambialo en `.env.docker`)
 
 El contenedor `app` ejecuta automáticamente al arrancar:
 1. Espera a que MySQL esté listo (healthcheck).

@@ -12,7 +12,7 @@ describe('SmartImage', () => {
     const img = screen.getByAltText('Logo')
     expect(img).toHaveAttribute(
       'src',
-      'https://panelipstream.cl/api/uploads/cmx/logo.png'
+      'https://panel.casterfly.com/api/uploads/cmx/logo.png'
     )
   })
 
@@ -38,7 +38,7 @@ describe('SmartImage', () => {
     fireEvent.error(img)
     expect(screen.getByAltText('Portada')).toHaveAttribute(
       'src',
-      'https://panelipstream.cl/api/uploads/cmx/logo.png'
+      'https://panel.casterfly.com/api/uploads/cmx/logo.png'
     )
   })
 
@@ -65,14 +65,14 @@ describe('SmartImage crossfade', () => {
     )
     expect(screen.getByAltText('A')).toHaveAttribute(
       'src',
-      'https://panelipstream.cl/a.png'
+      'https://panel.casterfly.com/a.png'
     )
 
     rerender(<SmartImage src="/b.png" alt="A" crossfade />)
     // La anterior sigue visible y aparece la entrante (decorativa).
     expect(screen.getByAltText('A')).toHaveAttribute(
       'src',
-      'https://panelipstream.cl/a.png'
+      'https://panel.casterfly.com/a.png'
     )
     const imgs = document.querySelectorAll('img')
     expect(imgs.length).toBe(2)
@@ -84,7 +84,7 @@ describe('SmartImage crossfade', () => {
 
     expect(screen.getByAltText('A')).toHaveAttribute(
       'src',
-      'https://panelipstream.cl/b.png'
+      'https://panel.casterfly.com/b.png'
     )
     expect(document.querySelectorAll('img').length).toBe(1)
   })
@@ -101,7 +101,7 @@ describe('SmartImage crossfade', () => {
     fireEvent.error(screen.getByAltText('Portada'))
     expect(screen.getByAltText('Portada')).toHaveAttribute(
       'src',
-      'https://panelipstream.cl/api/uploads/cmx/logo.png'
+      'https://panel.casterfly.com/api/uploads/cmx/logo.png'
     )
   })
 })

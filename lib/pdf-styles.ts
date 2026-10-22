@@ -26,8 +26,8 @@ export const PDF_FONTS = {
 }
 
 export const COMPANY = {
-  name: 'IpStream.cl',
+  name: 'CasterFly',
   tagline: 'Panel de Clientes',
-  email: 'contacto@ipstream.cl',
+  email: 'contacto@casterfly.com',
   logoPath: 'public/logo-ipstream.png',
 }

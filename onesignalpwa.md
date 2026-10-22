@@ -39,7 +39,7 @@ En `/admin/users/[id]/edit` → **Configuración OneSignal**:
 El `App ID` y el `Safari Web ID` se exponen en la API pública:
 
 ```http
-GET https://panelipstream.cl/api/public/{clientId}
+GET https://panel.casterfly.com/api/public/{clientId}
 ```
 
 ```json
@@ -111,7 +111,7 @@ el panel**, nunca hardcodeados en la PWA (el bundle es único y compartido).
 Para que el panel cuente clicks, en OneSignal → Webhooks apuntar a:
 
 ```http
-POST https://panelipstream.cl/api/webhook/onesignal
+POST https://panel.casterfly.com/api/webhook/onesignal
 Authorization: Bearer {ONESIGNAL_WEBHOOK_SECRET}
 ```
 

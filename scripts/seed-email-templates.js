@@ -13,7 +13,7 @@ const prisma = new PrismaClient()
 
 const BOX_STYLE = 'background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin:16px 0'
 const BTN_STYLE = 'display:inline-block;background:#0891b2;color:#ffffff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600'
-const FOOTER = `<p style="color:#9ca3af;font-size:12px;margin-top:24px;text-align:center">IPStream — Si no pediste este correo, ignoralo o respondé para dejar de recibir comunicaciones.</p>`
+const FOOTER = `<p style="color:#9ca3af;font-size:12px;margin-top:24px;text-align:center">CasterFly — Si no pediste este correo, ignoralo o respondé para dejar de recibir comunicaciones.</p>`
 
 const TEMPLATES = [
   {
@@ -116,7 +116,7 @@ const TEMPLATES = [
     key: 'aviso-admin',
     name: 'Notificación interna (admin)',
     description: 'Notificaciones internas al administrador (nuevos registros, etc.). Cuerpo fijo en código.',
-    subject: 'IPStream — notificación interna',
+    subject: 'CasterFly — notificación interna',
     htmlBody: '<p>Notificación interna del panel.</p>',
   },
 ]

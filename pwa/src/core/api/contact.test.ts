@@ -33,7 +33,7 @@ describe('sendContactMessage', () => {
     const call = fetchMock.mock.calls[0] as unknown[]
     const [url, init] = call as [string, RequestInit]
     expect(String(url)).toBe(
-      'https://panelipstream.cl/api/public/cmclient/contact-messages'
+      'https://panel.casterfly.com/api/public/cmclient/contact-messages'
     )
     expect(init.method).toBe('POST')
     expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })

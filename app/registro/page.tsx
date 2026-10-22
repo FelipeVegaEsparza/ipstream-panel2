@@ -53,14 +53,14 @@ export default async function RegistroPage({
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <a href="https://ipstream.cl" className="flex items-center">
+          <a href="https://casterfly.com" className="flex items-center">
             <PanelLogo themeOverride="light" className="h-11 w-auto" />
           </a>
           <nav className="flex items-center gap-5">
-            <a href="https://ipstream.cl/planes" className="text-sm text-muted-foreground hover:text-brand font-medium transition-colors hidden sm:inline">Planes</a>
-            <a href="https://ipstream.cl/caracteristicas" className="text-sm text-muted-foreground hover:text-brand font-medium transition-colors hidden sm:inline">Características</a>
+            <a href="https://casterfly.com/planes" className="text-sm text-muted-foreground hover:text-brand font-medium transition-colors hidden sm:inline">Planes</a>
+            <a href="https://casterfly.com/caracteristicas" className="text-sm text-muted-foreground hover:text-brand font-medium transition-colors hidden sm:inline">Características</a>
             <a
-              href="https://ipstream.cl/landing"
+              href="https://casterfly.com/planes"
               className="inline-flex items-center bg-brand hover:bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg transition-all"
             >
               Quiero Contratar

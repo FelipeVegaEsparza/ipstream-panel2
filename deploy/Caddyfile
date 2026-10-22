@@ -1,16 +1,26 @@
 # =====================================================
-# IPStream Panel — Caddyfile
+# CasterFly — Caddyfile
 # =====================================================
 # Reverse proxy + HTTPS automático con Let's Encrypt.
 #
-# Configuración:
-#   - panelipstream.cl      → Panel Next.js (HTTPS, :443)
-#   - stream.panelipstream.cl → Icecast (HTTPS, :443, proxy a :8000)
+# Mapa de hosts:
+#   - casterfly.com           → sitio público (contenedor site)
+#   - www.casterfly.com       → redirect a casterfly.com
+#   - panel.casterfly.com     → Panel Next.js (HTTPS, :443)
+#   - stream.casterfly.com    → Icecast (HTTPS, :443, proxy a :8000)
+#   - *.casterfly.com         → sitios de clientes (catch-all con TLS on-demand)
+#
+# Legado durante la transición:
+#   - panelipstream.cl        → páginas redirigidas al panel nuevo; /api/* proxeado
+#   - stream.panelipstream.cl → sigue proxeando a Icecast
 #
 # IMPORTANTE: configurá tu DNS ANTES de levantar Caddy.
 # Registros A requeridos:
-#   - panelipstream.cl        → TU_IP
-#   - stream.panelipstream.cl → TU_IP
+#   - casterfly.com           → TU_IP
+#   - panel.casterfly.com     → TU_IP
+#   - stream.casterfly.com    → TU_IP
+#   - www.casterfly.com       → TU_IP
+#   - *.casterfly.com         → TU_IP (sitios de clientes)
 # =====================================================
 
 # ============================================================
@@ -26,140 +36,236 @@
 }
 
 # ============================================================
-# Panel principal: panelipstream.cl
+# Sitio público: casterfly.com
 # ============================================================
-{$STREAM_DOMAIN:panelipstream.cl} {
-    # === Panel Next.js (puerto interno 3000) ===
-    reverse_proxy app:3000
+{$PUBLIC_DOMAIN:casterfly.com} {
+	# === Sitio público PHP/nginx (stack vecino al panel) ===
+	reverse_proxy site:80
 
-    # === Headers de seguridad ===
-    header {
-        # HSTS (incluye subdominios)
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        # Anti-clickjacking
-        X-Frame-Options "SAMEORIGIN"
-        # Anti-MIME-sniffing
-        X-Content-Type-Options "nosniff"
-        # Referrer
-        Referrer-Policy "strict-origin-when-cross-origin"
-        # Quitar header del server (no leak de versión)
-        -Server
-    }
+	# === Headers de seguridad ===
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
 
-    # === Radio: consola web (WHIP/WebSocket) ===
-    # El agente valida el token de sesión y proxea la señalización a SRS.
-    handle /rtc/* {
-        reverse_proxy agent:4000
-    }
-    handle /ws/live {
-        reverse_proxy agent:4000
-    }
+	# === Logging ===
+	log {
+		output file /data/site-access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+}
 
-    # === HLS streaming (proxy a SRS) ===
-    # AutoDJ se sirve en /live/* y el DJ en vivo en /dj/*
-    # CORS: los sitios de los clientes consumen el HLS cross-origin (Web
-    # Audio / video). Los .m3u8 y segmentos .ts se sirven desde acá.
-    handle /live/* {
-        header {
-            Access-Control-Allow-Origin "*"
-            Access-Control-Allow-Methods "GET, OPTIONS, HEAD"
-            Access-Control-Allow-Headers "Range, Content-Type"
-            Access-Control-Expose-Headers "Content-Length, Content-Type"
-        }
-        reverse_proxy srs:8080
-    }
+# HTTP -> HTTPS redirect (sitio público)
+http://{$PUBLIC_DOMAIN:casterfly.com} {
+	redir https://{$PUBLIC_DOMAIN:casterfly.com}{uri} permanent
+}
 
-    handle /dj/* {
-        header {
-            Access-Control-Allow-Origin "*"
-            Access-Control-Allow-Methods "GET, OPTIONS, HEAD"
-            Access-Control-Allow-Headers "Range, Content-Type"
-            Access-Control-Expose-Headers "Content-Length, Content-Type"
-        }
-        reverse_proxy srs:8080
-    }
+# www -> root
+www.{$PUBLIC_DOMAIN:casterfly.com} {
+	redir https://{$PUBLIC_DOMAIN:casterfly.com}{uri} permanent
+}
 
-    # === Logging ===
-    log {
-        output file /data/access.log {
-            roll_size 10mb
-            roll_keep 5
-        }
-    }
+http://www.{$PUBLIC_DOMAIN:casterfly.com} {
+	redir https://{$PUBLIC_DOMAIN:casterfly.com}{uri} permanent
+}
+
+# ============================================================
+# Panel principal: panel.casterfly.com
+# ============================================================
+{$PANEL_DOMAIN:panel.casterfly.com} {
+	# === Panel Next.js (puerto interno 3000) ===
+	reverse_proxy app:3000
+
+	# === Headers de seguridad ===
+	header {
+		# HSTS (incluye subdominios)
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		# Anti-clickjacking
+		X-Frame-Options "SAMEORIGIN"
+		# Anti-MIME-sniffing
+		X-Content-Type-Options "nosniff"
+		# Referrer
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Quitar header del server (no leak de versión)
+		-Server
+	}
+
+	# === Radio: consola web (WHIP/WebSocket) ===
+	# El agente valida el token de sesión y proxea la señalización a SRS.
+	handle /rtc/* {
+		reverse_proxy agent:4000
+	}
+	handle /ws/live {
+		reverse_proxy agent:4000
+	}
+
+	# === HLS streaming (proxy a SRS) ===
+	# AutoDJ se sirve en /live/* y el DJ en vivo en /dj/*
+	# CORS: los sitios de los clientes consumen el HLS cross-origin (Web
+	# Audio / video). Los .m3u8 y segmentos .ts se sirven desde acá.
+	handle /live/* {
+		header {
+			Access-Control-Allow-Origin "*"
+			Access-Control-Allow-Methods "GET, OPTIONS, HEAD"
+			Access-Control-Allow-Headers "Range, Content-Type"
+			Access-Control-Expose-Headers "Content-Length, Content-Type"
+		}
+		reverse_proxy srs:8080
+	}
+
+	handle /dj/* {
+		header {
+			Access-Control-Allow-Origin "*"
+			Access-Control-Allow-Methods "GET, OPTIONS, HEAD"
+			Access-Control-Allow-Headers "Range, Content-Type"
+			Access-Control-Expose-Headers "Content-Length, Content-Type"
+		}
+		reverse_proxy srs:8080
+	}
+
+	# === Logging ===
+	log {
+		output file /data/access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
 }
 
 # HTTP -> HTTPS redirect (panel)
-http://{$STREAM_DOMAIN:panelipstream.cl} {
-    redir https://{$STREAM_DOMAIN:panelipstream.cl}{uri} permanent
+http://{$PANEL_DOMAIN:panel.casterfly.com} {
+	redir https://{$PANEL_DOMAIN:panel.casterfly.com}{uri} permanent
 }
 
 # ============================================================
-# Stream (Icecast): stream.panelipstream.cl
+# Panel anterior: panelipstream.cl (transición)
+# ============================================================
+# Las páginas se redirigen al panel nuevo. /api/* se mantiene proxeado para
+# las PWA instaladas: un redirect convertiría POST en GET y rompería CORS.
+{$LEGACY_PANEL_DOMAIN:panelipstream.cl} {
+	route {
+		@legacy_api path /api/*
+		handle @legacy_api {
+			reverse_proxy app:3000
+		}
+		redir https://{$PANEL_DOMAIN:panel.casterfly.com}{uri} 308
+	}
+
+	log {
+		output file /data/legacy-panel-access.log {
+			roll_size 10mb
+			roll_keep 3
+		}
+	}
+}
+
+http://{$LEGACY_PANEL_DOMAIN:panelipstream.cl} {
+	redir https://{$PANEL_DOMAIN:panel.casterfly.com}{uri} permanent
+}
+
+# ============================================================
+# Stream (Icecast): stream.casterfly.com
 # ============================================================
 # Proxy HTTPS al Icecast interno (puerto 8000).
 # Esto da HTTPS al audio stream — algunos navegadores y players
 # requieren HTTPS para mixed content o por seguridad.
-stream.{$STREAM_DOMAIN:panelipstream.cl} {
-    # Proxy al Icecast
-    reverse_proxy icecast:8000
+{$STREAM_DOMAIN:stream.casterfly.com} {
+	# Proxy al Icecast
+	reverse_proxy icecast:8000
 
-    # === Headers específicos para audio streaming ===
-    header {
-        # CORS para que el player embebido funcione desde cualquier dominio
-        Access-Control-Allow-Origin "*"
-        Access-Control-Allow-Methods "GET, OPTIONS"
-        Access-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
-        Access-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
+	# === Headers específicos para audio streaming ===
+	header {
+		# CORS para que el player embebido funcione desde cualquier dominio
+		Access-Control-Allow-Origin "*"
+		Access-Control-Allow-Methods "GET, OPTIONS"
+		Access-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
+		Access-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
 
-        # Caching
-        Cache-Control "no-cache, no-store, must-revalidate"
+		# Caching
+		Cache-Control "no-cache, no-store, must-revalidate"
 
-        # Icecast-specific (para que se vea en players)
-        # Icecast 2.x ya envía estos headers, pero por las dudas
-        -Server
-    }
+		# Icecast-specific (para que se vea en players)
+		# Icecast 2.x ya envía estos headers, pero por las dudas
+		-Server
+	}
 
-    # Streaming pasa por HTTPS y se desfasa en chunks.
-    # Importante: NO comprimir (rompe el streaming)
-    encode zstd gzip
+	# Streaming pasa por HTTPS y se desfasa en chunks.
+	# Importante: NO comprimir (rompe el streaming)
+	encode zstd gzip
 
-    # === Logging ===
-    log {
-        output file /data/stream-access.log {
-            roll_size 10mb
-            roll_keep 5
-        }
-    }
+	# === Logging ===
+	log {
+		output file /data/stream-access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
 }
 
 # HTTP -> HTTPS redirect (stream)
-http://stream.{$STREAM_DOMAIN:panelipstream.cl} {
-    redir https://stream.{$STREAM_DOMAIN:panelipstream.cl}{uri} permanent
+http://{$STREAM_DOMAIN:stream.casterfly.com} {
+	redir https://{$STREAM_DOMAIN:stream.casterfly.com}{uri} permanent
+}
+
+# ============================================================
+# Stream anterior: stream.panelipstream.cl (transición)
+# ============================================================
+# Se mantiene proxeado a Icecast para no romper reproductores ni embeds con
+# URLs guardadas. No se redirige durante la transición.
+{$LEGACY_STREAM_DOMAIN:stream.panelipstream.cl} {
+	reverse_proxy icecast:8000
+
+	header {
+		Access-Control-Allow-Origin "*"
+		Access-Control-Allow-Methods "GET, OPTIONS"
+		Access-Control-Allow-Headers "Range, Content-Type, Icy-MetaData"
+		Access-Control-Expose-Headers "Content-Length, Content-Type, Icy-Br, Icy-MetaInt, Icy-MetaData"
+		Cache-Control "no-cache, no-store, must-revalidate"
+		-Server
+	}
+
+	encode zstd gzip
+
+	log {
+		output file /data/stream-access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+}
+
+http://{$LEGACY_STREAM_DOMAIN:stream.panelipstream.cl} {
+	redir https://{$LEGACY_STREAM_DOMAIN:stream.panelipstream.cl}{uri} permanent
 }
 
 # ============================================================
 # Sitios de clientes (bundle único de la PWA)
 # ============================================================
 # Catch-all: cualquier host que no matchee los bloques de arriba (subdominios
-# de plataforma tipo <cliente>.ipstream.cl y dominios custom) se sirve
+# de plataforma tipo <cliente>.casterfly.com y dominios custom) se sirve
 # como sitio de cliente. El header X-Tenant-Site hace que el middleware del
 # panel enrute al shell dinámico. TLS on-demand acotado por el endpoint `ask`:
 # solo se emiten certificados para dominios registrados y activos.
 :443 {
-    tls {
-        on_demand
-    }
+	tls {
+		on_demand
+	}
 
-    reverse_proxy app:3000 {
-        # Header de REQUEST al upstream (el `header` de site es de respuesta):
-        # hace que el middleware del panel enrute a /api/tenant.
-        header_up X-Tenant-Site "1"
-    }
+	reverse_proxy app:3000 {
+		# Header de REQUEST al upstream (el `header` de site es de respuesta):
+		# hace que el middleware del panel enrute a /api/tenant.
+		header_up X-Tenant-Site "1"
+	}
 
-    log {
-        output file /data/sites-access.log {
-            roll_size 10mb
-            roll_keep 5
-        }
-    }
+	log {
+		output file /data/sites-access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
 }

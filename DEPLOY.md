@@ -1,4 +1,4 @@
-# IPStream Panel — Deploy Guide
+# CasterFly Panel — Deploy Guide
 
 > **Único documento para deployar a producción.** Si algo falla, vení acá primero.
 
@@ -33,8 +33,10 @@ bash scripts/setup-prod.sh --force
 # 4. Editar .env para completar variables no-seguras
 nano .env
 # Editá:
-#   STREAM_DOMAIN=panelipstream.cl
-#   ADMIN_EMAIL=tu@email.com
+#   PUBLIC_DOMAIN=casterfly.com
+#   PANEL_DOMAIN=panel.casterfly.com
+#   STREAM_DOMAIN=stream.casterfly.com
+#   ADMIN_EMAIL=tu@casterfly.com
 #   ADMIN_PASSWORD=...
 #   (y otras que setup-prod no genera)
 
@@ -60,10 +62,59 @@ docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d
 | `HARBOR_CALLBACK_SECRET` | Auth liquidsoap ↔ agente (DJ en vivo) | `openssl rand -hex 32` |
 | `ICE_*_PASSWORD` | Auth Icecast | `openssl rand -hex 32` |
 | `CRON_SECRET` | Auth de cron jobs | `openssl rand -hex 32` |
-| `STREAM_DOMAIN` | Dominio público (ej: panelipstream.cl) | manual |
+| `PUBLIC_DOMAIN` | Sitio público (`casterfly.com`) | manual |
+| `PANEL_DOMAIN` | Panel (`panel.casterfly.com`) | manual |
+| `STREAM_DOMAIN` | Stream de audio (`stream.casterfly.com`) | manual |
+| `NEXTAUTH_URL` | URL pública del panel | `https://panel.casterfly.com` |
+| `PANEL_PUBLIC_URL` | URL para Server Actions y enlaces | `https://panel.casterfly.com` |
+| `PANEL_PUBLIC_HOST` | Host de DB para nodos remotos | `panel.casterfly.com` |
+| `CLIENT_SITES_DOMAIN` | Dominio base de sitios de clientes | `casterfly.com` |
+| `CLIENT_SITES_TARGET` | Target CNAME de dominios custom | `clientes.casterfly.com` |
+| `ICE_PUBLIC_URL` | URL pública de Icecast | `https://stream.casterfly.com` |
+| `HARBOR_PUBLIC_HOSTNAME` | Host de harbor para DJs | `stream.casterfly.com` |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Usuario admin inicial | manual |
 
 `scripts/setup-prod.sh --force` regenera automáticamente las primeras6.
+
+### Mapa de hosts
+
+| Host | Servicio |
+|---|---|
+| `casterfly.com` | Sitio público (contenedor `site`) |
+| `www.casterfly.com` | Redirect 301 a `casterfly.com` |
+| `panel.casterfly.com` | Panel Next.js + APIs |
+| `stream.casterfly.com` | Icecast |
+| `*.casterfly.com` | Sitios de clientes (TLS on-demand) |
+
+Durante la transición se mantienen:
+
+- `panelipstream.cl`: páginas con `308` al panel nuevo; `/api/*` proxeado para PWA instaladas.
+- `stream.panelipstream.cl`: proxeado a Icecast.
+- `*.ipstream.cl`: sitios de clientes existentes (alias).
+
+### Migración de dominios de clientes
+
+Después de actualizar `app_config` y los dominios:
+
+```bash
+# Dry-run (no escribe)
+docker exec ipstream-app node scripts/migrate-casterfly-domains.js
+# Aplicar
+docker exec ipstream-app node scripts/migrate-casterfly-domains.js --apply
+```
+
+El script es idempotente, crea `label.casterfly.com` como primario, deja
+`label.ipstream.cl` como alias y actualiza `BasicData.websiteUrl` y el servidor
+principal de streaming. No toca dominios custom ni nodos remotos.
+
+### Nodos remotos
+
+Un cambio de dominio no requiere rebuild del agente, pero sí actualizar su
+entorno: `CORS_ALLOWED_ORIGINS` debe incluir `https://panel.casterfly.com` y
+`https://panelipstream.cl`, y `DB_HOST`/`MYSQL_HOST` deben apuntar a
+`panel.casterfly.com`. Después del deploy, pulsá **"Actualizar nodo"** en cada
+nodo remoto o editá su `.env` y reiniciá el agente. No retires
+`panelipstream.cl` hasta que todos los nodos y PWA instaladas estén actualizados.
 
 ---
 
@@ -302,13 +353,13 @@ El panel envía correos a los clientes (boletas, avisos, soporte) vía **Resend*
 1. Creá una cuenta en [resend.com](https://resend.com) y agregá la **API Key** en `.env`:
    ```
    RESEND_API_KEY=re_...
-   RESEND_FROM_EMAIL=no-reply@ipstream.cl
+   RESEND_FROM_EMAIL=no-reply@casterfly.com
    RESEND_WEBHOOK_SECRET=<openssl rand -hex 32>
    ```
-2. **Verificá el dominio** en Resend (`ipstream.cl`): agregá los registros **DKIM/SPF** que te muestra Resend en tu DNS y pulsá "Verify". El `RESEND_FROM_EMAIL` debe usar un dominio verificado (si no, los correos no salen o caen en spam).
+2. **Verificá el dominio** en Resend (`casterfly.com`): agregá los registros **DKIM/SPF** que te muestra Resend en tu DNS y pulsá "Verify". El `RESEND_FROM_EMAIL` debe usar un dominio verificado (si no, los correos no salen o caen en spam).
 3. **Webhook de rastreo** (entregado/abierto/clic): en Resend → *Webhooks* → crear webhook apuntando a:
    ```
-   https://panelipstream.cl/api/webhooks/resend
+   https://panel.casterfly.com/api/webhooks/resend
    ```
    y pegar el secreto en `RESEND_WEBHOOK_SECRET`. Resend firma los payloads (Svix) y el panel los valida.
 4. **Plantillas**: se siembran solas al arrancar (`boleta`, `soporte`, `aviso`) y se editan desde `/admin/comunicaciones` → Plantillas.

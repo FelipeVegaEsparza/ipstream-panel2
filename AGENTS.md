@@ -39,9 +39,18 @@
 - **Tenant por dominio**: tabla `client_domains` (se gestiona en `/admin/users/[id]/edit` → "Dominios del sitio"). `GET /api/public/resolve-domain?host=` mapea host → cliente (caché 60s). El shell dinámico (`index.html` con OG, `manifest.webmanifest`, iconos) lo sirve `/api/tenant/*`.
 - **Routing**: Caddy manda los hosts de clientes a un bloque catch-all `:443` con header `X-Tenant-Site: 1`; el middleware de Next reescribe a `/api/tenant/*`. TLS on-demand acotado por `GET /api/domains/ask` (autoriza solo dominios `active`).
 - **PWA**: resuelve el tenant en runtime por host (el `clientId` horneado queda como fallback de dev); templates lazy con fallback al default.
-- **Configuración de plataforma desde el dashboard**: `/admin/settings` → pestaña **Sitios** (dominio base, target CNAME, IP, token de Cloudflare) con botón **"Asegurar DNS base"** (crea el wildcard `*.dominio`). Se guarda en `app_config`; si un campo está vacío, se usa la env como fallback. Envs: `CLIENT_SITES_DOMAIN`, `CLIENT_SITES_TARGET`, `CLIENT_SITES_IP`, `CLOUDFLARE_API_TOKEN`, `CLIENT_SITE_DIR`.
-- **Deploy**: el panel se deploya con GitHub Actions (push a `main`). El bundle de la PWA se publica con el workflow `deploy-site-bundle.yml` (se dispara con cambios en `pwa/**`) hacia `./data/client-site` del VPS.
+- **Configuración de plataforma desde el dashboard**: `/admin/settings` → pestaña **Sitios** (dominio base, target CNAME, IP, token de Cloudflare) con botón **"Asegurar DNS base"** (crea el wildcard `*.dominio`). Se guarda en `app_config`; si un campo está vacío, se usa la env como fallback. En CasterFly: `CLIENT_SITES_DOMAIN=casterfly.com`, `CLIENT_SITES_TARGET=clientes.casterfly.com`. Envs: `CLIENT_SITES_DOMAIN`, `CLIENT_SITES_TARGET`, `CLIENT_SITES_IP`, `CLOUDFLARE_API_TOKEN`, `CLIENT_SITE_DIR`.
+- **Deploy**: el panel se deploya con GitHub Actions (push a `main`). El bundle de la PWA se publica con el workflow `deploy-site-bundle.yml` (se dispara con cambios en `pwa/**`) hacia `./data/client-site` del VPS. El bundle de producción usa la API same-origin (`VITE_API_BASE=''`).
 - Un cambio que toca solo `pwa/**` **no** deploya el panel, pero **sí** republica el bundle (workflow aparte). Un cambio en el shell (`lib/client-site.ts`, `lib/client-icons.ts`, `app/api/tenant/*`, `middleware.ts`, `deploy/Caddyfile`) sí deploya el panel.
+
+## Dominios CasterFly (mapa vigente)
+
+- **Hosts**: `casterfly.com` → sitio público (contenedor `site`); `panel.casterfly.com` → panel Next.js/APIs; `stream.casterfly.com` → Icecast; `*.casterfly.com` → sitios de clientes; `www.casterfly.com` → 301 al root.
+- **Caddy**: tres variables independientes en `deploy/Caddyfile`: `PUBLIC_DOMAIN`, `PANEL_DOMAIN`, `STREAM_DOMAIN`. No volver a usar `STREAM_DOMAIN` como dominio del panel.
+- **Legacy**: `panelipstream.cl` redirige páginas con `308` pero mantiene `/api/*` proxeado para PWA instaladas; `stream.panelipstream.cl` sigue proxeando a Icecast; `*.ipstream.cl` sigue sirviendo como alias. No retirar estos hosts hasta actualizar nodos y PWA.
+- **Datos**: `scripts/migrate-casterfly-domains.js` (dry-run por defecto; `--apply` escribe) actualiza `app_config`, `client_domains` (nuevo primario + alias viejo), `BasicData.websiteUrl` y el servidor principal de streaming. Es idempotente.
+- **PWA**: el origen por defecto de desarrollo es `https://panel.casterfly.com`; el bundle de producción resuelve la API same-origin. El service worker solo cachea el origen configurado (nunca `panelipstream.cl`).
+- **Marca**: el logo por defecto es `public/logo-casterfly.png` (tema claro) y `public/logo-casterfly-dark.png` (tema oscuro). La paleta `--brand-*` no cambia.
 
 ## Facturación / Pagos (multi-moneda + PayPal)
 
@@ -57,6 +66,7 @@
 - El deploy de GitHub Actions solo actualiza el panel y el agente del VPS principal.
 - Los **nodos de streaming remotos** (registrados en `/admin/servers`) NO se actualizan solos: requieren pulsar el botón **"Actualizar nodo"** en `/admin/servers` (re-descarga el repo, copia el código, levanta el stack con `--build --force-recreate` y reinicia los streams activos).
 - **Siempre que se haga un cambio que toque el streaming-agent o sus scripts** (lib/streaming-client.ts, streaming/agent/*, streaming/liquidsoap/*, docker-compose.streaming.yml, node-provisioner.ts), indicar al usuario que debe pulsar "Actualizar nodo" en cada nodo remoto después del deploy.
+- Un cambio de dominio/CORS/DB host **no toca código del agente**, pero sí su entorno: después de deployar el panel hay que pulsar **"Actualizar nodo"** en cada nodo remoto (o editar su `.env` y reiniciar) para que reciba `CORS_ALLOWED_ORIGINS=https://panel.casterfly.com,https://panelipstream.cl` y `DB_HOST=panel.casterfly.com`.
 - Si el cambio toca SOLO el panel (app/*, lib/* que no use el agente), no hace falta el botón.
 
 ## Consola web de radio ("Transmitir en vivo")

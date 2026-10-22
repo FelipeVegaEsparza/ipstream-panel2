@@ -10,7 +10,7 @@ export const RESERVED_SUBDOMAINS = new Set<string>([
   'cpanel', 'whm', 'webdisk', 'autodiscover', 'autoconfig',
   'ns', 'ns1', 'ns2', 'ns3', 'cdn', 'static', 'assets', 'media',
   'soporte', 'support', 'help', 'status', 'billing', 'pago', 'pagos',
-  'ipstream', 'test', 'demo', 'staging', 'dev', 'about', 'blog', 'docs',
+  'ipstream', 'casterfly', 'test', 'demo', 'staging', 'dev', 'about', 'blog', 'docs',
 ])
 
 export const SLUG_MIN_LENGTH = 2

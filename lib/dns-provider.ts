@@ -52,7 +52,7 @@ async function cfZoneId(cfg: ClientSitesConfig): Promise<string> {
   if (direct?.[0]?.id) return direct[0].id
 
   // El dominio de sitios puede ser un subdominio de la zona (p. ej.
-  // sitios.ipstream.cl con zona ipstream.cl): buscamos la zona que sea sufijo.
+  // clientes.casterfly.com con zona casterfly.com): buscamos la zona que sea sufijo.
   const all = await cf<Array<{ id: string; name: string }>>(
     cfg.cloudflareToken,
     '/zones?status=active&per_page=50'
@@ -67,7 +67,7 @@ async function cfZoneId(cfg: ClientSitesConfig): Promise<string> {
 /** Verifica si existe un wildcard DNS para el dominio base. */
 async function wildcardCovers(hostname: string, domain: string): Promise<boolean> {
   if (!domain || !hostname.endsWith(`.${domain}`)) return false
-  const probe = `ipstream-wc-check-${Date.now().toString(36)}.${domain}`
+  const probe = `casterfly-wc-check-${Date.now().toString(36)}.${domain}`
   try {
     const [a, cname] = await Promise.allSettled([dns.resolve4(probe), dns.resolveCname(probe)])
     return a.status === 'fulfilled' || cname.status === 'fulfilled'

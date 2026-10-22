@@ -27,7 +27,7 @@ describe('firstPublicImageUrl', () => {
         '/api/uploads/cmx/cover.webp',
         '/api/uploads/cmx/logo.webp'
       ])
-    ).toBe('https://panelipstream.cl/api/uploads/cmx/cover.webp')
+    ).toBe('https://panel.casterfly.com/api/uploads/cmx/cover.webp')
   })
 
   it('devuelve null si ningún candidato es público', () => {

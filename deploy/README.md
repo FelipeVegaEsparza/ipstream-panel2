@@ -102,10 +102,12 @@ nano .env
 
 | Variable | Ejemplo | Cómo obtenerla |
 |---|---|---|
-| `STREAM_DOMAIN` | `stream.midominio.com` | Tu dominio |
-| `NEXTAUTH_URL` | `https://stream.midominio.com` | https + tu dominio |
-| `ICE_PUBLIC_URL` | `http://TU_IP:8000` | `http://IP:8000` |
-| `ADMIN_EMAIL` | `admin@midominio.com` | Tu email |
+| `PUBLIC_DOMAIN` | `casterfly.com` | Dominio raíz |
+| `PANEL_DOMAIN` | `panel.casterfly.com` | Subdominio del panel |
+| `STREAM_DOMAIN` | `stream.casterfly.com` | Subdominio de Icecast |
+| `NEXTAUTH_URL` | `https://panel.casterfly.com` | https + panel |
+| `ICE_PUBLIC_URL` | `https://stream.casterfly.com` | https + stream |
+| `ADMIN_EMAIL` | `admin@casterfly.com` | Tu email |
 | `ADMIN_PASSWORD` | `UnaPass123!` | Una pass fuerte |
 
 ```bashroot@vmi3100075:~# echo "=== Nombre del servicio ==="; systemctl list-units --type=service --no-pager 2>/dev/null | grep -i ssh; echo; echo "=== Status antes ==="; systemctl is-active ssh sshd 2>&1; echo; echo "=== Restart ==="; systemctl restart ssh && echo "ssh reiniciado OK"; echo; echo "=== Verificar que NO pide password ==="
@@ -136,7 +138,7 @@ En tu proveedor de DNS (Cloudflare, Route53, etc.):
 Verificá que el DNS propague:
 
 ```bash
-dig panelipstream.cl
+dig panel.casterfly.com
 # Debe devolver TU_IP_PUBLICA
 ```
 
@@ -149,7 +151,7 @@ Agregá estos 3 secrets:
 | Nombre | Valor |
 |---|---|
 | `VPS_SSH_KEY` | El contenido completo de tu SSH private key (la que está en `~/.ssh/id_ed25519`) |
-| `VPS_HOST` | `TU_IP_PUBLICA` o `panelipstream.cl` |
+| `VPS_HOST` | `TU_IP_PUBLICA` o `panel.casterfly.com` |
 | `VPS_USER` | `deploy` |
 
 ## 5. Generar SSH key para GitHub Actions
@@ -209,7 +211,7 @@ Salida esperada:
 ✅ Todo OK
 ```
 
-**Abrí en el browser:** `https://panelipstream.cl` — debería mostrar el panel.
+**Abrí en el browser:** `https://panel.casterfly.com` — debería mostrar el panel.
 
 **Caddy tarda 1-2 minutos** en obtener el cert de Let's Encrypt. Si ves error de cert, esperá unos minutos y recargá.
 
@@ -246,7 +248,7 @@ git commit -m "feat: nueva funcionalidad"
 git push origin main
 
 # → GitHub Actions deploya automáticamente a producción
-# → ~2 min después está en https://panelipstream.cl
+# → ~2 min después está en https://panel.casterfly.com
 ```
 
 ## Comandos útiles en el VPS
@@ -284,7 +286,7 @@ Verificá:
 
 ```bash
 # Verificar DNS
-dig panelipstream.cl
+dig panel.casterfly.com
 
 # Verificar puertos
 sudo ufw status

@@ -114,6 +114,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|logo-ipstream.png|text-sanitizer.js.bak|api/auth|api/public|api/uploads|api/panel-branding|api/cron|api/webhook|api/health).*)',
+    '/((?!_next/static|_next/image|favicon.ico|logo-ipstream.png|logo-casterfly.png|logo-casterfly-dark.png|icon.png|apple-touch-icon.png|og-casterfly.png|text-sanitizer.js.bak|api/auth|api/public|api/uploads|api/panel-branding|api/cron|api/webhook|api/health).*)',
   ],
 };

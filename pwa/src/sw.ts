@@ -5,6 +5,7 @@ import { ExpirationPlugin } from 'workbox-expiration'
 import { matchPrecache, precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute, setCatchHandler } from 'workbox-routing'
 import { NetworkFirst, NetworkOnly } from 'workbox-strategies'
+import { shouldCachePublicApi } from '@/core/config/api-cache'
 
 declare let self: ServiceWorkerGlobalScope
 
@@ -37,13 +38,14 @@ registerRoute(
 )
 
 // API pública: network-first con respaldo en caché de corta duración.
+// El origen se configura en build (VITE_API_BASE). Vacío = mismo origen del
+// sitio del cliente; nunca se cachea el panel viejo.
+const API_ORIGIN = (import.meta.env.VITE_API_BASE as string | undefined) ?? ''
+
 registerRoute(
-  ({ url }) =>
-    (url.hostname === 'panelipstream.cl' ||
-      url.hostname.endsWith('.panelipstream.cl')) &&
-    url.pathname.startsWith('/api/public'),
+  ({ url }) => shouldCachePublicApi(url, API_ORIGIN, self.location.origin),
   new NetworkFirst({
-    cacheName: 'ipstream-api-v1',
+    cacheName: 'casterfly-api-v1',
     networkTimeoutSeconds: 5,
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
