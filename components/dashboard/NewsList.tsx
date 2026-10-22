@@ -8,6 +8,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface NewsItem {
   id: string
@@ -24,11 +25,13 @@ interface NewsListProps {
 }
 
 export function NewsList({ news }: NewsListProps) {
+  const { t, locale } = useDashboardI18n()
+  const intlLocale = locale === 'en' ? 'en-US' : 'es-ES'
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
+    if (!confirm(t('news.confirmDelete'))) {
       return
     }
 
@@ -41,17 +44,17 @@ export function NewsList({ news }: NewsListProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar la noticia' })
+        showToast({ type: 'error', title: t('news.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar la noticia' })
+      showToast({ type: 'error', title: t('news.deleteError') })
     } finally {
       setLoading(null)
     }
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(intlLocale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -69,13 +72,13 @@ export function NewsList({ news }: NewsListProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          No hay noticias
+          {t('news.emptyTitle')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          Comienza publicando tu primera noticia
+          {t('news.emptyHint2')}
         </p>
         <Link href="/dashboard/news/new" className="btn-primary">
-          Crear Noticia
+          {t('news.create')}
         </Link>
       </div>
     )
@@ -108,8 +111,8 @@ export function NewsList({ news }: NewsListProps) {
                     {item.shortText}
                   </p>
                   <div className="flex items-center text-sm text-muted-foreground space-x-4">
-                    <span><span className="font-semibold text-brand">Publicado:</span> {formatDate(item.createdAt)}</span>
-                    <span><span className="font-semibold text-brand">Slug:</span> <code className="bg-secondary text-brand px-2 py-1 rounded text-xs">{item.slug}</code></span>
+                    <span><span className="font-semibold text-brand">{t('news.published')}</span> {formatDate(item.createdAt)}</span>
+                    <span><span className="font-semibold text-brand">{t('news.slug')}</span> <code className="bg-secondary text-brand px-2 py-1 rounded text-xs">{item.slug}</code></span>
                   </div>
                 </div>
                 
@@ -117,14 +120,14 @@ export function NewsList({ news }: NewsListProps) {
                   <Link
                     href={`/dashboard/news/${item.id}`}
                     className="action-button action-button-view"
-                    title="Ver noticia"
+                    title={t('news.view')}
                   >
                     <EyeIcon className="h-4 w-4" />
                   </Link>
                   <Link
                     href={`/dashboard/news/${item.id}/edit`}
                     className="action-button action-button-edit"
-                    title="Editar noticia"
+                    title={t('news.edit')}
                   >
                     <PencilIcon className="h-4 w-4" />
                   </Link>
@@ -132,7 +135,7 @@ export function NewsList({ news }: NewsListProps) {
                     onClick={() => handleDelete(item.id)}
                     disabled={loading === item.id}
                     className="action-button action-button-delete"
-                    title="Eliminar noticia"
+                    title={t('news.delete')}
                   >
                     {loading === item.id ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { DashboardWrapper } from './DashboardWrapper'
 import { BasicDataForm } from './BasicDataForm'
 import TimezoneSelector from './streaming/TimezoneSelector'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface BasicData {
   id: string
@@ -33,6 +34,7 @@ export function BasicDataClient() {
 }
 
 function BasicDataContent({ clientId }: { clientId: string }) {
+  const { t } = useDashboardI18n()
   const [basicData, setBasicData] = useState<BasicData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -49,11 +51,11 @@ function BasicDataContent({ clientId }: { clientId: string }) {
           // No hay datos básicos aún, esto es normal
           setBasicData(null)
         } else {
-          setError('Error al cargar datos básicos')
+          setError(t('basic.loadError'))
         }
       } catch (error) {
         console.error('Error fetching basic data:', error)
-        setError('Error al cargar datos básicos')
+        setError(t('basic.loadError'))
       } finally {
         setLoading(false)
       }
@@ -67,7 +69,7 @@ function BasicDataContent({ clientId }: { clientId: string }) {
       <div className="space-y-6">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando datos básicos...</p>
+          <p className="text-muted-foreground">{t('basic.loading')}</p>
         </div>
       </div>
     )
@@ -92,10 +94,10 @@ function BasicDataContent({ clientId }: { clientId: string }) {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          Datos Básicos del Proyecto
+          {t('basic.title')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configura la información básica de tu proyecto de radio
+          {t('basic.subtitle')}
         </p>
       </div>
 
@@ -104,9 +106,9 @@ function BasicDataContent({ clientId }: { clientId: string }) {
       </div>
 
       <div className="card max-w-2xl">
-        <h2 className="text-lg font-semibold text-foreground mb-1">Zona horaria</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-1">{t('basic.timezone')}</h2>
         <p className="text-sm text-muted-foreground mb-3">
-          Se usa para interpretar tu programación y agrupar las estadísticas.
+          {t('basic.timezoneHint')}
         </p>
         <TimezoneSelector />
       </div>

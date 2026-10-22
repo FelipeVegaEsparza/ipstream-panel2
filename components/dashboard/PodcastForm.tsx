@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { podcastSchema, type PodcastInput } from '@/lib/validations'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { FileUpload } from '@/components/ui/FileUpload'
 
 interface PodcastFormProps {
@@ -15,6 +16,7 @@ interface PodcastFormProps {
 }
 
 export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: PodcastFormProps) {
+  const { t } = useDashboardI18n()
   const [imageUrl, setImageUrl] = useState(podcast?.imageUrl || '')
   const [audioUrl, setAudioUrl] = useState(podcast?.audioUrl || '')
 
@@ -55,13 +57,13 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
         {/* Título */}
         <div>
           <label className="form-label">
-            Título del Episodio *
+            {t('podcasts.episodeTitle')}
           </label>
           <input
             {...register('title')}
             type="text"
             className="form-input"
-            placeholder="Ej: Episodio 1 - Introducción al Podcast"
+            placeholder={t('podcasts.episodeTitlePlaceholder')}
           />
           {errors.title && (
             <p className="form-error">{errors.title.message}</p>
@@ -73,8 +75,8 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
           <div className="flex items-center space-x-3">
             <div className="text-2xl">🎵</div>
             <div>
-              <h3 className="font-semibold text-foreground">Podcast de Audio</h3>
-              <p className="text-sm text-muted-foreground">Este formulario es específico para episodios de audio</p>
+              <h3 className="font-semibold text-foreground">{t('podcasts.audioTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{t('podcasts.audioNote')}</p>
             </div>
           </div>
         </div>
@@ -83,7 +85,7 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="form-label">
-              Número de Episodio
+              {t('podcasts.episodeNumber')}
             </label>
             <input
               {...register('episodeNumber', { 
@@ -101,13 +103,13 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
 
           <div>
             <label className="form-label">
-              Temporada
+              {t('podcasts.season')}
             </label>
             <input
               {...register('season')}
               type="text"
               className="form-input"
-              placeholder="Temporada 1"
+              placeholder={t('podcasts.seasonPlaceholder')}
             />
             {errors.season && (
               <p className="form-error">{errors.season.message}</p>
@@ -118,16 +120,16 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
         {/* Duración */}
         <div>
           <label className="form-label">
-            Duración
+            {t('podcasts.duration')}
           </label>
           <input
             {...register('duration')}
             type="text"
             className="form-input"
-            placeholder="45:30 (minutos:segundos)"
+            placeholder={t('podcasts.durationPlaceholder')}
           />
           <p className="form-help mt-1">
-            Formato: MM:SS o HH:MM:SS (ej: 45:30 o 1:15:45)
+            {t('podcasts.durationHelp')}
           </p>
           {errors.duration && (
             <p className="form-error">{errors.duration.message}</p>
@@ -137,16 +139,16 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
         {/* Descripción */}
         <div>
           <label className="form-label">
-            Descripción del Episodio *
+            {t('podcasts.description')}
           </label>
           <textarea
             {...register('description')}
             rows={6}
             className="form-input resize-vertical"
-            placeholder="Describe de qué trata este episodio, los temas que se abordan, invitados especiales, etc."
+            placeholder={t('podcasts.descriptionPlaceholder')}
           />
           <p className="form-help mt-1">
-            Esta descripción aparecerá como resumen en las listas de episodios
+            {t('podcasts.descriptionHelp')}
           </p>
           {errors.description && (
             <p className="form-error">{errors.description.message}</p>
@@ -158,8 +160,8 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
           value={imageUrl}
           onChange={setImageUrl}
           onRemove={() => setImageUrl('')}
-          label="Imagen del Episodio"
-          description="Portada del episodio (recomendado: 1400x1400px - formato cuadrado)"
+          label={t('podcasts.image')}
+          description={t('podcasts.imageHint')}
         />
 
         {/* Archivo de Audio */}
@@ -175,8 +177,8 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
           }}
           accept="audio/*"
           fileType="audio"
-          label="Archivo de Audio *"
-          description="Sube tu archivo de audio (MP3, WAV, M4A, AAC - Máx. 100MB)"
+          label={t('podcasts.audioFile')}
+          description={t('podcasts.audioFileHint')}
         />
 
         {/* Botones */}
@@ -187,14 +189,14 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
             className="btn-secondary"
             disabled={isLoading}
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             className="btn-primary"
             disabled={isLoading}
           >
-            {isLoading ? 'Guardando...' : podcast ? 'Actualizar Episodio' : 'Crear Episodio'}
+            {isLoading ? t('common.saving') : podcast ? t('podcasts.update') : t('podcasts.create')}
           </button>
         </div>
       </form>

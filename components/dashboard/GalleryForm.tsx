@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { gallerySchema, type GalleryInput } from '@/lib/validations'
 import { GalleryImageUpload } from './GalleryImageUpload'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface GalleryFormProps {
   initialData?: {
@@ -19,6 +20,7 @@ interface GalleryFormProps {
 }
 
 export function GalleryForm({ initialData }: GalleryFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -57,10 +59,10 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar la galería' })
+        showToast({ type: 'error', title: error.error || t('galleries.form.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar la galería' })
+      showToast({ type: 'error', title: t('galleries.form.saveError') })
     } finally {
       setLoading(false)
     }
@@ -76,7 +78,7 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
           type="text"
           id="title"
           className="form-input"
-          placeholder="Ej: Fiesta de la Radio 2025"
+          placeholder={t('galleries.form.titlePlaceholder')}
           {...register('title')}
         />
         {errors.title && (
@@ -92,7 +94,7 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
           id="description"
           rows={4}
           className="form-textarea"
-          placeholder="Describe de qué trata esta galería de imágenes..."
+          placeholder={t('galleries.form.descriptionPlaceholder')}
           {...register('description')}
         />
         {errors.description && (
@@ -116,11 +118,11 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
             </h3>
             <div className="mt-2 text-sm text-yellow-700">
               <ul className="list-disc list-inside space-y-1">
-                <li>Usa imágenes de buena calidad y resolución</li>
-                <li>Puedes subir varias imágenes a la vez</li>
-                <li>Reordena las imágenes con los botones &larr; &rarr;</li>
-                <li>Las imágenes se optimizarán automáticamente</li>
-                <li>Tamaño máximo por imagen: 5MB</li>
+                <li>{t('galleries.form.quality')}</li>
+                <li>{t('galleries.form.multiple')}</li>
+                <li>{t('galleries.form.reorder')}</li>
+                <li>{t('galleries.form.optimize')}</li>
+                <li>{t('galleries.form.maxSize')}</li>
               </ul>
             </div>
           </div>
@@ -133,7 +135,7 @@ export function GalleryForm({ initialData }: GalleryFormProps) {
           onClick={() => router.back()}
           className="btn-secondary"
         >
-          Cancelar
+          {t('galleries.form.cancel')}
         </button>
         <button
           type="submit"

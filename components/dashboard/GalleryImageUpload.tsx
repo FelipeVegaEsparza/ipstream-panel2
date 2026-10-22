@@ -1,6 +1,7 @@
 'use client'
 
 import { showToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 import { useState, useRef } from 'react'
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -20,6 +21,7 @@ export function GalleryImageUpload({
   label = 'Galería de Imágenes',
   description = 'Sube las imágenes de la galería (JPG, PNG, WebP - Máx. 5MB c/u)',
 }: GalleryImageUploadProps) {
+  const { t } = useDashboardI18n()
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -41,7 +43,7 @@ export function GalleryImageUpload({
     }
 
     const error = await response.json().catch(() => ({}))
-    showToast({ type: 'error', title: error.error || 'Error al subir la imagen' })
+    showToast({ type: 'error', title: error.error || t('galleries.image.uploadError') })
     return null
   }
 
@@ -61,7 +63,7 @@ export function GalleryImageUpload({
         }
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al subir la imagen' })
+      showToast({ type: 'error', title: t('galleries.image.uploadError') })
     } finally {
       setUploading(false)
     }
@@ -147,14 +149,14 @@ export function GalleryImageUpload({
         {uploading ? (
           <div className="space-y-3">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto" />
-            <p className="text-sm text-muted-foreground">Subiendo imágenes...</p>
+            <p className="text-sm text-muted-foreground">{t('galleries.form.uploading')}</p>
           </div>
         ) : (
           <div className="space-y-3">
             <PhotoIcon className="h-12 w-12 text-muted-foreground mx-auto" />
             <div>
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-brand">Haz clic para subir</span> o arrastra imágenes aquí
+                <span className="font-medium text-brand">{t('galleries.form.uploadTitle')}</span> o arrastra imágenes aquí
               </p>
               <p className="text-xs text-muted-foreground mt-2">{description}</p>
             </div>
@@ -188,7 +190,7 @@ export function GalleryImageUpload({
                       if (index > 0) handleReorder(index, index - 1)
                     }}
                     className="p-1.5 bg-white/20 text-foreground rounded-full hover:bg-white/40 transition-colors"
-                    title="Mover izquierda"
+                    title={t('galleries.image.moveLeft')}
                     disabled={index === 0}
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -205,7 +207,7 @@ export function GalleryImageUpload({
                       if (index < images.length - 1) handleReorder(index, index + 1)
                     }}
                     className="p-1.5 bg-white/20 text-foreground rounded-full hover:bg-white/40 transition-colors"
-                    title="Mover derecha"
+                    title={t('galleries.image.moveRight')}
                     disabled={index === images.length - 1}
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

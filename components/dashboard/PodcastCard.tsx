@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Podcast {
   id: string
@@ -26,6 +27,7 @@ interface PodcastCardProps {
 }
 
 export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: PodcastCardProps) {
+  const { t, locale } = useDashboardI18n()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const handleDelete = () => {
@@ -36,7 +38,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
   const formatDate = (dateString: string) => {
     return formatDistanceToNow(new Date(dateString), {
       addSuffix: true,
-      locale: es
+      locale: locale === 'en' ? enUS : es
     })
   }
 
@@ -94,7 +96,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
           <button
             onClick={() => onEdit(podcast)}
             className="action-button action-button-edit"
-            title="Editar episodio"
+            title={t('podcasts.edit')}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -104,7 +106,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="action-button action-button-delete"
-            title="Eliminar episodio"
+            title={t('podcasts.deleteEpisode')}
             disabled={isDeleting}
           >
             {isDeleting ? (
@@ -141,13 +143,13 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
         {/* Footer */}
         <div className="flex items-center justify-between text-meta">
           <span>
-            Publicado {formatDate(podcast.createdAt)}
+            {t('podcasts.published', { date: formatDate(podcast.createdAt) })}
           </span>
           
           {/* Indicador de archivo */}
           <div className="flex items-center space-x-1">
             <span>{getFileIcon()}</span>
-            <span>Audio</span>
+            <span>{t('podcasts.audioLabel')}</span>
           </div>
         </div>
       </div>
@@ -159,24 +161,24 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
             <div className="text-center">
               <div className="text-4xl mb-4">🗑️</div>
               <h3 className="text-lg font-bold text-foreground mb-2">
-                ¿Eliminar episodio?
+                {t('podcasts.deleteTitle')}
               </h3>
               <p className="text-muted-foreground mb-6">
-                Esta acción no se puede deshacer. El episodio "{podcast.title}" será eliminado permanentemente.
+                {t('podcasts.deleteText', { title: podcast.title })}
               </p>
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="btn-secondary flex-1"
                 >
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleDelete}
                   className="btn-danger flex-1"
                   disabled={isDeleting}
                 >
-                  {isDeleting ? 'Eliminando...' : 'Eliminar'}
+                  {isDeleting ? t('podcasts.deleting') : t('common.delete')}
                 </button>
               </div>
             </div>

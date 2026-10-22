@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { PodcastCard } from '@/components/dashboard/PodcastCard'
 import { PodcastForm } from '@/components/dashboard/PodcastForm'
 import { type PodcastInput } from '@/lib/validations'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Podcast {
   id: string
@@ -21,6 +22,7 @@ interface Podcast {
 }
 
 export default function PodcastsPage() {
+  const { t } = useDashboardI18n()
   const [podcasts, setPodcasts] = useState<Podcast[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -75,11 +77,11 @@ export default function PodcastsPage() {
       } else {
         const error = await response.json()
         console.error('🎙️ API Error:', error)
-        showToast({ type: 'error', title: error.error || 'Error al crear el episodio' })
+        showToast({ type: 'error', title: error.error || t('podcasts.createError') })
       }
     } catch (error) {
       console.error('🎙️ Network/Parse Error:', error)
-      showToast({ type: 'error', title: 'Error al crear el episodio' })
+      showToast({ type: 'error', title: t('podcasts.createError') })
     } finally {
       setSubmitting(false)
     }
@@ -105,11 +107,11 @@ export default function PodcastsPage() {
         setEditingPodcast(null)
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al actualizar el episodio' })
+        showToast({ type: 'error', title: error.error || t('podcasts.updateError') })
       }
     } catch (error) {
       console.error('Error updating podcast:', error)
-      showToast({ type: 'error', title: 'Error al actualizar el episodio' })
+      showToast({ type: 'error', title: t('podcasts.updateError') })
     } finally {
       setSubmitting(false)
     }
@@ -127,11 +129,11 @@ export default function PodcastsPage() {
         await loadPodcasts()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al eliminar el episodio' })
+        showToast({ type: 'error', title: error.error || t('podcasts.deleteError') })
       }
     } catch (error) {
       console.error('Error deleting podcast:', error)
-      showToast({ type: 'error', title: 'Error al eliminar el episodio' })
+      showToast({ type: 'error', title: t('podcasts.deleteError') })
     } finally {
       setDeletingId(null)
     }
@@ -155,12 +157,12 @@ export default function PodcastsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              {editingPodcast ? 'Editar Episodio' : 'Nuevo Episodio'}
+              {editingPodcast ? t('podcasts.edit') : t('podcasts.new')}
             </h1>
             <p className="text-muted-foreground mt-2">
               {editingPodcast 
-                ? 'Actualiza la información del episodio de podcast' 
-                : 'Crea un nuevo episodio de podcast de audio'
+                ? t('podcasts.editSubtitle')
+                : t('podcasts.newSubtitle')
               }
             </p>
           </div>
@@ -184,10 +186,10 @@ export default function PodcastsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            🎙️ Podcasts
+            {t('podcasts.title')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Gestiona los episodios de tu podcast de audio
+            {t('podcasts.subtitle')}
           </p>
         </div>
         
@@ -198,7 +200,7 @@ export default function PodcastsPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          <span>Nuevo Episodio</span>
+          <span>{t('podcasts.new')}</span>
         </button>
       </div>
 
@@ -207,7 +209,7 @@ export default function PodcastsPage() {
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100">Total Episodios</p>
+              <p className="text-purple-100">{t('podcasts.total')}</p>
               <p className="text-3xl font-bold">{podcasts.length}</p>
             </div>
             <div className="text-4xl opacity-80">🎙️</div>
@@ -217,7 +219,7 @@ export default function PodcastsPage() {
         <div className="bg-gradient-to-r from-brand to-brand rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100">Temporadas</p>
+              <p className="text-blue-100">{t('podcasts.seasons')}</p>
               <p className="text-3xl font-bold">
                 {new Set(podcasts.filter(p => p.season).map(p => p.season)).size || 0}
               </p>
@@ -229,7 +231,7 @@ export default function PodcastsPage() {
         <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-100">Último Episodio</p>
+              <p className="text-indigo-100">{t('podcasts.last')}</p>
               <p className="text-3xl font-bold">
                 {Math.max(...podcasts.map(p => p.episodeNumber || 0)) || 0}
               </p>
@@ -244,23 +246,23 @@ export default function PodcastsPage() {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Cargando episodios...</p>
+            <p className="text-muted-foreground">{t('podcasts.loading')}</p>
           </div>
         </div>
       ) : podcasts.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🎙️</div>
           <h3 className="text-xl font-semibold text-foreground mb-2">
-            No hay episodios aún
+            {t('podcasts.empty')}
           </h3>
           <p className="text-muted-foreground mb-6">
-            Crea tu primer episodio de podcast de audio para comenzar
+            {t('podcasts.emptyHint')}
           </p>
           <button
             onClick={() => setShowForm(true)}
             className="bg-gradient-to-r from-purple-600 to-brand hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
           >
-            Crear Primer Episodio
+            {t('podcasts.createFirst')}
           </button>
         </div>
       ) : (

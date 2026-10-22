@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { announcerSchema, type AnnouncerInput } from '@/lib/validations'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface AnnouncerFormProps {
   initialData?: {
@@ -19,6 +20,7 @@ interface AnnouncerFormProps {
 }
 
 export function AnnouncerForm({ initialData }: AnnouncerFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -52,10 +54,10 @@ export function AnnouncerForm({ initialData }: AnnouncerFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar el locutor' })
+        showToast({ type: 'error', title: error.error || t('announcers.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar el locutor' })
+      showToast({ type: 'error', title: t('announcers.saveError') })
     } finally {
       setLoading(false)
     }
@@ -64,32 +66,32 @@ export function AnnouncerForm({ initialData }: AnnouncerFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="form-group">
-        <label htmlFor="name" className="form-label">Nombre del Locutor *</label>
+        <label htmlFor="name" className="form-label">{t('announcers.name')}</label>
         <input
           type="text"
           id="name"
           className="form-input"
-          placeholder="Ej: Juan Pérez"
+          placeholder={t('announcers.namePlaceholder')}
           {...register('name')}
         />
         {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
       </div>
 
       <div className="form-group">
-        <label htmlFor="description" className="form-label">Descripción *</label>
+        <label htmlFor="description" className="form-label">{t('announcers.description')}</label>
         <textarea
           id="description"
           rows={4}
           className="form-textarea"
-          placeholder="Breve biografía o descripción del locutor..."
+          placeholder={t('announcers.descriptionPlaceholder')}
           {...register('description')}
         />
         {errors.description && <p className="text-sm text-red-600">{errors.description.message}</p>}
       </div>
 
       <ImageUpload
-        label="Foto del Locutor"
-        description="Foto o avatar del locutor (recomendado: 400x400px)"
+        label={t('announcers.photo')}
+        description={t('announcers.photoHint')}
         value={watch('imageUrl')}
         onChange={(url) => setValue('imageUrl', url)}
         onRemove={() => setValue('imageUrl', '')}
@@ -97,9 +99,9 @@ export function AnnouncerForm({ initialData }: AnnouncerFormProps) {
       {errors.imageUrl && <p className="text-sm text-red-600">{errors.imageUrl.message}</p>}
 
       <div className="flex justify-end space-x-3 pt-6 border-t">
-        <button type="button" onClick={() => router.back()} className="btn-secondary">Cancelar</button>
+        <button type="button" onClick={() => router.back()} className="btn-secondary">{t('common.cancel')}</button>
         <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
-          {loading ? 'Guardando...' : initialData ? 'Actualizar Locutor' : 'Crear Locutor'}
+          {loading ? t('common.saving') : initialData ? t('announcers.update') : t('announcers.create')}
         </button>
       </div>
     </form>

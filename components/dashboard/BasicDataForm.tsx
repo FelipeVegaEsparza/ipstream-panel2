@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { basicDataSchema, type BasicDataInput } from '@/lib/validations'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import type { GeocodeResult } from '@/lib/geocode'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface BasicDataFormProps {
   initialData?: {
@@ -31,6 +32,7 @@ interface BasicDataFormProps {
 }
 
 export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const [cityQuery, setCityQuery] = useState(initialData?.location?.city || '')
@@ -120,10 +122,10 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar los datos' })
+        showToast({ type: 'error', title: error.error || t('basic.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar los datos' })
+      showToast({ type: 'error', title: t('basic.saveError') })
     } finally {
       setLoading(false)
     }
@@ -133,7 +135,7 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="form-group">
         <label htmlFor="projectName" className="form-label">
-          Nombre del Proyecto *
+          {t('basic.projectName')}
         </label>
         <input
           type="text"
@@ -148,7 +150,7 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
 
       <div className="form-group">
         <label htmlFor="projectDescription" className="form-label">
-          Descripción del Proyecto *
+          {t('basic.projectDescription')}
         </label>
         <textarea
           id="projectDescription"
@@ -162,8 +164,8 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
       </div>
 
       <ImageUpload
-        label="Logo del Proyecto"
-        description="Logo de tu radio (recomendado: 200x100px)"
+        label={t('basic.logo')}
+        description={t('basic.logoHint')}
         value={watch('logoUrl')}
         onChange={(url) => setValue('logoUrl', url)}
         onRemove={() => setValue('logoUrl', '')}
@@ -173,8 +175,8 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
       )}
 
       <ImageUpload
-        label="Cover del Proyecto"
-        description="Imagen de portada (recomendado: 800x400px)"
+        label={t('basic.cover')}
+        description={t('basic.coverHint')}
         value={watch('coverUrl')}
         onChange={(url) => setValue('coverUrl', url)}
         onRemove={() => setValue('coverUrl', '')}
@@ -184,8 +186,8 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
       )}
 
       <ImageUpload
-        label="Fondo del splash (PWA)"
-        description="Imagen de fondo al abrir la app. Recomendado: vertical 720x1280px. Se optimiza a WebP automáticamente."
+        label={t('basic.splash')}
+        description={t('basic.splashHint')}
         value={watch('splashBackgroundUrl')}
         onChange={(url) => setValue('splashBackgroundUrl', url)}
         onRemove={() => setValue('splashBackgroundUrl', '')}
@@ -197,14 +199,14 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
 
       <div className="form-group">
         <label htmlFor="city" className="form-label">
-          Ciudad de la Radio
+          {t('basic.city')}
         </label>
         <div className="relative">
           <input
             id="city"
             type="text"
             className="form-input"
-            placeholder="Busca tu ciudad (ej: Osorno, Tokio...)"
+            placeholder={t('basic.cityPlaceholder')}
             value={cityQuery}
             onChange={(e) => {
               setCityQuery(e.target.value)
@@ -244,7 +246,7 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
               onClick={clearCity}
               className="text-xs text-red-400 hover:text-red-300"
             >
-              Quitar
+              {t('basic.remove')}
             </button>
           </div>
         )}
@@ -252,13 +254,13 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           <p className="text-sm text-red-600">{errors.location.message}</p>
         )}
         <p className="text-xs text-muted-foreground mt-1">
-          El panel resuelve automáticamente la ubicación (ciudades de cualquier país). Los sitios podrán mostrar el clima con estas coordenadas.
+          {t('basic.cityHint')}
         </p>
       </div>
 
       <div className="form-group">
         <label htmlFor="radioStreamingUrl" className="form-label">
-          URL de Streaming de Radio
+          {t('basic.radioUrl')}
         </label>
         <input
           type="text"
@@ -266,16 +268,16 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           readOnly
           className="form-input bg-card text-brand font-mono text-sm cursor-not-allowed"
           value={initialData?.radioStreamingUrl || ''}
-          placeholder="Se genera automáticamente según tu servidor"
+          placeholder={t('basic.urlPlaceholder')}
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Generada automáticamente según el servidor configurado. Copiala para usarla en tu sitio o player.
+          {t('basic.urlHint')}
         </p>
       </div>
 
       <div className="form-group">
         <label htmlFor="videoStreamingUrl" className="form-label">
-          URL de Streaming de Video
+          {t('basic.videoUrl')}
         </label>
         <input
           type="text"
@@ -283,10 +285,10 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           readOnly
           className="form-input bg-card text-brand font-mono text-sm cursor-not-allowed"
           value={initialData?.videoStreamingUrl || ''}
-          placeholder="Se genera automáticamente según tu servidor"
+          placeholder={t('basic.urlPlaceholder')}
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Generada automáticamente según el servidor configurado. Copiala para usarla en tu sitio o player.
+          {t('basic.urlHint')}
         </p>
       </div>
 
@@ -296,14 +298,14 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
           onClick={() => router.back()}
           className="btn-secondary"
         >
-          Cancelar
+          {t('basic.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="btn-primary disabled:opacity-50"
         >
-          {loading ? 'Guardando...' : 'Guardar'}
+          {loading ? t('basic.saving') : t('basic.save')}
         </button>
       </div>
     </form>

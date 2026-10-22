@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Hls from 'hls.js'
 import { useToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface VideoStatus {
   status: string
@@ -16,6 +17,7 @@ interface VideoStatus {
 }
 
 export default function TelevisionPage() {
+  const { t } = useDashboardI18n()
   const [videoStatus, setVideoStatus] = useState<VideoStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [copiedHls, setCopiedHls] = useState(false)
@@ -209,14 +211,14 @@ export default function TelevisionPage() {
         body: JSON.stringify({ action }),
       })
       if (res.ok) {
-        toast({ type: 'success', title: action === 'start' ? 'AutoDJ iniciado' : 'AutoDJ detenido' })
+        toast({ type: 'success', title: action === 'start' ? t('tv.autodjStarted') : t('tv.autodjStopped') })
         fetchStatus()
       } else {
         const err = await res.json()
-        toast({ type: 'error', title: 'Error', description: err.message || err.error })
+        toast({ type: 'error', title: t('tv.error'), description: err.message || err.error })
       }
     } catch (err) {
-      toast({ type: 'error', title: 'Error de conexión' })
+      toast({ type: 'error', title: t('tv.connectionError') })
     }
   }
 
@@ -224,7 +226,7 @@ export default function TelevisionPage() {
     if (!displayUrl) return
     navigator.clipboard.writeText(displayUrl)
     setCopiedHls(true)
-    toast({ type: 'success', title: 'URL HLS copiada' })
+    toast({ type: 'success', title: t('tv.hlsCopied') })
     setTimeout(() => setCopiedHls(false), 2000)
   }
 
@@ -232,7 +234,7 @@ export default function TelevisionPage() {
     if (!stableUrl) return
     navigator.clipboard.writeText(stableUrl)
     setCopiedStable(true)
-    toast({ type: 'success', title: 'URL estable copiada' })
+    toast({ type: 'success', title: t('tv.stableCopied') })
     setTimeout(() => setCopiedStable(false), 2000)
   }
 
@@ -240,7 +242,7 @@ export default function TelevisionPage() {
     if (!playerUrl) return
     navigator.clipboard.writeText(playerUrl)
     setCopiedPlayer(true)
-    toast({ type: 'success', title: 'URL del reproductor copiada' })
+    toast({ type: 'success', title: t('tv.playerCopied') })
     setTimeout(() => setCopiedPlayer(false), 2000)
   }
 
@@ -251,9 +253,9 @@ export default function TelevisionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Televisión</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('tv.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Transmisión de video en vivo — AutoDJ 24/7
+          {t('tv.subtitle')}
         </p>
       </div>
 
@@ -269,11 +271,11 @@ export default function TelevisionPage() {
             isLive ? 'bg-red-500 animate-pulse' :
             'bg-green-500 animate-pulse'
           }`} />
-          {isOff ? 'Detenido' : isLive ? 'EN VIVO (DJ)' : 'AutoDJ'}
+          {isOff ? t('tv.status.stopped') : isLive ? t('tv.status.liveDj') : t('tv.status.autodj')}
         </span>
         {videoStatus?.dj.active && (
           <span className="text-xs text-red-300">
-            DJ conectado desde {new Date(videoStatus.dj.connectedAt!).toLocaleTimeString('es-CL')}
+            {t('tv.djSince', { time: new Date(videoStatus.dj.connectedAt!).toLocaleTimeString('es-CL') })}
           </span>
         )}
       </div>
@@ -282,11 +284,11 @@ export default function TelevisionPage() {
       <div className="flex gap-3">
         {isOff ? (
           <button onClick={() => doAction('start')} className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
-            ▶ Iniciar AutoDJ
+            {t('tv.startAutodj')}
           </button>
         ) : (
           <button onClick={() => doAction('stop')} className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
-            ■ Detener
+            {t('tv.stop')}
           </button>
         )}
       </div>
@@ -294,7 +296,7 @@ export default function TelevisionPage() {
       {/* HLS Player */}
       {hlsUrl && (isAutoDj || isLive) && (
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Vista previa</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">{t('tv.preview')}</h2>
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
             <video
               key={hlsApp}
@@ -312,11 +314,11 @@ export default function TelevisionPage() {
       {/* URLs de transmisión */}
       {stableUrl && (
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5 space-y-3">
-          <h2 className="text-lg font-semibold text-foreground mb-1">URL de transmisión</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-1">{t('tv.streamUrl')}</h2>
 
           <div>
             <p className="text-xs text-muted-foreground mb-1.5">
-              Estable (muestra AutoDJ u OBS según lo que esté al aire)
+              {t('tv.stableHint')}
             </p>
             <div className="flex flex-col md:flex-row gap-2">
               <input
@@ -327,7 +329,7 @@ export default function TelevisionPage() {
                 onClick={(e) => e.currentTarget.select()}
               />
               <button onClick={copyStable} className="px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg transition-colors text-sm">
-                {copiedStable ? '✓ Copiado' : 'Copiar'}
+                {copiedStable ? t('tv.copied') : t('tv.copy')}
               </button>
             </div>
           </div>
@@ -335,7 +337,7 @@ export default function TelevisionPage() {
           {playerUrl && (
             <div>
               <p className="text-xs text-muted-foreground mb-1.5">
-                Reproductor (abre una página para ver lo que esté al aire)
+                {t('tv.playerHint')}
               </p>
               <div className="flex flex-col md:flex-row gap-2">
                 <input
@@ -351,10 +353,10 @@ export default function TelevisionPage() {
                   rel="noopener noreferrer"
                   className="px-4 py-2.5 bg-green-700 hover:bg-green-600 text-white rounded-lg transition-colors text-sm text-center"
                 >
-                  Abrir
+                  {t('tv.open')}
                 </a>
                 <button onClick={copyPlayer} className="px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-colors text-sm">
-                  {copiedPlayer ? '✓ Copiado' : 'Copiar'}
+                  {copiedPlayer ? t('tv.copied') : t('tv.copy')}
                 </button>
               </div>
             </div>
@@ -363,7 +365,7 @@ export default function TelevisionPage() {
           {displayUrl && (
             <div>
               <p className="text-xs text-muted-foreground mb-1.5">
-                Actual ({isLive ? 'OBS en vivo' : isAutoDj ? 'AutoDJ' : 'Detenido'})
+                {t('tv.current', { status: isLive ? t('tv.obsLive') : isAutoDj ? t('tv.status.autodj') : t('tv.status.stopped') })}
               </p>
               <div className="flex flex-col md:flex-row gap-2">
                 <input
@@ -374,7 +376,7 @@ export default function TelevisionPage() {
                   onClick={(e) => e.currentTarget.select()}
                 />
                 <button onClick={copyHls} className="px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-colors text-sm">
-                  {copiedHls ? '✓ Copiado' : 'Copiar'}
+                  {copiedHls ? t('tv.copied') : t('tv.copy')}
                 </button>
               </div>
             </div>
@@ -384,17 +386,17 @@ export default function TelevisionPage() {
 
       {/* Now Playing */}
       <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
-        <h2 className="text-lg font-semibold text-foreground mb-2">Ahora en pantalla</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-2">{t('tv.nowOnScreen')}</h2>
         {isLive ? (
-          <p className="text-brand font-medium">Transmisión en vivo desde OBS</p>
+          <p className="text-brand font-medium">{t('tv.liveFromObs')}</p>
         ) : isAutoDj ? (
           <p className="text-muted-foreground">
             {videoStatus?.encoder.currentTrack
-              ? `Reproduciendo: ${videoStatus.encoder.currentTrack}`
-              : 'Reproduciendo...'}
+              ? t('tv.playingTrack', { track: videoStatus.encoder.currentTrack })
+              : t('tv.playing')}
           </p>
         ) : (
-          <p className="text-muted-foreground italic">Stream detenido</p>
+          <p className="text-muted-foreground italic">{t('tv.streamStopped')}</p>
         )}
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/components/ui/toast'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface VideoPlaylist {
   id: string
@@ -35,6 +36,7 @@ interface Folder {
 }
 
 export default function TvPlaylistsPage() {
+  const { t } = useDashboardI18n()
   const [playlists, setPlaylists] = useState<VideoPlaylist[]>([])
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
   const [entries, setEntries] = useState<PlaylistEntry[]>([])
@@ -129,16 +131,16 @@ export default function TvPlaylistsPage() {
     })
     if (res.ok) {
       setNewPlaylistName('')
-      toast({ type: 'success', title: 'Playlist creada' })
+      toast({ type: 'success', title: t('tv.playlists.created') })
       fetchPlaylists()
     }
   }
 
   const deletePlaylist = async (id: string) => {
-    if (!confirm('¿Eliminar esta playlist?')) return
+    if (!confirm(t('tv.playlists.confirmDelete'))) return
     const res = await fetch(`/api/dashboard/television/playlists/${id}`, { method: 'DELETE' })
     if (res.ok) {
-      toast({ type: 'success', title: 'Playlist eliminada' })
+      toast({ type: 'success', title: t('tv.playlists.deleted') })
       if (selectedPlaylistId === id) setSelectedPlaylistId(null)
       fetchPlaylists()
     }
@@ -172,7 +174,7 @@ export default function TvPlaylistsPage() {
         })
         if (res.ok) added++
       }
-      toast({ type: 'success', title: `${added} tracks agregados` })
+      toast({ type: 'success', title: t('tv.playlists.tracksAdded', { count: added }) })
       setSelectedTrackIds(new Set())
       setShowAdd(false)
       setSearch('')
@@ -180,7 +182,7 @@ export default function TvPlaylistsPage() {
       fetchEntries()
       fetchPlaylists()
     } catch (_) {
-      toast({ type: 'error', title: 'Error al agregar tracks' })
+      toast({ type: 'error', title: t('tv.playlists.addError') })
     } finally {
       setAddingBulk(false)
     }
@@ -192,7 +194,7 @@ export default function TvPlaylistsPage() {
       method: 'DELETE',
     })
     if (res.ok) {
-      toast({ type: 'success', title: 'Track removido' })
+      toast({ type: 'success', title: t('tv.playlists.trackRemoved') })
       fetchEntries()
       fetchPlaylists()
     }
@@ -232,13 +234,13 @@ export default function TvPlaylistsPage() {
       })
       if (res.ok) {
         setLoadedEntryIds(entries.map(e => e.id).join(','))
-        toast({ type: 'success', title: 'Orden guardado' })
+        toast({ type: 'success', title: t('tv.playlists.orderSaved') })
       } else {
-        toast({ type: 'error', title: 'Error al guardar orden' })
+        toast({ type: 'error', title: t('tv.playlists.orderError') })
         fetchEntries()
       }
     } catch (_) {
-      toast({ type: 'error', title: 'Error al guardar orden' })
+      toast({ type: 'error', title: t('tv.playlists.orderError') })
       fetchEntries()
     } finally {
       setSavingOrder(false)
@@ -268,7 +270,7 @@ export default function TvPlaylistsPage() {
     else setSelectedTrackIds(new Set(ids))
   }
 
-  if (loading) return <div className="text-muted-foreground p-6">Cargando...</div>
+  if (loading) return <div className="text-muted-foreground p-6">{t('tv.playlists.loading')}</div>
 
   const selectableTracks = tracks.filter(t => !inPlaylistIds.has(t.id))
   const allSelected = selectableTracks.length > 0 && selectableTracks.every((t) => selectedTrackIds.has(t.id))
@@ -276,9 +278,9 @@ export default function TvPlaylistsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Programación</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('tv.playlists.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Crea y edita las playlists de video para tu canal de Televisión. Los videos se agregan desde la Videoteca o con el buscador.
+          {t('tv.playlists.subtitle')}
         </p>
       </div>
 
@@ -286,7 +288,7 @@ export default function TvPlaylistsPage() {
         {/* Playlist sidebar */}
         <div className="w-64 flex-shrink-0 space-y-3">
           <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">Playlists</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">{t('tv.playlists.list')}</h3>
             {playlists.map(pl => (
               <div key={pl.id} className="flex items-center gap-1 group">
                 <button
@@ -307,7 +309,7 @@ export default function TvPlaylistsPage() {
                 value={newPlaylistName}
                 onChange={e => setNewPlaylistName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && createPlaylist()}
-                placeholder="Nueva playlist..."
+                placeholder={t('tv.playlists.new')}
                 className="flex-1 bg-secondary text-foreground text-xs px-2 py-1.5 rounded border border-border outline-none focus:border-brand"
               />
               <button onClick={createPlaylist} className="px-2 py-1 bg-brand text-white text-xs rounded hover:bg-brand">
@@ -321,7 +323,7 @@ export default function TvPlaylistsPage() {
               onClick={() => { setShowAdd(true); setSelectedTrackIds(new Set()); setSearch(''); setFolderFilter(null) }}
               className="w-full px-3 py-2 bg-brand hover:bg-brand text-white text-sm rounded-lg transition-colors"
             >
-              + Agregar tracks
+              {t('tv.playlists.addTracks')}
             </button>
           )}
         </div>
@@ -330,9 +332,9 @@ export default function TvPlaylistsPage() {
         <div className="flex-1">
           <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl overflow-hidden">
             {!selectedPlaylistId ? (
-              <div className="p-6 text-center text-muted-foreground">Selecciona o crea una playlist</div>
+              <div className="p-6 text-center text-muted-foreground">{t('tv.playlists.selectOrCreate')}</div>
             ) : loadingEntries ? (
-              <div className="p-6 text-center text-muted-foreground">Cargando...</div>
+              <div className="p-6 text-center text-muted-foreground">{t('tv.playlists.loading')}</div>
             ) : (
               <>
                 <div className="p-4 border-b border-border flex items-center justify-between">
@@ -345,13 +347,13 @@ export default function TvPlaylistsPage() {
                       disabled={savingOrder}
                       className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white text-sm rounded"
                     >
-                      {savingOrder ? 'Guardando...' : 'Guardar orden'}
+                      {savingOrder ? t('tv.playlists.saving') : t('tv.playlists.saveOrder')}
                     </button>
                   )}
                 </div>
                 {entries.length === 0 ? (
                   <div className="p-12 text-center text-muted-foreground">
-                    Playlist vacía. Agregá videos desde la Videoteca o con "+ Agregar tracks".
+                    {t('tv.playlists.empty')}
                   </div>
                 ) : (
                   <div>
@@ -387,7 +389,7 @@ export default function TvPlaylistsPage() {
                           onClick={() => removeEntry(entry.id)}
                           className="text-xs text-muted-foreground hover:text-red-400"
                         >
-                          Quitar
+                          {t('tv.playlists.remove')}
                         </button>
                       </div>
                     ))}
@@ -405,7 +407,7 @@ export default function TvPlaylistsPage() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} />
           <div className="relative bg-card rounded-2xl shadow-2xl border border-border w-full max-w-lg max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground">Agregar tracks</h3>
+              <h3 className="text-lg font-semibold text-foreground">{t('tv.playlists.addTracksTitle')}</h3>
               <button onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} className="text-muted-foreground hover:text-foreground">
                 ✕
               </button>
@@ -418,8 +420,8 @@ export default function TvPlaylistsPage() {
                   onChange={e => setFolderFilter(e.target.value || null)}
                   className="flex-1 bg-background text-foreground text-sm px-2 py-1.5 rounded border border-border outline-none"
                 >
-                  <option value="">Todas las carpetas</option>
-                  <option value="__none__">Sin carpeta</option>
+                  <option value="">{t('tv.playlists.allFolders')}</option>
+                  <option value="__none__">{t('tv.playlists.noFolder')}</option>
                   {folders.map(f => (
                     <option key={f.id} value={f.id}>{f.name}</option>
                   ))}
@@ -431,7 +433,7 @@ export default function TvPlaylistsPage() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="🔍 Buscar en videoteca..."
+                placeholder={t('tv.playlists.searchLibrary')}
                 className="w-full bg-background text-foreground px-3 py-2 rounded border border-border"
               />
             </div>
@@ -445,14 +447,14 @@ export default function TvPlaylistsPage() {
                 className="rounded"
               />
               <span className="text-sm text-muted-foreground">
-                {allSelected ? 'Deseleccionar todos' : `Seleccionar todos (${selectableTracks.length} disponibles)`}
+                {allSelected ? t('tv.playlists.deselectAll') : t('tv.playlists.selectAll', { count: selectableTracks.length })}
               </span>
             </div>
 
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {selectableTracks.length === 0 ? (
                 <div className="text-muted-foreground text-sm py-8 text-center">
-                  {tracks.length === 0 ? 'No hay videos. Sube videos primero en la Videoteca.' : 'Sin resultados.'}
+                  {tracks.length === 0 ? t('tv.playlists.noVideos') : t('tv.playlists.noResults')}
                 </div>
               ) : (
                 selectableTracks.map(t => {
@@ -492,14 +494,14 @@ export default function TvPlaylistsPage() {
                 onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }}
                 className="flex-1 px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded-lg font-medium"
               >
-                Cancelar
+                {t('tv.playlists.cancel')}
               </button>
               <button
                 onClick={bulkAddTracks}
                 disabled={selectedTrackIds.size === 0 || addingBulk}
                 className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 text-white rounded-lg font-medium"
               >
-                {addingBulk ? 'Agregando...' : `Agregar seleccionados (${selectedTrackIds.size})`}
+                {addingBulk ? t('tv.playlists.adding') : t('tv.playlists.addSelected', { count: selectedTrackIds.size })}
               </button>
             </div>
           </div>

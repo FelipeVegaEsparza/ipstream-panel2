@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { programSchema, type ProgramInput } from '@/lib/validations'
 import { weekDayOptions } from '@/lib/utils'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface ProgramFormProps {
   initialData?: {
@@ -23,6 +24,11 @@ interface ProgramFormProps {
 }
 
 export function ProgramForm({ initialData }: ProgramFormProps) {
+  const { t } = useDashboardI18n()
+  const dayNames: Record<string, string> = {
+    monday: t('tv.day.1'), tuesday: t('tv.day.2'), wednesday: t('tv.day.3'),
+    thursday: t('tv.day.4'), friday: t('tv.day.5'), saturday: t('tv.day.6'), sunday: t('tv.day.0'),
+  }
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -75,10 +81,10 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar el programa' })
+        showToast({ type: 'error', title: error.error || t('programs.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar el programa' })
+      showToast({ type: 'error', title: t('programs.saveError') })
     } finally {
       setLoading(false)
     }
@@ -88,7 +94,7 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="form-group">
         <label htmlFor="name" className="form-label">
-          Nombre del Programa *
+          {t('programs.name')}
         </label>
         <input
           type="text"
@@ -102,8 +108,8 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
       </div>
 
       <ImageUpload
-        label="Imagen del Programa"
-        description="Imagen representativa del programa (recomendado: 300x200px)"
+        label={t('programs.image')}
+        description={t('programs.imageHint')}
         value={watch('imageUrl')}
         onChange={(url) => setValue('imageUrl', url)}
         onRemove={() => setValue('imageUrl', '')}
@@ -114,7 +120,7 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
 
       <div className="form-group">
         <label htmlFor="description" className="form-label">
-          Descripción *
+          {t('programs.description')}
         </label>
         <textarea
           id="description"
@@ -130,7 +136,7 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <div className="form-group">
           <label htmlFor="startTime" className="form-label">
-            Hora de Inicio *
+            {t('programs.startTime')}
           </label>
           <input
             type="time"
@@ -145,7 +151,7 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
 
         <div className="form-group">
           <label htmlFor="endTime" className="form-label">
-            Hora de Fin *
+            {t('programs.endTime')}
           </label>
           <input
             type="time"
@@ -161,7 +167,7 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
 
       <div className="form-group">
         <label className="form-label">
-          Días de la Semana *
+          {t('programs.weekdays')}
         </label>
         <div className="grid grid-cols-2 gap-3 mt-2">
           {weekDayOptions.map((option) => (
@@ -172,7 +178,7 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
                 checked={selectedDays?.includes(option.value) || false}
                 onChange={(e) => handleDayChange(option.value, e.target.checked)}
               />
-              <span className="ml-2 text-sm text-gray-700">{option.label}</span>
+              <span className="ml-2 text-sm text-gray-700">{dayNames[option.value] ?? option.label}</span>
             </label>
           ))}
         </div>
@@ -187,14 +193,14 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
           onClick={() => router.back()}
           className="btn-secondary"
         >
-          Cancelar
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="btn-primary disabled:opacity-50"
         >
-          {loading ? 'Guardando...' : 'Guardar'}
+          {loading ? t('common.saving') : t('common.save')}
         </button>
       </div>
     </form>

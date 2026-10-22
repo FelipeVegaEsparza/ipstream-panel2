@@ -6,8 +6,11 @@ import Link from 'next/link'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { NewsList } from '@/components/dashboard/NewsList'
 import { GenericNewsSelector } from '@/components/dashboard/GenericNewsSelector'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function NewsPage() {
+  const t = dashboardT(getDashboardLocale())
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
@@ -22,7 +25,7 @@ export default async function NewsPage() {
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const client = await prisma.client.findUnique({
@@ -54,12 +57,12 @@ export default async function NewsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Noticias
+            {t('news.title')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {useGenericNews
-              ? 'Estás usando noticias genéricas del sistema'
-              : 'Gestiona las noticias de tu radio'}
+              ? t('news.generic')
+              : t('news.subtitle')}
           </p>
         </div>
         {!useGenericNews && (
@@ -68,7 +71,7 @@ export default async function NewsPage() {
             className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="h-5 w-5" />
-            Nueva Noticia
+            {t('news.new')}
           </Link>
         )}
       </div>
@@ -84,8 +87,7 @@ export default async function NewsPage() {
       {useGenericNews ? (
         <div className="card p-6">
           <p className="text-muted-foreground">
-            Las noticias que se muestran en tu sitio web son proporcionadas por el sistema.
-            Puedes seleccionar las categorías que deseas mostrar en la sección de configuración superior.
+            {t('news.genericText')}
           </p>
         </div>
       ) : (

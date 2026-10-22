@@ -8,6 +8,7 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { pollSchema, type PollInput } from '@/lib/validations'
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface PollFormProps {
   initialData?: {
@@ -18,6 +19,7 @@ interface PollFormProps {
 }
 
 export function PollForm({ initialData }: PollFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -51,10 +53,10 @@ export function PollForm({ initialData }: PollFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar la encuesta' })
+        showToast({ type: 'error', title: error.error || t('polls.saveError') })
       }
     } catch {
-      showToast({ type: 'error', title: 'Error al guardar la encuesta' })
+      showToast({ type: 'error', title: t('polls.saveError') })
     } finally {
       setLoading(false)
     }
@@ -63,25 +65,25 @@ export function PollForm({ initialData }: PollFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="form-group">
-        <label htmlFor="title" className="form-label">Pregunta de la Encuesta *</label>
+        <label htmlFor="title" className="form-label">{t('polls.question')}</label>
         <input
           type="text"
           id="title"
           className="form-input"
-          placeholder="Ej: ¿Qué género musical prefieres?"
+          placeholder={t('polls.questionPlaceholder')}
           {...register('title')}
         />
         {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
       </div>
 
       <div className="space-y-3">
-        <label className="form-label">Opciones de Respuesta *</label>
+        <label className="form-label">{t('polls.optionsLabel')}</label>
         {fields.map((field, index) => (
           <div key={field.id} className="flex items-center gap-2">
             <input
               type="text"
               className="form-input flex-1"
-              placeholder={`Opción ${index + 1}`}
+              placeholder={t('polls.option', { n: index + 1 })}
               {...register(`options.${index}`)}
             />
             {fields.length > 2 && (
@@ -97,14 +99,14 @@ export function PollForm({ initialData }: PollFormProps) {
           onClick={() => append('')}
           className="text-sm text-brand hover:text-brand flex items-center gap-1"
         >
-          <PlusIcon className="h-4 w-4" /> Agregar opción
+          <PlusIcon className="h-4 w-4" /> {t('polls.addOption')}
         </button>
       </div>
 
       <div className="flex justify-end space-x-3 pt-6 border-t">
-        <button type="button" onClick={() => router.back()} className="btn-secondary">Cancelar</button>
+        <button type="button" onClick={() => router.back()} className="btn-secondary">{t('common.cancel')}</button>
         <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
-          {loading ? 'Guardando...' : initialData ? 'Actualizar Encuesta' : 'Crear Encuesta'}
+          {loading ? t('common.saving') : initialData ? t('polls.update') : t('polls.create')}
         </button>
       </div>
     </form>

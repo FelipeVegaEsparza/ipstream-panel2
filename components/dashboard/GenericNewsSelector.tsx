@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 
 import { useState } from 'react'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Category {
   id: string
@@ -17,6 +18,7 @@ interface GenericNewsSelectorProps {
 }
 
 export function GenericNewsSelector({ useGenericNews, selectedCategories, allCategories }: GenericNewsSelectorProps) {
+  const { t } = useDashboardI18n()
   const router = useRouter()
   const [enabled, setEnabled] = useState(useGenericNews)
   const [selected, setSelected] = useState<string[]>(selectedCategories.map(c => c.id))
@@ -57,16 +59,14 @@ export function GenericNewsSelector({ useGenericNews, selectedCategories, allCat
     <div className="card p-4 space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
-          <p className="font-semibold text-foreground">Noticias desde CasterFly</p>
+          <p className="font-semibold text-foreground">{t('news.genericTitle')}</p>
           <p className="text-sm text-muted-foreground mt-1">
             {enabled
-              ? 'Mostrando noticias proporcionadas por el sistema'
-              : 'Usando tus propias noticias'}
+              ? t('news.genericEnabled')
+              : t('news.genericDisabled')}
           </p>
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-            Al activar esta opción, tu sitio web mostrará las noticias publicadas desde CasterFly
-            en lugar de las que crees aquí. Podrás elegir qué categorías de noticias genéricas
-            deseas mostrar a tu audiencia.
+            {t('news.genericDescription')}
           </p>
         </div>
         <button
@@ -87,7 +87,7 @@ export function GenericNewsSelector({ useGenericNews, selectedCategories, allCat
       {enabled && allCategories.length > 0 && (
         <div>
           <p className="text-sm font-medium text-foreground mb-2">
-            Selecciona las categorías a mostrar:
+            {t('news.selectCategories')}
           </p>
           <div className="flex flex-wrap gap-3">
             {allCategories.map((cat) => (

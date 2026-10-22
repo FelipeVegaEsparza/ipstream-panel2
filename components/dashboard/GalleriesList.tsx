@@ -8,6 +8,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, TrashIcon, EyeIcon, PhotoIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface GalleryImage {
   id: string
@@ -28,11 +29,12 @@ interface GalleriesListProps {
 }
 
 export function GalleriesList({ galleries }: GalleriesListProps) {
+  const { t, locale } = useDashboardI18n()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta galería?')) {
+    if (!confirm(t('galleries.confirmDelete'))) {
       return
     }
 
@@ -45,17 +47,17 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar la galería' })
+        showToast({ type: 'error', title: t('galleries.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar la galería' })
+      showToast({ type: 'error', title: t('galleries.deleteError') })
     } finally {
       setLoading(null)
     }
   }
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -155,14 +157,14 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
                 <Link
                   href={`/dashboard/galleries/${gallery.id}`}
                   className="action-button action-button-view"
-                  title="Ver galería"
+                  title={t('galleries.view')}
                 >
                   <EyeIcon className="h-4 w-4" />
                 </Link>
                 <Link
                   href={`/dashboard/galleries/${gallery.id}/edit`}
                   className="action-button action-button-edit"
-                  title="Editar galería"
+                  title={t('galleries.edit')}
                 >
                   <PencilIcon className="h-4 w-4" />
                 </Link>
@@ -170,7 +172,7 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
                   onClick={() => handleDelete(gallery.id)}
                   disabled={loading === gallery.id}
                   className="action-button action-button-delete"
-                  title="Eliminar galería"
+                  title={t('galleries.delete')}
                 >
                   {loading === gallery.id ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

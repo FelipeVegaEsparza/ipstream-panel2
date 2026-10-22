@@ -3,6 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { GalleryForm } from '@/components/dashboard/GalleryForm'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface EditGalleryPageProps {
   params: {
@@ -11,10 +13,11 @@ interface EditGalleryPageProps {
 }
 
 export default async function EditGalleryPage({ params }: EditGalleryPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
 
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const gallery = await prisma.gallery.findFirst({
@@ -36,9 +39,9 @@ export default async function EditGalleryPage({ params }: EditGalleryPageProps) 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Editar Galería</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('galleries.form.edit')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Modifica la información y las imágenes de la galería
+          {t('galleries.form.editSubtitle')}
         </p>
       </div>
 

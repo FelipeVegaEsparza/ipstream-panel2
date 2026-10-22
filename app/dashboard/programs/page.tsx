@@ -5,8 +5,11 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { ProgramsList } from '@/components/dashboard/ProgramsList'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function ProgramsPage() {
+  const t = dashboardT(getDashboardLocale())
   // MENU_GUARD_INJECTED
   {
     const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
@@ -21,7 +24,7 @@ export default async function ProgramsPage() {
   const session = await getServerSession(authOptions)
   
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const programs = await prisma.program.findMany({
@@ -34,10 +37,10 @@ export default async function ProgramsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Programas
+            {t('programs.title')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Gestiona la programación de tu radio
+            {t('programs.subtitle')}
           </p>
         </div>
         <Link
@@ -45,7 +48,7 @@ export default async function ProgramsPage() {
           className="btn-primary flex items-center gap-2"
         >
           <PlusIcon className="h-5 w-5" />
-          Nuevo Programa
+          {t('programs.new')}
         </Link>
       </div>
 

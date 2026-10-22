@@ -5,14 +5,17 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, ArrowLeftIcon, CalendarDaysIcon, MapPinIcon, LinkIcon } from '@heroicons/react/24/outline'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface EventDetailPageProps {
   params: { id: string }
 }
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
-  if (!session?.user.clientId) return <div>Error: No se encontró información del cliente</div>
+  if (!session?.user.clientId) return <div>{t('news.noClient')}</div>
 
   const event = await prisma.event.findFirst({
     where: { id: params.id, clientId: session.user.clientId },
@@ -34,8 +37,8 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Vista de Evento</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Información del evento</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('events.detailTitle')}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t('events.detailSubtitle')}</p>
           </div>
         </div>
         <Link href={`/dashboard/events/${event.id}/edit`} className="btn-primary flex items-center gap-2">
@@ -51,7 +54,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 <Image src={event.imageUrl} alt={event.title} fill className="object-cover" />
                 {past && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="text-foreground text-lg font-bold uppercase tracking-wider bg-black/60 px-4 py-2 rounded-lg">Finalizado</span>
+                    <span className="text-foreground text-lg font-bold uppercase tracking-wider bg-black/60 px-4 py-2 rounded-lg">{t('events.finished')}</span>
                   </div>
                 )}
               </div>
@@ -89,46 +92,46 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Información</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('events.info')}</h3>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-muted-foreground">Estado:</span>
+                <span className="text-sm text-muted-foreground">{t('events.status')}</span>
                 <p className={`text-sm font-medium ${past ? 'text-red-600' : 'text-green-600'}`}>
-                  {past ? 'Finalizado' : 'Próximo'}
+                  {past ? t('events.finished') : t('events.upcoming')}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Fecha:</span>
+                <span className="text-sm text-muted-foreground">{t('events.dateLabel')}</span>
                 <p className="text-sm font-medium text-gray-900">{formatDate(event.date)}</p>
               </div>
               {event.time && (
                 <div>
-                  <span className="text-sm text-muted-foreground">Hora:</span>
+                  <span className="text-sm text-muted-foreground">{t('events.timeLabel')}</span>
                   <p className="text-sm font-medium text-gray-900">{event.time}</p>
                 </div>
               )}
               {event.location && (
                 <div>
-                  <span className="text-sm text-muted-foreground">Ubicación:</span>
+                  <span className="text-sm text-muted-foreground">{t('events.locationLabel')}</span>
                   <p className="text-sm font-medium text-gray-900">{event.location}</p>
                 </div>
               )}
               <div>
-                <span className="text-sm text-muted-foreground">Creado:</span>
+                <span className="text-sm text-muted-foreground">{t('events.createdLabel')}</span>
                 <p className="text-sm font-medium text-gray-900">{formatDateTime(event.createdAt)}</p>
               </div>
             </div>
           </div>
 
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Acciones</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('events.actions')}</h3>
             <Link href={`/dashboard/events/${event.id}/edit`} className="w-full btn-primary flex items-center justify-center gap-2">
-              <PencilIcon className="h-4 w-4" /> Editar evento
+              <PencilIcon className="h-4 w-4" /> {t('events.edit')}
             </Link>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">API REST</h3>
+            <h3 className="text-sm font-medium text-blue-800 mb-2">{t('events.apiRest')}</h3>
             <code className="block bg-blue-100 px-3 py-2 rounded text-xs text-blue-900 mt-1 break-all">
               GET /api/public/{session.user.clientId}/events
             </code>

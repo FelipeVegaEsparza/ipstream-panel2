@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/components/ui/toast'
 import { MediaUploader } from '@/components/dashboard/streaming/MediaUploader'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface VideoTrack {
   id: string
@@ -45,6 +46,7 @@ interface VideoPlaylist {
 }
 
 export default function TvLibraryPage() {
+  const { t } = useDashboardI18n()
   const [tracks, setTracks] = useState<VideoTrack[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
   const [playlists, setPlaylists] = useState<VideoPlaylist[]>([])
@@ -112,7 +114,7 @@ export default function TvLibraryPage() {
     })
     if (res.ok) {
       setNewFolderName('')
-      toast({ type: 'success', title: 'Carpeta creada' })
+      toast({ type: 'success', title: t('tv.library.folderCreated') })
       fetchAll()
     }
   }
@@ -126,26 +128,26 @@ export default function TvLibraryPage() {
     })
     if (res.ok) {
       setRenamingFolderId(null)
-      toast({ type: 'success', title: 'Carpeta renombrada' })
+      toast({ type: 'success', title: t('tv.library.folderRenamed') })
       fetchAll()
     }
   }
 
   const deleteFolder = async (folderId: string) => {
-    if (!confirm('¿Eliminar carpeta? Los videos se moverán a raíz.')) return
+    if (!confirm(t('tv.library.confirmFolder'))) return
     const res = await fetch(`/api/dashboard/television/folders/${folderId}`, { method: 'DELETE' })
     if (res.ok) {
-      toast({ type: 'success', title: 'Carpeta eliminada' })
+      toast({ type: 'success', title: t('tv.library.folderDeleted') })
       if (currentFolderId === folderId) setCurrentFolderId(null)
       fetchAll()
     }
   }
 
   const deleteTrack = async (trackId: string) => {
-    if (!confirm('¿Eliminar este video?')) return
+    if (!confirm(t('tv.library.confirmVideo'))) return
     const res = await fetch(`/api/dashboard/television/tracks/${trackId}`, { method: 'DELETE' })
     if (res.ok) {
-      toast({ type: 'success', title: 'Video eliminado' })
+      toast({ type: 'success', title: t('tv.library.videoDeleted') })
       fetchAll()
     }
   }
@@ -158,7 +160,7 @@ export default function TvLibraryPage() {
       body: JSON.stringify({ trackIds: Array.from(selectedTracks), folderId }),
     })
     if (res.ok) {
-      toast({ type: 'success', title: `${selectedTracks.size} videos movidos` })
+      toast({ type: 'success', title: t('tv.library.movedVideos', { count: selectedTracks.size }) })
       setSelectedTracks(new Set())
       fetchAll()
     }
@@ -176,7 +178,7 @@ export default function TvLibraryPage() {
       })
       if (res.ok) added++
     }
-    toast({ type: 'success', title: `${added} videos agregados a la playlist` })
+    toast({ type: 'success', title: t('tv.library.addedToPlaylist', { count: added }) })
     setSelectedTracks(new Set())
     fetchAll()
   }
@@ -195,9 +197,9 @@ export default function TvLibraryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Videoteca</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('tv.library.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Sube y gestiona tus videos para Televisión
+          {t('tv.library.subtitle')}
         </p>
       </div>
 
@@ -206,11 +208,11 @@ export default function TvLibraryPage() {
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4">
           <div className="flex justify-between text-sm mb-2">
             <span className="text-muted-foreground">
-              {storage.trackCount} videos — {storage.totalMB.toFixed(1)} MB
+              {t('tv.library.storage', { count: storage.trackCount, mb: storage.totalMB.toFixed(1) })}
             </span>
             {storage.quotaMB && (
               <span className={storage.percentUsed && storage.percentUsed > 90 ? 'text-red-400' : 'text-muted-foreground'}>
-                {storage.percentUsed?.toFixed(0)}% usado ({storage.remainingMB?.toFixed(0)} MB libres)
+                {t('tv.library.used', { percent: storage.percentUsed?.toFixed(0), free: storage.remainingMB?.toFixed(0) })}
               </span>
             )}
           </div>
@@ -231,14 +233,14 @@ export default function TvLibraryPage() {
         {/* Folder sidebar */}
         <div className="w-64 flex-shrink-0">
           <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">Carpetas</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">{t('tv.library.folders')}</h3>
             <button
               onClick={() => setCurrentFolderId(null)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                 !currentFolderId ? 'bg-brand/30 text-brand' : 'text-muted-foreground hover:bg-secondary'
               }`}
             >
-              📁 Todas ({tracks.length})
+              {t('tv.library.all', { count: tracks.length })}
             </button>
             {rootFolders.map(folder => (
               <div key={folder.id}>
@@ -285,7 +287,7 @@ export default function TvLibraryPage() {
                 value={newFolderName}
                 onChange={e => setNewFolderName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && createFolder()}
-                placeholder="Nueva carpeta..."
+                placeholder={t('tv.library.newFolder')}
                 className="flex-1 bg-secondary text-foreground text-xs px-2 py-1.5 rounded border border-border outline-none focus:border-brand"
               />
               <button onClick={createFolder} className="px-2 py-1 bg-brand text-white text-xs rounded hover:bg-brand">
@@ -302,15 +304,15 @@ export default function TvLibraryPage() {
             <MediaUploader
               accept="video/*"
               endpoint="/api/dashboard/television/tracks/upload"
-              dropTitle="Arrastra videos aquí o haz clic para seleccionar"
-              hint="Los videos se normalizan en segundo plano al subir."
+              dropTitle={t('tv.library.dropTitle')}
+              hint={t('tv.library.uploadHint')}
               extraFields={() => (currentFolderId ? { folderId: currentFolderId } : {})}
               statusUrl={(trackId) => `/api/dashboard/television/tracks/${trackId}/status`}
               onUploaded={fetchAll}
             />
             <input
               type="text"
-              placeholder="Buscar..."
+              placeholder={t('tv.library.search')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full bg-card text-foreground px-3 py-2 rounded-lg border border-border text-sm outline-none focus:border-brand"
@@ -320,16 +322,16 @@ export default function TvLibraryPage() {
           {/* Batch actions */}
           {selectedTracks.size > 0 && (
             <div className="bg-card rounded-lg p-3 flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-muted-foreground">{selectedTracks.size} seleccionados</span>
+              <span className="text-sm text-muted-foreground">{t('tv.library.selected', { count: selectedTracks.size })}</span>
               <button onClick={() => setSelectedTracks(new Set())} className="text-xs text-muted-foreground hover:text-foreground">
-                Deseleccionar
+                {t('tv.library.deselect')}
               </button>
               <select
                 onChange={e => batchMove(e.target.value || null)}
                 className="ml-auto bg-secondary text-foreground text-xs px-2 py-1 rounded"
               >
-                <option value="">Mover a...</option>
-                <option value="">Raíz</option>
+                <option value="">{t('tv.library.moveTo')}</option>
+                <option value="">{t('tv.library.root')}</option>
                 {folders.map(f => (
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
@@ -345,7 +347,7 @@ export default function TvLibraryPage() {
                   }}
                   className="bg-secondary text-foreground text-xs px-2 py-1 rounded"
                 >
-                  <option value="">Agregar a playlist...</option>
+                  <option value="">{t('tv.library.addToPlaylist')}</option>
                   {playlists.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -357,9 +359,9 @@ export default function TvLibraryPage() {
           {/* Tracks table */}
           <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl overflow-x-auto">
             {loading ? (
-              <div className="p-6 text-center text-muted-foreground">Cargando...</div>
+              <div className="p-6 text-center text-muted-foreground">{t('tv.library.loading')}</div>
             ) : tracks.length === 0 ? (
-              <div className="p-6 text-center text-muted-foreground">No hay videos. Sube tu primer video.</div>
+              <div className="p-6 text-center text-muted-foreground">{t('tv.library.empty')}</div>
             ) : (
               <table className="w-full">
                 <thead>
@@ -374,12 +376,12 @@ export default function TvLibraryPage() {
                         checked={selectedTracks.size === tracks.length && tracks.length > 0}
                       />
                     </th>
-                    <th className="text-left p-3">Thumbnail</th>
-                    <th className="text-left p-3">Título</th>
-                    <th className="text-left p-3">Duración</th>
-                    <th className="text-left p-3">Resolución</th>
-                    <th className="text-left p-3">Tamaño</th>
-                    <th className="text-right p-3">Acciones</th>
+                    <th className="text-left p-3">{t('tv.library.thumbnail')}</th>
+                    <th className="text-left p-3">{t('tv.library.videoTitle')}</th>
+                    <th className="text-left p-3">{t('tv.library.duration')}</th>
+                    <th className="text-left p-3">{t('tv.library.resolution')}</th>
+                    <th className="text-left p-3">{t('tv.library.size')}</th>
+                    <th className="text-right p-3">{t('tv.library.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -406,13 +408,13 @@ export default function TvLibraryPage() {
                       <td className="p-3 text-foreground font-medium">
                         {track.title}
                         {track.status === 'processing' && (
-                          <span className="ml-2 text-xs text-brand">procesando…</span>
+                          <span className="ml-2 text-xs text-brand">{t('tv.library.processing')}</span>
                         )}
                         {track.status === 'pending' && (
-                          <span className="ml-2 text-xs text-muted-foreground">en cola</span>
+                          <span className="ml-2 text-xs text-muted-foreground">{t('tv.library.queued')}</span>
                         )}
                         {track.status === 'error' && (
-                          <span className="ml-2 text-xs text-red-400" title={track.processingError || ''}>error</span>
+                          <span className="ml-2 text-xs text-red-400" title={track.processingError || ''}>{t('tv.library.error')}</span>
                         )}
                       </td>
                       <td className="p-3 text-muted-foreground">{formatDuration(track.duration)}</td>
@@ -422,7 +424,7 @@ export default function TvLibraryPage() {
                       <td className="p-3 text-muted-foreground">{formatSize(Number(track.filesize))}</td>
                       <td className="p-3 text-right">
                         <button onClick={() => deleteTrack(track.id)} className="text-muted-foreground hover:text-red-400 text-xs">
-                          Eliminar
+                          {t('tv.library.delete')}
                         </button>
                       </td>
                     </tr>

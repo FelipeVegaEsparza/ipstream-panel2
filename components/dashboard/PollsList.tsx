@@ -7,6 +7,7 @@ import { showToast } from '@/components/ui/toast'
 import { useState } from 'react'
 import Link from 'next/link'
 import { PencilIcon, TrashIcon, EyeIcon, ChartBarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface PollOption {
   id: string
@@ -27,19 +28,20 @@ interface PollsListProps {
 }
 
 export function PollsList({ polls }: PollsListProps) {
+  const { t, locale } = useDashboardI18n()
   const router = useRouter()
   const [deleting, setDeleting] = useState<string | null>(null)
   const [toggling, setToggling] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta encuesta?')) return
+    if (!confirm(t('polls.confirmDelete'))) return
     setDeleting(id)
     try {
       const res = await fetch(`/api/polls/${id}`, { method: 'DELETE' })
       if (res.ok) router.refresh()
-      else showToast({ type: 'error', title: 'Error al eliminar' })
+      else showToast({ type: 'error', title: t('polls.deleteError') })
     } catch {
-      showToast({ type: 'error', title: 'Error al eliminar' })
+      showToast({ type: 'error', title: t('polls.deleteError') })
     } finally {
       setDeleting(null)
     }
@@ -54,9 +56,9 @@ export function PollsList({ polls }: PollsListProps) {
         body: JSON.stringify({ active: !currentActive }),
       })
       if (res.ok) router.refresh()
-      else showToast({ type: 'error', title: 'Error al cambiar estado' })
+      else showToast({ type: 'error', title: t('polls.toggleError') })
     } catch {
-      showToast({ type: 'error', title: 'Error al cambiar estado' })
+      showToast({ type: 'error', title: t('polls.toggleError') })
     } finally {
       setToggling(null)
     }
@@ -64,15 +66,15 @@ export function PollsList({ polls }: PollsListProps) {
 
   const totalVotes = (options: PollOption[]) => options.reduce((sum, o) => sum + o.votes, 0)
   const formatDate = (date: Date) =>
-    new Intl.DateTimeFormat('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(date))
+    new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(date))
 
   if (polls.length === 0) {
     return (
       <div className="text-center py-12">
         <ChartBarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium text-foreground mb-2">No hay encuestas</h3>
-        <p className="text-muted-foreground mb-4">Crea tu primera encuesta para los oyentes</p>
-        <Link href="/dashboard/polls/new" className="btn-primary">Crear Encuesta</Link>
+        <h3 className="text-lg font-medium text-foreground mb-2">{t('polls.empty')}</h3>
+        <p className="text-muted-foreground mb-4">{t('polls.emptyHint')}</p>
+        <Link href="/dashboard/polls/new" className="btn-primary">{t('polls.create')}</Link>
       </div>
     )
   }
@@ -89,7 +91,7 @@ export function PollsList({ polls }: PollsListProps) {
                 onClick={() => handleToggle(poll.id, poll.active)}
                 disabled={toggling === poll.id}
                 className={`ml-2 p-1.5 rounded-full ${poll.active ? 'text-green-400 hover:text-green-300' : 'text-muted-foreground hover:text-muted-foreground'}`}
-                title={poll.active ? 'Desactivar' : 'Activar'}
+                title={poll.active ? t('polls.deactivate') : t('polls.activate')}
               >
                 {toggling === poll.id ? (
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -108,7 +110,7 @@ export function PollsList({ polls }: PollsListProps) {
                   <div key={opt.id}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-muted-foreground">{opt.text}</span>
-                      <span className="text-muted-foreground">{opt.votes} voto{opt.votes !== 1 ? 's' : ''} ({pct}%)</span>
+                      <span className="text-muted-foreground">{t('polls.votes', { count: opt.votes, plural: opt.votes !== 1 ? 's' : '' })} ({pct}%)</span>
                     </div>
                     <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-brand to-brand rounded-full transition-all" style={{ width: `${pct}%` }} />
@@ -119,21 +121,21 @@ export function PollsList({ polls }: PollsListProps) {
             </div>
 
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-              <span>{total} voto{total !== 1 ? 's' : ''}</span>
+              <span>{t('polls.votes', { count: total, plural: total !== 1 ? 's' : '' })}</span>
               <span className={poll.active ? 'text-green-400' : 'text-muted-foreground'}>
-                {poll.active ? 'Activa' : 'Inactiva'}
+                {poll.active ? t('polls.active') : t('polls.inactive')}
               </span>
               <span>{formatDate(poll.createdAt)}</span>
             </div>
 
             <div className="flex justify-end space-x-2 pt-3 border-t border-border">
-              <Link href={`/dashboard/polls/${poll.id}`} className="action-button action-button-view" title="Ver encuesta">
+              <Link href={`/dashboard/polls/${poll.id}`} className="action-button action-button-view" title={t('polls.view')}>
                 <EyeIcon className="h-4 w-4" />
               </Link>
-              <Link href={`/dashboard/polls/${poll.id}/edit`} className="action-button action-button-edit" title="Editar encuesta">
+              <Link href={`/dashboard/polls/${poll.id}/edit`} className="action-button action-button-edit" title={t('polls.edit')}>
                 <PencilIcon className="h-4 w-4" />
               </Link>
-              <button onClick={() => handleDelete(poll.id)} disabled={deleting === poll.id} className="action-button action-button-delete" title="Eliminar encuesta">
+              <button onClick={() => handleDelete(poll.id)} disabled={deleting === poll.id} className="action-button action-button-delete" title={t('polls.delete')}>
                 {deleting === poll.id ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (

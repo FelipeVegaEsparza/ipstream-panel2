@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { newsSchema, type NewsInput } from '@/lib/validations'
 import { generateSlug } from '@/lib/utils'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface NewsFormProps {
   initialData?: {
@@ -22,6 +23,7 @@ interface NewsFormProps {
 }
 
 export function NewsForm({ initialData }: NewsFormProps) {
+  const { t } = useDashboardI18n()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -72,10 +74,10 @@ export function NewsForm({ initialData }: NewsFormProps) {
         router.refresh()
       } else {
         const error = await response.json()
-        showToast({ type: 'error', title: error.error || 'Error al guardar la noticia' })
+        showToast({ type: 'error', title: error.error || t('news.form.saveError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al guardar la noticia' })
+      showToast({ type: 'error', title: t('news.form.saveError') })
     } finally {
       setLoading(false)
     }
@@ -85,7 +87,7 @@ export function NewsForm({ initialData }: NewsFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="form-group">
         <label htmlFor="name" className="form-label">
-          Título de la Noticia *
+          {t('news.form.name')}
         </label>
         <input
           type="text"
@@ -100,17 +102,17 @@ export function NewsForm({ initialData }: NewsFormProps) {
 
       <div className="form-group">
         <label htmlFor="slug" className="form-label">
-          Slug (URL amigable) *
+          {t('news.form.slug')}
         </label>
         <input
           type="text"
           id="slug"
           className="form-input"
-          placeholder="titulo-de-la-noticia"
+          placeholder={t('news.form.slugPlaceholder')}
           {...register('slug')}
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Solo letras minúsculas, números y guiones. Se genera automáticamente desde el título.
+          {t('news.form.slugHint')}
         </p>
         {errors.slug && (
           <p className="text-sm text-red-600">{errors.slug.message}</p>
@@ -118,8 +120,8 @@ export function NewsForm({ initialData }: NewsFormProps) {
       </div>
 
       <ImageUpload
-        label="Imagen de la Noticia"
-        description="Imagen principal de la noticia (recomendado: 800x400px)"
+        label={t('news.form.image')}
+        description={t('news.form.imageHint')}
         value={watch('imageUrl')}
         onChange={(url) => setValue('imageUrl', url)}
         onRemove={() => setValue('imageUrl', '')}
@@ -130,17 +132,17 @@ export function NewsForm({ initialData }: NewsFormProps) {
 
       <div className="form-group">
         <label htmlFor="shortText" className="form-label">
-          Texto Corto (Resumen) *
+          {t('news.form.shortText')}
         </label>
         <textarea
           id="shortText"
           rows={3}
           className="form-textarea"
-          placeholder="Breve resumen de la noticia que aparecerá en las listas..."
+          placeholder={t('news.form.shortPlaceholder')}
           {...register('shortText')}
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Este texto aparecerá como resumen en las listas de noticias.
+          {t('news.form.shortHint')}
         </p>
         {errors.shortText && (
           <p className="text-sm text-red-600">{errors.shortText.message}</p>
@@ -149,17 +151,17 @@ export function NewsForm({ initialData }: NewsFormProps) {
 
       <div className="form-group">
         <label htmlFor="longText" className="form-label">
-          Contenido Completo *
+          {t('news.form.longText')}
         </label>
         <textarea
           id="longText"
           rows={12}
           className="form-textarea"
-          placeholder="Escribe aquí el contenido completo de la noticia..."
+          placeholder={t('news.form.longPlaceholder')}
           {...register('longText')}
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Este es el contenido completo que se mostrará cuando se abra la noticia individual.
+          {t('news.form.longHint')}
         </p>
         {errors.longText && (
           <p className="text-sm text-red-600">{errors.longText.message}</p>
@@ -172,14 +174,14 @@ export function NewsForm({ initialData }: NewsFormProps) {
           onClick={() => router.back()}
           className="btn-secondary"
         >
-          Cancelar
+          {t('news.form.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
           className="btn-primary disabled:opacity-50"
         >
-          {loading ? 'Guardando...' : (initialData ? 'Actualizar' : 'Publicar')}
+          {loading ? t('news.form.saving') : (initialData ? t('news.form.update') : t('news.form.create'))}
         </button>
       </div>
     </form>

@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { videocastSchema, type VideocastInput } from '@/lib/validations'
 import { ImageUpload } from '@/components/ui/ImageUpload'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface VideocastFormProps {
   videocast?: any
@@ -14,6 +15,7 @@ interface VideocastFormProps {
 }
 
 export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false }: VideocastFormProps) {
+  const { t } = useDashboardI18n()
   const [imageUrl, setImageUrl] = useState(videocast?.imageUrl || '')
 
   const {
@@ -51,13 +53,13 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
         {/* Título */}
         <div>
           <label className="form-label">
-            Título del Episodio *
+            {t('podcasts.episodeTitle')}
           </label>
           <input
             {...register('title')}
             type="text"
             className="form-input"
-            placeholder="Ej: Episodio 1 - Introducción al Videocast"
+            placeholder={t('podcasts.episodeTitlePlaceholder')}
           />
           {errors.title && (
             <p className="form-error">{errors.title.message}</p>
@@ -68,7 +70,7 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="form-label">
-              Número de Episodio
+              {t('podcasts.episodeNumber')}
             </label>
             <input
               {...register('episodeNumber', { 
@@ -86,13 +88,13 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
 
           <div>
             <label className="form-label">
-              Temporada
+              {t('podcasts.season')}
             </label>
             <input
               {...register('season')}
               type="text"
               className="form-input"
-              placeholder="Temporada 1"
+              placeholder={t('podcasts.seasonPlaceholder')}
             />
             {errors.season && (
               <p className="form-error">{errors.season.message}</p>
@@ -103,16 +105,16 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
         {/* Duración */}
         <div>
           <label className="form-label">
-            Duración
+            {t('podcasts.duration')}
           </label>
           <input
             {...register('duration')}
             type="text"
             className="form-input"
-            placeholder="45:30 (minutos:segundos)"
+            placeholder={t('podcasts.durationPlaceholder')}
           />
           <p className="form-help mt-1">
-            Formato: MM:SS o HH:MM:SS (ej: 45:30 o 1:15:45)
+            {t('podcasts.durationHelp')}
           </p>
           {errors.duration && (
             <p className="form-error">{errors.duration.message}</p>
@@ -122,16 +124,16 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
         {/* Descripción */}
         <div>
           <label className="form-label">
-            Descripción del Episodio *
+            {t('podcasts.description')}
           </label>
           <textarea
             {...register('description')}
             rows={6}
             className="form-input resize-vertical"
-            placeholder="Describe de qué trata este episodio, los temas que se abordan, invitados especiales, etc."
+            placeholder={t('podcasts.descriptionPlaceholder')}
           />
           <p className="form-help mt-1">
-            Esta descripción aparecerá como resumen en las listas de episodios
+            {t('podcasts.descriptionHelp')}
           </p>
           {errors.description && (
             <p className="form-error">{errors.description.message}</p>
@@ -143,23 +145,23 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
           value={imageUrl}
           onChange={setImageUrl}
           onRemove={() => setImageUrl('')}
-          label="Imagen del Episodio"
-          description="Portada del episodio (recomendado: 1920x1080px - formato 16:9)"
+          label={t('podcasts.image')}
+          description={t('videocasts.imageHint')}
         />
 
         {/* URL de YouTube */}
         <div>
           <label className="form-label">
-            URL de YouTube *
+            {t('videocasts.videoUrl')}
           </label>
           <input
             {...register('videoUrl')}
             type="url"
             className="form-input"
-            placeholder="https://www.youtube.com/watch?v=..."
+            placeholder={t('videocasts.videoUrlPlaceholder')}
           />
           <p className="form-help mt-1">
-            Pega aquí el enlace de tu video de YouTube
+            {t('videocasts.videoUrlHelp')}
           </p>
           {errors.videoUrl && (
             <p className="form-error">{errors.videoUrl.message}</p>
@@ -174,14 +176,14 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
             className="btn-secondary"
             disabled={isLoading}
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             disabled={isLoading}
           >
-            {isLoading ? 'Guardando...' : videocast ? 'Actualizar Episodio' : 'Crear Episodio'}
+            {isLoading ? t('common.saving') : videocast ? t('podcasts.update') : t('podcasts.create')}
           </button>
         </div>
       </form>

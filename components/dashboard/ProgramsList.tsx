@@ -7,7 +7,8 @@ import { showToast } from '@/components/ui/toast'
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { formatTime, formatWeekDays } from '@/lib/utils'
+import { formatTime } from '@/lib/utils'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 interface Program {
@@ -25,11 +26,17 @@ interface ProgramsListProps {
 }
 
 export function ProgramsList({ programs }: ProgramsListProps) {
+  const { t } = useDashboardI18n()
+  const dayNames: Record<string, string> = {
+    monday: t('tv.day.1'), tuesday: t('tv.day.2'), wednesday: t('tv.day.3'),
+    thursday: t('tv.day.4'), friday: t('tv.day.5'), saturday: t('tv.day.6'), sunday: t('tv.day.0'),
+  }
+  const formatDays = (days: string[]) => days.map((day) => dayNames[day] ?? day).join(', ')
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este programa?')) {
+    if (!confirm(t('programs.confirmDelete'))) {
       return
     }
 
@@ -42,10 +49,10 @@ export function ProgramsList({ programs }: ProgramsListProps) {
       if (response.ok) {
         router.refresh()
       } else {
-        showToast({ type: 'error', title: 'Error al eliminar el programa' })
+        showToast({ type: 'error', title: t('programs.deleteError') })
       }
     } catch (error) {
-      showToast({ type: 'error', title: 'Error al eliminar el programa' })
+      showToast({ type: 'error', title: t('programs.deleteError') })
     } finally {
       setLoading(null)
     }
@@ -60,13 +67,13 @@ export function ProgramsList({ programs }: ProgramsListProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">
-          No hay programas
+          {t('programs.empty')}
         </h3>
         <p className="text-muted-foreground mb-4">
-          Comienza agregando tu primer programa de radio
+          {t('programs.emptyHint')}
         </p>
         <Link href="/dashboard/programs/new" className="btn-primary">
-          Crear Programa
+          {t('programs.create')}
         </Link>
       </div>
     )
@@ -102,12 +109,12 @@ export function ProgramsList({ programs }: ProgramsListProps) {
               
               <div className="text-sm text-muted-foreground space-y-1">
                 <div className="flex items-center">
-                  <span className="font-semibold text-brand mr-2">Horario:</span>
+                  <span className="font-semibold text-brand mr-2">{t('programs.schedule')}</span>
                   <span>{formatTime(program.startTime)} - {formatTime(program.endTime)}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="font-semibold text-brand mr-2">Días:</span>
-                  <span>{formatWeekDays(weekDays)}</span>
+                  <span className="font-semibold text-brand mr-2">{t('programs.days')}</span>
+                  <span>{formatDays(weekDays)}</span>
                 </div>
               </div>
               
@@ -115,7 +122,7 @@ export function ProgramsList({ programs }: ProgramsListProps) {
                 <Link
                   href={`/dashboard/programs/${program.id}/edit`}
                   className="action-button action-button-edit"
-                  title="Editar programa"
+                  title={t('programs.edit')}
                 >
                   <PencilIcon className="h-4 w-4" />
                 </Link>
@@ -123,7 +130,7 @@ export function ProgramsList({ programs }: ProgramsListProps) {
                   onClick={() => handleDelete(program.id)}
                   disabled={loading === program.id}
                   className="action-button action-button-delete"
-                  title="Eliminar programa"
+                  title={t('programs.delete')}
                 >
                   {loading === program.id ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

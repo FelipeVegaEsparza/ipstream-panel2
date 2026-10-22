@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PencilIcon, ArrowLeftIcon, PhotoIcon } from '@heroicons/react/24/outline'
+import { getDashboardLocale } from '@/lib/dashboard-locale-server'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 interface GalleryDetailPageProps {
   params: {
@@ -13,10 +15,11 @@ interface GalleryDetailPageProps {
 }
 
 export default async function GalleryDetailPage({ params }: GalleryDetailPageProps) {
+  const t = dashboardT(getDashboardLocale())
   const session = await getServerSession(authOptions)
 
   if (!session?.user.clientId) {
-    return <div>Error: No se encontró información del cliente</div>
+    return <div>{t('news.noClient')}</div>
   }
 
   const gallery = await prisma.gallery.findFirst({
@@ -57,10 +60,10 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Vista de Galería
+              {t('galleries.detail.title')}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Previsualización de la galería de imágenes
+              {t('galleries.detail.subtitle')}
             </p>
           </div>
         </div>
@@ -69,7 +72,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
           className="btn-primary flex items-center gap-2"
         >
           <PencilIcon className="h-5 w-5" />
-          Editar
+          {t('common.edit')}
         </Link>
       </div>
 
