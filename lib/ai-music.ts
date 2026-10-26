@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { aiPeriod } from '@/lib/ai-live'
+import type { AiUsageFeature } from '@/lib/ai-usage'
 
 export interface AiMusicAccess {
   enabled: boolean
@@ -37,13 +38,22 @@ export async function getAiMusicAccess(clientId: string): Promise<AiMusicAccess>
   }
 }
 
-export async function consumeAiMusicSeconds(clientId: string, seconds: number): Promise<void> {
+export async function consumeAiMusicSeconds(
+  clientId: string,
+  seconds: number,
+  feature: AiUsageFeature
+): Promise<void> {
   const amount = Math.max(0, Math.floor(seconds))
   if (!amount) return
   const period = aiPeriod()
-  await prisma.aiTtsUsage.upsert({
-    where: { clientId_period: { clientId, period } },
-    create: { clientId, period, musicSeconds: amount, requests: 1 },
-    update: { musicSeconds: { increment: amount }, requests: { increment: 1 } },
-  })
+  await prisma.$transaction([
+    prisma.aiTtsUsage.upsert({
+      where: { clientId_period: { clientId, period } },
+      create: { clientId, period, musicSeconds: amount, requests: 1 },
+      update: { musicSeconds: { increment: amount }, requests: { increment: 1 } },
+    }),
+    prisma.aiUsageEvent.create({
+      data: { clientId, period, feature, musicSeconds: amount },
+    }),
+  ])
 }

@@ -26,6 +26,7 @@ import {
   ServerStackIcon,
   EnvelopeIcon,
   SpeakerWaveIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 import { PanelLogo } from '@/components/ui/PanelLogo'
@@ -45,6 +46,7 @@ const navigationGroups = [
       { name: 'Gestión de Usuarios', href: '/admin/users', icon: UserGroupIcon },
       { name: 'Planes y Pagos', href: '/admin/billing', icon: CreditCardIcon },
       { name: 'Tickets de soporte', href: '/admin/tickets', icon: LifebuoyIcon },
+      { name: 'Consumo IA', href: '/admin/consumo-ia', icon: SparklesIcon },
       { name: 'Impersonar Cliente', href: '/admin/impersonate', icon: ArrowPathRoundedSquareIcon },
     ],
   },

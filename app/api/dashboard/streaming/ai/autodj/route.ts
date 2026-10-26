@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
       }
       if (!audio.cached) {
         try {
-          await consumeAiCharacters(ctx.clientId, text.length)
+          await consumeAiCharacters(ctx.clientId, text.length, 'autodj-presenter')
         } catch (err) {
           console.error('[ai/autodj] no se pudo registrar la cuota:', err)
         }

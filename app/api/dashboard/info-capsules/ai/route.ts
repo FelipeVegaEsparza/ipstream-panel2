@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     const tts = await synthesizePremiumTts({ clientId: ctx.clientId, text })
     if (!tts.cached) {
-      await consumeAiCharacters(ctx.clientId, text.length).catch(() => {})
+      await consumeAiCharacters(ctx.clientId, text.length, 'ai-capsule').catch(() => {})
     }
     const audio = await addCapsuleIntro(ctx.clientId, tts.audio)
 

@@ -36,6 +36,7 @@ export type MenuItemKey =
   | 'basic-data'
   | 'social-networks'
   | 'template'
+  | 'ai-usage'
   | 'programs'
   | 'news'
   | 'podcasts'
@@ -245,6 +246,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
     href: '/dashboard/template',
     section: 'General',
     icon: PaintBrushIcon,
+  },
+  {
+    key: 'ai-usage',
+    name: 'Consumo IA',
+    href: '/dashboard/consumo-ia',
+    section: 'General',
+    icon: SparklesIcon,
   },
   {
     key: 'programs',

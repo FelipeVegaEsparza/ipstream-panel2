@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       const premium = await synthesizePremiumTts({ clientId: ctx.clientId, text })
       if (!premium.cached) {
         try {
-          await consumeAiCharacters(ctx.clientId, text.length)
+          await consumeAiCharacters(ctx.clientId, text.length, 'live-locution')
         } catch (err) {
           console.error('[live/tts] no se pudo registrar la cuota:', err)
         }

@@ -71,6 +71,7 @@ model Client {
   chatBans               ChatBan[]
   contactMessages        ContactMessage[]
   aiTtsUsage             AiTtsUsage[]
+  aiUsageEvents          AiUsageEvent[]
   soundEffects           ClientSoundEffect[]
   infoCapsules           ClientInfoCapsule[]
   ownedCapsules          InfoCapsule[]
@@ -555,6 +556,22 @@ model AiTtsUsage {
   @@unique([clientId, period])
   @@index([clientId])
   @@map("ai_tts_usage")
+}
+
+model AiUsageEvent {
+  id           String   @id @default(cuid())
+  clientId     String
+  period       String   // YYYY-MM (UTC)
+  feature      String
+  characters   Int      @default(0)
+  musicSeconds Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, period])
+  @@index([period, feature])
+  @@map("ai_usage_events")
 }
 
 model AppConfig {

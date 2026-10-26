@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
       tagline,
     })
 
-    await consumeAiMusicSeconds(ctx.clientId, duration)
+    await consumeAiMusicSeconds(ctx.clientId, duration, 'ai-jingle')
     if (!result.ttsCached) {
       try {
-        await consumeAiCharacters(ctx.clientId, result.ttsCharacters)
+        await consumeAiCharacters(ctx.clientId, result.ttsCharacters, 'ai-jingle')
       } catch (err) {
         console.error('[jingles/ai/generate] no se pudo registrar TTS:', err)
       }

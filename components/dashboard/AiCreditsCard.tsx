@@ -44,12 +44,20 @@ export function AiCreditsCard({ limit, used, remaining, period, compact = false 
             </p>
           </div>
         </div>
-        <Link
-          href="/dashboard/streaming/locutor-ia"
-          className="text-xs font-medium text-brand hover:underline"
-        >
-          {t('aiCredits.configure')}
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/consumo-ia"
+            className="text-xs font-medium text-brand hover:underline"
+          >
+            {t('aiCredits.viewDetail')}
+          </Link>
+          <Link
+            href="/dashboard/streaming/locutor-ia"
+            className="text-xs font-medium text-brand hover:underline"
+          >
+            {t('aiCredits.configure')}
+          </Link>
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3">

@@ -5,6 +5,7 @@
 // cache hits no consumen. El período es UTC (YYYY-MM).
 
 import { prisma } from '@/lib/prisma'
+import type { AiUsageFeature } from '@/lib/ai-usage'
 
 export function aiPeriod(date = new Date()): string {
   return date.toISOString().slice(0, 7)
@@ -47,13 +48,22 @@ export async function getAiLiveAccess(clientId: string): Promise<AiLiveAccess> {
   }
 }
 
-export async function consumeAiCharacters(clientId: string, characters: number): Promise<void> {
+export async function consumeAiCharacters(
+  clientId: string,
+  characters: number,
+  feature: AiUsageFeature
+): Promise<void> {
   const amount = Math.max(0, Math.floor(characters))
   if (!amount) return
   const period = aiPeriod()
-  await prisma.aiTtsUsage.upsert({
-    where: { clientId_period: { clientId, period } },
-    create: { clientId, period, characters: amount, requests: 1 },
-    update: { characters: { increment: amount }, requests: { increment: 1 } },
-  })
+  await prisma.$transaction([
+    prisma.aiTtsUsage.upsert({
+      where: { clientId_period: { clientId, period } },
+      create: { clientId, period, characters: amount, requests: 1 },
+      update: { characters: { increment: amount }, requests: { increment: 1 } },
+    }),
+    prisma.aiUsageEvent.create({
+      data: { clientId, period, feature, characters: amount },
+    }),
+  ])
 }

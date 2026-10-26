@@ -108,7 +108,7 @@ export async function addCapsuleIntro(clientId: string, voice: Buffer): Promise<
   if (access.enabled && access.remainingSeconds >= MUSIC_BED_SECONDS) {
     bed = await generateMusicBed()
     if (bed) {
-      await consumeAiMusicSeconds(clientId, MUSIC_BED_SECONDS).catch(() => {})
+      await consumeAiMusicSeconds(clientId, MUSIC_BED_SECONDS, 'ai-capsule').catch(() => {})
     }
   }
   if (!bed) bed = await defaultBed()
