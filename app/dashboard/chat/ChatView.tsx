@@ -49,42 +49,50 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
 
   const poll = useCallback(async () => {
     try {
-      const since = lastSinceRef.current
-      const url = since
-        ? `/api/dashboard/chat/messages?since=${encodeURIComponent(since)}&limit=100`
-        : `/api/dashboard/chat/messages?limit=50`
+      let cursor = lastSinceRef.current
+      let nextCursor = cursor
+      const collected: ChatMessage[] = []
 
-      const res = await fetch(url, { cache: 'no-store' })
-      if (!res.ok) return
-      const data = await res.json()
-      const newMsgs: ChatMessage[] = (data.messages || []).map((m: ChatMessage) => ({
-        ...m,
-        createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date(m.createdAt).toISOString(),
-      }))
+      for (let batch = 0; batch < 10; batch += 1) {
+        const url = cursor
+          ? `/api/dashboard/chat/messages?since=${encodeURIComponent(cursor)}&limit=100`
+          : `/api/dashboard/chat/messages?limit=50`
 
-      if (newMsgs.length > 0) {
+        const res = await fetch(url, { cache: 'no-store' })
+        if (!res.ok) {
+          if (res.status === 403) setError(t('chat.disabled'))
+          return
+        }
+        const data = await res.json()
+        const newMsgs: ChatMessage[] = (data.messages || []).map((m: ChatMessage) => ({
+          ...m,
+          createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date(m.createdAt).toISOString(),
+        }))
+        collected.push(...newMsgs)
+
+        const responseCursor =
+          typeof data.nextCursor === 'string' ? data.nextCursor : null
+        const lastMessageCursor = newMsgs.length > 0
+          ? newMsgs[newMsgs.length - 1].createdAt
+          : null
+        nextCursor = responseCursor ?? lastMessageCursor ?? cursor
+
+        if (!data.hasMore || !nextCursor || nextCursor === cursor) break
+        cursor = nextCursor
+      }
+
+      if (collected.length > 0) {
         setMessages((prev) => {
           const seen = new Set(prev.map((m) => m.id))
           const merged = [...prev]
-          for (const m of newMsgs) {
+          for (const m of collected) {
             if (!seen.has(m.id)) merged.push(m)
           }
           return merged.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
         })
-        lastSinceRef.current = newMsgs[newMsgs.length - 1].createdAt
-      } else if (!since) {
-        // Sin cursor: no había mensajes. Pedimos el más reciente solo para fijar el cursor
-        const tail = await fetch(`/api/dashboard/chat/messages?limit=1`, { cache: 'no-store' })
-        if (tail.ok) {
-          const d = await tail.json()
-          const newest = d.messages?.[0]
-          if (newest?.createdAt) {
-            lastSinceRef.current = newest.createdAt
-          }
-        }
       }
+      lastSinceRef.current = nextCursor
 
-      // Refrescar stats en paralelo
       const statsRes = await fetch('/api/dashboard/chat/stats', { cache: 'no-store' })
       if (statsRes.ok) {
         const sd = await statsRes.json()
@@ -115,7 +123,6 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
       if (prev.some((m) => m.id === msg.id)) return prev
       return [...prev, msg].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     })
-    lastSinceRef.current = msg.createdAt
     setStats((s) => ({ ...s, lastHourMessages: s.lastHourMessages + 1, last24hMessages: s.last24hMessages + 1 }))
   }, [])
 

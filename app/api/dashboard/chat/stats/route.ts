@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { isChatEnabledForClient } from '@/lib/chat-helpers'
 import { getChatStats } from '@/lib/chat-helpers'
 
 export const dynamic = 'force-dynamic'
@@ -15,6 +16,9 @@ export async function GET(_request: NextRequest) {
     const effective = await getEffectiveClient()
     if (!effective) {
       return NextResponse.json({ error: 'Sin cliente asignado' }, { status: 401 })
+    }
+    if (!(await isChatEnabledForClient(effective.clientId))) {
+      return NextResponse.json({ error: 'Chat deshabilitado' }, { status: 403 })
     }
 
     const stats = await getChatStats(effective.clientId)

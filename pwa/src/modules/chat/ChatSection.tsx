@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getChatMessages, getChatOnline, sendChatMessage } from '@/core/api'
+import { ApiError, getChatMessages, getChatOnline, sendChatMessage } from '@/core/api'
 import type { ChatMessage } from '@/core/types'
 import { useTenant } from '@/core/config/TenantContext'
 import { Section } from '@/ui'
@@ -8,6 +8,7 @@ import styles from './ChatSection.module.css'
 
 const NAME_KEY = 'ipstream_chat_name'
 const MAX_MESSAGES = 100
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function mergeMessages(prev: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
   const seen = new Set(prev.map((message) => message.id))
@@ -27,11 +28,15 @@ function formatTime(iso: string): string {
   return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
 }
 
-export function ChatSection() {
+interface ChatSectionProps {
+  embedded?: boolean
+}
+
+export function ChatSection({ embedded = false }: ChatSectionProps) {
   const tenant = useTenant()
   const clientId = tenant.status === 'ready' ? tenant.clientId : null
 
-  const serverTimeRef = useRef<string | null>(null)
+  const cursorRef = useRef<string | null>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const stickToBottomRef = useRef(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -44,7 +49,25 @@ export function ChatSection() {
 
   const messagesQuery = useQuery({
     queryKey: ['chat', clientId],
-    queryFn: () => getChatMessages(clientId!, serverTimeRef.current ?? undefined),
+    queryFn: async () => {
+      const collected: ChatMessage[] = []
+      let cursor = cursorRef.current
+      let nextCursor = cursor
+
+      for (let batch = 0; batch < 10; batch += 1) {
+        const data = await getChatMessages(clientId!, cursor ?? undefined)
+        collected.push(...data.messages)
+        nextCursor =
+          data.nextCursor ??
+          (data.messages.length > 0
+            ? data.messages[data.messages.length - 1].createdAt
+            : cursor)
+        if (!data.hasMore || !nextCursor || nextCursor === cursor) break
+        cursor = nextCursor
+      }
+
+      return { messages: collected, nextCursor }
+    },
     enabled: Boolean(clientId),
     refetchInterval: 5000,
     refetchIntervalInBackground: false,
@@ -54,21 +77,9 @@ export function ChatSection() {
 
   useEffect(() => {
     if (!chatData) return
-    const previousSince = serverTimeRef.current
     setMessages((prev) => mergeMessages(prev, chatData.messages))
-    serverTimeRef.current = chatData.serverTime
-    // Si vienen exactamente tantos mensajes como el límite, puede haber un
-    // hueco (pestaña en segundo plano o más de `limit` mensajes): realinear
-    // el cursor pidiendo desde el principio una sola vez.
-    if (
-      previousSince !== null &&
-      chatData.messages.length >= 50 &&
-      chatData.serverTime !== previousSince
-    ) {
-      serverTimeRef.current = null
-      void chatRefetch()
-    }
-  }, [chatData, chatRefetch])
+    cursorRef.current = chatData.nextCursor
+  }, [chatData])
 
   // Autoscroll: seguir el hilo salvo que el usuario haya subido a leer.
   useEffect(() => {
@@ -92,24 +103,40 @@ export function ChatSection() {
       setValidation(null)
       setSendError(null)
 
-      if (!name.trim() || !body.trim()) {
-        setValidation('Ingresa tu nombre y un mensaje.')
+      if (!clientId) return
+      if (!name.trim() || !email.trim() || !body.trim()) {
+        setValidation('Ingresa tu nombre, un email válido y un mensaje.')
+        return
+      }
+      if (name.trim().length < 2) {
+        setValidation('El nombre debe tener al menos 2 caracteres.')
+        return
+      }
+      if (!EMAIL_RE.test(email.trim())) {
+        setValidation('Ingresa un email válido.')
         return
       }
 
       setSending(true)
       try {
-        await sendChatMessage(clientId!, {
+        await sendChatMessage(clientId, {
           name: name.trim(),
-          email: email.trim() || null,
+          email: email.trim(),
           body: body.trim()
         })
         localStorage.setItem(NAME_KEY, name.trim())
         setBody('')
         stickToBottomRef.current = true
         void chatRefetch()
-      } catch {
-        setSendError('No se pudo enviar el mensaje. Intenta de nuevo (límite: 5 por minuto).')
+      } catch (error) {
+        const status = error instanceof ApiError ? error.status : 0
+        if (status === 429) {
+          setSendError('Demasiados mensajes. Espera un momento antes de reintentar.')
+        } else if (status === 403) {
+          setSendError('No puedes escribir en este chat.')
+        } else {
+          setSendError('No se pudo enviar el mensaje. Intenta de nuevo.')
+        }
       } finally {
         setSending(false)
       }
@@ -117,75 +144,85 @@ export function ChatSection() {
     [clientId, name, email, body, chatRefetch]
   )
 
+  const content = (
+    <div className={styles.chat}>
+      <div className={styles.header}>
+        <span className={styles.online}>
+          {onlineQuery.data ? `${onlineQuery.data.count} oyentes activos` : 'Chat'}
+        </span>
+      </div>
+
+      <ul
+        ref={listRef}
+        className={styles.list}
+        aria-live="polite"
+        onScroll={() => {
+          const list = listRef.current
+          if (!list) return
+          stickToBottomRef.current =
+            list.scrollHeight - list.scrollTop - list.clientHeight < 80
+        }}
+      >
+        {messages.map((message) => (
+          <li
+            key={message.id}
+            className={message.authorType === 'staff' ? styles.admin : styles.listener}
+          >
+            <span className={styles.msgName}>{message.name}</span>
+            <span className={styles.msgBody}>{message.body}</span>
+            <span className={styles.msgTime}>{formatTime(message.createdAt)}</span>
+          </li>
+        ))}
+        {messages.length === 0 && !messagesQuery.isLoading && (
+          <li className={styles.empty}>Sé el primero en escribir…</li>
+        )}
+      </ul>
+
+      <form className={styles.form} onSubmit={handleSend}>
+        <div className={styles.fields}>
+          <input
+            className={styles.input}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Tu nombre"
+            aria-label="Nombre"
+            maxLength={60}
+          />
+          <input
+            className={styles.input}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Email"
+            type="email"
+            aria-label="Email"
+            maxLength={120}
+          />
+        </div>
+        <div className={styles.row}>
+          <textarea
+            className={styles.textarea}
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            placeholder="Escribe un mensaje…"
+            aria-label="Mensaje"
+            maxLength={500}
+            rows={2}
+          />
+          <button type="submit" className={styles.send} disabled={sending}>
+            {sending ? 'Enviando…' : 'Enviar'}
+          </button>
+        </div>
+        {validation && <p className={styles.error}>{validation}</p>}
+        {sendError && <p className={styles.error}>{sendError}</p>}
+      </form>
+    </div>
+  )
+
+  if (embedded) return content
+
   return (
     <Section title="Chat en vivo" visible loading={false}>
-      <div className={styles.chat}>
-        <div className={styles.header}>
-          <span className={styles.online}>
-            {onlineQuery.data ? `${onlineQuery.data.count} oyentes activos` : 'Chat'}
-          </span>
-        </div>
-
-        <ul
-          ref={listRef}
-          className={styles.list}
-          onScroll={() => {
-            const list = listRef.current
-            if (!list) return
-            stickToBottomRef.current =
-              list.scrollHeight - list.scrollTop - list.clientHeight < 80
-          }}
-        >
-          {messages.map((message) => (
-            <li
-              key={message.id}
-              className={message.authorType === 'admin' ? styles.admin : styles.listener}
-            >
-              <span className={styles.msgName}>{message.name}</span>
-              <span className={styles.msgBody}>{message.body}</span>
-              <span className={styles.msgTime}>{formatTime(message.createdAt)}</span>
-            </li>
-          ))}
-          {messages.length === 0 && !messagesQuery.isLoading && (
-            <li className={styles.empty}>Sé el primero en escribir…</li>
-          )}
-        </ul>
-
-        <form className={styles.form} onSubmit={handleSend}>
-          <div className={styles.fields}>
-            <input
-              className={styles.input}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Tu nombre"
-              aria-label="Nombre"
-            />
-            <input
-              className={styles.input}
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="Email (opcional)"
-              type="email"
-              aria-label="Email"
-            />
-          </div>
-          <div className={styles.row}>
-            <textarea
-              className={styles.textarea}
-              value={body}
-              onChange={(event) => setBody(event.target.value)}
-              placeholder="Escribe un mensaje…"
-              aria-label="Mensaje"
-              rows={2}
-            />
-            <button type="submit" className={styles.send} disabled={sending}>
-              {sending ? 'Enviando…' : 'Enviar'}
-            </button>
-          </div>
-          {validation && <p className={styles.error}>{validation}</p>}
-          {sendError && <p className={styles.error}>{sendError}</p>}
-        </form>
-      </div>
+      {content}
     </Section>
   )
 }

@@ -1,0 +1,34 @@
+#!/bin/bash
+# =====================================================
+# Limpia los mensajes de chat con más de 48 horas.
+# Pensado para un crontab cada hora:
+#   0 * * * * /opt/ipstream-panel/deploy/scripts/cron-chat.sh >/dev/null 2>&1
+# Ver README.md -> "Limpieza automática (Cron)".
+# =====================================================
+set -u
+
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ENV_FILE="$PROJECT_DIR/.env"
+
+read_env() {
+  local line
+  [[ -f "$ENV_FILE" ]] || return 0
+  line="$(grep -E "^$1=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
+  [[ -n "$line" ]] || return 0
+  printf '%s' "${line#*=}" | sed -e 's/^"//' -e 's/"$//'
+}
+
+CRON_SECRET="${CRON_SECRET:-$(read_env CRON_SECRET)}"
+PANEL_DOMAIN="${PANEL_DOMAIN:-$(read_env PANEL_DOMAIN)}"
+PANEL_PUBLIC_URL="${PANEL_PUBLIC_URL:-$(read_env PANEL_PUBLIC_URL)}"
+
+if [[ -z "${CRON_SECRET:-}" ]]; then
+  echo "cron-chat: CRON_SECRET no está definido (.env)" >&2
+  exit 1
+fi
+
+BASE_URL="${PANEL_PUBLIC_URL:-https://${PANEL_DOMAIN:-panel.casterfly.com}}"
+
+curl -fsS -X POST \
+  -H "Authorization: Bearer ${CRON_SECRET}" \
+  "${BASE_URL}/api/cron/chat/cleanup" >/dev/null

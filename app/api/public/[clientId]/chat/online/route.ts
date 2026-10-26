@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handleCors, createCorsResponse, createCorsErrorResponse } from '@/lib/cors'
+import { isChatEnabledForClient } from '@/lib/chat-helpers'
 
 export async function OPTIONS() {
   return handleCors()
@@ -21,30 +22,26 @@ export async function GET(
     if (!client) {
       return createCorsErrorResponse('Cliente no encontrado', 404)
     }
+    if (!(await isChatEnabledForClient(clientId))) {
+      return createCorsErrorResponse('Chat deshabilitado', 403)
+    }
 
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000)
 
     const recent = await prisma.chatMessage.findMany({
-      where: { clientId, createdAt: { gte: tenMinutesAgo } },
-      select: { name: true, authorType: true, email: true },
+      where: { clientId, createdAt: { gte: tenMinutesAgo }, authorType: 'listener' },
+      select: { name: true, email: true },
       orderBy: { createdAt: 'desc' },
       take: 200,
     })
 
     const uniqueNames = new Set<string>()
-    let activeCount = 0
-
-    for (const m of recent) {
-      const key = m.authorType === 'staff' ? `staff:${m.name}` : (m.email || m.name)
-      if (!uniqueNames.has(key)) {
-        uniqueNames.add(key)
-        activeCount++
-      }
+    for (const message of recent) {
+      uniqueNames.add(message.email || message.name)
     }
 
-    const recentNames = Array.from(
-      new Set(recent.filter((m) => m.authorType === 'listener').map((m) => m.name))
-    ).slice(0, 10)
+    const activeCount = uniqueNames.size
+    const recentNames = Array.from(new Set(recent.map((message) => message.name))).slice(0, 10)
 
     return createCorsResponse({
       count: activeCount,

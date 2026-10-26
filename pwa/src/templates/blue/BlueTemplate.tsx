@@ -11,6 +11,7 @@ import {
   FaBullhorn,
   FaCalendarDays,
   FaCloudSun,
+  FaComments,
   FaHandshake,
   FaHeart,
   FaImages,
@@ -47,6 +48,7 @@ const SECTION_ICONS: Record<SectionId, ComponentType<{ size?: number }>> = {
   events: FaCalendarDays,
   announcers: FaPeopleGroup,
   sponsors: FaHandshake,
+  chat: FaComments,
   social: FaHeart
 }
 

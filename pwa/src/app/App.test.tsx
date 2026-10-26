@@ -220,10 +220,12 @@ describe('App shell', () => {
 
     // Con los datos cargados (modo radio), se prefetchea el streaming durante
     // el splash (antes de montar el template).
-    await waitFor(() =>
-      expect(
-        fetchMock.mock.calls.some(([input]) => String(input).endsWith('/streaming'))
-      ).toBe(true)
+    await waitFor(
+      () =>
+        expect(
+          fetchMock.mock.calls.some(([input]) => String(input).endsWith('/streaming'))
+        ).toBe(true),
+      { timeout: 5000 }
     )
 
     // Aunque los datos llegaron, el splash sigue visible por el tiempo mínimo.

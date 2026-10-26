@@ -1,9 +1,10 @@
+import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { ChatView } from './ChatView'
-import { getChatStats } from '@/lib/chat-helpers'
+import { getChatStats, isChatEnabledForClient } from '@/lib/chat-helpers'
 import { getDashboardLocale } from '@/lib/dashboard-locale-server'
 import { dashboardT } from '@/lib/dashboard-i18n'
 
@@ -16,6 +17,7 @@ export default async function ChatPage() {
 
   const effective = await getEffectiveClient()
   if (!effective) return null
+  if (!(await isChatEnabledForClient(effective.clientId))) redirect('/dashboard')
 
   const [basicData, initialMessages, bans, stats] = await Promise.all([
     prisma.basicData.findUnique({

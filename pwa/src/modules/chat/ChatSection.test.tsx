@@ -106,7 +106,91 @@ describe('ChatSection', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
 
-    expect(await screen.findByText('Ingresa tu nombre y un mensaje.')).toBeInTheDocument()
+    expect(await screen.findByText('Ingresa tu nombre, un email válido y un mensaje.')).toBeInTheDocument()
+    const postCalls = fetchMock.mock.calls.filter(
+      ([, init]) => init?.method === 'POST'
+    )
+    expect(postCalls.length).toBe(0)
+  })
+
+
+  it('drena tandas usando nextCursor', async () => {
+    baked.clientId = 'cmclient'
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/chat/online')) {
+        return Promise.resolve(jsonResponse(200, { count: 0, recentNames: [] }))
+      }
+      if (url.includes('since=cursor-1')) {
+        return Promise.resolve(
+          jsonResponse(200, {
+            messages: [
+              {
+                id: 'm2',
+                authorType: 'listener',
+                name: 'Oyente 2',
+                body: 'Segundo lote',
+                email: 'o2@example.com',
+                createdAt: '2025-01-01T00:00:02.000Z'
+              }
+            ],
+            serverTime: '2025-01-01T00:00:05.000Z',
+            nextCursor: '2025-01-01T00:00:02.000Z',
+            hasMore: false,
+            retentionHours: 48
+          })
+        )
+      }
+      return Promise.resolve(
+        jsonResponse(200, {
+          messages: [
+            {
+              id: 'm1',
+              authorType: 'listener',
+              name: 'Oyente 1',
+              body: 'Primer lote',
+              email: 'o1@example.com',
+              createdAt: '2025-01-01T00:00:01.000Z'
+            }
+          ],
+          serverTime: '2025-01-01T00:00:05.000Z',
+          nextCursor: 'cursor-1',
+          hasMore: true,
+          retentionHours: 48
+        })
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderChat()
+
+    expect(await screen.findByText('Primer lote')).toBeInTheDocument()
+    expect(await screen.findByText('Segundo lote')).toBeInTheDocument()
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes('since=cursor-1'))
+    ).toBe(true)
+  })
+
+  it('rechaza un email inválido', async () => {
+    baked.clientId = 'cmclient'
+    const fetchMock = mockFetch()
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderChat()
+    await screen.findByText('Hola radio!')
+
+    fireEvent.change(screen.getByLabelText('Nombre'), {
+      target: { value: 'Oyente 2' }
+    })
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'usuario@sinpunto' }
+    })
+    fireEvent.change(screen.getByLabelText('Mensaje'), {
+      target: { value: 'Buenas tardes' }
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    expect(await screen.findByText('Ingresa un email válido.')).toBeInTheDocument()
     const postCalls = fetchMock.mock.calls.filter(
       ([, init]) => init?.method === 'POST'
     )
@@ -123,6 +207,9 @@ describe('ChatSection', () => {
 
     fireEvent.change(screen.getByLabelText('Nombre'), {
       target: { value: 'Oyente 2' }
+    })
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'oyente2@example.com' }
     })
     fireEvent.change(screen.getByLabelText('Mensaje'), {
       target: { value: 'Buenas tardes' }

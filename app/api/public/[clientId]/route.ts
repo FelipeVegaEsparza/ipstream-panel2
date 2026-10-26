@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { handleCors, createCachedCorsResponse, createCorsErrorResponse } from '@/lib/cors'
 import { normalizeAccentColor } from '@/lib/accent-color'
 import { withPublicContentCache } from '@/lib/public-cache'
+import { isMenuItemEnabled } from '@/lib/menu-permissions'
 
 export async function OPTIONS() {
   return handleCors()
@@ -93,7 +94,7 @@ async function handleGet(
     }
 
     // Obtener todos los datos del cliente
-    const [socialNetworks, programs, news, videos, sponsors, promotions, galleries, announcers, polls, events, [podcasts, videocasts], gcBar, banners] = await Promise.all([
+    const [socialNetworks, programs, news, videos, sponsors, promotions, galleries, announcers, polls, events, [podcasts, videocasts], gcBar, banners, chatEnabled] = await Promise.all([
       prisma.socialNetworks.findUnique({
         where: { clientId },
         select: {
@@ -301,7 +302,8 @@ async function handleGet(
           updatedAt: true,
         },
         orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-      })
+      }),
+      isMenuItemEnabled(clientId, 'chat')
     ])
 
     // Procesar weekDays para programs
@@ -338,7 +340,8 @@ async function handleGet(
       podcasts,
       videocasts,
       gcBar,
-      banners
+      banners,
+      chatEnabled
     })
 
   } catch (error) {

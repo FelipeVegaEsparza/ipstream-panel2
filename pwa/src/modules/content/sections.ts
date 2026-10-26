@@ -20,6 +20,7 @@ export type SectionId =
   | 'events'
   | 'announcers'
   | 'sponsors'
+  | 'chat'
   | 'social'
 
 export const SECTION_LABELS: Record<SectionId, string> = {
@@ -36,6 +37,7 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   events: 'Eventos',
   announcers: 'Locutores',
   sponsors: 'Auspiciadores',
+  chat: 'Chat en vivo',
   social: 'Síguenos'
 }
 
@@ -82,6 +84,8 @@ export function sectionHasContent(
       return (clientData?.announcers?.length ?? 0) > 0
     case 'sponsors':
       return (clientData?.sponsors?.length ?? 0) > 0
+    case 'chat':
+      return Boolean(clientData?.chatEnabled)
     case 'polls':
       // PollsSection solo muestra encuestas activas con opciones.
       return (
@@ -117,6 +121,7 @@ export const DEFAULT_ORDER: SectionId[] = [
   'events',
   'announcers',
   'sponsors',
+  'chat',
   'social'
 ]
 
@@ -135,6 +140,7 @@ const MODERNO_ORDER: SectionId[] = [
   'events',
   'announcers',
   'sponsors',
+  'chat',
   'social'
 ]
 
@@ -153,7 +159,8 @@ const PETROLEO_ORDER: SectionId[] = [
   'tv',
   'galleries',
   'announcers',
-  'sponsors'
+  'sponsors',
+  'chat'
 ]
 
 // Lista de reproducción: noticias abren y encuestas cierran.
@@ -170,6 +177,7 @@ const PLAYLIST_ORDER: SectionId[] = [
   'events',
   'announcers',
   'sponsors',
+  'chat',
   'social',
   'polls'
 ]
@@ -190,6 +198,7 @@ const BLUE_ORDER: SectionId[] = [
   'events',
   'announcers',
   'sponsors',
+  'chat',
   'social'
 ]
 
@@ -210,7 +219,8 @@ const MODERNO2_ORDER: SectionId[] = [
   'videocasts',
   'galleries',
   'events',
-  'polls'
+  'polls',
+  'chat'
 ]
 
 export function getSectionOrder(template: string | null | undefined): SectionId[] {

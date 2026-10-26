@@ -41,6 +41,7 @@ export interface FullClientData {
   videocasts: Videocast[]
   gcBar?: GcBarMessage[]
   banners?: Banner[]
+  chatEnabled?: boolean
 }
 
 export interface BasicLocation {
@@ -292,7 +293,7 @@ export interface Poll {
   updatedAt: string
 }
 
-export type ChatAuthorType = 'listener' | 'admin'
+export type ChatAuthorType = 'listener' | 'staff'
 
 export interface ChatMessage {
   id: string
@@ -307,6 +308,8 @@ export interface ChatMessagesResponse {
   messages: ChatMessage[]
   serverTime: string
   retentionHours: number
+  nextCursor?: string | null
+  hasMore?: boolean
 }
 
 export interface ChatOnlineResponse {

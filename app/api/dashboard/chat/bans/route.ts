@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { isChatEnabledForClient } from '@/lib/chat-helpers'
 import { chatBanSchema } from '@/lib/validations'
 import { normalizeEmail } from '@/lib/chat-helpers'
 
@@ -17,6 +18,9 @@ export async function GET(_request: NextRequest) {
     const effective = await getEffectiveClient()
     if (!effective) {
       return NextResponse.json({ error: 'Sin cliente asignado' }, { status: 401 })
+    }
+    if (!(await isChatEnabledForClient(effective.clientId))) {
+      return NextResponse.json({ error: 'Chat deshabilitado' }, { status: 403 })
     }
 
     const bans = await prisma.chatBan.findMany({
@@ -41,6 +45,9 @@ export async function POST(request: NextRequest) {
     const effective = await getEffectiveClient()
     if (!effective) {
       return NextResponse.json({ error: 'Sin cliente asignado' }, { status: 401 })
+    }
+    if (!(await isChatEnabledForClient(effective.clientId))) {
+      return NextResponse.json({ error: 'Chat deshabilitado' }, { status: 403 })
     }
 
     const json = await request.json().catch(() => null)

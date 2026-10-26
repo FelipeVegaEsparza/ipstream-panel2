@@ -1,0 +1,96 @@
+.fab {
+  position: fixed;
+  right: 20px;
+  bottom: calc(var(--player-height, 72px) + 18px);
+  z-index: 45;
+  width: 52px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--content-accent, var(--color-primary, #6366f1));
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.fab:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.panel {
+  position: fixed;
+  right: 20px;
+  bottom: calc(var(--player-height, 72px) + 80px);
+  z-index: 46;
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(620px, calc(100vh - 170px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--content-card-border, var(--color-border));
+  background: var(--content-card-bg, var(--color-surface, #1a1a2e));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--content-card-border, var(--color-border));
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--content-text, inherit);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--content-muted, #6b6761);
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus-visible {
+  background: rgba(128, 128, 128, 0.18);
+  color: var(--content-text, inherit);
+}
+
+.body {
+  padding: 12px 16px 16px;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    right: 8px;
+    left: 8px;
+    width: auto;
+    bottom: calc(var(--player-height, 72px) + 72px);
+    max-height: calc(100vh - 160px);
+  }
+
+  .fab {
+    right: 14px;
+    bottom: calc(var(--player-height, 72px) + 14px);
+  }
+}

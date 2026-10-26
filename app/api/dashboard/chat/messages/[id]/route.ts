@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
+import { isChatEnabledForClient } from '@/lib/chat-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +19,9 @@ export async function DELETE(
     const effective = await getEffectiveClient()
     if (!effective) {
       return NextResponse.json({ error: 'Sin cliente asignado' }, { status: 401 })
+    }
+    if (!(await isChatEnabledForClient(effective.clientId))) {
+      return NextResponse.json({ error: 'Chat deshabilitado' }, { status: 403 })
     }
 
     const existing = await prisma.chatMessage.findFirst({

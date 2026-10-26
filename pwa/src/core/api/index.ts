@@ -2,6 +2,7 @@ import { getPublicApiBase, getApiOrigin } from '@/core/config/tenant'
 import type {
   Announcer,
   BasicData,
+  ChatMessage,
   ChatMessagesResponse,
   ChatOnlineResponse,
   EventItem,
@@ -253,7 +254,7 @@ export interface SendChatMessageInput {
 export async function sendChatMessage(
   clientId: string,
   input: SendChatMessageInput
-): Promise<ChatMessagesResponse> {
+): Promise<ChatMessage> {
   const response = await request(getPublicApiBase(clientId) + '/chat/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import { ErrorScreen } from './ErrorScreen'
 import { LoadingScreen } from './LoadingScreen'
 import { getStreaming } from '@/core/api'
@@ -12,6 +12,8 @@ import { usePwaInstallReport } from '@/modules/pwa/usePwaInstallReport'
 import { PushOptIn } from '@/modules/pwa/PushOptIn'
 import { useDocumentTitle } from '@/core/hooks/useDocumentTitle'
 import { ContentSections } from '@/modules/content/ContentSections'
+import { ChatWidget } from '@/modules/chat/ChatWidget'
+import { shouldShowFloatingChat } from '@/modules/chat/visibility'
 import { TemplateSlot } from '@/templates'
 
 // Rutas de listado/detalle: se cargan bajo demanda (code-splitting) para no
@@ -57,6 +59,12 @@ function TenantApp({ clientId }: { clientId: string }) {
   const { data, isLoading, isError, refetch } = useFullClientData(clientId)
   const [splashMinElapsed, setSplashMinElapsed] = useState(false)
   const queryClient = useQueryClient()
+  const { pathname } = useLocation()
+  const showFloatingChat = shouldShowFloatingChat({
+    chatEnabled: Boolean(data?.chatEnabled),
+    pathname,
+    selectedTemplate: data?.selectedTemplate,
+  })
 
   usePwaRegistration(clientId)
   usePwaInstallReport(clientId)
@@ -133,6 +141,7 @@ function TenantApp({ clientId }: { clientId: string }) {
         appId={data?.oneSignalAppId}
         safariWebId={data?.oneSignalSafariWebId}
       />
+      {showFloatingChat && <ChatWidget />}
     </>
   )
 }

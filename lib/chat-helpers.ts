@@ -6,6 +6,11 @@ export const CHAT_DEFAULT_PAGE_SIZE = 50
 export const CHAT_MAX_PAGE_SIZE = 200
 export const CHAT_STAFF_NAME_FALLBACK = 'Estación'
 
+export async function isChatEnabledForClient(clientId: string): Promise<boolean> {
+  const { isMenuItemEnabled } = await import('@/lib/menu-permissions')
+  return isMenuItemEnabled(clientId, 'chat')
+}
+
 /**
  * Sanitiza un mensaje de chat (texto plano, sin HTML)
  */
@@ -114,29 +119,29 @@ export async function getChatStats(clientId: string) {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
-  const [lastHour, last24h, totalActive, activeBans, listenerCount] = await Promise.all([
+  const [lastHour, last24h, activeBans, listenerMessages] = await Promise.all([
     prisma.chatMessage.count({
       where: { clientId, createdAt: { gte: oneHourAgo } },
     }),
     prisma.chatMessage.count({
       where: { clientId, createdAt: { gte: oneDayAgo } },
     }),
-    prisma.chatMessage.findMany({
-      where: { clientId, createdAt: { gte: oneDayAgo } },
-      select: { email: true, name: true, authorType: true },
-    }),
     prisma.chatBan.count({ where: { clientId } }),
     prisma.chatMessage.findMany({
       where: { clientId, createdAt: { gte: oneHourAgo }, authorType: 'listener' },
-      distinct: ['email'],
       select: { email: true, name: true },
     }),
   ])
 
+  const activeUsers = new Set<string>()
+  for (const message of listenerMessages) {
+    activeUsers.add(message.email || message.name)
+  }
+
   return {
     lastHourMessages: lastHour,
     last24hMessages: last24h,
-    activeUsersLastHour: listenerCount.length,
+    activeUsersLastHour: activeUsers.size,
     activeBans,
   }
 }

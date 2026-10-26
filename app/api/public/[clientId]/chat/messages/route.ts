@@ -9,6 +9,7 @@ import {
   CHAT_MESSAGE_RETENTION_HOURS,
   getClientIp,
   isBanned,
+  isChatEnabledForClient,
   normalizeEmail,
   sanitizeChatBody,
   sanitizeChatName,
@@ -42,33 +43,59 @@ export async function GET(
     if (!client) {
       return createCorsErrorResponse('Cliente no encontrado', 404)
     }
+    if (!(await isChatEnabledForClient(clientId))) {
+      return createCorsErrorResponse('Chat deshabilitado', 403)
+    }
 
-    const where: { clientId: string; createdAt?: { gt: Date } } = { clientId }
-    if (sinceParam) {
-      const sinceDate = new Date(sinceParam)
-      if (!isNaN(sinceDate.getTime())) {
-        where.createdAt = { gt: sinceDate }
-      }
+    const sinceDate = sinceParam ? new Date(sinceParam) : null
+    const validSince = sinceDate && !isNaN(sinceDate.getTime()) ? sinceDate : null
+    const select = {
+      id: true,
+      authorType: true,
+      name: true,
+      body: true,
+      email: true,
+      ipAddress: true,
+      createdAt: true,
+    } as const
+
+    if (validSince) {
+      const messages = await prisma.chatMessage.findMany({
+        where: { clientId, createdAt: { gt: validSince } },
+        select,
+        orderBy: { createdAt: 'asc' },
+        take: limit + 1,
+      })
+      const hasMore = messages.length > limit
+      const page = hasMore ? messages.slice(0, limit) : messages
+      const nextCursor = page.length
+        ? page[page.length - 1].createdAt.toISOString()
+        : sinceParam
+
+      return createCorsResponse({
+        messages: page.map((msg) => serializeMessage(msg)),
+        serverTime: new Date().toISOString(),
+        nextCursor,
+        hasMore,
+        retentionHours: CHAT_MESSAGE_RETENTION_HOURS,
+      })
     }
 
     const messages = await prisma.chatMessage.findMany({
-      where,
-      select: {
-        id: true,
-        authorType: true,
-        name: true,
-        body: true,
-        email: true,
-        ipAddress: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'asc' },
+      where: { clientId },
+      select,
+      orderBy: { createdAt: 'desc' },
       take: limit,
     })
+    const ascending = messages.slice().reverse()
 
     return createCorsResponse({
-      messages: messages.map(msg => serializeMessage(msg)),
+      messages: ascending.map((msg) => serializeMessage(msg)),
       serverTime: new Date().toISOString(),
+      nextCursor: ascending.length
+        ? ascending[ascending.length - 1].createdAt.toISOString()
+        : null,
+      hasMore: false,
       retentionHours: CHAT_MESSAGE_RETENTION_HOURS,
     })
   } catch (error) {
@@ -91,6 +118,9 @@ export async function POST(
 
     if (!client) {
       return createCorsErrorResponse('Cliente no encontrado', 404)
+    }
+    if (!(await isChatEnabledForClient(clientId))) {
+      return createCorsErrorResponse('Chat deshabilitado', 403)
     }
 
     const body = await request.json().catch(() => null)

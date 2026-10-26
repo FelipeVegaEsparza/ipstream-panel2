@@ -224,7 +224,7 @@ El dashboard incluye una sección **Chat en Vivo** donde el dueño de la radio p
 GET /api/public/[clientId]/chat/messages?since=2026-07-12T10:00:00.000Z&limit=50
 ```
 
-Sin `since` devuelve los últimos N mensajes. Con `since` devuelve solo los mensajes con `createdAt > since`.
+Sin `since` devuelve los últimos N mensajes en orden ascendente. Con `since` devuelve solo los mensajes con `createdAt > since` y añade `nextCursor`/`hasMore` para seguir drenando tandas.
 
 **Enviar mensaje** (oyente):
 ```http
@@ -257,7 +257,7 @@ POST /api/cron/chat/cleanup
 Authorization: Bearer ${CRON_SECRET}
 ```
 
-Borra todos los mensajes con más de 48 h. Configurar para correr cada 1 h en el proveedor (Vercel Cron / externo). Si `CRON_SECRET` no está configurado, el endpoint no exige auth (útil para desarrollo local).
+Borra todos los mensajes con más de 48 h. Debe ejecutarse cada hora con `CRON_SECRET` configurado; si el secreto no está configurado, el endpoint responde error de configuración.
 
 ### Envío de notificaciones programadas (Cron)
 
@@ -275,6 +275,12 @@ Crontab del VPS (ejemplo):
 ```
 
 El script lee `CRON_SECRET` y el dominio del `.env` del proyecto.
+
+Limpieza del chat en el crontab del VPS (cada hora):
+
+```cron
+0 * * * * /opt/ipstream-panel/deploy/scripts/cron-chat.sh >/dev/null 2>&1
+```
 
 ### Endpoints del dashboard (requieren auth, para moderar)
 
