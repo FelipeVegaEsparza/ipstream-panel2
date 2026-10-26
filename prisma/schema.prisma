@@ -72,6 +72,8 @@ model Client {
   contactMessages        ContactMessage[]
   aiTtsUsage             AiTtsUsage[]
   aiUsageEvents          AiUsageEvent[]
+  aiCreditRequests       AiCreditRequest[]
+  aiCreditGrants         AiCreditGrant[]
   soundEffects           ClientSoundEffect[]
   infoCapsules           ClientInfoCapsule[]
   ownedCapsules          InfoCapsule[]
@@ -572,6 +574,74 @@ model AiUsageEvent {
   @@index([clientId, period])
   @@index([period, feature])
   @@map("ai_usage_events")
+}
+
+model AiCreditPack {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  creditType  String   // "characters" | "music"
+  amount      Int      // caracteres o minutos según creditType
+  price       Float
+  currency    String   @default("CLP")
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests AiCreditRequest[]
+  grants   AiCreditGrant[]
+
+  @@index([isActive, order])
+  @@map("ai_credit_packs")
+}
+
+model AiCreditRequest {
+  id         String    @id @default(cuid())
+  clientId   String
+  packId     String
+  status     String    @default("pending") // "pending" | "approved" | "rejected"
+  creditType String
+  amount     Int
+  price      Float
+  currency   String
+  note       String?   @db.Text
+  paymentId  String?
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  client Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  pack   AiCreditPack   @relation(fields: [packId], references: [id], onDelete: Restrict)
+  grant  AiCreditGrant?
+
+  @@index([clientId, status])
+  @@index([status, createdAt])
+  @@map("ai_credit_requests")
+}
+
+model AiCreditGrant {
+  id                   String   @id @default(cuid())
+  clientId             String
+  packId               String
+  requestId            String?  @unique
+  source               String   // "request" | "admin"
+  characters           Int      @default(0)
+  musicSeconds         Int      @default(0)
+  remainingCharacters   Int      @default(0)
+  remainingMusicSeconds Int      @default(0)
+  paymentId            String?
+  note                 String?  @db.Text
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  client  Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  pack    AiCreditPack     @relation(fields: [packId], references: [id], onDelete: Restrict)
+  request AiCreditRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, createdAt])
+  @@map("ai_credit_grants")
 }
 
 model AppConfig {

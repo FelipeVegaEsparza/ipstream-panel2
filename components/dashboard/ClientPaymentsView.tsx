@@ -377,6 +377,7 @@ export function ClientPaymentsView({
                           {payment.paymentMethod === 'credit_card' && t('payments.method.card')}
                           {payment.paymentMethod === 'cash' && t('payments.method.cash')}
                           {payment.paymentMethod === 'manual' && t('payments.method.manual')}
+                          {payment.paymentMethod === 'paypal' && t('payments.method.paypal')}
                           {payment.paymentMethod === 'other' && t('payments.method.other')}
                           {payment.paymentMethod === 'pending' && t('payments.method.pending')}
                         </div>

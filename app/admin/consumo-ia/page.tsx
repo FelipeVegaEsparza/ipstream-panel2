@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { AdminAiUsageView } from '@/components/admin/AiUsageAdminView'
@@ -19,9 +20,14 @@ export default async function AdminAiUsagePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('aiUsage.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('aiUsage.adminSubtitle')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{t('aiUsage.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('aiUsage.adminSubtitle')}</p>
+        </div>
+        <Link href="/admin/paquetes-ia" className="btn-secondary text-xs">
+          {t('adminAiPacks.manage')}
+        </Link>
       </div>
       <AdminAiUsageView data={data} />
     </div>

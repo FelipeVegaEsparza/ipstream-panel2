@@ -1,15 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
+  clientFindUnique: vi.fn(),
+  usageFindUnique: vi.fn(),
   upsert: vi.fn(),
   eventCreate: vi.fn(),
+  grantFindMany: vi.fn(),
+  grantUpdateMany: vi.fn(),
   transaction: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    aiTtsUsage: { upsert: mocks.upsert },
+    aiTtsUsage: { upsert: mocks.upsert, findUnique: mocks.usageFindUnique },
     aiUsageEvent: { create: mocks.eventCreate },
+    aiCreditGrant: { findMany: mocks.grantFindMany, updateMany: mocks.grantUpdateMany },
+    client: { findUnique: mocks.clientFindUnique },
     $transaction: mocks.transaction,
   },
 }))
@@ -17,13 +23,26 @@ vi.mock('@/lib/prisma', () => ({
 import { aiPeriod, consumeAiCharacters } from './ai-live'
 import { consumeAiMusicSeconds } from './ai-music'
 
+function tx() {
+  return {
+    client: { findUnique: mocks.clientFindUnique },
+    aiTtsUsage: { findUnique: mocks.usageFindUnique, upsert: mocks.upsert },
+    aiUsageEvent: { create: mocks.eventCreate },
+    aiCreditGrant: { findMany: mocks.grantFindMany, updateMany: mocks.grantUpdateMany },
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.clientFindUnique.mockResolvedValue({
+    plan: { aiLiveEnabled: true, aiMonthlyCharacters: 1000, aiMusicMinutes: 10 },
+  })
+  mocks.usageFindUnique.mockResolvedValue(null)
   mocks.upsert.mockResolvedValue({})
   mocks.eventCreate.mockResolvedValue({})
-  mocks.transaction.mockImplementation(async (operations: Array<Promise<unknown>>) =>
-    Promise.all(operations)
-  )
+  mocks.grantFindMany.mockResolvedValue([])
+  mocks.grantUpdateMany.mockResolvedValue({ count: 1 })
+  mocks.transaction.mockImplementation(async (fn: (client: ReturnType<typeof tx>) => Promise<void>) => fn(tx()))
 })
 
 describe('registro de consumo de IA', () => {
@@ -66,12 +85,45 @@ describe('registro de consumo de IA', () => {
     })
   })
 
+  it('reparte el consumo entre plan y saldo adicional', async () => {
+    mocks.clientFindUnique.mockResolvedValue({
+      plan: { aiLiveEnabled: true, aiMonthlyCharacters: 100, aiMusicMinutes: 0 },
+    })
+    mocks.usageFindUnique.mockResolvedValue({ characters: 80 })
+    mocks.grantFindMany.mockResolvedValue([{ id: 'g1', remainingCharacters: 30 }])
+
+    await consumeAiCharacters('client-a', 50, 'autodj-presenter')
+
+    expect(mocks.grantUpdateMany).toHaveBeenCalledWith({
+      where: { id: 'g1', remainingCharacters: { gte: 30 } },
+      data: { remainingCharacters: { decrement: 30 } },
+    })
+    expect(mocks.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: { characters: { increment: 50 }, requests: { increment: 1 } },
+      })
+    )
+  })
+
+  it('revierte si el saldo adicional no alcanza', async () => {
+    mocks.clientFindUnique.mockResolvedValue({
+      plan: { aiLiveEnabled: true, aiMonthlyCharacters: 0, aiMusicMinutes: 0 },
+    })
+    mocks.grantFindMany.mockResolvedValue([{ id: 'g1', remainingCharacters: 10 }])
+
+    await expect(consumeAiCharacters('client-a', 20, 'live-locution')).rejects.toThrow(
+      'insufficient_ai_credits'
+    )
+    expect(mocks.upsert).not.toHaveBeenCalled()
+    expect(mocks.eventCreate).not.toHaveBeenCalled()
+  })
+
   it('no registra nada cuando el consumo es cero', async () => {
     await consumeAiCharacters('client-a', 0, 'live-announce')
     await consumeAiMusicSeconds('client-a', 0, 'ai-capsule')
 
+    expect(mocks.transaction).not.toHaveBeenCalled()
     expect(mocks.upsert).not.toHaveBeenCalled()
     expect(mocks.eventCreate).not.toHaveBeenCalled()
-    expect(mocks.transaction).not.toHaveBeenCalled()
   })
 })

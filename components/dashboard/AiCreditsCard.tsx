@@ -10,6 +10,7 @@ interface Props {
   remaining: number
   period: string
   compact?: boolean
+  hasActivePacks?: boolean
 }
 
 function monthLabel(period: string, locale: 'es' | 'en'): string {
@@ -24,7 +25,7 @@ function monthLabel(period: string, locale: 'es' | 'en'): string {
   }
 }
 
-export function AiCreditsCard({ limit, used, remaining, period, compact = false }: Props) {
+export function AiCreditsCard({ limit, used, remaining, period, compact = false, hasActivePacks = false }: Props) {
   const { t, locale } = useDashboardI18n()
   const numberLocale = locale === 'en' ? 'en-US' : 'es-CL'
   if (limit <= 0) return null
@@ -49,7 +50,9 @@ export function AiCreditsCard({ limit, used, remaining, period, compact = false 
             href="/dashboard/consumo-ia"
             className="text-xs font-medium text-brand hover:underline"
           >
-            {t('aiCredits.viewDetail')}
+            {remaining <= 0 && hasActivePacks
+              ? t('aiCredits.buyMore')
+              : t('aiCredits.viewDetail')}
           </Link>
           <Link
             href="/dashboard/streaming/locutor-ia"

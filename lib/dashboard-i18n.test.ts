@@ -23,6 +23,8 @@ describe('dashboard i18n', () => {
     expect(translateDashboard('en', 'aiUsage.title')).toBe('AI usage')
     expect(translateDashboard('es', 'aiUsage.feature.ai-jingle')).toBe('Jingles IA')
     expect(menuName('en', 'Consumo IA')).toBe('AI usage')
+    expect(menuName('en', 'Paquetes IA')).toBe('AI packs')
+    expect(translateDashboard('es', 'aiCreditPacks.title')).toBe('Paquetes adicionales')
     expect(sectionName('en', 'Televisión')).toBe('TV')
     expect(adminMenuName('en', 'Planes y Pagos')).toBe('Plans & payments')
   })

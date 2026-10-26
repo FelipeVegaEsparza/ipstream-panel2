@@ -141,9 +141,10 @@ export default async function DashboardPage() {
     hasTv ? import('@/lib/streaming-helpers').then((m) => m.getVideoStorageUsage(effectiveClient.clientId)) : null,
   ])
 
-  const [onboarding, aiAccess] = await Promise.all([
+  const [onboarding, aiAccess, aiCreditPackCount] = await Promise.all([
     getOnboarding(effectiveClient.clientId),
     getAiLiveAccess(effectiveClient.clientId),
+    prisma.aiCreditPack.count({ where: { isActive: true } }),
   ])
 
   return (
@@ -235,6 +236,7 @@ export default async function DashboardPage() {
         used={aiAccess.used}
         remaining={aiAccess.remaining}
         period={aiAccess.period}
+        hasActivePacks={aiCreditPackCount > 0}
       />
 
       <NowPlayingDisplay />

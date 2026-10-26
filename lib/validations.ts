@@ -175,6 +175,21 @@ export const bannerSchema = z.object({
 
 export type BannerInput = z.infer<typeof bannerSchema>
 
+export const aiCreditPackSchema = z.object({
+  name: z.string().trim().min(1, 'El nombre es requerido').max(100),
+  description: z.string().trim().max(2000).optional().nullable(),
+  creditType: z.enum(['characters', 'music'], {
+    errorMap: () => ({ message: 'Tipo de crédito inválido' }),
+  }),
+  amount: z.number().int().positive('La cantidad debe ser mayor que cero'),
+  price: z.number().positive('El precio debe ser mayor que cero'),
+  currency: z.string().trim().regex(/^[A-Za-z]{3}$/, 'Moneda inválida').transform((value) => value.toUpperCase()),
+  isActive: z.boolean().optional(),
+  order: z.number().int().optional(),
+})
+
+export type AiCreditPackInput = z.infer<typeof aiCreditPackSchema>
+
 export const pollSchema = z.object({
   title: z.string().min(1, 'El título de la encuesta es requerido'),
   options: z.array(z.string().min(1, 'Cada opción debe tener texto')).min(2, 'Agrega al menos 2 opciones'),

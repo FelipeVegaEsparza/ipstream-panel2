@@ -37,6 +37,7 @@ export interface AiUsageQuota {
   limit: number
   used: number
   remaining: number
+  extraRemaining: number
 }
 
 export interface AiMusicQuota {
@@ -44,6 +45,7 @@ export interface AiMusicQuota {
   limitSeconds: number
   usedSeconds: number
   remainingSeconds: number
+  extraRemainingSeconds: number
 }
 
 export interface ClientAiUsageOverview {
@@ -259,12 +261,14 @@ export async function getClientAiUsage(clientId: string): Promise<ClientAiUsageO
         limit: charAccess.limit,
         used: charAccess.used,
         remaining: charAccess.remaining,
+        extraRemaining: charAccess.extraRemaining ?? 0,
       },
       music: {
         enabled: musicAccess.enabled,
         limitSeconds: musicAccess.limitSeconds,
         usedSeconds: musicAccess.usedSeconds,
         remainingSeconds: musicAccess.remainingSeconds,
+        extraRemainingSeconds: musicAccess.extraRemainingSeconds ?? 0,
       },
     },
     current: {
