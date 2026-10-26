@@ -56,12 +56,12 @@ export default function StreamingPage() {
             <input
               type="text"
               readOnly
-              value={absoluteStreamUrl}
+              value={absoluteStreamUrl ?? ''}
               className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none focus:ring-2 focus:ring-brand/30"
               onClick={(e) => e.currentTarget.select()}
             />
             <a
-              href={absoluteStreamUrl}
+              href={absoluteStreamUrl ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-2.5 bg-brand hover:bg-brand text-white font-medium rounded-lg text-center whitespace-nowrap transition-colors"

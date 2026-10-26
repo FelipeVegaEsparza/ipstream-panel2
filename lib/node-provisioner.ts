@@ -15,10 +15,35 @@ import { sshExec, sftpWrite, SshConfig } from './ssh'
 import crypto from 'crypto'
 
 const REPO_TARBALL = 'https://github.com/FelipeVegaEsparza/ipstream-panel2/archive/refs/heads/main.tar.gz'
+const REPO_COMMITS_API = 'https://api.github.com/repos/FelipeVegaEsparza/ipstream-panel2/commits/main'
 const NODE_DIR = '/opt/ipstream-node'
 const MAX_LOG_LINES = 200
 
 const activeJobs = new Map<string, Promise<void>>()
+
+// SHA del main cacheado (5 min). Se estampa como AGENT_BUILD en el .env del
+// nodo; el agente lo devuelve en /health y el panel detecta drift.
+let cachedMainBuild: { sha: string; at: number } | null = null
+
+async function getMainBuild(): Promise<string> {
+  if (cachedMainBuild && Date.now() - cachedMainBuild.at < 5 * 60_000) {
+    return cachedMainBuild.sha
+  }
+  try {
+    const res = await fetch(REPO_COMMITS_API, {
+      signal: AbortSignal.timeout(8000),
+      headers: { Accept: 'application/vnd.github+json' },
+    })
+    if (!res.ok) return 'unknown'
+    const data = (await res.json()) as { sha?: string }
+    if (typeof data.sha !== 'string' || !data.sha) return 'unknown'
+    const sha = data.sha.slice(0, 7)
+    cachedMainBuild = { sha, at: Date.now() }
+    return sha
+  } catch {
+    return 'unknown'
+  }
+}
 
 export function isProvisioning(serverId: string): boolean {
   return activeJobs.has(serverId)
@@ -83,12 +108,15 @@ function buildNodeEnv(server: {
   publicHostname: string
   sshHost: string
   tokenEnc: string
-}): string {
+}, agentBuild = 'unknown'): string {
   const token = decrypt(server.tokenEnc)
   const db = dbCreds()
   const rand = (len = 16) => crypto.randomBytes(len).toString('hex')
   const env: Record<string, string> = {
     NODE_ENV: 'production',
+    // SHA del código copiado al nodo. El agente lo reporta en /health y el
+    // panel avisa si el nodo quedó desactualizado tras un deploy.
+    AGENT_BUILD: agentBuild,
     DB_HOST: panelHost(),
     DB_PORT: '3307',
     DB_USER: db.user,
@@ -211,8 +239,8 @@ async function resolveSsh(server: {
     return {
       ssh: {
         host: server.sshHost,
-        port: server.sshPort,
-        username: server.sshUser,
+        port: server.sshPort ?? undefined,
+        username: server.sshUser ?? undefined,
         privateKey: sshKey || undefined,
         password: sshPassword || undefined,
       },
@@ -256,7 +284,8 @@ async function extractNodeCode(serverId: string, ssh: SshConfig): Promise<void> 
 
 /** Escribe .env + Caddyfile + override según el tipo de nodo. */
 async function writeNodeConfig(server: StreamingServerRow, ssh: SshConfig): Promise<void> {
-  const envContent = buildNodeEnv(server)
+  const agentBuild = await getMainBuild()
+  const envContent = buildNodeEnv(server, agentBuild)
   await sftpWrite(ssh, `${NODE_DIR}/.env`, Buffer.from(envContent, 'utf8'))
   await sftpWrite(ssh, `${NODE_DIR}/Caddyfile`, Buffer.from(CADDYFILE, 'utf8'))
   if (server.type === 'radio') {
@@ -307,6 +336,16 @@ type StreamingServerRow = {
   type: string
 }
 
+/**
+ * El provisioning sólo se ejecuta con host SSH configurado. El predicate
+ * estrecha `sshHost` (nullable en la DB) al `string` que esperan los helpers.
+ */
+function hasSshHost<T extends { sshHost: string | null }>(
+  server: T
+): server is T & { sshHost: string } {
+  return Boolean(server.sshHost)
+}
+
 // =====================================================
 // Provision inicial
 // =====================================================
@@ -320,7 +359,7 @@ export async function startNodeProvisioning(serverId: string): Promise<void> {
 async function runProvision(serverId: string): Promise<void> {
   const server = await prisma.streamingServer.findUnique({ where: { id: serverId } })
   if (!server) return
-  if (!server.sshHost) {
+  if (!hasSshHost(server)) {
     await setProgress(serverId, 'Sin datos SSH', 'Error: el servidor no tiene host SSH configurado', 'ssh_host_missing')
     return
   }
@@ -407,7 +446,7 @@ export async function startNodeUpdate(serverId: string): Promise<void> {
 async function runNodeUpdate(serverId: string): Promise<void> {
   const server = await prisma.streamingServer.findUnique({ where: { id: serverId } })
   if (!server) return
-  if (!server.sshHost) {
+  if (!hasSshHost(server)) {
     await setProgress(serverId, 'Sin datos SSH', 'Error: el servidor no tiene host SSH configurado', 'ssh_host_missing')
     return
   }

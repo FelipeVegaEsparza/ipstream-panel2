@@ -154,6 +154,9 @@ services:
     build:
       context: ./streaming/agent
       dockerfile: Dockerfile
+      args:
+        # Lo escribe el panel en el .env del nodo al provisionar/actualizar.
+        AGENT_BUILD: ${AGENT_BUILD:-unknown}
     container_name: ipstream-streaming-agent
     restart: unless-stopped
     depends_on:

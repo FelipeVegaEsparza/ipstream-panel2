@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ZodError } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { podcastSchema } from '@/lib/validations'
 import { getEffectiveClientFromRequest } from '@/lib/getEffectiveClient'
@@ -155,8 +156,9 @@ export async function PUT(
     } catch (zodError) {
       console.log('🎙️ Zod validation failed:', zodError)
       invalidatePublicCache()
+      const message = zodError instanceof ZodError ? zodError.message : 'datos inválidos'
       return NextResponse.json(
-        { error: 'Error de validación: ' + zodError.message },
+        { error: 'Error de validación: ' + message },
         { status: 400 }
       )
     }

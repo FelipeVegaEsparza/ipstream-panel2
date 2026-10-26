@@ -132,7 +132,7 @@ export function EmailTemplatesManager() {
       {(creating || editing) && (
         <div className="rounded-xl border border-brand/30 bg-card/60 p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">{creating ? t('admin.emailTemplates.new') : t('admin.emailTemplates.editing', { name: editing?.name })}</h3>
+            <h3 className="font-semibold text-foreground">{creating ? t('admin.emailTemplates.new') : t('admin.emailTemplates.editing', { name: editing?.name ?? '' })}</h3>
             <Button variant="ghost" size="sm" onClick={reset}><X className="h-4 w-4" /></Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

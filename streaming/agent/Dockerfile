@@ -13,6 +13,11 @@ RUN npm install --omit=dev
 FROM node:20-bookworm-slim
 WORKDIR /app
 
+# SHA del código con el que se construyó este agente. El panel lo compara
+# con su propio build para detectar nodos que quedaron con código viejo.
+ARG AGENT_BUILD=unknown
+ENV AGENT_BUILD=$AGENT_BUILD
+
 # tini + docker CLI (para `docker exec` en el container de liquidsoap) + curl + gosu
 RUN apt-get update && apt-get install -y --no-install-recommends \
         tini \

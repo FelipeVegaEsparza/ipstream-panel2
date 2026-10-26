@@ -212,7 +212,7 @@ export default function TvLibraryPage() {
             </span>
             {storage.quotaMB && (
               <span className={storage.percentUsed && storage.percentUsed > 90 ? 'text-red-400' : 'text-muted-foreground'}>
-                {t('tv.library.used', { percent: storage.percentUsed?.toFixed(0), free: storage.remainingMB?.toFixed(0) })}
+                {t('tv.library.used', { percent: storage.percentUsed?.toFixed(0) ?? '', free: storage.remainingMB?.toFixed(0) ?? '' })}
               </span>
             )}
           </div>

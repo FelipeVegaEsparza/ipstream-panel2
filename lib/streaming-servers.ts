@@ -123,16 +123,47 @@ export async function getDefaultServerDbId(db: PrismaDb = prisma): Promise<strin
   return s?.id ?? null
 }
 
-/** Health check HTTP de un target (sin token requerido en /health). */
-export async function pingServerTarget(target: StreamingServerTarget, timeoutMs = 5000): Promise<boolean> {
+export interface AgentProbe {
+  online: boolean
+  /** SHA corto que reporta el agente en /health (null si es viejo o no responde). */
+  build: string | null
+}
+
+/**
+ * Prueba /health del agente y extrae el SHA del código que corre.
+ * No requiere token: /health está exento de auth en el agente.
+ */
+export async function probeServerTarget(
+  target: StreamingServerTarget,
+  timeoutMs = 5000
+): Promise<AgentProbe> {
   try {
     const res = await fetch(`${target.baseUrl}/health`, {
       signal: AbortSignal.timeout(timeoutMs),
     })
-    return res.ok
+    let build: string | null = null
+    try {
+      const data = (await res.json()) as { build?: unknown }
+      const raw = typeof data.build === 'string' ? data.build.trim() : ''
+      build = raw && raw !== 'unknown' && raw !== 'dev' ? raw.slice(0, 7) : null
+    } catch {
+      build = null
+    }
+    return { online: res.ok, build }
   } catch {
-    return false
+    return { online: false, build: null }
   }
+}
+
+/** Health check HTTP de un target (sin token requerido en /health). */
+export async function pingServerTarget(target: StreamingServerTarget, timeoutMs = 5000): Promise<boolean> {
+  return (await probeServerTarget(target, timeoutMs)).online
+}
+
+/** SHA corto con el que se construyó la imagen del panel (null en dev). */
+export function getPanelBuild(): string | null {
+  const raw = (process.env.APP_GIT_SHA || '').trim()
+  return raw ? raw.slice(0, 7) : null
 }
 
 export interface ServerHealthResult {
@@ -151,6 +182,12 @@ export interface ServerHealthResult {
   videoClients: number
   accounts: number // clientes únicos con radio y/o TV en este servidor
   affectedClients: number
+  /** SHA del código que corre el nodo (null si es viejo o no responde). */
+  agentBuild: string | null
+  /** SHA del panel, para comparar. */
+  panelBuild: string | null
+  /** true si el nodo reporta un build distinto al del panel. */
+  buildOutdated: boolean
 }
 
 /**
@@ -162,12 +199,18 @@ export interface ServerHealthResult {
 export async function checkAllServers(): Promise<ServerHealthResult[]> {
   const servers = await prisma.streamingServer.findMany({ orderBy: { createdAt: 'asc' } })
   const results: ServerHealthResult[] = []
+  const panelBuild = getPanelBuild()
 
   for (const s of servers) {
     let online = false
+    let agentBuild: string | null = null
     if (s.isActive) {
       const target = await fetchServerTarget(s.id)
-      online = target ? await pingServerTarget(target) : false
+      if (target) {
+        const probe = await probeServerTarget(target)
+        online = probe.online
+        agentBuild = probe.build
+      }
     }
 
     const server = await prisma.streamingServer.update({
@@ -208,6 +251,9 @@ export async function checkAllServers(): Promise<ServerHealthResult[]> {
       videoClients,
       accounts: accountIds.size,
       affectedClients: radioClients + videoClients,
+      agentBuild,
+      panelBuild,
+      buildOutdated: Boolean(panelBuild && agentBuild && agentBuild !== panelBuild),
     })
   }
 

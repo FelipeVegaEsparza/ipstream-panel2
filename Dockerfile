@@ -56,6 +56,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# Identidad del build (SHA del commit). El panel la compara con el `build`
+# que reporta cada agente para detectar nodos desactualizados.
+ARG GIT_SHA=unknown
+ENV APP_GIT_SHA=$GIT_SHA
+
 # Labels de trazabilidad (útiles con `docker inspect`)
 LABEL org.opencontainers.image.title="IPStream Panel" \
       org.opencontainers.image.description="Next.js dashboard + streaming agent" \

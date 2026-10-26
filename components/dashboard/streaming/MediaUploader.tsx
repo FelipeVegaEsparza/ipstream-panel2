@@ -24,8 +24,9 @@ interface Props {
   hint?: string
   /** Texto principal de la zona de drop */
   dropTitle?: string
-  /** Campos extra del multipart (ej: folderId) */
-  extraFields?: () => Record<string, string>
+  /** Campos extra del multipart (ej: folderId). Las claves con valor
+   *  `undefined` se omiten, así un campo opcional puede no enviarse. */
+  extraFields?: () => Record<string, string | undefined>
   /** Validación opcional del archivo (mensaje en `invalidMessage` si falla) */
   validateFile?: (file: File) => boolean
   invalidMessage?: string
@@ -47,14 +48,16 @@ function formatSize(bytes: number) {
 function uploadFile(
   url: string,
   file: File,
-  extra: Record<string, string>,
+  extra: Record<string, string | undefined>,
   onProgress: (pct: number) => void,
   messages: { network: string; cancelled: string },
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     const form = new FormData()
     form.append('file', file)
-    for (const [k, v] of Object.entries(extra)) form.append(k, v)
+    for (const [k, v] of Object.entries(extra)) {
+      if (v !== undefined) form.append(k, v)
+    }
 
     const xhr = new XMLHttpRequest()
 

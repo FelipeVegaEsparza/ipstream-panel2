@@ -199,7 +199,7 @@ export async function generateNewsForCategory(
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     const content = await callDeepSeek(systemPrompt, userPrompt)
-    const parsed = parseContent(content)
+    const parsed = parseContent(content ?? undefined)
     if (!parsed) {
       console.warn(`[deepseek] intento ${attempt}: respuesta no parseable`)
       continue

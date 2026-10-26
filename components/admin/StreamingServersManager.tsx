@@ -8,6 +8,7 @@ import { showToast } from '@/components/ui/toast'
 import {
   Plus, Trash2, Pencil, RefreshCw, Radio, MonitorPlay, Wifi, WifiOff, Rocket,
   Loader2, RotateCw, KeyRound, ChevronDown, ChevronUp, Server, Network, Database, ShieldCheck, Music, Clapperboard, Mic,
+  AlertTriangle,
 } from 'lucide-react'
 import { ServerFormModal, EditableServer } from './ServerFormModal'
 import { ProvisionNodeModal } from './ProvisionNodeModal'
@@ -37,6 +38,8 @@ interface ServerRow {
 interface HealthInfo {
   online: boolean
   affectedClients: number
+  agentBuild: string | null
+  buildOutdated: boolean
 }
 
 const TYPE_ICON: Record<string, typeof Radio> = { radio: Radio, tv: MonitorPlay, both: Server }
@@ -45,6 +48,7 @@ export function StreamingServersManager() {
   const { t } = useDashboardI18n()
   const [servers, setServers] = useState<ServerRow[]>([])
   const [health, setHealth] = useState<Record<string, HealthInfo>>({})
+  const [panelBuild, setPanelBuild] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<EditableServer | null>(null)
@@ -75,9 +79,15 @@ export function StreamingServersManager() {
         const hdata = await healthRes.json()
         const map: Record<string, HealthInfo> = {}
         for (const s of hdata.servers || []) {
-          map[s.server.id] = { online: s.online, affectedClients: s.affectedClients }
+          map[s.server.id] = {
+            online: s.online,
+            affectedClients: s.affectedClients,
+            agentBuild: s.agentBuild ?? null,
+            buildOutdated: Boolean(s.buildOutdated),
+          }
         }
         setHealth(map)
+        setPanelBuild(hdata.panelBuild ?? null)
       }
     } catch (err) {
       console.error('[servers] load error', err)
@@ -321,6 +331,14 @@ export function StreamingServersManager() {
                         <Badge className="bg-purple-500/15 text-purple-400"><Rocket className="h-3 w-3 mr-1" /> {t('admin.servers.nodeBadge')}</Badge>
                       ) : null}
                       {!isProvisioningNow && !isUpdatingNow && <StatusDot online={online} />}
+                      {h?.buildOutdated && !isProvisioningNow && !isUpdatingNow && (
+                        <Badge
+                          className="bg-amber-500/15 text-amber-400 cursor-help"
+                          title={`${t('admin.servers.buildOutdatedHint')} · panel ${panelBuild ?? '?'} / nodo ${h.agentBuild ?? '?'}`}
+                        >
+                          <AlertTriangle className="h-3 w-3 mr-1" /> {t('admin.servers.buildOutdated')}
+                        </Badge>
+                      )}
                     </div>
                   </div>
 

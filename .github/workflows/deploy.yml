@@ -30,7 +30,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Gate de calidad: si algo falla acá, no se construye ni se deploya la
+  # imagen (producción sigue con la versión anterior). Solo en push: un
+  # rollback manual (workflow_dispatch con image_tag viejo) no debe quedar
+  # bloqueado si main está rojo.
+  verify:
+    name: Tests + typecheck
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # postinstall ya corre `prisma generate`
+      - name: Install panel deps
+        run: npm ci --legacy-peer-deps
+
+      - name: Typecheck (strict)
+        run: npx tsc --noEmit
+
+      - name: Panel tests
+        run: npm test
+
+      - name: Install agent deps
+        working-directory: streaming/agent
+        run: npm ci
+
+      - name: Agent tests
+        working-directory: streaming/agent
+        run: npm test
+
   build-and-deploy:
+    needs: verify
+    # `always()` + resultado: si verify se salteó (workflow_dispatch) seguimos;
+    # si falló, no se deploya.
+    if: ${{ always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
@@ -95,6 +137,10 @@ jobs:
           # encuentre localmente.
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # SHA del commit dentro de la imagen: el panel lo usa para avisar
+          # qué nodos siguen con código viejo (drift panel ↔ nodos).
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # NOTA: NO setear platforms — los runners ubuntu-latest ya

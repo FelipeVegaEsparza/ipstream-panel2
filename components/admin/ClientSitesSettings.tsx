@@ -73,8 +73,8 @@ export function ClientSitesSettings() {
       showToast({
         type: 'success',
         title: data.created
-          ? t('admin.clientSites.dnsCreated', { name: data.name, type: data.type, content: data.content })
-          : t('admin.clientSites.dnsExisting', { name: data.name, type: data.type, content: data.content }),
+          ? t('admin.clientSites.dnsCreated', { name: data.name ?? '', type: data.type ?? '', content: data.content ?? '' })
+          : t('admin.clientSites.dnsExisting', { name: data.name ?? '', type: data.type ?? '', content: data.content ?? '' }),
       })
     } catch (e) {
       showToast({ type: 'error', title: (e as Error).message })

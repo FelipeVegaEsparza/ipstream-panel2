@@ -1,5 +1,7 @@
 # Resumen del Proyecto: IPStream Panel (radio-dashboard)
 
+> ⚠️ **Snapshot histórico del MVP.** Varias cifras y afirmaciones de este documento ya no aplican (tests, Docker, cantidad de modelos/endpoints). La fuente de verdad es `AGENTS.md` + `DEPLOY.md` + `prisma/schema.prisma`.
+
 ## Descripción General
 Panel completo de gestión de contenido para radio y streaming. Los clientes (radios/streamers) gestionan su contenido (programas, noticias, videos, podcasts, videocasts, auspiciadores, promociones, galerías, locutores, encuestas, eventos) y lo exponen mediante API REST pública. Incluye panel de administración para usuarios, planes, pagos, plantillas web, notificaciones push y tracking de instalaciones PWA.
 
@@ -72,7 +74,7 @@ public/uploads/               # Archivos subidos por clientes
 
 ---
 
-## Base de Datos — 20 Modelos
+## Base de Datos — Modelos del MVP (el esquema actual tiene 70)
 
 | Modelo | Tabla | Descripción |
 |--------|-------|-------------|
@@ -407,13 +409,13 @@ Esto genera una experiencia visual inmersiva similar a Spotify y Apple Music.
 
 - **Idioma:** Español (UI y documentación)
 - **Estado:** Desarrollo activo (últimas migraciones jun 2026)
-- **No tiene tests automatizados**
-- **No usa Docker**
+- **Tests:** 23 archivos vitest en el panel + 73 tests del agente (`node --test`), corridos en CI antes de cada deploy
+- **Docker:** compose con panel, MySQL, Icecast, liquidsoap, SRS, video-encoder, piper, audio-bridge y agente
 - **Moneda principal:** CLP (soporte USD)
 - **Next.config.js** ignora errores TS/ESLint en build; imágenes permitidas de cualquier dominio
 - **Hay probador de API integrado** en `/dashboard/api-test` con descarga de guía Markdown
 - **Guía de API descargable** contiene esquemas completos, tipos, ejemplos y código de implementación
-- **20 modelos Prisma** en total
-- **19 endpoints públicos** (GET y POST)
+- **70 modelos Prisma** en total
+- **223 rutas de API** y 102 páginas
 - **Dashboard reorganizado:** Stats → Acciones Rápidas → PaymentStatus + PwaSubscribers
 - **Sidebar con acordeón:** 4 secciones colapsables con estado persistente

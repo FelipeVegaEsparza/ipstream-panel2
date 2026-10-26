@@ -45,6 +45,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Solo se usa si el deploy cae al build local (pull de GHCR falló).
+        GIT_SHA: ${AGENT_BUILD:-unknown}
     container_name: ipstream-app
     restart: unless-stopped
     depends_on:
@@ -244,6 +247,8 @@ services:
     build:
       context: ./streaming/agent
       dockerfile: Dockerfile
+      args:
+        AGENT_BUILD: ${AGENT_BUILD:-unknown}
     container_name: ipstream-streaming-agent
     restart: unless-stopped
     depends_on:

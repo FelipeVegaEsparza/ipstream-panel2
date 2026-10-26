@@ -150,7 +150,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
                 {socialNetworks.map((network) => (
                   <a
                     key={network.name}
-                    href={network.url}
+                    href={network.url ?? undefined}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`${network.color} text-foreground px-4 py-2 rounded-lg text-center text-sm font-medium transition-colors`}

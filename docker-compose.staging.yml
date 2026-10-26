@@ -1,0 +1,90 @@
+# =====================================================
+# CasterFly — Staging efímero del panel (stack aislado)
+# =====================================================
+# NO reemplaza al stack de producción. Es un proyecto compose aparte
+# (`ipstream-staging`) con su propia DB, sus propios volúmenes y puertos
+# publicados SOLO en loopback:
+#
+#   app -> 127.0.0.1:3001   (acceso por túnel SSH)
+#   db  -> 127.0.0.1:3308
+#
+# No toca Caddy ni los contenedores `ipstream-*` de producción, y no usa
+# `*.casterfly.com` (así no choca con el catch-all de sitios de clientes).
+#
+# Uso:
+#   bash deploy/scripts/setup-staging.sh          # una vez: genera .env.staging
+#   docker compose --env-file .env.staging -p ipstream-staging \
+#     -f docker-compose.staging.yml up -d
+#   ssh -L 3001:127.0.0.1:3001 usuario@vps        # abrir http://localhost:3001
+#
+# Teardown (borra DB y uploads de staging):
+#   docker compose --env-file .env.staging -p ipstream-staging \
+#     -f docker-compose.staging.yml down -v
+
+name: ipstream-staging
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: ipstream-staging-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?falta MYSQL_ROOT_PASSWORD en .env.staging}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ipstream_staging}
+      MYSQL_USER: ${MYSQL_USER:-ipstream}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?falta MYSQL_PASSWORD en .env.staging}
+      TZ: ${TZ:-UTC}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "127.0.0.1:3308:3306"
+    volumes:
+      - staging_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    # Misma imagen que producción: lo que se prueba es el artefacto real.
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:?falta GITHUB_REPOSITORY_OWNER}/ipstream-panel:${IMAGE_TAG:-latest}
+    container_name: ipstream-staging-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.staging
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: mysql://${MYSQL_USER:-ipstream}:${MYSQL_PASSWORD:?}@db:3306/${MYSQL_DATABASE:-ipstream_staging}?schema=public&charset=utf8mb4
+      NEXTAUTH_URL: ${STAGING_URL:-http://127.0.0.1:3001}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?falta NEXTAUTH_SECRET en .env.staging}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?falta ENCRYPTION_KEY en .env.staging}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@staging.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?falta ADMIN_PASSWORD en .env.staging}
+      # Un solo worker: staging no necesita concurrencia.
+      WEB_CONCURRENCY: "1"
+      # Tope de subida bajo para no llenar el disco del VPS.
+      MAX_VIDEO_UPLOAD_MB: "256"
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      # Volumen nombrado: al crearse hereda el dueño (nextjs) del directorio
+      # de la imagen, así el proceso no-root puede escribir.
+      - staging_uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 5
+
+volumes:
+  staging_db:
+  staging_uploads:

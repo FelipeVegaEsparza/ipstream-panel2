@@ -5,6 +5,10 @@
 - Producción se despliega vía GitHub Actions en un VPS propio del usuario.
 - El usuario tiene acceso SSH al VPS de producción; se puede usar para tareas de deploy, pruebas y diagnóstico.
 - Flujo habitual: commit + push a `main` → GitHub Actions despliega automáticamente en el VPS.
+- **Gate de CI**: `deploy.yml` corre un job `verify` (`npm ci`, `tsc --noEmit` con `strict: true`, tests del panel y del agente) antes de construir la imagen. Si falla, **no se deploya**: producción sigue con la imagen anterior. No pushear a `main` sin que ese job pase.
+- **Drift panel ↔ nodos**: la imagen del panel lleva `APP_GIT_SHA` (build-arg `GIT_SHA` en `deploy.yml`) y cada agente reporta `build` (`AGENT_BUILD`) en `/health`. `/admin/servers` marca "Nodo desactualizado" cuando no coinciden. El agente local lo recibe de `deploy/scripts/deploy.sh`; los remotos, del `.env` que escribe `lib/node-provisioner.ts` (SHA de `commits/main` vía API de GitHub).
+- **Staging efímero**: `docker-compose.staging.yml` + workflow manual `staging.yml` levantan la MISMA imagen de GHCR en un proyecto aislado (`ipstream-staging`, puertos loopback 3001/3308, DB y uploads propios, sin Caddy y sin tocar `*.casterfly.com`). Setup en el VPS: `bash deploy/scripts/setup-staging.sh`; luego `workflow_dispatch` "Staging (manual)". Acceso por túnel SSH. No reemplaza a producción.
+- **TypeScript**: `strict: true` en `tsconfig.json`. El CI falla con cualquier error de tipos; no usar `any`/`@ts-ignore` para esquivarlo.
 
 ## Diseño / UI (sistema de marca)
 

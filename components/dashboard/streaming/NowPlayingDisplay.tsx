@@ -19,7 +19,7 @@ function parseAndFormatDuration(startedAt: string | number | null | undefined): 
   return formatDuration(ts)
 }
 
-function TrackRow(props: { track: { title: string; artist?: string; coverUrl?: string; isJingle?: boolean } | null; label: string }) {
+function TrackRow(props: { track: { title: string; artist?: string | null; coverUrl?: string | null; isJingle?: boolean } | null; label: string }) {
   const { t } = useDashboardI18n()
   const track = props.track
   const label = props.label
@@ -151,11 +151,11 @@ export function NowPlayingDisplay() {
               {t('nowPlaying.queuedAutodj')}
             </div>
           )}
-          <TrackRow track={current} label={t('nowPlaying.nowPlaying')} />
+          <TrackRow track={current ?? null} label={t('nowPlaying.nowPlaying')} />
           {current && <div className="h-px bg-gradient-to-r from-secondary/50 to-transparent" />}
         </div>
         <div className="space-y-2">
-          <TrackRow track={next} label={t('nowPlaying.next')} />
+          <TrackRow track={next ?? null} label={t('nowPlaying.next')} />
           {isDjLive && (
             <div className="flex items-center gap-2 text-xs text-brand/60 bg-brand/5 border border-brand/10 rounded-lg px-3 py-2">
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

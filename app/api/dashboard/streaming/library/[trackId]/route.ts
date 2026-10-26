@@ -26,7 +26,13 @@ export async function PATCH(
       }, { status: 400 })
     }
 
-    const result = await streamingClient.updateTrack(ctx.clientId, params.trackId, parsed.data)
+    // El agente solo aplica artist/album si llegan como string; `null` y
+    // ausente son equivalentes para él, así que normalizamos a undefined.
+    const result = await streamingClient.updateTrack(ctx.clientId, params.trackId, {
+      ...parsed.data,
+      artist: parsed.data.artist ?? undefined,
+      album: parsed.data.album ?? undefined,
+    })
     return NextResponse.json(result)
   } catch (err) {
     if (err instanceof StreamingAuthError) {

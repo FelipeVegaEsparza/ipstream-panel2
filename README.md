@@ -5,6 +5,8 @@ Panel completo de gestión de contenido para radio y streaming con API REST púb
 **Dominios de producción:** `casterfly.com` (sitio público), `panel.casterfly.com` (panel) y `stream.casterfly.com` (Icecast). Ver `DEPLOY.md` para el mapa completo y la migración desde `panelipstream.cl`.
 **Incluye módulo de streaming propio** con Icecast 2 + liquidsoap (AutoDJ, playlists, biblioteca MP3, DJ en vivo).
 
+> **Antes de tocar código:** `AGENTS.md` es la fuente de verdad de arquitectura, envs y flujos de deploy. Cada push a `main` pasa por un gate de CI (tests + `tsc --noEmit` con `strict: true`) antes de construir la imagen; si falla, producción no se toca. Para probar sin riesgo hay un staging efímero manual (`staging.yml`).
+
 ## Características
 
 - **Dashboard de administración** para clientes

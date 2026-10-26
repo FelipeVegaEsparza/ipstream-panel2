@@ -98,8 +98,10 @@ export const authOptions: NextAuthOptions = {
           token.role = 'CLIENT'
           token.clientId = session.impersonation.clientId
         } else if ('impersonation' in session && !session.impersonation && token.impersonation) {
-          // Restaurar sesión original
-          token.role = token.originalRole
+          // Restaurar sesión original. Si el JWT no guardó el rol original
+          // (estado inconsistente) se conserva el rol actual —nunca se eleva
+          // privilegios a partir de un valor ausente.
+          token.role = token.originalRole ?? token.role
           token.clientId = token.originalClientId
           delete token.impersonation
           delete token.originalRole

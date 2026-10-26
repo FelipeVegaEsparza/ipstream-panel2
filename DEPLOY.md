@@ -12,6 +12,42 @@ git push origin main
 
 Si todo va bien, el workflow termina con ✓. Si algo falla, **no te asustes** — esta guía te ayuda a recuperarte.
 
+### Gate de calidad (job `verify`)
+
+Antes de construir la imagen, `deploy.yml` corre:
+
+```bash
+npm ci --legacy-peer-deps
+npx tsc --noEmit          # TypeScript strict
+npm test                  # panel (vitest)
+cd streaming/agent && npm ci && npm test   # agente (node --test)
+```
+
+Si cualquiera falla, **no se construye ni se deploya**: producción sigue con la imagen anterior. Un push a `main` con tests rojos no rompe el sitio, pero tampoco despliega.
+
+### Staging efímero (opcional, manual)
+
+Para probar la misma imagen sin tocar producción:
+
+```bash
+# En el VPS, una sola vez:
+cd /opt/ipstream-panel && bash deploy/scripts/setup-staging.sh
+```
+
+Después, en GitHub → Actions → **Staging (manual)** → *Run workflow* (input `image_tag`, default `latest`). Levanta un stack aislado `ipstream-staging` con DB propia y puertos solo en loopback. Abrir por túnel:
+
+```bash
+ssh -L 3001:127.0.0.1:3001 usuario@vps   # → http://localhost:3001
+```
+
+Teardown: mismo workflow con `teardown: true` (borra DB y uploads de staging). No toca Caddy ni `*.casterfly.com`.
+
+### Rollback
+
+Las últimas 6 imágenes del panel se conservan (`deploy/scripts/deploy.sh`). Para volver a una anterior:
+
+GitHub → Actions → **Deploy to production** → *Run workflow* con `image_tag=<sha corto>`.
+
 ---
 
 ## Pre-requisitos del VPS (solo la primera vez)

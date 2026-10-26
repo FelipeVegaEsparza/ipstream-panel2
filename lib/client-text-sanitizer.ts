@@ -111,9 +111,16 @@ export function useSanitizedInput() {
  */
 export function addTextSanitization(element: HTMLInputElement | HTMLTextAreaElement) {
   const { sanitizeOnPaste } = useSanitizedInput();
-  element.addEventListener('paste', sanitizeOnPaste);
+  // El elemento es una unión de tipos, así que el listener se registra como
+  // `EventListener` genérico y se estrecha a ClipboardEvent (el evento 'paste'
+  // siempre lo es) antes de delegar en el sanitizador.
+  const onPaste = (event: Event) => {
+    if (!(event instanceof ClipboardEvent)) return;
+    sanitizeOnPaste(event);
+  };
+  element.addEventListener('paste', onPaste);
   
   return () => {
-    element.removeEventListener('paste', sanitizeOnPaste);
+    element.removeEventListener('paste', onPaste);
   };
 }

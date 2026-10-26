@@ -5,7 +5,7 @@
 // cantidad de clientes afectados. Es SOLO informativo: nunca migra clientes.
 
 import { NextResponse } from 'next/server'
-import { checkAllServers } from '@/lib/streaming-servers'
+import { checkAllServers, getPanelBuild } from '@/lib/streaming-servers'
 import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +21,7 @@ export async function GET() {
     const down = servers.filter((s) => s.server.isActive && !s.online)
     return NextResponse.json({
       servers,
+      panelBuild: getPanelBuild(),
       downCount: down.length,
       down,
     })

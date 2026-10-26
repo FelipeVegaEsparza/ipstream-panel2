@@ -1,0 +1,99 @@
+name: Staging (manual)
+
+# Staging efímero del panel: levanta la MISMA imagen de GHCR en un stack
+# aislado (proyecto `ipstream-staging`) con su propia DB y volúmenes.
+# No toca Caddy, ni los contenedores de producción, ni *.casterfly.com.
+#
+# Requisitos en el VPS (una vez):
+#   cd /opt/ipstream-panel
+#   bash deploy/scripts/setup-staging.sh   # genera .env.staging
+#
+# Acceso: túnel SSH al puerto 3001 (no se expone a internet).
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag de la imagen del panel (SHA corto o latest)'
+        required: false
+        default: 'latest'
+      teardown:
+        description: 'Bajar staging y borrar su DB/uploads'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    name: Staging en el VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Add VPS to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Teardown
+        if: inputs.teardown
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /opt/ipstream-panel && \
+             docker compose --env-file .env.staging -p ipstream-staging \
+               -f docker-compose.staging.yml down -v 2>/dev/null || true"
+          echo "✓ Staging bajado (si existía)."
+
+      - name: Deploy staging
+        if: ${{ !inputs.teardown }}
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /opt/ipstream-panel && \
+             test -f docker-compose.staging.yml || { echo '✗ Falta docker-compose.staging.yml en el VPS (corré un deploy de producción primero)'; exit 1; }; \
+             test -f .env.staging || bash deploy/scripts/setup-staging.sh; \
+             echo '$GHCR_TOKEN' | docker login ghcr.io -u '$OWNER' --password-stdin >/dev/null; \
+             IMAGE_TAG='$IMAGE_TAG' docker compose --env-file .env.staging -p ipstream-staging \
+               -f docker-compose.staging.yml pull app && \
+             IMAGE_TAG='$IMAGE_TAG' docker compose --env-file .env.staging -p ipstream-staging \
+               -f docker-compose.staging.yml up -d --remove-orphans"
+
+      - name: Health check
+        if: ${{ !inputs.teardown }}
+        run: |
+          for i in $(seq 1 18); do
+            if ssh -o StrictHostKeyChecking=accept-new \
+                 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+                 "curl -fsS http://127.0.0.1:3001/api/health"; then
+              echo
+              echo "✓ Staging OK"
+              echo "  Abrir: ssh -L 3001:127.0.0.1:3001 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} → http://localhost:3001"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "✗ Staging no respondió. Logs:"
+          ssh -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "docker logs ipstream-staging-app --tail 60 2>&1 || true"
+          exit 1

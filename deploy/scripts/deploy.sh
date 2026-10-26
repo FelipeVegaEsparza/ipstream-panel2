@@ -101,6 +101,9 @@ df -h / | tail -1
 echo "📥 1/9 — Pull del código..."
 git fetch origin main
 git reset --hard origin/main
+# SHA del código desplegado. Se pasa como build-arg al agente local para que
+# /health lo reporte y el panel pueda detectar nodos remotos desactualizados.
+export AGENT_BUILD="$(git rev-parse --short=7 HEAD)"
 
 # === 1b. Recargar Caddy (el Caddyfile está bind-mounted y puede haber cambiado) ===
 # git reset --hard reemplaza el archivo (inode nuevo); el bind-mount del

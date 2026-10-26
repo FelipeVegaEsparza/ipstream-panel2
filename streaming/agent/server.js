@@ -146,6 +146,9 @@ app.get('/health', async (request, reply) => {
     status: allOk ? 'ok' : 'degraded',
     service: 'ipstream-streaming-agent',
     version: '0.1.0',
+    // SHA del commit del código que corre este nodo (build-arg AGENT_BUILD).
+    // null en nodos viejos que todavía no se actualizaron.
+    build: process.env.AGENT_BUILD || null,
     checks,
     timestamp: new Date().toISOString(),
   })
@@ -155,6 +158,7 @@ app.get('/health', async (request, reply) => {
 app.get('/', async () => ({
   service: 'ipstream-streaming-agent',
   version: '0.1.0',
+  build: process.env.AGENT_BUILD || null,
   endpoints: {
     health: 'GET /health',
     listStreams: 'GET /api/streams',

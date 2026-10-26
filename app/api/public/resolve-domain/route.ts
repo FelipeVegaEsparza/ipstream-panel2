@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
       return createCorsResponse({ found: false, hostname: host })
     }
 
-    return createCorsResponse({ found: true, hostname: host, ...resolved })
+    // El spread ya trae `hostname`; declararlo otra vez lo descartaba
+    // (TS2783). Se conserva el valor que efectivamente se devolvía para no
+    // cambiar el contrato de esta API pública.
+    return createCorsResponse({ found: true, ...resolved })
   } catch (error) {
     console.error('Error resolving domain:', error)
     return createCorsErrorResponse('Error interno del servidor', 500)
