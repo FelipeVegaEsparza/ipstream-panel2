@@ -248,13 +248,6 @@ export const MENU_ITEMS: MenuItemDef[] = [
     icon: PaintBrushIcon,
   },
   {
-    key: 'ai-usage',
-    name: 'Consumo IA',
-    href: '/dashboard/consumo-ia',
-    section: 'General',
-    icon: SparklesIcon,
-  },
-  {
     key: 'programs',
     name: 'Programas',
     href: '/dashboard/programs',
@@ -317,6 +310,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
     section: 'Contenido',
     icon: RectangleGroupIcon,
   },
+  {
+    key: 'sponsors',
+    name: 'Auspiciadores',
+    href: '/dashboard/sponsors',
+    section: 'Contenido',
+    icon: UserGroupIcon,
+  },
 
   {
     key: 'polls',
@@ -356,11 +356,11 @@ export const MENU_ITEMS: MenuItemDef[] = [
   },
 
   {
-    key: 'sponsors',
-    name: 'Auspiciadores',
-    href: '/dashboard/sponsors',
+    key: 'ai-usage',
+    name: 'Consumo IA',
+    href: '/dashboard/consumo-ia',
     section: 'Sistema',
-    icon: UserGroupIcon,
+    icon: SparklesIcon,
   },
   {
     key: 'notifications',
