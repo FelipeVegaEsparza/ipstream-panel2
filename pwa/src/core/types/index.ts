@@ -11,6 +11,15 @@ export interface GcBarMessage {
   updatedAt: string
 }
 
+export interface Banner {
+  id: string
+  imageUrl: string
+  linkUrl: string | null
+  order: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface FullClientData {
   client: ClientInfo
   selectedTemplate: string | null
@@ -31,6 +40,7 @@ export interface FullClientData {
   podcasts: Podcast[]
   videocasts: Videocast[]
   gcBar?: GcBarMessage[]
+  banners?: Banner[]
 }
 
 export interface BasicLocation {

@@ -93,7 +93,7 @@ async function handleGet(
     }
 
     // Obtener todos los datos del cliente
-    const [socialNetworks, programs, news, videos, sponsors, promotions, galleries, announcers, polls, events, [podcasts, videocasts], gcBar] = await Promise.all([
+    const [socialNetworks, programs, news, videos, sponsors, promotions, galleries, announcers, polls, events, [podcasts, videocasts], gcBar, banners] = await Promise.all([
       prisma.socialNetworks.findUnique({
         where: { clientId },
         select: {
@@ -289,6 +289,18 @@ async function handleGet(
           updatedAt: true,
         },
         orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+      }),
+      prisma.banner.findMany({
+        where: { clientId },
+        select: {
+          id: true,
+          imageUrl: true,
+          linkUrl: true,
+          order: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
       })
     ])
 
@@ -325,7 +337,8 @@ async function handleGet(
       events,
       podcasts,
       videocasts,
-      gcBar
+      gcBar,
+      banners
     })
 
   } catch (error) {

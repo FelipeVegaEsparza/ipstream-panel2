@@ -60,6 +60,7 @@ model Client {
   galleries              Gallery[]
   announcers             Announcer[]
   gcBarMessages          GcBarMessage[]
+  banners                Banner[]
   polls                  Poll[]
   events                 Event[]
   pwaInstalls            PwaInstall[]
@@ -313,6 +314,21 @@ model GcBarMessage {
 
   @@index([clientId])
   @@map("gc_bar_messages")
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  clientId  String
+  imageUrl  String   @db.Text
+  linkUrl   String?  @db.Text
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("banners")
 }
 
 model Poll {

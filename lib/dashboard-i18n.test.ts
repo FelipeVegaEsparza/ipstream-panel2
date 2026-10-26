@@ -17,6 +17,9 @@ describe('dashboard i18n', () => {
   it('traduce menús y secciones', () => {
     expect(menuName('en', 'Primeros pasos')).toBe('Getting started')
     expect(menuName('en', 'Locutor IA')).toBe('AI presenter')
+    expect(menuName('en', 'Banner')).toBe('Banner')
+    expect(translateDashboard('en', 'banner.title')).toBe('Banner')
+    expect(translateDashboard('es', 'banner.title')).toBe('Banner')
     expect(sectionName('en', 'Televisión')).toBe('TV')
     expect(adminMenuName('en', 'Planes y Pagos')).toBe('Plans & payments')
   })

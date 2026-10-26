@@ -24,6 +24,7 @@ import {
   LinkIcon,
   QueueListIcon,
   Bars3BottomLeftIcon,
+  RectangleGroupIcon,
   RocketLaunchIcon,
   SignalIcon,
   SparklesIcon,
@@ -43,6 +44,7 @@ export type MenuItemKey =
   | 'galleries'
   | 'announcers'
   | 'gc-bar'
+  | 'banner'
   | 'polls'
   | 'events'
   | 'promotions'
@@ -299,6 +301,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
     href: '/dashboard/gc-bar',
     section: 'Contenido',
     icon: Bars3BottomLeftIcon,
+  },
+  {
+    key: 'banner',
+    name: 'Banner',
+    href: '/dashboard/banner',
+    section: 'Contenido',
+    icon: RectangleGroupIcon,
   },
 
   {

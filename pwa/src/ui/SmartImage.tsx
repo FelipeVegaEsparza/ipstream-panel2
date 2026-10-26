@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { buildImageUrl } from '@/core/api'
 import styles from './SmartImage.module.css'
 
@@ -9,6 +9,8 @@ interface SmartImageProps {
   className?: string
   /** Hace un fundido cruzado cuando cambia la fuente (por defecto, corte seco). */
   crossfade?: boolean
+  /** Se invoca cuando la imagen y todos sus fallbacks fallan. */
+  onError?: () => void
 }
 
 interface ImageState {
@@ -25,7 +27,8 @@ export function SmartImage({
   alt,
   fallbacks,
   className,
-  crossfade = false
+  crossfade = false,
+  onError
 }: SmartImageProps) {
   const chain = unique(
     [
@@ -36,6 +39,9 @@ export function SmartImage({
 
   const [state, setState] = useState<ImageState>({ index: 0, failed: false })
   const [firstUrl, setFirstUrl] = useState<string | null>(chain[0] ?? null)
+  const onErrorRef = useRef(onError)
+
+  onErrorRef.current = onError
 
   if (firstUrl !== (chain[0] ?? null)) {
     setFirstUrl(chain[0] ?? null)
@@ -52,13 +58,15 @@ export function SmartImage({
 
   const current = state.failed ? null : chain[state.index] ?? null
 
-  const advance = () =>
-    setState((prev) => {
-      if (prev.index < chain.length - 1) {
-        return { index: prev.index + 1, failed: false }
-      }
-      return { index: prev.index, failed: true }
-    })
+  const advance = () => {
+    if (state.failed) return
+    if (state.index < chain.length - 1) {
+      setState({ index: state.index + 1, failed: false })
+      return
+    }
+    setState({ index: state.index, failed: true })
+    onErrorRef.current?.()
+  }
 
   if (crossfade) {
     return <CrossfadeImage src={current} alt={alt} className={className} onError={advance} />

@@ -71,6 +71,37 @@ describe('templates nuevos', () => {
       expect(screen.getAllByText('Mensaje GC').length).toBeGreaterThan(0)
       unmount()
     }
+  }, 15000)
+
+  it('minimalista muestra los banners en su home', async () => {
+    baked.clientId = 'cmtest'
+    const data = {
+      ...clientData,
+      banners: [
+        {
+          id: 'b1',
+          imageUrl: '/banner-1.webp',
+          linkUrl: 'https://example.com/uno',
+          order: 1,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z'
+        },
+        {
+          id: 'b2',
+          imageUrl: '/banner-2.webp',
+          linkUrl: null,
+          order: 2,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z'
+        }
+      ]
+    } as unknown as FullClientData
+
+    renderTemplate('minimalista', data)
+
+    expect(
+      await screen.findByRole('region', { name: 'Banners promocionales' }, { timeout: 5000 })
+    ).toBeInTheDocument()
   })
 
   it('blue no muestra los botones de instalar en el menú', () => {

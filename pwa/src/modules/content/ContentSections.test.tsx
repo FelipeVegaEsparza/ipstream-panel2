@@ -173,6 +173,24 @@ function fullData(selectedTemplate: string): FullClientData {
         createdAt: base.createdAt,
         updatedAt: base.updatedAt
       }
+    ],
+    banners: [
+      {
+        id: 'b1',
+        imageUrl: '/banner-1.webp',
+        linkUrl: 'https://example.com/uno',
+        order: 1,
+        createdAt: base.createdAt,
+        updatedAt: base.updatedAt
+      },
+      {
+        id: 'b2',
+        imageUrl: '/banner-2.webp',
+        linkUrl: null,
+        order: 2,
+        createdAt: base.createdAt,
+        updatedAt: base.updatedAt
+      }
     ]
   }
 }
@@ -253,6 +271,54 @@ const MODERNO2_ORDER = [
 ]
 
 describe('ContentSectionStack', () => {
+  it('muestra los banners antes de las secciones de contenido', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } }
+    })
+    const data = fullData('moderna')
+    data.banners = [
+      {
+        id: 'b1',
+        imageUrl: '/banner-1.webp',
+        linkUrl: 'https://example.com/uno',
+        order: 1,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      },
+      {
+        id: 'b2',
+        imageUrl: '/banner-2.webp',
+        linkUrl: null,
+        order: 2,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      }
+    ]
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <TenantProvider>
+          <MemoryRouter>
+            <ContentSectionStack clientData={data} isLoading={false} />
+          </MemoryRouter>
+        </TenantProvider>
+      </QueryClientProvider>
+    )
+
+    const firstChild = container.firstElementChild
+    expect(firstChild?.querySelector('[role="region"]')).not.toBeNull()
+    expect(firstChild?.contains(container.querySelector('section'))).toBe(false)
+  })
+
+  it('muestra el carrusel arriba del contenido en varios templates', () => {
+    for (const template of ['covered', 'blue', 'moderno', 'playlist']) {
+      const { container, unmount } = renderStack(template)
+      expect(
+        container.firstElementChild?.querySelector('[role="region"]')
+      ).not.toBeNull()
+      unmount()
+    }
+  })
+
   it('antepone el orden editorial en la home de covered', () => {
     const { container } = renderStack('covered')
     expect(sectionTitles(container)).toEqual(COVERED_ORDER)

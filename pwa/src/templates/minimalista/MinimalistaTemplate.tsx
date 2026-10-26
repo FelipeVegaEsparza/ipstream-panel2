@@ -14,6 +14,7 @@ import { VuMeter } from '@/modules/player/VuMeter'
 import { ShareButton } from '@/modules/share/ShareButton'
 import { BrandIcon, getSocialLinks } from '@/modules/social/brand'
 import { GcBar } from '@/modules/content/GcBar'
+import { BannerCarousel } from '@/modules/content/BannerCarousel'
 import { TvPlayer } from '@/modules/tv/TvPlayer'
 import { Weather } from '@/modules/weather/Weather'
 import { DigitalClock, SmartImage } from '@/ui'
@@ -100,6 +101,13 @@ export function MinimalistaTemplate({ clientData, isLoading }: TemplateProps) {
         </header>
 
         <GcBar messages={clientData?.gcBar} />
+
+        {isHome && (
+          <BannerCarousel
+            banners={clientData?.banners}
+            fallbackAlt={basic?.projectName ?? clientData?.client?.name}
+          />
+        )}
 
         {isHome ? (
           <div className={styles.columns}>

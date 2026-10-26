@@ -55,6 +55,16 @@ describe('SmartImage', () => {
     fireEvent.error(screen.getByAltText('Portada'))
     expect(screen.queryByAltText('Portada')).toBeNull()
   })
+
+  it('avisa cuando se agotan todas las fuentes', () => {
+    const onError = vi.fn()
+    render(<SmartImage src="/roto.png" alt="Rota" onError={onError} />)
+
+    fireEvent.error(screen.getByAltText('Rota'))
+
+    expect(onError).toHaveBeenCalledTimes(1)
+    expect(screen.queryByAltText('Rota')).toBeNull()
+  })
 })
 
 describe('SmartImage crossfade', () => {

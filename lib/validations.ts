@@ -154,6 +154,27 @@ export const gcBarMessageSchema = z.object({
 
 export type GcBarMessageInput = z.infer<typeof gcBarMessageSchema>
 
+export const bannerSchema = z.object({
+  imageUrl: z.string().trim().min(1, 'La imagen es requerida'),
+  linkUrl: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((value) => (value === '' ? null : value))
+    .refine(
+      (value) => value == null || /^https?:\/\//i.test(value),
+      'El enlace debe iniciar con http:// o https://'
+    )
+    .refine(
+      (value) => value == null || z.string().url().safeParse(value).success,
+      'URL inválida'
+    ),
+  order: z.number().int().optional(),
+})
+
+export type BannerInput = z.infer<typeof bannerSchema>
+
 export const pollSchema = z.object({
   title: z.string().min(1, 'El título de la encuesta es requerido'),
   options: z.array(z.string().min(1, 'Cada opción debe tener texto')).min(2, 'Agrega al menos 2 opciones'),

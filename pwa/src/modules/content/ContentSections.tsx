@@ -18,6 +18,7 @@ import { VideocastsSection } from './VideocastsSection'
 import { EventsSection } from './EventsSection'
 import { AnnouncersSection } from './AnnouncersSection'
 import { SponsorsSection } from './SponsorsSection'
+import { BannerCarousel } from './BannerCarousel'
 import {
   getSectionOrder,
   sectionAnchorId,
@@ -159,28 +160,34 @@ export function ContentSectionStack({ clientData, isLoading }: SectionDataProps)
   const tvOnly = deriveServiceMode(clientData?.basicData) === 'tv'
 
   return (
-    <SectionHeadingContext.Provider value={template === 'moderno2'}>
-      {getSectionOrder(template).map((id) => {
-        // En modo solo TV el video ya es el contenido principal del template.
-        if (id === 'tv' && tvOnly) return null
-        return (
-          <Fragment key={id}>
-            <div id={sectionAnchorId(id)} style={{ scrollMarginTop: 96 }}>
-              {sectionFor(id, { clientData, isLoading }, template)}
-            </div>
-            {slots.after?.[id]}
-          </Fragment>
-        )
-      })}
-      {template !== 'minimalista' &&
-        template !== 'moderno2' &&
-        !(template && CONTACT_SOCIAL_SCHEMES[template]) && (
-          <ContactSection
-            clientData={clientData}
-            withBrand={template === 'petroleo' || template === 'petroleoblue'}
-          />
-        )}
-    </SectionHeadingContext.Provider>
+    <>
+      <BannerCarousel
+        banners={clientData?.banners}
+        fallbackAlt={clientData?.basicData?.projectName ?? clientData?.client?.name}
+      />
+      <SectionHeadingContext.Provider value={template === 'moderno2'}>
+        {getSectionOrder(template).map((id) => {
+          // En modo solo TV el video ya es el contenido principal del template.
+          if (id === 'tv' && tvOnly) return null
+          return (
+            <Fragment key={id}>
+              <div id={sectionAnchorId(id)} style={{ scrollMarginTop: 96 }}>
+                {sectionFor(id, { clientData, isLoading }, template)}
+              </div>
+              {slots.after?.[id]}
+            </Fragment>
+          )
+        })}
+        {template !== 'minimalista' &&
+          template !== 'moderno2' &&
+          !(template && CONTACT_SOCIAL_SCHEMES[template]) && (
+            <ContactSection
+              clientData={clientData}
+              withBrand={template === 'petroleo' || template === 'petroleoblue'}
+            />
+          )}
+      </SectionHeadingContext.Provider>
+    </>
   )
 }
 
