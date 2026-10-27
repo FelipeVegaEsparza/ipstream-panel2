@@ -11,6 +11,10 @@ import {
   ELEVENLABS_MODELS,
   DEFAULT_ELEVENLABS_MODEL,
 } from '@/lib/elevenlabs-models'
+import {
+  DEFAULT_TTS_QUALITY_PRESET,
+  isTtsQualityPresetId,
+} from '@/lib/tts-quality'
 
 
 
@@ -20,6 +24,9 @@ export interface ElevenLabsConfig {
   model: string
   enabled: boolean
   cacheEnabled: boolean
+  qualityPreset: string
+  pronunciationDictionaryId: string | null
+  pronunciationDictionaryVersionId: string | null
 }
 
 const CACHE_TTL_MS = 60_000
@@ -43,6 +50,11 @@ function envConfig(): ElevenLabsConfig {
     model: validModel(process.env.ELEVENLABS_MODEL),
     enabled: Boolean(apiKey && voiceId) && process.env.ELEVENLABS_ENABLED !== 'false',
     cacheEnabled: process.env.TTS_CACHE_ENABLED !== 'false',
+    qualityPreset: isTtsQualityPresetId(process.env.TTS_QUALITY_PRESET)
+      ? process.env.TTS_QUALITY_PRESET
+      : DEFAULT_TTS_QUALITY_PRESET,
+    pronunciationDictionaryId: clean(process.env.ELEVENLABS_PRONUNCIATION_DICTIONARY_ID) || null,
+    pronunciationDictionaryVersionId: clean(process.env.ELEVENLABS_PRONUNCIATION_DICTIONARY_VERSION_ID) || null,
   }
 }
 
@@ -72,6 +84,9 @@ export async function getElevenLabsConfig(): Promise<ElevenLabsConfig> {
         elevenLabsModel: true,
         elevenLabsEnabled: true,
         ttsCacheEnabled: true,
+        ttsQualityPreset: true,
+        pronunciationDictionaryId: true,
+        pronunciationDictionaryVersionId: true,
       },
     })
     if (cfg) {
@@ -81,6 +96,14 @@ export async function getElevenLabsConfig(): Promise<ElevenLabsConfig> {
         model: validModel(cfg.elevenLabsModel || env.model),
         enabled: cfg.elevenLabsEnabled,
         cacheEnabled: cfg.ttsCacheEnabled,
+        qualityPreset: isTtsQualityPresetId(cfg.ttsQualityPreset)
+          ? cfg.ttsQualityPreset
+          : env.qualityPreset,
+        pronunciationDictionaryId:
+          clean(cfg.pronunciationDictionaryId) || env.pronunciationDictionaryId,
+        pronunciationDictionaryVersionId:
+          clean(cfg.pronunciationDictionaryVersionId) ||
+          env.pronunciationDictionaryVersionId,
       }
     }
   } catch {

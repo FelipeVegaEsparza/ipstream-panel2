@@ -8,6 +8,7 @@ import { getFishAudioConfig, invalidateFishAudioConfig } from '@/lib/fish-audio-
 import { validFishAudioModel } from '@/lib/fish-audio-models'
 import { ELEVENLABS_MODELS } from '@/lib/elevenlabs-models'
 import { parseVoiceCatalog } from '@/lib/elevenlabs-voices'
+import { isTtsQualityPresetId } from '@/lib/tts-quality'
 
 export async function GET() {
   try {
@@ -43,6 +44,9 @@ export async function GET() {
       elevenLabsEnabled: eleven.enabled,
       ttsCacheEnabled: eleven.cacheEnabled,
       elevenLabsVoices: parseVoiceCatalog(config.elevenLabsVoices),
+      ttsQualityPreset: eleven.qualityPreset,
+      pronunciationDictionaryId: eleven.pronunciationDictionaryId || '',
+      pronunciationDictionaryVersionId: eleven.pronunciationDictionaryVersionId || '',
       ttsProvider: config.ttsProvider === 'fish' ? 'fish' : 'elevenlabs',
       fishAudioKeySet: Boolean(config.fishAudioApiKeyEnc),
       fishAudioModel: validFishAudioModel(config.fishAudioModel),
@@ -80,6 +84,9 @@ export async function PUT(request: NextRequest) {
       ttsCacheEnabled,
       clearElevenLabsApiKey,
       elevenLabsVoices,
+      ttsQualityPreset,
+      pronunciationDictionaryId,
+      pronunciationDictionaryVersionId,
       ttsProvider,
       fishAudioApiKey,
       clearFishAudioApiKey,
@@ -139,6 +146,14 @@ export async function PUT(request: NextRequest) {
         .slice(0, 30)
     }
 
+    let qualityPresetValue: string | undefined
+    if (ttsQualityPreset !== undefined) {
+      if (!isTtsQualityPresetId(ttsQualityPreset)) {
+        return NextResponse.json({ error: 'Preset de calidad inválido' }, { status: 400 })
+      }
+      qualityPresetValue = ttsQualityPreset
+    }
+
     const elevenLabsData = {
       ...(elevenLabsVoiceId !== undefined
         ? { elevenLabsVoiceId: String(elevenLabsVoiceId).trim() || null }
@@ -147,6 +162,13 @@ export async function PUT(request: NextRequest) {
       ...(elevenLabsModelValue !== undefined ? { elevenLabsModel: elevenLabsModelValue } : {}),
       ...(typeof elevenLabsEnabled === 'boolean' ? { elevenLabsEnabled } : {}),
       ...(typeof ttsCacheEnabled === 'boolean' ? { ttsCacheEnabled } : {}),
+      ...(qualityPresetValue !== undefined ? { ttsQualityPreset: qualityPresetValue } : {}),
+      ...(pronunciationDictionaryId !== undefined
+        ? { pronunciationDictionaryId: String(pronunciationDictionaryId).trim().slice(0, 191) || null }
+        : {}),
+      ...(pronunciationDictionaryVersionId !== undefined
+        ? { pronunciationDictionaryVersionId: String(pronunciationDictionaryVersionId).trim().slice(0, 191) || null }
+        : {}),
       ...(elevenLabsKeyUpdate || {}),
     }
 
@@ -262,6 +284,9 @@ export async function PUT(request: NextRequest) {
       elevenLabsEnabled: eleven.enabled,
       ttsCacheEnabled: eleven.cacheEnabled,
       elevenLabsVoices: parseVoiceCatalog(config.elevenLabsVoices),
+      ttsQualityPreset: eleven.qualityPreset,
+      pronunciationDictionaryId: eleven.pronunciationDictionaryId || '',
+      pronunciationDictionaryVersionId: eleven.pronunciationDictionaryVersionId || '',
       ttsProvider: config.ttsProvider === 'fish' ? 'fish' : 'elevenlabs',
       fishAudioKeySet: Boolean(fish.apiKey),
       fishAudioModel: fish.model,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { showToast } from '@/components/ui/toast'
 import { ELEVENLABS_MODELS, DEFAULT_ELEVENLABS_MODEL } from '@/lib/elevenlabs-models'
+import { DEFAULT_TTS_QUALITY_PRESET, TTS_QUALITY_PRESETS } from '@/lib/tts-quality'
 import { FISH_AUDIO_MODELS, DEFAULT_FISH_AUDIO_MODEL } from '@/lib/fish-audio-models'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
@@ -19,6 +20,9 @@ interface Config {
   elevenLabsEnabled: boolean
   ttsCacheEnabled: boolean
   elevenLabsVoices?: VoiceOption[]
+  ttsQualityPreset?: string
+  pronunciationDictionaryId?: string
+  pronunciationDictionaryVersionId?: string
   ttsProvider: 'elevenlabs' | 'fish'
   fishAudioKeySet: boolean
   fishAudioModel: string
@@ -33,6 +37,9 @@ export function ElevenLabsSettings() {
   const [enabled, setEnabled] = useState(false)
   const [cacheEnabled, setCacheEnabled] = useState(true)
   const [voices, setVoices] = useState<VoiceOption[]>([])
+  const [qualityPreset, setQualityPreset] = useState<string>(DEFAULT_TTS_QUALITY_PRESET)
+  const [dictionaryId, setDictionaryId] = useState('')
+  const [dictionaryVersionId, setDictionaryVersionId] = useState('')
   const [keySet, setKeySet] = useState(false)
   const [provider, setProvider] = useState<'elevenlabs' | 'fish'>('elevenlabs')
   const [fishApiKey, setFishApiKey] = useState('')
@@ -52,6 +59,9 @@ export function ElevenLabsSettings() {
         setEnabled(Boolean(data.elevenLabsEnabled))
         setCacheEnabled(data.ttsCacheEnabled !== false)
         setVoices(Array.isArray(data.elevenLabsVoices) ? data.elevenLabsVoices : [])
+        setQualityPreset(data.ttsQualityPreset || DEFAULT_TTS_QUALITY_PRESET)
+        setDictionaryId(data.pronunciationDictionaryId || '')
+        setDictionaryVersionId(data.pronunciationDictionaryVersionId || '')
         setProvider(data.ttsProvider === 'fish' ? 'fish' : 'elevenlabs')
         setFishKeySet(Boolean(data.fishAudioKeySet))
         setFishModel(data.fishAudioModel || DEFAULT_FISH_AUDIO_MODEL)
@@ -70,6 +80,9 @@ export function ElevenLabsSettings() {
         elevenLabsEnabled: enabled,
         ttsCacheEnabled: cacheEnabled,
         elevenLabsVoices: voices,
+        ttsQualityPreset: qualityPreset,
+        pronunciationDictionaryId: dictionaryId.trim(),
+        pronunciationDictionaryVersionId: dictionaryVersionId.trim(),
         ttsProvider: provider,
         fishAudioModel: fishModel,
         fishAudioReferenceId: fishReferenceId.trim(),
@@ -250,6 +263,57 @@ export function ElevenLabsSettings() {
             <p className="mt-1 text-[11px] text-muted-foreground">
               {t('admin.tts.modelHint')}
             </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.qualityPreset')}</label>
+            <select
+              className={input}
+              value={qualityPreset}
+              onChange={(e) => setQualityPreset(e.target.value)}
+            >
+              {TTS_QUALITY_PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.id === 'natural'
+                    ? t('admin.tts.qualityNatural')
+                    : preset.id === 'stable'
+                      ? t('admin.tts.qualityStable')
+                      : t('admin.tts.qualityExpressive')}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {t('admin.tts.qualityPresetHint')}
+            </p>
+          </div>
+
+          <div className="space-y-3 rounded-lg border border-border bg-secondary/20 p-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">{t('admin.tts.pronunciationTitle')}</h3>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {t('admin.tts.pronunciationHint')}
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.pronunciationId')}</label>
+                <input
+                  className={input}
+                  value={dictionaryId}
+                  onChange={(e) => setDictionaryId(e.target.value)}
+                  placeholder="5xM3yVvZQKV0EfqQpLrJ"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.pronunciationVersion')}</label>
+                <input
+                  className={input}
+                  value={dictionaryVersionId}
+                  onChange={(e) => setDictionaryVersionId(e.target.value)}
+                  placeholder="v1"
+                />
+              </div>
+            </div>
           </div>
 
           <div>

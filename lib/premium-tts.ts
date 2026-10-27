@@ -62,6 +62,10 @@ export async function synthesizePremiumTts(input: {
         model: config.model,
         cacheEnabled: config.cacheEnabled,
         style: voice.style / 100,
+        legacyStyle: voice.style / 100,
+        quality: voice.quality,
+        pronunciationDictionaryId: config.pronunciationDictionaryId,
+        pronunciationDictionaryVersionId: config.pronunciationDictionaryVersionId,
       })
       return { ...result, provider: 'elevenlabs' }
     } catch (err) {

@@ -2,17 +2,10 @@
 // Jingle IA: música con Eleven Music + locución + mezcla FFmpeg
 // =====================================================
 
-import { execFile } from 'child_process'
-import { promisify } from 'util'
-import { promises as fs } from 'fs'
-import { tmpdir } from 'os'
-import { join } from 'path'
-import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { synthesizePremiumTts } from '@/lib/premium-tts'
-
-const execFileAsync = promisify(execFile)
+import { mixMusicAndVoice } from '@/lib/audio-mix'
 export const JINGLE_DURATIONS = [10, 15] as const
 
 export interface GenerateJingleInput {
@@ -70,42 +63,6 @@ async function generateMusic(prompt: string, duration: number, apiKey: string): 
   return Buffer.from(await res.arrayBuffer())
 }
 
-async function mixMusicAndVoice(
-  music: Buffer,
-  voice: Buffer,
-  duration: number
-): Promise<Buffer> {
-  const dir = await fs.mkdtemp(join(tmpdir(), 'jingle-ai-'))
-  const musicPath = join(dir, 'music.mp3')
-  const voicePath = join(dir, 'voice.mp3')
-  const outPath = join(dir, 'jingle.mp3')
-  try {
-    await fs.writeFile(musicPath, music)
-    await fs.writeFile(voicePath, voice)
-    const fadeOut = Math.max(0.2, duration - 0.6)
-    const filter = [
-      `[0:a]volume=0.35,afade=t=in:st=0:d=0.3,afade=t=out:st=${fadeOut}:d=0.6[bed]`,
-      `[1:a]adelay=400|400,volume=1.0[tag]`,
-      `[bed][tag]amix=inputs=2:duration=first:dropout_transition=2:normalize=0,alimiter=limit=0.95[out]`,
-    ].join(';')
-    await execFileAsync('ffmpeg', [
-      '-y',
-      '-i', musicPath,
-      '-i', voicePath,
-      '-filter_complex', filter,
-      '-map', '[out]',
-      '-t', String(duration),
-      '-ar', '44100',
-      '-ac', '2',
-      '-b:a', '192k',
-      outPath,
-    ], { timeout: 60_000 })
-    return await fs.readFile(outPath)
-  } finally {
-    await fs.rm(dir, { recursive: true, force: true }).catch(() => {})
-  }
-}
-
 export async function generateJingle(input: GenerateJingleInput): Promise<GeneratedJingle> {
   const config = await getElevenLabsConfig()
   if (!config.apiKey) throw new Error('La música IA de ElevenLabs no está configurada.' )
@@ -121,7 +78,13 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
     synthesizePremiumTts({ clientId: input.clientId, text: tagline.slice(0, 300) }),
   ])
 
-  const audio = await mixMusicAndVoice(music, voice.audio, input.duration)
+  const audio = await mixMusicAndVoice({
+    music,
+    voice: voice.audio,
+    duration: input.duration,
+    voiceDelaySeconds: 0.4,
+    musicVolume: 0.35,
+  })
   return {
     audio,
     ttsCached: voice.cached,

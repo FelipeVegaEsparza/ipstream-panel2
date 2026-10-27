@@ -13,6 +13,7 @@ interface AiInfo {
   ttsEnabled: boolean
   ttsRemaining: number
   voiceName: string
+  voicePreset?: string
   stationName: string
 }
 
@@ -143,7 +144,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
               <p className="font-mono text-foreground">{t('streaming.jingles.ai.characters', { count: info.ttsRemaining.toLocaleString(locale === 'en' ? 'en-US' : 'es-CL') })}</p>
             </div>
             <div className="col-span-2 text-muted-foreground">
-              {t('streaming.jingles.ai.voice')}: <span className="text-foreground">{info.voiceName}</span> · {t('streaming.jingles.ai.station')}: <span className="text-foreground">{info.stationName}</span>
+              {t('streaming.jingles.ai.voice')}: <span className="text-foreground">{info.voiceName}</span> · {t('streaming.jingles.ai.quality')}: <span className="text-foreground">{info.voicePreset || 'natural'}</span> · {t('streaming.jingles.ai.station')}: <span className="text-foreground">{info.stationName}</span>
             </div>
           </div>
         )}

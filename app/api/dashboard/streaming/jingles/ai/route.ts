@@ -34,6 +34,7 @@ export async function GET() {
       voiceName: provider === 'fish'
         ? (fish?.referenceId ? 'Fish Audio' : 'Fish Audio (voz predeterminada)')
         : voice.name,
+      voicePreset: voice.preset,
       provider,
       stationName: client?.basicData?.projectName || client?.name || 'la radio',
     })

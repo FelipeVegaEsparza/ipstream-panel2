@@ -10,6 +10,8 @@ import { DEFAULT_PRESENTER_PHRASES, normalizePhrases } from '@/lib/live-console/
 import { getVoiceCatalog } from '@/lib/elevenlabs-voices'
 import { streamingClient } from '@/lib/streaming-client'
 import { getTtsProvider } from '@/lib/tts-provider'
+import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
+import { isTtsQualityPresetId, resolveTtsQuality } from '@/lib/tts-quality'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +30,7 @@ function parsePhrases(raw: string | null | undefined): string[] {
 }
 
 async function loadConfig(clientId: string) {
-  const [rs, access, client, voices, provider] = await Promise.all([
+  const [rs, access, client, voices, provider, eleven] = await Promise.all([
     prisma.radioStream.findUnique({
       where: { clientId },
       select: {
@@ -39,6 +41,7 @@ async function loadConfig(clientId: string) {
         aiWeatherEveryMinutes: true,
         aiVoiceId: true,
         aiVoiceStyle: true,
+        aiVoicePreset: true,
       },
     }),
     getAiLiveAccess(clientId),
@@ -48,6 +51,7 @@ async function loadConfig(clientId: string) {
     }),
     getVoiceCatalog(),
     getTtsProvider(),
+    getElevenLabsConfig(),
   ])
   if (!rs) return null
   return {
@@ -58,6 +62,13 @@ async function loadConfig(clientId: string) {
     weatherEveryMinutes: rs.aiWeatherEveryMinutes,
     voiceId: rs.aiVoiceId || '',
     voiceStyle: rs.aiVoiceStyle,
+    voicePreset: rs.aiVoicePreset || '',
+    globalVoicePreset: eleven.qualityPreset,
+    effectiveVoicePreset: resolveTtsQuality({
+      globalPreset: eleven.qualityPreset,
+      clientPreset: rs.aiVoicePreset,
+      clientStyle: rs.aiVoiceStyle,
+    }).presetId,
     voices,
     provider,
     aiEnabled: access.enabled,
@@ -109,6 +120,13 @@ export async function PUT(request: NextRequest) {
     }
 
     const voiceId = typeof body?.voiceId === 'string' ? body.voiceId.trim().slice(0, 191) : ''
+    const voicePreset = typeof body?.voicePreset === 'string' ? body.voicePreset.trim() : ''
+    if (voicePreset && !isTtsQualityPresetId(voicePreset)) {
+      return NextResponse.json(
+        { error: 'invalid_voice_preset', message: 'Preset de calidad inválido.' },
+        { status: 400 }
+      )
+    }
     const voiceStyle = Number(body?.voiceStyle)
     if (!Number.isInteger(voiceStyle) || voiceStyle < 0 || voiceStyle > 100) {
       return NextResponse.json(
@@ -152,6 +170,7 @@ export async function PUT(request: NextRequest) {
         aiWeatherEveryMinutes: weatherEveryMinutes,
         aiVoiceId: voiceId || null,
         aiVoiceStyle: voiceStyle,
+        aiVoicePreset: voicePreset || null,
       },
     })
 

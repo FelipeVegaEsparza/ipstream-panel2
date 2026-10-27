@@ -302,6 +302,10 @@ Limpieza del chat en el crontab del VPS (cada hora):
 
 Los emails se almacenan en texto plano para poder aplicar bans. La ventana de retención de 48 h minimiza la exposición. Si necesitás mayor privacidad podemos hashear los emails en el futuro (perdiendo la capacidad de banear por email directo, pero permitiendo comparar hashes).
 
+## Calidad de locución IA
+
+Presets de voz, post-proceso, diccionario de pronunciación y garantía de créditos sin aumentos. Ver [`docs/elevenlabs-voice-quality.md`](docs/elevenlabs-voice-quality.md).
+
 ## Ejemplo de Uso de la API
 
 ```javascript

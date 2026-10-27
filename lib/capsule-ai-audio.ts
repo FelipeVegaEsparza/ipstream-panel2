@@ -1,30 +1,12 @@
-import { execFile } from 'child_process'
-import { promisify } from 'util'
 import { promises as fs } from 'fs'
-import { tmpdir } from 'os'
 import path from 'path'
-import { randomUUID } from 'crypto'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { getAiMusicAccess, consumeAiMusicSeconds } from '@/lib/ai-music'
-
-const execFileAsync = promisify(execFile)
+import { mixMusicAndVoice, probeAudioBufferDuration } from '@/lib/audio-mix'
 const INTRO_SECONDS = 4
 const MUSIC_BED_SECONDS = 10
 const INTRO_GAIN = 0.55
 const BED_GAIN = 0.18
-
-async function probeDuration(filePath: string): Promise<number | null> {
-  try {
-    const { stdout } = await execFileAsync('ffprobe', [
-      '-v', 'error', '-show_entries', 'format=duration',
-      '-of', 'default=noprint_wrappers=1:nokey=1', filePath,
-    ], { timeout: 15_000 })
-    const seconds = Number(String(stdout).trim())
-    return Number.isFinite(seconds) && seconds > 0 ? seconds : null
-  } catch {
-    return null
-  }
-}
 
 async function generateMusicBed(): Promise<Buffer | null> {
   const config = await getElevenLabsConfig()
@@ -60,43 +42,6 @@ async function defaultBed(): Promise<Buffer | null> {
   }
 }
 
-async function mixIntroBedAndVoice(bed: Buffer, voice: Buffer): Promise<Buffer> {
-  const dir = await fs.mkdtemp(path.join(tmpdir(), 'capsule-ai-'))
-  const bedPath = path.join(dir, 'bed.mp3')
-  const voicePath = path.join(dir, 'voice.mp3')
-  const outputPath = path.join(dir, `${randomUUID()}.mp3`)
-  try {
-    await fs.writeFile(bedPath, bed)
-    await fs.writeFile(voicePath, voice)
-    const voiceDuration = (await probeDuration(voicePath)) || 30
-    const total = Math.ceil((INTRO_SECONDS + voiceDuration + 1.2) * 10) / 10
-    const fadeStart = Math.max(INTRO_SECONDS, total - 0.9)
-    const filter = [
-      // La música entra desde el inicio. A los 4 s baja de volumen y sigue
-      // como fondo mientras habla la locución. Se repite si es más corta.
-      `[0:a]atrim=0:${total},asetpts=PTS-STARTPTS,afade=t=in:st=0:d=0.25,afade=t=out:st=${fadeStart}:d=0.9,volume=${INTRO_GAIN}:enable='lt(t,${INTRO_SECONDS})',volume=${BED_GAIN}:enable='gte(t,${INTRO_SECONDS})'[music]`,
-      `[1:a]adelay=${INTRO_SECONDS * 1000}|${INTRO_SECONDS * 1000}[voice]`,
-      `[music][voice]amix=inputs=2:duration=longest:dropout_transition=0,alimiter=limit=0.95[out]`,
-    ].join(';')
-    await execFileAsync('ffmpeg', [
-      '-y',
-      '-stream_loop', '-1',
-      '-i', bedPath,
-      '-i', voicePath,
-      '-filter_complex', filter,
-      '-map', '[out]',
-      '-t', String(total),
-      '-ar', '44100',
-      '-ac', '2',
-      '-b:a', '192k',
-      outputPath,
-    ], { timeout: 90_000 })
-    return await fs.readFile(outputPath)
-  } finally {
-    await fs.rm(dir, { recursive: true, force: true }).catch(() => {})
-  }
-}
-
 /**
  * Devuelve la voz con una intro musical y una cama baja durante la locución.
  * Si el plan no tiene minutos de música o falla Eleven Music, usa el jingle
@@ -114,7 +59,19 @@ export async function addCapsuleIntro(clientId: string, voice: Buffer): Promise<
   if (!bed) bed = await defaultBed()
   if (!bed) return voice
   try {
-    return await mixIntroBedAndVoice(bed, voice)
+    const voiceDuration = (await probeAudioBufferDuration(voice)) || 30
+    const total = Math.ceil((INTRO_SECONDS + voiceDuration + 1.2) * 10) / 10
+    return await mixMusicAndVoice({
+      music: bed,
+      voice,
+      duration: total,
+      voiceDelaySeconds: INTRO_SECONDS,
+      musicVolume: BED_GAIN,
+      introSeconds: INTRO_SECONDS,
+      introVolume: INTRO_GAIN,
+      bedVolume: BED_GAIN,
+      loopMusic: true,
+    })
   } catch {
     return voice
   }

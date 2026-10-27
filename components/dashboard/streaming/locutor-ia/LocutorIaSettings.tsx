@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { showToast } from '@/components/ui/toast'
 import { SparklesIcon, PlusIcon, Trash2Icon, PlayIcon, SaveIcon } from 'lucide-react'
 import { DEFAULT_PRESENTER_PHRASES } from '@/lib/live-console/presenter'
+import { TTS_QUALITY_PRESETS } from '@/lib/tts-quality'
 import { AiCreditsCard } from '@/components/dashboard/AiCreditsCard'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
@@ -14,6 +15,9 @@ interface Config {
   phrases: string[]
   voiceId: string
   voiceStyle: number
+  voicePreset?: string
+  globalVoicePreset?: string
+  effectiveVoicePreset?: string
   voices: { id: string; name: string; description?: string }[]
   provider?: 'elevenlabs' | 'fish'
   timeEveryMinutes: number
@@ -39,6 +43,7 @@ export function LocutorIaSettings() {
   const [phrases, setPhrases] = useState<string[]>([...DEFAULT_PRESENTER_PHRASES])
   const [voiceId, setVoiceId] = useState('')
   const [voiceStyle, setVoiceStyle] = useState(0)
+  const [voicePreset, setVoicePreset] = useState('')
   const [timeEveryMinutes, setTimeEveryMinutes] = useState(0)
   const [weatherEveryMinutes, setWeatherEveryMinutes] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -58,6 +63,7 @@ export function LocutorIaSettings() {
       setPhrases(Array.isArray(data.phrases) && data.phrases.length ? data.phrases : [...DEFAULT_PRESENTER_PHRASES])
       setVoiceId(data.voiceId || '')
       setVoiceStyle(Number(data.voiceStyle) || 0)
+      setVoicePreset(data.voicePreset || '')
       setTimeEveryMinutes(Number(data.timeEveryMinutes) || 0)
       setWeatherEveryMinutes(Number(data.weatherEveryMinutes) || 0)
     } catch (err) {
@@ -83,6 +89,7 @@ export function LocutorIaSettings() {
           phrases: clean.length ? clean : DEFAULT_PRESENTER_PHRASES,
           voiceId,
           voiceStyle,
+          voicePreset,
           timeEveryMinutes,
           weatherEveryMinutes,
         }),
@@ -198,7 +205,7 @@ export function LocutorIaSettings() {
             {t('streaming.locutor.fishNote')}
           </p>
         ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.voice')}</label>
             <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className={input}>
@@ -221,6 +228,28 @@ export function LocutorIaSettings() {
               onChange={(e) => setVoiceStyle(Number(e.target.value))}
               className="mt-3 w-full accent-[var(--brand-500)]"
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              {t('streaming.locutor.qualityPreset')}
+            </label>
+            <select value={voicePreset} onChange={(e) => setVoicePreset(e.target.value)} className={input}>
+              <option value="">
+                {t('streaming.locutor.qualityInherit')} ({config.globalVoicePreset || 'natural'})
+              </option>
+              {TTS_QUALITY_PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.id === 'natural'
+                    ? t('admin.tts.qualityNatural')
+                    : preset.id === 'stable'
+                      ? t('admin.tts.qualityStable')
+                      : t('admin.tts.qualityExpressive')}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {t('streaming.locutor.qualityHint')}
+            </p>
           </div>
         </div>
         )}

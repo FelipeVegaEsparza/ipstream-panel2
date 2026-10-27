@@ -4,6 +4,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
+import { resolveTtsQuality, type ResolvedTtsQuality } from '@/lib/tts-quality'
 
 export interface ElevenLabsVoiceOption {
   id: string
@@ -14,6 +15,8 @@ export interface ElevenLabsVoiceOption {
 export interface ClientVoiceSettings {
   voiceId: string
   style: number
+  preset: string
+  quality: ResolvedTtsQuality
   name: string
 }
 
@@ -52,7 +55,7 @@ export async function getClientVoiceSettings(clientId: string): Promise<ClientVo
   const [rs, cfg, global] = await Promise.all([
     prisma.radioStream.findUnique({
       where: { clientId },
-      select: { aiVoiceId: true, aiVoiceStyle: true },
+      select: { aiVoiceId: true, aiVoiceStyle: true, aiVoicePreset: true },
     }).catch(() => null),
     prisma.appConfig.findFirst({ select: { elevenLabsVoices: true } }).catch(() => null),
     getElevenLabsConfig(),
@@ -61,9 +64,17 @@ export async function getClientVoiceSettings(clientId: string): Promise<ClientVo
   const selected = rs?.aiVoiceId || ''
   const voice = catalog.find((v) => v.id === selected)
   const voiceId = (voice?.id || selected || global.voiceId || '').trim()
+  const style = Math.max(0, Math.min(100, rs?.aiVoiceStyle ?? 0))
+  const quality = resolveTtsQuality({
+    globalPreset: global.qualityPreset,
+    clientPreset: rs?.aiVoicePreset,
+    clientStyle: style,
+  })
   return {
     voiceId,
-    style: Math.max(0, Math.min(100, rs?.aiVoiceStyle ?? 0)),
+    style,
+    preset: quality.presetId,
+    quality,
     name: voice?.name || (selected ? 'Voz elegida' : 'Voz predeterminada'),
   }
 }
