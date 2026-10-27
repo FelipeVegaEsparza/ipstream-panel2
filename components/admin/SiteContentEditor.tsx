@@ -142,6 +142,81 @@ function ImageControl({
   )
 }
 
+function AudioControl({
+  value,
+  onChange,
+  label,
+}: {
+  value: string
+  onChange: (value: string) => void
+  label: string
+}) {
+  const { t } = useDashboardI18n()
+  const [uploading, setUploading] = useState(false)
+  const preview = value.startsWith('/') ? `${SITE_URL}${value}` : value
+
+  const handleFile = async (file: File) => {
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Error al subir')
+      onChange(new URL(data.url, window.location.origin).toString())
+    } catch (error) {
+      showToast({
+        type: 'error',
+        title: error instanceof Error ? error.message : 'No se pudo subir el audio',
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {preview && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-secondary/40 p-2">
+          <audio controls preload="none" src={preview} className="h-10 max-w-full" />
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {t('admin.siteContent.removeAudio')}
+          </button>
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="/audio/... o https://panel.casterfly.com/api/uploads/..."
+          className="min-w-[220px] flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand focus:outline-none"
+        />
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:border-brand">
+          {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          {uploading ? t('admin.siteContent.uploading') : t('admin.siteContent.uploadImage')}
+          <input
+            type="file"
+            accept="audio/*"
+            className="hidden"
+            disabled={uploading}
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (file) void handleFile(file)
+              event.target.value = ''
+            }}
+          />
+        </label>
+      </div>
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+    </div>
+  )
+}
+
 function FieldControl({
   id,
   label,
@@ -166,6 +241,15 @@ function FieldControl({
       <div className="space-y-1.5">
         <label className="block text-xs font-medium text-muted-foreground">{label}</label>
         <ImageControl value={stringValue} onChange={onChange} label={label} />
+      </div>
+    )
+  }
+
+  if (kind === 'audio') {
+    return (
+      <div className="space-y-1.5">
+        <label className="block text-xs font-medium text-muted-foreground">{label}</label>
+        <AudioControl value={stringValue} onChange={onChange} label={label} />
       </div>
     )
   }

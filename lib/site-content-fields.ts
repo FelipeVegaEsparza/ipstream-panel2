@@ -1,6 +1,6 @@
 import type { SiteContentLocale } from './site-content'
 
-export type SiteFieldKind = 'text' | 'textarea' | 'lines' | 'url' | 'email' | 'image'
+export type SiteFieldKind = 'text' | 'textarea' | 'lines' | 'url' | 'email' | 'image' | 'audio'
 
 export interface SiteI18nField {
   key: string
@@ -32,6 +32,7 @@ export type SiteCollectionKey =
   | 'supportCards'
   | 'faq'
   | 'proFeatures'
+  | 'voiceSamples'
 
 export interface SiteCollectionConfig {
   key: SiteCollectionKey
@@ -164,6 +165,29 @@ export const SITE_COLLECTIONS: Record<SiteCollectionKey, SiteCollectionConfig> =
     create: () => ({ icon: 'mic', title: 'Nueva característica', text: '' }),
     fields: [cf('icon', 'Icono'), cf('title', 'Título'), cf('text', 'Texto', 'textarea')],
   },
+  voiceSamples: {
+    key: 'voiceSamples',
+    label: 'Ejemplos de locución',
+    itemLabel: 'Locución',
+    create: () => ({
+      title: 'Nueva locución',
+      description: '',
+      voice: '',
+      tag: 'IA',
+      duration: '',
+      audioUrl: '',
+      transcript: '',
+    }),
+    fields: [
+      cf('title', 'Título'),
+      cf('description', 'Descripción', 'textarea'),
+      cf('voice', 'Voz'),
+      cf('tag', 'Etiqueta'),
+      cf('duration', 'Duración'),
+      cf('audioUrl', 'Audio', 'audio'),
+      cf('transcript', 'Transcripción', 'textarea'),
+    ],
+  },
 }
 
 export const SITE_CONTENT_TABS: SiteContentTab[] = [
@@ -284,8 +308,14 @@ export const SITE_CONTENT_TABS: SiteContentTab[] = [
       f('ia.cta.title', 'Título CTA IA'),
       f('ia.cta.description', 'Descripción CTA IA', 'textarea'),
       f('ia.cta.button', 'Botón CTA IA'),
+      f('home.voice.eyebrow', 'Eyebrow sección locuciones'),
+      f('home.voice.title', 'Título sección locuciones'),
+      f('home.voice.description', 'Descripción sección locuciones', 'textarea'),
+      f('home.voice.play', 'Texto reproducir'),
+      f('home.voice.pause', 'Texto pausar'),
+      f('home.voice.aria', 'Aria sección locuciones'),
     ],
-    collectionKeys: ['aiFeatures', 'aiSteps', 'proFeatures'],
+    collectionKeys: ['aiFeatures', 'aiSteps', 'proFeatures', 'voiceSamples'],
   },
   {
     id: 'platform',

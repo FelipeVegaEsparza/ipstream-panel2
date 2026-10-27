@@ -65,6 +65,16 @@ export const siteProFeatureSchema = z.object({
   text: longText(1000),
 })
 
+export const siteVoiceSampleSchema = z.object({
+  title: text(160),
+  description: longText(1000),
+  voice: text(80),
+  tag: text(40),
+  duration: text(16),
+  audioUrl: assetUrl(),
+  transcript: longText(2000),
+})
+
 export const siteSocialSchema = z.object({
   facebook: linkUrl(),
   youtube: linkUrl(),
@@ -94,6 +104,7 @@ export const siteCollectionsSchema = z.object({
   supportCards: z.array(siteSupportCardSchema).max(20).default([]),
   faq: z.array(siteFaqSchema).max(50).default([]),
   proFeatures: z.array(siteProFeatureSchema).max(20).default([]),
+  voiceSamples: z.array(siteVoiceSampleSchema).max(20).default([]),
 })
 
 const EMPTY_GLOBAL = siteGlobalSchema.parse({})
@@ -112,6 +123,7 @@ export type SitePlayer = z.infer<typeof sitePlayerSchema>
 export type SiteSupportCard = z.infer<typeof siteSupportCardSchema>
 export type SiteFaq = z.infer<typeof siteFaqSchema>
 export type SiteProFeature = z.infer<typeof siteProFeatureSchema>
+export type SiteVoiceSample = z.infer<typeof siteVoiceSampleSchema>
 
 export const SITE_CONTENT_LOCALES = ['es', 'en'] as const
 export type SiteContentLocale = (typeof SITE_CONTENT_LOCALES)[number]

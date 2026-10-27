@@ -181,7 +181,13 @@
       "ia.pro.tag3": "Noticias IA",
       "ia.pro.tag4": "Analítica",
       "home.chat.title": "Chat en vivo con tu audiencia",
-      "home.chat.description": "Abre un chat en vivo en el sitio de tu radio y en la app PWA. Tus oyentes conversan identificados con nombre y correo, el staff responde desde el panel y los mensajes nuevos se avisan al instante."
+      "home.chat.description": "Abre un chat en vivo en el sitio de tu radio y en la app PWA. Tus oyentes conversan identificados con nombre y correo, el staff responde desde el panel y los mensajes nuevos se avisan al instante.",
+      "home.voice.eyebrow": "[ LOCUCIONES / IA ]",
+      "home.voice.title": "Escucha la voz de tu radio",
+      "home.voice.description": "Ejemplos reales de locución generados con el asistente de IA: presentaciones, hora y clima, cápsulas e identificación de emisora.",
+      "home.voice.play": "Reproducir",
+      "home.voice.pause": "Pausar",
+      "home.voice.aria": "Ejemplos de locución con IA"
     },
     "collections": {
       "pillars": [
@@ -576,6 +582,44 @@
           "title": "Multi-emisora",
           "text": "Opera varias radios o canales desde un solo panel."
         }
+      ],
+      "voiceSamples": [
+        {
+          "title": "Presentación de tema",
+          "description": "El asistente anuncia el próximo tema con la voz de tu emisora.",
+          "voice": "Pedro",
+          "tag": "AUTO DJ",
+          "duration": "00:08",
+          "audioUrl": "/audio/locuciones/presentacion.mp3",
+          "transcript": "Estás escuchando CasterFly Radio. Ahora suena La distancia, de Los Bunkers. Mantente en sintonía."
+        },
+        {
+          "title": "Hora y clima",
+          "description": "La hora y el clima de tu ciudad, locutados automáticamente.",
+          "voice": "Fernanda",
+          "tag": "EN VIVO",
+          "duration": "00:09",
+          "audioUrl": "/audio/locuciones/hora-clima.mp3",
+          "transcript": "Son las ocho de la mañana con quince minutos. En Santiago, la temperatura actual es de dieciocho grados Celsius, con cielo despejado."
+        },
+        {
+          "title": "Cápsula informativa",
+          "description": "Un guion se convierte en una cápsula lista para emitir.",
+          "voice": "George",
+          "tag": "CÁPSULA IA",
+          "duration": "00:11",
+          "audioUrl": "/audio/locuciones/capsula.mp3",
+          "transcript": "CasterFly informa. La inteligencia artificial ya es parte de la radio: presenta la música, locuta la hora y el clima, y genera cápsulas con la voz de tu emisora."
+        },
+        {
+          "title": "Identificación de emisora",
+          "description": "La voz de tu radio en pocos segundos.",
+          "voice": "Isabela",
+          "tag": "MARCA",
+          "duration": "00:05",
+          "audioUrl": "/audio/locuciones/identificacion.mp3",
+          "transcript": "CasterFly. La radio que suena profesional, con la voz de tu emisora."
+        }
       ]
     }
   },
@@ -761,7 +805,13 @@
       "ia.pro.tag3": "AI news",
       "ia.pro.tag4": "Analytics",
       "home.chat.title": "Live chat with your audience",
-      "home.chat.description": "Open a live chat on your radio’s website and PWA. Listeners join with their name and email, staff replies from the panel, and new messages are announced instantly."
+      "home.chat.description": "Open a live chat on your radio’s website and PWA. Listeners join with their name and email, staff replies from the panel, and new messages are announced instantly.",
+      "home.voice.eyebrow": "[ VOICE-OVERS / AI ]",
+      "home.voice.title": "Hear your station’s voice",
+      "home.voice.description": "Real voice-over examples generated with the AI assistant: track intros, time and weather, capsules and station IDs.",
+      "home.voice.play": "Play",
+      "home.voice.pause": "Pause",
+      "home.voice.aria": "AI voice-over examples"
     },
     "collections": {
       "pillars": [
@@ -1155,6 +1205,44 @@
         {
           "question": "¿Qué medios de pago aceptan?",
           "answer": "Aceptamos tarjetas de crédito, débito y transferencia. La facturación es mensual, sin contratos de permanencia."
+        }
+      ],
+      "voiceSamples": [
+        {
+          "title": "Track intro",
+          "description": "The assistant announces the next track in your station’s voice.",
+          "voice": "Pedro",
+          "tag": "AUTO DJ",
+          "duration": "00:08",
+          "audioUrl": "/audio/locuciones/presentacion.mp3",
+          "transcript": "Estás escuchando CasterFly Radio. Ahora suena La distancia, de Los Bunkers. Mantente en sintonía."
+        },
+        {
+          "title": "Time and weather",
+          "description": "Your city’s time and weather, voiced automatically.",
+          "voice": "Fernanda",
+          "tag": "LIVE",
+          "duration": "00:09",
+          "audioUrl": "/audio/locuciones/hora-clima.mp3",
+          "transcript": "Son las ocho de la mañana con quince minutos. En Santiago, la temperatura actual es de dieciocho grados Celsius, con cielo despejado."
+        },
+        {
+          "title": "Info capsule",
+          "description": "A script becomes a ready-to-air capsule.",
+          "voice": "George",
+          "tag": "AI CAPSULE",
+          "duration": "00:11",
+          "audioUrl": "/audio/locuciones/capsula.mp3",
+          "transcript": "CasterFly informa. La inteligencia artificial ya es parte de la radio: presenta la música, locuta la hora y el clima, y genera cápsulas con la voz de tu emisora."
+        },
+        {
+          "title": "Station ID",
+          "description": "Your station’s voice in just a few seconds.",
+          "voice": "Isabela",
+          "tag": "BRAND",
+          "duration": "00:05",
+          "audioUrl": "/audio/locuciones/identificacion.mp3",
+          "transcript": "CasterFly. La radio que suena profesional, con la voz de tu emisora."
         }
       ]
     }
