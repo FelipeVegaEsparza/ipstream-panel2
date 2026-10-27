@@ -1,34 +1,49 @@
-.fab {
+.launcher {
   position: fixed;
-  right: 20px;
-  bottom: calc(var(--player-height, 72px) + 18px);
-  z-index: 45;
-  width: 52px;
-  height: 52px;
+  top: 50%;
+  right: 0;
+  z-index: 55;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
+  gap: 8px;
+  padding: 14px 10px;
+  border: 1px solid var(--content-card-border, var(--color-border));
+  border-right: none;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   background: var(--content-accent, var(--color-primary, #6366f1));
   color: #fff;
-  font-size: 1.25rem;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
-.fab:focus-visible {
+.launcher:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
 
-.panel {
+.launcherLabel {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.backdrop {
   position: fixed;
-  right: 20px;
-  bottom: calc(var(--player-height, 72px) + 80px);
-  z-index: 46;
-  width: min(380px, calc(100vw - 32px));
-  max-height: min(620px, calc(100vh - 170px));
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.dialog {
+  width: min(420px, 100%);
+  max-height: min(680px, calc(100vh - 40px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -36,6 +51,7 @@
   border: 1px solid var(--content-card-border, var(--color-border));
   background: var(--content-card-bg, var(--color-surface, #1a1a2e));
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  outline: none;
 }
 
 .header {
@@ -81,16 +97,17 @@
 }
 
 @media (max-width: 640px) {
-  .panel {
-    right: 8px;
-    left: 8px;
-    width: auto;
-    bottom: calc(var(--player-height, 72px) + 72px);
-    max-height: calc(100vh - 160px);
+  .backdrop {
+    padding: 8px;
+    align-items: flex-end;
   }
 
-  .fab {
-    right: 14px;
-    bottom: calc(var(--player-height, 72px) + 14px);
+  .dialog {
+    width: 100%;
+    max-height: calc(100vh - 16px);
+  }
+
+  .launcher {
+    padding: 12px 9px;
   }
 }

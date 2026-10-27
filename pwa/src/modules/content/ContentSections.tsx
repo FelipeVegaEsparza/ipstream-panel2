@@ -19,7 +19,6 @@ import { EventsSection } from './EventsSection'
 import { AnnouncersSection } from './AnnouncersSection'
 import { SponsorsSection } from './SponsorsSection'
 import { BannerCarousel } from './BannerCarousel'
-import { ChatSection } from '@/modules/chat/ChatSection'
 import {
   getSectionOrder,
   sectionAnchorId,
@@ -139,8 +138,6 @@ function sectionFor(
       )
     case 'sponsors':
       return <SponsorsSection clientData={clientData} isLoading={isLoading} />
-    case 'chat':
-      return clientData?.chatEnabled ? <ChatSection /> : null
     case 'social': {
       const scheme = template ? CONTACT_SOCIAL_SCHEMES[template] : undefined
       if (scheme) {
