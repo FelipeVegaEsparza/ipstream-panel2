@@ -34,7 +34,7 @@
 
 ## 6. Integración, despliegue y documentación
 
-- [ ] 6.1 Aplicar migración y seed en el panel desplegado y verificar `/admin/sitio` y `/api/public/site-content` en producción.
-- [ ] 6.2 Sincronizar y reconstruir el sitio una vez para activar el consumo de la API; verificar que un cambio del panel aparece en casterfly.com dentro de la ventana de caché y que el sitio sigue funcionando con la API caída.
+- [x] 6.1 Aplicar migración y seed en el panel desplegado y verificar `/admin/sitio` y `/api/public/site-content` en producción.
+- [x] 6.2 Sincronizar y reconstruir el sitio una vez para activar el consumo de la API; verificar que un cambio del panel aparece en casterfly.com dentro de la ventana de caché y que el sitio sigue funcionando con la API caída.
 - [x] 6.3 Documentar la operación: cómo editar contenido, dónde se publica, tiempo de caché, deploy único del sitio y rollback; verificar que los comandos y enlaces documentados coinciden con la realidad.
 - [x] 6.4 Confirmar que noticias, tutoriales, portafolio, mensajes y planes siguen en sus flujos actuales, y que el cambio no toca el agente ni requiere "Actualizar nodo".
