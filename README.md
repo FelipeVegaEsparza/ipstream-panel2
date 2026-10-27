@@ -207,6 +207,10 @@ POST /api/public/[clientId]/chat/messages
 GET /api/public/[clientId]/chat/online
 ```
 
+## Sitio público (CMS)
+
+El contenido editorial de casterfly.com se edita desde `/admin/sitio`. Ver [`docs/site-content-cms.md`](docs/site-content-cms.md).
+
 ## Chat en Vivo (oyentes↔oyentes)
 
 El dashboard incluye una sección **Chat en Vivo** donde el dueño de la radio puede:

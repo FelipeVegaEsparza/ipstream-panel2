@@ -676,6 +676,18 @@ model AppConfig {
   @@map("app_config")
 }
 
+model SiteContent {
+  id        String   @id @default(cuid())
+  locale    String   @unique @db.VarChar(16) // "es" | "en"
+  content   Json
+  version   Int      @default(1)
+  updatedBy String?  @db.VarChar(191)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_content")
+}
+
 model ClientMenuItem {
   id        String   @id @default(cuid())
   clientId  String

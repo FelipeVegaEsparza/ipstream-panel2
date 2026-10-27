@@ -1,0 +1,1162 @@
+{
+  "es": {
+    "global": {
+      "siteName": "CasterFly",
+      "tagline": "Radio profesional asistida por IA",
+      "contactEmail": "contacto@casterfly.com",
+      "panelUrl": "https://panel.casterfly.com/",
+      "demoStreamUrl": "https://audio1.ipstream.cl/radio_5715de5983df",
+      "social": {
+        "facebook": "",
+        "youtube": "",
+        "instagram": "",
+        "tiktok": "",
+        "twitter": ""
+      }
+    },
+    "i18n": {
+      "footer.description": "Soluciones profesionales para tu radio online. Transmite, comparte y llega a más oyentes con la plataforma más completa del mercado.",
+      "contact.eyebrow": "[ 09 / CONTACTO ]",
+      "contact.title": "Hablemos de tu radio",
+      "contact.description": "Cuéntanos qué necesitas y te contactamos a la brevedad. También puedes escribirnos directamente:",
+      "contact.email": "Correo",
+      "contact.panel": "Panel",
+      "contact.loginPanel": "Ingresar al panel",
+      "contact.error": "No se pudo enviar la consulta",
+      "contact.success": "¡Gracias! Recibimos tu consulta y te contactaremos a la brevedad.",
+      "contact.name": "Nombre",
+      "contact.emailLabel": "Correo",
+      "contact.phone": "Teléfono",
+      "contact.optional": "(opcional)",
+      "contact.subject": "Asunto",
+      "contact.message": "Mensaje",
+      "contact.honeypot": "No completar",
+      "contact.submit": "Enviar consulta",
+      "home.metaTitle": "CasterFly — Radio profesional asistida por IA",
+      "home.metaDescription": "Sitio, PWA con notificaciones push, chat en vivo, consola en vivo y un copiloto de IA que locuta, informa y programa. El panel profesional para tu radio online.",
+      "home.hero.badge": "RADIO + IA",
+      "home.hero.title": "Tu radio profesional, con IA a bordo",
+      "home.hero.description": "Sitio, app PWA con mensajería push, chat en vivo, consola en vivo y un copiloto de IA que locuta, informa y programa. Todo en una sola plataforma, con la voz y el estilo de tu emisora.",
+      "home.hero.ctaAI": "Conocer la IA",
+      "home.hero.ctaPlans": "Ver planes",
+      "home.demo.eyebrow": "[ DEMO EN VIVO ]",
+      "home.demo.title": "Escucha una radio real operada con IA",
+      "home.demo.description": "Dale play y escucha una emisora creada con CasterFly: AutoDJ, locuciones y programación funcionando en vivo, sin instalar nada.",
+      "home.demo.station": "CasterFly Demo",
+      "home.demo.meta": "AutoDJ + IA · 128 kbps",
+      "home.demo.play": "Escuchar demo",
+      "home.demo.pause": "Pausar demo",
+      "home.demo.connecting": "Conectando…",
+      "home.demo.error": "No se pudo conectar. Abre el stream directamente.",
+      "home.demo.open": "Abrir stream",
+      "home.demo.live": "EN VIVO",
+      "home.demo.aria": "Reproductor de demostración de audio con IA",
+      "home.hero.aiKicker": "[ COPILOTO PROFESIONAL ]",
+      "home.hero.aiTitle": "La IA se ocupa del aire. Tú diriges la radio.",
+      "home.hero.aiItem1": "Presenta el próximo tema",
+      "home.hero.aiItem2": "Locuta hora y clima",
+      "home.hero.aiItem3": "Genera cápsulas y noticias",
+      "home.hero.aiItem4": "Mide y aprende de tu audiencia",
+      "home.hero.aiCharacters": "{count} caracteres/mes",
+      "home.ai.eyebrow": "[ 01 / IA EN EL AIRE ]",
+      "home.ai.title": "Una radio que trabaja contigo",
+      "home.ai.description": "La IA no es un extra: presenta, locuta, redacta y programa. Seis funciones pensadas para que tu emisora suene profesional las 24 horas.",
+      "home.ai.cta": "Ver todo sobre la IA",
+      "home.platform.eyebrow": "[ 02 / PLATAFORMA ]",
+      "home.platform.title": "Todo lo que necesitas para tu radio online",
+      "home.platform.description": "Una solución completa para transmitir, gestionar y hacer crecer tu audiencia.",
+      "home.studio.eyebrow": "[ 03 / CASTERFLY STUDIO ]",
+      "home.studio.title": "Transmite en vivo desde tu panel",
+      "home.studio.description": "CasterFly Studio es la consola en vivo integrada en tu panel: carga tu música local, arma la cola, agrega micrófono, efectos y locuciones, y sal al aire sin instalar nada.",
+      "home.chat.eyebrow": "[ EN VIVO / COMUNIDAD ]",
+      "home.chat.demoAria": "Ejemplo del chat en vivo de una radio",
+      "home.chat.demoTitle": "Chat en vivo",
+      "home.chat.demoOnline": "12 oyentes activos",
+      "home.chat.demoStaff": "Radio CasterFly",
+      "home.chat.demoMsg1": "¡Hola! Saludos desde Valparaíso.",
+      "home.chat.demoMsg2": "¡Bienvenida! Ya suena el próximo tema.",
+      "home.chat.demoMsg3": "¿Pueden poner un tema de Los Bunkers?",
+      "home.chat.demoInput": "Escribe un mensaje…",
+      "home.chat.demoSend": "Enviar",
+      "home.highlights.eyebrow": "[ 04 / FUNCIONALIDADES ]",
+      "home.highlights.title": "Diseñado para hacer crecer tu audiencia",
+      "home.players.eyebrow": "[ 05 / REPRODUCTORES ]",
+      "home.players.title": "Los reproductores más modernos y compatibles",
+      "home.players.description": "Diseñados para ofrecer la mejor experiencia de streaming en cualquier dispositivo.",
+      "home.plans.eyebrow": "[ 06 / PLANES ]",
+      "home.plans.title": "Planes diseñados para tu éxito",
+      "home.plans.from": "Desde",
+      "home.plans.perMonth": "/mes",
+      "home.plans.viewPlans": "Ver {count} planes",
+      "home.clients.eyebrow": "[ 07 / CLIENTES ]",
+      "home.clients.title": "Radios que confían en CasterFly",
+      "home.clients.aria": "Clientes de CasterFly",
+      "home.aiPlan.eyebrow": "[ IA EN VIVO ]",
+      "home.aiPlan.characters": "Locutor IA · {count} caracteres/mes · {minutes} min de música IA",
+      "home.aiPlan.cta": "Conocer la IA",
+      "ia.metaTitle": "IA para radio — CasterFly",
+      "ia.metaDescription": "Locutor IA, cápsulas, noticias y locuciones automáticas de hora y clima. El copiloto profesional para tu radio online.",
+      "ia.hero.eyebrow": "[ IA / CO-PILOTO PROFESIONAL ]",
+      "ia.hero.title": "Tu radio, con un copiloto de IA",
+      "ia.hero.description": "Locutor automático, cápsulas, noticias y locuciones de hora y clima. La IA se ocupa de lo repetitivo; tú te quedas con la dirección de la emisora.",
+      "ia.hero.ctaPlans": "Ver planes con IA",
+      "ia.hero.ctaFeatures": "Conocer el panel",
+      "ia.console.label": "AI / CONSOLA",
+      "ia.console.onAir": "LOCUTOR IA",
+      "ia.console.kicker": "[ COPILOTO PROFESIONAL ]",
+      "ia.console.title": "La IA se ocupa del aire. Tú diriges la radio.",
+      "ia.console.item1": "Presenta el próximo tema",
+      "ia.console.item2": "Locuta hora y clima",
+      "ia.console.item3": "Genera cápsulas y noticias",
+      "ia.console.item4": "Cae a voz local si falla la nube",
+      "ia.console.characters": "{count} caracteres/mes",
+      "ia.console.music": "{minutes} min música IA",
+      "ia.features.eyebrow": "[ 01 / IA EN EL AIRE ]",
+      "ia.features.title": "Seis formas en que la IA trabaja para tu radio",
+      "ia.features.description": "No es un adorno: la IA produce audio, presenta la música y te ayuda a publicar contenido con la voz y el estilo de tu emisora.",
+      "ia.steps.eyebrow": "[ 02 / FLUJO ]",
+      "ia.steps.title": "De la idea al aire en cuatro pasos",
+      "ia.pro.eyebrow": "[ 03 / OPERACIÓN ]",
+      "ia.pro.title": "IA + operación profesional",
+      "ia.pro.description": "La IA no reemplaza el control: lo potencia. Todo lo que pasa en la radio se gestiona desde el mismo panel, con datos y trazabilidad.",
+      "ia.pro.moduleLabel": "PANEL / PROFESIONAL",
+      "ia.pro.kicker": "[ RADIO ASISTIDA ]",
+      "ia.pro.moduleTitle": "La IA produce. Tú diriges.",
+      "ia.pro.moduleDescription": "Programa, publica y mide sin perder el control editorial. La IA se apaga o se ajusta por plan y por emisora.",
+      "ia.pro.cta": "Elegir plan",
+      "ia.plans.eyebrow": "[ 04 / PLANES ]",
+      "ia.plans.title": "La IA incluida en tu plan",
+      "ia.plans.description": "La IA en vivo se habilita según el plan. Incluye presentador automático, locuciones libres y clima/hora con voz premium.",
+      "ia.plans.planFallback": "Plan Radio Pro",
+      "ia.plans.planDescription": "Presentador automático cada N temas, locuciones libres y voz premium para clima y hora. Si el proveedor falla, la radio sigue con la voz local.",
+      "ia.plans.characters": "{count} caracteres/mes",
+      "ia.plans.music": "{minutes} min de música IA/mes",
+      "ia.plans.cta": "Ver todos los planes",
+      "ia.cta.eyebrow": "[ SIGUIENTE PASO ]",
+      "ia.cta.title": "Pon a la IA a trabajar en tu radio",
+      "ia.cta.description": "Empieza con 7 días gratis y activa el copiloto cuando quieras.",
+      "ia.cta.button": "Empezar ahora",
+      "features.metaTitle": "Características — CasterFly",
+      "features.metaDescription": "Radio profesional asistida por IA: locutor automático, cápsulas, noticias, analítica, app PWA con notificaciones push, chat en vivo y la consola en vivo CasterFly Studio desde el panel.",
+      "features.hero.eyebrow": "[ PLATAFORMA / IA ]",
+      "features.hero.title": "Una plataforma profesional, con IA en el aire",
+      "features.hero.description": "Locutor automático, cápsulas, noticias, analítica y consola en vivo. Todo lo que tu radio necesita para sonar profesional.",
+      "features.ai.eyebrow": "[ 01 / IA EN EL AIRE ]",
+      "features.ai.title": "El copiloto que produce, locuta y programa",
+      "features.ai.description": "La IA se ocupa de lo repetitivo para que tu equipo se concentre en la dirección de la emisora.",
+      "features.base.eyebrow": "[ 02 / BASE ]",
+      "features.base.title": "La base de tu emisora",
+      "features.highlights.eyebrow": "[ 03 / DESTACADAS ]",
+      "features.highlights.title": "Funcionalidades premium",
+      "features.studio.eyebrow": "[ 04 / CONSOLA EN VIVO ]",
+      "features.studio.title": "Tu consola en vivo, en el navegador",
+      "features.studio.description": "La consola en vivo del panel, en el navegador: biblioteca local, cola e historial, micrófono con monitoreo, efectos, jingles, cápsulas y locuciones con IA. Sin instalar nada.",
+      "features.players.eyebrow": "[ 05 / REPRODUCTORES ]",
+      "features.players.title": "Reproductores para cada necesidad",
+      "features.cta.title": "¿Listo para empezar?",
+      "features.cta.button": "Ver planes y precios",
+      "plans.metaTitle": "Planes y precios — CasterFly",
+      "plans.metaDescription": "Planes profesionales con precios en USD. IA en vivo disponible en el Plan Radio Pro: locutor automático, cápsulas y locuciones.",
+      "clients.metaTitle": "Clientes — CasterFly",
+      "clients.metaDescription": "Conoce las radios y proyectos que transmiten con CasterFly.",
+      "tutorials.metaTitle": "Tutoriales — CasterFly",
+      "tutorials.metaDescription": "Guías paso a paso y videos para aprender a usar todas las herramientas de CasterFly.",
+      "news.metaTitle": "Noticias — CasterFly",
+      "news.metaDescription": "Novedades, actualizaciones y consejos para tu radio online.",
+      "home.studio.alt": "Consola en vivo de CasterFly Studio en el panel, con biblioteca, cola y transporte",
+      "home.studio.live": "En vivo",
+      "home.studio.bitrate": "192 kbps",
+      "home.studio.effects": "Efectos",
+      "home.studio.aiVoice": "Locutor IA",
+      "home.channel": "Canal",
+      "home.news.eyebrow": "[ 08 / NOTICIAS ]",
+      "home.news.title": "Últimas noticias",
+      "home.news.viewAll": "Ver todas las noticias",
+      "home.cta.eyebrow": "[ LISTO PARA EMITIR ]",
+      "home.cta.title": "¿Listo para profesionalizar tu radio?",
+      "home.cta.plans": "Ver planes",
+      "home.cta.contact": "Contactar ventas",
+      "ia.pro.tag1": "Locutor IA",
+      "ia.pro.tag2": "Cápsulas",
+      "ia.pro.tag3": "Noticias IA",
+      "ia.pro.tag4": "Analítica",
+      "home.chat.title": "Chat en vivo con tu audiencia",
+      "home.chat.description": "Abre un chat en vivo en el sitio de tu radio y en la app PWA. Tus oyentes conversan identificados con nombre y correo, el staff responde desde el panel y los mensajes nuevos se avisan al instante."
+    },
+    "collections": {
+      "pillars": [
+        {
+          "code": "01",
+          "title": "Sitio web profesional",
+          "description": "Tu radio con presencia profesional: página moderna, adaptable, rápida y con reproductor integrado. Noticias, programación, contacto y mucho más en un solo lugar.",
+          "points": [
+            "Diseño responsive y moderno",
+            "Reproductor integrado",
+            "Secciones personalizables"
+          ],
+          "image": "/images/banners/principal1.png",
+          "icon": "globe"
+        },
+        {
+          "code": "02",
+          "title": "App PWA multiplataforma",
+          "description": "Llega directo al bolsillo de tu audiencia. La App PWA funciona como una app móvil real, sin pasar por tiendas. Compatible con Android, iPhone y PC, con mensajería push masiva desde el panel.",
+          "points": [
+            "Instalable en dispositivos móviles",
+            "Android, iPhone y PC",
+            "Funciona sin conexión",
+            "Push masivo desde el panel"
+          ],
+          "image": "/images/banners/pwa1.png",
+          "icon": "smartphone"
+        },
+        {
+          "code": "03",
+          "title": "Panel profesional con IA",
+          "description": "Controla tu emisora y deja que la IA te asista: locutor automático, cápsulas, noticias y locuciones de hora/clima con la voz de tu radio.",
+          "points": [
+            "Locutor IA",
+            "Analítica profesional",
+            "Consola en vivo"
+          ],
+          "image": "/images/banners/dashboard1.png",
+          "icon": "dashboard"
+        }
+      ],
+      "highlights": [
+        {
+          "code": "01",
+          "title": "Reproductor profesional",
+          "description": "Transmite tu radio online con un reproductor moderno, compatible con todos los dispositivos y 100% personalizable.",
+          "points": [
+            "HTML5",
+            "Cross-browser",
+            "Personalizable"
+          ],
+          "icon": "play"
+        },
+        {
+          "code": "02",
+          "title": "Programación inteligente",
+          "description": "Muestra tu parrilla de programas en tiempo real. Profesionaliza tu emisora y facilita a tu audiencia saber qué se viene.",
+          "points": [
+            "Parrilla en vivo",
+            "Días y horarios",
+            "Fácil de editar"
+          ],
+          "icon": "calendar"
+        },
+        {
+          "code": "03",
+          "title": "Podcast integrado",
+          "description": "Activa tu sección de podcasts y permite que tus oyentes revivan tus mejores contenidos, donde y cuando quieran.",
+          "points": [
+            "Episodios por temporada",
+            "Reproducción on-demand",
+            "Catálogo propio"
+          ],
+          "icon": "mic"
+        },
+        {
+          "code": "04",
+          "title": "Videocast avanzado",
+          "description": "Convierte tu radio en multiplataforma: publica videoprogramas y aumenta tu alcance visual con enlace directo desde YouTube.",
+          "points": [
+            "Video en vivo",
+            "Enlace directo",
+            "Más alcance"
+          ],
+          "icon": "video"
+        },
+        {
+          "code": "05",
+          "title": "Portal de noticias",
+          "description": "Publica noticias directamente desde tu panel. Ideal para radios comunitarias, informativas o con contenido editorial.",
+          "points": [
+            "Redacción simple",
+            "Categorías",
+            "Compartir en redes"
+          ],
+          "icon": "news"
+        },
+        {
+          "code": "06",
+          "title": "Analítica profesional",
+          "description": "Mide oyentes en vivo, sesiones, dispositivos, ubicación y horas pico para tomar decisiones con datos.",
+          "points": [
+            "Oyentes en vivo",
+            "Sesiones y retención",
+            "Geografía y dispositivos"
+          ],
+          "icon": "ranking"
+        },
+        {
+          "code": "07",
+          "title": "Mensajería push masiva",
+          "description": "Envía mensajes masivos desde el panel de control a todos los dispositivos que tengan instalada la app de tu radio. Ideal para anunciar programas en vivo, noticias, promociones y eventos especiales.",
+          "points": [
+            "Desde el panel",
+            "Dispositivos con la app",
+            "Anuncios y promociones"
+          ],
+          "icon": "bell"
+        },
+        {
+          "code": "08",
+          "title": "Chat en vivo con tu audiencia",
+          "description": "Abre un chat en vivo en el sitio de tu radio y en la app PWA. Tus oyentes conversan identificados con nombre y correo, el staff responde desde el panel y los mensajes nuevos se avisan al instante.",
+          "points": [
+            "Sitio y app PWA",
+            "Moderación y bans",
+            "Aviso de mensajes nuevos"
+          ],
+          "icon": "chat"
+        }
+      ],
+      "aiFeatures": [
+        {
+          "code": "01",
+          "title": "Locutor IA",
+          "description": "Un presentador automático que anuncia el próximo tema con la voz de tu emisora. Eliges la frecuencia, las frases y el estilo.",
+          "points": [
+            "Voz de marca",
+            "Cada N temas",
+            "AutoDJ y vivo"
+          ],
+          "icon": "mic"
+        },
+        {
+          "code": "02",
+          "title": "Locuciones inteligentes",
+          "description": "Hora, clima y mensajes se generan solos, se mezclan con ducking y se cachean para no repetir costos.",
+          "points": [
+            "Hora y clima",
+            "Ducking automático",
+            "Cache de voz"
+          ],
+          "icon": "globe"
+        },
+        {
+          "code": "03",
+          "title": "Cápsulas IA",
+          "description": "Escribes un guion y la IA lo convierte en una cápsula de audio con música de fondo, lista para emitir.",
+          "points": [
+            "Guion → audio",
+            "Música IA",
+            "Programable"
+          ],
+          "icon": "layers"
+        },
+        {
+          "code": "04",
+          "title": "Noticias con IA",
+          "description": "Genera borradores de noticias para tu audiencia, revísalos y publícalos desde el mismo panel.",
+          "points": [
+            "Borradores IA",
+            "Categorías",
+            "Revisión editorial"
+          ],
+          "icon": "news"
+        },
+        {
+          "code": "05",
+          "title": "AutoDJ que presenta",
+          "description": "La música no se detiene: el AutoDJ rota, programa y presenta con IA, sin mezclar la voz con los jingles.",
+          "points": [
+            "Rotación inteligente",
+            "Intros IA",
+            "Operación 24/7"
+          ],
+          "icon": "radio"
+        },
+        {
+          "code": "06",
+          "title": "Voz profesional",
+          "description": "Elige ElevenLabs o Fish Audio, voces alternativas y un fallback local para que la radio nunca se quede sin voz.",
+          "points": [
+            "ElevenLabs",
+            "Fish Audio",
+            "Fallback Piper"
+          ],
+          "icon": "mic"
+        }
+      ],
+      "aiSteps": [
+        {
+          "code": "01",
+          "title": "Eliges la voz",
+          "description": "Seleccionas la voz de la emisora y el proveedor: ElevenLabs, Fish Audio o la voz local de respaldo."
+        },
+        {
+          "code": "02",
+          "title": "Defines el guion",
+          "description": "Escribes frases con variables como {{radio}}, {{titulo}} y {{artista}}, o dejas que la IA genere una cápsula."
+        },
+        {
+          "code": "03",
+          "title": "La IA locuta",
+          "description": "El panel genera el audio, lo cachea y lo mezcla con la música respetando los tiempos de la radio."
+        },
+        {
+          "code": "04",
+          "title": "Mides y ajustas",
+          "description": "Sigues la cuota de caracteres, la frecuencia y el resultado en la analítica del panel."
+        }
+      ],
+      "studioFeatures": [
+        {
+          "code": "01",
+          "title": "Biblioteca y cola",
+          "description": "Carga archivos o carpetas de tu equipo, busca, agrega a la cola y reordena. La música se reproduce desde tu navegador: no se sube al servidor.",
+          "points": [
+            "Carpeta local",
+            "Cola e historial",
+            "Sin subir archivos"
+          ]
+        },
+        {
+          "code": "02",
+          "title": "Micrófono y monitoreo",
+          "description": "Habla en vivo con ganancia, cue y medidores estéreo. La consola te pide confirmar audífonos antes de salir al aire.",
+          "points": [
+            "Ganancia y cue",
+            "VU estéreo",
+            "Audífonos"
+          ]
+        },
+        {
+          "code": "03",
+          "title": "Efectos y locuciones",
+          "description": "Dispara efectos, jingles y cápsulas, y agrega hora, clima o locutor IA con la voz de tu emisora.",
+          "points": [
+            "Botonera",
+            "Jingles y cápsulas",
+            "Hora/clima + IA"
+          ]
+        },
+        {
+          "code": "04",
+          "title": "Salida al aire",
+          "description": "Elige el slot o DJ, transmite a 192 kbps y sigue el estado de la sesión, la reconexión y los oyentes conectados.",
+          "points": [
+            "Slots y DJ",
+            "192 kbps",
+            "Estado y oyentes"
+          ]
+        }
+      ],
+      "players": [
+        {
+          "title": "Reproductor moderno",
+          "description": "Interfaz elegante y minimalista con controles intuitivos.",
+          "tags": [
+            "Responsive",
+            "HTML5",
+            "Cross-browser"
+          ],
+          "image": "/images/players/1.png"
+        },
+        {
+          "title": "Reproductor compacto",
+          "description": "Diseño minimalista perfecto para integrar en cualquier sitio web.",
+          "tags": [
+            "Ligero",
+            "Rápido",
+            "Integrable"
+          ],
+          "image": "/images/players/2.png"
+        },
+        {
+          "title": "Reproductor avanzado",
+          "description": "Metadatos, historial de reproducción y controles completos.",
+          "tags": [
+            "Metadatos",
+            "Historial",
+            "Premium"
+          ],
+          "image": "/images/players/3.png"
+        },
+        {
+          "title": "Reproductor flotante",
+          "description": "Permanece visible mientras navegas por el sitio.",
+          "tags": [
+            "Flotante",
+            "Sticky",
+            "Continuo"
+          ],
+          "image": "/images/players/4.png"
+        },
+        {
+          "title": "Reproductor full screen",
+          "description": "Experiencia inmersiva con modo pantalla completa.",
+          "tags": [
+            "Fullscreen",
+            "Inmersivo",
+            "HD"
+          ],
+          "image": "/images/players/5.png"
+        },
+        {
+          "title": "Reproductor personalizable",
+          "description": "Colores, estilos y funciones ajustables a tu marca.",
+          "tags": [
+            "Custom",
+            "Branding",
+            "Flexible"
+          ],
+          "image": "/images/players/6.png"
+        }
+      ],
+      "supportCards": [
+        {
+          "title": "Contacto soporte",
+          "description": "¿Tienes dudas o necesitas ayuda? Nuestro equipo está listo para asistirte.",
+          "href": "mailto:contacto@casterfly.com",
+          "action": "Escribir a soporte"
+        },
+        {
+          "title": "Tutoriales del sistema",
+          "description": "Aprende a usar todas las herramientas de tu plataforma con guías paso a paso y videos.",
+          "href": "/tutoriales",
+          "action": "Ver tutoriales"
+        },
+        {
+          "title": "Preguntas frecuentes",
+          "description": "Respuestas a las dudas más comunes sobre planes, transmisión y configuración.",
+          "href": "#faq",
+          "action": "Leer preguntas"
+        }
+      ],
+      "faq": [
+        {
+          "question": "¿Cómo empiezo a transmitir?",
+          "answer": "Contratas un plan, recibes tus credenciales de transmisión y transmites desde la consola en vivo del panel o desde tu software preferido (ZaraRadio, RadioBoss, OBS)."
+        },
+        {
+          "question": "¿Incluye sitio web y app?",
+          "answer": "Los planes Profesional incluyen sitio web con reproductor y App PWA instalable en Android, iPhone y PC. El plan Inicia incluye el perfil público y el reproductor."
+        },
+        {
+          "question": "¿Puedo cambiar de plan?",
+          "answer": "Sí. Puedes subir de plan en cualquier momento y conservas tu configuración, tu contenido y tu audiencia."
+        },
+        {
+          "question": "¿Qué medios de pago aceptan?",
+          "answer": "Aceptamos tarjetas de crédito, débito y transferencia. La facturación es mensual, sin contratos de permanencia."
+        }
+      ],
+      "proFeatures": [
+        {
+          "icon": "dashboard",
+          "title": "Analítica profesional",
+          "text": "Oyentes, sesiones, dispositivos, ubicación y horas pico."
+        },
+        {
+          "icon": "mic",
+          "title": "Consola en vivo",
+          "text": "Transporte, playlists, efectos y locuciones desde el navegador."
+        },
+        {
+          "icon": "calendar",
+          "title": "Parrilla y AutoDJ",
+          "text": "Programación por franjas, rotación automática y jingles."
+        },
+        {
+          "icon": "smartphone",
+          "title": "Sitio y PWA",
+          "text": "Sitio del cliente, reproductor y app instalable."
+        },
+        {
+          "icon": "video",
+          "title": "Radio + TV",
+          "text": "Audio y video en la misma plataforma, con HLS y VOD2Live."
+        },
+        {
+          "icon": "layers",
+          "title": "Multi-emisora",
+          "text": "Opera varias radios o canales desde un solo panel."
+        }
+      ]
+    }
+  },
+  "en": {
+    "global": {
+      "siteName": "CasterFly",
+      "tagline": "Radio profesional asistida por IA",
+      "contactEmail": "contacto@casterfly.com",
+      "panelUrl": "https://panel.casterfly.com/",
+      "demoStreamUrl": "https://audio1.ipstream.cl/radio_5715de5983df",
+      "social": {
+        "facebook": "",
+        "youtube": "",
+        "instagram": "",
+        "tiktok": "",
+        "twitter": ""
+      }
+    },
+    "i18n": {
+      "footer.description": "Professional solutions for your online radio. Broadcast, share and reach more listeners with the most complete platform on the market.",
+      "contact.eyebrow": "[ 09 / CONTACT ]",
+      "contact.title": "Let's talk about your station",
+      "contact.description": "Tell us what you need and we'll get back to you shortly. You can also email us directly:",
+      "contact.email": "Email",
+      "contact.panel": "Panel",
+      "contact.loginPanel": "Sign in to panel",
+      "contact.error": "We couldn't send your message",
+      "contact.success": "Thank you! We received your message and will contact you shortly.",
+      "contact.name": "Name",
+      "contact.emailLabel": "Email",
+      "contact.phone": "Phone",
+      "contact.optional": "(optional)",
+      "contact.subject": "Subject",
+      "contact.message": "Message",
+      "contact.honeypot": "Do not fill",
+      "contact.submit": "Send message",
+      "home.metaTitle": "CasterFly — Professional AI-assisted radio",
+      "home.metaDescription": "Website, PWA with push notifications, live chat, live console and an AI co-pilot that voices, informs and schedules. The professional panel for your online radio.",
+      "home.hero.badge": "RADIO + AI",
+      "home.hero.title": "Your professional radio, with AI on board",
+      "home.hero.description": "Website, PWA app with push messaging, live chat, live console and an AI co-pilot that voices, informs and schedules. All in one platform, with your station’s voice and style.",
+      "home.hero.ctaAI": "Discover AI",
+      "home.hero.ctaPlans": "View plans",
+      "home.demo.eyebrow": "[ LIVE DEMO ]",
+      "home.demo.title": "Listen to a real AI-run radio station",
+      "home.demo.description": "Press play and listen to a station built with CasterFly: AutoDJ, voice-overs and scheduling running live, with nothing to install.",
+      "home.demo.station": "CasterFly Demo",
+      "home.demo.meta": "AutoDJ + AI · 128 kbps",
+      "home.demo.play": "Play demo",
+      "home.demo.pause": "Pause demo",
+      "home.demo.connecting": "Connecting…",
+      "home.demo.error": "Could not connect. Open the stream directly.",
+      "home.demo.open": "Open stream",
+      "home.demo.live": "LIVE",
+      "home.demo.aria": "AI audio demo player",
+      "home.hero.aiKicker": "[ PROFESSIONAL CO-PILOT ]",
+      "home.hero.aiTitle": "AI runs the air. You run the station.",
+      "home.hero.aiItem1": "Announces the next track",
+      "home.hero.aiItem2": "Voices time and weather",
+      "home.hero.aiItem3": "Generates capsules and news",
+      "home.hero.aiItem4": "Measures and learns from your audience",
+      "home.hero.aiCharacters": "{count} characters/month",
+      "home.ai.eyebrow": "[ 01 / AI ON AIR ]",
+      "home.ai.title": "A radio that works with you",
+      "home.ai.description": "AI is not an add-on: it presents, voices, writes and schedules. Six capabilities designed to keep your station sounding professional 24/7.",
+      "home.ai.cta": "See everything about AI",
+      "home.platform.eyebrow": "[ 02 / PLATFORM ]",
+      "home.platform.title": "Everything you need for your online radio",
+      "home.platform.description": "A complete solution to broadcast, manage and grow your audience.",
+      "home.studio.eyebrow": "[ 03 / CASTERFLY STUDIO ]",
+      "home.studio.title": "Go live from your panel",
+      "home.studio.description": "CasterFly Studio is the live console built into your panel: load your local music, build the queue, add mic, effects and voice-overs, and go on air without installing anything.",
+      "home.chat.eyebrow": "[ LIVE / COMMUNITY ]",
+      "home.chat.demoAria": "Sample live chat from a radio station",
+      "home.chat.demoTitle": "Live chat",
+      "home.chat.demoOnline": "12 active listeners",
+      "home.chat.demoStaff": "CasterFly Radio",
+      "home.chat.demoMsg1": "Hi! Greetings from Valparaíso.",
+      "home.chat.demoMsg2": "Welcome! The next track is on now.",
+      "home.chat.demoMsg3": "Can you play a Los Bunkers song?",
+      "home.chat.demoInput": "Write a message…",
+      "home.chat.demoSend": "Send",
+      "home.highlights.eyebrow": "[ 04 / FEATURES ]",
+      "home.highlights.title": "Built to grow your audience",
+      "home.players.eyebrow": "[ 05 / PLAYERS ]",
+      "home.players.title": "The most modern, compatible players",
+      "home.players.description": "Designed to deliver the best streaming experience on any device.",
+      "home.plans.eyebrow": "[ 06 / PLANS ]",
+      "home.plans.title": "Plans designed for your success",
+      "home.plans.from": "From",
+      "home.plans.perMonth": "/month",
+      "home.plans.viewPlans": "View {count} plans",
+      "home.clients.eyebrow": "[ 07 / CLIENTS ]",
+      "home.clients.title": "Stations that trust CasterFly",
+      "home.clients.aria": "CasterFly clients",
+      "home.aiPlan.eyebrow": "[ LIVE AI ]",
+      "home.aiPlan.characters": "AI presenter · {count} characters/month · {minutes} min of AI music",
+      "home.aiPlan.cta": "Discover AI",
+      "ia.metaTitle": "AI for radio — CasterFly",
+      "ia.metaDescription": "AI presenter, capsules, news and automatic time and weather voice-overs. The professional co-pilot for your online radio.",
+      "ia.hero.eyebrow": "[ AI / PROFESSIONAL CO-PILOT ]",
+      "ia.hero.title": "Your radio, with an AI co-pilot",
+      "ia.hero.description": "Automatic presenter, capsules, news and time/weather voice-overs. AI handles the repetitive work; you keep directing the station.",
+      "ia.hero.ctaPlans": "View AI plans",
+      "ia.hero.ctaFeatures": "Explore the panel",
+      "ia.console.label": "AI / CONSOLE",
+      "ia.console.onAir": "AI PRESENTER",
+      "ia.console.kicker": "[ PROFESSIONAL CO-PILOT ]",
+      "ia.console.title": "AI runs the air. You run the station.",
+      "ia.console.item1": "Announces the next track",
+      "ia.console.item2": "Voices time and weather",
+      "ia.console.item3": "Generates capsules and news",
+      "ia.console.item4": "Falls back to local voice if the cloud fails",
+      "ia.console.characters": "{count} characters/month",
+      "ia.console.music": "{minutes} min of AI music",
+      "ia.features.eyebrow": "[ 01 / AI ON AIR ]",
+      "ia.features.title": "Six ways AI works for your radio",
+      "ia.features.description": "Not a gimmick: AI produces audio, presents the music and helps you publish content in your station’s voice and style.",
+      "ia.steps.eyebrow": "[ 02 / WORKFLOW ]",
+      "ia.steps.title": "From idea to air in four steps",
+      "ia.pro.eyebrow": "[ 03 / OPERATIONS ]",
+      "ia.pro.title": "AI + professional operations",
+      "ia.pro.description": "AI does not replace control: it amplifies it. Everything happening in your radio is managed from the same panel, with data and traceability.",
+      "ia.pro.moduleLabel": "PANEL / PROFESSIONAL",
+      "ia.pro.kicker": "[ AI-ASSISTED RADIO ]",
+      "ia.pro.moduleTitle": "AI produces. You direct.",
+      "ia.pro.moduleDescription": "Schedule, publish and measure without losing editorial control. AI can be turned off or tuned per plan and per station.",
+      "ia.pro.cta": "Choose a plan",
+      "ia.plans.eyebrow": "[ 04 / PLANS ]",
+      "ia.plans.title": "AI included in your plan",
+      "ia.plans.description": "Live AI is enabled per plan. It includes an automatic presenter, free voice-overs and time/weather with premium voice.",
+      "ia.plans.planFallback": "Radio Pro Plan",
+      "ia.plans.planDescription": "Automatic presenter every N tracks, free voice-overs and premium time/weather voice. If the provider fails, the radio keeps going with the local voice.",
+      "ia.plans.characters": "{count} characters/month",
+      "ia.plans.music": "{minutes} min of AI music/month",
+      "ia.plans.cta": "View all plans",
+      "ia.cta.eyebrow": "[ NEXT STEP ]",
+      "ia.cta.title": "Put AI to work on your radio",
+      "ia.cta.description": "Start with a 7-day free trial and turn on the co-pilot whenever you want.",
+      "ia.cta.button": "Start now",
+      "features.metaTitle": "Features — CasterFly",
+      "features.metaDescription": "Professional AI-assisted radio: automatic presenter, capsules, news, analytics, PWA app with push notifications, live chat and the CasterFly Studio live console in the panel.",
+      "features.hero.eyebrow": "[ PLATFORM / AI ]",
+      "features.hero.title": "A professional platform, with AI on air",
+      "features.hero.description": "Automatic presenter, capsules, news, analytics and live console. Everything your radio needs to sound professional.",
+      "features.ai.eyebrow": "[ 01 / AI ON AIR ]",
+      "features.ai.title": "The co-pilot that produces, voices and schedules",
+      "features.ai.description": "AI handles the repetitive work so your team can focus on directing the station.",
+      "features.base.eyebrow": "[ 02 / FOUNDATION ]",
+      "features.base.title": "Your station’s foundation",
+      "features.highlights.eyebrow": "[ 03 / HIGHLIGHTS ]",
+      "features.highlights.title": "Premium features",
+      "features.studio.eyebrow": "[ 04 / LIVE CONSOLE ]",
+      "features.studio.title": "Your live console, in the browser",
+      "features.studio.description": "The panel live console in your browser: local library, queue and history, mic monitoring, effects, jingles, capsules and AI voice-overs. No installation required.",
+      "features.players.eyebrow": "[ 05 / PLAYERS ]",
+      "features.players.title": "Players for every need",
+      "features.cta.title": "Ready to start?",
+      "features.cta.button": "View plans and pricing",
+      "plans.metaTitle": "Plans and pricing — CasterFly",
+      "plans.metaDescription": "Professional plans priced in USD. Live AI is available in the Radio Pro Plan: automatic presenter, capsules and voice-overs.",
+      "clients.metaTitle": "Clients — CasterFly",
+      "clients.metaDescription": "Meet the stations and projects broadcasting with CasterFly.",
+      "tutorials.metaTitle": "Tutorials — CasterFly",
+      "tutorials.metaDescription": "Step-by-step guides and videos to learn how to use every CasterFly tool.",
+      "news.metaTitle": "News — CasterFly",
+      "news.metaDescription": "News, updates and tips for your online radio.",
+      "home.studio.alt": "CasterFly Studio live console in the panel, with library, queue and transport",
+      "home.studio.live": "On air",
+      "home.studio.bitrate": "192 kbps",
+      "home.studio.effects": "Effects",
+      "home.studio.aiVoice": "AI presenter",
+      "home.channel": "Channel",
+      "home.news.eyebrow": "[ 08 / NEWS ]",
+      "home.news.title": "Latest news",
+      "home.news.viewAll": "View all news",
+      "home.cta.eyebrow": "[ READY TO BROADCAST ]",
+      "home.cta.title": "Ready to make your radio professional?",
+      "home.cta.plans": "View plans",
+      "home.cta.contact": "Contact sales",
+      "ia.pro.tag1": "AI presenter",
+      "ia.pro.tag2": "Capsules",
+      "ia.pro.tag3": "AI news",
+      "ia.pro.tag4": "Analytics",
+      "home.chat.title": "Live chat with your audience",
+      "home.chat.description": "Open a live chat on your radio’s website and PWA. Listeners join with their name and email, staff replies from the panel, and new messages are announced instantly."
+    },
+    "collections": {
+      "pillars": [
+        {
+          "code": "01",
+          "title": "Professional website",
+          "description": "Give your radio a professional presence: a modern, responsive, fast site with an integrated player. News, schedule, contact and much more in one place.",
+          "points": [
+            "Responsive, modern design",
+            "Integrated player",
+            "Customizable sections"
+          ],
+          "image": "/images/banners/principal1.png",
+          "icon": "globe"
+        },
+        {
+          "code": "02",
+          "title": "Cross-platform PWA app",
+          "description": "Reach your audience’s pocket. The PWA works like a real mobile app without app stores. Compatible with Android, iPhone and PC, with mass push messaging from the panel.",
+          "points": [
+            "Installable on mobile",
+            "Android, iPhone and PC",
+            "Works offline",
+            "Mass push from the panel"
+          ],
+          "image": "/images/banners/pwa1.png",
+          "icon": "smartphone"
+        },
+        {
+          "code": "03",
+          "title": "Professional panel with AI",
+          "description": "Control your station and let AI assist you: automatic presenter, capsules, news and time/weather voice-overs in your radio’s voice.",
+          "points": [
+            "AI presenter",
+            "Professional analytics",
+            "Live console"
+          ],
+          "image": "/images/banners/dashboard1.png",
+          "icon": "dashboard"
+        }
+      ],
+      "highlights": [
+        {
+          "code": "01",
+          "title": "Professional player",
+          "description": "Stream your online radio with a modern, fully customizable player that works on every device.",
+          "points": [
+            "HTML5",
+            "Cross-browser",
+            "Customizable"
+          ],
+          "icon": "play"
+        },
+        {
+          "code": "02",
+          "title": "Smart scheduling",
+          "description": "Show your program schedule in real time. Make your station more professional and help your audience know what’s next.",
+          "points": [
+            "Live schedule",
+            "Days and times",
+            "Easy to edit"
+          ],
+          "icon": "calendar"
+        },
+        {
+          "code": "03",
+          "title": "Integrated podcast",
+          "description": "Enable your podcast section and let listeners enjoy your best content whenever and wherever they want.",
+          "points": [
+            "Season episodes",
+            "On-demand playback",
+            "Your own catalog"
+          ],
+          "icon": "mic"
+        },
+        {
+          "code": "04",
+          "title": "Advanced videocast",
+          "description": "Turn your radio into a multiplatform brand: publish video shows and grow your visual reach with direct YouTube links.",
+          "points": [
+            "Live video",
+            "Direct link",
+            "More reach"
+          ],
+          "icon": "video"
+        },
+        {
+          "code": "05",
+          "title": "News portal",
+          "description": "Publish news directly from your panel. Ideal for community, news or editorial radio stations.",
+          "points": [
+            "Simple editor",
+            "Categories",
+            "Share on social"
+          ],
+          "icon": "news"
+        },
+        {
+          "code": "06",
+          "title": "Professional analytics",
+          "description": "Measure live listeners, sessions, devices, location and peak hours to make data-driven decisions.",
+          "points": [
+            "Live listeners",
+            "Sessions and retention",
+            "Geography and devices"
+          ],
+          "icon": "ranking"
+        },
+        {
+          "code": "07",
+          "title": "Mass push messaging",
+          "description": "Send mass messages from the control panel to every device that has your radio’s app installed. Ideal for announcing live shows, news, promotions and special events.",
+          "points": [
+            "From the panel",
+            "Devices with the app",
+            "Announcements and promos"
+          ],
+          "icon": "bell"
+        },
+        {
+          "code": "08",
+          "title": "Live chat with your audience",
+          "description": "Open a live chat on your radio’s website and PWA. Listeners join with their name and email, staff replies from the panel, and new messages are announced instantly.",
+          "points": [
+            "Website and PWA",
+            "Moderation and bans",
+            "New message alerts"
+          ],
+          "icon": "chat"
+        }
+      ],
+      "aiFeatures": [
+        {
+          "code": "01",
+          "title": "AI presenter",
+          "description": "An automatic presenter that announces the next track in your station’s voice. Choose the frequency, phrases and style.",
+          "points": [
+            "Brand voice",
+            "Every N tracks",
+            "AutoDJ and live"
+          ],
+          "icon": "mic"
+        },
+        {
+          "code": "02",
+          "title": "Smart voice-overs",
+          "description": "Time, weather and messages are generated automatically, ducked under the music and cached to avoid repeated costs.",
+          "points": [
+            "Time and weather",
+            "Automatic ducking",
+            "Voice cache"
+          ],
+          "icon": "globe"
+        },
+        {
+          "code": "03",
+          "title": "AI capsules",
+          "description": "Write a script and AI turns it into an audio capsule with background music, ready to air.",
+          "points": [
+            "Script → audio",
+            "AI music",
+            "Schedulable"
+          ],
+          "icon": "layers"
+        },
+        {
+          "code": "04",
+          "title": "AI-powered news",
+          "description": "Generate news drafts for your audience, review them and publish from the same panel.",
+          "points": [
+            "AI drafts",
+            "Categories",
+            "Editorial review"
+          ],
+          "icon": "news"
+        },
+        {
+          "code": "05",
+          "title": "AutoDJ that presents",
+          "description": "Music never stops: AutoDJ rotates, schedules and presents with AI, without mixing the voice into jingles.",
+          "points": [
+            "Smart rotation",
+            "AI intros",
+            "24/7 operation"
+          ],
+          "icon": "radio"
+        },
+        {
+          "code": "06",
+          "title": "Professional voice",
+          "description": "Choose ElevenLabs or Fish Audio, alternative voices and a local fallback so your radio never loses its voice.",
+          "points": [
+            "ElevenLabs",
+            "Fish Audio",
+            "Piper fallback"
+          ],
+          "icon": "mic"
+        }
+      ],
+      "aiSteps": [
+        {
+          "code": "01",
+          "title": "Choose the voice",
+          "description": "Select your station’s voice and provider: ElevenLabs, Fish Audio or the local backup voice."
+        },
+        {
+          "code": "02",
+          "title": "Define the script",
+          "description": "Write phrases with variables like {{radio}}, {{title}} and {{artist}}, or let AI generate a capsule."
+        },
+        {
+          "code": "03",
+          "title": "AI voices it",
+          "description": "The panel generates and caches the audio, then mixes it with the music while respecting the station’s timing."
+        },
+        {
+          "code": "04",
+          "title": "Measure and tune",
+          "description": "Track character quota, frequency and results in the panel analytics."
+        }
+      ],
+      "studioFeatures": [
+        {
+          "code": "01",
+          "title": "Library and queue",
+          "description": "Load files or folders from your computer, search, add to the queue and reorder. Audio plays from your browser and is never uploaded to the server.",
+          "points": [
+            "Local folder",
+            "Queue and history",
+            "No uploads"
+          ]
+        },
+        {
+          "code": "02",
+          "title": "Mic and monitoring",
+          "description": "Go live with gain, cue and stereo meters. The console asks you to confirm headphones before going on air.",
+          "points": [
+            "Gain and cue",
+            "Stereo VU",
+            "Headphones"
+          ]
+        },
+        {
+          "code": "03",
+          "title": "Effects and voice-overs",
+          "description": "Fire sound effects, jingles and capsules, and add time, weather or an AI presenter in your station voice.",
+          "points": [
+            "Sound pad",
+            "Jingles and capsules",
+            "Time/weather + AI"
+          ]
+        },
+        {
+          "code": "04",
+          "title": "On-air output",
+          "description": "Pick the slot or DJ, stream at 192 kbps and follow session status, reconnection and connected listeners.",
+          "points": [
+            "Slots and DJ",
+            "192 kbps",
+            "Status and listeners"
+          ]
+        }
+      ],
+      "players": [
+        {
+          "title": "Modern player",
+          "description": "Elegant, minimalist interface with intuitive controls.",
+          "tags": [
+            "Responsive",
+            "HTML5",
+            "Cross-browser"
+          ],
+          "image": "/images/players/1.png"
+        },
+        {
+          "title": "Compact player",
+          "description": "Minimalist design, perfect for embedding on any website.",
+          "tags": [
+            "Lightweight",
+            "Fast",
+            "Embeddable"
+          ],
+          "image": "/images/players/2.png"
+        },
+        {
+          "title": "Advanced player",
+          "description": "Metadata, playback history and complete controls.",
+          "tags": [
+            "Metadata",
+            "History",
+            "Premium"
+          ],
+          "image": "/images/players/3.png"
+        },
+        {
+          "title": "Floating player",
+          "description": "Stays visible while visitors browse your site.",
+          "tags": [
+            "Floating",
+            "Sticky",
+            "Continuous"
+          ],
+          "image": "/images/players/4.png"
+        },
+        {
+          "title": "Fullscreen player",
+          "description": "Immersive experience with fullscreen mode.",
+          "tags": [
+            "Fullscreen",
+            "Immersive",
+            "HD"
+          ],
+          "image": "/images/players/5.png"
+        },
+        {
+          "title": "Custom player",
+          "description": "Colors, styles and features adjustable to your brand.",
+          "tags": [
+            "Custom",
+            "Branding",
+            "Flexible"
+          ],
+          "image": "/images/players/6.png"
+        }
+      ],
+      "proFeatures": [
+        {
+          "icon": "dashboard",
+          "title": "Professional analytics",
+          "text": "Listeners, sessions, devices, location and peak hours."
+        },
+        {
+          "icon": "mic",
+          "title": "Live console",
+          "text": "Transport, playlists, effects and voice-overs from the browser."
+        },
+        {
+          "icon": "calendar",
+          "title": "Schedule and AutoDJ",
+          "text": "Time-slot programming, automatic rotation and jingles."
+        },
+        {
+          "icon": "smartphone",
+          "title": "Website and PWA",
+          "text": "Client website, player and installable app."
+        },
+        {
+          "icon": "video",
+          "title": "Radio + TV",
+          "text": "Audio and video on the same platform, with HLS and VOD2Live."
+        },
+        {
+          "icon": "layers",
+          "title": "Multi-station",
+          "text": "Run several radios or channels from a single panel."
+        }
+      ],
+      "supportCards": [
+        {
+          "title": "Contacto soporte",
+          "description": "¿Tienes dudas o necesitas ayuda? Nuestro equipo está listo para asistirte.",
+          "href": "mailto:contacto@casterfly.com",
+          "action": "Escribir a soporte"
+        },
+        {
+          "title": "Tutoriales del sistema",
+          "description": "Aprende a usar todas las herramientas de tu plataforma con guías paso a paso y videos.",
+          "href": "/tutoriales",
+          "action": "Ver tutoriales"
+        },
+        {
+          "title": "Preguntas frecuentes",
+          "description": "Respuestas a las dudas más comunes sobre planes, transmisión y configuración.",
+          "href": "#faq",
+          "action": "Leer preguntas"
+        }
+      ],
+      "faq": [
+        {
+          "question": "¿Cómo empiezo a transmitir?",
+          "answer": "Contratas un plan, recibes tus credenciales de transmisión y transmites desde la consola en vivo del panel o desde tu software preferido (ZaraRadio, RadioBoss, OBS)."
+        },
+        {
+          "question": "¿Incluye sitio web y app?",
+          "answer": "Los planes Profesional incluyen sitio web con reproductor y App PWA instalable en Android, iPhone y PC. El plan Inicia incluye el perfil público y el reproductor."
+        },
+        {
+          "question": "¿Puedo cambiar de plan?",
+          "answer": "Sí. Puedes subir de plan en cualquier momento y conservas tu configuración, tu contenido y tu audiencia."
+        },
+        {
+          "question": "¿Qué medios de pago aceptan?",
+          "answer": "Aceptamos tarjetas de crédito, débito y transferencia. La facturación es mensual, sin contratos de permanencia."
+        }
+      ]
+    }
+  }
+}

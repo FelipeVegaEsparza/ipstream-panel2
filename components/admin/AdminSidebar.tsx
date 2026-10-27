@@ -28,6 +28,7 @@ import {
   SpeakerWaveIcon,
   SparklesIcon,
   GiftIcon,
+  GlobeAltIcon,
 } from '@heroicons/react/24/outline'
 import { APP_VERSION, APP_NAME } from '@/lib/version'
 import { PanelLogo } from '@/components/ui/PanelLogo'
@@ -66,6 +67,7 @@ const navigationGroups = [
   {
     label: 'Contenido',
     items: [
+      { name: 'Sitio público', href: '/admin/sitio', icon: GlobeAltIcon },
       { name: 'Plantillas Sitio', href: '/admin/templates', icon: PaintBrushIcon },
       { name: 'Noticias Genéricas', href: '/admin/news-global', icon: NewspaperIcon },
       { name: 'Categorías Noticias', href: '/admin/news-categories', icon: TagIcon },
