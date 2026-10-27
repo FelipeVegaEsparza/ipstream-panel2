@@ -50,10 +50,10 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
   }
 
   return (
-    <div className="bg-card/40 border border-border rounded-xl">
+    <div className="bg-card border border-border rounded-xl shadow-soft">
       <div className="p-4 border-b border-border">
         <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-          <BanIcon className="h-4 w-4 text-red-400" />
+          <BanIcon className="h-4 w-4 text-destructive" />
           {t('chat.bans.title')}
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
@@ -101,7 +101,7 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
         <button
           type="submit"
           disabled={submitting || (!email.trim() && !ipAddress.trim())}
-          className="w-full inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-destructive text-white text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-4 w-4" />
           {submitting ? t('chat.bans.banning') : t('chat.bans.ban')}
@@ -139,7 +139,7 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
                       <div className="flex gap-1">
                         <button
                           onClick={() => handleRemove(b.id)}
-                          className="text-xs px-1.5 py-0.5 rounded bg-red-600 text-white hover:bg-red-700"
+                          className="text-xs px-1.5 py-0.5 rounded bg-destructive text-white hover:bg-destructive/90"
                         >
                           {t('chat.bans.remove')}
                         </button>
@@ -153,7 +153,7 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
                     ) : (
                       <button
                         onClick={() => setConfirmId(b.id)}
-                        className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+                        className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         title={t('chat.bans.removeTitle')}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

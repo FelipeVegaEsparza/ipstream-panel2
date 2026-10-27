@@ -58,14 +58,16 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-card/40 border border-brand/40 rounded-xl p-4"
+      className="border-t border-border bg-card px-3 py-3 sm:px-4"
     >
-      <div className="flex items-center gap-2 mb-2">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
         <Megaphone className="h-4 w-4 text-brand" />
-        <span className="text-xs uppercase tracking-wide text-brand font-semibold">
+        <span className="text-xs font-semibold uppercase tracking-wide text-brand">
           {t('chat.composer.label')}
         </span>
-        <span className="text-xs text-muted-foreground">{t('chat.composer.showingAs', { name: staffName })}</span>
+        <span className="text-xs text-muted-foreground">
+          {t('chat.composer.showingAs', { name: staffName })}
+        </span>
       </div>
       <div className="flex items-end gap-2">
         <textarea
@@ -73,21 +75,22 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t('chat.composer.placeholder')}
+          aria-label={t('chat.composer.placeholder')}
           rows={2}
           maxLength={500}
-          className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-foreground text-sm resize-none focus:border-brand focus:outline-none"
+          className="min-h-[44px] flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
           disabled={sending}
         />
         <button
           type="submit"
           disabled={!body.trim() || sending}
-          className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           {sending ? t('chat.composer.sending') : t('chat.composer.send')}
         </button>
       </div>
-      <div className="flex items-center justify-between mt-1">
+      <div className="mt-1.5 flex items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">{t('chat.composer.hint')}</p>
         <p className="text-xs text-muted-foreground">{body.length}/500</p>
       </div>

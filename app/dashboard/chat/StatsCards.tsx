@@ -28,40 +28,43 @@ export function StatsCards({ stats }: StatsCardsProps) {
       label: t('chat.stats.last24h'),
       value: stats.last24hMessages,
       icon: MessageSquare,
-      color: 'text-purple-300',
-      bg: 'bg-purple-500/10',
+      color: 'text-foreground',
+      bg: 'bg-secondary',
     },
     {
       label: t('chat.stats.activeUsers'),
       value: stats.activeUsersLastHour,
       icon: Users,
-      color: 'text-green-300',
-      bg: 'bg-green-500/10',
+      color: 'text-brand',
+      bg: 'bg-brand/10',
     },
     {
       label: t('chat.stats.activeBans'),
       value: stats.activeBans,
       icon: Ban,
-      color: 'text-red-300',
-      bg: 'bg-red-500/10',
+      color: 'text-destructive',
+      bg: 'bg-destructive/10',
     },
   ]
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-3">
       {cards.map((c) => {
         const Icon = c.icon
         return (
           <div
             key={c.label}
-            className="bg-card/40 border border-border rounded-xl p-4"
+            className="rounded-xl border border-border bg-card p-3 shadow-soft"
           >
-            <div className="flex items-center gap-2 mb-1.5">
-              <div className={`p-1.5 rounded ${c.bg}`}>
+            <div className="flex items-center gap-2">
+              <div className={`rounded-lg p-1.5 ${c.bg}`}>
                 <Icon className={`h-4 w-4 ${c.color}`} />
               </div>
-              <span className="text-xs text-muted-foreground">{c.label}</span>
+              <span className="text-[11px] leading-tight text-muted-foreground">
+                {c.label}
+              </span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{c.value}</p>
+            <p className="mt-1 text-xl font-bold text-foreground">{c.value}</p>
           </div>
         )
       })}

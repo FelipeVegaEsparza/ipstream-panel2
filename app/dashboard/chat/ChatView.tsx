@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MessagesSquare } from 'lucide-react'
 import { StaffComposer } from './StaffComposer'
-import { MessagesTable } from './MessagesTable'
+import { ChatThread } from './ChatThread'
 import { BansPanel } from './BansPanel'
 import { StatsCards, type ChatStats } from './StatsCards'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
@@ -169,39 +169,64 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
   }, [t])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
             <MessagesSquare className="h-6 w-6 text-brand" />
             {t('chat.title')}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t('chat.subtitle')}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-400" />
           {t('chat.updating', { seconds: POLL_INTERVAL_MS / 1000 })}
         </div>
       </div>
 
-      <StatsCards stats={stats} />
-
       {error && (
-        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-300">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4">
-          <StaffComposer staffName={staffName} onSent={handleSent} onError={setError} />
-          <MessagesTable messages={messages} onDelete={handleDelete} />
-        </div>
-        <div className="lg:col-span-1">
-          <BansPanel bans={bans} onAdd={handleAddBan} onRemove={handleRemoveBan} onError={setError} />
-        </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="flex h-[calc(100vh-240px)] min-h-[440px] max-h-[760px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:min-h-[520px]">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand/10 text-brand">
+                <MessagesSquare className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  {t('chat.conversation')}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {t('chat.count', { count: messages.length })}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <ChatThread messages={messages} onDelete={handleDelete} />
+          <StaffComposer
+            staffName={staffName}
+            onSent={handleSent}
+            onError={setError}
+          />
+        </section>
+
+        <aside className="space-y-4">
+          <StatsCards stats={stats} />
+          <BansPanel
+            bans={bans}
+            onAdd={handleAddBan}
+            onRemove={handleRemoveBan}
+            onError={setError}
+          />
+        </aside>
       </div>
     </div>
   )
