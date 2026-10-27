@@ -12,18 +12,17 @@ type Row = {
 
 const state = vi.hoisted(() => ({ rows: new Map<string, Row>() }))
 
-const upsert = vi.hoisted(() =>
-  vi.fn(async (args: { where: { locale: string }; create: Omit<Row, 'id' | 'createdAt' | 'updatedAt'> }) => {
-    if (!state.rows.has(args.where.locale)) {
-      const now = new Date()
-      state.rows.set(args.where.locale, {
-        ...args.create,
-        id: `seed-${args.where.locale}`,
-        createdAt: now,
-        updatedAt: now,
-      })
+const create = vi.hoisted(() =>
+  vi.fn(async (args: { data: { locale: string; content: unknown; version: number; updatedBy: string | null } }) => {
+    const now = new Date()
+    const row: Row = {
+      ...args.data,
+      id: `seed-${args.data.locale}`,
+      createdAt: now,
+      updatedAt: now,
     }
-    return state.rows.get(args.where.locale)
+    state.rows.set(args.data.locale, row)
+    return row
   })
 )
 
@@ -48,7 +47,7 @@ const update = vi.hoisted(() =>
 )
 
 vi.mock('./prisma', () => ({
-  prisma: { siteContent: { upsert, findUnique, update } },
+  prisma: { siteContent: { create, findUnique, update } },
 }))
 
 const {
