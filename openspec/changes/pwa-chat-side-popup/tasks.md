@@ -23,3 +23,9 @@
 
 - [x] 4.1 Ejecutar `cd pwa && npm run test`, `npm run build` y el linter de la PWA; corregir cualquier fallo.
 - [x] 4.2 Confirmar que no se tocaron archivos del panel, del agente ni de `lib/*`, y que el cambio solo republica el bundle de la PWA sin requerir "Actualizar nodo".
+
+## 5. Persistencia y mensajes nuevos
+
+- [x] 5.1 Mantener `ChatSection` montado cuando el modal está cerrado (backdrop oculto) para conservar historial, cursor y formulario al reabrir; verificar que el nodo no se remonta en `ChatWidget.test.tsx`.
+- [x] 5.2 Propagar los mensajes nuevos de `ChatSection` a `ChatWidget` y mostrar un badge numérico en el lanzador, sin contar el historial inicial ni incrementar mientras el modal está abierto; verificar con tests de `ChatSection` y `ChatWidget`.
+- [x] 5.3 Actualizar la spec y el diseño con la persistencia y el badge, y ejecutar `npm run test` de la PWA; corregir fallos.

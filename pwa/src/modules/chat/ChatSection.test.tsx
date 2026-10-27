@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TenantProvider } from '@/core/config/TenantContext'
@@ -64,17 +64,18 @@ function mockFetch() {
   })
 }
 
-function renderChat() {
+function renderChat(onNewMessages?: (count: number) => void) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } }
   })
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <TenantProvider>
-        <ChatSection />
+        <ChatSection onNewMessages={onNewMessages} />
       </TenantProvider>
     </QueryClientProvider>
   )
+  return { ...view, queryClient }
 }
 
 describe('ChatSection', () => {
@@ -94,6 +95,44 @@ describe('ChatSection', () => {
 
     expect(await screen.findByText('Hola radio!')).toBeInTheDocument()
     expect(await screen.findByText('3 oyentes activos')).toBeInTheDocument()
+  })
+
+  it('no cuenta el historial inicial y avisa solo los mensajes nuevos', async () => {
+    baked.clientId = 'cmclient'
+    vi.stubGlobal('fetch', mockFetch())
+    const onNewMessages = vi.fn()
+
+    const { queryClient } = renderChat(onNewMessages)
+
+    expect(await screen.findByText('Hola radio!')).toBeInTheDocument()
+    expect(onNewMessages).not.toHaveBeenCalled()
+
+    act(() => {
+      queryClient.setQueryData(['chat', 'cmclient'], {
+        messages: [
+          {
+            id: 'm1',
+            authorType: 'listener',
+            name: 'Oyente 1',
+            body: 'Hola radio!',
+            email: null,
+            createdAt: '2025-01-01T00:00:01.000Z'
+          },
+          {
+            id: 'm2',
+            authorType: 'listener',
+            name: 'Oyente 2',
+            body: 'Mensaje nuevo',
+            email: null,
+            createdAt: '2025-01-01T00:00:02.000Z'
+          }
+        ],
+        nextCursor: '2025-01-01T00:00:02.000Z'
+      })
+    })
+
+    await waitFor(() => expect(onNewMessages).toHaveBeenCalledWith(1))
+    expect(await screen.findByText('Mensaje nuevo')).toBeInTheDocument()
   })
 
   it('no envía un mensaje con campos vacíos', async () => {

@@ -88,6 +88,12 @@
   font-family: inherit;
 }
 
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--content-muted, #6b6761);
+  opacity: 1;
+}
+
 .row {
   display: flex;
   gap: var(--space-2);
@@ -126,7 +132,7 @@
 }
 
 .error {
-  color: #d64545;
+  color: var(--content-danger, #d64545);
   font-size: 0.85rem;
   margin: 0;
 }

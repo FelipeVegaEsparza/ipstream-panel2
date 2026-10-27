@@ -45,9 +45,10 @@ El lanzador es una pestaña fija al borde derecho, centrada verticalmente, con e
 
 ### 3. Modal con el `ChatSection` existente
 
-Al abrir, se monta `ChatSection embedded` dentro de un contenedor `role="dialog"` con `aria-modal="true"`. El chat solo se monta mientras el modal está abierto, así que no hay polling en segundo plano.
+`ChatSection embedded` se monta una sola vez dentro de un contenedor `role="dialog"` con `aria-modal="true"`. El backdrop se oculta con `display: none` al cerrar, pero el chat sigue montado: conserva historial, cursor y formulario, y mantiene el polling para detectar mensajes nuevos.
 
-- **Por qué**: reutiliza toda la lógica de mensajes/permisos y evita dos implementaciones.
+- **Por qué**: reutiliza toda la lógica de mensajes/permisos y evita dos implementaciones; además es la única forma de conservar el estado y avisar mensajes nuevos sin volver a montar el chat.
+- **Alternativa descartada**: montar `ChatSection` solo al abrir. Reinicia el estado y obliga a otra consulta independiente para el badge.
 - **Alternativa descartada**: `window.open` a una ruta dedicada; los navegadores móviles y la PWA instalada suelen bloquear popups y se perdería el contexto.
 
 ### 4. Comportamiento del modal
@@ -59,7 +60,14 @@ Al abrir, se monta `ChatSection embedded` dentro de un contenedor `role="dialog"
 
 - **Por qué**: el modal actual es solo visual; sin foco ni Escape no es accesible ni se comporta como un diálogo real.
 
-### 5. Retiro de la sección `chat`
+### 5. Aviso de mensajes nuevos
+
+`ChatSection` detecta los IDs que no había visto después de la carga inicial y avisa a `ChatWidget` con la cantidad. `ChatWidget` acumula ese contador solo mientras el modal está cerrado, lo muestra como badge en el lanzador y lo limpia al abrir. El historial de la primera carga no cuenta.
+
+- **Por qué**: el estado del chat ya vive en `ChatSection`; un callback evita duplicar la consulta o la lógica de IDs.
+- **Alternativa descartada**: consultar mensajes desde `ChatWidget` en paralelo; duplica polling y puede desincronizar el badge del hilo.
+
+### 6. Retiro de la sección `chat`
 
 Se quita `chat` de `SectionId`, `SECTION_LABELS`, `sectionHasContent`, de los órdenes por template, del `switch` de `ContentSections` y del mapa de iconos de `BlueTemplate`. El `ChatSection` deja de usarse en modo sección (solo `embedded`).
 
@@ -73,6 +81,8 @@ Se quita `chat` de `SectionId`, `SECTION_LABELS`, `sectionHasContent`, de los ó
 - **Tests existentes de sección/visibilidad fallan** → se actualizan `sections.test.ts`, `visibility.test.ts` y los renders de templates; se agrega cobertura del modal.
 - **El modal bloquea el scroll y el foco** → se restaura `overflow` y el foco en el cleanup del efecto para no dejar la página bloqueada.
 - **Popups bloqueados** → se descarta `window.open` por diseño; el modal es DOM normal de la PWA.
+- **Polling del chat con el modal cerrado** → es el costo de conservar el estado y detectar mensajes nuevos; el intervalo se mantiene en 5 s y `refetchIntervalInBackground` deja de consultar cuando la pestaña no está visible.
+- **Badge con el historial inicial** → se marca la primera carga como ya vista y solo se cuentan IDs nuevos posteriores; se cubre con tests de `ChatSection` y `ChatWidget`.
 
 ## Migration Plan
 

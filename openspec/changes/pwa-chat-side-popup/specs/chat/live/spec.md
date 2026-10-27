@@ -40,3 +40,32 @@ La PWA SHALL mostrar el chat en vivo cuando el cliente lo tenga habilitado media
 
 - **WHEN** el visitante usa la PWA en un dispositivo móvil con el reproductor visible
 - **THEN** el botón lateral sigue siendo visible y accesible, y el modal se adapta al ancho de la pantalla
+
+### Requirement: Persistencia y avisos de mensajes nuevos
+
+La PWA SHALL mantener el estado del chat —historial de mensajes y formulario— al cerrar y reabrir el modal, sin remontarlo ni reiniciar la conversación. Mientras el modal esté cerrado, la PWA SHALL seguir recibiendo mensajes y SHALL mostrar en el lanzador un badge con la cantidad de mensajes nuevos. El historial inicial NO SHALL contarse como mensajes nuevos. Al abrir el modal, el badge SHALL limpiarse. Mientras el modal esté abierto, los mensajes nuevos SHALL mostrarse en el hilo sin incrementar el badge.
+
+#### Scenario: Reabrir conserva el historial
+
+- **WHEN** el visitante cierra el modal y lo vuelve a abrir
+- **THEN** ve los mismos mensajes y el estado del formulario que tenía antes de cerrar
+
+#### Scenario: Mensaje nuevo con el modal cerrado
+
+- **WHEN** llega un mensaje mientras el modal está cerrado
+- **THEN** el badge del lanzador incrementa su número y el botón anuncia la cantidad de mensajes nuevos
+
+#### Scenario: Abrir limpia el badge
+
+- **WHEN** el visitante abre el modal con mensajes pendientes
+- **THEN** el badge desaparece y el chat muestra esos mensajes en el hilo
+
+#### Scenario: Mensaje nuevo con el modal abierto
+
+- **WHEN** llega un mensaje mientras el modal está abierto
+- **THEN** se muestra en el hilo sin activar el badge
+
+#### Scenario: Historial inicial
+
+- **WHEN** el chat carga por primera vez mensajes anteriores
+- **THEN** no se muestran como mensajes nuevos en el badge

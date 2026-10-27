@@ -9,6 +9,7 @@ El chat en vivo de la PWA se reparte hoy entre una sección de contenido en algu
 - Reemplazar la sección de contenido `chat` y el botón flotante actual por un **único botón lateral fijo** al borde derecho, visible en todas las páginas y templates de la PWA cuando el chat está habilitado.
 - Al pulsar el botón, abrir el chat en un **overlay modal** dentro de la PWA (no una ventana del navegador), con cabecera "Chat en vivo", cierre explícito y cierre por teclado.
 - Mantener el comportamiento del chat existente (mensajes, nombre/email, conteo de oyentes, polling, permisos).
+- Conservar el estado del chat (historial y formulario) al cerrar y reabrir el modal, y avisar en el lanzador los mensajes nuevos con un badge numérico mientras está cerrado.
 - Ocultar el botón lateral por completo cuando el cliente tenga el chat deshabilitado.
 - **BREAKING** (interno de la PWA): se elimina la sección `chat` del catálogo de secciones y el FAB anterior; el chat deja de mostrarse embebido en la home.
 
@@ -24,7 +25,7 @@ Ninguna.
 
 ## Impact
 
-- **PWA**: `pwa/src/app/App.tsx` (montaje global del lanzador), `pwa/src/modules/chat/ChatWidget.tsx` y su CSS, `pwa/src/modules/chat/visibility.ts` y tests.
+- **PWA**: `pwa/src/app/App.tsx` (montaje global del lanzador), `pwa/src/modules/chat/ChatWidget.tsx`, `pwa/src/modules/chat/ChatSection.tsx` (estado persistente y aviso de mensajes nuevos) y su CSS, `pwa/src/modules/chat/visibility.ts` y tests.
 - **Secciones**: quitar `chat` de `pwa/src/modules/content/sections.ts`, del switch de `pwa/src/modules/content/ContentSections.tsx` y del icono de `BlueTemplate`.
 - **Tests**: actualizar `visibility` y los tests de templates que hoy esperan la sección de chat; agregar cobertura del lanzador y del modal.
 - **Sin backend, sin panel y sin agente**: no requiere "Actualizar nodo".

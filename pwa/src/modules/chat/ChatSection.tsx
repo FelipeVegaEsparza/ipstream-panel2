@@ -30,13 +30,16 @@ function formatTime(iso: string): string {
 
 interface ChatSectionProps {
   embedded?: boolean
+  onNewMessages?: (count: number) => void
 }
 
-export function ChatSection({ embedded = false }: ChatSectionProps) {
+export function ChatSection({ embedded = false, onNewMessages }: ChatSectionProps) {
   const tenant = useTenant()
   const clientId = tenant.status === 'ready' ? tenant.clientId : null
 
   const cursorRef = useRef<string | null>(null)
+  const hasLoadedRef = useRef(false)
+  const knownIdsRef = useRef<Set<string>>(new Set())
   const listRef = useRef<HTMLUListElement>(null)
   const stickToBottomRef = useRef(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -77,9 +80,21 @@ export function ChatSection({ embedded = false }: ChatSectionProps) {
 
   useEffect(() => {
     if (!chatData) return
+
+    let newCount = 0
+    for (const message of chatData.messages) {
+      if (!knownIdsRef.current.has(message.id)) {
+        knownIdsRef.current.add(message.id)
+        newCount += 1
+      }
+    }
+
     setMessages((prev) => mergeMessages(prev, chatData.messages))
     cursorRef.current = chatData.nextCursor
-  }, [chatData])
+
+    if (hasLoadedRef.current && newCount > 0) onNewMessages?.(newCount)
+    hasLoadedRef.current = true
+  }, [chatData, onNewMessages])
 
   // Autoscroll: seguir el hilo salvo que el usuario haya subido a leer.
   useEffect(() => {
@@ -119,11 +134,12 @@ export function ChatSection({ embedded = false }: ChatSectionProps) {
 
       setSending(true)
       try {
-        await sendChatMessage(clientId, {
+        const sent = await sendChatMessage(clientId, {
           name: name.trim(),
           email: email.trim(),
           body: body.trim()
         })
+        knownIdsRef.current.add(sent.id)
         localStorage.setItem(NAME_KEY, name.trim())
         setBody('')
         stickToBottomRef.current = true
