@@ -589,7 +589,7 @@
           "description": "El asistente anuncia el próximo tema con la voz de tu emisora.",
           "voice": "Pedro",
           "tag": "AUTO DJ",
-          "duration": "00:08",
+          "duration": "00:10",
           "audioUrl": "/audio/locuciones/presentacion.mp3",
           "transcript": "Estás escuchando CasterFly Radio. Ahora suena La distancia, de Los Bunkers. Mantente en sintonía."
         },
@@ -605,9 +605,9 @@
         {
           "title": "Cápsula informativa",
           "description": "Un guion se convierte en una cápsula lista para emitir.",
-          "voice": "George",
+          "voice": "Pedro",
           "tag": "CÁPSULA IA",
-          "duration": "00:11",
+          "duration": "00:15",
           "audioUrl": "/audio/locuciones/capsula.mp3",
           "transcript": "CasterFly informa. La inteligencia artificial ya es parte de la radio: presenta la música, locuta la hora y el clima, y genera cápsulas con la voz de tu emisora."
         },
@@ -616,7 +616,7 @@
           "description": "La voz de tu radio en pocos segundos.",
           "voice": "Isabela",
           "tag": "MARCA",
-          "duration": "00:05",
+          "duration": "00:06",
           "audioUrl": "/audio/locuciones/identificacion.mp3",
           "transcript": "CasterFly. La radio que suena profesional, con la voz de tu emisora."
         }
@@ -1213,7 +1213,7 @@
           "description": "The assistant announces the next track in your station’s voice.",
           "voice": "Pedro",
           "tag": "AUTO DJ",
-          "duration": "00:08",
+          "duration": "00:10",
           "audioUrl": "/audio/locuciones/presentacion.mp3",
           "transcript": "Estás escuchando CasterFly Radio. Ahora suena La distancia, de Los Bunkers. Mantente en sintonía."
         },
@@ -1229,9 +1229,9 @@
         {
           "title": "Info capsule",
           "description": "A script becomes a ready-to-air capsule.",
-          "voice": "George",
+          "voice": "Pedro",
           "tag": "AI CAPSULE",
-          "duration": "00:11",
+          "duration": "00:15",
           "audioUrl": "/audio/locuciones/capsula.mp3",
           "transcript": "CasterFly informa. La inteligencia artificial ya es parte de la radio: presenta la música, locuta la hora y el clima, y genera cápsulas con la voz de tu emisora."
         },
@@ -1240,7 +1240,7 @@
           "description": "Your station’s voice in just a few seconds.",
           "voice": "Isabela",
           "tag": "BRAND",
-          "duration": "00:05",
+          "duration": "00:06",
           "audioUrl": "/audio/locuciones/identificacion.mp3",
           "transcript": "CasterFly. La radio que suena profesional, con la voz de tu emisora."
         }
