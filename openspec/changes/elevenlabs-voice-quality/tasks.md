@@ -30,5 +30,5 @@
 
 - [x] 5.1 Ejecutar `npx tsc --noEmit`, `npm test` y `npm run build`; corregir errores.
 - [x] 5.2 Comparar el consumo de caracteres/música para un mismo texto y duración antes/después del cambio; verificar que no aumenta y que un cache hit deja los contadores iguales.
-- [ ] 5.3 Desplegar el panel y verificar en producción que una locución nueva usa el preset, que un texto cacheado no dispara una llamada nueva y que el resultado no tiene clipping.
+- [x] 5.3 Desplegar el panel y verificar en producción que una locución nueva usa el preset, que un texto cacheado no dispara una llamada nueva y que el resultado no tiene clipping.
 - [x] 5.4 Confirmar que no se toca el agente ni se requiere "Actualizar nodo", porque el agente solo recibe el archivo final.
