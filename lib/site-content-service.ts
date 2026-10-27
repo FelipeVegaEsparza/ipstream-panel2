@@ -36,19 +36,65 @@ export function getSeedContent(locale: SiteContentLocale): SiteContent {
   return parsed.data
 }
 
+/**
+ * Agrega solo las claves/colecciones nuevas del seed que falten en el documento
+ * existente. Nunca pisa contenido ya editado por el administrador.
+ */
+export function mergeSeedContent(
+  existing: SiteContent,
+  incoming: SiteContent
+): { content: SiteContent; changed: boolean } {
+  let changed = false
+  const i18n = { ...existing.i18n }
+  for (const [key, value] of Object.entries(incoming.i18n)) {
+    if (!(key in i18n)) {
+      i18n[key] = value
+      changed = true
+    }
+  }
+
+  const collections = { ...existing.collections }
+  for (const key of Object.keys(incoming.collections) as Array<keyof SiteContent['collections']>) {
+    const current = collections[key]
+    const seedValue = incoming.collections[key]
+    if ((!Array.isArray(current) || current.length === 0) && Array.isArray(seedValue) && seedValue.length > 0) {
+      collections[key] = seedValue as never
+      changed = true
+    }
+  }
+
+  return { content: { ...existing, i18n, collections }, changed }
+}
+
 async function seedSiteContent() {
   for (const locale of SITE_CONTENT_LOCALES) {
     const content = getSeedContent(locale)
-    await prisma.siteContent.upsert({
-      where: { locale },
-      create: {
-        locale,
-        content: content as unknown as Prisma.InputJsonValue,
-        version: 1,
-        updatedBy: 'seed',
-      },
-      update: {},
-    })
+    const existing = await prisma.siteContent.findUnique({ where: { locale } })
+    if (!existing) {
+      await prisma.siteContent.create({
+        data: {
+          locale,
+          content: content as unknown as Prisma.InputJsonValue,
+          version: 1,
+          updatedBy: 'seed',
+        },
+      })
+      continue
+    }
+
+    const parsed = parseSiteContent(existing.content)
+    if (!parsed) continue
+    const merged = mergeSeedContent(parsed, content)
+    if (merged.changed) {
+      await prisma.siteContent.update({
+        where: { locale },
+        data: {
+          content: merged.content as unknown as Prisma.InputJsonValue,
+          version: { increment: 1 },
+          updatedBy: 'seed',
+        },
+      })
+    }
   }
 }
 
