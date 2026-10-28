@@ -11,6 +11,7 @@ import { resolveRadioServerTarget } from '@/lib/streaming-servers'
 import { weatherPhrase } from '@/lib/weather-label'
 import { synthesizePremiumTts } from '@/lib/premium-tts'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
+import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
 
 export const dynamic = 'force-dynamic'
 
@@ -162,7 +163,11 @@ export async function POST(request: NextRequest) {
 
     if (requestedVoice === 'premium' && premiumAllowed) {
       try {
-        const premium = await synthesizePremiumTts({ clientId: ctx.clientId, text })
+        const premium = await synthesizePremiumTts({
+          clientId: ctx.clientId,
+          text,
+          direction: type === 'time' ? FISH_AUDIO_DIRECTIONS.time : FISH_AUDIO_DIRECTIONS.weather,
+        })
         if (!premium.cached) {
           try {
             await consumeAiCharacters(ctx.clientId, text.length, 'live-announce')

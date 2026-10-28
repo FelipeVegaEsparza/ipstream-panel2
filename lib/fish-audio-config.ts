@@ -9,6 +9,7 @@ export interface FishAudioConfig {
   apiKey: string
   model: string
   referenceId: string
+  direction: string
   enabled: boolean
   cacheEnabled: boolean
 }
@@ -35,6 +36,7 @@ function envConfig(): FishAudioConfig {
     apiKey,
     model: validFishAudioModel(process.env.FISH_AUDIO_MODEL),
     referenceId: clean(process.env.FISH_AUDIO_REFERENCE_ID),
+    direction: clean(process.env.FISH_AUDIO_DIRECTION),
     enabled: Boolean(apiKey) && process.env.FISH_AUDIO_ENABLED !== 'false',
     cacheEnabled: process.env.TTS_CACHE_ENABLED !== 'false',
   }
@@ -54,6 +56,7 @@ export async function getFishAudioConfig(): Promise<FishAudioConfig> {
         fishAudioApiKeyEnc: true,
         fishAudioModel: true,
         fishAudioReferenceId: true,
+        fishAudioDirection: true,
         ttsCacheEnabled: true,
       },
     })
@@ -62,6 +65,7 @@ export async function getFishAudioConfig(): Promise<FishAudioConfig> {
         apiKey: secretFromDb(cfg.fishAudioApiKeyEnc) || env.apiKey,
         model: validFishAudioModel(cfg.fishAudioModel || env.model || DEFAULT_FISH_AUDIO_MODEL),
         referenceId: clean(cfg.fishAudioReferenceId) || env.referenceId,
+        direction: clean(cfg.fishAudioDirection) || env.direction,
         enabled: Boolean(secretFromDb(cfg.fishAudioApiKeyEnc) || env.apiKey) &&
           process.env.FISH_AUDIO_ENABLED !== 'false',
         cacheEnabled: cfg.ttsCacheEnabled,

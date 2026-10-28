@@ -30,6 +30,7 @@ export async function hasConfiguredPremiumTts(): Promise<boolean> {
 export async function synthesizePremiumTts(input: {
   clientId: string
   text: string
+  direction?: string
 }): Promise<PremiumTtsResult> {
   const selected = await getTtsProvider()
   const order: TtsProvider[] = selected === 'fish'
@@ -47,6 +48,7 @@ export async function synthesizePremiumTts(input: {
           apiKey: config.apiKey,
           model: config.model,
           referenceId: config.referenceId,
+          direction: config.direction || input.direction,
           cacheEnabled: config.cacheEnabled,
         })
         return { ...result, provider: 'fish' }

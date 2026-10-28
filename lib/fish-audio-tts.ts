@@ -1,8 +1,14 @@
 // Fish Audio TTS + cache persistente de audios generados.
+// Drama 3 acepta una dirección de locución en español y usa un post-proceso
+// de voz equivalente al de ElevenLabs para mantener el mismo nivel de salida.
 
 import { createHash } from 'crypto'
 import { promises as fs } from 'fs'
 import path from 'path'
+import {
+  postProcessVoice,
+  VOICE_POST_PROCESS_VERSION,
+} from '@/lib/elevenlabs-tts'
 
 export interface FishAudioTtsResult {
   audio: Buffer
@@ -15,9 +21,14 @@ export interface FishAudioTtsInput {
   apiKey: string
   model: string
   referenceId?: string
+  direction?: string
   cacheEnabled: boolean
   language?: string
+  postProcess?: boolean
 }
+
+const CACHE_VERSION = 'v2'
+const MAX_DIRECTION_CHARS = 500
 
 const CACHE_ROOT =
   process.env.TTS_CACHE_DIR?.trim() ||
@@ -29,13 +40,39 @@ function safeSegment(value: string): string {
   return value.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 96) || 'default'
 }
 
-function cacheFile(input: FishAudioTtsInput): string {
+function addDramaPause(text: string): string {
+  if (/\[(?:pausa|break|long-break)/i.test(text)) return text
+  const match = text.match(/^(.+?[.!?])\s+([\s\S]+)$/)
+  if (!match) return text
+  const [, first, rest] = match
+  return rest.trim() ? `${first} [pausa breve] ${rest}` : text
+}
+
+function fullText(input: FishAudioTtsInput): string {
+  const text = input.text.trim()
+  const direction = (input.direction || '').trim().slice(0, MAX_DIRECTION_CHARS)
+  if (input.model !== 'drama-3' || !direction) return text
+  return `${direction} ${addDramaPause(text)}`
+}
+
+function cacheFile(input: FishAudioTtsInput, text: string): string {
   const hash = createHash('sha256')
-    .update(`fish\n${input.model}\n${input.referenceId || ''}\n${input.language || 'es-CL'}\n${input.text}`)
+    .update(
+      [
+        'fish',
+        CACHE_VERSION,
+        input.model,
+        input.referenceId || '',
+        input.language || 'es-CL',
+        input.postProcess === false ? 'raw' : `pp:${VOICE_POST_PROCESS_VERSION}`,
+        text,
+      ].join('\n')
+    )
     .digest('hex')
   return path.join(
     CACHE_ROOT,
     'fish',
+    CACHE_VERSION,
     safeSegment(input.model),
     safeSegment(input.referenceId || 'default'),
     `${hash}.mp3`
@@ -62,14 +99,23 @@ async function writeCached(file: string, audio: Buffer): Promise<void> {
 }
 
 async function generate(input: FishAudioTtsInput): Promise<Buffer> {
+  const isDrama3 = input.model === 'drama-3'
   const body: Record<string, unknown> = {
     text: input.text,
     format: 'mp3',
-    mp3_bitrate: 128,
+    mp3_bitrate: 192,
+    sample_rate: 44100,
     normalize: true,
     language: input.language || 'es-CL',
     chunk_length: 300,
+    min_chunk_length: 50,
     latency: 'normal',
+    max_new_tokens: 1024,
+    repetition_penalty: isDrama3 ? 1.15 : 1.2,
+    condition_on_previous_chunks: true,
+    early_stop_threshold: 1,
+    temperature: isDrama3 ? 0.85 : 0.7,
+    top_p: isDrama3 ? 0.85 : 0.7,
     prosody: { speed: 1, volume: 0, normalize_loudness: true },
   }
   if (input.referenceId) body.reference_id = input.referenceId
@@ -101,11 +147,11 @@ async function generate(input: FishAudioTtsInput): Promise<Buffer> {
 export async function synthesizeFishAudio(
   input: FishAudioTtsInput
 ): Promise<FishAudioTtsResult> {
-  const text = input.text.trim()
+  const text = fullText(input)
   if (!text) throw new Error('text_required')
   if (!input.apiKey) throw new Error('fish_audio_api_key_required')
 
-  const file = cacheFile({ ...input, text })
+  const file = cacheFile(input, text)
   if (input.cacheEnabled) {
     const cached = await readCached(file)
     if (cached) return { audio: cached, contentType: 'audio/mpeg', cached: true }
@@ -115,7 +161,12 @@ export async function synthesizeFishAudio(
   if (existing) return existing
 
   const task = (async () => {
-    const audio = await generate({ ...input, text })
+    const raw = await generate({ ...input, text })
+    let audio = raw
+    if (input.postProcess !== false) {
+      const processed = await postProcessVoice(raw, 'fish-audio-tts')
+      if (processed) audio = processed
+    }
     if (input.cacheEnabled) await writeCached(file, audio)
     return { audio, contentType: 'audio/mpeg', cached: false }
   })()

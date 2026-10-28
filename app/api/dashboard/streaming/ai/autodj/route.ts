@@ -11,6 +11,7 @@ import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
 import { synthesizePremiumTts, hasConfiguredPremiumTts } from '@/lib/premium-tts'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 import { buildPresenterText, normalizePhrases } from '@/lib/live-console/presenter'
+import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
 
 export const dynamic = 'force-dynamic'
 
@@ -177,7 +178,11 @@ export async function POST(request: NextRequest) {
       const track = targets[i]
       let audio
       try {
-        audio = await synthesizePremiumTts({ clientId: ctx.clientId, text })
+        audio = await synthesizePremiumTts({
+          clientId: ctx.clientId,
+          text,
+          direction: FISH_AUDIO_DIRECTIONS.presenter,
+        })
       } catch (err) {
         return NextResponse.json(
           {

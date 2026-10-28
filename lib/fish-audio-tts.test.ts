@@ -11,6 +11,7 @@ const input = {
   model: 's2.1-pro-free',
   referenceId: 'voice-ref-1',
   cacheEnabled: true,
+  postProcess: false,
 }
 
 beforeEach(async () => {
@@ -53,6 +54,63 @@ describe('synthesizeFishAudio', () => {
       reference_id: 'voice-ref-1',
       format: 'mp3',
     })
+  })
+
+  it('aplica dirección y parámetros de Drama 3', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(new Uint8Array([1, 2, 3]), { status: 200 })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { synthesizeFishAudio } = await import('./fish-audio-tts')
+    await synthesizeFishAudio({
+      ...input,
+      model: 'drama-3',
+      direction: '[voz cálida y cercana]',
+    })
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('https://api.fish.audio/v1/tts')
+    expect((init as RequestInit).headers).toMatchObject({ model: 'drama-3' })
+    expect(JSON.parse(String((init as RequestInit).body))).toMatchObject({
+      text: '[voz cálida y cercana] Son las 19 horas con 12 minutos.',
+      temperature: 0.85,
+      top_p: 0.85,
+      repetition_penalty: 1.15,
+      mp3_bitrate: 192,
+    })
+  })
+
+  it('inserta una pausa breve después de la primera frase en Drama 3', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(new Uint8Array([1, 2, 3]), { status: 200 })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { synthesizeFishAudio } = await import('./fish-audio-tts')
+    await synthesizeFishAudio({
+      ...input,
+      text: 'Hola. Chau.',
+      model: 'drama-3',
+      direction: '[voz cálida]',
+    })
+    const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body))
+    expect(body.text).toBe('[voz cálida] Hola. [pausa breve] Chau.')
+  })
+
+  it('no aplica la dirección fuera de Drama 3', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(new Uint8Array([1, 2, 3]), { status: 200 })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { synthesizeFishAudio } = await import('./fish-audio-tts')
+    await synthesizeFishAudio({
+      ...input,
+      model: 's2.1-pro',
+      direction: '[voz cálida y cercana]',
+    })
+    const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body))
+    expect(body.text).toBe(input.text)
   })
 
   it('permite omitir reference_id para usar la voz predeterminada', async () => {

@@ -27,6 +27,7 @@ interface Config {
   fishAudioKeySet: boolean
   fishAudioModel: string
   fishAudioReferenceId: string
+  fishAudioDirection?: string
 }
 
 export function ElevenLabsSettings() {
@@ -46,6 +47,7 @@ export function ElevenLabsSettings() {
   const [fishKeySet, setFishKeySet] = useState(false)
   const [fishModel, setFishModel] = useState(DEFAULT_FISH_AUDIO_MODEL)
   const [fishReferenceId, setFishReferenceId] = useState('')
+  const [fishDirection, setFishDirection] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingCfg, setLoadingCfg] = useState(true)
 
@@ -66,6 +68,7 @@ export function ElevenLabsSettings() {
         setFishKeySet(Boolean(data.fishAudioKeySet))
         setFishModel(data.fishAudioModel || DEFAULT_FISH_AUDIO_MODEL)
         setFishReferenceId(data.fishAudioReferenceId || '')
+        setFishDirection(data.fishAudioDirection || '')
       })
       .catch(() => showToast({ type: 'error', title: t('admin.tts.loadError') }))
       .finally(() => setLoadingCfg(false))
@@ -86,6 +89,7 @@ export function ElevenLabsSettings() {
         ttsProvider: provider,
         fishAudioModel: fishModel,
         fishAudioReferenceId: fishReferenceId.trim(),
+        fishAudioDirection: fishDirection.trim(),
       }
       if (apiKey.trim()) body.elevenLabsApiKey = apiKey.trim()
       if (fishApiKey.trim()) body.fishAudioApiKey = fishApiKey.trim()
@@ -412,6 +416,21 @@ export function ElevenLabsSettings() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">{t('admin.tts.fishDirection')}</label>
+              <textarea
+                className={input}
+                rows={3}
+                value={fishDirection}
+                onChange={(e) => setFishDirection(e.target.value)}
+                placeholder={t('admin.tts.fishDirectionPlaceholder')}
+                maxLength={500}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {t('admin.tts.fishDirectionHint')}
+              </p>
             </div>
 
             <p className="text-[11px] text-muted-foreground">

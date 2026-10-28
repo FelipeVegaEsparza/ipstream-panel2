@@ -24,7 +24,10 @@ export async function GET() {
       })
     }
 
-    const eleven = await getElevenLabsConfig()
+    const [eleven, fish] = await Promise.all([
+      getElevenLabsConfig(),
+      getFishAudioConfig(),
+    ])
 
     // Config de sitios: valor efectivo (DB o env). El token nunca se devuelve.
     return NextResponse.json({
@@ -48,9 +51,10 @@ export async function GET() {
       pronunciationDictionaryId: eleven.pronunciationDictionaryId || '',
       pronunciationDictionaryVersionId: eleven.pronunciationDictionaryVersionId || '',
       ttsProvider: config.ttsProvider === 'fish' ? 'fish' : 'elevenlabs',
-      fishAudioKeySet: Boolean(config.fishAudioApiKeyEnc),
-      fishAudioModel: validFishAudioModel(config.fishAudioModel),
-      fishAudioReferenceId: config.fishAudioReferenceId || '',
+      fishAudioKeySet: Boolean(fish.apiKey),
+      fishAudioModel: fish.model,
+      fishAudioReferenceId: fish.referenceId,
+      fishAudioDirection: fish.direction,
     })
   } catch (error) {
     console.error('Error getting app config:', error)
@@ -92,6 +96,7 @@ export async function PUT(request: NextRequest) {
       clearFishAudioApiKey,
       fishAudioModel,
       fishAudioReferenceId,
+      fishAudioDirection,
     } = body
 
     let trialDaysValue: number | undefined
@@ -224,6 +229,9 @@ export async function PUT(request: NextRequest) {
       ...(fishAudioReferenceId !== undefined
         ? { fishAudioReferenceId: String(fishAudioReferenceId).trim().slice(0, 191) || null }
         : {}),
+      ...(fishAudioDirection !== undefined
+        ? { fishAudioDirection: String(fishAudioDirection).trim().slice(0, 500) || null }
+        : {}),
     }
 
     const sitesData = {
@@ -291,6 +299,7 @@ export async function PUT(request: NextRequest) {
       fishAudioKeySet: Boolean(fish.apiKey),
       fishAudioModel: fish.model,
       fishAudioReferenceId: fish.referenceId,
+      fishAudioDirection: fish.direction,
     })
   } catch (error) {
     console.error('Error updating app config:', error)

@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { synthesizePremiumTts } from '@/lib/premium-tts'
 import { mixMusicAndVoice } from '@/lib/audio-mix'
+import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
 export const JINGLE_DURATIONS = [10, 15] as const
 
 export interface GenerateJingleInput {
@@ -75,7 +76,11 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
 
   const [music, voice] = await Promise.all([
     generateMusic(input.prompt, input.duration, config.apiKey),
-    synthesizePremiumTts({ clientId: input.clientId, text: tagline.slice(0, 300) }),
+    synthesizePremiumTts({
+      clientId: input.clientId,
+      text: tagline.slice(0, 300),
+      direction: FISH_AUDIO_DIRECTIONS.station,
+    }),
   ])
 
   const audio = await mixMusicAndVoice({

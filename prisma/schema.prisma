@@ -674,6 +674,7 @@ model AppConfig {
   fishAudioApiKeyEnc   String? @db.Text // API key de Fish Audio (AES-256-GCM)
   fishAudioModel       String? // modelo de Fish Audio (s2.1-pro-free, s2.1-pro, ...)
   fishAudioReferenceId String? // voice model / reference ID de Fish Audio
+  fishAudioDirection   String? @db.VarChar(500) // dirección de locución para Drama 3
   ttsCacheEnabled      Boolean @default(true) // cache de audios generados (app_uploads)
 
   @@map("app_config")

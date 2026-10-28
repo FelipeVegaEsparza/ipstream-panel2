@@ -9,6 +9,7 @@ import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth
 import { resolveRadioServerTarget } from '@/lib/streaming-servers'
 import { synthesizePremiumTts } from '@/lib/premium-tts'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
+import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,7 +83,11 @@ export async function POST(request: NextRequest) {
     let result: AudioResult | null = null
 
     try {
-      const premium = await synthesizePremiumTts({ clientId: ctx.clientId, text })
+      const premium = await synthesizePremiumTts({
+        clientId: ctx.clientId,
+        text,
+        direction: FISH_AUDIO_DIRECTIONS.presenter,
+      })
       if (!premium.cached) {
         try {
           await consumeAiCharacters(ctx.clientId, text.length, 'live-locution')

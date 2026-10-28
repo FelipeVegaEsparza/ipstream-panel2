@@ -261,7 +261,10 @@ async function generateRaw(
   throw lastError instanceof Error ? lastError : new Error('elevenlabs_generation_failed')
 }
 
-async function postProcessVoice(raw: Buffer): Promise<Buffer | null> {
+export async function postProcessVoice(
+  raw: Buffer,
+  logPrefix = 'elevenlabs-tts'
+): Promise<Buffer | null> {
   const dir = await fs.mkdtemp(path.join(tmpdir(), 'tts-post-'))
   const inputPath = path.join(dir, 'raw.mp3')
   const outputPath = path.join(dir, 'processed.mp3')
@@ -287,7 +290,7 @@ async function postProcessVoice(raw: Buffer): Promise<Buffer | null> {
     )
     return await fs.readFile(outputPath)
   } catch (err) {
-    console.warn('[elevenlabs-tts] post-proceso falló; se usa el audio raw', err)
+    console.warn(`[${logPrefix}] post-proceso falló; se usa el audio raw`, err)
     return null
   } finally {
     await fs.rm(dir, { recursive: true, force: true }).catch(() => {})

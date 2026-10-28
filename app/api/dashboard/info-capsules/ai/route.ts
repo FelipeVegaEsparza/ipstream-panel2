@@ -12,6 +12,7 @@ import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 import { getFishAudioConfig } from '@/lib/fish-audio-config'
 import { prisma } from '@/lib/prisma'
 import { addCapsuleIntro } from '@/lib/capsule-ai-audio'
+import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
 
 export const dynamic = 'force-dynamic'
 const execFileAsync = promisify(execFile)
@@ -61,7 +62,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const tts = await synthesizePremiumTts({ clientId: ctx.clientId, text })
+    const tts = await synthesizePremiumTts({
+      clientId: ctx.clientId,
+      text,
+      direction: FISH_AUDIO_DIRECTIONS.capsule,
+    })
     if (!tts.cached) {
       await consumeAiCharacters(ctx.clientId, text.length, 'ai-capsule').catch(() => {})
     }
