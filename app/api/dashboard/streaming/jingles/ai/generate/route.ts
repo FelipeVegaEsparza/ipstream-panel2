@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { promises as fs } from 'fs'
+import path from 'path'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
-import { getAiMusicAccess, consumeAiMusicSeconds } from '@/lib/ai-music'
 import { generateJingle, JINGLE_DURATIONS } from '@/lib/jingle-ai'
+import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,12 +14,8 @@ export async function POST(request: NextRequest) {
     if (!ctx.hasRadioStream) return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
 
     const body = await request.json().catch(() => ({}))
-    const prompt = typeof body?.prompt === 'string' ? body.prompt.trim().slice(0, 600) : ''
     const tagline = typeof body?.tagline === 'string' ? body.tagline.trim().slice(0, 300) : ''
     const duration = Number(body?.duration)
-    if (!prompt) {
-      return NextResponse.json({ error: 'prompt_required', message: 'Describí el estilo de la música.' }, { status: 400 })
-    }
     if (!tagline) {
       return NextResponse.json({ error: 'tagline_required', message: 'Escribí la locución del jingle.' }, { status: 400 })
     }
@@ -25,20 +23,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'invalid_duration', message: 'Duración inválida.' }, { status: 400 })
     }
 
-    const [music, tts] = await Promise.all([
-      getAiMusicAccess(ctx.clientId),
+    const [tts, stream] = await Promise.all([
       getAiLiveAccess(ctx.clientId),
+      prisma.radioStream.findUnique({
+        where: { clientId: ctx.clientId },
+        select: {
+          jingleMusicTrack: {
+            select: { id: true, name: true, url: true, active: true },
+          },
+        },
+      }),
     ])
-    if (!music.enabled) {
+    const track = stream?.jingleMusicTrack
+    if (!track?.active) {
       return NextResponse.json(
-        { error: 'music_not_included', message: 'Tu plan no incluye minutos de música IA.' },
-        { status: 403 }
-      )
-    }
-    if (music.remainingSeconds < duration) {
-      return NextResponse.json(
-        { error: 'music_quota_exceeded', message: `Te quedan ${music.remainingSeconds} segundos de música IA.` },
-        { status: 402 }
+        { error: 'music_required', message: 'Elegí una pista de música para el jingle.' },
+        { status: 400 }
       )
     }
     if (!tts.enabled || tts.remaining < tagline.length) {
@@ -48,14 +48,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const storedName = path.basename(track.url)
+    const musicPath = path.join(process.cwd(), 'public', 'uploads', 'music', storedName)
+    let music: Buffer
+    try {
+      music = await fs.readFile(musicPath)
+    } catch {
+      return NextResponse.json(
+        { error: 'music_file_missing', message: 'No se encontró el archivo de música elegido.' },
+        { status: 500 }
+      )
+    }
+
     const result = await generateJingle({
       clientId: ctx.clientId,
-      prompt,
       duration,
       tagline,
+      music,
     })
 
-    await consumeAiMusicSeconds(ctx.clientId, duration, 'ai-jingle')
     if (!result.ttsCached) {
       try {
         await consumeAiCharacters(ctx.clientId, result.ttsCharacters, 'ai-jingle')
@@ -69,7 +80,6 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'audio/mpeg',
         'Cache-Control': 'no-store',
-        'X-Music-Remaining': String(Math.max(0, music.remainingSeconds - duration)),
         'X-AI-Remaining': String(Math.max(0, tts.remaining - (result.ttsCached ? 0 : tagline.length))),
       },
     })

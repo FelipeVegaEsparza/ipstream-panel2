@@ -407,39 +407,22 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               />
               {t('admin.planForm.aiInclude')}
             </label>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3">
               <div>
                 <label className="block text-xs text-muted-foreground mb-1">
                   {t('admin.planForm.aiCharacters')}
                 </label>
-              <Input
-                type="number"
-                min="0"
-                step="1000"
-                value={formData.aiMonthlyCharacters}
-                onChange={(e) => setFormData({ ...formData, aiMonthlyCharacters: e.target.value })}
-                placeholder={t('admin.planForm.aiCharactersPlaceholder')}
-                className="bg-secondary border-border text-foreground"
-              />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('admin.planForm.aiCharactersHint')}
-                </p>
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">
-                  {t('admin.planForm.aiMusic')}
-                </label>
                 <Input
                   type="number"
                   min="0"
-                  step="1"
-                  value={formData.aiMusicMinutes}
-                  onChange={(e) => setFormData({ ...formData, aiMusicMinutes: e.target.value })}
+                  step="1000"
+                  value={formData.aiMonthlyCharacters}
+                  onChange={(e) => setFormData({ ...formData, aiMonthlyCharacters: e.target.value })}
                   placeholder={t('admin.planForm.aiCharactersPlaceholder')}
                   className="bg-secondary border-border text-foreground"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {t('admin.planForm.aiMusicHint')}
+                  {t('admin.planForm.aiCharactersHint')}
                 </p>
               </div>
             </div>

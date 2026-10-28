@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { getAiLiveAccess } from '@/lib/ai-live'
-import { getAiMusicAccess } from '@/lib/ai-music'
 import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 import { getTtsProvider } from '@/lib/tts-provider'
 import { getFishAudioConfig } from '@/lib/fish-audio-config'
@@ -13,8 +12,7 @@ export async function GET() {
   try {
     const ctx = await requireStreamingClient()
     if (!ctx.hasRadioStream) return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
-    const [music, tts, voice, client, provider] = await Promise.all([
-      getAiMusicAccess(ctx.clientId),
+    const [tts, voice, client, provider, stream] = await Promise.all([
       getAiLiveAccess(ctx.clientId),
       getClientVoiceSettings(ctx.clientId),
       prisma.client.findUnique({
@@ -22,13 +20,18 @@ export async function GET() {
         select: { name: true, basicData: { select: { projectName: true } } },
       }),
       getTtsProvider(),
+      prisma.radioStream.findUnique({
+        where: { clientId: ctx.clientId },
+        select: {
+          jingleMusicTrack: {
+            select: { id: true, name: true, artist: true, url: true, active: true },
+          },
+        },
+      }),
     ])
     const fish = provider === 'fish' ? await getFishAudioConfig() : null
+    const musicTrack = stream?.jingleMusicTrack?.active ? stream.jingleMusicTrack : null
     return NextResponse.json({
-      musicEnabled: music.enabled,
-      musicLimitSeconds: music.limitSeconds,
-      musicUsedSeconds: music.usedSeconds,
-      musicRemainingSeconds: music.remainingSeconds,
       ttsEnabled: tts.enabled,
       ttsRemaining: tts.remaining,
       voiceName: provider === 'fish'
@@ -37,6 +40,10 @@ export async function GET() {
       voicePreset: voice.preset,
       provider,
       stationName: client?.basicData?.projectName || client?.name || 'la radio',
+      musicTrackId: musicTrack?.id || null,
+      musicTrackName: musicTrack?.name || null,
+      musicTrackArtist: musicTrack?.artist || null,
+      musicTrackUrl: musicTrack?.url || null,
     })
   } catch (err) {
     if (err instanceof StreamingAuthError) {

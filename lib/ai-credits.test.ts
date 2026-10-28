@@ -99,8 +99,6 @@ describe('shouldShowAiCreditUpsell', () => {
       shouldShowAiCreditUpsell({
         charactersEnabled: true,
         charactersRemaining: 0,
-        musicEnabled: true,
-        musicRemainingSeconds: 0,
         activePacks: 0,
       })
     ).toBe(false)
@@ -111,8 +109,6 @@ describe('shouldShowAiCreditUpsell', () => {
       shouldShowAiCreditUpsell({
         charactersEnabled: true,
         charactersRemaining: 0,
-        musicEnabled: false,
-        musicRemainingSeconds: 0,
         activePacks: 1,
       })
     ).toBe(true)
@@ -123,8 +119,6 @@ describe('shouldShowAiCreditUpsell', () => {
       shouldShowAiCreditUpsell({
         charactersEnabled: true,
         charactersRemaining: 20,
-        musicEnabled: true,
-        musicRemainingSeconds: 5,
         activePacks: 2,
       })
     ).toBe(false)

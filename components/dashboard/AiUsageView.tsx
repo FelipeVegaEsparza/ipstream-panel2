@@ -6,11 +6,7 @@ import { SparklesIcon } from '@heroicons/react/24/outline'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { showToast } from '@/components/ui/toast'
 import type { ClientAiUsageOverview } from '@/lib/ai-usage'
-import {
-  formatAiMusic,
-  formatAiNumber,
-  formatAiPeriod,
-} from '@/lib/ai-usage-format'
+import { formatAiNumber, formatAiPeriod } from '@/lib/ai-usage-format'
 import { shouldShowAiCreditUpsell } from '@/lib/ai-credit-upsell'
 import { AiUsageBreakdownTable } from '@/components/ai-usage/AiUsageBreakdownTable'
 import { AiUsageHistoryTable } from '@/components/ai-usage/AiUsageHistoryTable'
@@ -60,7 +56,7 @@ export function AiUsageView({ data, creditPacks, creditRequests }: Props) {
   const { t, locale } = useDashboardI18n()
   const router = useRouter()
   const [requesting, setRequesting] = useState<string | null>(null)
-  const { characters, music } = data.quotas
+  const { characters } = data.quotas
 
   const pendingPackIds = new Set(
     creditRequests.filter((request) => request.status === 'pending').map((request) => request.packId)
@@ -68,8 +64,6 @@ export function AiUsageView({ data, creditPacks, creditRequests }: Props) {
   const showUpsell = shouldShowAiCreditUpsell({
     charactersEnabled: characters.enabled,
     charactersRemaining: characters.remaining,
-    musicEnabled: music.enabled,
-    musicRemainingSeconds: music.remainingSeconds,
     activePacks: creditPacks.length,
   })
 
@@ -77,11 +71,6 @@ export function AiUsageView({ data, creditPacks, creditRequests }: Props) {
     characters.limit > 0
       ? Math.min(100, Math.round((characters.used / characters.limit) * 100))
       : 0
-  const musicPercent =
-    music.limitSeconds > 0
-      ? Math.min(100, Math.round((music.usedSeconds / music.limitSeconds) * 100))
-      : 0
-
   async function requestPack(packId: string) {
     setRequesting(packId)
     try {
@@ -124,7 +113,7 @@ export function AiUsageView({ data, creditPacks, creditRequests }: Props) {
         </section>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4">
         <section className="card p-5">
           <h2 className="text-lg font-semibold text-foreground">{t('aiUsage.characters')}</h2>
           {characters.enabled ? (
@@ -177,57 +166,6 @@ export function AiUsageView({ data, creditPacks, creditRequests }: Props) {
           )}
         </section>
 
-        <section className="card p-5">
-          <h2 className="text-lg font-semibold text-foreground">{t('aiUsage.music')}</h2>
-          {music.enabled ? (
-            <>
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {t('aiCredits.assigned')}
-                  </p>
-                  <p className="mt-0.5 font-mono text-lg font-semibold text-foreground">
-                    {formatAiMusic(music.limitSeconds)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {t('aiCredits.used')}
-                  </p>
-                  <p className="mt-0.5 font-mono text-lg font-semibold text-foreground">
-                    {formatAiMusic(music.usedSeconds)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {t('aiCredits.available')}
-                  </p>
-                  <p className="mt-0.5 font-mono text-lg font-semibold text-brand">
-                    {formatAiMusic(music.remainingSeconds)}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
-                <div
-                  className={`h-full rounded-full ${musicPercent >= 90 ? 'bg-red-400' : 'bg-brand'}`}
-                  style={{ width: `${musicPercent}%` }}
-                />
-              </div>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                <span>{formatAiPeriod(data.currentPeriod, locale)}</span>
-                {music.extraRemainingSeconds > 0 && (
-                  <span>
-                    {t('aiCreditPacks.extraMusic', {
-                      count: formatAiMusic(music.extraRemainingSeconds),
-                    })}
-                  </span>
-                )}
-              </div>
-            </>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground">{t('aiUsage.notIncluded')}</p>
-          )}
-        </section>
       </div>
 
       {creditPacks.length > 0 && (

@@ -6,15 +6,14 @@ import { SparklesIcon, PlayIcon, ArrowDownTrayIcon, XMarkIcon } from '@heroicons
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface AiInfo {
-  musicEnabled: boolean
-  musicLimitSeconds: number
-  musicUsedSeconds: number
-  musicRemainingSeconds: number
   ttsEnabled: boolean
   ttsRemaining: number
   voiceName: string
   voicePreset?: string
   stationName: string
+  musicTrackName: string | null
+  musicTrackArtist: string | null
+  musicTrackUrl: string | null
 }
 
 interface Props {
@@ -30,8 +29,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const { t, locale } = useDashboardI18n()
   const [info, setInfo] = useState<AiInfo | null>(null)
   const [title, setTitle] = useState(() => t('streaming.jingles.ai.defaultTitle'))
-  const [styles, setStyles] = useState<string[]>(['Pop'])
-  const [energy, setEnergy] = useState<'suave' | 'media' | 'alta'>('alta')
   const [tagline, setTagline] = useState(() => t('streaming.jingles.ai.defaultTagline'))
   const [duration, setDuration] = useState(10)
   const [generating, setGenerating] = useState(false)
@@ -62,20 +59,15 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
 
   if (!open) return null
 
-  const toggleStyle = (style: string) => {
-    setStyles((prev) => prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style])
-  }
-
   const generate = async () => {
     setGenerating(true)
     setError(null)
     setBlob(null)
-    const musicPrompt = `Jingle instrumental de radio, estilo ${(styles.length ? styles : ['Pop']).join(', ')}, energía ${energy}, final limpio, sin voces.`
     try {
       const res = await fetch('/api/dashboard/streaming/jingles/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, prompt: musicPrompt, tagline, duration }),
+        body: JSON.stringify({ tagline, duration }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -84,7 +76,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
       setBlob(await res.blob())
       setInfo((prev) => prev ? {
         ...prev,
-        musicRemainingSeconds: Number(res.headers.get('X-Music-Remaining') ?? prev.musicRemainingSeconds),
         ttsRemaining: Number(res.headers.get('X-AI-Remaining') ?? prev.ttsRemaining),
       } : prev)
     } catch (err) {
@@ -134,16 +125,17 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
         </div>
 
         {info && (
-          <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-secondary/50 p-3 text-xs">
+          <div className="mt-4 grid gap-3 rounded-lg bg-secondary/50 p-3 text-xs sm:grid-cols-2">
             <div>
-              <p className="text-muted-foreground">{t('streaming.jingles.ai.musicAvailable')}</p>
-              <p className="font-mono text-foreground">{Math.floor(info.musicRemainingSeconds / 60)} min {info.musicRemainingSeconds % 60}s</p>
+              <p className="text-muted-foreground">{t('streaming.jingles.ai.musicTrack')}</p>
+              <p className="font-medium text-foreground">{info.musicTrackName || t('streaming.jingles.ai.noMusicTrack')}</p>
+              {info.musicTrackArtist && <p className="text-muted-foreground">{info.musicTrackArtist}</p>}
             </div>
             <div>
               <p className="text-muted-foreground">{t('streaming.jingles.ai.voiceAvailable')}</p>
               <p className="font-mono text-foreground">{t('streaming.jingles.ai.characters', { count: info.ttsRemaining.toLocaleString(locale === 'en' ? 'en-US' : 'es-CL') })}</p>
             </div>
-            <div className="col-span-2 text-muted-foreground">
+            <div className="text-muted-foreground sm:col-span-2">
               {t('streaming.jingles.ai.voice')}: <span className="text-foreground">{info.voiceName}</span> · {t('streaming.jingles.ai.quality')}: <span className="text-foreground">{info.voicePreset || 'natural'}</span> · {t('streaming.jingles.ai.station')}: <span className="text-foreground">{info.stationName}</span>
             </div>
           </div>
@@ -154,49 +146,14 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
             <label className="mb-1 block text-xs text-muted-foreground">{t('streaming.jingles.ai.name')}</label>
             <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={180} />
           </div>
-          <div>
-            <label className="mb-2 block text-xs text-muted-foreground">{t('streaming.jingles.ai.style')}</label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {([
-                ['Pop', t('streaming.jingles.ai.stylePop')],
-                ['Rock', t('streaming.jingles.ai.styleRock')],
-                ['Urbano', t('streaming.jingles.ai.styleUrban')],
-                ['Electrónica', t('streaming.jingles.ai.styleElectronic')],
-                ['Corporativo', t('streaming.jingles.ai.styleCorporate')],
-                ['Acústico', t('streaming.jingles.ai.styleAcoustic')],
-              ] as const).map(([style, label]) => (
-                <label key={style} className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={styles.includes(style)}
-                    onChange={() => toggleStyle(style)}
-                    className="h-4 w-4 rounded border-border bg-secondary"
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {t('streaming.jingles.ai.styleNote')}
+          <div className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+            {t('streaming.jingles.ai.musicTrackHint')}
+          </div>
+          {info && !info.musicTrackName && (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+              {t('streaming.jingles.ai.selectMusicFirst')}
             </p>
-          </div>
-          <div>
-            <label className="mb-2 block text-xs text-muted-foreground">{t('streaming.jingles.ai.energy')}</label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['suave', 'media', 'alta'] as const).map((value) => (
-                <label key={value} className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm capitalize ${energy === value ? 'border-brand bg-brand/10 text-brand' : 'border-border bg-background text-foreground'}`}>
-                  <input
-                    type="radio"
-                    name="jingle-energy"
-                    checked={energy === value}
-                    onChange={() => setEnergy(value)}
-                    className="sr-only"
-                  />
-                  {value === 'suave' ? t('streaming.jingles.ai.soft') : value === 'media' ? t('streaming.jingles.ai.medium') : t('streaming.jingles.ai.high')}
-                </label>
-              ))}
-            </div>
-          </div>
+          )}
           <div>
             <label className="mb-1 block text-xs text-muted-foreground">{t('streaming.jingles.ai.voiceover')}</label>
             <textarea className={`${input} resize-none`} rows={2} value={tagline} onChange={(e) => setTagline(e.target.value)} maxLength={300} />
@@ -235,7 +192,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
           </button>
           <button
             onClick={() => void generate()}
-            disabled={generating || !info?.musicEnabled || !info?.ttsEnabled}
+            disabled={generating || !info?.musicTrackName || !info?.ttsEnabled}
             className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-foreground hover:text-brand disabled:opacity-40"
           >
             <PlayIcon className="h-4 w-4" />

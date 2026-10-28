@@ -1,34 +1,24 @@
 import { promises as fs } from 'fs'
 import path from 'path'
-import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
-import { getAiMusicAccess, consumeAiMusicSeconds } from '@/lib/ai-music'
+import { prisma } from '@/lib/prisma'
 import { mixMusicAndVoice, probeAudioBufferDuration } from '@/lib/audio-mix'
+
 const INTRO_SECONDS = 4
-const MUSIC_BED_SECONDS = 10
 const INTRO_GAIN = 0.55
 const BED_GAIN = 0.18
 
-async function generateMusicBed(): Promise<Buffer | null> {
-  const config = await getElevenLabsConfig()
-  if (!config.apiKey) return null
+async function selectedMusicBed(clientId: string): Promise<Buffer | null> {
   try {
-    const res = await fetch('https://api.elevenlabs.io/v1/music', {
-      method: 'POST',
-      headers: {
-        'xi-api-key': config.apiKey,
-        'Content-Type': 'application/json',
-        Accept: 'audio/mpeg',
+    const stream = await prisma.radioStream.findUnique({
+      where: { clientId },
+      select: {
+        jingleMusicTrack: { select: { url: true, active: true } },
       },
-      body: JSON.stringify({
-        prompt: 'Música instrumental suave para cápsula informativa de radio: intro cálida, moderna, sin voces, loopable, con final limpio.',
-        music_length_ms: MUSIC_BED_SECONDS * 1000,
-        model_id: 'music_v2_5',
-        force_instrumental: true,
-      }),
-      signal: AbortSignal.timeout(60_000),
     })
-    if (!res.ok) return null
-    return Buffer.from(await res.arrayBuffer())
+    const track = stream?.jingleMusicTrack
+    if (!track?.active) return null
+    const storedName = path.basename(track.url)
+    return await fs.readFile(path.join(process.cwd(), 'public', 'uploads', 'music', storedName))
   } catch {
     return null
   }
@@ -44,18 +34,11 @@ async function defaultBed(): Promise<Buffer | null> {
 
 /**
  * Devuelve la voz con una intro musical y una cama baja durante la locución.
- * Si el plan no tiene minutos de música o falla Eleven Music, usa el jingle
- * base como respaldo. Nunca deja la cápsula sin audio.
+ * Usa la pista elegida por el cliente; si no hay, cae al jingle base.
+ * La IA solo genera la voz.
  */
 export async function addCapsuleIntro(clientId: string, voice: Buffer): Promise<Buffer> {
-  const access = await getAiMusicAccess(clientId)
-  let bed: Buffer | null = null
-  if (access.enabled && access.remainingSeconds >= MUSIC_BED_SECONDS) {
-    bed = await generateMusicBed()
-    if (bed) {
-      await consumeAiMusicSeconds(clientId, MUSIC_BED_SECONDS, 'ai-capsule').catch(() => {})
-    }
-  }
+  let bed = await selectedMusicBed(clientId)
   if (!bed) bed = await defaultBed()
   if (!bed) return voice
   try {

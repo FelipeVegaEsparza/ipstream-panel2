@@ -919,6 +919,8 @@ model RadioStream {
   // Jingles (cuñas publicitarias)
   jinglePlayEvery      Int       @default(5) // cada X canciones
   jinglePlayCount      Int       @default(1) // reproducir Y jingles
+  // Música de fondo para los jingles (elegida por el cliente de la biblioteca admin)
+  jingleMusicTrackId   String?
   // Presentador IA del AutoDJ (fuente separada de los jingles)
   aiPresenterEnabled   Boolean   @default(false)
   aiPresenterEvery     Int       @default(3) // cada X temas de música
@@ -956,6 +958,7 @@ model RadioStream {
   tracks            Track[]
   playlists         Playlist[]
   jingles           Jingle[]
+  jingleMusicTrack  MusicTrack?         @relation("JingleMusicTrack", fields: [jingleMusicTrackId], references: [id], onDelete: SetNull)
   playlistSchedules PlaylistSchedule[]
   djs               RadioDj[]
   djSessions        DjSession[]
@@ -967,6 +970,7 @@ model RadioStream {
   @@index([status])
   @@index([enabled])
   @@index([serverId])
+  @@index([jingleMusicTrackId])
   @@map("radio_streams")
 }
 
@@ -1143,6 +1147,24 @@ model StreamingAuditLog {
 }
 
 // Jingles (cuñas publicitarias por cliente)
+model MusicTrack {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(120)
+  artist    String?  @db.VarChar(120)
+  fileName  String   @db.VarChar(191)
+  mimeType  String   @db.VarChar(100)
+  url       String   @db.VarChar(500)
+  size      Int
+  duration  Float?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  radioStreams RadioStream[] @relation("JingleMusicTrack")
+
+  @@map("music_tracks")
+}
+
 model Jingle {
   id            String   @id @default(cuid())
   clientId      String
