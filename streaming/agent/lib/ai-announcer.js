@@ -1,7 +1,7 @@
 // =====================================================
 // Locuciones automáticas de hora y clima para el AutoDJ
-// Genera el audio con ElevenLabs y lo deja en disco para que el scheduler
-// lo empuje a la cola de anuncios de Liquidsoap.
+// Usa el proveedor configurado (Fish Audio o ElevenLabs), con la voz
+// elegida por el cliente, y deja el audio en disco para el scheduler.
 // =====================================================
 
 import { createHash, randomUUID } from 'crypto'
@@ -77,28 +77,75 @@ async function weatherText(clientId) {
   return `En ${basic.city}, la temperatura actual es de ${Math.round(current.temperature)} grados ${unitLabel}, con ${weatherPhrase(current.weathercode)}.`
 }
 
+function parseFishVoices(raw) {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((v) => v && typeof v.id === 'string' && typeof v.name === 'string' &&
+        typeof v.referenceId === 'string' && (v.gender === 'male' || v.gender === 'female'))
+      .map((v) => ({
+        id: v.id.trim(),
+        name: v.name.trim(),
+        gender: v.gender,
+        referenceId: v.referenceId.trim(),
+      }))
+      .filter((v) => v.id && v.name && v.referenceId)
+      .slice(0, 6)
+  } catch {
+    return []
+  }
+}
+
+function secret(value) {
+  if (!value) return ''
+  if (!isEncrypted(value)) return value
+  try {
+    return decrypt(value)
+  } catch {
+    return ''
+  }
+}
+
 async function loadTtsConfig() {
   const [rows] = await pool.query(
-    `SELECT elevenLabsApiKeyEnc, elevenLabsVoiceId, elevenLabsModel, elevenLabsEnabled
+    `SELECT ttsProvider,
+            fishAudioApiKeyEnc, fishAudioModel, fishAudioReferenceId,
+            fishAudioVoices, fishAudioDirection,
+            elevenLabsApiKeyEnc, elevenLabsVoiceId, elevenLabsModel, elevenLabsEnabled
      FROM app_config LIMIT 1`
   )
   const row = rows[0]
-  if (!row || !row.elevenLabsEnabled || !row.elevenLabsApiKeyEnc || !row.elevenLabsVoiceId) return null
-  let apiKey = row.elevenLabsApiKeyEnc
-  if (isEncrypted(apiKey)) {
-    try { apiKey = decrypt(apiKey) } catch { return null }
-  }
+  if (!row) return { provider: null, fish: null, eleven: null }
+
+  const fishKey = secret(row.fishAudioApiKeyEnc)
+  const elevenKey = secret(row.elevenLabsApiKeyEnc)
   return {
-    apiKey,
-    voiceId: row.elevenLabsVoiceId,
-    model: row.elevenLabsModel || 'eleven_v4_turbo',
+    provider: row.ttsProvider === 'fish' ? 'fish' : 'elevenlabs',
+    fish: fishKey
+      ? {
+          apiKey: fishKey,
+          model: row.fishAudioModel || 's2.1-pro',
+          referenceId: row.fishAudioReferenceId || '',
+          voices: parseFishVoices(row.fishAudioVoices),
+          direction: row.fishAudioDirection || '',
+        }
+      : null,
+    eleven: row.elevenLabsEnabled && elevenKey && row.elevenLabsVoiceId
+      ? {
+          apiKey: elevenKey,
+          voiceId: row.elevenLabsVoiceId,
+          model: row.elevenLabsModel || 'eleven_v4_turbo',
+        }
+      : null,
   }
 }
 
 async function loadClientContext(clientId) {
   const [rows] = await pool.query(
     `SELECT c.timezone, p.aiLiveEnabled, p.aiMonthlyCharacters,
-            rs.aiVoiceId, rs.aiVoiceStyle
+            rs.aiVoiceId, rs.aiVoiceStyle, rs.fishVoiceId
      FROM clients c
      LEFT JOIN plans p ON p.id = c.planId
      LEFT JOIN radio_streams rs ON rs.clientId = c.id
@@ -108,8 +155,8 @@ async function loadClientContext(clientId) {
   return rows[0] || null
 }
 
-async function cachePath(clientId, text, voiceId, model, style) {
-  const hash = createHash('sha256').update(`${model}\n${voiceId}\n${style}\n${text}`).digest('hex')
+async function cachePath(clientId, text, cacheKey) {
+  const hash = createHash('sha256').update(`${cacheKey}\n${text}`).digest('hex')
   const dir = join(ANNOUNCE_DIR, clientId, 'announcements')
   await fs.mkdir(dir, { recursive: true })
   return join(dir, `${hash}.mp3`)
@@ -125,50 +172,64 @@ async function consume(clientId, characters) {
   )
 }
 
-export async function generateAnnouncement(clientId, type, { at = new Date() } = {}) {
-  const client = await loadClientContext(clientId)
-  if (!client?.aiLiveEnabled || !client?.aiMonthlyCharacters) return null
-  const tts = await loadTtsConfig()
-  if (!tts) return null
-
-  let text = null
-  if (type === 'time') text = timeText(client.timezone, at)
-  if (type === 'weather') text = await weatherText(clientId)
-  if (!text) return null
-
-  const voiceId = client.aiVoiceId || tts.voiceId
-  const style = Math.max(0, Math.min(100, Number(client.aiVoiceStyle) || 0)) / 100
-  const file = await cachePath(clientId, text, voiceId, tts.model, style)
-  try {
-    await fs.access(file)
-    return { path: file, cached: true, characters: 0 }
-  } catch {}
-
-  const [usageRows] = await pool.query(
-    `SELECT characters FROM ai_tts_usage WHERE clientId = ? AND period = ? LIMIT 1`,
-    [clientId, period()]
-  )
-  const used = Number(usageRows[0]?.characters || 0)
-  if (used + text.length > client.aiMonthlyCharacters) {
-    logger.warn({ clientId, type }, 'Cuota IA agotada para locución automática')
-    return null
+async function requestFishAudio(text, { apiKey, model, referenceId }) {
+  const res = await fetch('https://api.fish.audio/v1/tts', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      Accept: 'audio/mpeg',
+      model,
+    },
+    body: JSON.stringify({
+      text,
+      format: 'mp3',
+      mp3_bitrate: 192,
+      sample_rate: 44100,
+      normalize: true,
+      language: 'es-CL',
+      chunk_length: 300,
+      min_chunk_length: 50,
+      latency: 'normal',
+      max_new_tokens: 1024,
+      repetition_penalty: 1.15,
+      condition_on_previous_chunks: true,
+      early_stop_threshold: 1,
+      temperature: 0.85,
+      top_p: 0.85,
+      features: ['quality-guard'],
+      prosody: { speed: 1, volume: 0, normalize_loudness: true },
+      reference_id: referenceId,
+    }),
+    signal: AbortSignal.timeout(60_000),
+  })
+  if (!res.ok) {
+    let message = `Fish Audio ${res.status}`
+    try {
+      const data = await res.json()
+      message = data?.message || data?.reason || message
+    } catch {}
+    throw new Error(message)
   }
+  return Buffer.from(await res.arrayBuffer())
+}
 
+async function requestElevenLabs(text, { apiKey, voiceId, model }, style) {
   const url = new URL(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`)
   url.searchParams.set('output_format', 'mp3_44100_128')
   const res = await fetch(url, {
     method: 'POST',
     headers: {
-      'xi-api-key': tts.apiKey,
+      'xi-api-key': apiKey,
       'Content-Type': 'application/json',
       Accept: 'audio/mpeg',
     },
     body: JSON.stringify({
       text,
-      model_id: tts.model,
+      model_id: model,
       voice_settings: { stability: 0.5, similarity_boost: 0.75, style, use_speaker_boost: true },
     }),
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) {
     let message = `ElevenLabs ${res.status}`
@@ -176,12 +237,97 @@ export async function generateAnnouncement(clientId, type, { at = new Date() } =
       const data = await res.json()
       message = data?.detail?.message || data?.detail || message
     } catch {}
-    logger.warn({ clientId, type, message }, 'No se pudo generar locución automática')
-    return null
+    throw new Error(message)
+  }
+  return Buffer.from(await res.arrayBuffer())
+}
+
+function defaultDirection(type) {
+  return type === 'time' ? '[voz clara y cálida]' : '[voz tranquila y luminosa]'
+}
+
+export async function generateAnnouncement(clientId, type, { at = new Date() } = {}) {
+  const client = await loadClientContext(clientId)
+  if (!client?.aiLiveEnabled || !client?.aiMonthlyCharacters) return null
+  const tts = await loadTtsConfig()
+
+  let text = null
+  if (type === 'time') text = timeText(client.timezone, at)
+  if (type === 'weather') text = await weatherText(clientId)
+  if (!text) return null
+
+  const style = Math.max(0, Math.min(100, Number(client.aiVoiceStyle) || 0)) / 100
+  const order = tts.provider === 'fish' ? ['fish', 'elevenlabs'] : ['elevenlabs', 'fish']
+  let lastError = null
+  let quotaChecked = false
+
+  for (const provider of order) {
+    try {
+      let prepared
+      if (provider === 'fish') {
+        if (!tts.fish) continue
+        const voice = tts.fish.voices.find((item) => item.id === client.fishVoiceId)
+        const referenceId = voice?.referenceId || tts.fish.referenceId
+        if (!referenceId) continue
+        const direction = tts.fish.direction || defaultDirection(type)
+        prepared = {
+          text: `${direction} ${text}`,
+          cacheKey: `fish\n${tts.fish.model}\n${referenceId}\n${direction}`,
+          request: () => requestFishAudio(`${direction} ${text}`, {
+            apiKey: tts.fish.apiKey,
+            model: tts.fish.model,
+            referenceId,
+          }),
+        }
+      } else {
+        if (!tts.eleven) continue
+        const voiceId = client.aiVoiceId || tts.eleven.voiceId
+        if (!voiceId) continue
+        prepared = {
+          text,
+          cacheKey: `elevenlabs\n${tts.eleven.model}\n${voiceId}\n${style.toFixed(3)}`,
+          request: () => requestElevenLabs(text, {
+            apiKey: tts.eleven.apiKey,
+            voiceId,
+            model: tts.eleven.model,
+          }, style),
+        }
+      }
+
+      const file = await cachePath(clientId, prepared.text, prepared.cacheKey)
+      try {
+        await fs.access(file)
+        return { path: file, cached: true, characters: 0, provider }
+      } catch {}
+
+      if (!quotaChecked) {
+        const [usageRows] = await pool.query(
+          `SELECT characters FROM ai_tts_usage WHERE clientId = ? AND period = ? LIMIT 1`,
+          [clientId, period()]
+        )
+        const used = Number(usageRows[0]?.characters || 0)
+        if (used + text.length > client.aiMonthlyCharacters) {
+          logger.warn({ clientId, type }, 'Cuota IA agotada para locución automática')
+          return null
+        }
+        quotaChecked = true
+      }
+
+      const audio = await prepared.request()
+      await fs.writeFile(file, audio)
+      await consume(clientId, text.length)
+      return { path: file, cached: false, characters: text.length, provider }
+    } catch (err) {
+      lastError = err
+      logger.warn(
+        { clientId, type, provider, err: err.message },
+        'No se pudo generar locución automática; probando siguiente proveedor'
+      )
+    }
   }
 
-  const audio = Buffer.from(await res.arrayBuffer())
-  await fs.writeFile(file, audio)
-  await consume(clientId, text.length)
-  return { path: file, cached: false, characters: text.length }
+  if (lastError) {
+    logger.warn({ clientId, type, err: lastError.message }, 'Locución automática no generada')
+  }
+  return null
 }
