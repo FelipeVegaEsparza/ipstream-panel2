@@ -4,6 +4,7 @@
 
 export const FISH_AUDIO_DIRECTIONS = {
   presenter: '[voz cálida y cercana, con una sonrisa]',
+  presenterClosing: '[tono suave y seguro]',
   weather: '[voz tranquila y luminosa]',
   time: '[voz clara y cálida]',
   capsule: '[voz segura, curiosa y cercana]',

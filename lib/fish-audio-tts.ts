@@ -22,6 +22,8 @@ export interface FishAudioTtsInput {
   model: string
   referenceId?: string
   direction?: string
+  stationName?: string
+  closingDirection?: string
   cacheEnabled: boolean
   language?: string
   postProcess?: boolean
@@ -40,7 +42,13 @@ function safeSegment(value: string): string {
   return value.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 96) || 'default'
 }
 
-function addDramaPause(text: string): string {
+const EXPRESSIVE_MODELS = new Set(['s2.1-pro', 'drama-3'])
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function addCuePause(text: string): string {
   if (/\[(?:pausa|break|long-break)/i.test(text)) return text
   const match = text.match(/^(.+?[.!?])\s+([\s\S]+)$/)
   if (!match) return text
@@ -48,11 +56,30 @@ function addDramaPause(text: string): string {
   return rest.trim() ? `${first} [pausa breve] ${rest}` : text
 }
 
+function addStationEmphasis(text: string, stationName: string | undefined, model: string): string {
+  const name = (stationName || '').trim()
+  if (model !== 's2.1-pro' || !name) return text
+  const escaped = escapeRegExp(name)
+  if (new RegExp(`\\[emphasis\\]\\s*${escaped}`, 'i').test(text)) return text
+  return text.replace(new RegExp(escaped, 'i'), (match) => `[emphasis] ${match}`)
+}
+
+function addClosingDirection(text: string, closingDirection: string | undefined, model: string): string {
+  const closing = (closingDirection || '').trim()
+  if (model !== 's2.1-pro' || !closing || text.includes(closing)) return text
+  const match = text.match(/^([\s\S]*[.!?])\s+([^.!?]+[.!?]?)$/)
+  if (!match) return text
+  return `${match[1]} ${closing} ${match[2]}`
+}
+
 function fullText(input: FishAudioTtsInput): string {
   const text = input.text.trim()
   const direction = (input.direction || '').trim().slice(0, MAX_DIRECTION_CHARS)
-  if (input.model !== 'drama-3' || !direction) return text
-  return `${direction} ${addDramaPause(text)}`
+  if (!direction || !EXPRESSIVE_MODELS.has(input.model)) return text
+  let decorated = addStationEmphasis(text, input.stationName, input.model)
+  decorated = addClosingDirection(decorated, input.closingDirection, input.model)
+  decorated = addCuePause(decorated)
+  return `${direction} ${decorated}`
 }
 
 function cacheFile(input: FishAudioTtsInput, text: string): string {
@@ -99,7 +126,7 @@ async function writeCached(file: string, audio: Buffer): Promise<void> {
 }
 
 async function generate(input: FishAudioTtsInput): Promise<Buffer> {
-  const isDrama3 = input.model === 'drama-3'
+  const expressive = EXPRESSIVE_MODELS.has(input.model) && Boolean((input.direction || '').trim())
   const body: Record<string, unknown> = {
     text: input.text,
     format: 'mp3',
@@ -111,13 +138,14 @@ async function generate(input: FishAudioTtsInput): Promise<Buffer> {
     min_chunk_length: 50,
     latency: 'normal',
     max_new_tokens: 1024,
-    repetition_penalty: isDrama3 ? 1.15 : 1.2,
+    repetition_penalty: expressive ? 1.15 : 1.2,
     condition_on_previous_chunks: true,
     early_stop_threshold: 1,
-    temperature: isDrama3 ? 0.85 : 0.7,
-    top_p: isDrama3 ? 0.85 : 0.7,
+    temperature: expressive ? 0.85 : 0.7,
+    top_p: expressive ? 0.85 : 0.7,
     prosody: { speed: 1, volume: 0, normalize_loudness: true },
   }
+  if (input.model === 's2.1-pro' && expressive) body.features = ['quality-guard']
   if (input.referenceId) body.reference_id = input.referenceId
 
   const res = await fetch('https://api.fish.audio/v1/tts', {

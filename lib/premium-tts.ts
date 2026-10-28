@@ -8,6 +8,7 @@ import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
 import { synthesizeFishAudio } from '@/lib/fish-audio-tts'
 import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 import { getTtsProvider, type TtsProvider } from '@/lib/tts-provider'
+import { prisma } from '@/lib/prisma'
 
 export interface PremiumTtsResult {
   audio: Buffer
@@ -27,10 +28,19 @@ export async function hasConfiguredPremiumTts(): Promise<boolean> {
   )
 }
 
+async function stationName(clientId: string): Promise<string> {
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    select: { name: true, basicData: { select: { projectName: true } } },
+  })
+  return client?.basicData?.projectName || client?.name || ''
+}
+
 export async function synthesizePremiumTts(input: {
   clientId: string
   text: string
   direction?: string
+  closingDirection?: string
 }): Promise<PremiumTtsResult> {
   const selected = await getTtsProvider()
   const order: TtsProvider[] = selected === 'fish'
@@ -43,12 +53,15 @@ export async function synthesizePremiumTts(input: {
       if (provider === 'fish') {
         const config = await getFishAudioConfig()
         if (!config.enabled || !config.apiKey) continue
+        const station = await stationName(input.clientId)
         const result = await synthesizeFishAudio({
           text: input.text,
           apiKey: config.apiKey,
           model: config.model,
           referenceId: config.referenceId,
           direction: config.direction || input.direction,
+          stationName: station,
+          closingDirection: input.closingDirection,
           cacheEnabled: config.cacheEnabled,
         })
         return { ...result, provider: 'fish' }

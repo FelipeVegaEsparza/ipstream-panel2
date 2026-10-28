@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
         clientId: ctx.clientId,
         text,
         direction: FISH_AUDIO_DIRECTIONS.presenter,
+        closingDirection: FISH_AUDIO_DIRECTIONS.presenterClosing,
       })
       if (!premium.cached) {
         try {
