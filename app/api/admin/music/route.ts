@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
     const originalName = (typeof file.name === 'string' ? file.name : 'musica.mp3').slice(0, 180)
     const ext = path.extname(originalName).toLowerCase()
     const fileType = (typeof file.type === 'string' ? file.type : '').toLowerCase()
-    const mimeType = AUDIO_TYPES[fileType] || EXT_TYPES[ext]
     const resolvedExt = AUDIO_TYPES[fileType] || ext
     const normalizedExt = resolvedExt === '.oga' ? '.ogg' : resolvedExt
+    const mimeType = EXT_TYPES[normalizedExt] || fileType
     if (!mimeType || !EXT_TYPES[normalizedExt]) {
       return NextResponse.json({ error: 'invalid_type', message: 'Formato de audio no soportado' }, { status: 415 })
     }
