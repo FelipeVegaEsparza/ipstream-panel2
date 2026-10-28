@@ -7,6 +7,7 @@ import { SparklesIcon, PlusIcon, Trash2Icon, PlayIcon, SaveIcon } from 'lucide-r
 import { DEFAULT_PRESENTER_PHRASES } from '@/lib/live-console/presenter'
 import { TTS_QUALITY_PRESETS } from '@/lib/tts-quality'
 import { AiCreditsCard } from '@/components/dashboard/AiCreditsCard'
+import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Config {
@@ -204,14 +205,44 @@ export function LocutorIaSettings() {
           <div className="space-y-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.voice')}</label>
-              <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className={input}>
-                <option value="">{t('streaming.locutor.defaultVoice')}</option>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                    <input
+                      type="radio"
+                      name="fish-voice"
+                      checked={voiceId === ''}
+                      onChange={() => setVoiceId('')}
+                      className="h-4 w-4 accent-[var(--brand-500)]"
+                    />
+                    <span className="text-sm text-foreground">{t('streaming.locutor.defaultVoice')}</span>
+                  </label>
+                  <EffectPreviewButton src="/api/dashboard/streaming/ai/voice-preview" name={t('streaming.locutor.defaultVoice')} />
+                </div>
                 {config.voices.map((voice) => (
-                  <option key={voice.id} value={voice.id}>
-                    {voice.description ? `${voice.name} · ${voice.description}` : voice.name}
-                  </option>
+                  <div key={voice.id} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
+                    <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                      <input
+                        type="radio"
+                        name="fish-voice"
+                        checked={voiceId === voice.id}
+                        onChange={() => setVoiceId(voice.id)}
+                        className="h-4 w-4 accent-[var(--brand-500)]"
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm text-foreground">{voice.name}</span>
+                        {voice.description && (
+                          <span className="block text-[11px] text-muted-foreground">{voice.description}</span>
+                        )}
+                      </span>
+                    </label>
+                    <EffectPreviewButton
+                      src={`/api/dashboard/streaming/ai/voice-preview?voiceId=${encodeURIComponent(voice.id)}`}
+                      name={voice.name}
+                    />
+                  </div>
                 ))}
-              </select>
+              </div>
             </div>
             <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
               {t('streaming.locutor.fishNote')}
