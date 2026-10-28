@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { encrypt } from '@/lib/encryption'
 import { invalidateClientSitesConfig } from '@/lib/client-sites-config'
 import { getElevenLabsConfig, invalidateElevenLabsConfig } from '@/lib/elevenlabs-config'
-import { getFishAudioConfig, invalidateFishAudioConfig } from '@/lib/fish-audio-config'
+import { getFishAudioConfig, invalidateFishAudioConfig, parseFishVoiceCatalog } from '@/lib/fish-audio-config'
 import { validFishAudioModel } from '@/lib/fish-audio-models'
 import { ELEVENLABS_MODELS } from '@/lib/elevenlabs-models'
 import { parseVoiceCatalog } from '@/lib/elevenlabs-voices'
@@ -54,6 +54,7 @@ export async function GET() {
       fishAudioKeySet: Boolean(fish.apiKey),
       fishAudioModel: fish.model,
       fishAudioReferenceId: fish.referenceId,
+      fishAudioVoices: fish.voices,
       fishAudioDirection: fish.direction,
     })
   } catch (error) {
@@ -96,6 +97,7 @@ export async function PUT(request: NextRequest) {
       clearFishAudioApiKey,
       fishAudioModel,
       fishAudioReferenceId,
+      fishAudioVoices,
       fishAudioDirection,
     } = body
 
@@ -222,6 +224,14 @@ export async function PUT(request: NextRequest) {
       if (raw) fishKeyUpdate = { fishAudioApiKeyEnc: encrypt(raw) }
     }
 
+    let fishVoicesValue: string | undefined
+    if (fishAudioVoices !== undefined) {
+      if (!Array.isArray(fishAudioVoices)) {
+        return NextResponse.json({ error: 'fishAudioVoices debe ser un array' }, { status: 400 })
+      }
+      fishVoicesValue = JSON.stringify(parseFishVoiceCatalog(JSON.stringify(fishAudioVoices)))
+    }
+
     const ttsData = {
       ...(providerValue ? { ttsProvider: providerValue } : {}),
       ...(fishKeyUpdate || {}),
@@ -229,6 +239,7 @@ export async function PUT(request: NextRequest) {
       ...(fishAudioReferenceId !== undefined
         ? { fishAudioReferenceId: String(fishAudioReferenceId).trim().slice(0, 191) || null }
         : {}),
+      ...(fishVoicesValue !== undefined ? { fishAudioVoices: fishVoicesValue } : {}),
       ...(fishAudioDirection !== undefined
         ? { fishAudioDirection: String(fishAudioDirection).trim().slice(0, 500) || null }
         : {}),
@@ -299,6 +310,7 @@ export async function PUT(request: NextRequest) {
       fishAudioKeySet: Boolean(fish.apiKey),
       fishAudioModel: fish.model,
       fishAudioReferenceId: fish.referenceId,
+      fishAudioVoices: fish.voices,
       fishAudioDirection: fish.direction,
     })
   } catch (error) {

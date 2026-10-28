@@ -201,9 +201,22 @@ export function LocutorIaSettings() {
           </p>
         </div>
         {config.provider === 'fish' ? (
-          <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
-            {t('streaming.locutor.fishNote')}
-          </p>
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.voice')}</label>
+              <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className={input}>
+                <option value="">{t('streaming.locutor.defaultVoice')}</option>
+                {config.voices.map((voice) => (
+                  <option key={voice.id} value={voice.id}>
+                    {voice.description ? `${voice.name} · ${voice.description}` : voice.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
+              {t('streaming.locutor.fishNote')}
+            </p>
+          </div>
         ) : (
         <div className="grid gap-4 sm:grid-cols-3">
           <div>

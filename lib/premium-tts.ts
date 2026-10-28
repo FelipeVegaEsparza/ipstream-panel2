@@ -3,7 +3,7 @@
 // deja que el endpoint decida el fallback final a Piper.
 
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
-import { getFishAudioConfig } from '@/lib/fish-audio-config'
+import { getClientFishVoiceReference, getFishAudioConfig } from '@/lib/fish-audio-config'
 import { synthesizeElevenLabs } from '@/lib/elevenlabs-tts'
 import { synthesizeFishAudio } from '@/lib/fish-audio-tts'
 import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
@@ -53,12 +53,15 @@ export async function synthesizePremiumTts(input: {
       if (provider === 'fish') {
         const config = await getFishAudioConfig()
         if (!config.enabled || !config.apiKey) continue
-        const station = await stationName(input.clientId)
+        const [station, referenceId] = await Promise.all([
+          stationName(input.clientId),
+          getClientFishVoiceReference(input.clientId),
+        ])
         const result = await synthesizeFishAudio({
           text: input.text,
           apiKey: config.apiKey,
           model: config.model,
-          referenceId: config.referenceId,
+          referenceId,
           direction: config.direction || input.direction,
           stationName: station,
           closingDirection: input.closingDirection,

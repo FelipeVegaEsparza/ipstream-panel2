@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { SystemSettings } from '@/components/admin/SystemSettings'
 import { LoginBackgroundSettings } from '@/components/admin/LoginBackgroundSettings'
 import { ClientSitesSettings } from '@/components/admin/ClientSitesSettings'
-import { ElevenLabsSettings } from '@/components/admin/ElevenLabsSettings'
+import { VoiceSettings } from '@/components/admin/VoiceSettings'
 import { PanelLogoManager } from '@/components/admin/PanelLogoManager'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getLoginBackground } from '@/lib/login-background'
@@ -77,7 +77,7 @@ export default async function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="announce" className="space-y-6">
-          <ElevenLabsSettings />
+          <VoiceSettings />
         </TabsContent>
 
         <TabsContent value="login" className="space-y-6">

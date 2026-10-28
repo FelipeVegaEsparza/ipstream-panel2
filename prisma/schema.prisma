@@ -673,8 +673,9 @@ model AppConfig {
   pronunciationDictionaryVersionId String? @db.VarChar(191)
   fishAudioApiKeyEnc   String? @db.Text // API key de Fish Audio (AES-256-GCM)
   fishAudioModel       String? // modelo de Fish Audio (s2.1-pro-free, s2.1-pro, ...)
-  fishAudioReferenceId String? // voice model / reference ID de Fish Audio
-  fishAudioDirection   String? @db.VarChar(500) // dirección de locución para Drama 3
+  fishAudioReferenceId String? // voice model / reference ID predeterminado de Fish Audio
+  fishAudioVoices      String? @db.Text // JSON [{id,name,gender,referenceId}] (3 masculinas + 3 femeninas)
+  fishAudioDirection   String? @db.VarChar(500) // dirección de locución para s2.1-pro / Drama 3
   ttsCacheEnabled      Boolean @default(true) // cache de audios generados (app_uploads)
 
   @@map("app_config")
@@ -927,7 +928,8 @@ model RadioStream {
   aiIntroPhrases       String?   @db.Text // JSON array de frases del locutor
   aiTimeEveryMinutes   Int       @default(0) // 0 = desactivado
   aiWeatherEveryMinutes Int      @default(0) // 0 = desactivado
-  aiVoiceId            String? // voz elegida por el cliente; null = voz global
+  aiVoiceId            String? // voz ElevenLabs elegida por el cliente; null = voz global
+  fishVoiceId          String? // voz Fish elegida por el cliente; null = voz predeterminada
   aiVoiceStyle         Int       @default(0) // 0-100 expresividad
   aiVoicePreset        String?   @db.VarChar(40) // natural | stable | expressive; null = preset global
   // Cápsulas informativas programadas en AutoDJ

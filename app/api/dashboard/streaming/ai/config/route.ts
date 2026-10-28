@@ -11,6 +11,7 @@ import { getVoiceCatalog } from '@/lib/elevenlabs-voices'
 import { streamingClient } from '@/lib/streaming-client'
 import { getTtsProvider } from '@/lib/tts-provider'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
+import { getFishAudioConfig } from '@/lib/fish-audio-config'
 import { isTtsQualityPresetId, resolveTtsQuality } from '@/lib/tts-quality'
 
 export const dynamic = 'force-dynamic'
@@ -30,7 +31,7 @@ function parsePhrases(raw: string | null | undefined): string[] {
 }
 
 async function loadConfig(clientId: string) {
-  const [rs, access, client, voices, provider, eleven] = await Promise.all([
+  const [rs, access, client, elevenVoices, provider, eleven, fish] = await Promise.all([
     prisma.radioStream.findUnique({
       where: { clientId },
       select: {
@@ -40,6 +41,7 @@ async function loadConfig(clientId: string) {
         aiTimeEveryMinutes: true,
         aiWeatherEveryMinutes: true,
         aiVoiceId: true,
+        fishVoiceId: true,
         aiVoiceStyle: true,
         aiVoicePreset: true,
       },
@@ -52,15 +54,23 @@ async function loadConfig(clientId: string) {
     getVoiceCatalog(),
     getTtsProvider(),
     getElevenLabsConfig(),
+    getFishAudioConfig(),
   ])
   if (!rs) return null
+  const voices = provider === 'fish'
+    ? fish.voices.map((voice) => ({
+        id: voice.id,
+        name: voice.name,
+        description: voice.gender === 'female' ? 'Femenina' : 'Masculina',
+      }))
+    : elevenVoices
   return {
     enabled: rs.aiPresenterEnabled,
     every: rs.aiPresenterEvery,
     phrases: parsePhrases(rs.aiIntroPhrases),
     timeEveryMinutes: rs.aiTimeEveryMinutes,
     weatherEveryMinutes: rs.aiWeatherEveryMinutes,
-    voiceId: rs.aiVoiceId || '',
+    voiceId: provider === 'fish' ? (rs.fishVoiceId || '') : (rs.aiVoiceId || ''),
     voiceStyle: rs.aiVoiceStyle,
     voicePreset: rs.aiVoicePreset || '',
     globalVoicePreset: eleven.qualityPreset,
@@ -156,6 +166,17 @@ export async function PUT(request: NextRequest) {
         .slice(0, MAX_PHRASES)
     )
 
+    const provider = await getTtsProvider()
+    if (provider === 'fish' && voiceId) {
+      const fish = await getFishAudioConfig()
+      if (!fish.voices.some((voice) => voice.id === voiceId)) {
+        return NextResponse.json(
+          { error: 'invalid_voice', message: 'La voz Fish elegida no existe.' },
+          { status: 400 }
+        )
+      }
+    }
+
     const previous = await prisma.radioStream.findUnique({
       where: { clientId: ctx.clientId },
       select: { aiPresenterEnabled: true },
@@ -168,7 +189,9 @@ export async function PUT(request: NextRequest) {
         aiIntroPhrases: JSON.stringify(phrases),
         aiTimeEveryMinutes: timeEveryMinutes,
         aiWeatherEveryMinutes: weatherEveryMinutes,
-        aiVoiceId: voiceId || null,
+        ...(provider === 'fish'
+          ? { fishVoiceId: voiceId || null }
+          : { aiVoiceId: voiceId || null }),
         aiVoiceStyle: voiceStyle,
         aiVoicePreset: voicePreset || null,
       },

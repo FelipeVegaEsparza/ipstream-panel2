@@ -3,7 +3,7 @@ import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth
 import { getAiLiveAccess } from '@/lib/ai-live'
 import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
 import { getTtsProvider } from '@/lib/tts-provider'
-import { getFishAudioConfig } from '@/lib/fish-audio-config'
+import { getClientFishVoice, getFishAudioConfig } from '@/lib/fish-audio-config'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -29,13 +29,15 @@ export async function GET() {
         },
       }),
     ])
-    const fish = provider === 'fish' ? await getFishAudioConfig() : null
+    const [fish, fishVoice] = provider === 'fish'
+      ? await Promise.all([getFishAudioConfig(), getClientFishVoice(ctx.clientId)])
+      : [null, null]
     const musicTrack = stream?.jingleMusicTrack?.active ? stream.jingleMusicTrack : null
     return NextResponse.json({
       ttsEnabled: tts.enabled,
       ttsRemaining: tts.remaining,
       voiceName: provider === 'fish'
-        ? (fish?.referenceId ? 'Fish Audio' : 'Fish Audio (voz predeterminada)')
+        ? (fishVoice?.name || (fish?.referenceId ? 'Fish Audio' : 'Fish Audio (voz predeterminada)'))
         : voice.name,
       voicePreset: voice.preset,
       provider,

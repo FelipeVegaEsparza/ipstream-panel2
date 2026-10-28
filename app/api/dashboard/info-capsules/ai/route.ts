@@ -9,7 +9,7 @@ import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
 import { synthesizePremiumTts } from '@/lib/premium-tts'
 import { getTtsProvider } from '@/lib/tts-provider'
 import { getClientVoiceSettings } from '@/lib/elevenlabs-voices'
-import { getFishAudioConfig } from '@/lib/fish-audio-config'
+import { getClientFishVoice, getFishAudioConfig } from '@/lib/fish-audio-config'
 import { prisma } from '@/lib/prisma'
 import { addCapsuleIntro } from '@/lib/capsule-ai-audio'
 import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
@@ -27,13 +27,15 @@ export async function GET() {
       getTtsProvider(),
       getClientVoiceSettings(ctx.clientId),
     ])
-    const fish = provider === 'fish' ? await getFishAudioConfig() : null
+    const [fish, fishVoice] = provider === 'fish'
+      ? await Promise.all([getFishAudioConfig(), getClientFishVoice(ctx.clientId)])
+      : [null, null]
     return NextResponse.json({
       ttsEnabled: access.enabled,
       ttsRemaining: access.remaining,
       provider,
       voiceName: provider === 'fish'
-        ? (fish?.referenceId ? 'Fish Audio' : 'Fish Audio (voz predeterminada)')
+        ? (fishVoice?.name || (fish?.referenceId ? 'Fish Audio' : 'Fish Audio (voz predeterminada)'))
         : voice.name,
     })
   } catch (err) {
