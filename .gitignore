@@ -55,3 +55,9 @@ public/client-site/
 public/client-icons/
 # Cache de locuciones generadas (volumen app_uploads en Docker)
 public/uploads/tts-cache/
+
+# Impeccable: binario local del launcher y artefactos de revisión
+.opencode/skills/impeccable/scripts/bin/
+/.impeccable/review/
+/.impeccable/mocks/
+/.impeccable/build/

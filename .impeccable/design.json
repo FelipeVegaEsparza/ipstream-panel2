@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T00:00:00.000Z",
+  "title": "Design System: CasterFly Control Room",
+  "extensions": {
+    "colorMeta": {
+      "signal": {
+        "role": "primary",
+        "displayName": "Signal Cyan",
+        "canonical": "#28b4f0",
+        "tonalRamp": ["#062433", "#08415c", "#0a5d81", "#0d7ba6", "#1499c9", "#28b4f0", "#6ccdf6", "#b3e8fb"]
+      },
+      "live": {
+        "role": "secondary",
+        "displayName": "On Air Green",
+        "canonical": "#3ddc97",
+        "tonalRamp": ["#08251a", "#0d3d2b", "#13573d", "#1a7251", "#258f66", "#3ddc97", "#7be8bb", "#bdf4da"]
+      },
+      "surface-0": {
+        "role": "neutral",
+        "displayName": "Control Ink",
+        "canonical": "#0b0e12",
+        "tonalRamp": ["#0b0e12", "#12171d", "#1a2028", "#232b34", "#2d3640", "#3a444f", "#4a5562", "#5c6876"]
+      },
+      "text-1": {
+        "role": "neutral",
+        "displayName": "Primary Text",
+        "canonical": "#e7ecf2",
+        "tonalRamp": ["#2a3037", "#3b434c", "#4f5964", "#66717d", "#838e9a", "#a4aeb9", "#c8d0d8", "#e7ecf2"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Station Identity", "purpose": "Nombre de la emisora y títulos de página." },
+      "title": { "displayName": "Operational Title", "purpose": "Encabezados de sección, temas y controles." },
+      "body": { "displayName": "Work Text", "purpose": "Descripciones, metadatos y texto de interfaz." },
+      "label": { "displayName": "Metric Label", "purpose": "Etiquetas de métricas y estados." },
+      "metric": { "displayName": "Tabular Metric", "purpose": "Cifras, tiempo y medidas que cambian en vivo." }
+    },
+    "shadows": [
+      { "name": "popover", "value": "0 12px 32px -16px rgba(0,0,0,0.45)", "purpose": "Menús, dropdowns y capas flotantes." }
+    ],
+    "motion": [
+      { "name": "state", "value": "150ms ease", "purpose": "Transiciones de color y borde; sin escala ni rebote." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal del panel, una por bloque.",
+      "html": "<button class=\"ds-btn-primary\">Abrir consola</button>",
+      "css": ".ds-btn-primary { background: var(--signal, #28b4f0); color: #fff; border: 1px solid transparent; border-radius: 8px; padding: 8px 12px; font-family: Archivo, Inter, system-ui, sans-serif; font-size: 13px; font-weight: 500; line-height: 20px; cursor: pointer; transition: filter 150ms ease; } .ds-btn-primary:hover { filter: brightness(1.08); } .ds-btn-primary:focus-visible { outline: 2px solid var(--signal, #28b4f0); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción secundaria o de navegación.",
+      "html": "<button class=\"ds-btn-secondary\">Ver biblioteca</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: var(--text-1, #e7ecf2); border: 1px solid var(--line, #232c36); border-radius: 8px; padding: 6px 12px; font-family: Archivo, Inter, system-ui, sans-serif; font-size: 13px; font-weight: 500; line-height: 20px; cursor: pointer; transition: background 150ms ease; } .ds-btn-secondary:hover { background: var(--surface-3, #1a222b); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--signal, #28b4f0); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto de formularios del panel.",
+      "html": "<input class=\"ds-input\" placeholder=\"Nombre del programa\" />",
+      "css": ".ds-input { background: var(--surface-2, #131920); color: var(--text-1, #e7ecf2); border: 1px solid var(--line, #232c36); border-radius: 8px; padding: 10px 12px; font-family: Archivo, Inter, system-ui, sans-serif; font-size: 13px; line-height: 20px; width: 280px; } .ds-input::placeholder { color: var(--text-3, #758392); } .ds-input:focus-visible { outline: 2px solid var(--signal, #28b4f0); outline-offset: 2px; border-color: var(--signal, #28b4f0); }"
+    },
+    {
+      "name": "Operational Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Contenedor base de una sección de trabajo.",
+      "html": "<section class=\"ds-panel\"><h2>Al aire</h2><p>Radio · 128 oyentes</p></section>",
+      "css": ".ds-panel { background: var(--surface-2, #131920); color: var(--text-1, #e7ecf2); border: 1px solid var(--line, #232c36); border-radius: 10px; padding: 16px; font-family: Archivo, Inter, system-ui, sans-serif; } .ds-panel h2 { margin: 0 0 8px; font-size: 13px; font-weight: 500; line-height: 20px; } .ds-panel p { margin: 0; color: var(--text-2, #9ba7b5); font-size: 13px; line-height: 20px; }"
+    },
+    {
+      "name": "Active Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Item activo del rail del dashboard.",
+      "html": "<a class=\"ds-nav-active\" href=\"#\"><span class=\"ds-nav-dot\"></span>Streaming</a>",
+      "css": ".ds-nav-active { display: flex; align-items: center; gap: 10px; background: var(--surface-3, #1a222b); color: var(--text-1, #e7ecf2); border-radius: 8px; padding: 8px 10px; font-family: Archivo, Inter, system-ui, sans-serif; font-size: 13px; font-weight: 500; line-height: 20px; box-shadow: inset 1px 0 0 var(--signal, #28b4f0); text-decoration: none; } .ds-nav-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--signal, #28b4f0); }"
+    },
+    {
+      "name": "Metric Cell",
+      "kind": "custom",
+      "refersTo": "metric-cell",
+      "description": "Celda de métrica tabular sin tarjeta individual.",
+      "html": "<div class=\"ds-metric\"><div class=\"ds-metric-label\">Oyentes</div><div class=\"ds-metric-value\">128</div><div class=\"ds-metric-note\">Radio</div></div>",
+      "css": ".ds-metric { padding: 16px; border-right: 1px solid var(--line, #232c36); font-family: Archivo, Inter, system-ui, sans-serif; } .ds-metric-label { color: var(--text-3, #758392); font-size: 10px; font-weight: 500; line-height: 14px; } .ds-metric-value { color: var(--text-1, #e7ecf2); font-family: 'Martian Mono', ui-monospace, monospace; font-size: 24px; font-weight: 500; line-height: 28px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 6px; } .ds-metric-note { color: var(--text-3, #758392); font-size: 10px; line-height: 14px; margin-top: 2px; }"
+    },
+    {
+      "name": "On Air Ribbon",
+      "kind": "custom",
+      "refersTo": "on-air-ribbon",
+      "description": "Firma del sistema: estado de emisión, audiencia y rundown.",
+      "html": "<section class=\"ds-onair\"><header><span class=\"ds-onair-dot\"></span><strong>Radio</strong><span>AutoDJ</span><span class=\"ds-onair-listeners\">128 oyentes</span></header><div class=\"ds-onair-track\"><div><span>Ahora suena</span><p>De Música Ligera</p><small>Soda Stereo</small></div><a href=\"#\">Abrir consola</a></div></section>",
+      "css": ".ds-onair { background: var(--surface-2, #131920); border: 1px solid var(--line, #232c36); border-radius: 10px; color: var(--text-1, #e7ecf2); font-family: Archivo, Inter, system-ui, sans-serif; } .ds-onair header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line, #232c36); font-size: 13px; } .ds-onair header strong { font-weight: 500; } .ds-onair header span:not(.ds-onair-dot) { color: var(--text-2, #9ba7b5); font-size: 11px; } .ds-onair-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--live, #3ddc97); } .ds-onair-listeners { margin-left: auto; font-family: 'Martian Mono', ui-monospace, monospace; font-size: 11px; } .ds-onair-track { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; } .ds-onair-track span { color: var(--text-3, #758392); font-size: 10px; } .ds-onair-track p { margin: 8px 0 2px; font-size: 13px; font-weight: 500; } .ds-onair-track small { color: var(--text-2, #9ba7b5); font-size: 11px; } .ds-onair-track a { color: var(--signal, #28b4f0); font-size: 11px; font-weight: 500; text-decoration: none; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Control Room",
+    "overview": "El panel del cliente se comporta como una consola de operación: primero el estado de la emisora, después las métricas y por último lo que requiere atención. La densidad es deliberada, pero la jerarquía evita que todo compita al mismo volumen. La superficie es grafito en tema oscuro y papel frío en tema claro; el cyan de marca aparece solo cuando señala una acción, un foco o una señal.",
+    "keyCharacteristics": [
+      "Superficies planas y bordes de 1px.",
+      "Un solo color de señal: cyan de marca.",
+      "Semántica estricta para vivo, advertencia y error.",
+      "Tipografía de trabajo con métricas tabulares.",
+      "Densidad de consola, no de landing."
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "El cyan no decora: solo aparece en acciones, foco, enlaces y la marca de al aire. Si no comunica una acción o un estado, no lleva cyan.", "section": "colors" },
+      { "name": "The Semantic Color Rule", "body": "Verde, ámbar y rojo solo existen para vivo, advertencia y error. Nunca para diferenciar tarjetas o métricas.", "section": "colors" },
+      { "name": "The Tabular Data Rule", "body": "Toda cifra que cambia en vivo usa Martian Mono con font-variant-numeric: tabular-nums; el ancho no salta cuando cambia el valor.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Las superficies base no llevan sombra. Si una capa necesita sombra, es porque flota sobre otra.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar surface-*, line, text-* y signal como tokens semánticos.",
+      "Do reservar el cyan para acción, foco, enlace y señal de emisión.",
+      "Do usar cifras tabulares para métricas que cambian.",
+      "Do dejar que el estado On Air sea el bloque dominante de la home."
+    ],
+    "donts": [
+      "Don't usar gradientes decorativos, blobs, glassmorphism ni sombras grandes.",
+      "Don't usar una paleta arcoíris para métricas o tarjetas.",
+      "Don't usar hover:scale, emojis en controles ni íconos como decoración.",
+      "Don't poner bordes laterales gruesos o tarjetas dentro de tarjetas."
+    ]
+  }
+}
