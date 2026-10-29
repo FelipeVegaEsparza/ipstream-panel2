@@ -101,14 +101,14 @@ export function TicketsManager({ initialTickets, initialSummary }: TicketsManage
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 bg-card/40 rounded-xl border border-dashed border-border">
+        <div className="text-center py-12 bg-card/40 rounded-panel border border-dashed border-border">
           <LifeBuoy className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground">
             {tickets.length === 0 ? t('admin.tickets.empty') : t('admin.tickets.noMatch')}
           </p>
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-xl overflow-x-auto">
+        <div className="bg-card border border-border rounded-panel overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-background/40 text-left text-muted-foreground border-b border-border">
               <tr>
@@ -206,7 +206,7 @@ function StatCard({
     red: 'border-red-500/30 bg-red-500/10 text-red-300',
   }
   return (
-    <div className={`p-4 rounded-xl border ${colors[color]}`}>
+    <div className={`p-4 rounded-panel border ${colors[color]}`}>
       <p className="text-xs uppercase tracking-wide opacity-80">{label}</p>
       <div className="flex items-center gap-2 mt-1">
         {icon && <AlertTriangle className="h-5 w-5" />}

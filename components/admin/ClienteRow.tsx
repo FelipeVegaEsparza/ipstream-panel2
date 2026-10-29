@@ -181,7 +181,7 @@ export function ClienteRow({
                   title={t('admin.clientRow.customMenu')}
                   className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded bg-orange-500/20 text-orange-300 border border-orange-500/30 hover:bg-orange-500/30"
                 >
-                  ⚙ {t('admin.clientRow.hidden', { count: client.disabledMenuCount ?? 0 })}
+                   {t('admin.clientRow.hidden', { count: client.disabledMenuCount ?? 0 })}
                 </a>
               )}
             </div>
@@ -289,7 +289,7 @@ export function ClienteRow({
                 </Button>
 
                 {menuOpen && (
-                  <div className="absolute right-0 mt-1 w-52 rounded-lg border border-border bg-card shadow-xl z-20 py-1 text-sm">
+                  <div className="absolute right-0 mt-1 w-52 rounded-lg border border-border bg-card  z-20 py-1 text-sm">
                     <button
                       onClick={() => {
                         setMenuOpen(false)

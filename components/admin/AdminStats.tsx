@@ -9,44 +9,7 @@ interface AdminStatsProps {
   stats: Stat[]
 }
 
-const colorVariants = {
-  'bg-brand': {
-    gradient: 'from-brand/20 to-brand/20',
-    border: 'border-brand/30',
-    text: 'text-brand',
-    icon: 'text-brand'
-  },
-  'bg-green-500': {
-    gradient: 'from-green-500/20 to-green-600/20',
-    border: 'border-green-500/30',
-    text: 'text-green-400',
-    icon: 'text-green-400'
-  },
-  'bg-purple-500': {
-    gradient: 'from-purple-500/20 to-purple-600/20',
-    border: 'border-purple-500/30',
-    text: 'text-purple-400',
-    icon: 'text-purple-400'
-  },
-  'bg-red-500': {
-    gradient: 'from-red-500/20 to-red-600/20',
-    border: 'border-red-500/30',
-    text: 'text-red-400',
-    icon: 'text-red-400'
-  },
-  'bg-yellow-500': {
-    gradient: 'from-yellow-500/20 to-yellow-600/20',
-    border: 'border-yellow-500/30',
-    text: 'text-yellow-400',
-    icon: 'text-yellow-400'
-  },
-  'bg-pink-500': {
-    gradient: 'from-pink-500/20 to-pink-600/20',
-    border: 'border-pink-500/30',
-    text: 'text-pink-400',
-    icon: 'text-pink-400'
-  }
-}
+
 
 const getIcon = (iconName: string) => {
   switch (iconName) {
@@ -97,35 +60,18 @@ const getIcon = (iconName: string) => {
 
 export function AdminStats({ stats }: AdminStatsProps) {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-      {stats.map((stat) => {
-        const variant = colorVariants[stat.color as keyof typeof colorVariants]
-        
-        return (
-          <div
-            key={stat.name}
-            className={`stat-card bg-gradient-to-br ${variant.gradient} ${variant.border} hover:scale-105 group`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <dt className={`truncate text-sm font-medium ${variant.text} mb-2`}>
-                  {stat.name}
-                </dt>
-                <dd className="text-2xl font-bold tracking-tight text-foreground">
-                  {stat.value.toLocaleString()}
-                </dd>
-              </div>
-              <div className={`${variant.icon} opacity-60 group-hover:opacity-100 transition-opacity`}>
-                {getIcon(stat.icon)}
-              </div>
-            </div>
-            
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/5 transform rotate-45"></div>
-            <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 rounded-full bg-white/5"></div>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      {stats.map((stat) => (
+        <div key={stat.name} className="dashboard-panel p-4">
+          <div className="flex items-center justify-between gap-2">
+            <dt className="truncate text-[10px] font-medium text-muted-foreground">{stat.name}</dt>
+            <span className="text-muted-foreground">{getIcon(stat.icon)}</span>
           </div>
-        )
-      })}
+          <dd className="dashboard-metric mt-2 text-2xl font-medium text-foreground">
+            {stat.value.toLocaleString()}
+          </dd>
+        </div>
+      ))}
     </div>
   )
 }

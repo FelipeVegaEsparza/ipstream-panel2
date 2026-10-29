@@ -52,10 +52,10 @@ export function StatsCharts({ usersByDay, contentByType }: StatsChartsProps) {
                 <Line 
                   type="monotone" 
                   dataKey="count" 
-                  stroke="#3B82F6" 
+                  stroke="#28b4f0" 
                   strokeWidth={2}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+                  dot={{ fill: '#28b4f0', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#28b4f0', strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>

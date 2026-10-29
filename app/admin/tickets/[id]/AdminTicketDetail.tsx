@@ -140,7 +140,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3 bg-card border border-border rounded-2xl overflow-hidden">
+        <div className="lg:col-span-3 bg-card border border-border rounded-container overflow-hidden">
           <div className="p-4 max-h-[60vh] overflow-y-auto space-y-4">
             {ticket.messages.map((m) => (
               <MessageBubble key={m.id} message={m} />
@@ -204,7 +204,7 @@ export function AdminTicketDetail({ ticket: initial }: Props) {
           )}
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-4 space-y-3 h-fit">
+        <div className="bg-card border border-border rounded-container p-4 space-y-3 h-fit">
           <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             {t('admin.ticketDetail.client')}
           </h3>

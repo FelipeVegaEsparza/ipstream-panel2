@@ -78,11 +78,11 @@ export default async function StatsPage() {
 
   // Datos para gráficos
   const contentByType = [
-    { name: t('admin.dashboard.totalPrograms'), value: totalPrograms, color: '#3b82f6' },
-    { name: t('admin.dashboard.totalNews'), value: totalNews, color: '#10b981' },
-    { name: t('admin.dashboard.totalVideos'), value: totalVideos, color: '#8b5cf6' },
-    { name: t('admin.dashboard.totalSponsors'), value: totalSponsors, color: '#f59e0b' },
-    { name: t('admin.dashboard.totalPromotions'), value: totalPromotions, color: '#ec4899' }
+    { name: t('admin.dashboard.totalPrograms'), value: totalPrograms, color: '#28b4f0' },
+    { name: t('admin.dashboard.totalNews'), value: totalNews, color: '#3ddc97' },
+    { name: t('admin.dashboard.totalVideos'), value: totalVideos, color: '#758392' },
+    { name: t('admin.dashboard.totalSponsors'), value: totalSponsors, color: '#e8b45a' },
+    { name: t('admin.dashboard.totalPromotions'), value: totalPromotions, color: '#e5645f' }
   ]
 
   // Datos para gráfico de usuarios por día (últimos 30 días)

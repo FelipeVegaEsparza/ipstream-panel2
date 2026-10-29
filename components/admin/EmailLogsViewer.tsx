@@ -94,7 +94,7 @@ export function EmailLogsViewer() {
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
+      <div className="overflow-x-auto rounded-panel border border-border">
         <table className="w-full text-sm">
           <thead className="bg-background/60 text-muted-foreground uppercase text-xs">
             <tr>

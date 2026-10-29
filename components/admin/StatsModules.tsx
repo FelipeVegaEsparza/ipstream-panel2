@@ -126,7 +126,7 @@ export function StatsModules({
               topClients.map((client, index) => (
                 <div key={client.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                   <div className="flex items-center space-x-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-brand to-purple-600 text-white text-sm font-bold">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-surface-3 from-brand to-purple-600 text-white text-sm font-bold">
                       {index + 1}
                     </div>
                     <div>

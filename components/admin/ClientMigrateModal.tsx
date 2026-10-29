@@ -106,7 +106,7 @@ export function ClientMigrateModal({ clientId, clientName, open, onClose, onMigr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-xl border border-border bg-background p-6 shadow-2xl">
+      <div className="relative w-full max-w-lg rounded-panel border border-border bg-background p-6 ">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <ArrowRightLeft className="h-5 w-5 text-brand" /> {t('admin.migrate.title', { name: clientName })}

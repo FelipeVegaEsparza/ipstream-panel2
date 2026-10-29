@@ -108,8 +108,8 @@ export function RegistrarPagoModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-lg w-full">
+      <div className="absolute inset-0 bg-black/60 " onClick={onClose} />
+      <div className="relative bg-card rounded-container  border border-border max-w-lg w-full">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"

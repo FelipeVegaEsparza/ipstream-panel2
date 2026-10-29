@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -95,14 +96,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          {t('admin.dashboard.title')}
-        </h1>
-        <p className="text-muted-foreground">
-          {t('admin.dashboard.subtitle')}
-        </p>
-      </div>
+      <DashboardPageHeader title={t('admin.dashboard.title')} description={t('admin.dashboard.subtitle')} />
 
       <AdminStats stats={stats} />
 
@@ -149,10 +143,10 @@ export default async function AdminDashboardPage() {
           <div className="space-y-3">
             <a
               href="/admin/users/new"
-              className="block p-4 border border-border rounded-xl hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
+              className="block p-4 border border-border rounded-panel hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-surface-3 from-brand to-brand rounded-lg flex items-center justify-center group- transition-transform">
                   <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                   </svg>
@@ -165,10 +159,10 @@ export default async function AdminDashboardPage() {
             </a>
             <a
               href="/admin/users"
-              className="block p-4 border border-border rounded-xl hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
+              className="block p-4 border border-border rounded-panel hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-surface-3 from-green-500 to-green-600 rounded-lg flex items-center justify-center group- transition-transform">
                   <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
@@ -181,10 +175,10 @@ export default async function AdminDashboardPage() {
             </a>
             <a
               href="/admin/impersonate"
-              className="block p-4 border border-border rounded-xl hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
+              className="block p-4 border border-border rounded-panel hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-surface-3 rounded-lg flex items-center justify-center group- transition-transform">
                   <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>

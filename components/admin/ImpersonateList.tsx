@@ -146,7 +146,7 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
       </div>
 
       {/* Tabla de clientes */}
-      <div className="bg-card/80 rounded-xl border border-border overflow-x-auto">
+      <div className="bg-card/80 rounded-panel border border-border overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-background/60 text-muted-foreground uppercase text-xs">
             <tr>
@@ -177,7 +177,7 @@ export function ImpersonateList({ clients }: ImpersonateListProps) {
                           className="w-9 h-9 object-contain rounded-lg bg-secondary/30 p-0.5"
                         />
                       ) : (
-                        <div className="w-9 h-9 bg-gradient-to-br from-brand to-brand rounded-lg flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 bg-surface-3 from-brand to-brand rounded-lg flex items-center justify-center shrink-0">
                           <span className="text-foreground font-semibold text-sm">
                             {(client.basicData?.projectName || client.name).charAt(0).toUpperCase()}
                           </span>

@@ -77,7 +77,7 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-sm text-amber-200 flex items-start gap-2">
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-panel p-3 text-sm text-amber-200 flex items-start gap-2">
         <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
         <div>
           <p>
@@ -94,7 +94,7 @@ export function GlobalMenuConfig({ initialHidden }: GlobalMenuConfigProps) {
       {MENU_SECTIONS.map((section) => {
         const items = MENU_ITEMS.filter((i) => i.section === section)
         return (
-          <div key={section} className="bg-card/40 border border-border rounded-xl p-4">
+          <div key={section} className="bg-card/40 border border-border rounded-panel p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm uppercase tracking-wide text-muted-foreground">{locale === 'en' ? adminSectionName(locale, section) : section}</h3>
               <div className="flex gap-1">

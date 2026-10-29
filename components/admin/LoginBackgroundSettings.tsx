@@ -188,7 +188,7 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onClick={() => !uploading && fileInputRef.current?.click()}
-            className={`relative rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
+            className={`relative rounded-panel border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
               dragOver
                 ? 'border-brand bg-brand/10'
                 : 'border-border bg-card/40 hover:border-border hover:bg-card/60'
@@ -241,11 +241,11 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
       )}
 
       {preview ? (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className="rounded-panel border border-border overflow-hidden">
           <div className="aspect-video relative bg-background">
             <img src={preview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <div className="bg-card/80 backdrop-blur-sm rounded-xl px-6 py-4 border border-border">
+              <div className="bg-card/80  rounded-panel px-6 py-4 border border-border">
                 <p className="text-foreground text-sm font-medium">{t('admin.loginBackground.previewTitle')}</p>
                 <p className="text-muted-foreground text-xs">{t('admin.loginBackground.previewHint')}</p>
               </div>
@@ -253,7 +253,7 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-border p-8 text-center bg-card/40">
+        <div className="rounded-panel border border-dashed border-border p-8 text-center bg-card/40">
           <ImageIcon className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
           <p className="text-muted-foreground text-sm">{t('admin.loginBackground.noImage')}</p>
           <p className="text-muted-foreground text-xs">{t('admin.loginBackground.noImageHint')}</p>

@@ -130,7 +130,7 @@ export function EmailTemplatesManager() {
       </div>
 
       {(creating || editing) && (
-        <div className="rounded-xl border border-brand/30 bg-card/60 p-5 space-y-4">
+        <div className="rounded-panel border border-brand/30 bg-card/60 p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground">{creating ? t('admin.emailTemplates.new') : t('admin.emailTemplates.editing', { name: editing?.name ?? '' })}</h3>
             <Button variant="ghost" size="sm" onClick={reset}><X className="h-4 w-4" /></Button>
@@ -174,7 +174,7 @@ export function EmailTemplatesManager() {
             return a.key.localeCompare(b.key)
           })
           .map((tpl) => (
-          <div key={tpl.id} className={`rounded-xl border p-4 flex items-start justify-between gap-4 ${tpl.key === 'bienvenida' ? 'border-brand/40 bg-brand/5' : 'border-border bg-card/60'}`}>
+          <div key={tpl.id} className={`rounded-panel border p-4 flex items-start justify-between gap-4 ${tpl.key === 'bienvenida' ? 'border-brand/40 bg-brand/5' : 'border-border bg-card/60'}`}>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-foreground">{tpl.name}</p>

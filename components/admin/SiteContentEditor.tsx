@@ -318,7 +318,7 @@ function CollectionEditor({
   }
 
   return (
-    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+    <section className="space-y-3 rounded-panel border border-border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="text-sm font-semibold text-foreground">{config.label}</h3>
@@ -496,7 +496,7 @@ export function SiteContentEditor() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-panel border border-border bg-card p-3">
         <div className="flex items-center gap-1 rounded-lg bg-secondary p-1">
           {(['es', 'en'] as const).map((value) => (
             <button
@@ -552,7 +552,7 @@ export function SiteContentEditor() {
           {SITE_CONTENT_TABS.map((tab) => (
             <TabsContent key={tab.id} value={tab.id} className="space-y-4">
               {tab.globalFields && tab.globalFields.length > 0 && (
-                <section className="grid gap-4 rounded-xl border border-border bg-card p-4 md:grid-cols-2">
+                <section className="grid gap-4 rounded-panel border border-border bg-card p-4 md:grid-cols-2">
                   {tab.globalFields.map((field) => (
                     <FieldControl
                       key={field.path}
@@ -567,7 +567,7 @@ export function SiteContentEditor() {
               )}
 
               {tab.i18nFields.length > 0 && (
-                <section className="grid gap-4 rounded-xl border border-border bg-card p-4 md:grid-cols-2">
+                <section className="grid gap-4 rounded-panel border border-border bg-card p-4 md:grid-cols-2">
                   {tab.i18nFields.map((field) => (
                     <div key={field.key} className={field.kind === 'textarea' ? 'md:col-span-2' : ''}>
                       <FieldControl

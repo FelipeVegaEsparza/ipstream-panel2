@@ -170,7 +170,7 @@ export function TutorialsManager({
 
   if (initialCategories.length === 0) {
     return (
-      <div className="text-center py-12 bg-card/40 rounded-xl border border-dashed border-border">
+      <div className="text-center py-12 bg-card/40 rounded-panel border border-dashed border-border">
         <p className="text-foreground font-medium mb-2">{t('admin.tutorials.manager.noCategories')}</p>
         <p className="text-sm text-muted-foreground mb-4">
           {t('admin.tutorials.manager.noCategoriesHint')}

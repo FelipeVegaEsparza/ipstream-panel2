@@ -421,7 +421,7 @@ export function AiCreditPacksAdminView({ packs, requests, clients, grants }: Pro
 
       {saleRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-soft">
+          <div className="w-full max-w-md rounded-container border border-border bg-card p-5 ">
             <h3 className="text-lg font-semibold text-foreground">{t('adminAiPacks.approve')}</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               {saleRequest.clientName} · {saleRequest.packName} · {formatCurrency(saleRequest.price, saleRequest.currency, locale)}

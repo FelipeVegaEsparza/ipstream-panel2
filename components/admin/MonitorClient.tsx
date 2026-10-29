@@ -240,7 +240,7 @@ export function MonitorClient() {
                     ? Math.round((st.loadAvg.one / st.cpuCount) * 100)
                     : null
                   return (
-                    <div key={srv.serverId} className={`rounded-xl border p-4 ${srv.online ? 'border-border bg-card/60' : 'border-red-700/40 bg-card/40'}`}>
+                    <div key={srv.serverId} className={`rounded-panel border p-4 ${srv.online ? 'border-border bg-card/60' : 'border-red-700/40 bg-card/40'}`}>
                       <div className="flex items-center justify-between mb-3">
                         <div>
                           <p className="font-semibold text-foreground">{srv.name}</p>

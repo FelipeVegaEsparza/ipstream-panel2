@@ -369,7 +369,7 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
                     </div>
 
                     {/* API Info */}
-                    <div className="bg-blue-50/10 border border-brand/30 rounded-xl p-4">
+                    <div className="bg-blue-50/10 border border-brand/30 rounded-panel p-4">
                         <h3 className="text-sm font-medium text-brand mb-2">
                             {t('admin.userDetail.clientApi')}
                         </h3>

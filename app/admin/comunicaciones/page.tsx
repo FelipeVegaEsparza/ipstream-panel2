@@ -26,7 +26,7 @@ export default function ComunicacionesPage() {
         </TabsList>
 
         <TabsContent value="enviar" className="space-y-4">
-          <div className="bg-card/60 rounded-xl border border-border p-5">
+          <div className="bg-card/60 rounded-panel border border-border p-5">
             <EmailComposer />
           </div>
         </TabsContent>

@@ -135,11 +135,11 @@ export function UsersList({ users }: UsersListProps) {
             user.client._count.sponsors + user.client._count.promotions : 0
 
           return (
-            <div key={user.id} className="card hover:scale-[1.01] transition-transform duration-200">
+            <div key={user.id} className="card">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1">
                   {/* Avatar */}
-                  <div className="w-12 h-12 bg-gradient-to-br from-brand to-brand rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-surface-3 from-brand to-brand rounded-full flex items-center justify-center">
                     <span className="text-foreground font-semibold text-lg">
                       {(user.name || user.email).charAt(0).toUpperCase()}
                     </span>

@@ -45,7 +45,7 @@ export function ServerAlerts() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8 lg:px-8 pt-4">
-      <div className="flex items-start justify-between gap-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3">
+      <div className="flex items-start justify-between gap-3 rounded-panel border border-red-500/40 bg-red-500/10 px-4 py-3">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
           <div>

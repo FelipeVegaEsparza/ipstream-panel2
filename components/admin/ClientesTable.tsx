@@ -312,7 +312,7 @@ function StatCard({
     cyan: 'border-brand/30 bg-brand/10 text-brand',
   }
   return (
-    <div className={`p-4 rounded-xl border ${colors[color]}`}>
+    <div className={`p-4 rounded-panel border ${colors[color]}`}>
       <div className="flex items-center gap-3">
         <Icon className="h-6 w-6" />
         <div>

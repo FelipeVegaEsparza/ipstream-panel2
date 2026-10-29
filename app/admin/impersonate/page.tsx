@@ -64,7 +64,7 @@ export default async function ImpersonatePage() {
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="stat-card bg-gradient-to-br from-brand/20 to-brand/20 border-brand/30">
+        <div className="stat-card bg-surface-3 from-brand/20 to-brand/20 border-brand/30">
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-brand mb-2">
@@ -80,7 +80,7 @@ export default async function ImpersonatePage() {
           </div>
         </div>
 
-        <div className="stat-card bg-gradient-to-br from-green-500/20 to-green-600/20 border-green-500/30">
+        <div className="stat-card bg-surface-3 from-green-500/20 to-green-600/20 border-green-500/30">
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-green-400 mb-2">
@@ -99,10 +99,10 @@ export default async function ImpersonatePage() {
           </div>
         </div>
 
-        <div className="stat-card bg-gradient-to-br from-purple-500/20 to-purple-600/20 border-purple-500/30">
+        <div className="stat-card bg-surface-3 border-line">
           <div className="flex items-center justify-between">
             <div>
-              <dt className="text-sm font-medium text-purple-400 mb-2">
+              <dt className="text-sm font-medium text-signal mb-2">
                 {t('admin.users.activeToday')}
               </dt>
               <dd className="text-2xl font-bold text-foreground">
@@ -113,13 +113,13 @@ export default async function ImpersonatePage() {
                 }).length}
               </dd>
             </div>
-            <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-signal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
         </div>
 
-        <div className="stat-card bg-gradient-to-br from-brand/20 to-brand/20 border-brand/30">
+        <div className="stat-card bg-surface-3 from-brand/20 to-brand/20 border-brand/30">
           <div className="flex items-center justify-between">
             <div>
               <dt className="text-sm font-medium text-brand mb-2">
