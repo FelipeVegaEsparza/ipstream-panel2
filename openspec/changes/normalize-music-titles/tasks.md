@@ -41,4 +41,4 @@
 - [x] 7.1 Ampliar las anotaciones parentéticas reconocidas (`Remasterizado`, `Con letra`, `En Directo`, `Gira`, `Audio`, `Extended`, `Mix`, `Videoclip`, etc.) y quitar tokens sueltos como `HD`, `1080`, `320kbps`; verificar con `cd streaming/agent && npm test`.
 - [x] 7.2 Quitar el nombre del artista del título en formatos `Artista - Tema`, `Tema - Artista` y `Artista ft. Invitado - Tema`; verificar con casos reales de la biblioteca en los tests.
 - [x] 7.3 Conservar subtítulos legítimos entre paréntesis que no son anotaciones (`(Tu Forma De Ser)`, `(I Just)`); verificar con `cd streaming/agent && npm test`.
-- [ ] 7.4 Redeployar el agente, verificar en el servidor y pedir al cliente que pulse "Normalizar título" para reprocesar el catálogo existente.
+- [x] 7.4 Redeployar el agente, verificar en el servidor y pedir al cliente que pulse "Normalizar título" para reprocesar el catálogo existente.
