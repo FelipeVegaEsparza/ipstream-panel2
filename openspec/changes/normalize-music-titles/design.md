@@ -31,15 +31,18 @@ Algoritmo, aplicado por separado a título y artista:
 
 1. Normalizar Unicode (NFC), reemplazar `_` por espacio y quitar extensión de audio si aparece al final (`.mp3`, `.m4a`, etc.).
 2. Quitar URLs y dominios (`http(s)://…`, `www.…`, `*.com/…`).
-3. Quitar repetidamente segmentos entre paréntesis/corchetes cuyo contenido (sin distinguir mayúsculas) coincida con:
-   - técnicos: `official video`, `official audio`, `video oficial`, `audio oficial`, `lyric(s)`, `letra`, `hd`, `hq`, `4k`, `1080p`, `720p`, `320kbps`, `128kbps`, `kbps`, `mp3`, `descarga`, `download`, `gratis`, `youtube`;
-   - versiones: `remix`, `live`, `en vivo`, `acústico`, `acoustic`, `cover`, `feat. …`, `ft. …`;
+3. Quitar segmentos entre paréntesis/corchetes cuyo contenido coincida con anotaciones:
+   - técnicos: `official video`, `video oficial`, `videoclip`, `audio`, `con letra`, `lyric(s)`, `letra`, `hd`, `hq`, `4k`, `1080p`, `720p`, `320kbps`, `128kbps`, `kbps`, `mp3`, `descarga`, `download`, `gratis`, `youtube`;
+   - versiones: `remix`, `mix`, `version`, `edit`, `remaster`, `extended`, `live`, `en vivo`, `en directo`, `acústico`, `acoustic`, `cover`, `feat. …`, `ft. …`, `gira`, `tour`, `session`, `demo`;
    - año de 4 dígitos (`(2021)`, `[1998]`).
-4. Quitar numeración de pista al inicio: `[01]`, `(01)`, `01.`, `01 -`, `01_`, `1 -` y números con cero inicial seguidos de espacio (`01 Tema`). Un número sin separador ni cero inicial (`30 Seconds to Mars`, `24 Horas`) se conserva para no mutilar nombres legítimos.
-5. Quitar separadores sobrantes al inicio/fin (`-`, `–`, `—`, `.`, `_`) y colapsar espacios.
-6. Si el resultado queda vacío, devolver el valor original.
+   Se conservan subtítulos legítimos sin palabras de anotación, como `(Tu Forma De Ser)`.
+4. Quitar tokens técnicos sueltos (`HD`, `HQ`, `4K`, `1080`, `720`, `320kbps`) y anotaciones finales sin paréntesis (`Video oficial`, `Audio`, `Con letra`, `En vivo`, `feat. …`).
+5. Quitar el nombre del artista del título cuando aparece como `Artista - Tema`, `Tema - Artista` o `Artista ft. Invitado - Tema`. Primero se comparan los segmentos con el campo artista (incluyendo listas separadas por coma) y luego se aplica un fallback para canales de YouTube donde el campo artista no coincide.
+6. Quitar numeración de pista al inicio: `[01]`, `(01)`, `01.`, `01 -`, `01_`, `1 -` y números con cero inicial seguidos de espacio (`01 Tema`). Un número sin separador ni cero inicial (`30 Seconds to Mars`, `24 Horas`) se conserva para no mutilar nombres legítimos.
+7. Quitar separadores sobrantes al inicio/fin (`-`, `–`, `—`, `.`, `_`) y colapsar espacios.
+8. Si el resultado queda vacío, devolver el valor original.
 
-Solo se eliminan segmentos delimitados por paréntesis/corchetes (más la numeración inicial). No se cortan palabras sueltas ni sufijos sin delimitar, para evitar borrar títulos legítimos como “Live and Let Die”. Alternativa considerada: regex sobre el string completo; se descartó por agresiva y propensa a falsos positivos. Alternativa considerada: limpiar en el panel antes de enviar; se descartó porque el panel no ve la metadata y los nodos quedarían inconsistentes.
+Solo se eliminan segmentos reconocidos como anotaciones o el nombre del artista ya presente en su campo. No se cortan palabras sueltas ni sufijos no reconocidos, para evitar borrar títulos legítimos como “Live and Let Die”. Alternativa considerada: regex sobre el string completo; se descartó por agresiva y propensa a falsos positivos. Alternativa considerada: limpiar en el panel antes de enviar; se descartó porque el panel no ve la metadata y los nodos quedarían inconsistentes.
 
 ### 2. Normalización en el upload
 

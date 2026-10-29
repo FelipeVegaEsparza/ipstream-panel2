@@ -82,3 +82,85 @@ test('quita URLs y dominios', () => {
     'Tema'
   )
 })
+
+test('quita el nombre del artista del inicio del título', () => {
+  const result = normalizeTrackMetadata({
+    title: 'Viejas Locas - Me Gustas Mucho',
+    artist: 'Viejas Locas',
+  })
+  assert.equal(result.title, 'Me Gustas Mucho')
+  assert.equal(result.artist, 'Viejas Locas')
+})
+
+test('quita prefijo de artista cuando el campo trae varios artistas', () => {
+  const result = normalizeTrackMetadata({
+    title: 'Turf - Pasos al costado HD',
+    artist: 'PopArt Discos, Turf',
+  })
+  assert.equal(result.title, 'Pasos al costado')
+})
+
+test('quita prefijo con feat. y canal de YouTube', () => {
+  assert.equal(
+    normalizeTrackMetadata({
+      title: 'Los Piojos - El farolito (Con letra)',
+      artist: 'Canal Piojoso',
+    }).title,
+    'El farolito'
+  )
+  assert.equal(
+    normalizeTrackMetadata({
+      title: 'Ratones Paranoicos ft Andrés Calamaro - Para siempre HD',
+      artist: 'PopArt Discos',
+    }).title,
+    'Para siempre'
+  )
+})
+
+test('quita el artista al final cuando el título viene como "Tema - Artista"', () => {
+  assert.equal(
+    normalizeTrackMetadata({
+      title: 'Por Mil Noches - AIRBAG - Video oficial',
+      artist: 'AIRBAG',
+    }).title,
+    'Por Mil Noches'
+  )
+})
+
+test('quita anotaciones parentéticas reales de descargas', () => {
+  assert.equal(
+    normalizeTrackMetadata({
+      title: 'Vasos Vacíos (Remasterizado 2008)',
+      artist: 'Los Fabulosos Cadillacs',
+    }).title,
+    'Vasos Vacíos'
+  )
+  assert.equal(
+    normalizeTrackMetadata({
+      title: 'Soda Stereo - Persiana Americana (Gira Me Verás Volver)',
+      artist: 'Soda Stereo',
+    }).title,
+    'Persiana Americana'
+  )
+  assert.equal(
+    normalizeTrackMetadata({
+      title: 'Tema (12" Extended Version)',
+      artist: 'Artista',
+    }).title,
+    'Tema'
+  )
+})
+
+test('conserva subtítulos que no son anotaciones', () => {
+  assert.equal(
+    normalizeMetadataValue('Loco (Tu Forma De Ser)'),
+    'Loco (Tu Forma De Ser)'
+  )
+  assert.equal(normalizeMetadataValue('Annihilation (I Just)'), 'Annihilation (I Just)')
+})
+
+test('quita HD y otros tokens técnicos sueltos', () => {
+  assert.equal(normalizeMetadataValue('Las Pelotas - Será HD'), 'Las Pelotas - Será')
+  assert.equal(normalizeMetadataValue('Tema 1080 HD'), 'Tema')
+  assert.equal(normalizeMetadataValue('Tema 320kbps'), 'Tema')
+})

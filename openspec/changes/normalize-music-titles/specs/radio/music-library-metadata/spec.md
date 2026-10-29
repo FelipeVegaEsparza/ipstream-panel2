@@ -15,11 +15,14 @@ La normalización SHALL:
 - Recortar espacios al inicio y al final y colapsar espacios repetidos.
 - Quitar numeración de pista al inicio (`01`, `01.`, `01 -`, `[01]`, `(01)`).
 - Convertir guiones bajos usados como separador en espacios.
-- Quitar sufijos técnicos entre paréntesis o corchetes, sin distinguir mayúsculas: `official video`, `official audio`, `video oficial`, `audio oficial`, `lyric(s)`, `letra`, `hd`, `hq`, `4k`, `1080p`, `720p`, `320kbps`, `128kbps`, `kbps`, `mp3`, `descarga`, `download`, `gratis`, `youtube`, dominios y URLs.
-- Quitar anotaciones de versión entre paréntesis o corchetes: `remix`, `live`, `en vivo`, `acústico`, `acoustic`, `cover`, `feat. ...`, `ft. ...`.
+- Quitar sufijos técnicos entre paréntesis o corchetes, sin distinguir mayúsculas: `official video`, `official audio`, `video oficial`, `videoclip`, `audio`, `lyric(s)`, `letra`, `con letra`, `hd`, `hq`, `4k`, `1080p`, `720p`, `320kbps`, `128kbps`, `kbps`, `mp3`, `descarga`, `download`, `gratis`, `youtube`, dominios y URLs.
+- Quitar anotaciones de versión entre paréntesis o corchetes: `remix`, `mix`, `version`, `edit`, `remaster`, `extended`, `live`, `en vivo`, `en directo`, `acústico`, `acoustic`, `cover`, `feat. ...`, `ft. ...`, `gira`, `tour`, `session`, `demo`.
+- Quitar tokens técnicos sueltos fuera de paréntesis: `HD`, `HQ`, `4K`, `1080`, `720`, `320kbps`, etc., y anotaciones finales como `Video oficial`, `Audio`, `Con letra`, `En vivo`.
+- Quitar el nombre del artista del título cuando el título viene como `Artista - Tema`, `Tema - Artista` o `Artista ft. Invitado - Tema` y el artista ya tiene su propio campo.
 - Quitar un año entre paréntesis al final del texto.
 - Quitar guiones, puntos o guiones bajos sobrantes al inicio y al final.
 - No agregar texto, números, prefijos ni sufijos que no estuvieran en el valor original.
+- Conservar subtítulos entre paréntesis que no sean anotaciones, por ejemplo `(Tu Forma De Ser)`.
 
 Si el resultado de la normalización queda vacío, el sistema SHALL conservar el valor original sin cambios.
 
@@ -39,6 +42,32 @@ Si el resultado de la normalización queda vacío, el sistema SHALL conservar el
 
 - **WHEN** se sube una pista con título `Tema Central (Remix) (2021)`
 - **THEN** la pista se guarda con título `Tema Central`
+
+#### Scenario: Anotación parentética de descarga
+
+- **WHEN** se sube una pista con título `Vasos Vacíos (Remasterizado 2008)` o `Lunes Por La Madrugada (En Directo / Teatro Opera / 1985)`
+- **THEN** la pista se guarda sin el contenido entre paréntesis
+
+#### Scenario: Token técnico suelto
+
+- **WHEN** se sube una pista con título `Turf - Pasos al costado HD` o `Tema 1080 HD`
+- **THEN** la pista se guarda sin `HD` ni `1080`
+
+#### Scenario: Artista repetido en el título
+
+- **WHEN** se sube una pista con título `Viejas Locas - Me Gustas Mucho` y artista `Viejas Locas`
+- **THEN** la pista se guarda con título `Me Gustas Mucho`
+- **AND** el artista se conserva en su propio campo
+
+#### Scenario: Título con formato tema - artista
+
+- **WHEN** se sube una pista con título `Por Mil Noches - AIRBAG - Video oficial` y artista `AIRBAG`
+- **THEN** la pista se guarda con título `Por Mil Noches`
+
+#### Scenario: Subtítulo legítimo entre paréntesis
+
+- **WHEN** se sube una pista con título `Loco (Tu Forma De Ser)`
+- **THEN** el paréntesis se conserva porque no es una anotación técnica ni de versión
 
 #### Scenario: Texto que ya está limpio
 
