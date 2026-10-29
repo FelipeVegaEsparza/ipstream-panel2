@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -45,24 +46,19 @@ export function SupportView({ initialTickets }: SupportViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <LifeBuoy className="h-6 w-6 text-brand" />
-            {t('support.title')}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t('support.subtitle')}
-          </p>
-        </div>
-        <button
-          onClick={() => setShowNew(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          {t('support.newTicket')}
-        </button>
-      </div>
+      <DashboardPageHeader
+        title={t('support.title')}
+        description={t('support.subtitle')}
+        actions={
+          <button
+            onClick={() => setShowNew(true)}
+            className="inline-flex items-center gap-2 rounded-control bg-signal px-4 py-2 text-xs font-medium text-white transition-colors hover:brightness-110"
+          >
+            <Plus className="h-4 w-4" />
+            {t('support.newTicket')}
+          </button>
+        }
+      />
 
       {tickets.length === 0 ? (
     <div className="text-center py-16 bg-card/40 rounded-panel border border-dashed border-border">

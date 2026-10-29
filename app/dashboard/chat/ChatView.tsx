@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MessagesSquare } from 'lucide-react'
 import { StaffComposer } from './StaffComposer'
@@ -170,21 +171,16 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-            <MessagesSquare className="h-6 w-6 text-brand" />
-            {t('chat.title')}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('chat.subtitle')}
-          </p>
-        </div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-400" />
-          {t('chat.updating', { seconds: POLL_INTERVAL_MS / 1000 })}
-        </div>
-      </div>
+      <DashboardPageHeader
+        title={t('chat.title')}
+        description={t('chat.subtitle')}
+        actions={
+          <div className="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1.5 text-xs text-muted-foreground">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[color:var(--live)]" />
+            {t('chat.updating', { seconds: POLL_INTERVAL_MS / 1000 })}
+          </div>
+        }
+      />
 
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">

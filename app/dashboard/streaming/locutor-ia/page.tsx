@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { LocutorIaSettings } from '@/components/dashboard/streaming/locutor-ia/LocutorIaSettings'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { getDisabledMenuItems } from '@/lib/menu-permissions'
@@ -27,14 +28,7 @@ export default async function LocutorIaPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-3xl font-bold text-foreground">
-          {t('streaming.locutor.title')}
-        </h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          {t('streaming.locutor.subtitle')}
-        </p>
-      </div>
+      <DashboardPageHeader title={t('streaming.locutor.title')} description={t('streaming.locutor.subtitle')} />
       <LocutorIaSettings />
     </div>
   )

@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useEffect, useMemo, useState } from 'react'
 import { CheckCircleIcon, SparklesIcon, SpeakerWaveIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
@@ -74,17 +75,15 @@ export function InfoCapsulesSelector() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{t('capsules.title')}</h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            {t('capsules.subtitle')}
-          </p>
-        </div>
-        <button type="button" onClick={() => setAiOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-medium text-white hover:opacity-90">
-          <SparklesIcon className="h-4 w-4" /> {t('capsules.createAi')}
-        </button>
-      </div>
+      <DashboardPageHeader
+        title={t('capsules.title')}
+        description={t('capsules.subtitle')}
+        actions={
+          <button type="button" onClick={() => setAiOpen(true)} className="inline-flex items-center gap-1.5 rounded-control bg-signal px-3 py-2 text-xs font-medium text-white transition-colors hover:brightness-110">
+            <SparklesIcon className="h-4 w-4" /> {t('capsules.createAi')}
+          </button>
+        }
+      />
 
       <CapsuleAiModal open={aiOpen} onClose={() => setAiOpen(false)} onSaved={() => void load()} />
 
