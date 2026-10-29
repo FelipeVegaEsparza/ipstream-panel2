@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { BannerManager } from '@/components/dashboard/BannerManager'
@@ -30,10 +31,7 @@ export default async function BannerPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('banner.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('banner.subtitle')}</p>
-      </div>
+      <DashboardPageHeader title={t('banner.title')} description={t('banner.subtitle')} />
       <BannerManager banners={banners} />
     </div>
   )

@@ -30,9 +30,9 @@ typography:
     letterSpacing: "-0.025em"
   title:
     fontFamily: "Archivo, Inter, system-ui, sans-serif"
-    fontSize: "0.8125rem"
+    fontSize: "0.9375rem"
     fontWeight: 500
-    lineHeight: 1.54
+    lineHeight: 1.5
     letterSpacing: "0em"
   body:
     fontFamily: "Archivo, Inter, system-ui, sans-serif"
@@ -40,11 +40,35 @@ typography:
     fontWeight: 400
     lineHeight: 1.54
     letterSpacing: "0em"
+  small:
+    fontFamily: "Archivo, Inter, system-ui, sans-serif"
+    fontSize: "0.75rem"
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: "0em"
+  meta:
+    fontFamily: "Archivo, Inter, system-ui, sans-serif"
+    fontSize: "0.6875rem"
+    fontWeight: 500
+    lineHeight: 1.45
+    letterSpacing: "0em"
   label:
     fontFamily: "Archivo, Inter, system-ui, sans-serif"
     fontSize: "0.625rem"
     fontWeight: 500
     lineHeight: 1.4
+    letterSpacing: "0em"
+  caption:
+    fontFamily: "Archivo, Inter, system-ui, sans-serif"
+    fontSize: "0.5625rem"
+    fontWeight: 500
+    lineHeight: 1.35
+    letterSpacing: "0em"
+  micro:
+    fontFamily: "Archivo, Inter, system-ui, sans-serif"
+    fontSize: "0.5rem"
+    fontWeight: 500
+    lineHeight: 1.3
     letterSpacing: "0em"
   metric:
     fontFamily: "Martian Mono, ui-monospace, monospace"

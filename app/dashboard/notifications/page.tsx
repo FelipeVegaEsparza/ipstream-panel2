@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -39,14 +40,7 @@ export default async function NotificationsPage() {
   if (!hasOneSignal) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {t('push.title')}
-          </h1>
-          <p className="text-muted-foreground">
-            {t('push.subtitle')}
-          </p>
-        </div>
+        <DashboardPageHeader title={t('push.title')} description={t('push.subtitle')} />
 
         <div className="card">
           <div className="text-center py-12">

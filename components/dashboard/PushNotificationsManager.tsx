@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useState, useEffect } from 'react'
 import { useModal } from '@/components/ui/modal'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
@@ -149,14 +150,7 @@ export function PushNotificationsManager() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {t('push.title')}
-          </h1>
-          <p className="text-muted-foreground">
-            {t('push.subtitle')}
-          </p>
-        </div>
+        <DashboardPageHeader title={t('push.title')} description={t('push.subtitle')} />
         <button
           onClick={() => setShowForm(!showForm)}
           className="btn-primary flex items-center gap-2"

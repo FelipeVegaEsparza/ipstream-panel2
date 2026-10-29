@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useState, useMemo, useEffect } from 'react'
 import { X, PlayCircle, Play } from 'lucide-react'
 import { extractYouTubeId, getYouTubeEmbedUrl, getYouTubeThumbnailUrl, getYouTubeThumbnailFallbackUrl } from '@/lib/youtube'
@@ -73,12 +74,7 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('tutorials.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('tutorials.subtitle')}
-        </p>
-      </div>
+      <DashboardPageHeader title={t('tutorials.title')} description={t('tutorials.subtitle')} />
 
       <div className="flex gap-2 flex-wrap border-b border-border pb-3">
         <CategoryTab

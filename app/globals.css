@@ -487,6 +487,14 @@
 
   /* Normalización del resto del panel: las páginas heredan el lenguaje
      Control Room aunque todavía usen utilidades del sistema anterior. */
+  .dashboard-shell h1,
+  .dashboard-shell .text-2xl.font-bold {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+
   .dashboard-shell .text-4xl {
     font-size: 1.75rem;
     line-height: 2.125rem;

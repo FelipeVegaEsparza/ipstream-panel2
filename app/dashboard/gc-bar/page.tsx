@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { GcBarManager } from '@/components/dashboard/GcBarManager'
@@ -30,12 +31,7 @@ export default async function GcBarPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('gcbar.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('gcbar.subtitle')}
-        </p>
-      </div>
+      <DashboardPageHeader title={t('gcbar.title')} description={t('gcbar.subtitle')} />
       <GcBarManager messages={messages} />
     </div>
   )

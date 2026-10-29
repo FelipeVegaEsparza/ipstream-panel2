@@ -33,7 +33,11 @@
       "display": { "displayName": "Station Identity", "purpose": "Nombre de la emisora y títulos de página." },
       "title": { "displayName": "Operational Title", "purpose": "Encabezados de sección, temas y controles." },
       "body": { "displayName": "Work Text", "purpose": "Descripciones, metadatos y texto de interfaz." },
+      "small": { "displayName": "Small Text", "purpose": "Texto secundario y controles compactos." },
+      "meta": { "displayName": "Meta Text", "purpose": "Metadatos y ayudas breves." },
       "label": { "displayName": "Metric Label", "purpose": "Etiquetas de métricas y estados." },
+      "caption": { "displayName": "Caption", "purpose": "Etiquetas de tablas y microcopy." },
+      "micro": { "displayName": "Micro", "purpose": "Indicadores compactos y columnas densas." },
       "metric": { "displayName": "Tabular Metric", "purpose": "Cifras, tiempo y medidas que cambian en vivo." }
     },
     "shadows": [

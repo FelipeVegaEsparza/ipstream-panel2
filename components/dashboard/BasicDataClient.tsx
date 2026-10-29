@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useEffect, useState } from 'react'
 import { DashboardWrapper } from './DashboardWrapper'
 import { BasicDataForm } from './BasicDataForm'
@@ -92,20 +93,13 @@ function BasicDataContent({ clientId }: { clientId: string }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          {t('basic.title')}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('basic.subtitle')}
-        </p>
-      </div>
+      <DashboardPageHeader title={t('basic.title')} description={t('basic.subtitle')} />
 
-      <div className="card max-w-2xl">
+      <div className="dashboard-panel max-w-2xl">
         <BasicDataForm initialData={basicData} clientId={clientId} />
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="dashboard-panel max-w-2xl">
         <h2 className="text-lg font-semibold text-foreground mb-1">{t('basic.timezone')}</h2>
         <p className="text-sm text-muted-foreground mb-3">
           {t('basic.timezoneHint')}

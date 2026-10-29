@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -110,14 +111,7 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
         onConfirm={handleConfirmActivation}
         onClose={closeActivation}
       />
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          {t('templateSelector.title')}
-        </h1>
-        <p className="text-muted-foreground">
-          {t('templateSelector.subtitle')}
-        </p>
-      </div>
+      <DashboardPageHeader title={t('templateSelector.title')} description={t('templateSelector.subtitle')} />
 
       {selectedTemplateId && (
     <Card className="bg-surface-3 from-brand/20 to-brand/20 border-brand/30">

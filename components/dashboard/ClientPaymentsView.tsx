@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -211,14 +212,7 @@ export function ClientPaymentsView({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          {t('payments.title')}
-        </h1>
-        <p className="text-muted-foreground">
-          {t('payments.subtitle')}
-        </p>
-      </div>
+      <DashboardPageHeader title={t('payments.title')} description={t('payments.subtitle')} />
 
       {/* Próximo Pago - Destacado */}
       {client.subscription && nextPaymentDate && (
