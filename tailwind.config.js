@@ -9,9 +9,12 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        dashboard: ['var(--font-archivo)', 'Inter', 'system-ui', 'sans-serif'],
+        metric: ['var(--font-martian)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       boxShadow: {
         soft: 'var(--shadow-soft)',
+        popover: '0 12px 32px -16px rgba(0, 0, 0, 0.45)',
       },
       colors: {
         brand: {
@@ -58,11 +61,25 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        surface: {
+          0: "var(--surface-0)",
+          1: "var(--surface-1)",
+          2: "var(--surface-2)",
+          3: "var(--surface-3)",
+        },
+        line: "var(--line)",
+        signal: "var(--signal)",
+        live: "var(--live)",
+        warn: "var(--warn)",
+        danger: "var(--danger)",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        control: "var(--radius-control)",
+        panel: "var(--radius-panel)",
+        container: "var(--radius-container)",
       },
       keyframes: {
         'slide-up': {

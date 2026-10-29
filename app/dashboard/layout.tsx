@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
+import { Archivo, Martian_Mono } from 'next/font/google'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SessionProvider } from '@/components/providers/SessionProvider'
@@ -15,6 +16,11 @@ import { getDisabledMenuItems, getGloballyHiddenMenuItems } from '@/lib/menu-per
 // genere las páginas estáticamente. Sin este flag, el build tira error
 // "cannot be statically generated".
 export const dynamic = 'force-dynamic'
+
+// Tipografía del dashboard: Archivo para UI y Martian Mono para métricas.
+// Se aplican solo al wrapper del panel para no tocar el sitio público.
+const archivo = Archivo({ subsets: ['latin'], variable: '--font-archivo', display: 'swap' })
+const martian = Martian_Mono({ subsets: ['latin'], variable: '--font-martian', display: 'swap' })
 
 export default async function DashboardLayout({
   children,
@@ -67,7 +73,7 @@ export default async function DashboardLayout({
   return (
     <SessionProvider session={session}>
       <ModalProvider>
-        <div className="min-h-screen bg-background">
+        <div className={`dashboard-shell min-h-screen bg-background ${archivo.variable} ${martian.variable}`}>
           <DashboardLayoutClient
             locale={locale}
             user={session.user}

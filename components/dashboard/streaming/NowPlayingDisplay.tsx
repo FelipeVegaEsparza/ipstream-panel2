@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
@@ -19,44 +20,47 @@ function parseAndFormatDuration(startedAt: string | number | null | undefined): 
   return formatDuration(ts)
 }
 
-function TrackRow(props: { track: { title: string; artist?: string | null; coverUrl?: string | null; isJingle?: boolean } | null; label: string }) {
+function TrackRow(props: {
+  track: { title: string; artist?: string | null; coverUrl?: string | null; isJingle?: boolean } | null
+  label: string
+}) {
   const { t } = useDashboardI18n()
   const track = props.track
-  const label = props.label
+
   return (
-    <div className="flex items-center gap-3">
-      <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shadow-lg bg-background shrink-0 ring-1 ring-white/5">
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[6px] border border-line bg-surface-3">
         {track?.coverUrl ? (
           <img
             src={track.coverUrl}
             alt={track.title || t('nowPlaying.cover')}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          <div className="flex h-full w-full items-center justify-center">
+            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
           </div>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium mb-1">{label}</div>
+        <div className="dashboard-label mb-1">{props.label}</div>
         {track ? (
           <>
             <div className="flex items-center gap-2">
-              <p className="text-foreground font-semibold truncate text-sm md:text-base">{track.title || t('nowPlaying.noTitle')}</p>
+              <p className="truncate text-[13px] font-medium text-foreground">{track.title || t('nowPlaying.noTitle')}</p>
               {track.isJingle && (
-                <span className="text-[10px] bg-amber-600/80 text-white px-1.5 py-0.5 rounded font-medium shrink-0">JINGLE</span>
+                <span className="shrink-0 rounded border border-amber-500/30 bg-amber-500/10 px-1 py-0.5 text-[9px] font-medium uppercase text-amber-300">
+                  Jingle
+                </span>
               )}
             </div>
-            {track.artist && (
-              <p className="text-muted-foreground text-xs truncate mt-0.5">{track.artist}</p>
-            )}
+            {track.artist && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{track.artist}</p>}
           </>
         ) : (
-          <p className="text-muted-foreground text-xs">{t('nowPlaying.waiting')}</p>
+          <p className="text-xs text-muted-foreground">{t('nowPlaying.waiting')}</p>
         )}
       </div>
     </div>
@@ -69,16 +73,15 @@ export function NowPlayingDisplay() {
 
   if (loading && !status) {
     return (
-      <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-xl p-6 md:p-8 animate-pulse">
-        <div className="h-5 bg-secondary rounded w-32 mb-8" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="p-4 sm:p-5">
+        <div className="h-4 w-24 animate-pulse rounded bg-surface-3" />
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {[0, 1].map((i) => (
-            <div key={i} className="flex items-center gap-4">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-secondary" />
+            <div key={i} className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-[6px] bg-surface-3" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-secondary rounded w-16" />
-                <div className="h-5 bg-secondary rounded w-3/4" />
-                <div className="h-4 bg-secondary rounded w-1/2" />
+                <div className="h-2.5 w-16 rounded bg-surface-3" />
+                <div className="h-3.5 w-3/4 rounded bg-surface-3" />
               </div>
             </div>
           ))}
@@ -87,91 +90,72 @@ export function NowPlayingDisplay() {
     )
   }
 
-  if (!status?.hasRadioStream) return null
-  if (!status.process?.running) return null
+  if (!status) return null
 
+  const running = Boolean(status.process?.running)
+  const listeners = status.icecast?.listeners ?? 0
+  const isDjLive = Boolean(status.dj?.connected)
+  const djDuration = parseAndFormatDuration(status.dj?.connectedAt)
+  const autodjDuration = parseAndFormatDuration(status.process?.startedAt)
   const nowPlaying = status.nowPlaying
   const current = nowPlaying?.currentTrack
   const next = nowPlaying?.nextTrack
-  const isDjLive = status.dj?.connected
-  const djName = status.dj?.name
-  const djDuration = parseAndFormatDuration(status.dj?.connectedAt)
-  const autodjDuration = parseAndFormatDuration(status.process?.startedAt)
 
   return (
-    <div className="bg-gradient-to-br from-card/90 to-card/90 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-6 md:p-8">
-      {isDjLive ? (
-        <div className="bg-gradient-to-r from-green-900/40 to-emerald-900/20 border border-green-700/30 rounded-xl p-4 md:p-5 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="relative flex w-4 h-4">
-                <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />
-                <span className="relative rounded-full w-4 h-4 bg-green-500" />
-              </span>
-              <span className="text-green-400 font-bold text-lg uppercase tracking-wider">{t('nowPlaying.live')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m-4 0h8m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-              <span className="text-green-300 font-semibold text-base">{djName || t('nowPlaying.djConnected')}</span>
-            </div>
-          </div>
-          <p className="text-green-400/60 text-xs mt-3 ml-1">
-            {djDuration ? t('nowPlaying.liveSince', { duration: djDuration }) : t('nowPlaying.liveNow')} — {t('nowPlaying.autodjAfterDj')}
-          </p>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3 mb-6">
-          <span className="w-3 h-3 rounded-full bg-gradient-to-br from-brand to-brand shadow-lg shadow-cyan-500/20" />
-          <span className="text-muted-foreground font-semibold text-sm uppercase tracking-wider">{t('nowPlaying.autodj')}</span>
-          {autodjDuration && (
-            <span className="text-muted-foreground text-xs font-mono">{t('nowPlaying.onAirFor', { duration: autodjDuration })}</span>
-          )}
-        </div>
-      )}
-
-      {nowPlaying?.playlist && !isDjLive && (
-        <div className="mb-5 flex items-center gap-3">
-          <span className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">{t('nowPlaying.playlist')}</span>
-          <div className="h-px flex-1 bg-gradient-to-r from-secondary/50 to-transparent" />
-          <span className="text-sm font-semibold text-brand bg-brand/10 px-3 py-1 rounded-lg border border-brand/20">
-            {nowPlaying.playlist.name}
+    <div className="p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+          <span className={`h-1.5 w-1.5 rounded-full ${running ? 'bg-[color:var(--live)]' : 'bg-[color:var(--text-3)]'}`} />
+          <span className="text-[13px] font-medium text-foreground">{t('nowPlaying.radio')}</span>
+          <span className="text-xs text-muted-foreground">
+            {running
+              ? isDjLive
+                ? t('nowPlaying.live')
+                : t('nowPlaying.autodj')
+              : t('nowPlaying.radioOff')}
           </span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          {isDjLive && (
-            <div className="flex items-center gap-1.5 text-[10px] text-brand/70 uppercase tracking-wider font-medium mb-2">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {t('nowPlaying.queuedAutodj')}
-            </div>
-          )}
-          <TrackRow track={current ?? null} label={t('nowPlaying.nowPlaying')} />
-          {current && <div className="h-px bg-gradient-to-r from-secondary/50 to-transparent" />}
-        </div>
-        <div className="space-y-2">
-          <TrackRow track={next ?? null} label={t('nowPlaying.next')} />
-          {isDjLive && (
-            <div className="flex items-center gap-2 text-xs text-brand/60 bg-brand/5 border border-brand/10 rounded-lg px-3 py-2">
-              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {t('nowPlaying.autodjAfterDj')}
-            </div>
+          {running && (
+            <>
+              <span className="dashboard-metric text-[11px] text-muted-foreground">
+                {listeners} {t('nowPlaying.listeners')}
+              </span>
+              {(isDjLive ? djDuration : autodjDuration) && (
+                <span className="dashboard-metric hidden text-[11px] text-muted-foreground sm:inline">
+                  {isDjLive ? djDuration : autodjDuration}
+                </span>
+              )}
+            </>
           )}
         </div>
+        <Link href="/dashboard/streaming" className="text-xs font-medium text-signal hover:underline">
+          {t('nowPlaying.openConsole')}
+        </Link>
       </div>
 
-      {nowPlaying?.position && !isDjLive && (
-        <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="w-1 h-1 rounded-full bg-secondary" />
-          {t('nowPlaying.trackOf', { index: nowPlaying.position.index, total: nowPlaying.position.total })}
+      {!running ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+          <p className="text-xs text-muted-foreground">{t('nowPlaying.radioOffHint')}</p>
+          <Link href="/dashboard/streaming" className="text-xs font-medium text-signal hover:underline">
+            {t('nowPlaying.startStreaming')}
+          </Link>
         </div>
+      ) : (
+        <>
+          {nowPlaying?.playlist && !isDjLive && (
+            <p className="mt-2 truncate text-[11px] text-muted-foreground">
+              {t('nowPlaying.playlist')}: <span className="text-foreground">{nowPlaying.playlist.name}</span>
+            </p>
+          )}
+          <div className="mt-3 grid gap-4 border-t border-line pt-3 sm:grid-cols-2">
+            <TrackRow track={current ?? null} label={t('nowPlaying.nowPlaying')} />
+            <TrackRow track={next ?? null} label={t('nowPlaying.next')} />
+          </div>
+          {isDjLive && (
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              {status.dj?.name ? `${status.dj.name} · ` : ''}{t('nowPlaying.autodjAfterDj')}
+            </p>
+          )}
+        </>
       )}
     </div>
   )

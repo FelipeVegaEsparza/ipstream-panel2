@@ -44,6 +44,23 @@
     --locution-soft: rgba(233, 179, 91, 0.14);
     --shadow-soft: 0 3px 12px -10px rgba(0, 0, 0, 0.5);
     --sidebar-grad: linear-gradient(180deg, hsl(213 30% 10%), hsl(213 33% 6%));
+
+    /* Control Room — superficies y jerarquía */
+    --surface-0: #0b0e12;
+    --surface-1: #0e1217;
+    --surface-2: #131920;
+    --surface-3: #1a222b;
+    --line: #232c36;
+    --text-1: #e7ecf2;
+    --text-2: #9ba7b5;
+    --text-3: #758392;
+    --signal: #28b4f0;
+    --live: #3ddc97;
+    --warn: #e8b45a;
+    --danger: #e5645f;
+    --radius-control: 8px;
+    --radius-panel: 10px;
+    --radius-container: 12px;
   }
 
   [data-theme="light"] {
@@ -83,6 +100,70 @@
     --locution-soft: rgba(161, 98, 7, 0.12);
     --shadow-soft: 0 3px 12px -10px rgba(15, 23, 42, 0.4);
     --sidebar-grad: linear-gradient(180deg, hsl(210 30% 98%), hsl(210 40% 95%));
+
+    /* Control Room — superficies y jerarquía */
+    --surface-0: #f6f7f9;
+    --surface-1: #ffffff;
+    --surface-2: #ffffff;
+    --surface-3: #f0f2f5;
+    --line: #dfe3e8;
+    --text-1: #14181f;
+    --text-2: #5b6675;
+    --text-3: #647080;
+    --signal: #0b72c4;
+    --live: #1a9e6a;
+    --warn: #a16207;
+    --danger: #c0392b;
+    --radius-control: 8px;
+    --radius-panel: 10px;
+    --radius-container: 12px;
+  }
+
+  /* El dashboard usa una superficie propia; admin y sitio público conservan
+     sus tokens actuales hasta que se rediseñen en una fase posterior. */
+  .dashboard-shell {
+    --background: 214 24% 5%;
+    --foreground: 210 30% 93%;
+    --card: 210 24% 10%;
+    --card-foreground: 210 30% 93%;
+    --popover: 210 24% 10%;
+    --popover-foreground: 210 30% 93%;
+    --secondary: 210 22% 14%;
+    --secondary-foreground: 210 30% 93%;
+    --muted: 210 22% 14%;
+    --muted-foreground: 211 15% 66%;
+    --accent: 210 22% 14%;
+    --accent-foreground: 210 30% 93%;
+    --border: 210 21% 17%;
+    --input: 210 21% 17%;
+    --ring: 197 86% 55%;
+    --radius: 10px;
+    font-family: var(--font-archivo), Inter, system-ui, sans-serif;
+    caret-color: var(--signal);
+  }
+
+  .dashboard-shell ::selection {
+    background: var(--signal);
+    color: #ffffff;
+  }
+
+  [data-theme="light"] .dashboard-shell {
+    --background: 210 20% 97%;
+    --foreground: 215 25% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 10%;
+    --secondary: 210 20% 95%;
+    --secondary-foreground: 215 25% 10%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 214 15% 41%;
+    --accent: 210 20% 95%;
+    --accent-foreground: 215 25% 10%;
+    --border: 210 16% 89%;
+    --input: 210 16% 89%;
+    --ring: 213 90% 40%;
+    --radius: 10px;
   }
 
   html {
@@ -244,6 +325,27 @@
     @apply text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent;
   }
 
+  /* Control Room: la navegación del cliente usa una densidad y un estado
+     activo distintos, sin tocar la navegación de admin. */
+  .dashboard-shell .sidebar-item {
+    @apply items-center gap-x-2.5 rounded-[8px] px-2.5 py-2 text-[13px] leading-5 font-medium;
+  }
+
+  .dashboard-shell .sidebar-item-active {
+    color: var(--text-1);
+    background: var(--surface-3);
+    box-shadow: inset 1px 0 0 var(--signal);
+  }
+
+  .dashboard-shell .sidebar-item-inactive {
+    color: var(--text-2);
+  }
+
+  .dashboard-shell .sidebar-item-inactive:hover {
+    color: var(--text-1);
+    background: var(--surface-2);
+  }
+
   /* === ESTADÍSTICAS === */
   .stat-card {
     @apply relative overflow-hidden rounded-2xl bg-card p-6 border border-border;
@@ -326,5 +428,71 @@
 
   .action-button-view {
     @apply bg-emerald-600 hover:bg-emerald-700 text-white;
+  }
+
+  /* === CONTROL ROOM === */
+  .dashboard-metric {
+    font-family: var(--font-martian), ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .dashboard-label {
+    @apply text-[10px] font-medium;
+    color: var(--text-3);
+  }
+
+  .dashboard-panel {
+    @apply rounded-[10px] border bg-card;
+    border-color: var(--line);
+  }
+
+  .dashboard-live-dot {
+    @apply inline-block h-1.5 w-1.5 rounded-full;
+    background: var(--live);
+  }
+
+  .dashboard-shell .card,
+  .dashboard-shell .stat-card {
+    border-radius: var(--radius-container);
+    border-color: var(--line);
+    box-shadow: none;
+  }
+
+  .dashboard-shell .btn-primary {
+    border-radius: var(--radius-control);
+    background-image: none;
+    background-color: hsl(var(--brand));
+    box-shadow: none;
+  }
+
+  .dashboard-shell .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  .dashboard-shell .btn-secondary {
+    border-radius: var(--radius-control);
+  }
+
+  .dashboard-shell .form-input,
+  .dashboard-shell .form-textarea {
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+  }
+
+  .dashboard-shell :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-shell *,
+    .dashboard-shell *::before,
+    .dashboard-shell *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

@@ -52,6 +52,18 @@ function fmtCurrency(price: number, currency: string, locale: 'es' | 'en') {
   }
 }
 
+function MetricCell(props: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+  return (
+    <div className="border-b border-line p-4 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0">
+      <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+        {props.icon}
+        {props.label}
+      </div>
+      <div className="mt-2">{props.children}</div>
+    </div>
+  )
+}
+
 export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: DashboardOverviewCardsProps) {
   const { t, locale } = useDashboardI18n()
   const { status } = useStreamingStatus({ pollingMs: 5000 })
@@ -108,58 +120,56 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
     : null
 
   const storageItems: { label: string; used: OverviewStorage | null; quota: number | null }[] = []
-  if (hasRadio) storageItems.push({ label: 'Radio', used: usageRadio, quota: plan?.radioStorageQuotaMB ?? null })
-  if (hasTv) storageItems.push({ label: 'TV', used: usageVideo, quota: plan?.videoStorageQuotaMB ?? null })
+  if (hasRadio) storageItems.push({ label: t('nowPlaying.radio'), used: usageRadio, quota: plan?.radioStorageQuotaMB ?? null })
+  if (hasTv) storageItems.push({ label: t('nowPlaying.tv'), used: usageVideo, quota: plan?.videoStorageQuotaMB ?? null })
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-      {/* Oyentes en vivo */}
-      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-        <div className="flex items-center gap-2 mb-3">
-          <Headphones className="h-4 w-4 text-[color:var(--brand-500)]" />
-          <h3 className="font-semibold text-foreground">{t('overview.listeners')}</h3>
-        </div>
-        <div className="flex items-end gap-6">
-          <div>
-            <div className="text-2xl font-bold text-foreground">{radioListeners}</div>
-            <div className="text-xs text-muted-foreground">Radio</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <MetricCell
+        icon={<Headphones className="h-3.5 w-3.5" />}
+        label={t('overview.listeners')}
+      >
+        {hasRadio || hasTv ? (
+          <div className="flex items-end gap-5">
+            {hasRadio && (
+              <div>
+                <div className="dashboard-metric text-2xl font-medium text-foreground">{radioListeners}</div>
+                <div className="mt-0.5 text-[10px] text-muted-foreground">{t('nowPlaying.radio')}</div>
+              </div>
+            )}
+            {hasTv && (
+              <div>
+                <div className="dashboard-metric text-2xl font-medium text-foreground">{tvViewers}</div>
+                <div className="mt-0.5 text-[10px] text-muted-foreground">{t('nowPlaying.tv')}</div>
+              </div>
+            )}
           </div>
-          {hasTv && (
-            <div>
-              <div className="text-2xl font-bold text-foreground">{tvViewers}</div>
-              <div className="text-xs text-muted-foreground">TV</div>
-            </div>
-          )}
-        </div>
-        {!hasRadio && !hasTv && <p className="text-xs text-muted-foreground mt-1">{t('overview.noStreaming')}</p>}
-      </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">{t('overview.noStreaming')}</p>
+        )}
+      </MetricCell>
 
-      {/* Almacenamiento */}
-      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-        <div className="flex items-center gap-2 mb-3">
-          <HardDrive className="h-4 w-4 text-[color:var(--brand-500)]" />
-          <h3 className="font-semibold text-foreground">{t('overview.storage')}</h3>
-        </div>
+      <MetricCell icon={<HardDrive className="h-3.5 w-3.5" />} label={t('overview.storage')}>
         {storageItems.length === 0 ? (
           <p className="text-xs text-muted-foreground">{t('overview.noStorage')}</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {storageItems.map((item) => {
               const usedMB = item.used?.totalMB ?? 0
               const quotaMB = item.quota ?? item.used?.quotaMB ?? null
               const pct = item.used?.percentUsed ?? (quotaMB ? Math.min(100, (usedMB / quotaMB) * 100) : null)
               return (
                 <div key={item.label}>
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-[10px]">
                     <span className="text-muted-foreground">{item.label}</span>
-                    <span className="text-foreground font-medium">
+                    <span className="dashboard-metric text-foreground">
                       {fmtMB(usedMB, t('overview.unlimited'))} / {fmtMB(quotaMB, t('overview.unlimited'))}
                     </span>
                   </div>
                   {quotaMB !== null && pct !== null && (
-                    <div className="mt-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-3">
                       <div
-                        className={`h-full ${item.used?.exceeded ? 'bg-red-500' : pct > 80 ? 'bg-yellow-500' : 'bg-[color:var(--brand-500)]'}`}
+                        className={`h-full rounded-full ${item.used?.exceeded ? 'bg-[color:var(--danger)]' : pct > 80 ? 'bg-[color:var(--warn)]' : 'bg-[color:var(--signal)]'}`}
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
@@ -169,50 +179,39 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
             })}
           </div>
         )}
-      </div>
+      </MetricCell>
 
-      {/* Plan contratado */}
-      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-        <div className="flex items-center gap-2 mb-3">
-          <Crown className="h-4 w-4 text-[color:var(--brand-500)]" />
-          <h3 className="font-semibold text-foreground">{t('overview.plan')}</h3>
-        </div>
+      <MetricCell icon={<Crown className="h-3.5 w-3.5" />} label={t('overview.plan')}>
         {plan ? (
           <>
-            <div className="text-2xl font-bold text-foreground">{plan.name}</div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="truncate text-[15px] font-medium text-foreground">{plan.name}</div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">
               {plan.interval === 'monthly' ? t('overview.monthly') : t('overview.yearly')}
               {planLabel ? ` · ${planLabel}` : ''}
             </div>
-            <div className="text-sm text-[color:var(--brand-500)] font-semibold mt-2">
+            <div className="dashboard-metric mt-1 text-[11px] font-medium text-signal">
               {fmtCurrency(plan.price, plan.currency, locale)}
             </div>
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            {t('overview.noPlan')}{' '}
-            <span className="text-[color:var(--brand-500)]">{t('overview.contactSupport')}</span>
+          <p className="text-xs text-muted-foreground">
+            {t('overview.noPlan')} <span className="text-signal">{t('overview.contactSupport')}</span>
           </p>
         )}
-      </div>
+      </MetricCell>
 
-      {/* PWA instalada */}
-      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-        <div className="flex items-center gap-2 mb-3">
-          <Smartphone className="h-4 w-4 text-[color:var(--brand-500)]" />
-          <h3 className="font-semibold text-foreground">{t('overview.pwaInstalled')}</h3>
-        </div>
-        <div className="text-2xl font-bold text-foreground">
+      <MetricCell icon={<Smartphone className="h-3.5 w-3.5" />} label={t('overview.pwaInstalled')}>
+        <div className="dashboard-metric text-2xl font-medium text-foreground">
           {installedCount === null ? '—' : installedCount}
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
+        <div className="mt-0.5 text-[10px] text-muted-foreground">
           {installedCount === null
             ? t('overview.devicesInstalled')
             : installedCount === 1
               ? t('overview.deviceInstalled')
               : t('overview.devicesInstalled')}
         </div>
-      </div>
+      </MetricCell>
     </div>
   )
 }

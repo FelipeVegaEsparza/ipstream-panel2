@@ -20,7 +20,7 @@ export function GlobalMenuBanner({ globallyHidden }: GlobalMenuBannerProps) {
   const item = MENU_ITEMS.find((i) => i.key === hiddenKey)
     ?? MENU_ITEMS.flatMap((i) => i.children ?? []).find((c) => c.key === hiddenKey)
   return (
-    <div className="bg-amber-500/10 border-b border-amber-500/30 text-amber-200 text-sm px-4 py-2 flex items-center gap-2">
+    <div className="flex items-center gap-2 border-b border-amber-500/25 bg-amber-500/10 px-4 py-2 text-xs text-amber-300 sm:px-6 lg:px-8">
       <EyeOff className="h-4 w-4 flex-shrink-0" />
       <span>
         {t('menuBanner.hidden', { name: item?.name ?? hiddenKey })}

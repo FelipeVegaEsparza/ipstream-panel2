@@ -47,11 +47,11 @@ export function DashboardLayoutClient({
         setSidebarOpen={setSidebarOpen}
         disabledItems={disabledSet}
       />
-      <div className="lg:pl-72">
+      <div className="lg:pl-[248px]">
         <Header user={user} setSidebarOpen={setSidebarOpen} websiteUrl={websiteUrl} />
         <GlobalMenuBanner globallyHidden={globalHidden} />
         <main className="py-6 md:py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-8">
+          <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-10">
             {children}
           </div>
         </main>

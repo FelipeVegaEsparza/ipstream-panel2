@@ -40,28 +40,28 @@ export function ImpersonationBanner() {
   console.log('🎯 [Banner] Showing banner')
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between py-3">
+    <div className="fixed left-0 right-0 top-0 z-50 border-b border-amber-500/30 bg-[#241b0e] text-amber-100">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between py-2">
           <div className="flex items-center space-x-3">
-            <ShieldExclamationIcon className="h-6 w-6 text-foreground" />
+            <ShieldExclamationIcon className="h-5 w-5 text-amber-300" />
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-              <span className="font-semibold">
+              <span className="text-[13px] font-semibold">
                 {t('impersonation.active')}
               </span>
-              <span className="text-sm opacity-90">
+              <span className="text-xs opacity-80">
                 {t('impersonation.client')} <strong>{impersonationData.clientName}</strong> ({impersonationData.clientEmail})
               </span>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="hidden sm:block text-sm opacity-90">
+            <div className="hidden text-xs opacity-70 sm:block">
               {t('impersonation.admin')} {impersonationData.adminEmail}
             </div>
             <button
               onClick={handleStopImpersonation}
-              className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center space-x-1.5 rounded-control border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs transition-colors hover:bg-amber-500/20"
             >
               <ArrowLeftIcon className="h-4 w-4" />
               <span className="text-sm font-medium">{t('impersonation.backToAdmin')}</span>

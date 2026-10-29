@@ -152,9 +152,9 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
     item.children?.some((c) => isChildActive(c)) ?? false
 
   const renderNavContent = (onLinkClick?: () => void) => (
-    <div className="flex min-h-0 grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4 border-r border-border">
-      <div className="sticky top-0 z-10 flex h-20 shrink-0 items-center justify-center gradient-bg -mx-6 px-6">
-        <PanelLogo className="h-12 w-auto filter drop-shadow-lg" />
+    <div className="flex min-h-0 grow flex-col gap-y-4 overflow-y-auto bg-surface-1 px-3 pb-4 border-r border-line">
+      <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center bg-surface-1 -mx-3 px-4 border-b border-line">
+        <PanelLogo className="h-8 w-auto" />
       </div>
       <nav className="flex flex-1 flex-col">
         <ul role="list" className="flex flex-1 flex-col gap-y-6">
@@ -164,7 +164,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
               <li key={section.name}>
                 <button
                   onClick={() => toggleSection(section.name)}
-                  className="flex w-full items-center justify-between px-1 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex w-full items-center justify-between px-2 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {sectionLabel(section.name)}
                   <ChevronDownIcon
@@ -203,17 +203,14 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                     }`}
                                   >
                                     <item.icon
-                                      className={`h-6 w-6 shrink-0 transition-colors ${
+                                      className={`h-[18px] w-[18px] shrink-0 transition-colors ${
                                         isActive
-                                          ? 'text-brand'
-                                          : 'text-muted-foreground group-hover:text-brand'
+                                          ? 'text-signal'
+                                          : 'text-muted-foreground group-hover:text-foreground'
                                       }`}
                                       aria-hidden="true"
                                     />
                                     <span className="truncate flex-1">{label(item.name)}</span>
-                                    {isActive && (
-                                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-grad rounded-l-full"></div>
-                                    )}
                                   </Link>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); toggleChildren(item.key) }}
@@ -232,7 +229,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                   isChildGroupOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
                                 }`}
                               >
-                                <ul className="space-y-0.5 pt-0.5 pl-3">
+                                <ul className="space-y-0.5 pt-0.5 pl-2">
                                   {item.children!.map((child) => {
                                     const childActive = isChildActive(child)
                                     return (
@@ -247,17 +244,15 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                           }`}
                                         >
                                           <child.icon
-                                            className={`h-5 w-5 shrink-0 transition-colors ${
+                                            className={`h-4 w-4 shrink-0 transition-colors ${
                                               childActive
-                                                ? 'text-brand'
-                                                : 'text-muted-foreground group-hover:text-brand'
+                                                ? 'text-signal'
+                                                : 'text-muted-foreground group-hover:text-foreground'
                                             }`}
                                             aria-hidden="true"
                                           />
                                           <span className="truncate text-sm">{label(child.name)}</span>
-                                          {childActive && (
-                                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-grad rounded-l-full"></div>
-                                          )}
+
                                         </Link>
                                       </li>
                                     )
@@ -275,10 +270,10 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                               aria-current={isActive ? 'page' : undefined}
                             >
                               <item.icon
-                                className={`h-6 w-6 shrink-0 transition-colors ${
+                                className={`h-[18px] w-[18px] shrink-0 transition-colors ${
                                   isActive
-                                    ? 'text-brand'
-                                    : 'text-muted-foreground group-hover:text-brand'
+                                    ? 'text-signal'
+                                    : 'text-muted-foreground group-hover:text-foreground'
                                 }`}
                                 aria-hidden="true"
                               />
@@ -293,9 +288,6 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                                   {onboardingPending > 9 ? '9+' : onboardingPending}
                                 </span>
                               )}
-                              {isActive && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-grad rounded-l-full"></div>
-                              )}
                             </Link>
                           )}
                         </li>
@@ -309,9 +301,9 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
         </ul>
       </nav>
 
-      <div className="glass-effect rounded-xl p-4 text-center">
-        <p className="text-xs text-muted-foreground">{APP_NAME}</p>
-        <p className="text-xs text-muted-foreground">v{APP_VERSION}</p>
+      <div className="border-t border-line px-2 pt-3 pb-1">
+        <p className="text-[11px] font-medium text-muted-foreground">{APP_NAME}</p>
+        <p className="dashboard-metric text-[10px] text-muted-foreground/70">v{APP_VERSION}</p>
       </div>
     </div>
   )
@@ -343,7 +335,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
               leaveFrom="translate-x-0"
               leaveTo="-translate-x-full"
             >
-              <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
+              <Dialog.Panel className="relative mr-16 flex w-full max-w-[280px] flex-1">
                 <Transition.Child
                   as={Fragment}
                   enter="ease-in-out duration-300"
@@ -372,7 +364,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
       </Transition.Root>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col min-h-0">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-[248px] lg:flex-col min-h-0">
         {renderNavContent()}
       </div>
     </>
