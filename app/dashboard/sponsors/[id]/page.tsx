@@ -46,7 +46,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
   const socialNetworks = [
     { name: 'Facebook', url: sponsor.facebook, color: 'bg-brand hover:bg-brand' },
     { name: 'Instagram', url: sponsor.instagram, color: 'bg-pink-600 hover:bg-pink-700' },
-    { name: 'YouTube', url: sponsor.youtube, color: 'bg-red-600 hover:bg-red-700' },
+  { name: 'YouTube', url: sponsor.youtube, color: 'bg-[color:var(--danger)] hover:brightness-110' },
     { name: 'TikTok', url: sponsor.tiktok, color: 'bg-card hover:bg-background' },
     { name: 'X', url: sponsor.x, color: 'bg-card hover:bg-background' },
     { name: 'WhatsApp', url: sponsor.whatsapp, color: 'bg-green-600 hover:bg-green-700' },
@@ -63,7 +63,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="text-2xl font-bold text-foreground">
               {sponsor.name}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -96,7 +96,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
                     className="h-24 w-auto object-contain"
                   />
                 ) : (
-                  <div className="h-24 w-32 bg-gray-100 rounded-lg flex items-center justify-center">
+         <div className="h-24 w-32 bg-surface-3 rounded-lg flex items-center justify-center">
                     <span className="text-muted-foreground text-sm">{t('sponsors.noLogo')}</span>
                   </div>
                 )}
@@ -104,7 +104,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
 
               {/* Basic Info */}
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-foreground mb-2">
                   {sponsor.name}
                 </h2>
                 
@@ -115,7 +115,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
                   </div>
                 )}
 
-                <p className="text-gray-700 leading-relaxed">
+        <p className="text-muted-foreground leading-relaxed">
                   {sponsor.description}
                 </p>
               </div>
@@ -125,7 +125,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
           {/* Website */}
           {sponsor.website && (
             <div className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+       <h3 className="text-lg font-medium text-foreground mb-4">
                 {t('sponsors.website')}
               </h3>
               <a
@@ -143,7 +143,7 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
           {/* Social Networks */}
           {socialNetworks.length > 0 && (
             <div className="card">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+       <h3 className="text-lg font-medium text-foreground mb-4">
                 {t('sponsors.social')}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -167,25 +167,25 @@ export default async function SponsorDetailPage({ params }: SponsorDetailPagePro
         <div className="space-y-6">
           {/* Stats */}
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <h3 className="text-lg font-medium text-foreground mb-4">
               {t('sponsors.info')}
             </h3>
             <div className="space-y-3">
               <div>
                 <span className="text-sm text-muted-foreground">{t('sponsors.added')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {formatDate(sponsor.createdAt)}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('sponsors.updatedLabel')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {formatDate(sponsor.updatedAt)}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('sponsors.socialCount')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {t('sponsors.configured', { count: socialNetworks.length })}
                 </p>
               </div>

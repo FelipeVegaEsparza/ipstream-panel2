@@ -207,7 +207,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
       )}
 
       {empty && !error && (
-        <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
+    <div className="bg-card border border-border rounded-panel p-8 text-center text-muted-foreground">
           {t('analytics.empty')}
         </div>
       )}
@@ -223,7 +223,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
             <Kpi title="Uptime" value={fmtUptime(s.airtimeSeconds, summary!.from, summary!.to)} />
           </div>
 
-          <div className="bg-card rounded-xl p-5 border border-border">
+     <div className="bg-card rounded-panel p-5 border border-border">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-foreground">{t('analytics.audience')}</h2>
               <span className="text-xs text-muted-foreground">{t('analytics.timezone', { timezone: summary!.timezone })}</span>
@@ -256,7 +256,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
           </div>
 
           {heatmap && heatmap.max > 0 && (
-            <div className="bg-card rounded-xl p-5 border border-border">
+      <div className="bg-card rounded-panel p-5 border border-border">
               <h2 className="text-lg font-semibold text-foreground mb-4">{t('analytics.heatmap')}</h2>
               <div className="overflow-x-auto">
                 <div className="inline-block">
@@ -293,7 +293,7 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
 
 function Kpi({ title, value, sub, delta }: { title: string; value: string; sub?: string; delta?: number | null }) {
   return (
-    <div className="bg-card rounded-xl p-4 border border-border">
+  <div className="bg-card rounded-panel p-4 border border-border">
       <p className="text-xs text-muted-foreground mb-1">{title}</p>
       <p className="text-2xl font-bold text-foreground">{value}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
@@ -308,7 +308,7 @@ function Kpi({ title, value, sub, delta }: { title: string; value: string; sub?:
 
 function RankCard({ title, items }: { title: string; items: RankItem[] }) {
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden">
+  <div className="bg-card rounded-panel border border-border overflow-hidden">
       <div className="px-5 py-4 border-b border-border">
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       </div>

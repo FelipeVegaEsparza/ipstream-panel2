@@ -54,7 +54,7 @@ export default async function FirstStepsPage() {
       </div>
 
       {embed && (
-        <div className="rounded-2xl overflow-hidden border border-border bg-black aspect-video">
+    <div className="rounded-container overflow-hidden border border-border bg-black aspect-video">
           <iframe
             src={embed}
             title={intro?.title || t('onboarding.videoTitle')}
@@ -74,7 +74,7 @@ export default async function FirstStepsPage() {
         </div>
         <div className="h-2 w-full rounded-full bg-card overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-brand to-brand transition-all"
+      className="h-full rounded-full bg-signal transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -86,7 +86,7 @@ export default async function FirstStepsPage() {
           return (
           <li
             key={step.key}
-            className={`flex items-start gap-4 rounded-xl border p-4 ${
+      className={`flex items-start gap-4 rounded-panel border p-4 ${
               step.done ? 'border-green-500/30 bg-green-500/5' : 'border-border bg-card/40'
             }`}
           >

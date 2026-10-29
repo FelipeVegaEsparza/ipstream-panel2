@@ -18,11 +18,13 @@ La dirección **Control Room** fue elegida por el usuario, no por una tirada de 
 
 **Non-Goals:**
 
-- Rediseñar streaming, TV, contenido, cuentas o admin en esta fase.
+- Rediseñar admin en esta fase.
 - Agregar features, endpoints, métricas nuevas o cambios de negocio.
 - Cambiar el logo, el nombre o la paleta de marca.
-- Reescribir la lógica de los componentes de la home; se recompone y se reestiliza.
+- Reescribir la lógica de los componentes; se recompone y se reestiliza.
 - Generar mockups con IA para una superficie Operate; el contrato vive en este documento y en el código.
+
+**Rollout del resto del panel:** las pantallas del cliente heredan el shell y sus tokens. Las utilidades heredadas se normalizan con reglas scopeadas a `.dashboard-shell` (radios, sombras, blur, gradientes decorativos y escalas) y las pantallas principales de streaming, TV, biblioteca y analítica reciben cabeceras y controles del nuevo sistema. Las páginas de contenido se limpian en lotes para reemplazar emojis, acentos fuera de marca y tarjetas heredadas sin tocar su lógica.
 
 ## Decisions
 

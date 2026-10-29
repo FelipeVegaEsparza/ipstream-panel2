@@ -24,7 +24,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('events.edit')}</h1>
+    <h1 className="text-2xl font-bold text-foreground">{t('events.edit')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t('events.editSubtitle')}</p>
       </div>
       <div className="card max-w-2xl">

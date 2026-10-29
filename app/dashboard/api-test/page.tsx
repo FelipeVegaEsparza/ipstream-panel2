@@ -1281,7 +1281,7 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
         </button>
       </div>
 
-      <div className="glass-effect rounded-xl p-6">
+   <div className="glass-effect rounded-panel p-6">
         <h3 className="text-lg font-medium text-brand mb-4 flex items-center">
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -1301,12 +1301,12 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
           <div key={group}>
             <div className="flex items-center gap-3 mb-3">
               <h2 className="text-lg font-semibold text-foreground">{group}</h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-secondary/50 to-transparent" />
+       <div className="h-px flex-1 bg-surface-3 from-secondary/50 to-transparent" />
               <span className="text-xs text-muted-foreground">{items.length} endpoints</span>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {items.map((endpoint) => (
-                <div key={endpoint.url} className="card hover:scale-[1.02] transition-transform duration-200">
+        <div key={endpoint.url} className="card transition-transform duration-200">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <h3 className="text-base font-semibold text-foreground mb-1">
@@ -1367,7 +1367,7 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
           </svg>
           Sistema de Plantillas
         </h3>
-        <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-6 mb-4">
+    <div className="bg-purple-900/20 border border-purple-500/30 rounded-panel p-6 mb-4">
           <p className="text-muted-foreground mb-4">
             El endpoint principal <code className="text-purple-400 bg-card px-2 py-1 rounded">/api/public/{clientId}</code> ahora incluye el campo <code className="text-purple-400 bg-card px-2 py-1 rounded">selectedTemplate</code> que contiene el nombre de la plantilla que seleccionaste en tu dashboard.
           </p>
@@ -1411,7 +1411,7 @@ Las imágenes se optimizan automáticamente al subirse (redimensionadas a max 19
         </p>
 
         <div className="grid gap-6 md:grid-cols-2 mb-6">
-          <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-5">
+     <div className="bg-green-900/20 border border-green-500/30 rounded-panel p-5">
             <h4 className="text-sm font-semibold text-green-400 mb-3 flex items-center">
               <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs font-bold mr-2">1</span>
               Obtener encuestas activas
@@ -1425,7 +1425,7 @@ const polls = await res.json()
             </pre>
           </div>
 
-          <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-5">
+     <div className="bg-green-900/20 border border-green-500/30 rounded-panel p-5">
             <h4 className="text-sm font-semibold text-green-400 mb-3 flex items-center">
               <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs font-bold mr-2">2</span>
               Verificar voto existente
@@ -1441,7 +1441,7 @@ if (voted) {
             </pre>
           </div>
 
-          <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-5">
+     <div className="bg-green-900/20 border border-green-500/30 rounded-panel p-5">
             <h4 className="text-sm font-semibold text-green-400 mb-3 flex items-center">
               <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs font-bold mr-2">3</span>
               Enviar voto al servidor
@@ -1463,7 +1463,7 @@ const data = await res.json()`}
             </pre>
           </div>
 
-          <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-5">
+     <div className="bg-green-900/20 border border-green-500/30 rounded-panel p-5">
             <h4 className="text-sm font-semibold text-green-400 mb-3 flex items-center">
               <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs font-bold mr-2">4</span>
               Guardar voto y mostrar resultados
@@ -1515,7 +1515,7 @@ data.options.forEach(opt => {
         </p>
 
         <div className="grid gap-6 md:grid-cols-2 mb-6">
-          <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-5">
+     <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-panel p-5">
             <h4 className="text-sm font-semibold text-indigo-400 mb-3 flex items-center">
               <span className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold mr-2">1</span>
               Generar deviceId (una sola vez)
@@ -1531,7 +1531,7 @@ if (!deviceId) {
             </pre>
           </div>
 
-          <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-5">
+     <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-panel p-5">
             <h4 className="text-sm font-semibold text-indigo-400 mb-3 flex items-center">
               <span className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold mr-2">2</span>
               Registrar instalación (solo si es nuevo)
@@ -1574,7 +1574,7 @@ if (!deviceId) {
           </svg>
           Ejemplo de uso con JavaScript
         </h3>
-        <div className="bg-background border border-border rounded-xl p-6 overflow-x-auto">
+    <div className="bg-background border border-border rounded-panel p-6 overflow-x-auto">
           <pre className="text-green-400 text-sm leading-relaxed">
 {`// Obtener toda la información del cliente (incluye plantilla)
 fetch('${baseUrl}/api/public/${clientId}')

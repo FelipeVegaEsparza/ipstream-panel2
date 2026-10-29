@@ -120,7 +120,7 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
       </div>
 
       {selectedTemplateId && (
-        <Card className="bg-gradient-to-r from-brand/20 to-brand/20 border-brand/30">
+    <Card className="bg-surface-3 from-brand/20 to-brand/20 border-brand/30">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="bg-brand/20 p-2 rounded-lg">
@@ -148,7 +148,7 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
               key={template.id} 
               className={`bg-card border-2 overflow-hidden transition-all duration-200 ${
                 isSelected 
-                  ? 'border-brand shadow-lg shadow-cyan-500/20' 
+         ? 'border-brand ' 
                   : 'border-border hover:border-border'
               }`}
             >

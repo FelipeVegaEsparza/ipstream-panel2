@@ -24,11 +24,11 @@ const colorVariants = {
     text: 'text-green-400',
     icon: 'text-green-400'
   },
-  'bg-purple-500': {
-    gradient: 'from-purple-500/20 to-purple-600/20',
-    border: 'border-purple-500/30',
-    text: 'text-purple-400',
-    icon: 'text-purple-400'
+  'bg-signal-500': {
+    gradient: 'from-signal-500/20 to-signal-600/20',
+    border: 'border-signal-500/30',
+    text: 'text-signal-400',
+    icon: 'text-signal-400'
   },
   'bg-yellow-500': {
     gradient: 'from-yellow-500/20 to-yellow-600/20',
@@ -95,7 +95,7 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
           <Link
             key={stat.name}
             href={stat.href}
-            className={`stat-card bg-gradient-to-br ${variant.gradient} ${variant.border} hover:scale-105 group`}
+      className={`stat-card bg-surface-3 ${variant.gradient} ${variant.border} group`}
           >
             <div className="flex items-center justify-between">
               <div>

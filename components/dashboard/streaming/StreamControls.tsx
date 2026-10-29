@@ -39,7 +39,7 @@ export function StreamControls({ isRunning, onChange }: Props) {
   }
 
   return (
-    <div className="bg-card rounded-lg shadow-lg p-6">
+  <div className="bg-card rounded-lg p-6">
       <h3 className="text-lg font-semibold text-foreground mb-4">{t('streaming.controls.title')}</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <button

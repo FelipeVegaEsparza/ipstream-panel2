@@ -193,7 +193,7 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
       )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <section className="flex h-[calc(100vh-240px)] min-h-[440px] max-h-[760px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:min-h-[520px]">
+    <section className="flex h-[calc(100vh-240px)] min-h-[440px] max-h-[760px] flex-col overflow-hidden rounded-container border border-border bg-card sm:min-h-[520px]">
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand/10 text-brand">

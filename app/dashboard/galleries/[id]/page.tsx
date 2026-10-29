@@ -60,7 +60,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="text-2xl font-bold text-foreground">
               {t('galleries.detail.title')}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
           <div className="card">
             <article className="space-y-6">
               <header>
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+        <h1 className="text-3xl font-bold text-foreground mb-4">
                   {gallery.title}
                 </h1>
 
@@ -94,31 +94,31 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
                 </div>
               </header>
 
-              <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+       <div className="text-foreground leading-relaxed whitespace-pre-wrap">
                 {gallery.description}
               </div>
 
               {/* Image Gallery Grid */}
               {gallery.images.length > 0 ? (
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">
+         <h2 className="text-xl font-bold text-foreground mb-4">
                     {t('galleries.detail.images', { count: gallery.images.length })}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {gallery.images.map((img, index) => (
-                      <div key={img.id} className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
+           <div key={img.id} className="relative aspect-video rounded-lg overflow-hidden border border-line">
                         <Image
                           src={img.imageUrl}
                           alt={t('galleries.detail.imageAlt', { title: gallery.title, index: index + 1 })}
                           fill
-                          className="object-cover hover:scale-105 transition-transform duration-300"
+             className="object-cover transition-transform duration-300"
                         />
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <div className="text-center py-12 bg-surface-2 rounded-lg">
                   <PhotoIcon className="mx-auto h-12 w-12 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
                     {t('galleries.detail.noImages')}
@@ -132,7 +132,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
         {/* Sidebar */}
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <h3 className="text-lg font-medium text-foreground mb-4">
               {t('galleries.detail.info')}
             </h3>
             <div className="space-y-3">
@@ -142,19 +142,19 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('galleries.detail.imageCount')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {gallery.images.length}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('galleries.detail.createdLabel')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {formatDate(gallery.createdAt)}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('galleries.detail.lastUpdated')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {formatDate(gallery.updatedAt)}
                 </p>
               </div>
@@ -162,7 +162,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
           </div>
 
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <h3 className="text-lg font-medium text-foreground mb-4">
               {t('galleries.detail.actions')}
             </h3>
             <div className="space-y-3">

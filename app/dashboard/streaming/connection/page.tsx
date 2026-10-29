@@ -1,4 +1,5 @@
 'use client'
+import { CheckIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 import { useEffect, useState, useCallback } from 'react'
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
@@ -44,7 +45,7 @@ const ROLE_HIERARCHY: Record<string, number> = {
 
 const ROLE_STYLES: Record<string, string> = {
   owner: 'bg-red-900/50 text-red-300',
-  host: 'bg-blue-900/50 text-brand',
+ host: 'bg-surface-3 text-signal',
   guest: 'bg-secondary text-muted-foreground',
 }
 
@@ -255,7 +256,7 @@ export default function ConnectionPage() {
 
       {/* Status */}
       <div className={`rounded-lg p-4 text-sm border ${
-        djConnected ? 'bg-green-900/30 border-green-700 text-green-100' : 'bg-card border-border text-muted-foreground'
+    djConnected ? 'bg-[color:var(--live)]/10 border border-[color:var(--live)]/30 text-[color:var(--live)]' : 'bg-card border-border text-muted-foreground'
       }`}>
         <div className="flex items-center gap-2">
           <span className={`inline-block w-3 h-3 rounded-full ${djConnected ? 'bg-green-500 animate-pulse' : 'bg-secondary'}`} />
@@ -277,7 +278,7 @@ export default function ConnectionPage() {
         <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded text-sm">{error}</div>
       )}
       {success && (
-        <div className="bg-green-900/30 border border-green-700 text-green-200 px-4 py-3 rounded text-sm">{success}</div>
+    <div className="bg-[color:var(--live)]/10 border border-[color:var(--live)]/30 text-[color:var(--live)] px-4 py-3 rounded text-sm">{success}</div>
       )}
 
       {/* Jerarquía de roles */}
@@ -304,7 +305,7 @@ export default function ConnectionPage() {
             onClick={startCreate}
             disabled={djSlots.length >= planMaxDjs}
             title={djSlots.length >= planMaxDjs ? t('streaming.connection.planMax', { count: planMaxDjs }) : t('streaming.connection.newDj')}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-sm"
+      className="px-4 py-2 bg-signal hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded text-sm"
           >
             {t('streaming.connection.newDj')}
           </button>
@@ -318,7 +319,7 @@ export default function ConnectionPage() {
           <div className="space-y-3">
             {sortedSlots.map(slot => (
               <div key={slot.id} className={`border rounded-lg p-4 ${
-                slot.connected ? 'border-green-700 bg-green-900/20' : 'border-border bg-background/50'
+        slot.connected ? 'border-[color:var(--live)]/30 bg-[color:var(--live)]/10' : 'border-border bg-background/50'
               }`}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -402,7 +403,7 @@ export default function ConnectionPage() {
             <div className="flex items-center gap-2 mt-1">
               <code className="bg-background text-brand px-3 py-2 rounded flex-1 font-mono text-sm">{displayPassword}</code>
               <button onClick={revealPassword} disabled={loadingPassword} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary disabled:opacity-50 text-foreground rounded" title={showPassword ? t('streaming.connection.hide') : t('streaming.connection.show')}>
-                {loadingPassword ? '...' : showPassword ? '🙈' : '👁'}
+        {loadingPassword ? '...' : showPassword ? <EyeSlashIcon className="h-3.5 w-3.5" /> : <EyeIcon className="h-3.5 w-3.5" />}
               </button>
               {livePassword && showPassword && (
                 <button onClick={() => copy(livePassword, t('streaming.connection.password'))} className="text-xs px-2 py-1 bg-secondary hover:bg-secondary text-foreground rounded">{t('streaming.connection.copy')}</button>
@@ -542,7 +543,7 @@ export default function ConnectionPage() {
 
             <div className="flex justify-end gap-2 pt-2">
               <button onClick={resetForm} className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded text-sm">{t('streaming.connection.cancel')}</button>
-              <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded text-sm">
+       <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-signal hover:brightness-110 disabled:opacity-50 text-white rounded text-sm">
                 {saving ? t('streaming.connection.saving') : editId ? t('streaming.connection.save') : t('streaming.connection.create')}
               </button>
             </div>
@@ -551,14 +552,14 @@ export default function ConnectionPage() {
       )}
 
       {copyText && (
-        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg">
-          ✓ {t('streaming.connection.copied', { label: copyText })}
+    <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded ">
+     <CheckIcon className="inline h-3.5 w-3.5" /> {t('streaming.connection.copied', { label: copyText })}
         </div>
       )}
 
       {success && (
-        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg">
-          ✓ {success}
+    <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded ">
+     <CheckIcon className="inline h-3.5 w-3.5" /> {success}
         </div>
       )}
     </div>

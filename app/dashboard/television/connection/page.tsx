@@ -74,7 +74,7 @@ export default function TvConnectionPage() {
       </div>
 
       {/* DJ Status */}
-      <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+   <div className="bg-card/80 rounded-container border border-border/40 p-5">
         <h2 className="text-lg font-semibold text-foreground mb-3">{t('tv.connection.djStatus')}</h2>
         <div className="flex items-center gap-2">
           <span className={`w-2.5 h-2.5 rounded-full ${info?.dj.active ? 'bg-red-500 animate-pulse' : 'bg-secondary'}`} />
@@ -101,7 +101,7 @@ export default function TvConnectionPage() {
       {/* Conexión Universal (H.264 estándar; HEVC/AV1 por enhanced RTMP se descartan en ingesta con SRS v5) */}
       {info && (
         <>
-          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+     <div className="bg-card/80 rounded-container border border-border/40 p-5">
             <h2 className="text-lg font-semibold text-foreground mb-3">{t('tv.connection.universalTitle')}</h2>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2.5 h-2.5 rounded-full bg-green-500" />

@@ -11,6 +11,7 @@ import { StreamControls } from '@/components/dashboard/streaming/StreamControls'
 import { PlayHistory } from '@/components/dashboard/streaming/PlayHistory'
 import { useToast } from '@/components/ui/toast'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 
 export default function StreamingPage() {
   const { t } = useDashboardI18n()
@@ -35,19 +36,14 @@ export default function StreamingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('streaming.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('streaming.subtitle')}
-        </p>
-      </div>
+   <DashboardPageHeader title={t('streaming.title')} description={t('streaming.subtitle')} />
 
       <StreamControls isRunning={isRunning} onChange={refresh} />
 
       {streamUrl && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+    <div className="dashboard-panel p-5">
           <div className="flex items-center gap-2 mb-3">
-            <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-4 w-4 text-signal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
             <span className="text-sm font-semibold text-muted-foreground">{t('streaming.urlTitle')}</span>
@@ -57,27 +53,27 @@ export default function StreamingPage() {
               type="text"
               readOnly
               value={absoluteStreamUrl ?? ''}
-              className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none focus:ring-2 focus:ring-brand/30"
+       className="dashboard-metric flex-1 rounded-control border border-line bg-surface-2 px-3 py-2.5 text-xs text-foreground outline-none"
               onClick={(e) => e.currentTarget.select()}
             />
             <a
               href={absoluteStreamUrl ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-2.5 bg-brand hover:bg-brand text-white font-medium rounded-lg text-center whitespace-nowrap transition-colors"
+       className="rounded-control bg-signal px-5 py-2.5 text-center text-xs font-medium text-white transition-colors hover:brightness-110 whitespace-nowrap"
             >
               {t('streaming.listen')}
             </a>
             <button
               onClick={copyUrl}
-              className="px-5 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg whitespace-nowrap transition-colors"
+       className="rounded-control border border-line bg-surface-3 px-5 py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-surface-2 whitespace-nowrap"
             >
               {copied ? t('streaming.copied') : t('streaming.copy')}
             </button>
           </div>
           {isRunning && (
-            <p className="text-xs text-green-400/80 mt-2.5 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+      <p className="mt-2.5 flex items-center gap-1.5 text-xs text-[color:var(--live)]">
+       <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--live)]" />
               {t('streaming.active')}
             </p>
           )}

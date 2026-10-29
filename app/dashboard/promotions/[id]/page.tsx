@@ -54,7 +54,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="text-2xl font-bold text-foreground">
               {t('promotions.detailTitle')}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -77,7 +77,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
           <div className="card">
             <article className="space-y-6">
               <header>
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+        <h1 className="text-3xl font-bold text-foreground mb-4">
                   {promotion.title}
                 </h1>
                 
@@ -101,7 +101,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
               )}
 
               <div className="prose prose-lg max-w-none">
-                <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+        <div className="text-foreground leading-relaxed whitespace-pre-wrap">
                   {promotion.description}
                 </div>
               </div>
@@ -134,7 +134,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
         <div className="space-y-6">
           {/* Stats */}
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <h3 className="text-lg font-medium text-foreground mb-4">
               {t('promotions.info')}
             </h3>
             <div className="space-y-3">
@@ -146,25 +146,25 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('promotions.createdLabel')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {formatDate(promotion.createdAt)}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('promotions.updatedLabel')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {formatDate(promotion.updatedAt)}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('promotions.hasImage')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {promotion.imageUrl ? t('promotions.yes') : t('promotions.no')}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('promotions.hasLink')}</span>
-                <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
                   {promotion.link ? t('promotions.yes') : t('promotions.no')}
                 </p>
               </div>
@@ -173,7 +173,7 @@ export default async function PromotionDetailPage({ params }: PromotionDetailPag
 
           {/* Actions */}
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <h3 className="text-lg font-medium text-foreground mb-4">
               {t('promotions.actions')}
             </h3>
             <div className="space-y-3">

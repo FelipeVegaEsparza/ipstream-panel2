@@ -78,13 +78,13 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
           aria-label={t('chat.composer.placeholder')}
           rows={2}
           maxLength={500}
-          className="min-h-[44px] flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+     className="min-h-[44px] flex-1 resize-none rounded-panel border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
           disabled={sending}
         />
         <button
           type="submit"
           disabled={!body.trim() || sending}
-          className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
+     className="inline-flex h-11 items-center gap-2 rounded-panel bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           {sending ? t('chat.composer.sending') : t('chat.composer.send')}

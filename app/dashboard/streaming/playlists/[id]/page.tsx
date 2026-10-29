@@ -407,7 +407,7 @@ export default function PlaylistEditorPage() {
               {playlist.description || <em className="text-muted-foreground">{t('streaming.playlistDetail.noDescription')}</em>}
             </div>
             <div className="flex gap-4 text-sm text-muted-foreground">
-              <span>🎵 {playlist.entries.length} tracks</span>
+       <span>{playlist.entries.length} tracks</span>
               <span>⏱️ {fmtDuration(playlist.totalDuration)}</span>
               <span>{playlist.shuffle ? t('streaming.playlistDetail.shuffleOn') : t('streaming.playlistDetail.shuffleOff')}</span>
               <span>{playlist.repeat ? t('streaming.playlistDetail.repeatOn') : t('streaming.playlistDetail.repeatOff')}</span>
@@ -477,8 +477,8 @@ export default function PlaylistEditorPage() {
         {/* Modal de selección múltiple */}
         {showAdd && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} />
-            <div className="relative bg-card rounded-2xl shadow-2xl border border-border w-full max-w-lg max-h-[80vh] flex flex-col">
+      <div className="absolute inset-0 bg-black/60 " onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} />
+      <div className="relative bg-card rounded-container border border-border w-full max-w-lg max-h-[80vh] flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <h3 className="text-lg font-semibold text-foreground">{t('streaming.playlistDetail.addTracksTitle')}</h3>
@@ -550,7 +550,7 @@ export default function PlaylistEditorPage() {
                       <div
                         key={track.id}
                         className={`flex items-center gap-2 p-2 rounded ${
-                          inPlaylist ? 'bg-card/50 opacity-40' : isSelected ? 'bg-indigo-900/40 border border-indigo-700' : 'bg-card/50 hover:bg-secondary'
+             inPlaylist ? 'bg-card/50 opacity-40' : isSelected ? 'bg-signal/10 border border-signal/30' : 'bg-card/50 hover:bg-secondary'
                         }`}
                       >
                         <input
@@ -564,7 +564,7 @@ export default function PlaylistEditorPage() {
                           {track.coverUrl ? (
                             <img src={track.coverUrl} alt="" className="w-8 h-8 rounded object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                           ) : (
-                            <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center text-muted-foreground text-xs">🎵</div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-control bg-surface-3"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" /></div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -601,7 +601,7 @@ export default function PlaylistEditorPage() {
                 <button
                   onClick={bulkAddTracks}
                   disabled={selectedTrackIds.size === 0 || addingBulk}
-                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 text-white rounded-lg font-medium"
+         className="flex-1 px-4 py-2 bg-signal hover:brightness-110 disabled:opacity-50 text-white rounded-lg font-medium"
                 >
                   {addingBulk ? t('streaming.playlistDetail.adding') : t('streaming.playlistDetail.addSelected', { count: selectedTrackIds.size })}
                 </button>
@@ -612,8 +612,8 @@ export default function PlaylistEditorPage() {
 
         {showCapsules && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCapsules(false)} />
-            <div className="relative flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-border bg-card shadow-2xl">
+      <div className="absolute inset-0 bg-black/60 " onClick={() => setShowCapsules(false)} />
+      <div className="relative flex max-h-[80vh] w-full max-w-lg flex-col rounded-container border border-border bg-card ">
               <div className="flex items-center justify-between border-b border-border p-4">
                 <h3 className="text-lg font-semibold text-foreground">{t('streaming.playlistDetail.addCapsule')}</h3>
                 <button onClick={() => setShowCapsules(false)} className="text-muted-foreground hover:text-foreground" aria-label={t('streaming.playlistDetail.close')}>×</button>
@@ -678,7 +678,7 @@ export default function PlaylistEditorPage() {
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center text-muted-foreground text-xs">🎵</div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-control bg-surface-3"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" /></div>
                   )}
                 </div>
                 <button

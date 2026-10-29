@@ -183,7 +183,7 @@ export function LocutorIaSettings() {
         period={config.period}
       />
 
-      <div className="rounded-xl border border-brand/30 bg-brand/5 p-4">
+   <div className="rounded-panel border border-brand/30 bg-brand/5 p-4">
         <p className="text-sm font-semibold text-foreground">{t('streaming.locutor.howItWorks')}</p>
         <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
           <p><strong className="text-foreground">1.</strong> {t('streaming.locutor.step1')}</p>

@@ -1,4 +1,5 @@
 'use client'
+import { CheckIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/components/ui/toast'
@@ -205,7 +206,7 @@ export default function TvLibraryPage() {
 
       {/* Storage bar */}
       {storage && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4">
+    <div className="bg-card/80 rounded-container border border-border/40 p-4">
           <div className="flex justify-between text-sm mb-2">
             <span className="text-muted-foreground">
               {t('tv.library.storage', { count: storage.trackCount, mb: storage.totalMB.toFixed(1) })}
@@ -232,7 +233,7 @@ export default function TvLibraryPage() {
       <div className="flex gap-4">
         {/* Folder sidebar */}
         <div className="w-64 flex-shrink-0">
-          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4 space-y-3">
+     <div className="bg-card/80 rounded-container border border-border/40 p-4 space-y-3">
             <h3 className="text-sm font-semibold text-muted-foreground">{t('tv.library.folders')}</h3>
             <button
               onClick={() => setCurrentFolderId(null)}
@@ -251,7 +252,7 @@ export default function TvLibraryPage() {
                       currentFolderId === folder.id ? 'bg-brand/30 text-brand' : 'text-muted-foreground hover:bg-secondary'
                     }`}
                   >
-                    📁 {folder.name} ({getTrackCount(folder)})
+          {folder.name} ({getTrackCount(folder)})
                   </button>
                   {renamingFolderId === folder.id ? (
                     <div className="flex gap-1">
@@ -262,8 +263,8 @@ export default function TvLibraryPage() {
                         className="w-24 bg-secondary text-foreground text-xs px-2 py-1 rounded"
                         autoFocus
                       />
-                      <button onClick={() => renameFolder(folder.id)} className="text-xs text-green-400">✓</button>
-                      <button onClick={() => setRenamingFolderId(null)} className="text-xs text-muted-foreground">✗</button>
+           <button onClick={() => renameFolder(folder.id)} className="text-[color:var(--live)]"><CheckIcon className="h-3.5 w-3.5" /></button>
+           <button onClick={() => setRenamingFolderId(null)} className="text-muted-foreground"><XMarkIcon className="h-3.5 w-3.5" /></button>
                     </div>
                   ) : (
                     <div className="hidden group-hover:flex gap-1">
@@ -271,10 +272,10 @@ export default function TvLibraryPage() {
                         onClick={() => { setRenamingFolderId(folder.id); setRenamingName(folder.name) }}
                         className="text-xs text-muted-foreground hover:text-foreground"
                       >
-                        ✎
+            <PencilIcon className="h-3.5 w-3.5" />
                       </button>
                       <button onClick={() => deleteFolder(folder.id)} className="text-xs text-muted-foreground hover:text-red-400">
-                        ✕
+            <XMarkIcon className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   )}
@@ -357,7 +358,7 @@ export default function TvLibraryPage() {
           )}
 
           {/* Tracks table */}
-          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl overflow-x-auto">
+     <div className="bg-card/80 rounded-container border border-border/40 overflow-x-auto">
             {loading ? (
               <div className="p-6 text-center text-muted-foreground">{t('tv.library.loading')}</div>
             ) : tracks.length === 0 ? (

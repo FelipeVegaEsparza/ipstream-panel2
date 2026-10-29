@@ -7,7 +7,7 @@ export default function NewEventPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('events.new')}</h1>
+    <h1 className="text-2xl font-bold text-foreground">{t('events.new')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t('events.newSubtitle')}</p>
       </div>
       <div className="card max-w-2xl">

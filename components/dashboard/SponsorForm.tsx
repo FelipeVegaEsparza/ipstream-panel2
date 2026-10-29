@@ -90,7 +90,7 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {/* Información Básica */}
       <div className="space-y-6">
-        <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+    <h3 className="text-lg font-medium text-foreground border-b pb-2">
           {t('sponsors.basicInfo')}
         </h3>
 
@@ -158,7 +158,7 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
 
       {/* Sitio Web */}
       <div className="space-y-6">
-        <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+    <h3 className="text-lg font-medium text-foreground border-b pb-2">
           {t('sponsors.website')}
         </h3>
 
@@ -181,7 +181,7 @@ export function SponsorForm({ initialData }: SponsorFormProps) {
 
       {/* Redes Sociales */}
       <div className="space-y-6">
-        <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+    <h3 className="text-lg font-medium text-foreground border-b pb-2">
           {t('sponsors.social')}
         </h3>
 

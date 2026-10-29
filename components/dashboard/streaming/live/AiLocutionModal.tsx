@@ -78,7 +78,7 @@ export function AiLocutionModal({ open, onClose, generate, onAdd }: Props) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-soft"
+    className="w-full max-w-lg rounded-container border border-border bg-card p-5 "
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">

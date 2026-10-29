@@ -71,8 +71,8 @@ export function SponsorsList({ sponsors }: SponsorsListProps) {
     if (sponsor.facebook) networks.push({ name: 'Facebook', url: sponsor.facebook, color: 'text-blue-600' })
     if (sponsor.instagram) networks.push({ name: 'Instagram', url: sponsor.instagram, color: 'text-pink-600' })
     if (sponsor.youtube) networks.push({ name: 'YouTube', url: sponsor.youtube, color: 'text-red-600' })
-    if (sponsor.tiktok) networks.push({ name: 'TikTok', url: sponsor.tiktok, color: 'text-gray-800' })
-    if (sponsor.x) networks.push({ name: 'X', url: sponsor.x, color: 'text-gray-800' })
+  if (sponsor.tiktok) networks.push({ name: 'TikTok', url: sponsor.tiktok, color: 'text-foreground' })
+  if (sponsor.x) networks.push({ name: 'X', url: sponsor.x, color: 'text-foreground' })
     if (sponsor.website) networks.push({ name: 'Website', url: sponsor.website, color: 'text-green-600' })
     return networks
   }

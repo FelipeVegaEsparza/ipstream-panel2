@@ -35,7 +35,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('polls.resultsTitle')}</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t('polls.resultsTitle')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('polls.resultsSubtitle')}</p>
           </div>
         </div>
@@ -47,7 +47,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <div className="card">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">{poll.title}</h2>
+      <h2 className="text-2xl font-bold text-foreground mb-6">{poll.title}</h2>
 
             <div className="space-y-4">
               {poll.options
@@ -58,16 +58,16 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
                     <div key={opt.id}>
                       <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center gap-2">
-                          <span className={`text-sm font-bold ${i === 0 && totalVotes > 0 ? 'text-brand' : 'text-gray-700'}`}>
+             <span className={`text-sm font-bold ${i === 0 && totalVotes > 0 ? 'text-brand' : 'text-muted-foreground'}`}>
                             {i + 1}
                           </span>
-                          <span className="text-gray-800 font-medium">{opt.text}</span>
+             <span className="text-foreground font-medium">{opt.text}</span>
                         </div>
                         <span className="text-sm text-muted-foreground">{t('polls.votes', { count: opt.votes, plural: opt.votes !== 1 ? 's' : '' })} ({pct}%)</span>
                       </div>
-                      <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+           <div className="w-full h-4 bg-surface-3 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all ${i === 0 && totalVotes > 0 ? 'bg-gradient-to-r from-brand to-brand' : 'bg-gray-400'}`}
+             className={`h-full rounded-full transition-all ${i === 0 && totalVotes > 0 ? 'bg-signal' : 'bg-surface-3'}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -82,7 +82,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
 
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('polls.info')}</h3>
+      <h3 className="text-lg font-medium text-foreground mb-4">{t('polls.info')}</h3>
             <div className="space-y-3">
               <div>
                 <span className="text-sm text-muted-foreground">{t('polls.status')}</span>
@@ -92,21 +92,21 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('polls.options')}</span>
-                <p className="text-sm font-medium text-gray-900">{poll.options.length}</p>
+        <p className="text-sm font-medium text-foreground">{poll.options.length}</p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('polls.totalVotes')}</span>
-                <p className="text-sm font-medium text-gray-900">{totalVotes}</p>
+        <p className="text-sm font-medium text-foreground">{totalVotes}</p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('polls.created')}</span>
-                <p className="text-sm font-medium text-gray-900">{formatDate(poll.createdAt)}</p>
+        <p className="text-sm font-medium text-foreground">{formatDate(poll.createdAt)}</p>
               </div>
             </div>
           </div>
 
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('polls.actions')}</h3>
+      <h3 className="text-lg font-medium text-foreground mb-4">{t('polls.actions')}</h3>
             <Link href={`/dashboard/polls/${poll.id}/edit`} className="w-full btn-primary flex items-center justify-center gap-2">
               <PencilIcon className="h-4 w-4" /> {t('polls.editPoll')}
             </Link>

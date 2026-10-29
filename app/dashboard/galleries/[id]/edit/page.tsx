@@ -39,7 +39,7 @@ export default async function EditGalleryPage({ params }: EditGalleryPageProps) 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('galleries.form.edit')}</h1>
+    <h1 className="text-2xl font-bold text-foreground">{t('galleries.form.edit')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {t('galleries.form.editSubtitle')}
         </p>

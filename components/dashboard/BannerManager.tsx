@@ -182,7 +182,7 @@ export function BannerManager({ banners }: BannerManagerProps) {
               className={`card flex items-center justify-between gap-4 ${editingId === banner.id ? 'ring-1 ring-brand' : ''}`}
             >
               <div className="flex min-w-0 items-center gap-4">
-                <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-border bg-secondary">
+        <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-panel border border-border bg-secondary">
                   <Image
                     src={normalizeImageUrl(banner.imageUrl)}
                     alt=""

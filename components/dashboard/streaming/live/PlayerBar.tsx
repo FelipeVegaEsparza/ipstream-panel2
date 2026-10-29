@@ -55,9 +55,9 @@ export function PlayerBar({
   const progress = Math.max(0, Math.min(position, duration || 0))
 
   return (
-    <section className="rounded-xl border border-border bg-card p-3 shadow-soft">
+  <section className="rounded-panel border border-border bg-card p-3 ">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
+    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-panel border border-border bg-secondary">
           <MusicalNoteIcon className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
         </div>
 

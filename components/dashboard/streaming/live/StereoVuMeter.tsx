@@ -64,7 +64,7 @@ export function StereoVuMeter({ leftDb, rightDb }: Props) {
   const { t } = useDashboardI18n()
   return (
     <section
-      className="flex h-full min-h-[120px] flex-col rounded-xl border border-border bg-card p-2 shadow-soft"
+   className="flex h-full min-h-[120px] flex-col rounded-panel border border-border bg-card p-2 "
       aria-label={t('live.vu.ariaLabel')}
     >
       <p className="text-center text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">

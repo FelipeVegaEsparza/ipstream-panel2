@@ -195,7 +195,7 @@ export default function VideocastsPage() {
         
         <button
           onClick={() => setShowForm(true)}
-          className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg flex items-center space-x-2"
+     className="flex items-center gap-2 rounded-control bg-signal px-4 py-2 text-xs font-medium text-white transition-colors hover:brightness-110"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -206,37 +206,37 @@ export default function VideocastsPage() {
 
       {/* Estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-6 text-white">
+    <div className="dashboard-panel p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-red-100">{t('podcasts.total')}</p>
-              <p className="text-3xl font-bold">{videocasts.length}</p>
+       <p className="text-muted-foreground">{t('podcasts.total')}</p>
+       <p className="dashboard-metric text-2xl font-medium text-foreground">{videocasts.length}</p>
             </div>
-            <div className="text-4xl opacity-80">🎥</div>
+      
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-2xl p-6 text-white">
+    <div className="dashboard-panel p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-pink-100">{t('podcasts.seasons')}</p>
-              <p className="text-3xl font-bold">
+       <p className="text-muted-foreground">{t('podcasts.seasons')}</p>
+       <p className="dashboard-metric text-2xl font-medium text-foreground">
                 {new Set(videocasts.filter(v => v.season).map(v => v.season)).size || 0}
               </p>
             </div>
-            <div className="text-4xl opacity-80">📺</div>
+      
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+    <div className="dashboard-panel p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100">{t('podcasts.last')}</p>
-              <p className="text-3xl font-bold">
+       <p className="text-muted-foreground">{t('podcasts.last')}</p>
+       <p className="dashboard-metric text-2xl font-medium text-foreground">
                 {Math.max(...videocasts.map(v => v.episodeNumber || 0)) || 0}
               </p>
             </div>
-            <div className="text-4xl opacity-80">🎬</div>
+      
           </div>
         </div>
       </div>
@@ -245,13 +245,13 @@ export default function VideocastsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <div className="w-12 h-12 border-4 border-signal border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-muted-foreground">{t('podcasts.loading')}</p>
           </div>
         </div>
       ) : videocasts.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">🎥</div>
+     <span className="mx-auto mb-4 block h-px w-10 bg-signal" />
           <h3 className="text-xl font-semibold text-foreground mb-2">
             {t('podcasts.empty')}
           </h3>
@@ -260,7 +260,7 @@ export default function VideocastsPage() {
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
+      className="rounded-control bg-signal px-4 py-2 text-xs font-medium text-white transition-colors hover:brightness-110"
           >
             {t('podcasts.createFirst')}
           </button>

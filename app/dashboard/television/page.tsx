@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Hls from 'hls.js'
 import { useToast } from '@/components/ui/toast'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 
 interface VideoStatus {
   status: string
@@ -252,19 +253,14 @@ export default function TelevisionPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('tv.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('tv.subtitle')}
-        </p>
-      </div>
+   <DashboardPageHeader title={t('tv.title')} description={t('tv.subtitle')} />
 
       {/* Status badge */}
       <div className="flex items-center gap-3">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
           isOff ? 'bg-secondary text-muted-foreground' :
           isLive ? 'bg-red-900/60 text-red-300 border border-red-500/40' :
-          'bg-green-900/60 text-green-300 border border-green-500/40'
+     'bg-[color:var(--live)]/10 text-[color:var(--live)] border border-[color:var(--live)]/30'
         }`}>
           <span className={`w-2 h-2 rounded-full ${
             isOff ? 'bg-secondary' :
@@ -287,7 +283,7 @@ export default function TelevisionPage() {
             {t('tv.startAutodj')}
           </button>
         ) : (
-          <button onClick={() => doAction('stop')} className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
+     <button onClick={() => doAction('stop')} className="px-5 py-2.5 bg-[color:var(--danger)] hover:brightness-110 text-white font-medium rounded-lg transition-colors">
             {t('tv.stop')}
           </button>
         )}
@@ -295,7 +291,7 @@ export default function TelevisionPage() {
 
       {/* HLS Player */}
       {hlsUrl && (isAutoDj || isLive) && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+    <div className="bg-card/80 rounded-container border border-border/40 p-5">
           <h2 className="text-lg font-semibold text-foreground mb-3">{t('tv.preview')}</h2>
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
             <video
@@ -313,7 +309,7 @@ export default function TelevisionPage() {
 
       {/* URLs de transmisión */}
       {stableUrl && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5 space-y-3">
+    <div className="bg-card/80 rounded-container border border-border/40 p-5 space-y-3">
           <h2 className="text-lg font-semibold text-foreground mb-1">{t('tv.streamUrl')}</h2>
 
           <div>
@@ -385,7 +381,7 @@ export default function TelevisionPage() {
       )}
 
       {/* Now Playing */}
-      <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+   <div className="bg-card/80 rounded-container border border-border/40 p-5">
         <h2 className="text-lg font-semibold text-foreground mb-2">{t('tv.nowOnScreen')}</h2>
         {isLive ? (
           <p className="text-brand font-medium">{t('tv.liveFromObs')}</p>

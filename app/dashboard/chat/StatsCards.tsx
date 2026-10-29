@@ -54,7 +54,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
         return (
           <div
             key={c.label}
-            className="rounded-xl border border-border bg-card p-3 shadow-soft"
+      className="rounded-panel border border-border bg-card p-3 "
           >
             <div className="flex items-center gap-2">
               <div className={`rounded-lg p-1.5 ${c.bg}`}>

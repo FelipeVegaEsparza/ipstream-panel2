@@ -48,14 +48,14 @@ export function TemplateActivationModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+    className="absolute inset-0 bg-black/60 "
         onClick={isSubmitting ? undefined : onClose}
       />
 
       <div
         role="dialog"
         aria-modal="true"
-        className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-md w-full"
+    className="relative bg-card rounded-container border border-border max-w-md w-full"
       >
         <button
           onClick={onClose}

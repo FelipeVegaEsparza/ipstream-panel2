@@ -485,6 +485,62 @@
     outline-offset: 2px;
   }
 
+  /* Normalización del resto del panel: las páginas heredan el lenguaje
+     Control Room aunque todavía usen utilidades del sistema anterior. */
+  .dashboard-shell .text-4xl {
+    font-size: 1.75rem;
+    line-height: 2.125rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .dashboard-shell .text-3xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+
+  .dashboard-shell .rounded-3xl,
+  .dashboard-shell .rounded-2xl {
+    border-radius: var(--radius-container);
+  }
+
+  .dashboard-shell .rounded-xl {
+    border-radius: var(--radius-panel);
+  }
+
+  .dashboard-shell .shadow-2xl,
+  .dashboard-shell .shadow-xl,
+  .dashboard-shell .shadow-lg,
+  .dashboard-shell .shadow-md,
+  .dashboard-shell .shadow-soft,
+  .dashboard-shell .shadow-cyan-500\/20 {
+    box-shadow: none;
+  }
+
+  .dashboard-shell [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .dashboard-shell [class*="bg-gradient-"] {
+    background-image: none;
+    background-color: var(--surface-3);
+  }
+
+  .dashboard-shell [class*="bg-gradient-"][class*="text-white"] {
+    color: var(--text-1);
+  }
+
+  .dashboard-shell .hover\:scale-105:hover,
+  .dashboard-shell .hover\:scale-\[1\.02\]:hover,
+  .dashboard-shell .hover\:scale-110:hover,
+  .dashboard-shell .group:hover .group-hover\:scale-105,
+  .dashboard-shell .group:hover .group-hover\:scale-110 {
+    transform: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .dashboard-shell *,
     .dashboard-shell *::before,

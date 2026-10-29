@@ -201,7 +201,7 @@ export default function TvSchedulePage() {
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">{t('tv.schedule.loading')}</div>
       ) : schedules.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+    <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-panel">
           <p className="text-lg mb-2">{t('tv.schedule.emptyTitle')}</p>
           <p className="text-sm">{t('tv.schedule.emptyHint')}</p>
         </div>
@@ -286,7 +286,7 @@ export default function TvSchedulePage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 border border-border">
+     <div className="bg-card rounded-container w-full max-w-md p-6 border border-border">
             <h2 className="text-lg font-semibold text-foreground mb-4">
               {editId ? t('tv.schedule.editSlot') : t('tv.schedule.newSlot')}
             </h2>

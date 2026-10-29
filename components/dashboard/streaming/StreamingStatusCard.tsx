@@ -58,7 +58,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
   }
 
   return (
-    <div className="bg-card rounded-lg shadow-lg p-6 space-y-4">
+  <div className="bg-card rounded-lg p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -140,7 +140,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
               onClick={copyUrl}
               className="px-4 py-2 bg-secondary hover:bg-secondary text-foreground rounded whitespace-nowrap"
             >
-              {copied ? t('streaming.copied') : `📋 ${t('streaming.copy')}`}
+              {copied ? t('streaming.copied') : t('streaming.copy')}
             </button>
           </div>
           {isRunning && (
@@ -154,7 +154,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
       {isRunning && isDjLive && (
         <div className="bg-green-900/30 border border-green-700 rounded p-4 space-y-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase">
-            <span className="text-green-400">🔴</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--live)]" />
             <span className="text-green-300 font-semibold">{t('streaming.djLive')}</span>
           </div>
           <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ export function StreamingStatusCard({ status, loading, onRefresh }: Props) {
       {isRunning && !isDjLive && status.nowPlaying && status.nowPlaying.playlist && (
         <div className="bg-background/60 rounded p-4 space-y-3">
           <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase">
-            <span>🎵</span>
+            
             <span>{t('streaming.nowPlaying')}</span>
             <span className="flex-1"></span>
             <span className="text-brand">{status.nowPlaying.playlist.name}</span>

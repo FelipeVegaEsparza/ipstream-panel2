@@ -216,7 +216,7 @@ export function BasicDataForm({ initialData, clientId }: BasicDataFormProps) {
             onBlur={() => setTimeout(() => setCityOpen(false), 150)}
           />
           {cityOpen && suggestions.length > 0 && (
-            <ul className="absolute z-20 mt-1 w-full bg-card border border-border rounded-md shadow-xl max-h-60 overflow-auto">
+      <ul className="absolute z-20 mt-1 w-full bg-card border border-border rounded-md max-h-60 overflow-auto">
               {suggestions.map((s) => (
                 <li key={s.id}>
                   <button

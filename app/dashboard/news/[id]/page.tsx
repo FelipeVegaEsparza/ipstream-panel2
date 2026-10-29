@@ -55,7 +55,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="text-2xl font-bold text-foreground">
               {t('news.detail.title')}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -75,14 +75,14 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
       <div className="card max-w-4xl">
         <article className="prose prose-lg max-w-none">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-foreground mb-4">
               {news.name}
             </h1>
             
             <div className="flex items-center text-sm text-muted-foreground space-x-4 mb-6">
               <span>{t('news.published')} {formatDate(news.createdAt)}</span>
               <span>•</span>
-              <span>{t('news.slug')} <code className="bg-gray-100 px-2 py-1 rounded text-xs">{news.slug}</code></span>
+       <span>{t('news.slug')} <code className="bg-surface-3 px-2 py-1 rounded text-xs">{news.slug}</code></span>
             </div>
 
             {news.imageUrl && (
@@ -97,15 +97,15 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
               </div>
             )}
 
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">{t('news.detail.summary')}</h3>
+      <div className="bg-surface-2 p-4 rounded-lg mb-6">
+       <h3 className="text-sm font-medium text-muted-foreground mb-2">{t('news.detail.summary')}</h3>
               <p className="text-muted-foreground italic">
                 {news.shortText}
               </p>
             </div>
           </header>
 
-          <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+     <div className="text-foreground leading-relaxed whitespace-pre-wrap">
             {news.longText}
           </div>
         </article>

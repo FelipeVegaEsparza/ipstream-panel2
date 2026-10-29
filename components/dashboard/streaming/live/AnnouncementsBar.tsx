@@ -29,7 +29,7 @@ export function AnnouncementsBar({
   const { t } = useDashboardI18n()
   const busy = loading != null
   return (
-    <aside className="flex min-h-[180px] flex-col rounded-xl border border-border bg-card p-3 shadow-soft">
+  <aside className="flex min-h-[180px] flex-col rounded-panel border border-border bg-card p-3 ">
       <h2 className="text-sm font-semibold text-foreground">{t('live.announce.title')}</h2>
       <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
         {t('live.announce.subtitle')}

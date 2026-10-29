@@ -1,4 +1,5 @@
 'use client'
+import { MusicalNoteIcon } from '@heroicons/react/24/outline'
 
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -73,7 +74,7 @@ export function PodcastForm({ podcast, onSubmit, onCancel, isLoading = false }: 
         {/* Tipo de Contenido - Solo Audio */}
         <div className="card-light">
           <div className="flex items-center space-x-3">
-            <div className="text-2xl">🎵</div>
+      <MusicalNoteIcon className="h-6 w-6 text-signal" />
             <div>
               <h3 className="font-semibold text-foreground">{t('podcasts.audioTitle')}</h3>
               <p className="text-sm text-muted-foreground">{t('podcasts.audioNote')}</p>

@@ -1,4 +1,5 @@
 'use client'
+import { MusicalNoteIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 import { useState } from 'react'
 import Image from 'next/image'
@@ -43,7 +44,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
   }
 
   const getFileIcon = () => {
-    return '🎵'
+  return <MusicalNoteIcon className="h-10 w-10 text-foreground/60" />
   }
 
   const getFileTypeLabel = () => {
@@ -53,13 +54,13 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
   return (
     <div className="card-content group">
       {/* Header con imagen */}
-      <div className="relative h-48 bg-gradient-to-br from-purple-500 to-brand">
+   <div className="relative h-48 bg-surface-3 from-purple-500 to-brand">
         {podcast.imageUrl ? (
           <Image
             src={podcast.imageUrl}
             alt={podcast.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+      className="object-cover group- transition-transform duration-300"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -74,11 +75,11 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
         
         {/* Badges */}
         <div className="absolute top-4 left-4 flex space-x-2 z-10">
-          <span className="badge badge-secondary backdrop-blur-sm">
+     <span className="badge badge-secondary ">
             {getFileTypeLabel()}
           </span>
           {podcast.episodeNumber && (
-            <span className="badge badge-primary backdrop-blur-sm">
+      <span className="badge badge-primary ">
               Ep. {podcast.episodeNumber}
             </span>
           )}
@@ -86,7 +87,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
 
         {/* Duración */}
         {podcast.duration && (
-          <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-foreground px-3 py-1 rounded-full text-sm font-medium z-10">
+     <div className="absolute top-4 right-4 bg-black/70 text-foreground px-3 py-1 rounded-full text-sm font-medium z-10">
             {podcast.duration}
           </div>
         )}
@@ -156,10 +157,10 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
 
       {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="card max-w-md mx-4">
             <div className="text-center">
-              <div className="text-4xl mb-4">🗑️</div>
+       <div className="mb-4 flex justify-center text-[color:var(--danger)]"><TrashIcon className="h-9 w-9" /></div>
               <h3 className="text-lg font-bold text-foreground mb-2">
                 {t('podcasts.deleteTitle')}
               </h3>

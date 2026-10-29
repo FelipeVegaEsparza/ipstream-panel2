@@ -60,18 +60,18 @@ export function PlayHistory() {
   const typeBadge = (type: string) => {
     switch (type) {
       case 'music':
-        return <span className="text-xs bg-brand/30 text-brand px-2 py-0.5 rounded-full">🎵 music</span>
+        return <span className="text-xs bg-brand/30 text-brand px-2 py-0.5 rounded-full">music</span>
       case 'jingle':
-        return <span className="text-xs bg-amber-600/30 text-amber-300 px-2 py-0.5 rounded-full">🔔 jingle</span>
+        return <span className="text-xs bg-amber-600/30 text-amber-300 px-2 py-0.5 rounded-full">jingle</span>
       case 'live_dj':
-        return <span className="text-xs bg-green-600/30 text-green-300 px-2 py-0.5 rounded-full">🎤 live</span>
+        return <span className="text-xs bg-green-600/30 text-green-300 px-2 py-0.5 rounded-full">live</span>
       default:
         return <span className="text-xs bg-secondary/30 text-muted-foreground px-2 py-0.5 rounded-full">autodj</span>
     }
   }
 
   return (
-    <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+  <div className="bg-card/80 rounded-container border border-border/40 p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-foreground">{t('streaming.history.title')}</h2>
         <span className="text-xs text-muted-foreground">

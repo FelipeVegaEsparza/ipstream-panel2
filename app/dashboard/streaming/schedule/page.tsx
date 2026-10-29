@@ -202,7 +202,7 @@ export default function SchedulePage() {
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">{t('streaming.schedule.loading')}</div>
       ) : schedules.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+    <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-panel">
           <p className="text-lg mb-2">{t('streaming.schedule.emptyTitle')}</p>
           <p className="text-sm">{t('streaming.schedule.emptyText')}</p>
         </div>
@@ -287,7 +287,7 @@ export default function SchedulePage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 border border-border">
+     <div className="bg-card rounded-container w-full max-w-md p-6 border border-border">
             <h2 className="text-lg font-semibold text-foreground mb-4">
               {editId ? t('streaming.schedule.editTitle') : t('streaming.schedule.newTitle')}
             </h2>

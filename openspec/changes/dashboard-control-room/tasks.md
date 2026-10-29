@@ -42,3 +42,12 @@
 - [x] 6.3 Generar `DESIGN.md` y `.impeccable/design.json` desde el mundo construido, con paleta, tipografía, radios, espaciado, estados y reglas de composición.
 - [ ] 6.4 Hacer la revisión final con capturas desktop/mobile y confirmar que la home sigue el contrato de dirección (On Air primero, métricas compactas, atención agrupada).
 - [ ] 6.5 Deployar el panel y verificar en producción que el shell y la home cargan bien en ambos temas; sin migraciones ni cambios de infraestructura.
+
+## 7. Rollout al resto de pantallas del cliente
+
+- [x] 7.1 Normalizar desde `.dashboard-shell` las utilidades heredadas: radios, sombras, blur, gradientes decorativos, escalas y títulos; verificar con `npx next build`.
+- [x] 7.2 Aplicar la cabecera Control Room a streaming, TV, biblioteca y analítica; verificar que las rutas y acciones no cambian.
+- [x] 7.3 Reemplazar acentos indigo/blue y estados verdes/rojos crudos por tokens semánticos en streaming y TV; verificar con búsqueda de patrones.
+- [x] 7.4 Limpiar emojis y decoración heredada en las páginas de contenido (about, podcasts, videocasts y formularios asociados); verificar en ES/EN.
+- [ ] 7.5 Revisar las pantallas de cuenta y sistema (datos básicos, pagos, soporte, notificaciones, primeros pasos); verificar dark/light y móvil.
+- [x] 7.6 Ejecutar `npx tsc --noEmit`, `npm test`, `npx next build` y detector de Impeccable sobre los archivos tocados.

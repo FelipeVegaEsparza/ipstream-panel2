@@ -68,7 +68,7 @@ export function JingleMusicSelector() {
   }
 
   return (
-    <section className="bg-card/60 border border-border rounded-xl p-5 space-y-4">
+  <section className="bg-card/60 border border-border rounded-panel p-5 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">

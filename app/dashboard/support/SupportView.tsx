@@ -65,7 +65,7 @@ export function SupportView({ initialTickets }: SupportViewProps) {
       </div>
 
       {tickets.length === 0 ? (
-        <div className="text-center py-16 bg-card/40 rounded-xl border border-dashed border-border">
+    <div className="text-center py-16 bg-card/40 rounded-panel border border-dashed border-border">
           <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
           <h2 className="text-lg font-medium text-foreground mb-1">{t('support.empty')}</h2>
           <p className="text-sm text-muted-foreground mb-4">
@@ -91,7 +91,7 @@ export function SupportView({ initialTickets }: SupportViewProps) {
               <li key={ticket.id}>
                 <Link
                   href={`/dashboard/support/${ticket.id}`}
-                  className="block bg-card border border-border rounded-xl p-4 hover:border-brand transition-colors"
+         className="block bg-card border border-border rounded-panel p-4 hover:border-brand transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <h3 className="text-foreground font-semibold flex-1">{ticket.subject}</h3>
@@ -207,11 +207,11 @@ function NewTicketModal({ onClose, onCreated }: { onClose: () => void; onCreated
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+   className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 "
       onClick={onClose}
     >
       <div
-        className="bg-card rounded-2xl border border-border max-w-lg w-full"
+    className="bg-card rounded-container border border-border max-w-lg w-full"
         onClick={(e) => e.stopPropagation()}
       >
         <form onSubmit={handleSubmit} className="p-6 space-y-4">

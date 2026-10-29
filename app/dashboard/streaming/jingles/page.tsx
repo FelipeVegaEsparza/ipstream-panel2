@@ -6,6 +6,7 @@ import { JingleAiModal } from './JingleAiModal'
 import { JingleMusicSelector } from './JingleMusicSelector'
 
 import { useEffect, useState, useRef } from 'react'
+import { CameraIcon, MusicalNoteIcon, PlayIcon, StopIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 interface Jingle {
   id: string
@@ -223,7 +224,7 @@ export default function JinglesPage() {
       </div>
 
       {/* Config card */}
-      <div className="bg-card/60 border border-border rounded-xl p-5">
+   <div className="bg-card/60 border border-border rounded-panel p-5">
         <h2 className="text-lg font-semibold text-foreground mb-4">{t('streaming.jingles.insertRule')}</h2>
         <div className="flex flex-wrap items-end gap-4">
           <div>
@@ -265,7 +266,7 @@ export default function JinglesPage() {
       <JingleMusicSelector />
 
       {/* Upload zone */}
-      <div className="bg-card/60 border border-border rounded-xl p-5">
+   <div className="bg-card/60 border border-border rounded-panel p-5">
         <h2 className="text-lg font-semibold text-foreground mb-3">{t('streaming.jingles.uploadTitle')}</h2>
         <input
           type="file"
@@ -297,7 +298,7 @@ export default function JinglesPage() {
       <JingleAiModal open={aiOpen} onClose={() => setAiOpen(false)} onSaved={() => void load()} />
 
       {/* Table */}
-      <div className="bg-card rounded-lg shadow-lg overflow-x-auto">
+   <div className="bg-card rounded-lg overflow-x-auto">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">
             {loading ? t('streaming.jingles.loading') : t('streaming.jingles.count', { count: jingles.length, plural: jingles.length !== 1 ? 's' : '' })}
@@ -314,7 +315,7 @@ export default function JinglesPage() {
           <table className="w-full text-sm">
             <thead className="bg-background/50 text-muted-foreground uppercase text-xs">
               <tr>
-                <th className="text-left p-3 w-10">🎵</th>
+        <th className="w-10 p-3 text-left"><span className="sr-only">{t('streaming.jingles.preview')}</span></th>
                 <th className="text-left p-3 w-12">{t('streaming.jingles.cover')}</th>
                 <th className="text-left p-3">{t('streaming.jingles.songTitle')}</th>
                 <th className="text-left p-3 hidden sm:table-cell">{t('streaming.jingles.artist')}</th>
@@ -336,7 +337,7 @@ export default function JinglesPage() {
                       }`}
                       title={playingId === j.id ? t('streaming.jingles.stop') : t('streaming.jingles.preview')}
                     >
-                      {playingId === j.id ? '⏹' : '▶'}
+           {playingId === j.id ? <StopIcon className="h-3.5 w-3.5" /> : <PlayIcon className="h-3.5 w-3.5" />}
                     </button>
                   </td>
                   <td className="p-3">
@@ -349,8 +350,8 @@ export default function JinglesPage() {
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                         />
                         {!j.coverUrl && (
-                          <div className="w-10 h-10 rounded bg-secondary flex items-center justify-center text-muted-foreground text-lg">
-                            🎵
+             <div className="flex h-10 w-10 items-center justify-center rounded-control bg-surface-3">
+              <MusicalNoteIcon className="h-4 w-4 text-muted-foreground" />
                           </div>
                         )}
                         <input
@@ -372,7 +373,7 @@ export default function JinglesPage() {
                           className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand rounded-full flex items-center justify-center text-white text-xs hover:bg-brand disabled:opacity-50"
                           title={t('streaming.jingles.uploadCover')}
                         >
-                          {coverUploadingId === j.id ? '⏳' : '📷'}
+             {coverUploadingId === j.id ? '…' : <CameraIcon className="h-3 w-3" />}
                         </button>
                         {j.coverUrl && (
                           <button
@@ -381,7 +382,7 @@ export default function JinglesPage() {
                             className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white text-[8px] hover:bg-red-500 disabled:opacity-50"
                             title={t('streaming.jingles.deleteCover')}
                           >
-                            {coverDeletingId === j.id ? '⏳' : '✕'}
+              {coverDeletingId === j.id ? '…' : <XMarkIcon className="h-3 w-3" />}
                           </button>
                         )}
                       </div>
@@ -394,8 +395,8 @@ export default function JinglesPage() {
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded bg-secondary flex items-center justify-center text-muted-foreground text-lg">
-                          🎵
+            <div className="flex h-10 w-10 items-center justify-center rounded-control bg-surface-3">
+             <MusicalNoteIcon className="h-4 w-4 text-muted-foreground" />
                         </div>
                       )
                     )}

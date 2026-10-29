@@ -1,4 +1,5 @@
 'use client'
+import { PlayIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/components/ui/toast'
@@ -287,7 +288,7 @@ export default function TvPlaylistsPage() {
       <div className="flex gap-4">
         {/* Playlist sidebar */}
         <div className="w-64 flex-shrink-0 space-y-3">
-          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-4 space-y-2">
+     <div className="bg-card/80 rounded-container border border-border/40 p-4 space-y-2">
             <h3 className="text-sm font-semibold text-muted-foreground">{t('tv.playlists.list')}</h3>
             {playlists.map(pl => (
               <div key={pl.id} className="flex items-center gap-1 group">
@@ -297,10 +298,10 @@ export default function TvPlaylistsPage() {
                     selectedPlaylistId === pl.id ? 'bg-brand/30 text-brand' : 'text-muted-foreground hover:bg-secondary'
                   }`}
                 >
-                  ▶ {pl.name} ({pl.trackCount})
+         <PlayIcon className="mr-1 inline h-3 w-3" />{pl.name} ({pl.trackCount})
                 </button>
                 <button onClick={() => deletePlaylist(pl.id)} className="hidden group-hover:block text-xs text-muted-foreground hover:text-red-400">
-                  ✕
+         <XMarkIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
             ))}
@@ -330,7 +331,7 @@ export default function TvPlaylistsPage() {
 
         {/* Playlist entries */}
         <div className="flex-1">
-          <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl overflow-hidden">
+     <div className="bg-card/80 rounded-container border border-border/40 overflow-hidden">
             {!selectedPlaylistId ? (
               <div className="p-6 text-center text-muted-foreground">{t('tv.playlists.selectOrCreate')}</div>
             ) : loadingEntries ? (
@@ -404,12 +405,12 @@ export default function TvPlaylistsPage() {
       {/* Modal de agregar tracks */}
       {showAdd && selectedPlaylistId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} />
-          <div className="relative bg-card rounded-2xl shadow-2xl border border-border w-full max-w-lg max-h-[80vh] flex flex-col">
+     <div className="absolute inset-0 bg-black/60 " onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} />
+     <div className="relative bg-card rounded-container border border-border w-full max-w-lg max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-lg font-semibold text-foreground">{t('tv.playlists.addTracksTitle')}</h3>
               <button onClick={() => { setShowAdd(false); setSelectedTrackIds(new Set()) }} className="text-muted-foreground hover:text-foreground">
-                ✕
+        <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
 
@@ -463,7 +464,7 @@ export default function TvPlaylistsPage() {
                     <div
                       key={t.id}
                       className={`flex items-center gap-2 p-2 rounded ${
-                        isSelected ? 'bg-indigo-900/40 border border-indigo-700' : 'bg-card/50 hover:bg-secondary'
+            isSelected ? 'bg-signal/10 border border-signal/30' : 'bg-card/50 hover:bg-secondary'
                       }`}
                     >
                       <input
@@ -499,7 +500,7 @@ export default function TvPlaylistsPage() {
               <button
                 onClick={bulkAddTracks}
                 disabled={selectedTrackIds.size === 0 || addingBulk}
-                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 text-white rounded-lg font-medium"
+        className="flex-1 px-4 py-2 bg-signal hover:brightness-110 disabled:opacity-50 text-white rounded-lg font-medium"
               >
                 {addingBulk ? t('tv.playlists.adding') : t('tv.playlists.addSelected', { count: selectedTrackIds.size })}
               </button>

@@ -146,7 +146,7 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
 
                     <div className="max-w-[85%] sm:max-w-[75%]">
                       <div
-                        className={`rounded-2xl border px-3.5 py-2.5 ${
+            className={`rounded-container border px-3.5 py-2.5 ${
                           isStaff
                             ? 'rounded-br-md border-brand/30 bg-brand/15'
                             : 'rounded-bl-md border-border bg-card'

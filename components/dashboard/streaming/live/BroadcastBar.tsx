@@ -64,7 +64,7 @@ export function BroadcastBar({
   const canGoLive = engineReady && headphonesConfirmed && !busy && !live && !slotOccupied
 
   return (
-    <section className="rounded-xl border border-border bg-card px-3 py-2.5 shadow-soft">
+  <section className="rounded-panel border border-border bg-card px-3 py-2.5 ">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${status.className}`}>
           {live && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />}

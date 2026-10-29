@@ -42,7 +42,7 @@ export function PlanServicesCard({ plan }: PlanServicesCardProps) {
   const { t } = useDashboardI18n()
   if (!plan) {
     return (
-      <div className="bg-card/80 rounded-2xl border border-border/50 p-5">
+   <div className="bg-card/80 rounded-container border border-border/50 p-5">
         <p className="text-sm text-muted-foreground">
           {t('plan.noPlan')} {''}
           <span className="text-brand">{t('plan.contactSupport')}</span>
@@ -55,7 +55,7 @@ export function PlanServicesCard({ plan }: PlanServicesCardProps) {
   const hasTv = plan.services !== 'radio'
 
   return (
-    <div className="bg-gradient-to-br from-card/90 to-card/90 rounded-2xl border border-border/50 p-5">
+  <div className="bg-surface-3 from-card/90 to-card/90 rounded-container border border-border/50 p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-foreground">{t('plan.title')}</h3>

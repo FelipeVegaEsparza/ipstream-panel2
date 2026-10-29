@@ -180,7 +180,7 @@ export function VideocastForm({ videocast, onSubmit, onCancel, isLoading = false
           </button>
           <button
             type="submit"
-            className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+      className="rounded-control bg-signal px-4 py-2 text-xs font-medium text-white transition-colors hover:brightness-110 disabled:opacity-50"
             disabled={isLoading}
           >
             {isLoading ? t('common.saving') : videocast ? t('podcasts.update') : t('podcasts.create')}

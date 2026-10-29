@@ -36,7 +36,7 @@ export default async function PromotionsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+     <h1 className="text-2xl font-bold text-foreground">
             {t('promotions.title')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

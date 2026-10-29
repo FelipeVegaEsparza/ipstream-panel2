@@ -116,7 +116,7 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
               <button
                 key={t.id}
                 onClick={() => setOpenTutorial(t)}
-                className="text-left bg-card border border-border rounded-xl overflow-hidden hover:border-brand transition-colors group"
+        className="text-left bg-card border border-border rounded-panel overflow-hidden hover:border-brand transition-colors group"
               >
                 <div className="relative aspect-video bg-background">
                   {thumb ? (
@@ -158,11 +158,11 @@ export function TutorialsView({ initialCategories, initialTutorials }: Tutorials
 
       {openTutorial && openVideoId && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 "
           onClick={() => setOpenTutorial(null)}
         >
           <div
-            className="bg-card rounded-2xl border border-border max-w-4xl w-full overflow-hidden shadow-2xl"
+      className="bg-card rounded-container border border-border max-w-4xl w-full overflow-hidden "
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-border">

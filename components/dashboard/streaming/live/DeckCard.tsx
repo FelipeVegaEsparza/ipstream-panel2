@@ -86,7 +86,7 @@ export function DeckCard({
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+  <section className="rounded-container border border-border bg-card p-4 ">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-sm font-bold text-brand">
@@ -121,7 +121,7 @@ export function DeckCard({
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-border bg-background p-3">
+   <div className="mt-4 rounded-panel border border-border bg-background p-3">
         <p className="truncate text-sm font-medium text-foreground">
           {track ? track.title : t('live.deck.chooseTrack')}
         </p>
@@ -158,7 +158,7 @@ export function DeckCard({
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <div className="space-y-2 rounded-xl border border-border bg-background p-3">
+    <div className="space-y-2 rounded-panel border border-border bg-background p-3">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Gain</span>
             <span className="font-mono text-foreground">{deck.gain > 0 ? '+' : ''}{deck.gain.toFixed(1)} dB</span>
@@ -180,7 +180,7 @@ export function DeckCard({
           </div>
         </div>
 
-        <div className="space-y-2 rounded-xl border border-border bg-background p-3">
+    <div className="space-y-2 rounded-panel border border-border bg-background p-3">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Loop</span>
             <span className="font-mono text-foreground">

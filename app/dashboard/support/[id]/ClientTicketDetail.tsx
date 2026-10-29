@@ -138,7 +138,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+   <div className="bg-card border border-border rounded-container overflow-hidden">
         <div className="p-4 max-h-[60vh] overflow-y-auto space-y-4">
           {ticket.messages.map((m) => (
             <MessageBubble key={m.id} message={m} />
@@ -204,7 +204,7 @@ export function ClientTicketDetail({ ticket: initial }: Props) {
               setNewReply(null)
               messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
             }}
-            className="w-full flex items-start gap-3 p-4 rounded-xl bg-card border border-brand/50 shadow-lg shadow-cyan-500/10 text-left hover:bg-secondary transition-colors"
+      className="w-full flex items-start gap-3 p-4 rounded-panel bg-card border border-brand/50 shadow-cyan-500/10 text-left hover:bg-secondary transition-colors"
           >
             <BellRing className="h-5 w-5 text-brand mt-0.5 flex-shrink-0" />
             <div className="min-w-0">

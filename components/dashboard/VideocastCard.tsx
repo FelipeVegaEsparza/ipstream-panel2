@@ -1,4 +1,5 @@
 'use client'
+import { TrashIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 
 import { useState } from 'react'
 import Image from 'next/image'
@@ -45,19 +46,17 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
   return (
     <div className="card-content group">
       {/* Header con imagen */}
-      <div className="relative h-48 bg-gradient-to-br from-red-500 to-pink-600">
+   <div className="relative h-48 bg-surface-3 from-red-500 to-pink-600">
         {videocast.imageUrl ? (
           <Image
             src={videocast.imageUrl}
             alt={videocast.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+      className="object-cover group- transition-transform duration-300"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <div className="text-6xl opacity-80 text-foreground">
-              🎥
-            </div>
+      <VideoCameraIcon className="h-10 w-10 text-foreground/60" />
           </div>
         )}
         
@@ -66,11 +65,11 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
         
         {/* Badges */}
         <div className="absolute top-4 left-4 flex space-x-2 z-10">
-          <span className="badge badge-secondary backdrop-blur-sm">
+     <span className="badge badge-secondary ">
             Videocast
           </span>
           {videocast.episodeNumber && (
-            <span className="badge badge-danger backdrop-blur-sm">
+      <span className="badge badge-danger ">
               Ep. {videocast.episodeNumber}
             </span>
           )}
@@ -78,7 +77,7 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
 
         {/* Duración */}
         {videocast.duration && (
-          <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-foreground px-3 py-1 rounded-full text-sm font-medium z-10">
+     <div className="absolute top-4 right-4 bg-black/70 text-foreground px-3 py-1 rounded-full text-sm font-medium z-10">
             {videocast.duration}
           </div>
         )}
@@ -140,7 +139,7 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
           
           {/* Indicador de archivo */}
           <div className="flex items-center space-x-1">
-            <span>🎥</span>
+      <VideoCameraIcon className="h-4 w-4 text-muted-foreground" />
             <span>{t('videocasts.videoLabel')}</span>
           </div>
         </div>
@@ -148,10 +147,10 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
 
       {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="card max-w-md mx-4">
             <div className="text-center">
-              <div className="text-4xl mb-4">🗑️</div>
+       <div className="mb-4 flex justify-center text-[color:var(--danger)]"><TrashIcon className="h-9 w-9" /></div>
               <h3 className="text-lg font-bold text-foreground mb-2">
                 {t('podcasts.deleteTitle')}
               </h3>

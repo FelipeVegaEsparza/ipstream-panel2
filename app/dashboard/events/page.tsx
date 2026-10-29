@@ -33,7 +33,7 @@ export default async function EventsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('events.title')}</h1>
+     <h1 className="text-2xl font-bold text-foreground">{t('events.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t('events.subtitle')}</p>
         </div>
         <Link href="/dashboard/events/new" className="btn-primary flex items-center gap-2">

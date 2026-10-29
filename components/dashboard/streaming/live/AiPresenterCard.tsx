@@ -34,7 +34,7 @@ export function AiPresenterCard({
 }: Props) {
   const { t, locale } = useDashboardI18n()
   return (
-    <aside className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-soft">
+  <aside className="flex flex-col gap-3 rounded-panel border border-border bg-card p-3 ">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <SparklesIcon className="h-4 w-4 text-brand" />

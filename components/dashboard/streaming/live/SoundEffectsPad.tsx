@@ -47,7 +47,7 @@ export function SoundEffectsPad({
   }
 
   return (
-    <section className={`min-h-0 rounded-lg border border-border bg-card shadow-soft ${compact ? 'p-2' : 'p-3'}`}>
+  <section className={`min-h-0 rounded-lg border border-border bg-card ${compact ? 'p-2' : 'p-3'}`}>
       <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between ${compact ? 'gap-1.5' : 'gap-3'}`}>
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">

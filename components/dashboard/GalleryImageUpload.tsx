@@ -130,9 +130,9 @@ export function GalleryImageUpload({
           setDragOver(false)
         }}
         className={`
-          relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
+     relative border-2 border-dashed rounded-panel p-8 text-center cursor-pointer transition-all duration-200
           ${dragOver
-            ? 'border-brand bg-brand/10 backdrop-blur-sm'
+      ? 'border-brand bg-brand/10 '
             : 'border-border hover:border-brand/50 bg-secondary/30'
           }
           ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50'}
@@ -223,7 +223,7 @@ export function GalleryImageUpload({
                     e.stopPropagation()
                     handleRemove(index)
                   }}
-                  className="absolute top-2 right-2 p-1.5 bg-red-500/90 text-white rounded-full hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100 shadow-lg"
+         className="absolute top-2 right-2 p-1.5 bg-red-500/90 text-white rounded-full hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100 "
                   title={t('galleries.image.remove')}
                 >
                   <XMarkIcon className="h-3.5 w-3.5" />

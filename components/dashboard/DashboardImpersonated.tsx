@@ -124,7 +124,7 @@ export function DashboardImpersonated() {
       name: t('impersonated.statVideos'),
       value: 0,
       href: '/dashboard/videos',
-      color: 'bg-purple-500'
+      color: 'bg-signal-500'
     },
     {
       name: t('impersonated.statSponsors'),
@@ -149,7 +149,7 @@ export function DashboardImpersonated() {
         <p className="text-muted-foreground mb-6">
           {t('impersonated.asClient', { email: clientData.email })}
         </p>
-        <div className="glass-effect rounded-xl p-4 mb-6">
+    <div className="glass-effect rounded-panel p-4 mb-6">
           <p className="text-sm text-brand">
             <strong>Client ID:</strong> <code className="bg-secondary/50 px-3 py-1 rounded-lg text-xs font-mono text-brand ml-2">{clientData.id}</code>
           </p>
@@ -159,7 +159,7 @@ export function DashboardImpersonated() {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-green-500/20 to-brand/20 border border-green-500/30 rounded-xl p-6 backdrop-blur-sm">
+   <div className="bg-surface-3 from-green-500/20 to-brand/20 border border-green-500/30 rounded-panel p-6 ">
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
             <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,10 +204,10 @@ export function DashboardImpersonated() {
           <div className="space-y-3">
             <a
               href="/dashboard/programs/new"
-              className="block p-4 border border-border rounded-xl hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
+       className="block p-4 border border-border rounded-panel hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="w-10 h-10 bg-surface-3 from-brand to-brand rounded-lg flex items-center justify-center group- transition-transform">
                   <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                   </svg>
@@ -220,10 +220,10 @@ export function DashboardImpersonated() {
             </a>
             <a
               href="/dashboard/news/new"
-              className="block p-4 border border-border rounded-xl hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
+       className="block p-4 border border-border rounded-panel hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="w-10 h-10 bg-surface-3 from-green-500 to-green-600 rounded-lg flex items-center justify-center group- transition-transform">
                   <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                   </svg>
@@ -236,10 +236,10 @@ export function DashboardImpersonated() {
             </a>
             <a
               href="/dashboard/videos/new"
-              className="block p-4 border border-border rounded-xl hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
+       className="block p-4 border border-border rounded-panel hover:bg-secondary/50 hover:border-brand/50 transition-all duration-200 group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="w-10 h-10 bg-surface-3 from-signal-500 to-signal-600 rounded-lg flex items-center justify-center group- transition-transform">
                   <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>

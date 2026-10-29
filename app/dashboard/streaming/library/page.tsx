@@ -4,7 +4,9 @@ import { showToast } from '@/components/ui/toast'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { CameraIcon, MusicalNoteIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { LibraryUploader } from '@/components/dashboard/streaming/LibraryUploader'
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 
 interface Track {
   id: string
@@ -506,17 +508,10 @@ export default function LibraryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{tr('streaming.library.title')}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {tr('streaming.library.subtitle')}
-          </p>
-        </div>
-      </div>
+   <DashboardPageHeader title={tr('streaming.library.title')} description={tr('streaming.library.subtitle')} />
 
       {storage && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl p-5">
+    <div className="dashboard-panel p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -562,7 +557,7 @@ export default function LibraryPage() {
         <button
           onClick={refreshCovers}
           disabled={refreshingCovers}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-secondary text-white text-sm font-medium rounded-lg transition-colors"
+     className="rounded-control border border-line bg-surface-3 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-surface-2 disabled:opacity-50"
         >
           {refreshingCovers ? tr('streaming.library.searchingCovers') : tr('streaming.library.searchCovers')}
         </button>
@@ -584,7 +579,7 @@ export default function LibraryPage() {
       <div className="flex gap-6">
         {/* Sidebar */}
         <div className="w-64 shrink-0">
-          <div className="bg-card rounded-lg shadow-lg">
+     <div className="bg-card rounded-lg ">
             <div className="p-3 border-b border-border flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{tr('streaming.library.folders')}</span>
               <button
@@ -611,7 +606,7 @@ export default function LibraryPage() {
                     autoFocus
                   />
                   <button onClick={handleCreateFolder} className="text-green-400 text-xs font-medium">OK</button>
-                  <button onClick={() => { setCreatingFolder(false); setNewFolderName('') }} className="text-muted-foreground text-xs">✕</button>
+         <button onClick={() => { setCreatingFolder(false); setNewFolderName('') }} className="text-muted-foreground text-xs"><XMarkIcon className="h-3 w-3" /></button>
                 </div>
               </div>
             )}
@@ -673,7 +668,7 @@ export default function LibraryPage() {
 
         {/* Main content */}
         <div className="flex-1 min-w-0">
-          <div className="bg-card rounded-lg shadow-lg overflow-x-auto">
+     <div className="bg-card rounded-lg overflow-x-auto">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 {currentFolderName && (
@@ -770,7 +765,7 @@ export default function LibraryPage() {
                         aria-label={tr('streaming.library.selectAllPage')}
                       />
                     </th>
-                    <th className="text-left p-3 w-10">🎵</th>
+          <th className="w-10 p-3 text-left"><span className="sr-only">{tr('streaming.library.preview')}</span></th>
                     <th className="text-left p-3 w-12">{tr('streaming.library.cover')}</th>
                     <th className="text-left p-3">{tr('streaming.library.titleCol')}</th>
                     <th className="text-left p-3 hidden sm:table-cell">{tr('streaming.library.artistCol')}</th>
@@ -814,7 +809,7 @@ export default function LibraryPage() {
                               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                             />
                             {!t.coverUrl && (
-                              <div className="w-10 h-10 rounded bg-secondary flex items-center justify-center text-muted-foreground text-lg">🎵</div>
+               <div className="flex h-10 w-10 items-center justify-center rounded-control bg-surface-3"><MusicalNoteIcon className="h-4 w-4 text-muted-foreground" /></div>
                             )}
                             <input
                               ref={coverInputRef}
@@ -829,7 +824,7 @@ export default function LibraryPage() {
                               className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand rounded-full flex items-center justify-center text-white text-xs hover:bg-brand disabled:opacity-50"
                               title={tr('streaming.library.uploadCover')}
                             >
-                              {coverUploadingId === t.id ? '⏳' : '📷'}
+               {coverUploadingId === t.id ? '…' : <CameraIcon className="h-3 w-3" />}
                             </button>
                             {t.coverUrl && (
                               <button
@@ -838,7 +833,7 @@ export default function LibraryPage() {
                                 className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white text-[8px] hover:bg-red-500 disabled:opacity-50"
                                 title={tr('streaming.library.deleteCover')}
                               >
-                                {coverDeletingId === t.id ? '⏳' : '✕'}
+                {coverDeletingId === t.id ? '…' : <XMarkIcon className="h-3 w-3" />}
                               </button>
                             )}
                           </div>
@@ -846,7 +841,7 @@ export default function LibraryPage() {
                           t.coverUrl ? (
                             <img src={t.coverUrl} alt="" className="w-10 h-10 rounded object-cover shadow-sm" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                           ) : (
-                            <div className="w-10 h-10 rounded bg-secondary flex items-center justify-center text-muted-foreground text-lg">🎵</div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-control bg-surface-3"><MusicalNoteIcon className="h-4 w-4 text-muted-foreground" /></div>
                           )
                         )}
                       </td>
@@ -887,7 +882,7 @@ export default function LibraryPage() {
                               {tr('streaming.library.move')}
                             </button>
                             {moveTrackId === t.id && (
-                              <div className="absolute mt-1 right-0 z-10 bg-card border border-border rounded-lg shadow-xl p-2 min-w-[180px]">
+               <div className="absolute mt-1 right-0 z-10 bg-card border border-border rounded-lg p-2 min-w-[180px]">
                                 <div className="text-[11px] text-muted-foreground uppercase px-2 py-1">{tr('streaming.library.moveTo')}</div>
                                 <button onClick={() => handleMoveTrack(t.id, null)} className="block w-full text-left px-2 py-1.5 text-xs text-muted-foreground hover:bg-secondary rounded">{tr('streaming.library.uncategorized')}</button>
                                 {folders.map(f => (

@@ -16,7 +16,7 @@ export default async function LocutorIaPage() {
   const disabled = await getDisabledMenuItems(client.clientId)
   if (disabled.has('streaming-locutor-ia')) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6">
+   <div className="rounded-container border border-border bg-card p-6">
         <h1 className="text-xl font-semibold text-foreground">{t('streaming.locutor.pageDisabledTitle')}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {t('streaming.locutor.pageDisabledText')}

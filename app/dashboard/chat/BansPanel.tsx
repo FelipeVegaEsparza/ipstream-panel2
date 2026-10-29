@@ -50,7 +50,7 @@ export function BansPanel({ bans, onAdd, onRemove, onError }: BansPanelProps) {
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl shadow-soft">
+  <div className="bg-card border border-border rounded-panel ">
       <div className="p-4 border-b border-border">
         <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
           <BanIcon className="h-4 w-4 text-destructive" />

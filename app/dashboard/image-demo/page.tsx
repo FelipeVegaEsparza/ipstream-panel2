@@ -4,7 +4,7 @@ export default function ImageDemoPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+    <h1 className="text-2xl font-bold text-foreground">
           Demo de Upload de Imágenes
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -14,47 +14,47 @@ export default function ImageDemoPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+     <h3 className="text-lg font-medium text-foreground mb-4">
             Funcionalidades del Sistema de Upload
           </h3>
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start space-x-2">
-              <span className="text-green-500">✓</span>
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
               <span>Drag & Drop de imágenes</span>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-green-500">✓</span>
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
               <span>Click para seleccionar archivo</span>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-green-500">✓</span>
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
               <span>Vista previa inmediata</span>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-green-500">✓</span>
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
               <span>Validación de tipo de archivo</span>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-green-500">✓</span>
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
               <span>Límite de tamaño (5MB)</span>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-green-500">✓</span>
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
               <span>Eliminación automática del servidor</span>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-green-500">✓</span>
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
               <span>Alternativa con URL externa</span>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-green-500">✓</span>
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
               <span>Organización por cliente</span>
             </div>
           </div>
         </div>
 
         <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+     <h3 className="text-lg font-medium text-foreground mb-4">
             Formatos Soportados
           </h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
@@ -77,7 +77,7 @@ export default function ImageDemoPage() {
           </div>
 
           <div className="mt-6">
-            <h4 className="font-medium text-gray-900 mb-2">Límites:</h4>
+      <h4 className="font-medium text-foreground mb-2">Límites:</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Tamaño máximo: 5MB</li>
               <li>• Solo imágenes</li>

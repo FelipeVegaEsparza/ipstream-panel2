@@ -37,9 +37,9 @@ export function MixerBar({
 }: Props) {
   const { t } = useDashboardI18n()
   return (
-    <section className="grid gap-4 rounded-2xl border border-border bg-card p-4 shadow-soft md:grid-cols-[1.2fr_1fr]">
+  <section className="grid gap-4 rounded-container border border-border bg-card p-4 md:grid-cols-[1.2fr_1fr]">
       <div className="space-y-4">
-        <div className="rounded-xl border border-border bg-background p-3">
+    <div className="rounded-panel border border-border bg-background p-3">
           <div className="mb-2 flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Crossfader</span>
             <span className="font-mono text-foreground">{Math.round(crossfader * 100)}%</span>
@@ -59,7 +59,7 @@ export function MixerBar({
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-background p-3">
+    <div className="rounded-panel border border-border bg-background p-3">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Master</span>
             <span className="font-mono text-foreground">{masterDb > 0 ? '+' : ''}{masterDb.toFixed(1)} dB</span>
@@ -99,7 +99,7 @@ export function MixerBar({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-background p-3">
+   <div className="rounded-panel border border-border bg-background p-3">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xs font-semibold text-foreground">{t('live.mixer.microphone')}</h3>

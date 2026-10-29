@@ -8,7 +8,7 @@ export default function AboutPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <PanelLogo className="h-24 w-auto mx-auto mb-8 filter drop-shadow-2xl" />
+    <PanelLogo className="h-24 w-auto mx-auto mb-8 filter drop-" />
         <h1 className="text-4xl font-bold text-foreground mb-4">
           CasterFly
         </h1>
@@ -41,7 +41,7 @@ export default function AboutPage() {
               'about.feature.12'
             ] as const).map((feature, index) => (
               <div key={index} className="flex items-start space-x-3 p-3 bg-secondary/30 rounded-lg">
-                <span className="text-green-400 mt-0.5">✓</span>
+        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--live)]" />
                 <span className="text-muted-foreground">{t(feature)}</span>
               </div>
             ))}
@@ -85,20 +85,20 @@ export default function AboutPage() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {([
-              { icon: '📊', name: 'about.module.basic', desc: 'about.module.basicDesc', color: 'from-brand/20 to-brand/20 border-brand/30' },
-              { icon: '📱', name: 'about.module.social', desc: 'about.module.socialDesc', color: 'from-green-500/20 to-green-600/20 border-green-500/30' },
-              { icon: '🎙️', name: 'about.module.programs', desc: 'about.module.programsDesc', color: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30' },
-              { icon: '📰', name: 'about.module.news', desc: 'about.module.newsDesc', color: 'from-purple-500/20 to-purple-600/20 border-purple-500/30' },
-              { icon: '🎵', name: 'about.module.podcasts', desc: 'about.module.podcastsDesc', color: 'from-indigo-500/20 to-purple-600/20 border-indigo-500/30' },
-              { icon: '🎥', name: 'about.module.videocasts', desc: 'about.module.videocastsDesc', color: 'from-red-500/20 to-pink-600/20 border-red-500/30' },
-              { icon: '📺', name: 'about.module.videos', desc: 'about.module.videosDesc', color: 'from-orange-500/20 to-red-600/20 border-orange-500/30' },
-              { icon: '🏢', name: 'about.module.sponsors', desc: 'about.module.sponsorsDesc', color: 'from-teal-500/20 to-brand/20 border-teal-500/30' },
-              { icon: '🎉', name: 'about.module.promotions', desc: 'about.module.promotionsDesc', color: 'from-pink-500/20 to-rose-600/20 border-pink-500/30' },
-              { icon: '🔧', name: 'about.module.api', desc: 'about.module.apiDesc', color: 'from-secondary/20 to-secondary/20 border-border/30' }
+       { name: 'about.module.basic', desc: 'about.module.basicDesc' },
+       { name: 'about.module.social', desc: 'about.module.socialDesc' },
+       { name: 'about.module.programs', desc: 'about.module.programsDesc' },
+       { name: 'about.module.news', desc: 'about.module.newsDesc' },
+       { name: 'about.module.podcasts', desc: 'about.module.podcastsDesc' },
+       { name: 'about.module.videocasts', desc: 'about.module.videocastsDesc' },
+       { name: 'about.module.videos', desc: 'about.module.videosDesc' },
+       { name: 'about.module.sponsors', desc: 'about.module.sponsorsDesc' },
+       { name: 'about.module.promotions', desc: 'about.module.promotionsDesc' },
+       { name: 'about.module.api', desc: 'about.module.apiDesc' }
             ] as const).map((module, index) => (
-            <div key={index} className={`text-center p-6 bg-gradient-to-br ${module.color} rounded-xl border backdrop-blur-sm hover:scale-105 transition-transform duration-200`}>
-              <div className="text-3xl mb-3">{module.icon}</div>
-              <h4 className="font-semibold text-foreground mb-2">{t(module.name)}</h4>
+      <div key={index} className="dashboard-panel p-5">
+       <span className="mb-3 block h-px w-6 bg-signal" />
+       <h4 className="mb-2 text-[13px] font-medium text-foreground">{t(module.name)}</h4>
               <p className="text-xs text-muted-foreground">{t(module.desc)}</p>
             </div>
           ))}
@@ -121,8 +121,8 @@ export default function AboutPage() {
               'about.news.3',
               'about.news.4'
             ] as const).map((feature, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg border border-indigo-500/20">
-                <span className="text-indigo-400 mt-0.5">✨</span>
+       <div key={index} className="flex items-start gap-3 rounded-control border border-line bg-surface-2 p-3">
+        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-signal" />
                 <span className="text-muted-foreground text-sm">{t(feature)}</span>
               </div>
             ))}
@@ -136,8 +136,8 @@ export default function AboutPage() {
               'about.design.3',
               'about.design.4'
             ] as const).map((feature, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 bg-gradient-to-r from-brand/10 to-brand/10 rounded-lg border border-brand/20">
-                <span className="text-brand mt-0.5">🎨</span>
+       <div key={index} className="flex items-start gap-3 rounded-control border border-line bg-surface-2 p-3">
+        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-signal" />
                 <span className="text-muted-foreground text-sm">{t(feature)}</span>
               </div>
             ))}
@@ -145,9 +145,9 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-brand/20 to-brand/20 border border-brand/30 rounded-2xl p-8 backdrop-blur-sm">
+   <div className="dashboard-panel p-8">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-brand to-brand rounded-full mb-6">
+     <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-surface-3">
             <svg className="w-8 h-8 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>

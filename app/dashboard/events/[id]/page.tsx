@@ -37,7 +37,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('events.detailTitle')}</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t('events.detailTitle')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('events.detailSubtitle')}</p>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               </div>
             )}
 
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
+      <h1 className="text-3xl font-bold text-foreground mb-4">{event.title}</h1>
 
             <div className="flex flex-wrap gap-4 mb-6 text-sm">
               <div className="flex items-center text-muted-foreground gap-1.5">
@@ -75,7 +75,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               )}
             </div>
 
-            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">{event.description}</div>
+      <div className="text-foreground leading-relaxed whitespace-pre-wrap">{event.description}</div>
 
             {event.eventUrl && (
               <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -92,7 +92,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('events.info')}</h3>
+      <h3 className="text-lg font-medium text-foreground mb-4">{t('events.info')}</h3>
             <div className="space-y-3">
               <div>
                 <span className="text-sm text-muted-foreground">{t('events.status')}</span>
@@ -102,29 +102,29 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">{t('events.dateLabel')}</span>
-                <p className="text-sm font-medium text-gray-900">{formatDate(event.date)}</p>
+        <p className="text-sm font-medium text-foreground">{formatDate(event.date)}</p>
               </div>
               {event.time && (
                 <div>
                   <span className="text-sm text-muted-foreground">{t('events.timeLabel')}</span>
-                  <p className="text-sm font-medium text-gray-900">{event.time}</p>
+         <p className="text-sm font-medium text-foreground">{event.time}</p>
                 </div>
               )}
               {event.location && (
                 <div>
                   <span className="text-sm text-muted-foreground">{t('events.locationLabel')}</span>
-                  <p className="text-sm font-medium text-gray-900">{event.location}</p>
+         <p className="text-sm font-medium text-foreground">{event.location}</p>
                 </div>
               )}
               <div>
                 <span className="text-sm text-muted-foreground">{t('events.createdLabel')}</span>
-                <p className="text-sm font-medium text-gray-900">{formatDateTime(event.createdAt)}</p>
+        <p className="text-sm font-medium text-foreground">{formatDateTime(event.createdAt)}</p>
               </div>
             </div>
           </div>
 
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('events.actions')}</h3>
+      <h3 className="text-lg font-medium text-foreground mb-4">{t('events.actions')}</h3>
             <Link href={`/dashboard/events/${event.id}/edit`} className="w-full btn-primary flex items-center justify-center gap-2">
               <PencilIcon className="h-4 w-4" /> {t('events.edit')}
             </Link>

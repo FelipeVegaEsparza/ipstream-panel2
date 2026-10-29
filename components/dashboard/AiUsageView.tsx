@@ -98,7 +98,7 @@ export function AiUsageView({ data, creditPacks, creditRequests }: Props) {
   return (
     <div className="space-y-6">
       {showUpsell && (
-        <section className="rounded-xl border border-brand/40 bg-brand/10 p-4">
+    <section className="rounded-panel border border-brand/40 bg-brand/10 p-4">
           <div className="flex items-start gap-3">
             <SparklesIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
             <div>
@@ -177,7 +177,7 @@ export function AiUsageView({ data, creditPacks, creditRequests }: Props) {
               const pending = pendingPackIds.has(pack.id)
               const isMusic = pack.creditType === 'music'
               return (
-                <div key={pack.id} className="rounded-xl border border-border bg-secondary/30 p-4">
+        <div key={pack.id} className="rounded-panel border border-border bg-secondary/30 p-4">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-sm font-semibold text-foreground">{pack.name}</h3>
                     <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand">

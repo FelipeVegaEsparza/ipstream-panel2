@@ -34,7 +34,7 @@ export default async function PollsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('polls.title')}</h1>
+     <h1 className="text-2xl font-bold text-foreground">{t('polls.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t('polls.subtitle')}</p>
         </div>
         <Link href="/dashboard/polls/new" className="btn-primary flex items-center gap-2">

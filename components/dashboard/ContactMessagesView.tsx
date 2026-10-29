@@ -150,7 +150,7 @@ export function ContactMessagesView() {
   const endPage = Math.min(pagination.page * pagination.limit, pagination.total)
 
   return (
-    <div className="bg-card/40 border border-border rounded-xl">
+  <div className="bg-card/40 border border-border rounded-panel">
       <div className="p-4 border-b border-border flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1 bg-background border border-border rounded-lg p-1">
           {FILTERS.map((key) => (

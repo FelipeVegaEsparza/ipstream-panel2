@@ -190,10 +190,10 @@ export default function PlaylistsPage() {
                     <p className="text-sm text-muted-foreground mt-1">{p.description}</p>
                   )}
                   <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
-                    <span>🎵 {t('streaming.playlists.trackCount', { count: p.entryCount })}</span>
+          <span>{t('streaming.playlists.trackCount', { count: p.entryCount })}</span>
                     <span>⏱️ {fmtDuration(p.totalDuration)}</span>
-                    {p.shuffle && <span>🔀 {t('streaming.playlists.shuffle')}</span>}
-                    {p.repeat && <span>🔁 {t('streaming.playlists.repeat')}</span>}
+          {p.shuffle && <span>{t('streaming.playlists.shuffle')}</span>}
+          {p.repeat && <span>{t('streaming.playlists.repeat')}</span>}
                   </div>
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function PlaylistsPage() {
                 <button
                   onClick={() => remove(p.id, p.name)}
                   disabled={deletingId === p.id}
-                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-secondary text-white text-sm rounded ml-auto"
+         className="px-3 py-1.5 bg-[color:var(--danger)] hover:brightness-110 disabled:bg-secondary text-white text-sm rounded ml-auto"
                 >
                   {t('streaming.playlists.delete')}
                 </button>

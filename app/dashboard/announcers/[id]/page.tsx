@@ -35,7 +35,7 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('announcers.detail.title')}</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t('announcers.detail.title')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('announcers.detail.subtitle')}</p>
           </div>
         </div>
@@ -49,15 +49,15 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
           <div className="card">
             <div className="flex flex-col md:flex-row gap-6 items-start">
               {announcer.imageUrl ? (
-                <Image src={announcer.imageUrl} alt={announcer.name} width={200} height={200} className="w-48 h-48 object-cover rounded-xl border border-gray-200" />
+        <Image src={announcer.imageUrl} alt={announcer.name} width={200} height={200} className="w-48 h-48 object-cover rounded-panel border border-line" />
               ) : (
-                <div className="w-48 h-48 rounded-xl bg-gray-100 flex items-center justify-center border border-gray-200">
+        <div className="w-48 h-48 rounded-panel bg-surface-3 flex items-center justify-center border border-line">
                   <MicrophoneIcon className="h-16 w-16 text-muted-foreground" />
                 </div>
               )}
               <div className="space-y-4 flex-1">
-                <h1 className="text-3xl font-bold text-gray-900">{announcer.name}</h1>
-                <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">{announcer.description}</div>
+        <h1 className="text-3xl font-bold text-foreground">{announcer.name}</h1>
+        <div className="text-foreground leading-relaxed whitespace-pre-wrap">{announcer.description}</div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <span>{t('common.created', { date: formatDate(announcer.createdAt) })}</span>
                   <span className="mx-2">&bull;</span>
@@ -70,7 +70,7 @@ export default async function AnnouncerDetailPage({ params }: AnnouncerDetailPag
 
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('common.actions')}</h3>
+      <h3 className="text-lg font-medium text-foreground mb-4">{t('common.actions')}</h3>
             <Link href={`/dashboard/announcers/${announcer.id}/edit`} className="w-full btn-primary flex items-center justify-center gap-2">
               <PencilIcon className="h-4 w-4" /> {t('announcers.edit')}
             </Link>

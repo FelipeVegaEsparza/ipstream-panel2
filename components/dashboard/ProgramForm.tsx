@@ -174,11 +174,11 @@ export function ProgramForm({ initialData }: ProgramFormProps) {
             <label key={option.value} className="flex items-center">
               <input
                 type="checkbox"
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+        className="rounded border-line text-primary-600 focus:ring-primary-500"
                 checked={selectedDays?.includes(option.value) || false}
                 onChange={(e) => handleDayChange(option.value, e.target.checked)}
               />
-              <span className="ml-2 text-sm text-gray-700">{dayNames[option.value] ?? option.label}</span>
+       <span className="ml-2 text-sm text-muted-foreground">{dayNames[option.value] ?? option.label}</span>
             </label>
           ))}
         </div>

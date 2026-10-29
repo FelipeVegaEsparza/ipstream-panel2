@@ -101,7 +101,7 @@ export function GalleriesList({ galleries }: GalleriesListProps) {
                   fill
                   className="object-cover"
                 />
-                <div className="absolute top-2 right-2 bg-black/60 text-foreground text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+        <div className="absolute top-2 right-2 bg-black/60 text-foreground text-xs px-2 py-1 rounded-full ">
                   {t('galleries.images', { count: gallery.images.length, plural: gallery.images.length === 1 ? '' : (locale === 'en' ? 's' : 'es') })}
                 </div>
               </div>

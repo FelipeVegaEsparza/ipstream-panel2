@@ -113,7 +113,7 @@ export function PollsList({ polls }: PollsListProps) {
                       <span className="text-muted-foreground">{t('polls.votes', { count: opt.votes, plural: opt.votes !== 1 ? 's' : '' })} ({pct}%)</span>
                     </div>
                     <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-brand to-brand rounded-full transition-all" style={{ width: `${pct}%` }} />
+           <div className="h-full bg-signal rounded-full transition-all" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 )
