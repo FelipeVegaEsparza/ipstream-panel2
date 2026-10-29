@@ -459,10 +459,11 @@
     box-shadow: none;
   }
 
-  .dashboard-shell .btn-primary {
+  .dashboard-shell .btn-primary,
+  .dashboard-shell .bg-brand-grad {
     border-radius: var(--radius-control);
     background-image: none;
-    background-color: hsl(var(--brand));
+    background-color: var(--signal);
     box-shadow: none;
   }
 
