@@ -1,6 +1,7 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { readMetadata, fetchCoverFromMusicBrainz, sanitizeFileName, isMp3 } from '../lib/id3.js'
+import { normalizeTrackMetadata } from '../lib/title-normalizer.js'
 import { saveMp3, deleteMp3, saveCover, deleteCover, getCoverPath, isSafeFileName, ensureClientDir, mp3Path, uniqueFileName } from '../lib/files.js'
 import { regenerateM3u } from '../lib/liquidsoap.js'
 import { existsSync } from 'fs'
@@ -110,7 +111,10 @@ export default async function libraryRoutes(app) {
       const { path: filePath, size } = await saveMp3(clientId, fileName, buffer)
       savedFileName = fileName
 
-      const meta = await readMetadata(filePath)
+      const meta = await readMetadata(filePath, data.filename)
+      const normalized = normalizeTrackMetadata({ title: meta.title, artist: meta.artist })
+      const title = normalized.title
+      const artist = normalized.artist
 
       const trackId = 'trk_' + uuid().slice(0, 8)
       let coverUrl = null
@@ -122,9 +126,9 @@ export default async function libraryRoutes(app) {
       }
 
       // Fallback: try MusicBrainz if we have artist+album but no embedded cover
-      if (!meta.coverBuffer && meta.artist && meta.album) {
+      if (!meta.coverBuffer && artist && meta.album) {
         try {
-          const mbCover = await fetchCoverFromMusicBrainz(meta.artist, meta.album)
+          const mbCover = await fetchCoverFromMusicBrainz(artist, meta.album)
           if (mbCover) {
             await saveCover(clientId, trackId, mbCover.buffer)
             coverUrl = `/api/dashboard/streaming/library/${trackId}/cover`
@@ -140,7 +144,7 @@ export default async function libraryRoutes(app) {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
           [
             trackId, clientId, radioStreamId,
-            meta.title, meta.artist, meta.album, meta.duration,
+            title, artist, meta.album, meta.duration,
             fileName, filePath, size, coverUrl, data.mimetype || 'audio/mpeg',
           ]
         )
@@ -151,7 +155,7 @@ export default async function libraryRoutes(app) {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
           [
             trackId, clientId, radioStreamId,
-            meta.title, meta.artist, meta.album, meta.duration,
+            title, artist, meta.album, meta.duration,
             fileName, filePath, size, data.mimetype || 'audio/mpeg',
           ]
         )
@@ -160,17 +164,17 @@ export default async function libraryRoutes(app) {
       await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
          VALUES (?, ?, 'track_upload', ?, NOW())`,
-        [uuid(), clientId, JSON.stringify({ trackId, fileName, title: meta.title, size })]
+        [uuid(), clientId, JSON.stringify({ trackId, fileName, title, size })]
       )
 
-      logger.info({ clientId, trackId, fileName, size, title: meta.title }, 'Track uploaded')
+      logger.info({ clientId, trackId, fileName, size, title }, 'Track uploaded')
 
       return {
         ok: true,
         track: {
           id: trackId,
-          title: meta.title,
-          artist: meta.artist,
+          title,
+          artist,
           album: meta.album,
           duration: meta.duration,
           fileName,
@@ -186,6 +190,63 @@ export default async function libraryRoutes(app) {
       }
       return reply.code(500).send({ error: 'upload_failed', message: err.message })
     }
+  })
+
+  app.post('/api/streams/:clientId/library/normalize', async (request) => {
+    const { clientId } = request.params
+    const rawTrackIds = request.body && Array.isArray(request.body.trackIds)
+      ? request.body.trackIds
+      : []
+    const trackIds = rawTrackIds.filter((id) => typeof id === 'string' && id.length > 0)
+
+    let rows
+    if (trackIds.length > 0) {
+      const placeholders = trackIds.map(() => '?').join(', ')
+      ;[rows] = await pool.query(
+        `SELECT id, title, artist FROM tracks
+         WHERE clientId = ? AND capsuleId IS NULL AND id IN (${placeholders})`,
+        [clientId, ...trackIds]
+      )
+    } else {
+      ;[rows] = await pool.query(
+        `SELECT id, title, artist FROM tracks
+         WHERE clientId = ? AND capsuleId IS NULL`,
+        [clientId]
+      )
+    }
+
+    let normalized = 0
+    let unchanged = 0
+    let failed = 0
+
+    for (const track of rows) {
+      try {
+        const result = normalizeTrackMetadata({ title: track.title, artist: track.artist })
+        if (!result.changed) {
+          unchanged++
+          continue
+        }
+        await pool.query(
+          `UPDATE tracks SET title = ?, artist = ?, updatedAt = NOW()
+           WHERE id = ? AND clientId = ?`,
+          [result.title, result.artist, track.id, clientId]
+        )
+        normalized++
+      } catch (err) {
+        failed++
+        logger.warn({ err: err.message, trackId: track.id }, 'No se pudo normalizar el track')
+      }
+    }
+
+    const summary = { scanned: rows.length, normalized, unchanged, failed }
+    await pool.query(
+      `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
+       VALUES (?, ?, 'tracks_normalize', ?, NOW())`,
+      [uuid(), clientId, JSON.stringify(summary)]
+    )
+
+    logger.info({ clientId, ...summary }, 'Tracks normalizados')
+    return { ok: true, ...summary }
   })
 
   app.patch('/api/streams/:clientId/library/:trackId', async (request, reply) => {

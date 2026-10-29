@@ -119,6 +119,8 @@ export default function LibraryPage() {
   const [page, setPage] = useState(1)
   const [refreshingCovers, setRefreshingCovers] = useState(false)
   const [coverResult, setCoverResult] = useState('')
+  const [normalizingTitles, setNormalizingTitles] = useState(false)
+  const [titleResult, setTitleResult] = useState('')
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set())
   const [bulkFolderId, setBulkFolderId] = useState('')
   const [bulkMoving, setBulkMoving] = useState(false)
@@ -177,6 +179,40 @@ export default function LibraryPage() {
       setCoverResult(tr('streaming.library.coversError'))
     } finally {
       setRefreshingCovers(false)
+    }
+  }
+
+  const normalizeTitles = async () => {
+    const trackIds = Array.from(selectedTrackIds)
+    if (trackIds.length === 0 && !confirm(tr('streaming.library.normalizeConfirm', { count: tracks.length }))) {
+      return
+    }
+    setNormalizingTitles(true)
+    setTitleResult('')
+    try {
+      const res = await fetch('/api/dashboard/streaming/library/normalize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trackIds.length > 0 ? { trackIds } : {}),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setTitleResult(data.message || tr('streaming.library.normalizeError'))
+        return
+      }
+      setTitleResult(
+        tr('streaming.library.normalizeResult', {
+          normalized: data.normalized ?? 0,
+          unchanged: data.unchanged ?? 0,
+          failed: data.failed ?? 0,
+        })
+      )
+      setSelectedTrackIds(new Set())
+      await load()
+    } catch {
+      setTitleResult(tr('streaming.library.normalizeError'))
+    } finally {
+      setNormalizingTitles(false)
     }
   }
 
@@ -532,6 +568,16 @@ export default function LibraryPage() {
         </button>
         {coverResult && (
           <span className="text-xs text-muted-foreground">{coverResult}</span>
+        )}
+        <button
+          onClick={normalizeTitles}
+          disabled={normalizingTitles}
+          className="px-4 py-2 bg-brand hover:bg-brand/90 disabled:bg-secondary text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          {normalizingTitles ? tr('streaming.library.normalizing') : tr('streaming.library.normalize')}
+        </button>
+        {titleResult && (
+          <span className="text-xs text-muted-foreground">{titleResult}</span>
         )}
       </div>
 

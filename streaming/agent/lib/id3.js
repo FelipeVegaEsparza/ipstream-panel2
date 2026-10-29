@@ -4,7 +4,7 @@ import { logger } from './logger.js'
 
 const FILENAME_SEPARATORS = [' - ', ' – ', ' — ', '_-_', '_–_']
 
-export async function readMetadata(filePath) {
+export async function readMetadata(filePath, fallbackFilename = filePath) {
   try {
     const meta = await parseFile(filePath, { duration: true, skipCovers: false })
     const { common, format } = meta
@@ -22,7 +22,7 @@ export async function readMetadata(filePath) {
       coverFormat = pic.format || 'image/jpeg'
     }
 
-    const parsed = parseFilename(filePath)
+    const parsed = parseFilename(fallbackFilename)
 
     return {
       title: title || parsed.title,
@@ -34,7 +34,7 @@ export async function readMetadata(filePath) {
     }
   } catch (err) {
     logger.warn({ err: err.message, filePath }, 'No se pudo leer metadata')
-    const parsed = parseFilename(filePath)
+    const parsed = parseFilename(fallbackFilename)
     return {
       title: parsed.title,
       artist: parsed.artist,
@@ -96,7 +96,7 @@ export async function fetchCoverFromMusicBrainz(artist, album, title = null) {
   }
 }
 
-function parseFilename(filePath) {
+export function parseFilename(filePath) {
   const base = filePath.split('/').pop() || ''
   const name = base.replace(/\.[^.]+$/, '')
 

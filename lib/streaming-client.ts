@@ -127,6 +127,12 @@ export const streamingClient = {
   // Library
   listLibrary: async (clientId: string) => request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/library`),
   refreshCovers: async (clientId: string) => request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/library/covers/refresh`, { method: 'POST' }),
+  normalizeTitles: async (clientId: string, trackIds?: string[]) =>
+    request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/library/normalize`, {
+      method: 'POST',
+      body: trackIds && trackIds.length > 0 ? { trackIds } : {},
+      timeoutMs: UPLOAD_TIMEOUT_MS,
+    }),
   uploadTrack: async (clientId: string, file: File) => {
     const form = new FormData()
     form.append('file', file)
