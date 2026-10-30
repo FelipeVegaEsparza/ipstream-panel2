@@ -10,6 +10,7 @@ export interface ElevenLabsVoiceOption {
   id: string
   name: string
   description?: string
+  gender?: 'male' | 'female'
 }
 
 export interface ClientVoiceSettings {
@@ -31,6 +32,7 @@ export function parseVoiceCatalog(raw: string | null | undefined): ElevenLabsVoi
         id: v.id.trim(),
         name: v.name.trim(),
         description: typeof v.description === 'string' ? v.description.trim() : undefined,
+        ...(v.gender === 'male' || v.gender === 'female' ? { gender: v.gender } : {}),
       }))
       .filter((v) => v.id && v.name)
       .slice(0, 30)

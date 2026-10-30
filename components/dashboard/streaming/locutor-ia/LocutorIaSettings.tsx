@@ -19,7 +19,7 @@ interface Config {
   voicePreset?: string
   globalVoicePreset?: string
   effectiveVoicePreset?: string
-  voices: { id: string; name: string; description?: string }[]
+  voices: { id: string; name: string; description?: string; gender?: 'male' | 'female' }[]
   provider?: 'elevenlabs' | 'fish'
   timeEveryMinutes: number
   weatherEveryMinutes: number
@@ -35,6 +35,40 @@ const input =
   'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none'
 
 const INTERVALS = [0, 15, 30, 60, 120, 180, 240]
+function VoiceRow({
+  voice,
+  selected,
+  onSelect,
+}: {
+  voice: { id: string; name: string; description?: string }
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
+      <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+        <input
+          type="radio"
+          name="ai-voice"
+          checked={selected}
+          onChange={onSelect}
+          className="h-4 w-4 accent-[var(--brand-500)]"
+        />
+        <span className="min-w-0">
+          <span className="block truncate text-sm text-foreground">{voice.name}</span>
+          {voice.description && (
+            <span className="block text-[11px] text-muted-foreground">{voice.description}</span>
+          )}
+        </span>
+      </label>
+      <EffectPreviewButton
+        src={`/api/dashboard/streaming/ai/voice-preview${voice.id ? `?voiceId=${encodeURIComponent(voice.id)}` : ''}`}
+        name={voice.name}
+      />
+    </div>
+  )
+}
+
 
 export function LocutorIaSettings() {
   const { t } = useDashboardI18n()
@@ -136,6 +170,11 @@ export function LocutorIaSettings() {
     }
   }
 
+  const voiceOptions = config?.voices ?? []
+  const femaleVoices = voiceOptions.filter((voice) => voice.gender === 'female')
+  const maleVoices = voiceOptions.filter((voice) => voice.gender === 'male')
+  const unclassifiedVoices = voiceOptions.filter((voice) => !voice.gender)
+
   const updatePhrase = (index: number, value: string) => {
     setPhrases((prev) => prev.map((phrase, i) => (i === index ? value.slice(0, 240) : phrase)))
   }
@@ -201,107 +240,101 @@ export function LocutorIaSettings() {
               : t('streaming.locutor.voiceUsage')}
           </p>
         </div>
-        {config.provider === 'fish' ? (
-          <div className="space-y-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.voice')}</label>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
-                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
-                    <input
-                      type="radio"
-                      name="fish-voice"
-                      checked={voiceId === ''}
-                      onChange={() => setVoiceId('')}
-                      className="h-4 w-4 accent-[var(--brand-500)]"
-                    />
-                    <span className="text-sm text-foreground">{t('streaming.locutor.defaultVoice')}</span>
-                  </label>
-                  <EffectPreviewButton src="/api/dashboard/streaming/ai/voice-preview" name={t('streaming.locutor.defaultVoice')} />
-                </div>
-                {config.voices.map((voice) => (
-                  <div key={voice.id} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
-                    <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
-                      <input
-                        type="radio"
-                        name="fish-voice"
-                        checked={voiceId === voice.id}
-                        onChange={() => setVoiceId(voice.id)}
-                        className="h-4 w-4 accent-[var(--brand-500)]"
-                      />
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm text-foreground">{voice.name}</span>
-                        {voice.description && (
-                          <span className="block text-[11px] text-muted-foreground">{voice.description}</span>
-                        )}
-                      </span>
-                    </label>
-                    <EffectPreviewButton
-                      src={`/api/dashboard/streaming/ai/voice-preview?voiceId=${encodeURIComponent(voice.id)}`}
-                      name={voice.name}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
-              {t('streaming.locutor.fishNote')}
-            </p>
-          </div>
-        ) : (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-4">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('streaming.locutor.voice')}</label>
-            <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className={input}>
-              <option value="">{t('streaming.locutor.defaultVoice')}</option>
-              {config.voices.map((voice) => (
-                <option key={voice.id} value={voice.id}>{voice.name}</option>
-              ))}
-            </select>
+            <div className="space-y-2">
+              <VoiceRow
+                voice={{ id: '', name: t('streaming.locutor.defaultVoice') }}
+                selected={voiceId === ''}
+                onSelect={() => setVoiceId('')}
+              />
+              {femaleVoices.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium text-muted-foreground">{t('streaming.locutor.femaleVoices')}</p>
+                  {femaleVoices.map((voice) => (
+                    <VoiceRow
+                      key={voice.id}
+                      voice={voice}
+                      selected={voiceId === voice.id}
+                      onSelect={() => setVoiceId(voice.id)}
+                    />
+                  ))}
+                </div>
+              )}
+              {maleVoices.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium text-muted-foreground">{t('streaming.locutor.maleVoices')}</p>
+                  {maleVoices.map((voice) => (
+                    <VoiceRow
+                      key={voice.id}
+                      voice={voice}
+                      selected={voiceId === voice.id}
+                      onSelect={() => setVoiceId(voice.id)}
+                    />
+                  ))}
+                </div>
+              )}
+              {unclassifiedVoices.length > 0 && (
+                <div className="space-y-1.5">
+                  {unclassifiedVoices.map((voice) => (
+                    <VoiceRow
+                      key={voice.id}
+                      voice={voice}
+                      selected={voiceId === voice.id}
+                      onSelect={() => setVoiceId(voice.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-              {t('streaming.locutor.expressivity', { value: voiceStyle })}
-            </label>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={voiceStyle}
-              onChange={(e) => setVoiceStyle(Number(e.target.value))}
-              className="mt-3 w-full accent-[var(--brand-500)]"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-              {t('streaming.locutor.qualityPreset')}
-            </label>
-            <select value={voicePreset} onChange={(e) => setVoicePreset(e.target.value)} className={input}>
-              <option value="">
-                {t('streaming.locutor.qualityInherit')} ({config.globalVoicePreset || 'natural'})
-              </option>
-              {TTS_QUALITY_PRESETS.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.id === 'natural'
-                    ? t('admin.tts.qualityNatural')
-                    : preset.id === 'stable'
-                      ? t('admin.tts.qualityStable')
-                      : t('admin.tts.qualityExpressive')}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {t('streaming.locutor.qualityHint')}
-            </p>
-          </div>
-        </div>
-        )}
-        {config.provider !== 'fish' && (
-          <p className="text-[11px] text-muted-foreground">
-            {t('streaming.locutor.voiceCacheNote')}
+
+          {config.provider === 'elevenlabs' && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  {t('streaming.locutor.expressivity', { value: voiceStyle })}
+                </label>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={voiceStyle}
+                  onChange={(e) => setVoiceStyle(Number(e.target.value))}
+                  className="mt-3 w-full accent-[var(--brand-500)]"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  {t('streaming.locutor.qualityPreset')}
+                </label>
+                <select value={voicePreset} onChange={(e) => setVoicePreset(e.target.value)} className={input}>
+                  <option value="">
+                    {t('streaming.locutor.qualityInherit')} ({config.globalVoicePreset || 'natural'})
+                  </option>
+                  {TTS_QUALITY_PRESETS.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.id === 'natural'
+                        ? t('admin.tts.qualityNatural')
+                        : preset.id === 'stable'
+                          ? t('admin.tts.qualityStable')
+                          : t('admin.tts.qualityExpressive')}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {t('streaming.locutor.qualityHint')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
+            {config.provider === 'fish' ? t('streaming.locutor.fishNote') : t('streaming.locutor.voiceCacheNote')}
           </p>
-        )}
+        </div>
       </section>
 
       <section className="card space-y-4">

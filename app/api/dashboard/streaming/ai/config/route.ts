@@ -61,6 +61,7 @@ async function loadConfig(clientId: string) {
     ? fish.voices.map((voice) => ({
         id: voice.id,
         name: voice.name,
+        gender: voice.gender,
         description: voice.gender === 'female' ? 'Femenina' : 'Masculina',
       }))
     : elevenVoices
@@ -172,6 +173,15 @@ export async function PUT(request: NextRequest) {
       if (!fish.voices.some((voice) => voice.id === voiceId)) {
         return NextResponse.json(
           { error: 'invalid_voice', message: 'La voz Fish elegida no existe.' },
+          { status: 400 }
+        )
+      }
+    }
+    if (provider === 'elevenlabs' && voiceId) {
+      const catalog = await getVoiceCatalog()
+      if (!catalog.some((voice) => voice.id === voiceId)) {
+        return NextResponse.json(
+          { error: 'invalid_voice', message: 'La voz ElevenLabs elegida no existe.' },
           { status: 400 }
         )
       }

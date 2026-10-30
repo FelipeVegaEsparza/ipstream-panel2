@@ -10,6 +10,7 @@ interface VoiceOption {
   id: string
   name: string
   description?: string
+  gender?: 'male' | 'female'
 }
 
 interface Config {
@@ -268,54 +269,114 @@ export function ElevenLabsSettings() {
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <label className="block text-xs text-muted-foreground">{t('admin.tts.clientVoices')}</label>
-                <p className="text-[11px] text-muted-foreground">{t('admin.tts.clientVoicesHint')}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setVoices((prev) => [...prev, { id: '', name: '' }])}
-                disabled={voices.length >= 30}
-                className="rounded border border-border px-2.5 py-1.5 text-xs text-foreground hover:border-brand hover:text-brand disabled:opacity-40"
-              >
-                {t('admin.tts.addVoice')}
-              </button>
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">{t('admin.tts.elevenCatalogTitle')}</h3>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{t('admin.tts.elevenCatalogHint')}</p>
             </div>
-            <div className="mt-2 space-y-2">
-              {voices.map((voice, index) => (
-                <div key={index} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-                  <input
-                    className={input}
-                    value={voice.name}
-                    onChange={(e) =>
-                      setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, name: e.target.value } : v)))
-                    }
-                    placeholder={t('admin.tts.voiceNamePlaceholder')}
-                  />
-                  <input
-                    className={input}
-                    value={voice.id}
-                    onChange={(e) =>
-                      setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, id: e.target.value } : v)))
-                    }
-                    placeholder={t('admin.tts.voiceIdFieldPlaceholder')}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setVoices((prev) => prev.filter((_, i) => i !== index))}
-                    className="rounded border border-border px-2 text-muted-foreground hover:text-red-300"
-                    aria-label={t('admin.tts.removeVoice')}
-                  >
-                    ×
-                  </button>
+
+            {(['female', 'male'] as const).map((gender) => {
+              const rows = voices
+                .map((voice, index) => ({ voice, index }))
+                .filter(({ voice }) => voice.gender === gender)
+              return (
+                <div key={gender} className="rounded-lg border border-border bg-secondary/20 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-foreground">
+                      {gender === 'female' ? t('admin.voice.femaleVoices') : t('admin.voice.maleVoices')}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground">{rows.length}/4</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (rows.length >= 4) return
+                          setVoices((prev) => [...prev, { id: '', name: '', gender }])
+                        }}
+                        disabled={rows.length >= 4}
+                        className="rounded border border-border px-2 py-1 text-[11px] text-foreground transition-colors hover:border-signal hover:text-signal disabled:opacity-40"
+                      >
+                        {gender === 'female' ? t('admin.tts.addFemaleVoice') : t('admin.tts.addMaleVoice')}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {rows.map(({ voice, index }) => (
+                      <div key={`${gender}-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]">
+                        <input
+                          className={input}
+                          value={voice.name}
+                          onChange={(e) =>
+                            setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, name: e.target.value } : v)))
+                          }
+                          placeholder={t('admin.tts.voiceNamePlaceholder')}
+                          maxLength={120}
+                        />
+                        <input
+                          className={input}
+                          value={voice.id}
+                          onChange={(e) =>
+                            setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, id: e.target.value } : v)))
+                          }
+                          placeholder={t('admin.tts.voiceIdFieldPlaceholder')}
+                          maxLength={191}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setVoices((prev) => prev.filter((_, i) => i !== index))}
+                          className="rounded border border-border px-2 text-muted-foreground hover:text-red-300"
+                          aria-label={t('admin.tts.removeVoice')}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {rows.length === 0 && (
+                      <p className="text-[11px] text-muted-foreground">{t('admin.tts.noVoices')}</p>
+                    )}
+                  </div>
                 </div>
-              ))}
-              {voices.length === 0 && (
-                <p className="text-[11px] text-muted-foreground">{t('admin.tts.noVoices')}</p>
-              )}
-            </div>
+              )
+            })}
+
+            {voices.some((voice) => !voice.gender) && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="text-xs font-semibold text-amber-200">{t('admin.tts.unclassifiedVoices')}</p>
+                <div className="mt-2 space-y-2">
+                  {voices
+                    .map((voice, index) => ({ voice, index }))
+                    .filter(({ voice }) => !voice.gender)
+                    .map(({ voice, index }) => (
+                      <div key={`unclassified-${index}`} className="flex flex-wrap items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate text-xs text-foreground">
+                          {voice.name || voice.id}
+                        </span>
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            const gender = e.target.value as 'male' | 'female'
+                            if (gender !== 'male' && gender !== 'female') return
+                            setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, gender } : v)))
+                          }}
+                          className="rounded border border-border bg-background px-2 py-1 text-[11px] text-foreground"
+                        >
+                          <option value="">{t('admin.tts.gender')}</option>
+                          <option value="female">{t('admin.tts.genderFemale')}</option>
+                          <option value="male">{t('admin.tts.genderMale')}</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => setVoices((prev) => prev.filter((_, i) => i !== index))}
+                          className="rounded border border-border px-2 py-1 text-muted-foreground hover:text-red-300"
+                          aria-label={t('admin.tts.removeVoice')}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-start justify-between gap-4 rounded-lg bg-secondary/50 p-3">

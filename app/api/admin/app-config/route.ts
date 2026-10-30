@@ -135,7 +135,7 @@ export async function PUT(request: NextRequest) {
       elevenLabsModelValue = model
     }
 
-    let voicesValue: { id: string; name: string; description?: string }[] | undefined
+    let voicesValue: { id: string; name: string; description?: string; gender?: 'male' | 'female' }[] | undefined
     if (elevenLabsVoices !== undefined) {
       if (!Array.isArray(elevenLabsVoices)) {
         return NextResponse.json({ error: 'elevenLabsVoices debe ser un array' }, { status: 400 })
@@ -148,9 +148,18 @@ export async function PUT(request: NextRequest) {
           ...(typeof v.description === 'string' && v.description.trim()
             ? { description: v.description.trim().slice(0, 300) }
             : {}),
+          ...(v.gender === 'male' || v.gender === 'female' ? { gender: v.gender } : {}),
         }))
         .filter((v) => v.id && v.name)
-        .slice(0, 30)
+        .slice(0, 12)
+      const female = voicesValue.filter((v) => v.gender === 'female').length
+      const male = voicesValue.filter((v) => v.gender === 'male').length
+      if (female > 4 || male > 4) {
+        return NextResponse.json(
+          { error: 'Máximo 4 voces femeninas y 4 masculinas' },
+          { status: 400 }
+        )
+      }
     }
 
     let qualityPresetValue: string | undefined
