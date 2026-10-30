@@ -26,6 +26,48 @@ interface Config {
   ttsProvider: 'elevenlabs' | 'fish'
 }
 
+type VoiceGender = 'male' | 'female'
+
+interface VoiceRow extends VoiceOption {
+  slot: string
+}
+
+const VOICE_SLOTS: Array<{ slot: string; gender: VoiceGender }> = [
+  { slot: 'female-1', gender: 'female' },
+  { slot: 'female-2', gender: 'female' },
+  { slot: 'female-3', gender: 'female' },
+  { slot: 'female-4', gender: 'female' },
+  { slot: 'male-1', gender: 'male' },
+  { slot: 'male-2', gender: 'male' },
+  { slot: 'male-3', gender: 'male' },
+  { slot: 'male-4', gender: 'male' },
+]
+
+function emptyVoices(): VoiceRow[] {
+  return VOICE_SLOTS.map((slot) => ({ ...slot, id: '', name: '', description: '' }))
+}
+
+function mergeVoices(configured: VoiceOption[] | undefined): VoiceRow[] {
+  const slots = emptyVoices()
+  const extra: VoiceRow[] = []
+  for (const voice of configured || []) {
+    if (!voice.id || !voice.name) continue
+    const slot =
+      slots.find((candidate) => candidate.id === voice.id) ||
+      (voice.gender
+        ? slots.find((candidate) => candidate.gender === voice.gender && !candidate.id)
+        : undefined)
+    if (slot) {
+      slot.id = voice.id
+      slot.name = voice.name
+      slot.description = voice.description
+    } else {
+      extra.push({ slot: `extra-${extra.length}`, ...voice })
+    }
+  }
+  return [...slots, ...extra]
+}
+
 export function ElevenLabsSettings() {
   const { t } = useDashboardI18n()
   const [apiKey, setApiKey] = useState('')
@@ -33,7 +75,7 @@ export function ElevenLabsSettings() {
   const [model, setModel] = useState(DEFAULT_ELEVENLABS_MODEL)
   const [enabled, setEnabled] = useState(false)
   const [cacheEnabled, setCacheEnabled] = useState(true)
-  const [voices, setVoices] = useState<VoiceOption[]>([])
+  const [voices, setVoices] = useState<VoiceRow[]>(emptyVoices)
   const [qualityPreset, setQualityPreset] = useState<string>(DEFAULT_TTS_QUALITY_PRESET)
   const [dictionaryId, setDictionaryId] = useState('')
   const [dictionaryVersionId, setDictionaryVersionId] = useState('')
@@ -51,7 +93,7 @@ export function ElevenLabsSettings() {
         setModel(data.elevenLabsModel || DEFAULT_ELEVENLABS_MODEL)
         setEnabled(Boolean(data.elevenLabsEnabled))
         setCacheEnabled(data.ttsCacheEnabled !== false)
-        setVoices(Array.isArray(data.elevenLabsVoices) ? data.elevenLabsVoices : [])
+        setVoices(mergeVoices(Array.isArray(data.elevenLabsVoices) ? data.elevenLabsVoices : []))
         setQualityPreset(data.ttsQualityPreset || DEFAULT_TTS_QUALITY_PRESET)
         setDictionaryId(data.pronunciationDictionaryId || '')
         setDictionaryVersionId(data.pronunciationDictionaryVersionId || '')
@@ -69,7 +111,7 @@ export function ElevenLabsSettings() {
         elevenLabsModel: model,
         elevenLabsEnabled: enabled,
         ttsCacheEnabled: cacheEnabled,
-        elevenLabsVoices: voices,
+        elevenLabsVoices: voices.filter((voice) => voice.id.trim() && voice.name.trim()).map(({ slot, ...voice }) => voice),
         ttsQualityPreset: qualityPreset,
         pronunciationDictionaryId: dictionaryId.trim(),
         pronunciationDictionaryVersionId: dictionaryVersionId.trim(),
@@ -133,6 +175,23 @@ export function ElevenLabsSettings() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const assignExtraGender = (slot: string, gender: VoiceGender) => {
+    setVoices((prev) => {
+      const extra = prev.find((voice) => voice.slot === slot)
+      if (!extra) return prev
+      const without = prev.filter((voice) => voice.slot !== slot)
+      const free = without.find(
+        (voice) => voice.slot.startsWith(`${gender}-`) && !voice.id && !voice.name
+      )
+      if (!free) return prev
+      return without.map((voice) =>
+        voice.slot === free.slot
+          ? { ...voice, id: extra.id, name: extra.name, description: extra.description }
+          : voice
+      )
+    })
   }
 
   const input =
@@ -276,64 +335,45 @@ export function ElevenLabsSettings() {
             </div>
 
             {(['female', 'male'] as const).map((gender) => {
-              const rows = voices
-                .map((voice, index) => ({ voice, index }))
-                .filter(({ voice }) => voice.gender === gender)
+              const rows = voices.filter((voice) => voice.slot.startsWith(`${gender}-`))
               return (
                 <div key={gender} className="rounded-lg border border-border bg-secondary/20 p-3">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <p className="text-xs font-semibold text-foreground">
                       {gender === 'female' ? t('admin.voice.femaleVoices') : t('admin.voice.maleVoices')}
                     </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground">{rows.length}/4</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (rows.length >= 4) return
-                          setVoices((prev) => [...prev, { id: '', name: '', gender }])
-                        }}
-                        disabled={rows.length >= 4}
-                        className="rounded border border-border px-2 py-1 text-[11px] text-foreground transition-colors hover:border-signal hover:text-signal disabled:opacity-40"
-                      >
-                        {gender === 'female' ? t('admin.tts.addFemaleVoice') : t('admin.tts.addMaleVoice')}
-                      </button>
-                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {rows.filter((voice) => voice.id.trim()).length}/4
+                    </span>
                   </div>
                   <div className="space-y-2">
-                    {rows.map(({ voice, index }) => (
-                      <div key={`${gender}-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]">
-                        <input
-                          className={input}
-                          value={voice.name}
-                          onChange={(e) =>
-                            setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, name: e.target.value } : v)))
-                          }
-                          placeholder={t('admin.tts.voiceNamePlaceholder')}
-                          maxLength={120}
-                        />
-                        <input
-                          className={input}
-                          value={voice.id}
-                          onChange={(e) =>
-                            setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, id: e.target.value } : v)))
-                          }
-                          placeholder={t('admin.tts.voiceIdFieldPlaceholder')}
-                          maxLength={191}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setVoices((prev) => prev.filter((_, i) => i !== index))}
-                          className="rounded border border-border px-2 text-muted-foreground hover:text-red-300"
-                          aria-label={t('admin.tts.removeVoice')}
-                        >
-                          ×
-                        </button>
+                    {rows.map((voice, index) => (
+                      <div key={voice.slot} className="rounded-lg border border-border bg-background p-2">
+                        <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                          {gender === 'female' ? t('admin.voice.femaleSlot', { n: index + 1 }) : t('admin.voice.maleSlot', { n: index + 1 })}
+                        </p>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <input
+                            className={input}
+                            value={voice.name}
+                            onChange={(e) =>
+                              setVoices((prev) => prev.map((v) => (v.slot === voice.slot ? { ...v, name: e.target.value } : v)))
+                            }
+                            placeholder={t('admin.tts.voiceNamePlaceholder')}
+                            maxLength={120}
+                          />
+                          <input
+                            className={input}
+                            value={voice.id}
+                            onChange={(e) =>
+                              setVoices((prev) => prev.map((v) => (v.slot === voice.slot ? { ...v, id: e.target.value } : v)))
+                            }
+                            placeholder={t('admin.tts.voiceIdFieldPlaceholder')}
+                            maxLength={191}
+                          />
+                        </div>
                       </div>
                     ))}
-                    {rows.length === 0 && (
-                      <p className="text-[11px] text-muted-foreground">{t('admin.tts.noVoices')}</p>
-                    )}
                   </div>
                 </div>
               )
@@ -344,19 +384,18 @@ export function ElevenLabsSettings() {
                 <p className="text-xs font-semibold text-amber-200">{t('admin.tts.unclassifiedVoices')}</p>
                 <div className="mt-2 space-y-2">
                   {voices
-                    .map((voice, index) => ({ voice, index }))
-                    .filter(({ voice }) => !voice.gender)
-                    .map(({ voice, index }) => (
-                      <div key={`unclassified-${index}`} className="flex flex-wrap items-center gap-2">
+                    .filter((voice) => !voice.gender)
+                    .map((voice) => (
+                      <div key={voice.slot} className="flex flex-wrap items-center gap-2">
                         <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                           {voice.name || voice.id}
                         </span>
                         <select
                           value=""
                           onChange={(e) => {
-                            const gender = e.target.value as 'male' | 'female'
+                            const gender = e.target.value as VoiceGender
                             if (gender !== 'male' && gender !== 'female') return
-                            setVoices((prev) => prev.map((v, i) => (i === index ? { ...v, gender } : v)))
+                            assignExtraGender(voice.slot, gender)
                           }}
                           className="rounded border border-border bg-background px-2 py-1 text-[11px] text-foreground"
                         >
@@ -366,7 +405,7 @@ export function ElevenLabsSettings() {
                         </select>
                         <button
                           type="button"
-                          onClick={() => setVoices((prev) => prev.filter((_, i) => i !== index))}
+                          onClick={() => setVoices((prev) => prev.filter((v) => v.slot !== voice.slot))}
                           className="rounded border border-border px-2 py-1 text-muted-foreground hover:text-red-300"
                           aria-label={t('admin.tts.removeVoice')}
                         >
