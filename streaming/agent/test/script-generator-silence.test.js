@@ -54,7 +54,7 @@ test('el script multi-DJ envuelve cada slot', () => {
   assert.match(script, /fallback\(track_sensitive=false, \[owner_djs, guest_djs, autodj\]\)/)
 })
 
-test('normaliza música, jingles, intros IA y locuciones al mismo loudness', () => {
+test('normaliza música y jingles con AGC lento y deja las locuciones al TTS', () => {
   const script = generateLiquidsoapScript(baseArgs({
     aiPresenterEvery: 3,
     aiIntrosM3uPath: '/tmp/ai-intros.m3u',
@@ -63,7 +63,8 @@ test('normaliza música, jingles, intros IA y locuciones al mismo loudness', () 
     jinglesM3uPath: '/tmp/jingles.m3u',
   }))
   const normalizers = script.match(/lufs=true/g) || []
-  assert.ok(normalizers.length >= 4, `esperaba al menos 4 normalizadores, hay ${normalizers.length}`)
+  assert.equal(normalizers.length, 2, `esperaba 2 normalizadores (música y jingles), hay ${normalizers.length}`)
   assert.match(script, /target=-16\.0/)
-  assert.match(script, /announcements = normalize\(/)
+  assert.match(script, /window=30\.0/)
+  assert.match(script, /announcements = request\.queue\(id="announcements"\)/)
 })

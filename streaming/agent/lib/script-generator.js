@@ -48,9 +48,12 @@ export function generateLiquidsoapScript({
     lufs=true,
     target=-16.0,
     track_sensitive=true,
-    window=1.0,
-    up=5.0,
-    down=2.0,
+    window=30.0,
+    up=0.3,
+    down=0.3,
+    threshold=-35.0,
+    gain_min=-12.0,
+    gain_max=12.0,
     ${source}
   )`
 
@@ -72,13 +75,13 @@ export function generateLiquidsoapScript({
     // una capa exterior separada, así no alteran el contador del presentador.
     let baseSource = musicSource
     if (hasAi) {
-      const aiSource = level(`playlist(
+      const aiSource = `playlist(
     id="${safeMount}-ai",
     "${aiIntrosM3uPath}",
     mode="normal",
     reload_mode="watch",
     loop=true
-  )`)
+  )`
       baseSource = `rotate(
     weights=[${aiPresenterEvery}, 1],
     [
@@ -258,7 +261,7 @@ settings.server.telnet.bind_addr.set("0.0.0.0")
 
 settings.harbor.bind_addrs := ["0.0.0.0"]
 
-announcements = ${level('request.queue(id="announcements")')}
+announcements = request.queue(id="announcements")
 autodj = fallback(track_sensitive=true, [announcements, ${sourceBlock}])
 ${harborInputs}
 

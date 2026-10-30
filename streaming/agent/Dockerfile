@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         gosu \
         docker.io \
+        ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Verificar

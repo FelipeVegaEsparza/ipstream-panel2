@@ -6,24 +6,23 @@ Ver `proposal.md` — Why. El generador de scripts de Liquidsoap ya envuelve cad
 
 ## Decisions
 
-### 1. `normalize(lufs=true, target=-16.0)` por fuente
+### 1. AGC lento solo para música y jingles
 
-Liquidsoap 2.4.5 incluye el operador `normalize` con soporte LUFS. Se aplica antes del `fallback`/`rotate` a:
+Liquidsoap 2.4.5 incluye `normalize` con soporte LUFS. Se aplica antes del `fallback`/`rotate` a la playlist de música y a la de jingles con parámetros lentos: `target=-16.0`, `track_sensitive=true`, `window=30.0`, `up=0.3`, `down=0.3`, `threshold=-35.0`, `gain_min=-12`, `gain_max=12`.
 
-- playlist de música,
-- playlist de jingles,
-- playlist de intros IA,
-- `request.queue` de locuciones.
-
-Parámetros: `target=-16.0`, `track_sensitive=true`, `window=1.0`, `up=5.0`, `down=2.0`. El objetivo coincide con el post-proceso de TTS (`loudnorm=I=-16`) para que no haya diferencia entre proveedores.
+Las intros IA y las locuciones de hora/clima **no** pasan por AGC en Liquidsoap: son TTS y se normalizan con ganancia estática en su post-proceso. Así se evita el bombeo dentro de una locución.
 
 ### 2. No se normaliza el harbor del DJ en vivo
 
 El DJ envía su propia mezcla; aplicar AGC dinámico a una fuente live puede bombear. Se deja fuera para no degradar la operación en vivo. Si se necesita, se puede agregar después con `track_sensitive=false`.
 
-### 3. Sin re-encodeo de archivos
+### 3. Ganancia estática para el TTS del agente
 
-La nivelación ocurre en el flujo de Liquidsoap, no en los MP3. No se toca la biblioteca, los tags ni las carátulas.
+El agente mide la loudness integrada del TTS de hora/clima con `loudnorm` y aplica una ganancia fija hasta -16 LUFS + limitador. No usa AGC dinámico, por lo que el volumen de una locución no sube y baja mientras habla. El post-proceso del panel ya hacía algo equivalente para las locuciones generadas desde la consola.
+
+### 4. Sin re-encodeo de la biblioteca
+
+La nivelación de música/jingles ocurre en el flujo de Liquidsoap. No se re-encodean los MP3 ni se tocan tags o carátulas.
 
 ## Risks / Trade-offs
 

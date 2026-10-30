@@ -10,6 +10,7 @@ import { join } from 'path'
 import { pool } from './db.js'
 import { config } from './config.js'
 import { logger } from './logger.js'
+import { normalizeSpeechBuffer } from './audio-normalize.js'
 import { decrypt, isEncrypted } from './encryption.js'
 
 const ANNOUNCE_DIR = join(config.library.path)
@@ -313,7 +314,8 @@ export async function generateAnnouncement(clientId, type, { at = new Date() } =
         quotaChecked = true
       }
 
-      const audio = await prepared.request()
+      const rawAudio = await prepared.request()
+      const audio = await normalizeSpeechBuffer(rawAudio, `ai-announcer-${provider}`)
       await fs.writeFile(file, audio)
       await consume(clientId, text.length)
       return { path: file, cached: false, characters: text.length, provider }
