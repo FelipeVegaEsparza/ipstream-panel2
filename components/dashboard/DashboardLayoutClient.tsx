@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { GlobalMenuBanner } from './GlobalMenuBanner'
@@ -19,6 +19,8 @@ interface DashboardLayoutClientProps {
   disabledItems?: MenuItemKey[]
   globalHiddenItems?: MenuItemKey[]
   websiteUrl?: string | null
+  radioLogoUrl?: string | null
+  stationName?: string | null
 }
 
 export function DashboardLayoutClient({
@@ -28,8 +30,11 @@ export function DashboardLayoutClient({
   disabledItems,
   globalHiddenItems,
   websiteUrl,
+  radioLogoUrl,
+  stationName,
 }: DashboardLayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const disabledSet = useMemo(
     () => new Set<MenuItemKey>(disabledItems ?? []),
     [disabledItems]
@@ -39,6 +44,20 @@ export function DashboardLayoutClient({
     [globalHiddenItems]
   )
 
+  useEffect(() => {
+    try {
+      setSidebarCollapsed(localStorage.getItem('sidebar-collapsed') === '1')
+    } catch {}
+  }, [])
+
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev
+      try { localStorage.setItem('sidebar-collapsed', next ? '1' : '0') } catch {}
+      return next
+    })
+  }
+
   return (
     <DashboardI18nProvider locale={locale}>
       <ImpersonationBanner />
@@ -46,9 +65,17 @@ export function DashboardLayoutClient({
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         disabledItems={disabledSet}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={toggleSidebarCollapsed}
       />
-      <div className="lg:pl-[248px]">
-        <Header user={user} setSidebarOpen={setSidebarOpen} websiteUrl={websiteUrl} />
+      <div className={sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[248px]'}>
+        <Header
+          user={user}
+          setSidebarOpen={setSidebarOpen}
+          websiteUrl={websiteUrl}
+          radioLogoUrl={radioLogoUrl}
+          stationName={stationName}
+        />
         <GlobalMenuBanner globallyHidden={globalHidden} />
         <main className="py-6 md:py-8">
           <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-10">

@@ -51,3 +51,10 @@
 - [x] 7.4 Limpiar emojis y decoración heredada en las páginas de contenido (about, podcasts, videocasts y formularios asociados); verificar en ES/EN.
 - [ ] 7.5 Revisar las pantallas de cuenta y sistema (datos básicos, pagos, soporte, notificaciones, primeros pasos); verificar dark/light y móvil.
 - [x] 7.6 Ejecutar `npx tsc --noEmit`, `npm test`, `npx next build` y detector de Impeccable sobre los archivos tocados.
+
+## 8. Navegación colapsable y branding del cliente
+
+- [x] 8.1 Agregar estado persistente de sidebar colapsado en `DashboardLayoutClient` y adaptar el ancho del contenido entre 248px y 72px.
+- [x] 8.2 Implementar el modo colapsado del rail en `Sidebar.tsx`, centrar el logo y agregar controles de contraer/expandir accesibles.
+- [x] 8.3 Cargar el logo y nombre de la radio desde `BasicData` y mostrarlos en el header junto al selector de idioma.
+- [ ] 8.4 Verificar en producción el colapso en desktop, el drawer móvil y el logo del cliente.

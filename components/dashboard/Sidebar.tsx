@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Fragment, useState, useEffect, useCallback, useMemo } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, ChevronDownIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/outline'
 import {
   MENU_ITEMS,
   MENU_SECTIONS,
@@ -51,11 +51,13 @@ interface SidebarProps {
   sidebarOpen?: boolean
   setSidebarOpen?: (open: boolean) => void
   disabledItems?: Set<MenuItemKey>
+  collapsed?: boolean
+  onToggleCollapsed?: () => void
 }
 
-export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: SidebarProps) {
+export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems, collapsed = false, onToggleCollapsed }: SidebarProps) {
   const pathname = usePathname()
-  const { locale } = useDashboardI18n()
+  const { locale, t } = useDashboardI18n()
   const label = (name: string) => menuName(locale, name)
   const sectionLabel = (name: string) => sectionName(locale, name)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(getInitialOpenSections)
@@ -151,11 +153,69 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
   const hasActiveChild = (item: typeof MENU_ITEMS[number]) =>
     item.children?.some((c) => isChildActive(c)) ?? false
 
-  const renderNavContent = (onLinkClick?: () => void) => (
-    <div className="flex min-h-0 grow flex-col gap-y-4 overflow-y-auto bg-surface-1 px-3 pb-4 border-r border-line">
-      <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center bg-surface-1 -mx-3 px-4 border-b border-line">
-        <PanelLogo className="h-8 w-auto" />
-      </div>
+  const renderNavContent = (onLinkClick?: () => void, collapsedMode = false, showCollapse = false) => {
+    if (collapsedMode) {
+      return (
+        <div className="flex min-h-0 grow flex-col overflow-y-auto bg-surface-1 px-2 pb-4 border-r border-line">
+          <div className="relative flex h-16 shrink-0 items-center justify-center border-b border-line">
+            <span className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-surface-3 text-[11px] font-semibold text-signal">
+              CF
+            </span>
+            {showCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapsed}
+                className="absolute right-1 rounded-control p-1 text-muted-foreground transition-colors hover:bg-surface-3 hover:text-foreground"
+                title={t('sidebar.expand')}
+                aria-label={t('sidebar.expand')}
+              >
+                <ChevronDoubleRightIcon className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <nav className="mt-2 flex flex-1 flex-col gap-1">
+            {sections.map((section) => (
+              <div key={section.name} className="border-b border-line/60 py-1 last:border-0">
+                {section.items.map((item) => {
+                  const active = pathname === item.href || hasActiveChild(item)
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      onClick={onLinkClick}
+                      title={label(item.name)}
+                      aria-label={label(item.name)}
+                      className={`sidebar-item justify-center px-0 py-2 ${
+                        active ? 'sidebar-item-active' : 'sidebar-item-inactive'
+                      }`}
+                    >
+                      <item.icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-signal' : 'text-muted-foreground'}`} aria-hidden="true" />
+                    </Link>
+                  )
+                })}
+              </div>
+            ))}
+          </nav>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex min-h-0 grow flex-col gap-y-4 overflow-y-auto bg-surface-1 px-3 pb-4 border-r border-line">
+        <div className="relative flex h-16 shrink-0 items-center justify-center border-b border-line -mx-3 px-3">
+          <PanelLogo className="h-8 w-auto" />
+          {showCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapsed}
+              className="absolute right-1.5 rounded-control p-1 text-muted-foreground transition-colors hover:bg-surface-3 hover:text-foreground"
+              title={t('sidebar.collapse')}
+              aria-label={t('sidebar.collapse')}
+            >
+              <ChevronDoubleLeftIcon className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       <nav className="flex flex-1 flex-col">
         <ul role="list" className="flex flex-1 flex-col gap-y-6">
           {sections.map((section) => {
@@ -305,8 +365,9 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
         <p className="text-[11px] font-medium text-muted-foreground">{APP_NAME}</p>
         <p className="dashboard-metric text-[10px] text-muted-foreground/70">v{APP_VERSION}</p>
       </div>
-    </div>
-  )
+      </div>
+    )
+  }
 
   return (
     <>
@@ -356,7 +417,7 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
                     </button>
                   </div>
                 </Transition.Child>
-                {renderNavContent(() => setSidebarOpen?.(false))}
+                {renderNavContent(() => setSidebarOpen?.(false), false, false)}
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -364,8 +425,8 @@ export function Sidebar({ sidebarOpen = false, setSidebarOpen, disabledItems }: 
       </Transition.Root>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-[248px] lg:flex-col min-h-0">
-        {renderNavContent()}
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col min-h-0 ${collapsed ? 'lg:w-[72px]' : 'lg:w-[248px]'}`}>
+        {renderNavContent(undefined, collapsed, true)}
       </div>
     </>
   )

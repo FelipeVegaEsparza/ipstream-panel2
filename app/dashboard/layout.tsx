@@ -59,15 +59,19 @@ export default async function DashboardLayout({
   // Se deriva del dominio primario del cliente (creado al registrarse o por el admin);
   // si no hay dominio registrado, se usa el `websiteUrl` que cargue el admin.
   let websiteUrl: string | null = null
+  let radioLogoUrl: string | null = null
+  let stationName: string | null = null
   if (effectiveClient) {
     const [basicData, domainUrl] = await Promise.all([
       prisma.basicData.findUnique({
         where: { clientId: effectiveClient.clientId },
-        select: { websiteUrl: true },
+        select: { websiteUrl: true, logoUrl: true, projectName: true },
       }),
       resolveClientSiteUrl(effectiveClient.clientId),
     ])
     websiteUrl = domainUrl ?? basicData?.websiteUrl ?? null
+    radioLogoUrl = basicData?.logoUrl ?? null
+    stationName = basicData?.projectName ?? null
   }
 
   return (
@@ -80,6 +84,8 @@ export default async function DashboardLayout({
             disabledItems={disabledItems}
             globalHiddenItems={globalHiddenItems}
             websiteUrl={websiteUrl}
+            radioLogoUrl={radioLogoUrl}
+            stationName={stationName}
           >
             {children}
           </DashboardLayoutClient>

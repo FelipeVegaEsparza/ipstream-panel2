@@ -14,6 +14,8 @@ export const DASHBOARD_LOCALE_META: Record<DashboardLocale, { label: string; sho
 const es = {
   'header.openSidebar': 'Abrir sidebar',
   'header.controlRoom': 'Control Room',
+  'sidebar.collapse': 'Contraer menú',
+  'sidebar.expand': 'Expandir menú',
   'header.myWebsite': 'Ir a mi sitio Web',
   'header.tutorials': 'Tutoriales',
   'header.support': 'Soporte',
@@ -3552,6 +3554,8 @@ export type DashboardTranslationKey = keyof typeof es
 const en: Record<DashboardTranslationKey, string> = {
   'header.openSidebar': 'Open sidebar',
   'header.controlRoom': 'Control Room',
+  'sidebar.collapse': 'Collapse menu',
+  'sidebar.expand': 'Expand menu',
   'header.myWebsite': 'Go to my website',
   'header.tutorials': 'Tutorials',
   'header.support': 'Support',

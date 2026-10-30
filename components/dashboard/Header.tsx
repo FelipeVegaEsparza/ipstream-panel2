@@ -21,9 +21,11 @@ interface HeaderProps {
   }
   setSidebarOpen?: (open: boolean) => void
   websiteUrl?: string | null
+  radioLogoUrl?: string | null
+  stationName?: string | null
 }
 
-export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
+export function Header({ user, setSidebarOpen, websiteUrl, radioLogoUrl, stationName }: HeaderProps) {
   const { t, locale } = useDashboardI18n()
   const pathname = usePathname()
   const { effectiveUser, isImpersonating } = useImpersonationSession()
@@ -117,6 +119,28 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
             )}
           </Link>
           <div className="h-4 w-px bg-line" />
+
+          {(radioLogoUrl || stationName) && (
+            <>
+              <div className="hidden items-center gap-2 sm:flex" title={stationName || undefined}>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-control border border-line bg-surface-3">
+                  {radioLogoUrl ? (
+                    <img src={radioLogoUrl} alt={stationName || 'Radio'} className="h-full w-full object-contain" />
+                  ) : (
+                    <span className="text-[10px] font-semibold text-muted-foreground">
+                      {(stationName || 'R').charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                {stationName && (
+                  <span className="hidden max-w-[140px] truncate text-[11px] font-medium text-muted-foreground xl:block">
+                    {stationName}
+                  </span>
+                )}
+              </div>
+              <div className="hidden h-4 w-px bg-line sm:block" />
+            </>
+          )}
 
           <PanelLanguageSwitcher />
 
