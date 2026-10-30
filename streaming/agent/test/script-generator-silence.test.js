@@ -53,3 +53,17 @@ test('el script multi-DJ envuelve cada slot', () => {
   assert.match(script, /\/harbor\/silence\?dj=%2Fdj2&slot=dj1/)
   assert.match(script, /fallback\(track_sensitive=false, \[owner_djs, guest_djs, autodj\]\)/)
 })
+
+test('normaliza música, jingles, intros IA y locuciones al mismo loudness', () => {
+  const script = generateLiquidsoapScript(baseArgs({
+    aiPresenterEvery: 3,
+    aiIntrosM3uPath: '/tmp/ai-intros.m3u',
+    jinglePlayEvery: 5,
+    jinglePlayCount: 1,
+    jinglesM3uPath: '/tmp/jingles.m3u',
+  }))
+  const normalizers = script.match(/lufs=true/g) || []
+  assert.ok(normalizers.length >= 4, `esperaba al menos 4 normalizadores, hay ${normalizers.length}`)
+  assert.match(script, /target=-16\.0/)
+  assert.match(script, /announcements = normalize\(/)
+})

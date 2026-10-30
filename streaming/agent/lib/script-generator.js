@@ -41,6 +41,19 @@ export function generateLiquidsoapScript({
   const hasJingles = jinglePlayEvery > 0 && jinglesM3uPath
   const hasAi = aiPresenterEvery > 0 && aiIntrosM3uPath && !shuffle
 
+  // Nivelación de loudness entre música, jingles y locuciones. El TTS ya
+  // sale normalizado a -16 LUFS; esto nivela también la música y cualquier
+  // locución generada por el agente para que no haya saltos de volumen.
+  const level = (source) => `normalize(
+    lufs=true,
+    target=-16.0,
+    track_sensitive=true,
+    window=1.0,
+    up=5.0,
+    down=2.0,
+    ${source}
+  )`
+
   const playlistMode = shuffle ? 'randomize' : 'normal'
   const loopStr = repeat ? 'true' : 'false'
 
@@ -48,24 +61,24 @@ export function generateLiquidsoapScript({
   if (mode !== 'playlist') {
     sourceBlock = 'blank()'
   } else {
-    const musicSource = `playlist(
+    const musicSource = level(`playlist(
     id="${safeMount}-music",
     "${m3u}",
     mode="${playlistMode}",
     reload_mode="watch",
     loop=${loopStr}
-  )`
+  )`)
     // La fuente IA se intercala cada N temas de música. Los jingles van en
     // una capa exterior separada, así no alteran el contador del presentador.
     let baseSource = musicSource
     if (hasAi) {
-      const aiSource = `playlist(
+      const aiSource = level(`playlist(
     id="${safeMount}-ai",
     "${aiIntrosM3uPath}",
     mode="normal",
     reload_mode="watch",
     loop=true
-  )`
+  )`)
       baseSource = `rotate(
     weights=[${aiPresenterEvery}, 1],
     [
@@ -76,13 +89,13 @@ export function generateLiquidsoapScript({
     }
     if (hasJingles) {
       const jingleMode = shuffle ? 'random' : 'normal'
-      const jingleSource = `playlist(
+      const jingleSource = level(`playlist(
     id="${safeMount}-jingles",
     "${jinglesM3uPath}",
     mode="${jingleMode}",
     reload_mode="watch",
     loop=true
-  )`
+  )`)
       baseSource = `rotate(
     weights=[${jinglePlayEvery}, ${jinglePlayCount}],
     [
@@ -245,7 +258,7 @@ settings.server.telnet.bind_addr.set("0.0.0.0")
 
 settings.harbor.bind_addrs := ["0.0.0.0"]
 
-announcements = request.queue(id="announcements")
+announcements = ${level('request.queue(id="announcements")')}
 autodj = fallback(track_sensitive=true, [announcements, ${sourceBlock}])
 ${harborInputs}
 
