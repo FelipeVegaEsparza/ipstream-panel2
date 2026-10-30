@@ -19,5 +19,5 @@
 ## 4. Verificación y activación
 
 - [x] 4.1 Ejecutar `npx tsc --noEmit`, `npm test` y `npx next build`.
-- [ ] 4.2 Deployar, clasificar las voces existentes y activar `ttsProvider=elevenlabs`.
+- [x] 4.2 Deployar, clasificar las voces existentes y activar `ttsProvider=elevenlabs`.
 - [ ] 4.3 Probar preview y locución con una voz femenina y una masculina en producción.
