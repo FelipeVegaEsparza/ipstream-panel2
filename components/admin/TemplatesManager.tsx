@@ -285,16 +285,16 @@ export function TemplatesManager({ templates: initialTemplates }: TemplatesManag
         {templates.map((template) => (
           <Card key={template.id} className="bg-card border-border overflow-hidden">
             {template.imageUrl && (
-              <div className="w-full h-96 bg-secondary relative">
+              <div className="relative aspect-square w-full bg-secondary">
                 <img
                   src={template.imageUrl}
                   alt={template.displayName}
-                  className="w-full h-full object-contain p-4"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               </div>
             )}
             {!template.imageUrl && (
-              <div className="w-full h-96 bg-secondary flex items-center justify-center">
+              <div className="flex aspect-square w-full items-center justify-center bg-secondary">
                 <ImageIcon className="h-16 w-16 text-muted-foreground" />
               </div>
             )}
