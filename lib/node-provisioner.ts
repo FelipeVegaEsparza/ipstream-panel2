@@ -14,7 +14,7 @@ import { decrypt } from './encryption'
 import { sshExec, sftpWrite, SshConfig } from './ssh'
 import crypto from 'crypto'
 
-const REPO_TARBALL = 'https://github.com/FelipeVegaEsparza/ipstream-panel2/archive/refs/heads/main.tar.gz'
+const REPO_TARBALL_BASE = 'https://github.com/FelipeVegaEsparza/ipstream-panel2/archive'
 const REPO_COMMITS_API = 'https://api.github.com/repos/FelipeVegaEsparza/ipstream-panel2/commits/main'
 const NODE_DIR = '/opt/ipstream-node'
 const MAX_LOG_LINES = 200
@@ -28,6 +28,14 @@ let cachedMainBuild: { sha: string; at: number } | null = null
 async function getMainBuild(): Promise<string> {
   if (cachedMainBuild && Date.now() - cachedMainBuild.at < 5 * 60_000) {
     return cachedMainBuild.sha
+  }
+  // El nodo debe correr el mismo build que el panel desplegado, no el HEAD
+  // de main (puede incluir commits docs-only que no generaron imagen).
+  const deployed = (process.env.APP_GIT_SHA || '').trim()
+  if (deployed) {
+    const sha = deployed.slice(0, 7)
+    cachedMainBuild = { sha, at: Date.now() }
+    return sha
   }
   try {
     const res = await fetch(REPO_COMMITS_API, {
@@ -257,7 +265,11 @@ async function resolveSsh(server: {
 
 /** Descarga el repo y sube el tarball al nodo. */
 async function syncCodeTarball(serverId: string, ssh: SshConfig, label: string): Promise<void> {
-  const res = await fetch(REPO_TARBALL, { signal: AbortSignal.timeout(120000) })
+  const build = await getMainBuild()
+  const url = build === 'unknown'
+    ? `${REPO_TARBALL_BASE}/refs/heads/main.tar.gz`
+    : `${REPO_TARBALL_BASE}/${build}.tar.gz`
+  const res = await fetch(url, { signal: AbortSignal.timeout(120000) })
   if (!res.ok) throw new Error(`No se pudo descargar el código (${res.status})`)
   const buf = Buffer.from(await res.arrayBuffer())
   await sftpWrite(ssh, '/tmp/ipstream-node.tar.gz', buf)
