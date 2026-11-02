@@ -2,6 +2,7 @@ import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { readMetadata, fetchCoverFromMusicBrainz, sanitizeFileName, isMp3 } from '../lib/id3.js'
 import { normalizeTrackMetadata } from '../lib/title-normalizer.js'
+import { tagLoudness } from '../lib/loudness.js'
 import { saveMp3, deleteMp3, saveCover, deleteCover, getCoverPath, isSafeFileName, ensureClientDir, mp3Path, uniqueFileName } from '../lib/files.js'
 import { regenerateM3u } from '../lib/liquidsoap.js'
 import { existsSync } from 'fs'
@@ -112,6 +113,7 @@ export default async function libraryRoutes(app) {
       savedFileName = fileName
 
       const meta = await readMetadata(filePath, data.filename)
+      try { await tagLoudness(filePath) } catch (err) { logger.warn({ err: err.message, filePath }, 'No se pudo medir loudness del track') }
       const normalized = normalizeTrackMetadata({ title: meta.title, artist: meta.artist })
       const title = normalized.title
       const artist = normalized.artist

@@ -54,7 +54,7 @@ test('el script multi-DJ envuelve cada slot', () => {
   assert.match(script, /fallback\(track_sensitive=false, \[owner_djs, guest_djs, autodj\]\)/)
 })
 
-test('normaliza música y jingles con AGC lento y deja las locuciones al TTS', () => {
+test('aplica ganancia estática ReplayGain a música y jingles', () => {
   const script = generateLiquidsoapScript(baseArgs({
     aiPresenterEvery: 3,
     aiIntrosM3uPath: '/tmp/ai-intros.m3u',
@@ -62,9 +62,10 @@ test('normaliza música y jingles con AGC lento y deja las locuciones al TTS', (
     jinglePlayCount: 1,
     jinglesM3uPath: '/tmp/jingles.m3u',
   }))
-  const normalizers = script.match(/lufs=true/g) || []
-  assert.equal(normalizers.length, 2, `esperaba 2 normalizadores (música y jingles), hay ${normalizers.length}`)
-  assert.match(script, /target=-16\.0/)
-  assert.match(script, /window=30\.0/)
+  const normalizers = script.match(/normalize_track_gain\(/g) || []
+  assert.equal(normalizers.length, 2, `esperaba 2 normalize_track_gain (música y jingles), hay ${normalizers.length}`)
+  assert.doesNotMatch(script, /lufs=true/)
   assert.match(script, /announcements = request\.queue\(id="announcements"\)/)
+  assert.match(script, /radio = limit\(fallback\(/)
+  assert.match(script, /settings\.normalize_track_gain_metadata := "replaygain_track_gain"/)
 })

@@ -41,19 +41,9 @@ export function generateLiquidsoapScript({
   const hasJingles = jinglePlayEvery > 0 && jinglesM3uPath
   const hasAi = aiPresenterEvery > 0 && aiIntrosM3uPath && !shuffle
 
-  // Nivelación de loudness entre música, jingles y locuciones. El TTS ya
-  // sale normalizado a -16 LUFS; esto nivela también la música y cualquier
-  // locución generada por el agente para que no haya saltos de volumen.
-  const level = (source) => `normalize(
-    lufs=true,
-    target=-16.0,
-    track_sensitive=true,
-    window=30.0,
-    up=0.3,
-    down=0.3,
-    threshold=-35.0,
-    gain_min=-12.0,
-    gain_max=12.0,
+  // La música y los jingles llevan una ganancia estática ReplayGain por
+  // track. Las locuciones son TTS ya normalizado y no pasan por AGC.
+  const level = (source) => `normalize_track_gain(
     ${source}
   )`
 
@@ -261,11 +251,15 @@ settings.server.telnet.bind_addr.set("0.0.0.0")
 
 settings.harbor.bind_addrs := ["0.0.0.0"]
 
+# ReplayGain por track: normalize_track_gain lee replaygain_track_gain
+# (por defecto busca liq_normalize_track_gain, que no escribimos).
+settings.normalize_track_gain_metadata := "replaygain_track_gain"
+
 announcements = request.queue(id="announcements")
 autodj = fallback(track_sensitive=true, [announcements, ${sourceBlock}])
 ${harborInputs}
 
-radio = fallback(track_sensitive=false, [${fallbackList}])
+radio = limit(fallback(track_sensitive=false, [${fallbackList}]))
 ${mode === 'playlist' ? `
 # Notificar al agente cada vez que el AutoDJ arranca un track, para
 # derivar elapsed (tiempo transcurrido del tema) en /now-playing.

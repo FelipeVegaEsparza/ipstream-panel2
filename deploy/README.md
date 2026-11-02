@@ -331,3 +331,17 @@ docker exec ipstream-streaming-agent ping -c 2 liquidsoap
 1. Los logs de GitHub Actions
 2. `docker logs` de los containers que fallan
 3. `./deploy/scripts/health-check.sh` para diagnóstico
+
+## Nivelación de volumen (ReplayGain)
+
+El agente aplica ganancia estática por track con `normalize_track_gain`. Después de actualizar un nodo, etiquetá la biblioteca existente:
+
+```bash
+# Un cliente
+docker exec ipstream-streaming-agent node scripts/backfill-loudness.js <clientId>
+
+# Toda la biblioteca del nodo
+docker exec ipstream-streaming-agent node scripts/backfill-loudness.js --all
+```
+
+El proceso mide LUFS-I y agrega `replaygain_track_gain` / `replaygain_track_peak` sin re-encodear el audio. Los tracks ya etiquetados se omiten. Después del backfill, reiniciá los streams del nodo para regenerar los `.liq`.

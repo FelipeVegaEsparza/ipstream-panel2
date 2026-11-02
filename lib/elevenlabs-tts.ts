@@ -41,15 +41,29 @@ export interface ElevenLabsTtsInput {
   postProcess?: boolean
 }
 
-export const VOICE_POST_PROCESS_VERSION = 'v1'
+export const VOICE_POST_PROCESS_VERSION = 'v2'
 export const VOICE_POST_PROCESS_BITRATE = '192k'
 export const VOICE_POST_PROCESS_FILTER = [
   'highpass=f=80',
   'equalizer=f=3000:t=q:w=1:g=2',
-  'acompressor=threshold=-18dB:ratio=2.5:attack=5:release=80',
-  'loudnorm=I=-16:TP=-1.5:LRA=11',
   'alimiter=limit=0.95',
 ].join(',')
+
+const VOICE_TARGET_LUFS = -16
+const VOICE_MAX_GAIN_DB = 12
+
+function parseLoudnormInput(stderr: string): number | null {
+  const matches = stderr.match(/\{[\s\S]*?\}/g)
+  if (!matches) return null
+  for (let i = matches.length - 1; i >= 0; i--) {
+    try {
+      const data = JSON.parse(matches[i])
+      const value = Number(data.input_i)
+      if (Number.isFinite(value)) return value
+    } catch {}
+  }
+  return null
+}
 
 const RAW_FORMAT = 'mp3_44100_192'
 const FALLBACK_FORMAT = 'mp3_44100_128'
@@ -270,6 +284,30 @@ export async function postProcessVoice(
   const outputPath = path.join(dir, 'processed.mp3')
   try {
     await fs.writeFile(inputPath, raw)
+    const { stderr } = await execFileAsync(
+      'ffmpeg',
+      [
+        '-hide_banner',
+        '-i',
+        inputPath,
+        '-af',
+        `loudnorm=I=${VOICE_TARGET_LUFS}:TP=-1.5:LRA=11:print_format=json`,
+        '-f',
+        'null',
+        '-',
+      ],
+      { timeout: 60_000, maxBuffer: 2 * 1024 * 1024 }
+    )
+    const inputLufs = parseLoudnormInput(stderr)
+    const gainDb = inputLufs === null
+      ? 0
+      : Math.max(-VOICE_MAX_GAIN_DB, Math.min(VOICE_MAX_GAIN_DB, VOICE_TARGET_LUFS - inputLufs))
+    const filter = [
+      'highpass=f=80',
+      'equalizer=f=3000:t=q:w=1:g=2',
+      `volume=${gainDb.toFixed(2)}dB`,
+      'alimiter=limit=0.95',
+    ].join(',')
     await execFileAsync(
       'ffmpeg',
       [
@@ -277,7 +315,7 @@ export async function postProcessVoice(
         '-i',
         inputPath,
         '-af',
-        VOICE_POST_PROCESS_FILTER,
+        filter,
         '-ar',
         '44100',
         '-ac',

@@ -98,11 +98,12 @@ describe('synthesizeElevenLabs', () => {
     expect(fetchMock.mock.calls.length).toBeGreaterThan(1)
   })
 
-  it('expone un filtro de post-proceso con loudness y limitador', async () => {
-    const { VOICE_POST_PROCESS_FILTER } = await import('./elevenlabs-tts')
+  it('expone un filtro de post-proceso con limitador', async () => {
+    const { VOICE_POST_PROCESS_FILTER, VOICE_POST_PROCESS_VERSION } = await import('./elevenlabs-tts')
     expect(VOICE_POST_PROCESS_FILTER).toContain('highpass=f=80')
-    expect(VOICE_POST_PROCESS_FILTER).toContain('loudnorm')
+    expect(VOICE_POST_PROCESS_FILTER).not.toContain('loudnorm')
     expect(VOICE_POST_PROCESS_FILTER).toContain('alimiter')
+    expect(VOICE_POST_PROCESS_VERSION).toBe('v2')
   })
 
   it('reutiliza el cache legacy sin llamar a la API', async () => {

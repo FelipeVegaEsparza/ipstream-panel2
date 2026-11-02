@@ -1,6 +1,7 @@
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { readMetadata, sanitizeFileName, isMp3 } from '../lib/id3.js'
+import { tagLoudness } from '../lib/loudness.js'
 import { saveJingle, deleteJingleFile, saveCover, deleteCover, getCoverPath, isSafeFileName, uniqueFileName } from '../lib/files.js'
 import { regenerateJinglesM3u, restartStream } from '../lib/liquidsoap.js'
 import { existsSync, createReadStream } from 'fs'
@@ -112,6 +113,7 @@ export default async function jingleRoutes(app) {
       savedFileName = fileName
 
       const meta = await readMetadata(filePath)
+      try { await tagLoudness(filePath) } catch (err) { logger.warn({ err: err.message, filePath }, 'No se pudo medir loudness del jingle') }
 
       const jingleId = 'jng_' + uuid().slice(0, 8)
       let coverUrl = null
