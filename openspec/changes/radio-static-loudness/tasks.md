@@ -15,7 +15,7 @@
 ## 3. Biblioteca existente
 
 - [x] 3.1 Crear `streaming/agent/scripts/backfill-loudness.js [clientId] [--all]` para medir y etiquetar tracks sin ganancia.
-- [ ] 3.2 Ejecutarlo en un cliente de prueba y verificar que los tags quedan escritos y el audio no se re-encodea.
+- [x] 3.2 Ejecutarlo en un cliente de prueba y verificar que los tags quedan escritos y el audio no se re-encodea.
 - [x] 3.3 Documentar el comando de backfill para nodos remotos.
 
 ## 4. TTS
