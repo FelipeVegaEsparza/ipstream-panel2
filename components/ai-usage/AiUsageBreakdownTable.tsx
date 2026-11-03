@@ -15,7 +15,7 @@ const FEATURE_LABELS: Record<AiUsageFeatureKey, DashboardTranslationKey> = {
   'autodj-presenter': 'aiUsage.feature.autodj-presenter',
   'ai-capsule': 'aiUsage.feature.ai-capsule',
   'ai-jingle': 'aiUsage.feature.ai-jingle',
-  'ai-review': 'aiUsage.feature.ai-review',
+  'ai-special': 'aiUsage.feature.ai-special',
   unattributed: 'aiUsage.feature.unattributed',
 }
 

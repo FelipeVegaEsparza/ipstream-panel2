@@ -22,7 +22,6 @@ import {
 } from './library'
 import { createTransport } from './transport'
 import { buildPresenterText, normalizePhrases } from './presenter'
-import { isReviewEligibleTrack, normalizeReviewEvery, reviewTracksRemaining, shouldPlayReview } from './reviews'
 import { createAnnouncementTrack, type AnnouncementType } from './announcements'
 import { readLocalTags } from './local-tags'
 import {
@@ -149,11 +148,6 @@ export interface AiApi {
   error: string | null
   remaining: number
   limit: number
-  reviewEnabled: boolean
-  reviewEvery: number
-  reviewGenerating: boolean
-  reviewIn: number
-  reviewStyle: string
   setPresenterEnabled: (enabled: boolean) => void
   setEvery: (every: number) => void
   generateSpeech: (text: string) => Promise<Blob>
@@ -280,9 +274,6 @@ export function useLiveConsole(
     aiPresenterEnabled?: boolean
     aiPresenterEvery?: number
     aiIntroPhrases?: string[]
-    aiReviewEnabled?: boolean
-    aiReviewEvery?: number
-    aiReviewStyle?: string
   } = {}
 ): UseLiveConsoleResult {
   const premiumVoiceAvailable = Boolean(options.premiumVoiceAvailable)
@@ -368,21 +359,11 @@ export function useLiveConsole(
     }
   })
   const [presenterGenerating, setPresenterGenerating] = useState(false)
-  const [reviewGenerating, setReviewGenerating] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiRemaining, setAiRemaining] = useState(Math.max(0, options.aiRemaining ?? 0))
   const aiLimit = Math.max(0, options.aiLimit ?? 0)
-  const aiReviewEnabled = aiEnabled && Boolean(options.aiReviewEnabled)
-  const aiReviewEvery = normalizeReviewEvery(options.aiReviewEvery)
-  const aiReviewStyle = typeof options.aiReviewStyle === 'string' ? options.aiReviewStyle : 'dato-curioso'
   const tracksSinceIntroRef = useRef(0)
   const introPrefetchRef = useRef<{ trackId: string; promise: Promise<Blob | null> } | null>(null)
-  const tracksSinceReviewRef = useRef(0)
-  const [reviewProgress, setReviewProgress] = useState(0)
-  const reviewPrefetchRef = useRef<{
-    trackId: string
-    promise: Promise<{ text: string; blob: Blob } | null>
-  } | null>(null)
 
   const effectsRef = useRef<Map<number, SoundEffect>>(new Map())
   const effectBuffersRef = useRef<Map<string, AudioBuffer>>(new Map())
@@ -1017,7 +998,7 @@ export function useLiveConsole(
 
   const maybePlayPresenter = useCallback(async (next: LocalTrack | null) => {
     if (!aiEnabled || !aiPresenterEnabled) return
-    if (next?.kind === 'spot' || next?.kind === 'jingle' || next?.kind === 'announcement') return
+    if (next?.kind === 'spot' || next?.kind === 'jingle' || next?.kind === 'announcement' || next?.kind === 'special') return
     if (tracksSinceIntroRef.current < presenterEvery) return
 
     setPresenterGenerating(true)
@@ -1068,77 +1049,6 @@ export function useLiveConsole(
     introPrefetchRef.current = { trackId: next.id, promise }
   }, [queue, aiEnabled, aiPresenterEnabled, presenterEvery, stationName, introPhrases, generateSpeech])
 
-  // Reseñas IA: texto desde el banco (lookup) y audio con la voz premium.
-  const prepareReview = useCallback(async (track: LocalTrack | null) => {
-    if (!track) return null
-    const res = await fetch('/api/dashboard/streaming/ai/reviews/lookup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ artist: track.artist || '', title: track.title || '', seed: track.id }),
-    })
-    if (!res.ok) return null
-    const data = await res.json().catch(() => ({}))
-    const text = typeof data?.review?.text === 'string' ? data.review.text.trim() : ''
-    if (!data?.available || !text) return null
-    const blob = await generateSpeech(text)
-    return { text, blob }
-  }, [generateSpeech])
-
-  const maybePlayReview = useCallback(async (next: LocalTrack | null) => {
-    if (!shouldPlayReview({
-      enabled: aiEnabled && aiReviewEnabled,
-      every: aiReviewEvery,
-      tracksSinceReview: tracksSinceReviewRef.current,
-      track: next,
-    })) return
-    if (!next) return
-
-    setReviewGenerating(true)
-    setAiError(null)
-    try {
-      const prepared = reviewPrefetchRef.current?.trackId === next.id
-        ? await reviewPrefetchRef.current.promise
-        : await prepareReview(next)
-      reviewPrefetchRef.current = null
-      tracksSinceReviewRef.current = 0
-      setReviewProgress(0)
-      if (!prepared) return
-      const engine = engineRef.current
-      if (!engine) return
-      engine.setMonitor(true)
-      const buffer = await engine.decodeAudio(await prepared.blob.arrayBuffer())
-      await engine.playAnnouncement(buffer, 0, 20)
-      pushHistory(createSpotTrack(prepared.blob, prepared.text, buffer.duration))
-    } catch (err) {
-      reviewPrefetchRef.current = null
-      tracksSinceReviewRef.current = 0
-      setReviewProgress(0)
-      setAiError(err instanceof Error ? err.message : 'No se pudo generar la reseña')
-    } finally {
-      setReviewGenerating(false)
-    }
-  }, [aiEnabled, aiReviewEnabled, aiReviewEvery, prepareReview, pushHistory])
-
-  // Pre-genera la reseña mientras suena el tema anterior.
-  useEffect(() => {
-    if (!aiEnabled || !aiReviewEnabled || aiReviewEvery < 2) return
-    if (tracksSinceReviewRef.current < aiReviewEvery) return
-    const next = queue[0]
-    if (!isReviewEligibleTrack(next)) return
-    if (reviewPrefetchRef.current?.trackId === next.id) return
-    const promise = prepareReview(next).catch((err) => {
-      setAiError(err instanceof Error ? err.message : 'No se pudo generar la reseña')
-      return null
-    })
-    reviewPrefetchRef.current = { trackId: next.id, promise }
-  }, [queue, aiEnabled, aiReviewEnabled, aiReviewEvery, prepareReview])
-
-  const bumpTrackCounters = useCallback(() => {
-    tracksSinceIntroRef.current += 1
-    tracksSinceReviewRef.current += 1
-    setReviewProgress(tracksSinceReviewRef.current)
-  }, [])
-
   const prepareTrack = useCallback(async (track: LocalTrack) => {
     if (track.kind === 'announcement' && track.announcementType) {
       const blob = await generateAnnouncementAudio(track.announcementType)
@@ -1172,9 +1082,8 @@ export function useLiveConsole(
       void (async () => {
         try {
           await maybePlayPresenter(next)
-          await maybePlayReview(next)
           if (!next) return
-          if (next.kind !== 'spot' && next.kind !== 'jingle' && next.kind !== 'announcement') bumpTrackCounters()
+          if (next.kind !== 'spot' && next.kind !== 'jingle' && next.kind !== 'announcement' && next.kind !== 'special') tracksSinceIntroRef.current += 1
           const prepared = await prepareTrack(next)
           setQueue((prev) => prev.filter((item) => item.id !== next.id))
           const mode = await engine.loadTrack(id, prepared.track, prepared.file)
@@ -1191,7 +1100,7 @@ export function useLiveConsole(
     return () => {
       engine.onDeckEnded = null
     }
-  }, [detectBpm, updateNowPlaying, maybePlayPresenter, maybePlayReview, bumpTrackCounters, pushHistory, prepareTrack])
+  }, [detectBpm, updateNowPlaying, maybePlayPresenter, pushHistory, prepareTrack])
 
   const refreshSlots = useCallback(async () => {
     try {
@@ -1243,10 +1152,10 @@ export function useLiveConsole(
     const mode = await engine.loadTrack(deckId, prepared.track, prepared.file)
     if (mode === 'buffer' && prepared.track.kind !== 'spot' && prepared.track.kind !== 'announcement') detectBpm(deckId)
     else engine.setDeckBpm(deckId, null, 0)
-    if (prepared.track.kind !== 'spot' && prepared.track.kind !== 'jingle' && prepared.track.kind !== 'announcement') bumpTrackCounters()
+    if (prepared.track.kind !== 'spot' && prepared.track.kind !== 'jingle' && prepared.track.kind !== 'announcement' && prepared.track.kind !== 'special') tracksSinceIntroRef.current += 1
     setQueue((prev) => prev.filter((item) => item.id !== track.id))
     updateNowPlaying(deckId)
-  }, [bumpTrackCounters, detectBpm, prepareTrack, updateNowPlaying])
+  }, [detectBpm, prepareTrack, updateNowPlaying])
 
   const playDeck = useCallback(async (deckId: DeckId) => {
     const engine = engineRef.current
@@ -1283,11 +1192,10 @@ export function useLiveConsole(
       return
     }
     await maybePlayPresenter(track)
-    await maybePlayReview(track)
     if (current) rememberCurrent()
     await loadToDeck('A', track)
     await playDeck('A')
-  }, [loadToDeck, playDeck, rememberCurrent, maybePlayPresenter, maybePlayReview])
+  }, [loadToDeck, playDeck, rememberCurrent, maybePlayPresenter])
 
   const playNext = useCallback(async () => {
     const engine = engineRef.current
@@ -1299,11 +1207,10 @@ export function useLiveConsole(
       return
     }
     await maybePlayPresenter(nextTrack)
-    await maybePlayReview(nextTrack)
     rememberCurrent()
     await loadToDeck('A', nextTrack)
     await playDeck('A')
-  }, [loadToDeck, playDeck, rememberCurrent, maybePlayPresenter, maybePlayReview])
+  }, [loadToDeck, playDeck, rememberCurrent, maybePlayPresenter])
 
   const playPrevious = useCallback(async () => {
     const engine = engineRef.current
@@ -1683,13 +1590,6 @@ export function useLiveConsole(
     error: aiError,
     remaining: aiRemaining,
     limit: aiLimit,
-    reviewEnabled: aiReviewEnabled && aiReviewEvery >= 2,
-    reviewEvery: aiReviewEvery,
-    reviewGenerating,
-    reviewIn: aiReviewEvery >= 2
-      ? reviewTracksRemaining(aiReviewEvery, reviewProgress)
-      : 0,
-    reviewStyle: aiReviewStyle,
     setPresenterEnabled: setAiPresenterEnabledPersisted,
     setEvery: setPresenterEveryPersisted,
     generateSpeech,
@@ -1702,11 +1602,6 @@ export function useLiveConsole(
     aiError,
     aiRemaining,
     aiLimit,
-    aiReviewEnabled,
-    aiReviewEvery,
-    aiReviewStyle,
-    reviewGenerating,
-    reviewProgress,
     setAiPresenterEnabledPersisted,
     setPresenterEveryPersisted,
     generateSpeech,

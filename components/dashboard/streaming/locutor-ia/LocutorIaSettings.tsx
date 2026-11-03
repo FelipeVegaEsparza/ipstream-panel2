@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { showToast } from '@/components/ui/toast'
 import { SparklesIcon, PlusIcon, Trash2Icon, PlayIcon, SaveIcon } from 'lucide-react'
 import { DEFAULT_PRESENTER_PHRASES } from '@/lib/live-console/presenter'
-import type { DashboardTranslationKey } from '@/lib/dashboard-i18n'
 import { TTS_QUALITY_PRESETS } from '@/lib/tts-quality'
 import { AiCreditsCard } from '@/components/dashboard/AiCreditsCard'
 import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
@@ -30,41 +29,7 @@ interface Config {
   used: number
   period: string
   stationName: string
-  reviewsEnabled: boolean
-  reviewEvery: number
-  reviewStyle: string
-  reviewAdminEnabled: boolean
-  reviewsAvailable: boolean
-  reviewsUnavailableReason: 'ai' | 'tts' | null
 }
-
-interface ReviewItem {
-  id: string
-  kind: string
-  artist: string
-  title: string
-  style: string
-  text: string
-  active: boolean
-  createdAt?: string
-  updatedAt?: string
-}
-
-const REVIEW_STYLE_OPTIONS = [
-  'dato-curioso',
-  'detras-de-la-cancion',
-  'contexto-historico',
-  'biografia',
-] as const
-
-const REVIEW_STYLE_KEY: Record<string, DashboardTranslationKey> = {
-  'dato-curioso': 'streaming.locutor.reviewsStyleDato',
-  'detras-de-la-cancion': 'streaming.locutor.reviewsStyleDetras',
-  'contexto-historico': 'streaming.locutor.reviewsStyleContexto',
-  biografia: 'streaming.locutor.reviewsStyleBiografia',
-}
-
-const REVIEW_EVERY_OPTIONS = [2, 3, 4, 5, 6, 8, 10, 15, 20]
 
 const input =
   'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none'
@@ -116,34 +81,11 @@ export function LocutorIaSettings() {
   const [voicePreset, setVoicePreset] = useState('')
   const [timeEveryMinutes, setTimeEveryMinutes] = useState(0)
   const [weatherEveryMinutes, setWeatherEveryMinutes] = useState(0)
-  const [reviewsEnabled, setReviewsEnabled] = useState(false)
-  const [reviewEvery, setReviewEvery] = useState(5)
-  const [reviewStyle, setReviewStyle] = useState('dato-curioso')
-  const [reviewAdminEnabled, setReviewAdminEnabled] = useState(true)
-  const [reviewsAvailable, setReviewsAvailable] = useState(true)
-  const [reviewsUnavailableReason, setReviewsUnavailableReason] = useState<'ai' | 'tts' | null>(null)
-  const [reviews, setReviews] = useState<ReviewItem[]>([])
-  const [reviewsLoading, setReviewsLoading] = useState(false)
-  const [reviewActionId, setReviewActionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [applying, setApplying] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [applyMessage, setApplyMessage] = useState<string | null>(null)
-
-  const loadReviews = async () => {
-    setReviewsLoading(true)
-    try {
-      const res = await fetch('/api/dashboard/streaming/ai/reviews', { cache: 'no-store' })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.locutor.reviewsLoadError'))
-      setReviews(Array.isArray(data.reviews) ? data.reviews : [])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('streaming.locutor.reviewsLoadError'))
-    } finally {
-      setReviewsLoading(false)
-    }
-  }
 
   const load = async () => {
     try {
@@ -159,13 +101,6 @@ export function LocutorIaSettings() {
       setVoicePreset(data.voicePreset || '')
       setTimeEveryMinutes(Number(data.timeEveryMinutes) || 0)
       setWeatherEveryMinutes(Number(data.weatherEveryMinutes) || 0)
-      setReviewsEnabled(Boolean(data.reviewsEnabled))
-      setReviewEvery(Number(data.reviewEvery) >= 2 ? Number(data.reviewEvery) : 5)
-      setReviewStyle(typeof data.reviewStyle === 'string' && data.reviewStyle ? data.reviewStyle : 'dato-curioso')
-      setReviewAdminEnabled(data.reviewAdminEnabled !== false)
-      setReviewsAvailable(data.reviewsAvailable !== false)
-      setReviewsUnavailableReason(data.reviewsUnavailableReason || null)
-      void loadReviews()
     } catch (err) {
       setError(err instanceof Error ? err.message : t('streaming.locutor.loadError'))
     } finally {
@@ -192,22 +127,11 @@ export function LocutorIaSettings() {
           voicePreset,
           timeEveryMinutes,
           weatherEveryMinutes,
-          ...(reviewAdminEnabled
-            ? {
-                reviewsEnabled,
-                reviewEvery: reviewsEnabled ? reviewEvery : 0,
-                reviewStyle,
-              }
-            : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.locutor.saveError'))
       setConfig(data)
-      setReviewsEnabled(Boolean(data.reviewsEnabled))
-      setReviewAdminEnabled(data.reviewAdminEnabled !== false)
-      setReviewsAvailable(data.reviewsAvailable !== false)
-      setReviewsUnavailableReason(data.reviewsUnavailableReason || null)
       setPhrases(Array.isArray(data.phrases) && data.phrases.length ? data.phrases : clean)
       showToast({ type: 'success', title: t('streaming.locutor.saveSuccess') })
       return true
@@ -220,7 +144,7 @@ export function LocutorIaSettings() {
   }
 
   const applyAutoDj = async () => {
-    if (!enabled && !reviewsEnabled) {
+    if (!enabled) {
       setError(t('streaming.locutor.enableBeforeApply'))
       return
     }
@@ -233,68 +157,16 @@ export function LocutorIaSettings() {
       const res = await fetch('/api/dashboard/streaming/ai/autodj', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          enabled,
-          every,
-          ...(reviewAdminEnabled
-            ? {
-                reviewsEnabled,
-                reviewEvery: reviewsEnabled ? reviewEvery : 0,
-                reviewStyle,
-              }
-            : {}),
-        }),
+        body: '{}',
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.locutor.autodjError'))
       setApplyMessage(data.message || t('streaming.locutor.autodjUpdated'))
       showToast({ type: 'success', title: data.message || t('streaming.locutor.autodjUpdated') })
-      void loadReviews()
     } catch (err) {
       setError(err instanceof Error ? err.message : t('streaming.locutor.autodjError'))
     } finally {
       setApplying(false)
-    }
-  }
-
-  const toggleReview = async (review: ReviewItem) => {
-    setReviewActionId(review.id)
-    setError(null)
-    try {
-      const res = await fetch(`/api/dashboard/streaming/ai/reviews/${encodeURIComponent(review.id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: !review.active }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.locutor.reviewsToggleError'))
-      setReviews((prev) =>
-        prev.map((item) => (item.id === review.id ? { ...item, active: !review.active } : item))
-      )
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('streaming.locutor.reviewsToggleError'))
-    } finally {
-      setReviewActionId(null)
-    }
-  }
-
-  const regenerateReview = async (review: ReviewItem) => {
-    setReviewActionId(review.id)
-    setError(null)
-    try {
-      const res = await fetch(
-        `/api/dashboard/streaming/ai/reviews/${encodeURIComponent(review.id)}/regenerate`,
-        { method: 'POST' }
-      )
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.locutor.reviewsRegenerateError'))
-      if (data?.review) {
-        setReviews((prev) => prev.map((item) => (item.id === review.id ? { ...item, ...data.review } : item)))
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('streaming.locutor.reviewsRegenerateError'))
-    } finally {
-      setReviewActionId(null)
     }
   }
 
@@ -556,149 +428,6 @@ export function LocutorIaSettings() {
 
       <section className="card space-y-4">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-            <SparklesIcon className="h-4 w-4 text-brand" />
-            {t('streaming.locutor.reviewsSection')}
-          </h2>
-          <p className="text-sm text-muted-foreground">{t('streaming.locutor.reviewsNote')}</p>
-        </div>
-
-        {!reviewAdminEnabled ? (
-          <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-            {t('streaming.locutor.reviewsAdminDisabled')}
-          </p>
-        ) : !reviewsAvailable ? (
-          <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-            {reviewsUnavailableReason === 'ai'
-              ? t('streaming.locutor.reviewsUnavailableAi')
-              : t('streaming.locutor.reviewsUnavailableTts')}
-          </p>
-        ) : (
-          <>
-            <label className="flex items-center gap-2 text-sm text-foreground">
-              <input
-                type="checkbox"
-                checked={reviewsEnabled}
-                onChange={(e) => setReviewsEnabled(e.target.checked)}
-                className="h-4 w-4 rounded border-border bg-secondary"
-              />
-              {t('streaming.locutor.reviewsEnable')}
-            </label>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  {t('streaming.locutor.reviewsEvery')}
-                </label>
-                <select
-                  value={reviewEvery}
-                  onChange={(e) => setReviewEvery(Number(e.target.value))}
-                  className={input}
-                  disabled={!reviewsEnabled}
-                >
-                  {REVIEW_EVERY_OPTIONS.map((value) => (
-                    <option key={value} value={value}>
-                      {t('streaming.locutor.tracksCount', { count: value })}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  {t('streaming.locutor.reviewsStyle')}
-                </label>
-                <select
-                  value={reviewStyle}
-                  onChange={(e) => setReviewStyle(e.target.value)}
-                  className={input}
-                  disabled={!reviewsEnabled}
-                >
-                  {REVIEW_STYLE_OPTIONS.map((value) => (
-                    <option key={value} value={value}>
-                      {t(REVIEW_STYLE_KEY[value])}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-1 text-[11px] text-muted-foreground">
-              <p>{t('streaming.locutor.reviewsStyleNote')}</p>
-              <p>{t('streaming.locutor.reviewsMax20')} {t('streaming.locutor.reviewsQuotaNote')}</p>
-              <p>{t('streaming.locutor.reviewsApplyNote')}</p>
-              <p>{t('streaming.locutor.reviewsFallbackNote')}</p>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-foreground">{t('streaming.locutor.reviewsListTitle')}</p>
-              {reviewsLoading ? (
-                <p className="text-xs text-muted-foreground">{t('streaming.locutor.loading')}</p>
-              ) : reviews.length === 0 ? (
-                <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-                  {t('streaming.locutor.reviewsListEmpty')}
-                </p>
-              ) : (
-                reviews.map((review) => (
-                  <div key={review.id} className="rounded-lg border border-border bg-background p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-                            {review.kind === 'artist'
-                              ? t('streaming.locutor.reviewsBadgeArtist')
-                              : t('streaming.locutor.reviewsBadgeTrack')}
-                          </span>
-                          <p className="truncate text-sm text-foreground">
-                            {review.title || review.artist}
-                          </p>
-                        </div>
-                        <p className="truncate text-[11px] text-muted-foreground">
-                          {[review.artist, review.title].filter(Boolean).join(' · ')}
-                        </p>
-                      </div>
-                      {!review.active && (
-                        <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] text-muted-foreground">
-                          {t('streaming.locutor.reviewsInactive')}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 text-xs text-muted-foreground">{review.text}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <EffectPreviewButton
-                        src={`/api/dashboard/streaming/ai/reviews/${encodeURIComponent(review.id)}/audio`}
-                        name={review.title || review.artist}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => void regenerateReview(review)}
-                        disabled={reviewActionId === review.id}
-                        className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-40"
-                      >
-                        {reviewActionId === review.id
-                          ? t('streaming.locutor.reviewsRegenerating')
-                          : t('streaming.locutor.reviewsRegenerate')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void toggleReview(review)}
-                        disabled={reviewActionId === review.id}
-                        className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-40"
-                      >
-                        {review.active
-                          ? t('streaming.locutor.reviewsDisable')
-                          : t('streaming.locutor.reviewsEnableItem')}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </>
-        )}
-      </section>
-
-      <section className="card space-y-4">
-        <div>
           <h2 className="text-lg font-semibold text-foreground">{t('streaming.locutor.saveSection')}</h2>
           <p className="text-sm text-muted-foreground">
             {t('streaming.locutor.saveSectionNote')}
@@ -717,7 +446,7 @@ export function LocutorIaSettings() {
           <button
             type="button"
             onClick={() => void applyAutoDj()}
-            disabled={applying || saving || (!enabled && !reviewsEnabled)}
+            disabled={applying || saving || !enabled}
             className="flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
             <PlayIcon className="h-4 w-4" />

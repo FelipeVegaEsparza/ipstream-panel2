@@ -5,6 +5,7 @@ import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24
 import { FileBrowser } from './FileBrowser'
 import { AnnouncementsBar } from './AnnouncementsBar'
 import { JinglesPanel } from './JinglesPanel'
+import { SpecialsPanel } from './SpecialsPanel'
 import { CapsulesPanel } from './CapsulesPanel'
 import { LiveSessionInfo } from './LiveSessionInfo'
 import { AiLocutionModal } from './AiLocutionModal'
@@ -25,9 +26,6 @@ export function LiveConsole({
   aiPresenterEnabled = false,
   aiPresenterEvery = 3,
   aiIntroPhrases = [],
-  aiReviewEnabled = false,
-  aiReviewEvery = 0,
-  aiReviewStyle = 'dato-curioso',
   timezone,
 }: {
   premiumVoiceAvailable?: boolean
@@ -38,9 +36,6 @@ export function LiveConsole({
   aiPresenterEnabled?: boolean
   aiPresenterEvery?: number
   aiIntroPhrases?: string[]
-  aiReviewEnabled?: boolean
-  aiReviewEvery?: number
-  aiReviewStyle?: string
   timezone?: string | null
 }) {
   const { t } = useDashboardI18n()
@@ -53,9 +48,6 @@ export function LiveConsole({
     aiPresenterEnabled,
     aiPresenterEvery,
     aiIntroPhrases,
-    aiReviewEnabled,
-    aiReviewEvery,
-    aiReviewStyle,
   })
   const [composerOpen, setComposerOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
@@ -151,9 +143,6 @@ export function LiveConsole({
           onStopLive={live.stopLive}
           onReconnect={live.reconnect}
           onRefreshSlots={live.refreshSlots}
-          reviewEnabled={live.ai.reviewEnabled}
-          reviewIn={live.ai.reviewIn}
-          reviewGenerating={live.ai.reviewGenerating}
         />
       </div>
 
@@ -210,6 +199,7 @@ export function LiveConsole({
             onAddToQueue={live.announcements.enqueue}
             onOpenComposer={() => setComposerOpen(true)}
           />
+          <SpecialsPanel onAdd={live.player.addToPlaylist} />
           <JinglesPanel onAdd={live.player.addToPlaylist} />
           <CapsulesPanel onAdd={live.player.addToPlaylist} />
         </div>

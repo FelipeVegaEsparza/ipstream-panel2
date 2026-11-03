@@ -7,7 +7,6 @@ import { prisma } from '@/lib/prisma'
 import { getStorageUsage } from '@/lib/streaming-helpers'
 import { getLiveListenersByClient } from '@/lib/admin-live-listening'
 import { streamingAdminConfigSchema } from '@/lib/validations'
-import { streamingClient } from '@/lib/streaming-client'
 import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
@@ -94,7 +93,6 @@ export async function PATCH(
     if (data.storageQuotaMB !== undefined) cleanedData.storageQuotaMB = data.storageQuotaMB
     if (data.maxListeners !== undefined) cleanedData.maxListeners = data.maxListeners
     if (data.maxTracksPerPlaylist !== undefined) cleanedData.maxTracksPerPlaylist = data.maxTracksPerPlaylist
-    if (data.aiReviewAdminEnabled !== undefined) cleanedData.aiReviewAdminEnabled = data.aiReviewAdminEnabled
     if (data.adminNotes !== undefined) cleanedData.adminNotes = data.adminNotes
 
     // Verificar que el cliente tiene RadioStream
@@ -120,16 +118,6 @@ export async function PATCH(
       where: { clientId: params.clientId },
       data: cleanedData,
     })
-
-    // El kill switch de reseñas cambia el m3u: reiniciar el AutoDJ para que
-    // deje de emitirlas (o vuelva a emitirlas) sin esperar al próximo apply.
-    if (data.aiReviewAdminEnabled !== undefined) {
-      try {
-        await streamingClient.restart(params.clientId)
-      } catch (err) {
-        console.warn('[admin/streaming PATCH] no se pudo reiniciar el AutoDJ', err)
-      }
-    }
 
     // Audit log
     await prisma.streamingAuditLog.create({

@@ -18,7 +18,7 @@ import libraryRoutes from './routes/library.js'
 import playlistRoutes from './routes/playlists.js'
 import jingleRoutes from './routes/jingles.js'
 import aiIntroRoutes from './routes/ai-intros.js'
-import aiReviewRoutes from './routes/ai-reviews.js'
+import specialRoutes from './routes/specials.js'
 import scheduleRoutes, { startScheduleCron } from './routes/schedule.js'
 import folderRoutes from './routes/folders.js'
 import monitorRoutes from './routes/monitor.js'
@@ -40,6 +40,7 @@ import { startAiAnnouncementScheduler } from './lib/ai-announcement-scheduler.js
 import { startStreamSupervisor, stopStreamSupervisor } from './lib/stream-supervisor.js'
 import { startHistoryCron, stopHistoryCron } from './lib/track-history.js'
 import { startAnalyticsCrons, stopAnalyticsCrons } from './lib/analytics/index.js'
+import { startSpecialScheduleCron, stopSpecialScheduleCron } from './lib/special-schedule-cron.js'
 import { startSessionSweep, stopSessionSweep, stopAllSessions, endSession } from './lib/live-sessions.js'
 import { reconcileOrphanBridges } from './lib/live-bridge.js'
 
@@ -820,7 +821,7 @@ await app.register(libraryRoutes)
 await app.register(playlistRoutes)
 await app.register(jingleRoutes)
 await app.register(aiIntroRoutes)
-await app.register(aiReviewRoutes)
+await app.register(specialRoutes)
 await app.register(scheduleRoutes)
 await app.register(monitorRoutes)
   await app.register(folderRoutes)
@@ -846,6 +847,7 @@ startAiAnnouncementScheduler()
   startStreamSupervisor()
   startHistoryCron()
   startAnalyticsCrons()
+  startSpecialScheduleCron()
   startSessionSweep((session) => endSession(session))
   await reconcileOrphanBridges()
 
@@ -861,6 +863,7 @@ const shutdown = async (signal) => {
     stopStreamSupervisor()
     stopHistoryCron()
     stopAnalyticsCrons()
+    stopSpecialScheduleCron()
     stopSessionSweep()
     await stopAllSessions()
     await app.close()

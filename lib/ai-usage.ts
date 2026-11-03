@@ -8,7 +8,7 @@ export const AI_USAGE_FEATURES = [
   'autodj-presenter',
   'ai-capsule',
   'ai-jingle',
-  'ai-review',
+  'ai-special',
 ] as const
 
 export type AiUsageFeature = (typeof AI_USAGE_FEATURES)[number]

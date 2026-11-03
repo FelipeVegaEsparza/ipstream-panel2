@@ -1,5 +1,5 @@
 // =====================================================
-// Configuración del proveedor de texto para reseñas IA.
+// Configuración del proveedor de texto para los textos de Especiales.
 // La API key se guarda encriptada en app_config; el env queda como fallback.
 // =====================================================
 

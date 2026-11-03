@@ -13,9 +13,6 @@ import { getTtsProvider } from '@/lib/tts-provider'
 import { getElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { getFishAudioConfig } from '@/lib/fish-audio-config'
 import { isTtsQualityPresetId, resolveTtsQuality } from '@/lib/tts-quality'
-import { DEFAULT_REVIEW_STYLE, isReviewStyle } from '@/lib/ai-reviews'
-import { isDeepSeekConfigured } from '@/lib/deepseek'
-import { hasConfiguredPremiumTts } from '@/lib/premium-tts'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +31,7 @@ function parsePhrases(raw: string | null | undefined): string[] {
 }
 
 async function loadConfig(clientId: string) {
-  const [rs, access, client, elevenVoices, provider, eleven, fish, premiumTts] = await Promise.all([
+  const [rs, access, client, elevenVoices, provider, eleven, fish] = await Promise.all([
     prisma.radioStream.findUnique({
       where: { clientId },
       select: {
@@ -47,9 +44,6 @@ async function loadConfig(clientId: string) {
         fishVoiceId: true,
         aiVoiceStyle: true,
         aiVoicePreset: true,
-        aiReviewEveryTracks: true,
-        aiReviewStyle: true,
-        aiReviewAdminEnabled: true,
       },
     }),
     getAiLiveAccess(clientId),
@@ -61,10 +55,8 @@ async function loadConfig(clientId: string) {
     getTtsProvider(),
     getElevenLabsConfig(),
     getFishAudioConfig(),
-    hasConfiguredPremiumTts(),
   ])
   if (!rs) return null
-  const deepseekAvailable = await isDeepSeekConfigured()
   const voices = provider === 'fish'
     ? fish.voices.map((voice) => ({
         id: voice.id,
@@ -96,16 +88,6 @@ async function loadConfig(clientId: string) {
     used: access.used,
     period: access.period,
     stationName: client?.basicData?.projectName || client?.name || 'la radio',
-    reviewsEnabled: rs.aiReviewAdminEnabled && rs.aiReviewEveryTracks > 0,
-    reviewEvery: rs.aiReviewEveryTracks,
-    reviewStyle: isReviewStyle(rs.aiReviewStyle) ? rs.aiReviewStyle : DEFAULT_REVIEW_STYLE,
-    reviewAdminEnabled: rs.aiReviewAdminEnabled,
-    reviewsAvailable: deepseekAvailable && premiumTts,
-    reviewsUnavailableReason: !deepseekAvailable
-      ? 'ai'
-      : !premiumTts
-        ? 'tts'
-        : null,
   }
 }
 
@@ -176,50 +158,6 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const hasReviewConfig =
-      body &&
-      typeof body === 'object' &&
-      ('reviewsEnabled' in body || 'reviewEvery' in body || 'reviewStyle' in body)
-
-    let reviewEvery = 0
-    let reviewStyle = DEFAULT_REVIEW_STYLE
-    if (hasReviewConfig) {
-      const reviewsEnabled = Boolean(body.reviewsEnabled)
-      const rawEvery = Number(body.reviewEvery ?? 0)
-      if (!Number.isInteger(rawEvery) || rawEvery < 0 || rawEvery > 20) {
-        return NextResponse.json(
-          { error: 'invalid_review_every', message: 'La frecuencia de reseñas debe ser un entero entre 0 y 20 temas.' },
-          { status: 400 }
-        )
-      }
-      if (reviewsEnabled && rawEvery < 2) {
-        return NextResponse.json(
-          { error: 'invalid_review_every', message: 'Para activar las reseñas la frecuencia debe ser entre 2 y 20 temas.' },
-          { status: 400 }
-        )
-      }
-      const rawStyle = typeof body.reviewStyle === 'string' ? body.reviewStyle.trim() : ''
-      if (rawStyle && !isReviewStyle(rawStyle)) {
-        return NextResponse.json(
-          { error: 'invalid_review_style', message: 'El estilo de reseña elegido no existe.' },
-          { status: 400 }
-        )
-      }
-      reviewEvery = reviewsEnabled ? rawEvery : 0
-      reviewStyle = isReviewStyle(rawStyle) ? rawStyle : DEFAULT_REVIEW_STYLE
-
-      const adminConfig = await prisma.radioStream.findUnique({
-        where: { clientId: ctx.clientId },
-        select: { aiReviewAdminEnabled: true },
-      })
-      if (adminConfig && !adminConfig.aiReviewAdminEnabled && (reviewsEnabled || rawEvery > 0)) {
-        return NextResponse.json(
-          { error: 'reviews_disabled_by_admin', message: 'El administrador desactivó las reseñas para esta radio.' },
-          { status: 403 }
-        )
-      }
-    }
-
     const rawPhrases = Array.isArray(body?.phrases) ? body.phrases : []
     const phrases = normalizePhrases(
       rawPhrases
@@ -251,7 +189,7 @@ export async function PUT(request: NextRequest) {
 
     const previous = await prisma.radioStream.findUnique({
       where: { clientId: ctx.clientId },
-      select: { aiPresenterEnabled: true, aiReviewEveryTracks: true },
+      select: { aiPresenterEnabled: true },
     })
     await prisma.radioStream.update({
       where: { clientId: ctx.clientId },
@@ -266,26 +204,15 @@ export async function PUT(request: NextRequest) {
           : { aiVoiceId: voiceId || null }),
         aiVoiceStyle: voiceStyle,
         aiVoicePreset: voicePreset || null,
-        ...(hasReviewConfig
-          ? {
-              aiReviewEveryTracks: reviewEvery,
-              aiReviewStyle: reviewStyle,
-            }
-          : {}),
       },
     })
 
-    const clearIntros = Boolean(previous?.aiPresenterEnabled) && !enabled
-    const clearReviews =
-      hasReviewConfig && (previous?.aiReviewEveryTracks ?? 0) > 0 && reviewEvery === 0
-
-    if (clearIntros || clearReviews) {
+    if (previous?.aiPresenterEnabled && !enabled) {
       try {
-        if (clearIntros) await streamingClient.clearAiIntros(ctx.clientId)
-        if (clearReviews) await streamingClient.clearAiReviews(ctx.clientId)
+        await streamingClient.clearAiIntros(ctx.clientId)
         await streamingClient.restart(ctx.clientId)
       } catch (err) {
-        console.warn('[ai/config] no se pudieron limpiar las locuciones del AutoDJ', err)
+        console.warn('[ai/config] no se pudieron quitar las intros del AutoDJ', err)
       }
     }
 

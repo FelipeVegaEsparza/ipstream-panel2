@@ -24,7 +24,7 @@ export interface LocalTrack {
   size: number
   lastModified: number
   mimeType: string
-  source: 'handle' | 'file' | 'jingle' | 'announcement' | 'capsule'
+  source: 'handle' | 'file' | 'jingle' | 'announcement' | 'capsule' | 'special'
   handle?: FileSystemFileHandle | null
   file?: File | null
   /** Audio remoto del panel (jingles) cuando no hay archivo local. */
@@ -34,7 +34,7 @@ export interface LocalTrack {
   coverFile?: File | null
   available: boolean
   /** 'spot' = locución generada por IA; no cuenta para el presentador. */
-  kind?: 'music' | 'spot' | 'jingle' | 'announcement' | 'capsule'
+  kind?: 'music' | 'spot' | 'jingle' | 'announcement' | 'capsule' | 'special'
   announcementType?: 'time' | 'weather'
 }
 

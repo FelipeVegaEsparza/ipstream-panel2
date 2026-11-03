@@ -268,21 +268,23 @@ export const streamingClient = {
       timeoutMs: UPLOAD_TIMEOUT_MS,
     })
   },
-  // Reseñas IA del AutoDJ (separadas de las intros)
-  clearAiReviews: async (clientId: string) =>
-    request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/ai-reviews`, {
-      method: 'DELETE',
-    }),
-  uploadAiReview: async (clientId: string, file: File) => {
+  // Especiales: intro/cierre subidos al agente
+  uploadSpecialAudio: async (clientId: string, specialId: string, part: 'intro' | 'closing', file: File) => {
     const form = new FormData()
     form.append('file', file)
-    return request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/ai-reviews/upload`, {
-      method: 'POST',
-      body: form,
-      isMultipart: true,
-      timeoutMs: UPLOAD_TIMEOUT_MS,
-    })
+    return request(
+      await resolveTarget('radio', clientId),
+      `/api/streams/${encodeURIComponent(clientId)}/specials/${encodeURIComponent(specialId)}/audio?part=${part}`,
+      { method: 'POST', body: form, isMultipart: true, timeoutMs: UPLOAD_TIMEOUT_MS }
+    )
   },
+  clearSpecialAudio: async (clientId: string, specialId: string) =>
+    request(
+      await resolveTarget('radio', clientId),
+      `/api/streams/${encodeURIComponent(clientId)}/specials/${encodeURIComponent(specialId)}`,
+      { method: 'DELETE' }
+    ),
+
   getJingleConfig: async (clientId: string) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/jingles/config`),
   updateJingleConfig: async (clientId: string, jinglePlayEvery: number, jinglePlayCount: number) =>

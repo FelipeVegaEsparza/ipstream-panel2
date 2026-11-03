@@ -67,6 +67,7 @@ export type MenuItemKey =
   | 'streaming-sound-effects'
   | 'streaming-info-capsules'
   | 'streaming-locutor-ia'
+  | 'streaming-especiales'
   | 'streaming-stats'
   // Televisión
   | 'television'
@@ -163,6 +164,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   key: 'streaming-locutor-ia',
   name: 'Locutor IA',
   href: '/dashboard/streaming/locutor-ia',
+  section: 'Radio',
+  icon: SparklesIcon,
+},
+{
+  key: 'streaming-especiales',
+  name: 'Especiales',
+  href: '/dashboard/streaming/especiales',
   section: 'Radio',
   icon: SparklesIcon,
 },

@@ -360,7 +360,6 @@ export const streamingAdminConfigSchema = z.object({
   storageQuotaMB: z.number().int().min(0).max(1024 * 1024).nullable().optional(),  // max 1TB
   maxListeners: z.number().int().min(0).max(100000).nullable().optional(),
   maxTracksPerPlaylist: z.number().int().min(1).max(10000).nullable().optional(),
-  aiReviewAdminEnabled: z.boolean().optional(),
   adminNotes: z.string().max(5000).nullable().optional(),
 })
 export type StreamingAdminConfigInput = z.infer<typeof streamingAdminConfigSchema>

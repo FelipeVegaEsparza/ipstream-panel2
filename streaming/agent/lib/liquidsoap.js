@@ -8,8 +8,9 @@ import { logger } from './logger.js'
 import { generateLiquidsoapScript } from './script-generator.js'
 import { pool } from './db.js'
 import { decrypt, isEncrypted } from './encryption.js'
-import { listAiIntroFiles, clientAiIntrosDir, listAiReviewFiles, clientAiReviewsDir, parseAiReviewFileName } from './files.js'
+import { listAiIntroFiles, clientAiIntrosDir, specialAudioExists, specialAudioPath } from './files.js'
 import { aiLayersEnabled, buildAiLayerLines } from './m3u-layers.js'
+import { insertionPositions, isSpecialInWindow, todayInTimezone } from './special-schedule.js'
 
 const execp = promisify(exec)
 
@@ -365,9 +366,12 @@ export async function regenerateM3u(clientId) {
     [playlistId]
   )
   const [rsRows] = await pool.query(
-    `SELECT aiPresenterEnabled, aiPresenterEvery, aiReviewEveryTracks, aiReviewAdminEnabled,
-            capsuleAutoDjEnabled, capsulePlayEvery, capsulePlayCount
-       FROM radio_streams WHERE clientId = ? LIMIT 1`,
+    `SELECT rs.aiPresenterEnabled, rs.aiPresenterEvery,
+            rs.capsuleAutoDjEnabled, rs.capsulePlayEvery, rs.capsulePlayCount,
+            c.timezone
+       FROM radio_streams rs
+       JOIN clients c ON c.id = rs.clientId
+       WHERE rs.clientId = ? LIMIT 1`,
     [clientId]
   )
   const rs = rsRows[0] || {}
@@ -382,11 +386,60 @@ export async function regenerateM3u(clientId) {
     if (match && !aiByTrack.has(match[1])) aiByTrack.set(match[1], file)
   }
 
-  const reviewFiles = layers.reviews ? await listAiReviewFiles(clientId) : []
-  const reviewByTrack = new Map()
-  for (const file of reviewFiles) {
-    const trackId = parseAiReviewFileName(file)
-    if (trackId && !reviewByTrack.has(trackId)) reviewByTrack.set(trackId, file)
+  // Especiales: bloques [intro][temas][cierre] insertados cada X temas normales.
+  const specialBlocks = new Map() // posición (1-based) → líneas
+  const specialsApplied = []
+  const specialsSkipped = []
+  const today = todayInTimezone(rs.timezone)
+  const [specialRows] = await pool.query(
+    `SELECT id, name, everyTracks, startDate, endDate
+       FROM radio_specials WHERE clientId = ? AND active = 1`,
+    [clientId]
+  )
+  for (const special of specialRows) {
+    if (!isSpecialInWindow(special, today)) continue
+    if (!specialAudioExists(clientId, special.id, 'intro') ||
+        !specialAudioExists(clientId, special.id, 'closing')) {
+      specialsSkipped.push({ id: special.id, name: special.name, reason: 'audio_missing' })
+      continue
+    }
+    const positions = insertionPositions(special.everyTracks, entries.length)
+    if (positions.length === 0) {
+      specialsSkipped.push({ id: special.id, name: special.name, reason: 'playlist_too_short' })
+      continue
+    }
+    const [specialTracks] = await pool.query(
+      `SELECT t.id, t.fileName, t.title, t.artist, t.duration
+         FROM radio_special_tracks rst
+         JOIN tracks t ON t.id = rst.trackId
+        WHERE rst.specialId = ?
+        ORDER BY rst.order ASC`,
+      [special.id]
+    )
+    const availableTracks = specialTracks.filter((track) => existsSync(join(mp3Dir, track.fileName)))
+    if (availableTracks.length === 0) {
+      specialsSkipped.push({ id: special.id, name: special.name, reason: 'tracks_missing' })
+      continue
+    }
+    if (positions.some((position) => specialBlocks.has(position))) {
+      specialsSkipped.push({ id: special.id, name: special.name, reason: 'collision' })
+      continue
+    }
+
+    const blockLines = []
+    blockLines.push(`#EXTINF:-1,Especial · ${special.name}`)
+    blockLines.push(specialAudioPath(clientId, special.id, 'intro'))
+    for (const track of availableTracks) {
+      const label = track.artist ? `${track.artist} - ${track.title || ''}` : (track.title || '')
+      const dur = track.duration ? Math.round(track.duration) : -1
+      blockLines.push(`#EXTINF:${dur},${label}`)
+      blockLines.push(join(mp3Dir, track.fileName))
+    }
+    blockLines.push(`#EXTINF:-1,Cierre · ${special.name}`)
+    blockLines.push(specialAudioPath(clientId, special.id, 'closing'))
+
+    for (const position of positions) specialBlocks.set(position, blockLines)
+    specialsApplied.push({ id: special.id, name: special.name, positions })
   }
 
   const capsuleEvery = Number(rs.capsulePlayEvery) || 0
@@ -415,14 +468,15 @@ export async function regenerateM3u(clientId) {
     lines.push(...buildAiLayerLines({
       trackId: e.trackId,
       introByTrack: aiByTrack,
-      reviewByTrack,
       introDir: clientAiIntrosDir(clientId),
-      reviewDir: clientAiReviewsDir(clientId),
     }))
     const label = e.artist ? `${e.artist} - ${e.title || ''}` : (e.title || '')
     const dur = e.duration ? Math.round(e.duration) : -1
     lines.push(`#EXTINF:${dur},${label}`)
     lines.push(join(mp3Dir, e.fileName))
+
+    const specialBlock = specialBlocks.get(index + 1)
+    if (specialBlock) lines.push(...specialBlock)
 
     if (capsuleEnabled && capsulePool.length > 0 && (index + 1) % capsuleEvery === 0) {
       for (let c = 0; c < capsuleCount; c++) {
@@ -438,8 +492,11 @@ export async function regenerateM3u(clientId) {
     }
   }
   await writeFile(m3uPath, lines.join('\n') + '\n', { mode: 0o644 })
-  logger.info({ clientId, m3uPath, trackCount: entries.length }, 'm3u regenerado')
-  return { active: true, trackCount: entries.length }
+  logger.info(
+    { clientId, m3uPath, trackCount: entries.length, specialsApplied: specialsApplied.length, specialsSkipped: specialsSkipped.length },
+    'm3u regenerado'
+  )
+  return { active: true, trackCount: entries.length, specialsApplied, specialsSkipped }
 }
 
 export async function regenerateAiIntrosM3u(clientId) {

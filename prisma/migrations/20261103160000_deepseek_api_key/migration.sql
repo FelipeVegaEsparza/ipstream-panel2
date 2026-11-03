@@ -1,4 +1,4 @@
--- API key del proveedor de texto para las reseñas IA (encriptada en la app).
+-- API key del proveedor de texto para los textos de Especiales (encriptada en la app).
 -- Migración aditiva: sin clave la función queda apagada.
 
 ALTER TABLE `app_config`

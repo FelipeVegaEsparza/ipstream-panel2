@@ -603,44 +603,36 @@ se modifican. La frecuencia y las frases se configuran por radio (`aiPresenterEv
 regenera las intros. Requiere playlist sin shuffle. Tocar el agente o el script de Liquidsoap obliga a **“Actualizar nodo”**
 en los nodos remotos.
 
-### Reseñas IA
+### Especiales
 
-Las **Reseñas IA** son una locución independiente de la presentación: un dato
-corto sobre el artista o el tema que suena **antes de la canción**. Se
-configuran en **Radio → Locutor IA** con su propia frecuencia (cada 2–20 temas;
-`0` = desactivadas) y un estilo: dato curioso, detrás de la canción, contexto
-histórico o biografía del artista.
+La sección **Radio → Especiales** (`/dashboard/streaming/especiales`) permite
+crear bloques de contenido curados por el cliente:
 
-- El texto lo redacta **DeepSeek** priorizando lo descriptivo (género, época,
-  instrumentación, mood, letra). Solo usa historia o biografía si el modelo la
-  marca como segura; se descartan fechas exactas, listas, premios, ventas,
-  muerte, escándalos, política, religión y vida privada.
-- Cada reseña se guarda en el banco de la radio (`ai_reviews`) por artista,
-  título y estilo. Si el tema vuelve a sonar, se reutiliza el texto y el audio
-  cacheado. El administrador puede apagarlas por radio con
-  `aiReviewAdminEnabled`.
-- El audio se sintetiza con la voz premium y se limita a **20 segundos**. Si se
-  pasa, se recorta el texto en el último punto y se regenera una vez; si sigue
-  pasándose, la reseña se descarta.
-- **Solo el audio consume cuota**: el texto no descuenta caracteres y un audio ya
-  cacheado tampoco. La sección queda deshabilitada si no hay clave de texto o
-  proveedor de voz premium. La clave se configura en
-  **Admin → Configuración → IA** (encriptada en `app_config`); `DEEPSEEK_API_KEY`
-  queda como fallback por entorno. En el panel del cliente no se nombra al
-  proveedor de texto.
-- Cada reseña hablada **empieza con el nombre de la emisora** y luego el texto
-  generado. Si el tema no tiene artista/título confiables (vacíos, “Unknown”,
-  “Track 01”, etc.), en vez de inventar un dato se emite una **pausa de
-  emisora** corta; si hay artista válido pero falta el título, se usa una bio
-  corta del artista.
-- **Aplicar al AutoDJ** genera las intros y las reseñas en la misma pasada y las
-  ancla a su tema: el orden es `[presentación][reseña][tema]`. Si la playlist se
-  reordena o cambia la frecuencia/estilo, hay que volver a aplicar. Las reseñas
-  desactivadas individualmente no se emiten ni caen al respaldo de biografía.
-- En la **consola en vivo** la reseña usa un contador propio y se prefetchea un
-  tema antes; se reproduce completa antes de la canción, sin superar los 20 s.
-- Tocar `streaming/agent/*` para soportar las reseñas obliga a **"Actualizar
-  nodo"** en los nodos remotos después del deploy.
+- Nombre y artista/tema central, más una descripción breve del especial.
+- **Intro y cierre** redactados con IA a partir de esa descripción. El cliente
+  puede revisar y editar el texto antes de grabar el audio. Cada audio dura como
+  máximo **20 segundos** y siempre empieza con el nombre de la emisora.
+- Hasta **5 temas** elegidos de la biblioteca, sin repetir. Pueden ser temas que
+  también estén en la rotación normal.
+- Frecuencia propia: cada X temas sueltos del AutoDJ. El bloque se inserta
+  **entre** los temas normales, no reemplaza al siguiente, y se repite en cada
+  vuelta de la playlist.
+- Fecha de inicio y fin opcionales. Fuera de la vigencia el especial no se
+  inserta.
+- Puede haber varios especiales activos. Si dos frecuencias caen en el mismo
+  tema de la playlist, el panel rechaza la configuración y muestra el conflicto.
+- **Generar audio** graba la intro/cierre y los sube al agente; **Aplicar al
+  AutoDJ** valida choques, reconstruye el m3u y reinicia el AutoDJ.
+- Si un especial no tiene temas o le falta la intro/cierre, se omite completo y
+  el panel lo avisa. Si un tema individual no está disponible en el agente, se
+  saltea y el especial continúa.
+- En la **consola en vivo** hay un panel **Especiales** para encolar un bloque
+  completo (intro + temas + cierre) manualmente.
+
+La clave de texto de la IA se configura en **Admin → Configuración → IA**
+(encriptada en `app_config`); `DEEPSEEK_API_KEY` queda como fallback. Tocar
+`streaming/agent/*` para soportar especiales obliga a **"Actualizar nodo"** en
+los nodos remotos después del deploy.
 
 ### Fallback por silencio
 

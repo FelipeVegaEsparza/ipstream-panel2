@@ -72,7 +72,7 @@ model Client {
   contactMessages        ContactMessage[]
   aiTtsUsage             AiTtsUsage[]
   aiUsageEvents          AiUsageEvent[]
-  aiReviews              AiReview[]
+  specials               RadioSpecial[]
   aiCreditRequests       AiCreditRequest[]
   aiCreditGrants         AiCreditGrant[]
   soundEffects           ClientSoundEffect[]
@@ -577,29 +577,43 @@ model AiUsageEvent {
   @@map("ai_usage_events")
 }
 
-// Reseña hablada de un artista/tema, generada con DeepSeek y cacheada por
-// radio. La clave normalizada (sin acentos, minúsculas) permite reutilizar la
-// reseña aunque el título venga con sufijos distintos.
-model AiReview {
-  id        String   @id @default(cuid())
-  clientId  String
-  kind      String   @default("track") @db.VarChar(20) // track | artist
-  artist    String   @db.VarChar(300) // valor de pantalla
-  title     String   @db.VarChar(300) @default("") // vacío cuando es de artista
-  artistKey String   @db.VarChar(191)
-  titleKey  String   @db.VarChar(191) @default("")
-  style     String   @db.VarChar(40)
-  text      String   @db.Text
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// Especiales: bloque de intro + temas + cierre que se intercala en el AutoDJ.
+model RadioSpecial {
+  id             String   @id @default(cuid())
+  clientId       String
+  name           String   @db.VarChar(200)
+  artist         String?  @db.VarChar(200)
+  description    String   @db.Text
+  introText      String   @db.Text
+  closingText    String   @db.Text
+  everyTracks    Int      @default(10)
+  startDate      String?  @db.VarChar(10) // YYYY-MM-DD, fecha local del cliente
+  endDate        String?  @db.VarChar(10) // YYYY-MM-DD, fecha local del cliente
+  active         Boolean  @default(true)
+  introReadyAt   DateTime?
+  closingReadyAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tracks RadioSpecialTrack[]
 
-  @@unique([clientId, kind, artistKey, titleKey, style])
   @@index([clientId, active])
-  @@index([clientId, artistKey])
-  @@map("ai_reviews")
+  @@map("radio_specials")
+}
+
+model RadioSpecialTrack {
+  id        String @id @default(cuid())
+  specialId String
+  trackId   String
+  order     Int    @default(0)
+
+  special RadioSpecial @relation(fields: [specialId], references: [id], onDelete: Cascade)
+  track   Track        @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([specialId, trackId])
+  @@index([specialId, order])
+  @@map("radio_special_tracks")
 }
 
 model AiCreditPack {
@@ -961,10 +975,6 @@ model RadioStream {
   fishVoiceId          String? // voz Fish elegida por el cliente; null = voz predeterminada
   aiVoiceStyle         Int       @default(0) // 0-100 expresividad
   aiVoicePreset        String?   @db.VarChar(40) // natural | stable | expressive; null = preset global
-  // Reseñas IA (dato corto del artista/tema antes de la canción)
-  aiReviewEveryTracks  Int       @default(0) // 0 = desactivado
-  aiReviewStyle        String?   @db.VarChar(40) // dato-curioso | detras-de-la-cancion | contexto-historico | biografia
-  aiReviewAdminEnabled Boolean   @default(true) // kill switch del admin
   // Cápsulas informativas programadas en AutoDJ
   capsuleAutoDjEnabled Boolean   @default(false)
   capsulePlayEvery     Int       @default(8)
@@ -1084,6 +1094,7 @@ model Track {
   capsule     InfoCapsule?    @relation(fields: [capsuleId], references: [id], onDelete: SetNull)
   radioStream RadioStream     @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
   entries     PlaylistEntry[]
+  specialTracks RadioSpecialTrack[]
   folder      Folder?         @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   @@index([clientId])
