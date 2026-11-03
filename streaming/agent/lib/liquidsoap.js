@@ -8,7 +8,8 @@ import { logger } from './logger.js'
 import { generateLiquidsoapScript } from './script-generator.js'
 import { pool } from './db.js'
 import { decrypt, isEncrypted } from './encryption.js'
-import { listAiIntroFiles, clientAiIntrosDir } from './files.js'
+import { listAiIntroFiles, clientAiIntrosDir, listAiReviewFiles, clientAiReviewsDir, parseAiReviewFileName } from './files.js'
+import { aiLayersEnabled, buildAiLayerLines } from './m3u-layers.js'
 
 const execp = promisify(exec)
 
@@ -364,21 +365,28 @@ export async function regenerateM3u(clientId) {
     [playlistId]
   )
   const [rsRows] = await pool.query(
-    `SELECT aiPresenterEnabled, aiPresenterEvery, capsuleAutoDjEnabled, capsulePlayEvery, capsulePlayCount
+    `SELECT aiPresenterEnabled, aiPresenterEvery, aiReviewEveryTracks, aiReviewAdminEnabled,
+            capsuleAutoDjEnabled, capsulePlayEvery, capsulePlayCount
        FROM radio_streams WHERE clientId = ? LIMIT 1`,
     [clientId]
   )
   const rs = rsRows[0] || {}
   const playlistInfo = await getActivePlaylist(clientId)
-  const aiFiles = (rs.aiPresenterEnabled && Number(rs.aiPresenterEvery) > 0 && !playlistInfo?.shuffle)
-    ? await listAiIntroFiles(clientId)
-    : []
+  const layers = aiLayersEnabled(rs, Boolean(playlistInfo?.shuffle))
+  const aiFiles = layers.intros ? await listAiIntroFiles(clientId) : []
   // El nombre incluye el id del track destino (ia-0001-<id>.mp3). Así la
   // intro sigue al tema correcto aunque la playlist se reordene.
   const aiByTrack = new Map()
   for (const file of aiFiles) {
     const match = /^ia-\d+-([A-Za-z0-9_-]+)\.mp3$/i.exec(file)
     if (match && !aiByTrack.has(match[1])) aiByTrack.set(match[1], file)
+  }
+
+  const reviewFiles = layers.reviews ? await listAiReviewFiles(clientId) : []
+  const reviewByTrack = new Map()
+  for (const file of reviewFiles) {
+    const trackId = parseAiReviewFileName(file)
+    if (trackId && !reviewByTrack.has(trackId)) reviewByTrack.set(trackId, file)
   }
 
   const capsuleEvery = Number(rs.capsulePlayEvery) || 0
@@ -404,11 +412,13 @@ export async function regenerateM3u(clientId) {
   const lines = ['#EXTM3U']
   for (let index = 0; index < entries.length; index++) {
     const e = entries[index]
-    const introFile = aiByTrack.get(e.trackId)
-    if (introFile) {
-      lines.push('#EXTINF:-1,Locutor IA')
-      lines.push(join(clientAiIntrosDir(clientId), introFile))
-    }
+    lines.push(...buildAiLayerLines({
+      trackId: e.trackId,
+      introByTrack: aiByTrack,
+      reviewByTrack,
+      introDir: clientAiIntrosDir(clientId),
+      reviewDir: clientAiReviewsDir(clientId),
+    }))
     const label = e.artist ? `${e.artist} - ${e.title || ''}` : (e.title || '')
     const dur = e.duration ? Math.round(e.duration) : -1
     lines.push(`#EXTINF:${dur},${label}`)

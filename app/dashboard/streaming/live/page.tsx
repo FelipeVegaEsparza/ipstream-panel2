@@ -42,6 +42,9 @@ export default async function LivePage() {
             aiPresenterEnabled: true,
             aiPresenterEvery: true,
             aiIntroPhrases: true,
+            aiReviewEveryTracks: true,
+            aiReviewStyle: true,
+            aiReviewAdminEnabled: true,
           },
         },
       },
@@ -70,6 +73,12 @@ export default async function LivePage() {
       aiPresenterEnabled={Boolean(clientInfo?.radioStream?.aiPresenterEnabled)}
       aiPresenterEvery={clientInfo?.radioStream?.aiPresenterEvery ?? 3}
       aiIntroPhrases={aiIntroPhrases}
+      aiReviewEnabled={
+        Boolean(clientInfo?.radioStream?.aiReviewAdminEnabled) &&
+        Number(clientInfo?.radioStream?.aiReviewEveryTracks) > 0
+      }
+      aiReviewEvery={clientInfo?.radioStream?.aiReviewEveryTracks ?? 0}
+      aiReviewStyle={clientInfo?.radioStream?.aiReviewStyle ?? 'dato-curioso'}
       timezone={clientInfo?.timezone}
     />
   )

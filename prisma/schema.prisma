@@ -72,6 +72,7 @@ model Client {
   contactMessages        ContactMessage[]
   aiTtsUsage             AiTtsUsage[]
   aiUsageEvents          AiUsageEvent[]
+  aiReviews              AiReview[]
   aiCreditRequests       AiCreditRequest[]
   aiCreditGrants         AiCreditGrant[]
   soundEffects           ClientSoundEffect[]
@@ -576,6 +577,31 @@ model AiUsageEvent {
   @@map("ai_usage_events")
 }
 
+// Reseña hablada de un artista/tema, generada con DeepSeek y cacheada por
+// radio. La clave normalizada (sin acentos, minúsculas) permite reutilizar la
+// reseña aunque el título venga con sufijos distintos.
+model AiReview {
+  id        String   @id @default(cuid())
+  clientId  String
+  kind      String   @default("track") // track | artist
+  artist    String   @db.VarChar(300) // valor de pantalla
+  title     String   @db.VarChar(300) @default("") // vacío cuando es de artista
+  artistKey String   @db.VarChar(300)
+  titleKey  String   @db.VarChar(300) @default("")
+  style     String   @db.VarChar(40)
+  text      String   @db.Text
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, kind, artistKey, titleKey, style])
+  @@index([clientId, active])
+  @@index([clientId, artistKey])
+  @@map("ai_reviews")
+}
+
 model AiCreditPack {
   id          String   @id @default(cuid())
   name        String
@@ -932,6 +958,10 @@ model RadioStream {
   fishVoiceId          String? // voz Fish elegida por el cliente; null = voz predeterminada
   aiVoiceStyle         Int       @default(0) // 0-100 expresividad
   aiVoicePreset        String?   @db.VarChar(40) // natural | stable | expressive; null = preset global
+  // Reseñas IA (dato corto del artista/tema antes de la canción)
+  aiReviewEveryTracks  Int       @default(0) // 0 = desactivado
+  aiReviewStyle        String?   @db.VarChar(40) // dato-curioso | detras-de-la-cancion | contexto-historico | biografia
+  aiReviewAdminEnabled Boolean   @default(true) // kill switch del admin
   // Cápsulas informativas programadas en AutoDJ
   capsuleAutoDjEnabled Boolean   @default(false)
   capsulePlayEvery     Int       @default(8)

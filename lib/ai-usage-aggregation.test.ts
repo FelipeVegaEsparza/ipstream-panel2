@@ -16,7 +16,7 @@ describe('buildFeatureBreakdown', () => {
       ]
     )
 
-    expect(breakdown).toHaveLength(6)
+    expect(breakdown).toHaveLength(7)
     expect(breakdown.find((row) => row.feature === 'live-locution')).toMatchObject({
       characters: 60,
       musicSeconds: 0,

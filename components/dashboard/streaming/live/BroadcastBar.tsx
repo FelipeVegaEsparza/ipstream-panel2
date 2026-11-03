@@ -23,6 +23,9 @@ interface Props {
   onStopLive: () => Promise<void>
   onReconnect: () => Promise<void>
   onRefreshSlots: () => Promise<void>
+  reviewEnabled?: boolean
+  reviewIn?: number
+  reviewGenerating?: boolean
 }
 
 const STATUS: Record<SessionState, { labelKey: 'live.broadcast.offAir' | 'live.broadcast.preparing' | 'live.broadcast.connecting' | 'live.broadcast.live' | 'live.broadcast.reconnecting' | 'live.broadcast.error'; className: string }> = {
@@ -54,6 +57,9 @@ export function BroadcastBar({
   onStopLive,
   onReconnect,
   onRefreshSlots,
+  reviewEnabled = false,
+  reviewIn = 0,
+  reviewGenerating = false,
 }: Props) {
   const { t } = useDashboardI18n()
   const status = STATUS[state]
@@ -70,6 +76,16 @@ export function BroadcastBar({
           {live && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />}
           {t(status.labelKey)}
         </span>
+
+        {reviewEnabled && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] text-muted-foreground">
+            {reviewGenerating
+              ? t('live.broadcast.reviewGenerating')
+              : reviewIn <= 0
+                ? t('live.broadcast.reviewNext')
+                : t('live.broadcast.reviewIn', { count: reviewIn })}
+          </span>
+        )}
 
         <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="hidden sm:inline">{t('live.broadcast.slot')}</span>

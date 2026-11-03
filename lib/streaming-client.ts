@@ -268,6 +268,21 @@ export const streamingClient = {
       timeoutMs: UPLOAD_TIMEOUT_MS,
     })
   },
+  // Reseñas IA del AutoDJ (separadas de las intros)
+  clearAiReviews: async (clientId: string) =>
+    request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/ai-reviews`, {
+      method: 'DELETE',
+    }),
+  uploadAiReview: async (clientId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/ai-reviews/upload`, {
+      method: 'POST',
+      body: form,
+      isMultipart: true,
+      timeoutMs: UPLOAD_TIMEOUT_MS,
+    })
+  },
   getJingleConfig: async (clientId: string) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/jingles/config`),
   updateJingleConfig: async (clientId: string, jinglePlayEvery: number, jinglePlayCount: number) =>

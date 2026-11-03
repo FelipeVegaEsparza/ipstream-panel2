@@ -603,6 +603,37 @@ se modifican. La frecuencia y las frases se configuran por radio (`aiPresenterEv
 regenera las intros. Requiere playlist sin shuffle. Tocar el agente o el script de Liquidsoap obliga a **“Actualizar nodo”**
 en los nodos remotos.
 
+### Reseñas IA
+
+Las **Reseñas IA** son una locución independiente de la presentación: un dato
+corto sobre el artista o el tema que suena **antes de la canción**. Se
+configuran en **Radio → Locutor IA** con su propia frecuencia (cada 2–20 temas;
+`0` = desactivadas) y un estilo: dato curioso, detrás de la canción, contexto
+histórico o biografía del artista.
+
+- El texto lo redacta **DeepSeek** priorizando lo descriptivo (género, época,
+  instrumentación, mood, letra). Solo usa historia o biografía si el modelo la
+  marca como segura; se descartan fechas exactas, listas, premios, ventas,
+  muerte, escándalos, política, religión y vida privada.
+- Cada reseña se guarda en el banco de la radio (`ai_reviews`) por artista,
+  título y estilo. Si el tema vuelve a sonar, se reutiliza el texto y el audio
+  cacheado. El administrador puede apagarlas por radio con
+  `aiReviewAdminEnabled`.
+- El audio se sintetiza con la voz premium y se limita a **20 segundos**. Si se
+  pasa, se recorta el texto en el último punto y se regenera una vez; si sigue
+  pasándose, la reseña se descarta.
+- **Solo el audio consume cuota**: el texto de DeepSeek no descuenta caracteres y
+  un audio ya cacheado tampoco. La sección queda deshabilitada sin
+  `DEEPSEEK_API_KEY` o sin proveedor de voz premium.
+- **Aplicar al AutoDJ** genera las intros y las reseñas en la misma pasada y las
+  ancla a su tema: el orden es `[presentación][reseña][tema]`. Si la playlist se
+  reordena o cambia la frecuencia/estilo, hay que volver a aplicar. Las reseñas
+  desactivadas individualmente no se emiten ni caen al respaldo de biografía.
+- En la **consola en vivo** la reseña usa un contador propio y se prefetchea un
+  tema antes; se reproduce completa antes de la canción, sin superar los 20 s.
+- Tocar `streaming/agent/*` para soportar las reseñas obliga a **"Actualizar
+  nodo"** en los nodos remotos después del deploy.
+
 ### Fallback por silencio
 
 Si la fuente en vivo deja de emitir audio (consola web o DJ externo conectado al

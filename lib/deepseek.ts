@@ -36,6 +36,10 @@ function getApiKey(): string {
   return key
 }
 
+export function isDeepSeekConfigured(): boolean {
+  return Boolean(process.env.DEEPSEEK_API_KEY)
+}
+
 function buildSystemPrompt(): string {
   return [
     'Eres un redactor jefe de un portal de noticias en español para emisoras de radio.',
@@ -117,21 +121,18 @@ function buildUserPrompt(
   ].join('\n')
 }
 
-function parseContent(raw: string | undefined): { items: DraftNews[] } | null {
-  if (!raw) return null
-  const trimmed = raw.trim()
-  try {
-    const data = JSON.parse(trimmed)
-    if (data && Array.isArray(data.items)) {
-      return { items: data.items }
-    }
-    if (Array.isArray(data)) {
-      return { items: data }
-    }
-    return null
-  } catch {
-    return null
+function parseContent(data: unknown): { items: DraftNews[] } | null {
+  const items = extractItems(data)
+  if (!items) return null
+  return { items: items as DraftNews[] }
+}
+
+export function extractItems(data: unknown): unknown[] | null {
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && Array.isArray((data as { items?: unknown }).items)) {
+    return (data as { items: unknown[] }).items
   }
+  return null
 }
 
 function validateItem(raw: unknown): DraftNews | null {
@@ -189,6 +190,19 @@ async function callDeepSeek(systemPrompt: string, userPrompt: string): Promise<s
   }
 }
 
+export async function callDeepSeekJson<T = unknown>(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<T | null> {
+  const content = await callDeepSeek(systemPrompt, userPrompt)
+  if (!content) return null
+  try {
+    return JSON.parse(content.trim()) as T
+  } catch {
+    return null
+  }
+}
+
 export async function generateNewsForCategory(
   category: { name: string; slug: string; description?: string | null },
   count: number,
@@ -198,8 +212,8 @@ export async function generateNewsForCategory(
   const systemPrompt = buildSystemPrompt()
 
   for (let attempt = 1; attempt <= 2; attempt++) {
-    const content = await callDeepSeek(systemPrompt, userPrompt)
-    const parsed = parseContent(content ?? undefined)
+    const data = await callDeepSeekJson<unknown>(systemPrompt, userPrompt)
+    const parsed = parseContent(data)
     if (!parsed) {
       console.warn(`[deepseek] intento ${attempt}: respuesta no parseable`)
       continue

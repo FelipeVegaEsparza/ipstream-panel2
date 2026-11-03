@@ -44,6 +44,7 @@ interface RadioStreamData {
   storageQuotaMB: number | null
   maxListeners: number | null
   maxTracksPerPlaylist: number | null
+  aiReviewAdminEnabled: boolean
   adminNotes: string | null
   status: string
   listenerCount: number
@@ -79,6 +80,7 @@ export default function AdminStreamingConfigPage() {
   const [storageQuotaMB, setStorageQuotaMB] = useState<string>('')
   const [maxListeners, setMaxListeners] = useState<string>('')
   const [maxTracksPerPlaylist, setMaxTracksPerPlaylist] = useState<string>('')
+  const [aiReviewAdminEnabled, setAiReviewAdminEnabled] = useState(true)
   const [adminNotes, setAdminNotes] = useState('')
 
   const load = useCallback(async () => {
@@ -95,6 +97,7 @@ export default function AdminStreamingConfigPage() {
         setStorageQuotaMB(d.radioStream.storageQuotaMB?.toString() ?? '')
         setMaxListeners(d.radioStream.maxListeners?.toString() ?? '')
         setMaxTracksPerPlaylist(d.radioStream.maxTracksPerPlaylist?.toString() ?? '')
+        setAiReviewAdminEnabled(d.radioStream.aiReviewAdminEnabled !== false)
         setAdminNotes(d.radioStream.adminNotes || '')
       } else if (res.status === 404) {
         toast({ type: 'error', title: t('admin.streaming.notFound') })
@@ -118,6 +121,7 @@ export default function AdminStreamingConfigPage() {
         storageQuotaMB: storageQuotaMB === '' ? null : Number(storageQuotaMB),
         maxListeners: maxListeners === '' ? null : Number(maxListeners),
         maxTracksPerPlaylist: maxTracksPerPlaylist === '' ? null : Number(maxTracksPerPlaylist),
+        aiReviewAdminEnabled,
         adminNotes: adminNotes || null,
       }
       const res = await fetch(`/api/admin/streaming/${clientId}`, {
@@ -279,6 +283,23 @@ export default function AdminStreamingConfigPage() {
             {t('admin.streaming.autoStart')}
             <span className="block text-xs text-muted-foreground">
               {t('admin.streaming.autoStartHint')}
+            </span>
+          </label>
+        </div>
+
+        {/* Reseñas IA: kill switch por radio */}
+        <div className="flex items-center gap-3 pb-3 border-b border-border">
+          <input
+            type="checkbox"
+            id="aiReviewAdminEnabled"
+            checked={aiReviewAdminEnabled}
+            onChange={(e) => setAiReviewAdminEnabled(e.target.checked)}
+            className="rounded"
+          />
+          <label htmlFor="aiReviewAdminEnabled" className="text-foreground">
+            {t('admin.streaming.aiReviews')}
+            <span className="block text-xs text-muted-foreground">
+              {t('admin.streaming.aiReviewsHint')}
             </span>
           </label>
         </div>

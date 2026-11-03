@@ -240,3 +240,48 @@ export async function listAiIntroFiles(clientId) {
   const files = await readdir(dir)
   return files.filter((f) => extname(f).toLowerCase() === '.mp3').sort()
 }
+
+// =====================================================
+// AI review file helpers (reseñas del AutoDJ)
+// =====================================================
+
+export function clientAiReviewsDir(clientId) {
+  return join(LIBRARY_PATH, clientId, 'ai-reviews')
+}
+
+export function aiReviewPath(clientId, fileName) {
+  return join(clientAiReviewsDir(clientId), fileName)
+}
+
+export async function ensureAiReviewsDir(clientId) {
+  const dir = clientAiReviewsDir(clientId)
+  if (!existsSync(dir)) await mkdir(dir, { recursive: true })
+  return dir
+}
+
+export async function saveAiReview(clientId, fileName, buffer) {
+  await ensureAiReviewsDir(clientId)
+  const dest = join(clientAiReviewsDir(clientId), fileName)
+  await writeFile(dest, buffer)
+  const stats = await stat(dest)
+  return { path: dest, size: stats.size }
+}
+
+export async function clearAiReviews(clientId) {
+  const dir = clientAiReviewsDir(clientId)
+  if (existsSync(dir)) await rm(dir, { recursive: true, force: true })
+  return true
+}
+
+export async function listAiReviewFiles(clientId) {
+  const dir = clientAiReviewsDir(clientId)
+  if (!existsSync(dir)) return []
+  const files = await readdir(dir)
+  return files.filter((f) => extname(f).toLowerCase() === '.mp3').sort()
+}
+
+/** Extrae el trackId de `rv-0001-<trackId>.mp3`; null si no cumple. */
+export function parseAiReviewFileName(fileName) {
+  const match = /^rv-\d+-([A-Za-z0-9_-]+)\.mp3$/i.exec(fileName)
+  return match ? match[1] : null
+}

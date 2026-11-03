@@ -1,7 +1,8 @@
 // =====================================================
 // /api/dashboard/streaming/ai/autodj
 // Presentador IA del AutoDJ en una fuente separada de los jingles.
-// Genera una intro por bloque, la sube a ai-intros y actualiza la frecuencia.
+// Genera una intro y una reseña por bloque, las sube al agente y
+// actualiza las frecuencias.
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -12,10 +13,21 @@ import { synthesizePremiumTts, hasConfiguredPremiumTts } from '@/lib/premium-tts
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
 import { buildPresenterText, normalizePhrases } from '@/lib/live-console/presenter'
 import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
+import {
+  DEFAULT_REVIEW_STYLE,
+  getArtistReviewRecord,
+  getOrCreateArtistReview,
+  getOrCreateReview,
+  getReviewRecord,
+  isReviewStyle,
+  synthesizeReviewWithLimit,
+  type ReviewRecord,
+} from '@/lib/ai-reviews'
 
 export const dynamic = 'force-dynamic'
 
 const MAX_INTROS = 80
+const MAX_REVIEWS = 80
 const AI_JINGLE_ARTIST = 'Locutor IA'
 
 function parsePhrases(raw: string | null | undefined): string[] {
@@ -28,6 +40,10 @@ function parsePhrases(raw: string | null | undefined): string[] {
   } catch {
     return []
   }
+}
+
+function reviewFileName(index: number, trackId: string): string {
+  return `rv-${String(index + 1).padStart(4, '0')}-${trackId}.mp3`
 }
 
 export async function POST(request: NextRequest) {
@@ -66,7 +82,14 @@ export async function POST(request: NextRequest) {
           name: true,
           basicData: { select: { projectName: true } },
           radioStream: {
-            select: { aiPresenterEnabled: true, aiPresenterEvery: true, aiIntroPhrases: true },
+            select: {
+              aiPresenterEnabled: true,
+              aiPresenterEvery: true,
+              aiIntroPhrases: true,
+              aiReviewEveryTracks: true,
+              aiReviewStyle: true,
+              aiReviewAdminEnabled: true,
+            },
           },
         },
       }),
@@ -82,59 +105,174 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'shuffle_not_supported',
-          message: 'Desactivá “Aleatorio” en la playlist para usar el presentador IA en el AutoDJ.',
+          message: 'Desactivá “Aleatorio” en la playlist para usar el locutor IA en el AutoDJ.',
         },
         { status: 400 }
       )
     }
 
+    const rs = clientInfo?.radioStream
     const station = clientInfo?.basicData?.projectName || clientInfo?.name || 'la radio'
-    const every = Number(body?.every) || clientInfo?.radioStream?.aiPresenterEvery || 3
+
+    // Presentación
+    const presenterEnabled = body?.enabled !== undefined
+      ? Boolean(body.enabled)
+      : Boolean(rs?.aiPresenterEnabled)
+    const every = Number(body?.every) || rs?.aiPresenterEvery || 3
     if (!Number.isInteger(every) || every < 2 || every > 10) {
       return NextResponse.json(
         { error: 'invalid_every', message: 'La frecuencia debe ser un entero entre 2 y 10.' },
         { status: 400 }
       )
     }
-    const phrases = normalizePhrases(parsePhrases(clientInfo?.radioStream?.aiIntroPhrases))
+
+    // Reseñas
+    let reviewEvery =
+      body?.reviewEvery !== undefined ? Number(body.reviewEvery) : (rs?.aiReviewEveryTracks ?? 0)
+    if (body?.reviewsEnabled !== undefined && !body.reviewsEnabled) reviewEvery = 0
+    if (!Number.isInteger(reviewEvery) || !(reviewEvery === 0 || (reviewEvery >= 2 && reviewEvery <= 20))) {
+      return NextResponse.json(
+        { error: 'invalid_review_every', message: 'La frecuencia de reseñas debe ser 0 o un entero entre 2 y 20 temas.' },
+        { status: 400 }
+      )
+    }
+    const rawStyle = body?.reviewStyle !== undefined ? body.reviewStyle : rs?.aiReviewStyle
+    if (body?.reviewStyle !== undefined && rawStyle != null && rawStyle !== '' && !isReviewStyle(rawStyle)) {
+      return NextResponse.json(
+        { error: 'invalid_review_style', message: 'El estilo de reseña elegido no existe.' },
+        { status: 400 }
+      )
+    }
+    const reviewStyle = isReviewStyle(rawStyle) ? rawStyle : DEFAULT_REVIEW_STYLE
+    const reviewAdminEnabled = rs?.aiReviewAdminEnabled ?? true
+    const reviewsActive = reviewAdminEnabled && reviewEvery >= 2
+
     const entries = playlist.entries
-    const count = Math.floor((entries.length - 1) / every)
-    if (count <= 0) {
+    const phrases = normalizePhrases(parsePhrases(rs?.aiIntroPhrases))
+
+    const introIndices: number[] = []
+    if (presenterEnabled) {
+      for (let i = 1; i < entries.length; i++) {
+        if (i % every === 0) introIndices.push(i)
+      }
+    }
+    const reviewIndices: number[] = []
+    if (reviewsActive) {
+      for (let i = 1; i < entries.length; i++) {
+        if (i % reviewEvery === 0) reviewIndices.push(i)
+      }
+    }
+
+    if (!presenterEnabled && !reviewsActive) {
+      return NextResponse.json(
+        { error: 'nothing_to_apply', message: 'Activá la presentación o las reseñas antes de aplicar.' },
+        { status: 400 }
+      )
+    }
+    if (presenterEnabled && introIndices.length > MAX_INTROS) {
+      return NextResponse.json(
+        {
+          error: 'too_many_intros',
+          message: `La playlist generaría ${introIndices.length} intros (máximo ${MAX_INTROS}). Subí la frecuencia o reducí la playlist.`,
+        },
+        { status: 400 }
+      )
+    }
+    if (reviewsActive && reviewIndices.length > MAX_REVIEWS) {
+      return NextResponse.json(
+        {
+          error: 'too_many_reviews',
+          message: `La playlist generaría ${reviewIndices.length} reseñas (máximo ${MAX_REVIEWS}). Subí la frecuencia o reducí la playlist.`,
+        },
+        { status: 400 }
+      )
+    }
+    if (presenterEnabled && introIndices.length === 0 && reviewIndices.length === 0) {
       return NextResponse.json(
         { error: 'playlist_too_short', message: 'La playlist no tiene suficientes temas para esa frecuencia.' },
         { status: 400 }
       )
     }
-    if (count > MAX_INTROS) {
-      return NextResponse.json(
-        {
-          error: 'too_many_intros',
-          message: `La playlist generaría ${count} intros (máximo ${MAX_INTROS}). Subí la frecuencia o reducí la playlist.`,
-        },
-        { status: 400 }
-      )
-    }
 
-    if (!(await hasConfiguredPremiumTts())) {
+    const needsTts = introIndices.length > 0 || reviewIndices.length > 0
+    if (needsTts && !(await hasConfiguredPremiumTts())) {
       return NextResponse.json(
         { error: 'tts_not_configured', message: 'Configurá ElevenLabs o Fish Audio en Locución.' },
         { status: 503 }
       )
     }
 
-    const targets = []
-    for (let k = 1; k <= count; k++) {
-      targets.push(entries[k * every].track)
+    const introTargets = introIndices.map((index) => ({
+      index,
+      track: entries[index].track,
+      text: buildPresenterText(station, entries[index].track, phrases),
+    }))
+    const introIndexSet = new Set(introIndices)
+
+    const reviewTargets: Array<{
+      index: number
+      trackId: string
+      review: ReviewRecord
+    }> = []
+    for (const index of reviewIndices) {
+      const track = entries[index].track
+      const artist = track.artist || ''
+      const title = track.title || ''
+      if (!artist || !title) continue
+
+      try {
+        // Una reseña desactivada por el cliente no se emite ni cae al
+        // respaldo de biografía.
+        const existing = await getReviewRecord({
+          clientId: ctx.clientId,
+          artist,
+          title,
+          style: reviewStyle,
+        })
+        if (existing && !existing.active) continue
+
+        let review: ReviewRecord | null = existing
+        if (!review) {
+          review = await getOrCreateReview({
+            clientId: ctx.clientId,
+            artist,
+            title,
+            style: reviewStyle,
+            hasIntro: introIndexSet.has(index),
+          })
+        }
+        if (!review) {
+          const existingArtist = await getArtistReviewRecord({
+            clientId: ctx.clientId,
+            artist,
+            style: reviewStyle,
+          })
+          if (existingArtist && !existingArtist.active) continue
+          review = existingArtist ?? await getOrCreateArtistReview({
+            clientId: ctx.clientId,
+            artist,
+            style: reviewStyle,
+            hasIntro: introIndexSet.has(index),
+          })
+        }
+        if (!review) continue
+
+        reviewTargets.push({ index, trackId: track.id, review })
+      } catch (err) {
+        // Un fallo de DeepSeek no aborta la preparación del AutoDJ.
+        console.warn('[ai/autodj] no se pudo preparar la reseña del tema', track.id, err)
+      }
     }
-    const texts = targets.map((track) =>
-      buildPresenterText(station, track, phrases)
-    )
-    const totalChars = texts.reduce((sum, text) => sum + text.length, 0)
+
+    const totalChars =
+      introTargets.reduce((sum, target) => sum + target.text.length, 0) +
+      reviewTargets.reduce((sum, target) => sum + target.review.text.length, 0)
     if (totalChars > access.remaining) {
       return NextResponse.json(
         {
           error: 'ai_quota_exceeded',
           message: `La preparación necesita ${totalChars} caracteres y te quedan ${access.remaining}.`,
+          missingCharacters: totalChars - access.remaining,
         },
         { status: 402 }
       )
@@ -170,17 +308,33 @@ export async function POST(request: NextRequest) {
     }
 
     await streamingClient.clearAiIntros(ctx.clientId)
+    if (reviewEvery === 0) {
+      try {
+        await streamingClient.clearAiReviews(ctx.clientId)
+      } catch (err) {
+        // Nodo con agente anterior: las reseñas no se insertarán, pero las
+        // intros siguen funcionando.
+        console.warn('[ai/autodj] no se pudieron limpiar las reseñas del agente', err)
+      }
+    } else if (reviewsActive) {
+      try {
+        // Al reaplicar se regeneran todas las reseñas del estilo/frecuencia
+        // actuales; las del estilo anterior no deben quedar.
+        await streamingClient.clearAiReviews(ctx.clientId)
+      } catch (err) {
+        console.warn('[ai/autodj] no se pudieron limpiar las reseñas del agente', err)
+      }
+    }
 
     let remaining = access.remaining
-    let generated = 0
-    for (let i = 0; i < targets.length; i++) {
-      const text = texts[i]
-      const track = targets[i]
+    let generatedIntros = 0
+    for (let i = 0; i < introTargets.length; i++) {
+      const target = introTargets[i]
       let audio
       try {
         audio = await synthesizePremiumTts({
           clientId: ctx.clientId,
-          text,
+          text: target.text,
           direction: FISH_AUDIO_DIRECTIONS.presenter,
           closingDirection: FISH_AUDIO_DIRECTIONS.presenterClosing,
         })
@@ -195,36 +349,81 @@ export async function POST(request: NextRequest) {
       }
       if (!audio.cached) {
         try {
-          await consumeAiCharacters(ctx.clientId, text.length, 'autodj-presenter')
+          await consumeAiCharacters(ctx.clientId, target.text.length, 'autodj-presenter')
         } catch (err) {
           console.error('[ai/autodj] no se pudo registrar la cuota:', err)
         }
-        remaining = Math.max(0, remaining - text.length)
+        remaining = Math.max(0, remaining - target.text.length)
       }
 
-      const fileName = `ia-${String(i + 1).padStart(4, '0')}-${track.id}.mp3`
+      const fileName = `ia-${String(i + 1).padStart(4, '0')}-${target.track.id}.mp3`
       const file = new File([new Uint8Array(audio.audio)], fileName, { type: 'audio/mpeg' })
       await streamingClient.uploadAiIntro(ctx.clientId, file)
-      generated++
+      generatedIntros++
+    }
+
+    let generatedReviews = 0
+    for (const target of reviewTargets) {
+      try {
+        const audio = await synthesizeReviewWithLimit({
+          clientId: ctx.clientId,
+          text: target.review.text,
+        })
+        if (!audio) {
+          console.warn('[ai/autodj] la reseña superó el tope de 20 s y se descartó', target.trackId)
+          continue
+        }
+        if (!audio.cached) {
+          if (audio.text.length > remaining) {
+            console.warn('[ai/autodj] cuota insuficiente para la reseña', target.trackId)
+            break
+          }
+          try {
+            await consumeAiCharacters(ctx.clientId, audio.text.length, 'ai-review')
+          } catch (err) {
+            console.error('[ai/autodj] no se pudo registrar la cuota de la reseña:', err)
+          }
+          remaining = Math.max(0, remaining - audio.text.length)
+        }
+
+        const file = new File(
+          [new Uint8Array(audio.audio)],
+          reviewFileName(target.index, target.trackId),
+          { type: 'audio/mpeg' }
+        )
+        await streamingClient.uploadAiReview(ctx.clientId, file)
+        generatedReviews++
+      } catch (err) {
+        // Un fallo de TTS o del agente en una reseña no aborta el resto.
+        console.warn('[ai/autodj] no se pudo generar la reseña', target.trackId, err)
+      }
     }
 
     await prisma.radioStream.update({
       where: { clientId: ctx.clientId },
       data: {
-        aiPresenterEnabled: true,
+        aiPresenterEnabled: presenterEnabled,
         aiPresenterEvery: every,
+        ...(body?.reviewsEnabled !== undefined || body?.reviewEvery !== undefined
+          ? { aiReviewEveryTracks: reviewEvery }
+          : {}),
+        ...(body?.reviewStyle !== undefined ? { aiReviewStyle: reviewStyle } : {}),
       },
     })
     await streamingClient.restart(ctx.clientId)
 
     return NextResponse.json({
       ok: true,
-      generated,
+      generated: generatedIntros,
+      generatedIntros,
+      generatedReviews,
       every,
+      reviewEvery,
+      reviewsEnabled: reviewsActive,
       totalCharacters: totalChars,
       remaining,
       playlistTracks: entries.length,
-      message: `AutoDJ preparado: ${generated} intros antes de sus temas.`,
+      message: `AutoDJ preparado: ${generatedIntros} intros y ${generatedReviews} reseñas antes de sus temas.`,
     })
   } catch (err) {
     if (err instanceof StreamingAuthError) {
