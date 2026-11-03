@@ -71,7 +71,7 @@ export function normalizeReviewKey(value: string | null | undefined): string {
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 300)
+    .slice(0, 191)
 }
 
 export function buildReviewKeys(artist: string | null | undefined, title: string | null | undefined): ReviewKeys {

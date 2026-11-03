@@ -586,8 +586,8 @@ model AiReview {
   kind      String   @default("track") // track | artist
   artist    String   @db.VarChar(300) // valor de pantalla
   title     String   @db.VarChar(300) @default("") // vacío cuando es de artista
-  artistKey String   @db.VarChar(300)
-  titleKey  String   @db.VarChar(300) @default("")
+  artistKey String   @db.VarChar(191)
+  titleKey  String   @db.VarChar(191) @default("")
   style     String   @db.VarChar(40)
   text      String   @db.Text
   active    Boolean  @default(true)
