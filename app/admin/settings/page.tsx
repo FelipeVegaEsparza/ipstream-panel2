@@ -5,6 +5,7 @@ import { SystemSettings } from '@/components/admin/SystemSettings'
 import { LoginBackgroundSettings } from '@/components/admin/LoginBackgroundSettings'
 import { ClientSitesSettings } from '@/components/admin/ClientSitesSettings'
 import { VoiceSettings } from '@/components/admin/VoiceSettings'
+import { DeepSeekSettings } from '@/components/admin/DeepSeekSettings'
 import { PanelLogoManager } from '@/components/admin/PanelLogoManager'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getLoginBackground } from '@/lib/login-background'
@@ -46,7 +47,7 @@ export default async function SettingsPage() {
       </div>
 
       <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 bg-card border-border">
+        <TabsList className="grid w-full grid-cols-6 bg-card border-border">
           <TabsTrigger value="system" className="data-[state=active]:bg-brand">
             {t('admin.settings.tabSystem')}
           </TabsTrigger>
@@ -58,6 +59,9 @@ export default async function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="announce" className="data-[state=active]:bg-brand">
             {t('admin.settings.tabAnnounce')}
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="data-[state=active]:bg-brand">
+            {t('admin.settings.tabAi')}
           </TabsTrigger>
           <TabsTrigger value="login" className="data-[state=active]:bg-brand">
             {t('admin.settings.tabLogin')}
@@ -78,6 +82,10 @@ export default async function SettingsPage() {
 
         <TabsContent value="announce" className="space-y-6">
           <VoiceSettings />
+        </TabsContent>
+
+        <TabsContent value="ai" className="space-y-6">
+          <DeepSeekSettings />
         </TabsContent>
 
         <TabsContent value="login" className="space-y-6">

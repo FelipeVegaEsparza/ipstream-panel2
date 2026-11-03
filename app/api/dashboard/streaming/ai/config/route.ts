@@ -64,6 +64,7 @@ async function loadConfig(clientId: string) {
     hasConfiguredPremiumTts(),
   ])
   if (!rs) return null
+  const deepseekAvailable = await isDeepSeekConfigured()
   const voices = provider === 'fish'
     ? fish.voices.map((voice) => ({
         id: voice.id,
@@ -99,9 +100,9 @@ async function loadConfig(clientId: string) {
     reviewEvery: rs.aiReviewEveryTracks,
     reviewStyle: isReviewStyle(rs.aiReviewStyle) ? rs.aiReviewStyle : DEFAULT_REVIEW_STYLE,
     reviewAdminEnabled: rs.aiReviewAdminEnabled,
-    reviewsAvailable: isDeepSeekConfigured() && premiumTts,
-    reviewsUnavailableReason: !isDeepSeekConfigured()
-      ? 'deepseek'
+    reviewsAvailable: deepseekAvailable && premiumTts,
+    reviewsUnavailableReason: !deepseekAvailable
+      ? 'ai'
       : !premiumTts
         ? 'tts'
         : null,

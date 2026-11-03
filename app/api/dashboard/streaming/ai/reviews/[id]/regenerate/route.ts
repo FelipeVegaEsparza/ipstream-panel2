@@ -28,9 +28,9 @@ export async function POST(
         { status: 403 }
       )
     }
-    if (!isDeepSeekConfigured()) {
+    if (!(await isDeepSeekConfigured())) {
       return NextResponse.json(
-        { error: 'deepseek_unavailable', message: 'Falta configurar DeepSeek para generar reseñas.' },
+        { error: 'ai_unavailable', message: 'La generación de reseñas no está configurada en el panel.' },
         { status: 503 }
       )
     }

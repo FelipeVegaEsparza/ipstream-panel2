@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const title = typeof body?.title === 'string' ? body.title.trim() : ''
     if (!artist || !title) return unavailable('missing_metadata')
 
-    if (!isDeepSeekConfigured()) return unavailable('deepseek_unavailable')
+    if (!(await isDeepSeekConfigured())) return unavailable('ai_unavailable')
 
     // Si la reseña ya existe pero el cliente la desactivó, no se emite
     // (tampoco se cae al respaldo del artista).

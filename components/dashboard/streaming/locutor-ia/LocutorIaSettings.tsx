@@ -35,7 +35,7 @@ interface Config {
   reviewStyle: string
   reviewAdminEnabled: boolean
   reviewsAvailable: boolean
-  reviewsUnavailableReason: 'deepseek' | 'tts' | null
+  reviewsUnavailableReason: 'ai' | 'tts' | null
 }
 
 interface ReviewItem {
@@ -121,7 +121,7 @@ export function LocutorIaSettings() {
   const [reviewStyle, setReviewStyle] = useState('dato-curioso')
   const [reviewAdminEnabled, setReviewAdminEnabled] = useState(true)
   const [reviewsAvailable, setReviewsAvailable] = useState(true)
-  const [reviewsUnavailableReason, setReviewsUnavailableReason] = useState<'deepseek' | 'tts' | null>(null)
+  const [reviewsUnavailableReason, setReviewsUnavailableReason] = useState<'ai' | 'tts' | null>(null)
   const [reviews, setReviews] = useState<ReviewItem[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(false)
   const [reviewActionId, setReviewActionId] = useState<string | null>(null)
@@ -569,8 +569,8 @@ export function LocutorIaSettings() {
           </p>
         ) : !reviewsAvailable ? (
           <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-            {reviewsUnavailableReason === 'deepseek'
-              ? t('streaming.locutor.reviewsUnavailableDeepseek')
+            {reviewsUnavailableReason === 'ai'
+              ? t('streaming.locutor.reviewsUnavailableAi')
               : t('streaming.locutor.reviewsUnavailableTts')}
           </p>
         ) : (

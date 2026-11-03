@@ -1,3 +1,5 @@
+import { getDeepSeekApiKey } from '@/lib/deepseek-config'
+
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions'
 const DEFAULT_MODEL = 'deepseek-chat'
 const REQUEST_TIMEOUT_MS = 60_000
@@ -28,16 +30,16 @@ interface DeepSeekResponse {
   error?: { message?: string }
 }
 
-function getApiKey(): string {
-  const key = process.env.DEEPSEEK_API_KEY
+async function getApiKey(): Promise<string> {
+  const key = await getDeepSeekApiKey()
   if (!key) {
-    throw new Error('DEEPSEEK_API_KEY no está configurada en las variables de entorno')
+    throw new Error('La IA de texto no está configurada en el panel.')
   }
   return key
 }
 
-export function isDeepSeekConfigured(): boolean {
-  return Boolean(process.env.DEEPSEEK_API_KEY)
+export async function isDeepSeekConfigured(): Promise<boolean> {
+  return Boolean(await getDeepSeekApiKey())
 }
 
 function buildSystemPrompt(): string {
@@ -155,12 +157,13 @@ function validateItem(raw: unknown): DraftNews | null {
 async function callDeepSeek(systemPrompt: string, userPrompt: string): Promise<string | null> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  const apiKey = await getApiKey()
   try {
     const res = await fetch(DEEPSEEK_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getApiKey()}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: process.env.DEEPSEEK_MODEL || DEFAULT_MODEL,

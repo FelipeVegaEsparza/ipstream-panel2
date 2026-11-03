@@ -74,6 +74,10 @@ vi.mock('@/lib/premium-tts', () => ({
   hasConfiguredPremiumTts: mocks.hasConfiguredPremiumTts,
 }))
 
+vi.mock('@/lib/deepseek', () => ({
+  isDeepSeekConfigured: vi.fn().mockResolvedValue(true),
+}))
+
 import { GET as getConfig, PUT as saveConfig } from '@/app/api/dashboard/streaming/ai/config/route'
 
 function jsonRequest(body: unknown) {

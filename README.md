@@ -622,9 +622,12 @@ histórico o biografía del artista.
 - El audio se sintetiza con la voz premium y se limita a **20 segundos**. Si se
   pasa, se recorta el texto en el último punto y se regenera una vez; si sigue
   pasándose, la reseña se descarta.
-- **Solo el audio consume cuota**: el texto de DeepSeek no descuenta caracteres y
-  un audio ya cacheado tampoco. La sección queda deshabilitada sin
-  `DEEPSEEK_API_KEY` o sin proveedor de voz premium.
+- **Solo el audio consume cuota**: el texto no descuenta caracteres y un audio ya
+  cacheado tampoco. La sección queda deshabilitada si no hay clave de texto o
+  proveedor de voz premium. La clave se configura en
+  **Admin → Configuración → IA** (encriptada en `app_config`); `DEEPSEEK_API_KEY`
+  queda como fallback por entorno. En el panel del cliente no se nombra al
+  proveedor de texto.
 - **Aplicar al AutoDJ** genera las intros y las reseñas en la misma pasada y las
   ancla a su tema: el orden es `[presentación][reseña][tema]`. Si la playlist se
   reordena o cambia la frecuencia/estilo, hay que volver a aplicar. Las reseñas

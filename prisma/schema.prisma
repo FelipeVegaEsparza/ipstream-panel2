@@ -704,6 +704,9 @@ model AppConfig {
   fishAudioDirection   String? @db.VarChar(500) // dirección de locución para s2.1-pro / Drama 3
   ttsCacheEnabled      Boolean @default(true) // cache de audios generados (app_uploads)
 
+  // IA de texto (reseñas). La API key se guarda encriptada.
+  deepseekApiKeyEnc    String? @db.Text // API key del proveedor de texto (AES-256-GCM)
+
   @@map("app_config")
 }
 

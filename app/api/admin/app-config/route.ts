@@ -5,6 +5,7 @@ import { encrypt } from '@/lib/encryption'
 import { invalidateClientSitesConfig } from '@/lib/client-sites-config'
 import { getElevenLabsConfig, invalidateElevenLabsConfig } from '@/lib/elevenlabs-config'
 import { getFishAudioConfig, invalidateFishAudioConfig, parseFishVoiceCatalog } from '@/lib/fish-audio-config'
+import { getDeepSeekConfig, invalidateDeepSeekConfig } from '@/lib/deepseek-config'
 import { validFishAudioModel } from '@/lib/fish-audio-models'
 import { ELEVENLABS_MODELS } from '@/lib/elevenlabs-models'
 import { parseVoiceCatalog } from '@/lib/elevenlabs-voices'
@@ -24,9 +25,10 @@ export async function GET() {
       })
     }
 
-    const [eleven, fish] = await Promise.all([
+    const [eleven, fish, deepseek] = await Promise.all([
       getElevenLabsConfig(),
       getFishAudioConfig(),
+      getDeepSeekConfig(),
     ])
 
     // Config de sitios: valor efectivo (DB o env). El token nunca se devuelve.
@@ -56,6 +58,8 @@ export async function GET() {
       fishAudioReferenceId: fish.referenceId,
       fishAudioVoices: fish.voices,
       fishAudioDirection: fish.direction,
+      deepseekKeySet: deepseek.configured,
+      deepseekKeySource: deepseek.source,
     })
   } catch (error) {
     console.error('Error getting app config:', error)
@@ -99,6 +103,8 @@ export async function PUT(request: NextRequest) {
       fishAudioReferenceId,
       fishAudioVoices,
       fishAudioDirection,
+      deepseekApiKey,
+      clearDeepSeekApiKey,
     } = body
 
     let trialDaysValue: number | undefined
@@ -233,6 +239,14 @@ export async function PUT(request: NextRequest) {
       if (raw) fishKeyUpdate = { fishAudioApiKeyEnc: encrypt(raw) }
     }
 
+    let deepseekKeyUpdate: { deepseekApiKeyEnc: string | null } | undefined
+    if (clearDeepSeekApiKey === true) {
+      deepseekKeyUpdate = { deepseekApiKeyEnc: null }
+    } else if (deepseekApiKey !== undefined) {
+      const raw = typeof deepseekApiKey === 'string' ? deepseekApiKey.trim() : ''
+      if (raw) deepseekKeyUpdate = { deepseekApiKeyEnc: encrypt(raw) }
+    }
+
     let fishVoicesValue: string | undefined
     if (fishAudioVoices !== undefined) {
       if (!Array.isArray(fishAudioVoices)) {
@@ -252,6 +266,7 @@ export async function PUT(request: NextRequest) {
       ...(fishAudioDirection !== undefined
         ? { fishAudioDirection: String(fishAudioDirection).trim().slice(0, 500) || null }
         : {}),
+      ...(deepseekKeyUpdate || {}),
     }
 
     const sitesData = {
@@ -292,8 +307,12 @@ export async function PUT(request: NextRequest) {
     invalidateClientSitesConfig()
     invalidateElevenLabsConfig()
     invalidateFishAudioConfig()
-    const eleven = await getElevenLabsConfig()
-    const fish = await getFishAudioConfig()
+    invalidateDeepSeekConfig()
+    const [eleven, fish, deepseek] = await Promise.all([
+      getElevenLabsConfig(),
+      getFishAudioConfig(),
+      getDeepSeekConfig(),
+    ])
 
     return NextResponse.json({
       enableGenericNews: config.enableGenericNews,
@@ -321,6 +340,8 @@ export async function PUT(request: NextRequest) {
       fishAudioReferenceId: fish.referenceId,
       fishAudioVoices: fish.voices,
       fishAudioDirection: fish.direction,
+      deepseekKeySet: deepseek.configured,
+      deepseekKeySource: deepseek.source,
     })
   } catch (error) {
     console.error('Error updating app config:', error)
