@@ -9,7 +9,7 @@ ALTER TABLE `radio_streams`
 CREATE TABLE `ai_reviews` (
   `id` VARCHAR(191) NOT NULL,
   `clientId` VARCHAR(191) NOT NULL,
-  `kind` VARCHAR(191) NOT NULL DEFAULT 'track',
+  `kind` VARCHAR(20) NOT NULL DEFAULT 'track',
   `artist` VARCHAR(300) NOT NULL,
   `title` VARCHAR(300) NOT NULL DEFAULT '',
   `artistKey` VARCHAR(191) NOT NULL,

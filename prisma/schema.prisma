@@ -583,7 +583,7 @@ model AiUsageEvent {
 model AiReview {
   id        String   @id @default(cuid())
   clientId  String
-  kind      String   @default("track") // track | artist
+  kind      String   @default("track") @db.VarChar(20) // track | artist
   artist    String   @db.VarChar(300) // valor de pantalla
   title     String   @db.VarChar(300) @default("") // vacío cuando es de artista
   artistKey String   @db.VarChar(191)
