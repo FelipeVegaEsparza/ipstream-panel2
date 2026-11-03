@@ -133,6 +133,16 @@ export async function PATCH(
       await replaceSpecialTracks(existing.id, validTracks)
     }
 
+    const activeChanged = body?.active !== undefined && active !== existing.active
+    if (activeChanged) {
+      try {
+        await streamingClient.regenerateM3u(ctx.clientId)
+        await streamingClient.restart(ctx.clientId)
+      } catch (err) {
+        console.warn('[specials PATCH] no se pudo reflejar el estado en el AutoDJ', err)
+      }
+    }
+
     const updated = await prisma.radioSpecial.findUnique({
       where: { id: existing.id },
       include: SPECIAL_INCLUDE,
