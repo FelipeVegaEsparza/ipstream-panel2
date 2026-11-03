@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
   radioStream: {
     findUnique: vi.fn(),
   },
+  client: {
+    findUnique: vi.fn(),
+  },
   callDeepSeekJson: vi.fn(),
   isDeepSeekConfigured: vi.fn(),
   synthesizePremiumTts: vi.fn(),
@@ -25,6 +28,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     aiReview: mocks.aiReview,
     radioStream: mocks.radioStream,
+    client: mocks.client,
   },
 }))
 
@@ -98,6 +102,10 @@ beforeEach(() => {
     aiReviewEveryTracks: 5,
     aiReviewStyle: 'dato-curioso',
     aiReviewAdminEnabled: true,
+  })
+  mocks.client.findUnique.mockResolvedValue({
+    name: 'Radio',
+    basicData: { projectName: 'Radio' },
   })
   mocks.isDeepSeekConfigured.mockReturnValue(true)
   mocks.hasConfiguredPremiumTts.mockResolvedValue(true)
@@ -208,7 +216,9 @@ describe('lookup de reseñas para la consola', () => {
     const data = await response.json()
 
     expect(response.status).toBe(200)
-    expect(data).toMatchObject({ available: true, review: { id: 'rev-1', text: REVIEW_TEXT } })
+    expect(data).toMatchObject({ available: true, review: { id: 'rev-1' } })
+    expect(data.review.text).toContain(REVIEW_TEXT)
+    expect(data.review.text.startsWith('Radio.')).toBe(true)
     expect(mocks.callDeepSeekJson).not.toHaveBeenCalled()
   })
 
@@ -244,10 +254,12 @@ describe('lookup de reseñas para la consola', () => {
     expect(mocks.aiReview.create).toHaveBeenCalled()
   })
 
-  it('no emite nada si falta artista o título', async () => {
-    const response = await lookupReview(jsonRequest({ artist: '', title: 'Tema' }))
+  it('usa una pausa de emisora si faltan artista y título', async () => {
+    const response = await lookupReview(jsonRequest({ artist: '', title: '', seed: 'local-1' }))
+    const data = await response.json()
 
-    expect(await response.json()).toMatchObject({ available: false, reason: 'missing_metadata' })
+    expect(data).toMatchObject({ available: true, review: { kind: 'station' } })
+    expect(data.review.text.startsWith('Radio.')).toBe(true)
     expect(mocks.aiReview.findUnique).not.toHaveBeenCalled()
   })
 

@@ -15,11 +15,11 @@ export function normalizeReviewEvery(value: unknown): number {
   return Math.min(20, Math.max(2, Math.round(n)))
 }
 
-/** Solo temas reales, con artista y título, llevan reseña. */
+/** Solo temas musicales (no spots/jingles/anuncios) llevan reseña. */
 export function isReviewEligibleTrack(track: ReviewEligibleTrack | null | undefined): boolean {
   if (!track) return false
   if (track.kind === 'spot' || track.kind === 'jingle' || track.kind === 'announcement') return false
-  return Boolean((track.artist || '').trim() && (track.title || '').trim())
+  return true
 }
 
 export function shouldPlayReview(input: {

@@ -47,6 +47,11 @@ vi.mock('@/lib/ai-reviews', () => ({
   DEFAULT_REVIEW_STYLE: 'dato-curioso',
   isReviewStyle: (value: unknown) =>
     ['dato-curioso', 'detras-de-la-cancion', 'contexto-historico', 'biografia'].includes(String(value)),
+  buildReviewSpeech: (station: string, text: string) => `${station}. ${text}`,
+  buildStationBreak: () => 'Seguimos con más música.',
+  isUsableArtist: (value: unknown) => Boolean(String(value || '').trim().length > 1),
+  isUsableTrackMetadata: (artist: unknown, title: unknown) =>
+    Boolean(String(artist || '').trim() && String(title || '').trim()),
   getReviewRecord: mocks.getReviewRecord,
   getArtistReviewRecord: mocks.getArtistReviewRecord,
   getOrCreateReview: mocks.getOrCreateReview,

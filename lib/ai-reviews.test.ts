@@ -35,9 +35,14 @@ import {
   MAX_REVIEW_SECONDS,
   buildReviewKeys,
   buildReviewPrompt,
+  buildReviewSpeech,
+  buildStationBreak,
   clampReviewText,
   containsForbiddenContent,
   generateReviewText,
+  isUsableArtist,
+  isUsableTitle,
+  isUsableTrackMetadata,
   normalizeReviewKey,
   parseReviewResponse,
   synthesizeReviewWithLimit,
@@ -216,5 +221,50 @@ describe('audio con tope de 20 segundos', () => {
     })
 
     expect(result).toBeNull()
+  })
+})
+
+describe('nombre de la emisora y metadatos', () => {
+  it('antepone siempre el nombre de la radio al texto', () => {
+    expect(buildReviewSpeech('Radio CasterFly', 'Un dato sobre el tema.'))
+      .toBe('Radio CasterFly. Un dato sobre el tema.')
+    expect(buildReviewSpeech('radio casterfly', 'un dato sobre el tema.'))
+      .toBe('Radio casterfly. Un dato sobre el tema.')
+  })
+
+  it('no duplica la emisora si el texto ya empieza con su nombre', () => {
+    expect(buildReviewSpeech('Radio CasterFly', 'Radio CasterFly. Un dato.'))
+      .toBe('Radio CasterFly. Un dato.')
+  })
+
+  it('usa la radio por defecto si el nombre viene vacío', () => {
+    expect(buildReviewSpeech('', 'Un dato.')).toBe('La radio. Un dato.')
+  })
+
+  it('detecta metadatos poco confiables', () => {
+    expect(isUsableArtist('Los Prisioneros')).toBe(true)
+    expect(isUsableArtist('Unknown Artist')).toBe(false)
+    expect(isUsableArtist('Artista desconocido')).toBe(false)
+    expect(isUsableArtist('12345')).toBe(false)
+    expect(isUsableArtist('')).toBe(false)
+
+    expect(isUsableTitle('El baile de los que sobran', 'Los Prisioneros')).toBe(true)
+    expect(isUsableTitle('Track 01')).toBe(false)
+    expect(isUsableTitle('Sin título')).toBe(false)
+    expect(isUsableTitle('Los Prisioneros', 'Los Prisioneros')).toBe(false)
+    expect(isUsableTitle('cancion.mp3')).toBe(false)
+  })
+
+  it('exige artista y título utilizables para reseñar un tema', () => {
+    expect(isUsableTrackMetadata('Soda Stereo', 'De Música Ligera')).toBe(true)
+    expect(isUsableTrackMetadata('Unknown', 'De Música Ligera')).toBe(false)
+    expect(isUsableTrackMetadata('Soda Stereo', 'Track 03')).toBe(false)
+  })
+
+  it('genera una pausa de emisora estable y que arranca con la radio', () => {
+    const first = buildStationBreak('track-1')
+    expect(buildStationBreak('track-1')).toBe(first)
+    const speech = buildReviewSpeech('Radio CasterFly', first)
+    expect(speech.startsWith('Radio CasterFly.')).toBe(true)
   })
 })

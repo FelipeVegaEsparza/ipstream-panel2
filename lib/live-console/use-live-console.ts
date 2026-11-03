@@ -1070,11 +1070,11 @@ export function useLiveConsole(
 
   // Reseñas IA: texto desde el banco (lookup) y audio con la voz premium.
   const prepareReview = useCallback(async (track: LocalTrack | null) => {
-    if (!track?.artist || !track.title) return null
+    if (!track) return null
     const res = await fetch('/api/dashboard/streaming/ai/reviews/lookup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ artist: track.artist, title: track.title }),
+      body: JSON.stringify({ artist: track.artist || '', title: track.title || '', seed: track.id }),
     })
     if (!res.ok) return null
     const data = await res.json().catch(() => ({}))

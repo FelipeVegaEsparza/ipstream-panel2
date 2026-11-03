@@ -16,10 +16,10 @@ describe('frecuencia de reseñas en la consola', () => {
     expect(normalizeReviewEvery(undefined)).toBe(0)
   })
 
-  it('solo acepta temas reales con artista y título', () => {
+  it('acepta temas musicales aunque falten metadatos', () => {
     expect(isReviewEligibleTrack({ artist: 'Artista', title: 'Tema' })).toBe(true)
-    expect(isReviewEligibleTrack({ artist: '', title: 'Tema' })).toBe(false)
-    expect(isReviewEligibleTrack({ artist: 'Artista', title: '  ' })).toBe(false)
+    expect(isReviewEligibleTrack({ artist: '', title: 'Tema' })).toBe(true)
+    expect(isReviewEligibleTrack({ artist: 'Artista', title: '  ' })).toBe(true)
     expect(isReviewEligibleTrack({ artist: 'A', title: 'B', kind: 'spot' })).toBe(false)
     expect(isReviewEligibleTrack({ artist: 'A', title: 'B', kind: 'jingle' })).toBe(false)
     expect(isReviewEligibleTrack(null)).toBe(false)

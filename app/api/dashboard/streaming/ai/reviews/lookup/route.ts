@@ -7,25 +7,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import {
+  buildReviewSpeech,
+  buildStationBreak,
   getArtistReviewRecord,
   getClientReviewConfig,
+  getClientStationName,
   getOrCreateArtistReview,
   getOrCreateReview,
   getReviewRecord,
+  isUsableArtist,
+  isUsableTrackMetadata,
   type ReviewRecord,
 } from '@/lib/ai-reviews'
 import { isDeepSeekConfigured } from '@/lib/deepseek'
 
 export const dynamic = 'force-dynamic'
 
-function toDto(review: ReviewRecord) {
+function toDto(review: ReviewRecord, station: string) {
   return {
     id: review.id,
     kind: review.kind,
     artist: review.artist,
     title: review.title,
     style: review.style,
-    text: review.text,
+    text: buildReviewSpeech(station, review.text),
+  }
+}
+
+function stationBreakDto(station: string, seed: string, style: string) {
+  return {
+    id: 'station-break',
+    kind: 'station',
+    artist: '',
+    title: '',
+    style,
+    text: buildReviewSpeech(station, buildStationBreak(seed)),
   }
 }
 
@@ -47,9 +63,40 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}))
     const artist = typeof body?.artist === 'string' ? body.artist.trim() : ''
     const title = typeof body?.title === 'string' ? body.title.trim() : ''
-    if (!artist || !title) return unavailable('missing_metadata')
+    const seed = typeof body?.seed === 'string' ? body.seed.trim().slice(0, 191) : ''
 
     if (!(await isDeepSeekConfigured())) return unavailable('ai_unavailable')
+
+    const station = await getClientStationName(ctx.clientId)
+
+    if (!isUsableTrackMetadata(artist, title)) {
+      // Metadatos poco confiables: si hay artista, bio corta; si no, pausa
+      // de emisora. Nunca se inventa un dato sobre un tema no identificado.
+      if (isUsableArtist(artist)) {
+        const existingArtist = await getArtistReviewRecord({
+          clientId: ctx.clientId,
+          artist,
+          style: config.style,
+        })
+        if (existingArtist && !existingArtist.active) return unavailable('review_disabled')
+        const artistReview = existingArtist ?? await getOrCreateArtistReview({
+          clientId: ctx.clientId,
+          artist,
+          style: config.style,
+          hasIntro: true,
+        })
+        if (artistReview) {
+          return NextResponse.json({
+            available: true,
+            review: toDto(artistReview, station),
+          })
+        }
+      }
+      return NextResponse.json({
+        available: true,
+        review: stationBreakDto(station, seed || `${artist}-${title}`, config.style),
+      })
+    }
 
     // Si la reseña ya existe pero el cliente la desactivó, no se emite
     // (tampoco se cae al respaldo del artista).
@@ -61,7 +108,7 @@ export async function POST(request: NextRequest) {
     })
     if (existing) {
       if (!existing.active) return unavailable('review_disabled')
-      return NextResponse.json({ available: true, review: toDto(existing) })
+      return NextResponse.json({ available: true, review: toDto(existing, station) })
     }
 
     const trackReview = await getOrCreateReview({
@@ -72,7 +119,7 @@ export async function POST(request: NextRequest) {
       hasIntro: true,
     })
     if (trackReview) {
-      return NextResponse.json({ available: true, review: toDto(trackReview) })
+      return NextResponse.json({ available: true, review: toDto(trackReview, station) })
     }
 
     const existingArtist = await getArtistReviewRecord({
@@ -89,7 +136,7 @@ export async function POST(request: NextRequest) {
       hasIntro: true,
     })
     if (artistReview) {
-      return NextResponse.json({ available: true, review: toDto(artistReview) })
+      return NextResponse.json({ available: true, review: toDto(artistReview, station) })
     }
 
     return unavailable('not_generated')

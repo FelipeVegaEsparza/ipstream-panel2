@@ -15,11 +15,15 @@ import { buildPresenterText, normalizePhrases } from '@/lib/live-console/present
 import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
 import {
   DEFAULT_REVIEW_STYLE,
+  buildReviewSpeech,
+  buildStationBreak,
   getArtistReviewRecord,
   getOrCreateArtistReview,
   getOrCreateReview,
   getReviewRecord,
   isReviewStyle,
+  isUsableArtist,
+  isUsableTrackMetadata,
   synthesizeReviewWithLimit,
   type ReviewRecord,
 } from '@/lib/ai-reviews'
@@ -212,15 +216,48 @@ export async function POST(request: NextRequest) {
     const reviewTargets: Array<{
       index: number
       trackId: string
-      review: ReviewRecord
+      text: string
     }> = []
     for (const index of reviewIndices) {
       const track = entries[index].track
       const artist = track.artist || ''
       const title = track.title || ''
-      if (!artist || !title) continue
+      const hasIntro = introIndexSet.has(index)
 
       try {
+        if (!isUsableTrackMetadata(artist, title)) {
+          // Metadatos poco confiables: si hay artista, una bio corta; si no,
+          // una pausa de emisora (siempre empieza con el nombre de la radio).
+          if (isUsableArtist(artist)) {
+            const existingArtist = await getArtistReviewRecord({
+              clientId: ctx.clientId,
+              artist,
+              style: reviewStyle,
+            })
+            if (existingArtist && !existingArtist.active) continue
+            const artistReview = existingArtist ?? await getOrCreateArtistReview({
+              clientId: ctx.clientId,
+              artist,
+              style: reviewStyle,
+              hasIntro,
+            })
+            if (artistReview) {
+              reviewTargets.push({
+                index,
+                trackId: track.id,
+                text: buildReviewSpeech(station, artistReview.text),
+              })
+              continue
+            }
+          }
+          reviewTargets.push({
+            index,
+            trackId: track.id,
+            text: buildReviewSpeech(station, buildStationBreak(`${track.id}-${index}`)),
+          })
+          continue
+        }
+
         // Una reseña desactivada por el cliente no se emite ni cae al
         // respaldo de biografía.
         const existing = await getReviewRecord({
@@ -238,10 +275,10 @@ export async function POST(request: NextRequest) {
             artist,
             title,
             style: reviewStyle,
-            hasIntro: introIndexSet.has(index),
+            hasIntro,
           })
         }
-        if (!review) {
+        if (!review && isUsableArtist(artist)) {
           const existingArtist = await getArtistReviewRecord({
             clientId: ctx.clientId,
             artist,
@@ -252,21 +289,25 @@ export async function POST(request: NextRequest) {
             clientId: ctx.clientId,
             artist,
             style: reviewStyle,
-            hasIntro: introIndexSet.has(index),
+            hasIntro,
           })
         }
         if (!review) continue
 
-        reviewTargets.push({ index, trackId: track.id, review })
+        reviewTargets.push({
+          index,
+          trackId: track.id,
+          text: buildReviewSpeech(station, review.text),
+        })
       } catch (err) {
-        // Un fallo de DeepSeek no aborta la preparación del AutoDJ.
+        // Un fallo del generador de texto no aborta la preparación del AutoDJ.
         console.warn('[ai/autodj] no se pudo preparar la reseña del tema', track.id, err)
       }
     }
 
     const totalChars =
       introTargets.reduce((sum, target) => sum + target.text.length, 0) +
-      reviewTargets.reduce((sum, target) => sum + target.review.text.length, 0)
+      reviewTargets.reduce((sum, target) => sum + target.text.length, 0)
     if (totalChars > access.remaining) {
       return NextResponse.json(
         {
@@ -367,7 +408,7 @@ export async function POST(request: NextRequest) {
       try {
         const audio = await synthesizeReviewWithLimit({
           clientId: ctx.clientId,
-          text: target.review.text,
+          text: target.text,
         })
         if (!audio) {
           console.warn('[ai/autodj] la reseña superó el tope de 20 s y se descartó', target.trackId)

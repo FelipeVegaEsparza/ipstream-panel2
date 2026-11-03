@@ -9,7 +9,7 @@ import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth
 import { prisma } from '@/lib/prisma'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
 import { hasConfiguredPremiumTts } from '@/lib/premium-tts'
-import { synthesizeReviewWithLimit } from '@/lib/ai-reviews'
+import { synthesizeReviewWithLimit, buildReviewSpeech, getClientStationName } from '@/lib/ai-reviews'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,9 +42,10 @@ export async function GET(
       )
     }
 
+    const station = await getClientStationName(ctx.clientId)
     const result = await synthesizeReviewWithLimit({
       clientId: ctx.clientId,
-      text: review.text,
+      text: buildReviewSpeech(station, review.text),
     })
     if (!result) {
       return NextResponse.json(

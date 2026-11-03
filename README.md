@@ -628,6 +628,11 @@ histórico o biografía del artista.
   **Admin → Configuración → IA** (encriptada en `app_config`); `DEEPSEEK_API_KEY`
   queda como fallback por entorno. En el panel del cliente no se nombra al
   proveedor de texto.
+- Cada reseña hablada **empieza con el nombre de la emisora** y luego el texto
+  generado. Si el tema no tiene artista/título confiables (vacíos, “Unknown”,
+  “Track 01”, etc.), en vez de inventar un dato se emite una **pausa de
+  emisora** corta; si hay artista válido pero falta el título, se usa una bio
+  corta del artista.
 - **Aplicar al AutoDJ** genera las intros y las reseñas en la misma pasada y las
   ancla a su tema: el orden es `[presentación][reseña][tema]`. Si la playlist se
   reordena o cambia la frecuencia/estilo, hay que volver a aplicar. Las reseñas

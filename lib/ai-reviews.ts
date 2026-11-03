@@ -86,6 +86,127 @@ export function buildReviewKeys(artist: string | null | undefined, title: string
 }
 
 // =====================================================
+// Calidad de metadatos y respaldo de emisora
+// =====================================================
+
+const PLACEHOLDER_METADATA = new Set([
+  'unknown',
+  'unknown artist',
+  'unknown title',
+  'artista desconocido',
+  'artista desconocida',
+  'desconocido',
+  'desconocida',
+  'various artists',
+  'varios artistas',
+  'various',
+  'va',
+  'vv aa',
+  'sin artista',
+  'no artist',
+  'artista',
+  'artist',
+  'audio',
+  'track',
+  'pista',
+  'cancion',
+  'song',
+  'untitled',
+  'sin titulo',
+  'title',
+  'titulo',
+  'nombre',
+  'name',
+  'mp3',
+  'music',
+  'musica',
+  'demo',
+  'test',
+  'prueba',
+])
+
+function hasLetter(value: string): boolean {
+  return /[a-z]/i.test(value)
+}
+
+function looksLikeTrackNumber(key: string): boolean {
+  return /^\d+$/.test(key) || /^(?:track|pista|audio|cancion)\s*\d+$/.test(key)
+}
+
+/** ¿El artista parece un nombre real y no un placeholder? */
+export function isUsableArtist(value: string | null | undefined): boolean {
+  const key = normalizeReviewKey(value)
+  if (!key || key.length < 2 || PLACEHOLDER_METADATA.has(key)) return false
+  if (!hasLetter(key) || looksLikeTrackNumber(key)) return false
+  return true
+}
+
+/** ¿El título parece un nombre real y no un placeholder o el mismo artista? */
+export function isUsableTitle(
+  value: string | null | undefined,
+  artist?: string | null
+): boolean {
+  const key = normalizeReviewKey(value)
+  if (!key || key.length < 2 || PLACEHOLDER_METADATA.has(key)) return false
+  if (!hasLetter(key) || looksLikeTrackNumber(key)) return false
+  if (key.endsWith(' mp3') || key.endsWith(' wav') || key.endsWith(' m4a')) return false
+  const artistKey = normalizeReviewKey(artist)
+  if (artistKey && key === artistKey) return false
+  return true
+}
+
+export function isUsableTrackMetadata(
+  artist: string | null | undefined,
+  title: string | null | undefined
+): boolean {
+  return isUsableArtist(artist) && isUsableTitle(title, artist)
+}
+
+const STATION_BREAKS = [
+  'Seguimos juntos con más música.',
+  'La música no se detiene.',
+  'Un momento para respirar y seguir con la mejor selección.',
+  'Más temas para acompañarte.',
+  'Seguimos con la música que te gusta.',
+  'Un breve respiro y volvemos con más canciones.',
+  'La mejor compañía para seguir adelante.',
+  'Aquí seguimos, con música para todo el día.',
+]
+
+function seedIndex(seed: string | null | undefined, length: number): number {
+  const value = (seed || '').trim()
+  if (!value) return 0
+  let hash = 0
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash) % length
+}
+
+/** Frase segura para cuando el tema no tiene metadatos confiables. */
+export function buildStationBreak(seed?: string | null): string {
+  return STATION_BREAKS[seedIndex(seed, STATION_BREAKS.length)]
+}
+
+/**
+ * La reseña hablada siempre arranca con el nombre de la emisora y luego el
+ * texto. Si el texto ya empieza con la emisora, no se duplica.
+ */
+export function buildReviewSpeech(
+  stationName: string | null | undefined,
+  text: string | null | undefined
+): string {
+  const rawStation = (stationName || '').replace(/\s+/g, ' ').trim() || 'la radio'
+  const station = rawStation.replace(/[.:;,]+$/, '')
+  const display = station.charAt(0).toUpperCase() + station.slice(1)
+  const body = (text || '').replace(/\s+/g, ' ').trim()
+  if (!body) return display
+  if (body.toLowerCase().startsWith(display.toLowerCase())) return body
+  const sentence = body.charAt(0).toUpperCase() + body.slice(1)
+  return `${display}. ${sentence}`
+}
+
+// =====================================================
 // Política de contenido
 // =====================================================
 
@@ -165,6 +286,7 @@ export function buildReviewPrompt(
     '- PROHIBIDO: años o fechas exactas, posiciones en listas, premios, cifras de venta, anécdotas puntuales, muerte, escándalos, política, religión, vida privada.',
     '- Sin markdown, sin comillas tipográficas, sin emojis.',
     '- No repitas el nombre del tema más de una vez.',
+    '- No empieces con el nombre de la radio: el panel lo agrega antes del texto.',
   ].join('\n')
 
   const user = [
@@ -280,6 +402,7 @@ export async function getOrCreateReview(input: {
   style: ReviewStyle
   hasIntro: boolean
 }): Promise<ReviewRecord | null> {
+  if (!isUsableTrackMetadata(input.artist, input.title)) return null
   const keys = buildReviewKeys(input.artist, input.title)
   if (!keys.artistKey || !keys.titleKey) return null
 
@@ -313,6 +436,7 @@ export async function getOrCreateArtistReview(input: {
   style: ReviewStyle
   hasIntro: boolean
 }): Promise<ReviewRecord | null> {
+  if (!isUsableArtist(input.artist)) return null
   const keys = buildReviewKeys(input.artist, '')
   if (!keys.artistKey) return null
 
@@ -389,6 +513,14 @@ export interface ClientReviewConfig {
   everyTracks: number
   style: ReviewStyle
   adminEnabled: boolean
+}
+
+export async function getClientStationName(clientId: string): Promise<string> {
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    select: { name: true, basicData: { select: { projectName: true } } },
+  })
+  return (client?.basicData?.projectName || client?.name || 'la radio').trim() || 'la radio'
 }
 
 export async function getClientReviewConfig(clientId: string): Promise<ClientReviewConfig | null> {

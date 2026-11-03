@@ -626,6 +626,7 @@ export function LocutorIaSettings() {
               <p>{t('streaming.locutor.reviewsStyleNote')}</p>
               <p>{t('streaming.locutor.reviewsMax20')} {t('streaming.locutor.reviewsQuotaNote')}</p>
               <p>{t('streaming.locutor.reviewsApplyNote')}</p>
+              <p>{t('streaming.locutor.reviewsFallbackNote')}</p>
             </div>
 
             <div className="space-y-2">
