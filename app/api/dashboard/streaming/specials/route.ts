@@ -9,7 +9,6 @@ import { getAiLiveAccess } from '@/lib/ai-live'
 import { isDeepSeekConfigured } from '@/lib/deepseek'
 import { hasConfiguredPremiumTts } from '@/lib/premium-tts'
 import {
-  ensureStationPrefix,
   findSpecialCollision,
   getClientStationName,
   getClientTimezone,
@@ -79,11 +78,10 @@ export async function POST(request: NextRequest) {
     const description = typeof body?.description === 'string'
       ? body.description.trim().slice(0, MAX_DESCRIPTION)
       : ''
-    const station = await getClientStationName(ctx.clientId)
     const introRaw = typeof body?.introText === 'string' ? body.introText.trim().slice(0, MAX_TEXT) : ''
     const closingRaw = typeof body?.closingText === 'string' ? body.closingText.trim().slice(0, MAX_TEXT) : ''
-    const introText = introRaw ? ensureStationPrefix(station, introRaw) : ''
-    const closingText = closingRaw ? ensureStationPrefix(station, closingRaw) : ''
+    const introText = introRaw
+    const closingText = closingRaw
     const everyTracks = Number(body?.everyTracks)
     const startDate = typeof body?.startDate === 'string' && body.startDate.trim() ? body.startDate.trim() : null
     const endDate = typeof body?.endDate === 'string' && body.endDate.trim() ? body.endDate.trim() : null

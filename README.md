@@ -611,7 +611,7 @@ crear bloques de contenido curados por el cliente:
 - Nombre y artista/tema central, más una descripción breve del especial.
 - **Intro y cierre** redactados con IA a partir de esa descripción. El cliente
   puede revisar y editar el texto antes de grabar el audio. Cada audio dura como
-  máximo **20 segundos** y siempre empieza con el nombre de la emisora.
+  máximo **20 segundos**. Si el cliente edita el texto de un audio ya generado, el audio se regenera automáticamente con los cambios.
 - Hasta **5 temas** elegidos de la biblioteca, sin repetir. Pueden ser temas que
   también estén en la rotación normal.
 - Frecuencia propia: cada X temas sueltos del AutoDJ. El bloque se inserta

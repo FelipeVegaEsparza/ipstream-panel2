@@ -8,9 +8,8 @@ import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth
 import { prisma } from '@/lib/prisma'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
 import { hasConfiguredPremiumTts } from '@/lib/premium-tts'
-import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
+import { generateAndUploadSpecialAudio } from '@/lib/specials-audio'
 import {
-  getClientStationName,
   synthesizeSpecialSpeech,
   type SpecialPart,
   type SpecialSpeech,
@@ -33,7 +32,7 @@ async function buildAudio(
   clientId: string,
   special: { id: string; introText: string; closingText: string },
   part: SpecialPart
-): Promise<{ speech: SpecialSpeech; station: string; text: string } | { error: string; status: number; message: string }> {
+): Promise<{ speech: SpecialSpeech; text: string } | { error: string; status: number; message: string }> {
   const access = await getAiLiveAccess(clientId)
   if (!access.enabled) {
     return { error: 'ai_not_included', status: 403, message: 'Tu plan no incluye IA.' }
@@ -51,10 +50,8 @@ async function buildAudio(
     return { error: 'missing_text', status: 400, message: 'Falta el texto de esta parte.' }
   }
 
-  const station = await getClientStationName(clientId)
   const speech = await synthesizeSpecialSpeech({
     clientId,
-    station,
     text,
     part,
   })
@@ -81,7 +78,7 @@ async function buildAudio(
     }
   }
 
-  return { speech, station, text: speech.text }
+  return { speech, text: speech.text }
 }
 
 export async function POST(
@@ -101,42 +98,24 @@ export async function POST(
     const special = await loadSpecial(ctx.clientId, params.id)
     if (!special) return NextResponse.json({ error: 'special_not_found' }, { status: 404 })
 
-    const result = await buildAudio(ctx.clientId, special, part)
-    if ('error' in result) {
+    const text = part === 'intro' ? special.introText : special.closingText
+    const result = await generateAndUploadSpecialAudio({
+      clientId: ctx.clientId,
+      specialId: special.id,
+      part,
+      text,
+    })
+    if (!result.ok) {
       return NextResponse.json({ error: result.error, message: result.message }, { status: result.status })
     }
 
-    const file = new File(
-      [new Uint8Array(result.speech.audio)],
-      `${part}.mp3`,
-      { type: result.speech.contentType || 'audio/mpeg' }
-    )
-    try {
-      await streamingClient.uploadSpecialAudio(ctx.clientId, special.id, part, file)
-    } catch (err) {
-      if (err instanceof StreamingAgentError) {
-        return NextResponse.json({ error: 'agent_error', message: err.message }, { status: 502 })
-      }
-      throw err
-    }
-
-    const readyAt = new Date()
-    await prisma.radioSpecial.update({
-      where: { id: special.id },
-      data: {
-        ...(part === 'intro'
-          ? { introText: result.text, introReadyAt: readyAt }
-          : { closingText: result.text, closingReadyAt: readyAt }),
-      },
-    })
-
     return NextResponse.json({
       ok: true,
-      part,
+      part: result.part,
       text: result.text,
-      seconds: result.speech.seconds,
-      cached: result.speech.cached,
-      trimmed: result.text !== (part === 'intro' ? special.introText : special.closingText),
+      seconds: result.seconds,
+      cached: result.cached,
+      trimmed: result.trimmed,
     })
   } catch (err) {
     if (err instanceof StreamingAuthError) {

@@ -24,7 +24,6 @@ vi.mock('@/lib/audio-mix', () => ({ probeAudioBufferDuration: mocks.probeAudioBu
 import {
   MAX_SPECIAL_SECONDS,
   clampSpecialText,
-  ensureStationPrefix,
   findSpecialCollision,
   generateSpecialText,
   insertionPositions,
@@ -39,12 +38,8 @@ beforeEach(() => {
 })
 
 describe('texto de especiales', () => {
-  it('siempre antepone el nombre de la radio', () => {
-    expect(ensureStationPrefix('Radio CasterFly', 'Bienvenidos al especial.'))
-      .toBe('Radio CasterFly. Bienvenidos al especial.')
-    expect(ensureStationPrefix('Radio CasterFly', 'radio casterfly. Bienvenidos.'))
-      .toBe('radio casterfly. Bienvenidos.')
-    expect(ensureStationPrefix('', 'Hola.')).toBe('La radio. Hola.')
+  it('no antepone el nombre de la radio al texto', () => {
+    expect(clampSpecialText('Bienvenidos al especial.')).toBe('Bienvenidos al especial.')
   })
 
   it('recorta en el último punto útil', () => {
@@ -63,13 +58,12 @@ describe('texto de especiales', () => {
       texto: 'Un recorrido por los mejores temas de la banda.',
     })
     const result = await generateSpecialText({
-      station: 'Radio CasterFly',
       name: 'Especial de Soda Stereo',
       artist: 'Soda Stereo',
       description: 'Repaso de sus canciones más conocidas.',
       part: 'intro',
     })
-    expect(result?.startsWith('Radio CasterFly.')).toBe(true)
+    expect(result?.startsWith('Un recorrido')).toBe(true)
     expect(mocks.callDeepSeekJson).toHaveBeenCalledTimes(1)
   })
 })
@@ -81,7 +75,6 @@ describe('audio de especiales', () => {
 
     const result = await synthesizeSpecialSpeech({
       clientId: 'c1',
-      station: 'Radio',
       text: 'Radio. Bienvenidos al especial.',
       part: 'intro',
     })
@@ -97,7 +90,6 @@ describe('audio de especiales', () => {
 
     const result = await synthesizeSpecialSpeech({
       clientId: 'c1',
-      station: 'Radio',
       text: 'Radio. Primera frase del especial que ocupa bastante. Segunda frase que también suma caracteres.',
       part: 'closing',
     })
@@ -112,7 +104,6 @@ describe('audio de especiales', () => {
 
     const result = await synthesizeSpecialSpeech({
       clientId: 'c1',
-      station: 'Radio',
       text: 'Radio. Primera frase del especial que ocupa bastante. Segunda frase que también suma caracteres.',
       part: 'intro',
     })

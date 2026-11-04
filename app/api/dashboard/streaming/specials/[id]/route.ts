@@ -6,10 +6,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { prisma } from '@/lib/prisma'
 import { streamingClient } from '@/lib/streaming-client'
+import { generateAndUploadSpecialAudio } from '@/lib/specials-audio'
 import {
-  ensureStationPrefix,
   findSpecialCollision,
-  getClientStationName,
   isDateString,
 } from '@/lib/specials'
 import {
@@ -44,7 +43,6 @@ export async function PATCH(
     if (!existing) return NextResponse.json({ error: 'special_not_found' }, { status: 404 })
 
     const body = await request.json().catch(() => ({}))
-    const station = await getClientStationName(ctx.clientId)
 
     const name = body?.name !== undefined
       ? (typeof body.name === 'string' ? body.name.trim().slice(0, 200) : '')
@@ -61,8 +59,8 @@ export async function PATCH(
     const closingRaw = body?.closingText !== undefined
       ? (typeof body.closingText === 'string' ? body.closingText.trim().slice(0, MAX_TEXT) : '')
       : existing.closingText
-    const introText = introRaw ? ensureStationPrefix(station, introRaw) : ''
-    const closingText = closingRaw ? ensureStationPrefix(station, closingRaw) : ''
+    const introText = introRaw
+    const closingText = closingRaw
     const everyTracks = body?.everyTracks !== undefined ? Number(body.everyTracks) : existing.everyTracks
     const startDate = body?.startDate !== undefined
       ? (typeof body.startDate === 'string' && body.startDate.trim() ? body.startDate.trim() : null)
@@ -112,6 +110,7 @@ export async function PATCH(
 
     const introChanged = introText !== existing.introText
     const closingChanged = closingText !== existing.closingText
+    const regenerateAudio = body?.regenerateAudio !== false
 
     await prisma.radioSpecial.update({
       where: { id: existing.id },
@@ -133,6 +132,28 @@ export async function PATCH(
       await replaceSpecialTracks(existing.id, validTracks)
     }
 
+    // Si el texto cambió y ese audio ya existía, lo regeneramos con los
+    // cambios para que no quede desincronizado.
+    const audioWarnings: Array<{ part: 'intro' | 'closing'; message: string }> = []
+    if (regenerateAudio && introChanged && existing.introReadyAt) {
+      const result = await generateAndUploadSpecialAudio({
+        clientId: ctx.clientId,
+        specialId: existing.id,
+        part: 'intro',
+        text: introText,
+      })
+      if (!result.ok) audioWarnings.push({ part: 'intro', message: result.message })
+    }
+    if (regenerateAudio && closingChanged && existing.closingReadyAt) {
+      const result = await generateAndUploadSpecialAudio({
+        clientId: ctx.clientId,
+        specialId: existing.id,
+        part: 'closing',
+        text: closingText,
+      })
+      if (!result.ok) audioWarnings.push({ part: 'closing', message: result.message })
+    }
+
     const activeChanged = body?.active !== undefined && active !== existing.active
     if (activeChanged) {
       try {
@@ -150,6 +171,7 @@ export async function PATCH(
     return NextResponse.json({
       ok: true,
       special: updated ? serializeSpecial(updated as SpecialWithTracks) : null,
+      audioWarnings,
     })
   } catch (err) {
     if (err instanceof StreamingAuthError) {

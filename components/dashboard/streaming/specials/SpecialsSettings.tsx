@@ -200,7 +200,7 @@ export function SpecialsSettings() {
     })
   }
 
-  const save = async (): Promise<SpecialItem | null> => {
+  const save = async (skipAudioRegeneration = false): Promise<SpecialItem | null> => {
     if (!form) return null
     setSaving(true)
     setError(null)
@@ -217,6 +217,7 @@ export function SpecialsSettings() {
         endDate: form.endDate || null,
         active: form.active,
         trackIds: form.trackIds,
+        regenerateAudio: !skipAudioRegeneration,
       }
       const res = await fetch(
         form.id
@@ -233,7 +234,12 @@ export function SpecialsSettings() {
       const special = data.special as SpecialItem
       setForm(fromSpecial(special))
       await load()
-      showToast({ type: 'success', title: t('streaming.specials.saved') })
+      const warnings = Array.isArray(data.audioWarnings) ? data.audioWarnings : []
+      if (warnings.length > 0) {
+        setError(warnings.map((item: { message: string }) => item.message).join(' '))
+      } else {
+        showToast({ type: 'success', title: t('streaming.specials.saved') })
+      }
       return special
     } catch (err) {
       setError(err instanceof Error ? err.message : t('streaming.specials.saveError'))
@@ -284,7 +290,7 @@ export function SpecialsSettings() {
     setNotice(null)
     try {
       // Siempre guardamos primero para que el audio use el texto editado.
-      const saved = await save()
+      const saved = await save(true)
       const id = saved?.id
       if (!id) return
       const res = await fetch(

@@ -68,22 +68,6 @@ export async function getClientTimezone(clientId: string): Promise<string> {
   return client?.timezone || 'UTC'
 }
 
-function cleanStation(name: string | null | undefined): string {
-  const raw = (name || '').replace(/\s+/g, ' ').trim() || 'la radio'
-  const withoutPunctuation = raw.replace(/[.:;,]+$/, '')
-  return withoutPunctuation.charAt(0).toUpperCase() + withoutPunctuation.slice(1)
-}
-
-/** Garantiza que el texto hablado empiece con el nombre de la emisora. */
-export function ensureStationPrefix(stationName: string | null | undefined, text: string | null | undefined): string {
-  const station = cleanStation(stationName)
-  const body = (text || '').replace(/\s+/g, ' ').trim()
-  if (!body) return station
-  if (body.toLowerCase().startsWith(station.toLowerCase())) return body
-  const sentence = body.charAt(0).toUpperCase() + body.slice(1)
-  return `${station}. ${sentence}`
-}
-
 /** Recorta al límite en el último punto completo o en el último espacio. */
 export function clampSpecialText(text: string, max: number = MAX_SPECIAL_CHARS): string {
   const clean = (text || '').replace(/\s+/g, ' ').trim()
@@ -100,23 +84,21 @@ export function clampSpecialText(text: string, max: number = MAX_SPECIAL_CHARS):
 }
 
 export async function generateSpecialText(input: {
-  station: string
   name: string
   artist?: string | null
   description: string
   part: SpecialPart
 }): Promise<string | null> {
-  const station = cleanStation(input.station)
   const artist = (input.artist || '').trim()
   const name = (input.name || '').trim()
   const description = (input.description || '').replace(/\s+/g, ' ').trim()
   if (!description) return null
 
   const system = [
-    `Sos el locutor de ${station}. Escribís la ${input.part === 'intro' ? 'introducción' : 'despedida'} de un especial de radio.`,
+    `Sos el locutor de una radio. Escribís la ${input.part === 'intro' ? 'introducción' : 'despedida'} de un especial.`,
     'Reglas obligatorias:',
     '- Español neutro, oral, 2 o 3 frases. Máximo 280 caracteres.',
-    `- Empezá siempre con el nombre de la emisora: "${station}".`,
+    '- No empieces con el nombre de la radio; no es necesario.',
     input.part === 'intro'
       ? '- Presentá el especial, el artista o tema central y lo que va a escuchar el oyente.'
       : '- Cerrá el especial, agradecé la escucha e invitá a seguir en la radio.',
@@ -140,7 +122,7 @@ export async function generateSpecialText(input: {
 
   const data = await callDeepSeekJson<{ texto?: unknown }>(system, user)
   const raw = typeof data?.texto === 'string' ? data.texto : ''
-  const text = clampSpecialText(ensureStationPrefix(station, raw))
+  const text = clampSpecialText(raw)
   if (text.length < MIN_SPECIAL_CHARS) return null
   return text
 }
@@ -151,11 +133,10 @@ export async function generateSpecialText(input: {
  */
 export async function synthesizeSpecialSpeech(input: {
   clientId: string
-  station: string
   text: string
   part: SpecialPart
 }): Promise<SpecialSpeech | null> {
-  let text = ensureStationPrefix(input.station, input.text)
+  let text = (input.text || '').replace(/\s+/g, ' ').trim()
   const isIntro = input.part === 'intro'
 
   for (let attempt = 0; attempt < 2; attempt++) {

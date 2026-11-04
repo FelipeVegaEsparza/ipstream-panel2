@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { getAiLiveAccess } from '@/lib/ai-live'
 import { isDeepSeekConfigured } from '@/lib/deepseek'
-import { generateSpecialText, getClientStationName, type SpecialPart } from '@/lib/specials'
+import { generateSpecialText, type SpecialPart } from '@/lib/specials'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,9 +41,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const station = await getClientStationName(ctx.clientId)
     const text = await generateSpecialText({
-      station,
       name,
       artist,
       description,
