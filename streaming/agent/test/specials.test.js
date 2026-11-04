@@ -19,7 +19,7 @@ process.env.HARBOR_PUBLIC_HOSTNAME = 'localhost'
 const library = await mkdtemp(join(tmpdir(), 'specials-'))
 process.env.RADIO_LIBRARY_PATH = library
 
-const { todayInTimezone, isSpecialInWindow, insertionPositions } = await import(
+const { todayInTimezone, isSpecialInWindow, insertionPositions, buildSpecialBlock } = await import(
   '../lib/special-schedule.js'
 )
 const { saveSpecialAudio, specialAudioExists, clearSpecialAudio } = await import('../lib/files.js')
@@ -58,4 +58,25 @@ test('guarda y limpia el audio de un especial', async () => {
   await clearSpecialAudio('client-a', 'sp-1')
   assert.equal(specialAudioExists('client-a', 'sp-1', 'intro'), false)
   assert.equal(specialAudioExists('client-a', 'sp-1', 'closing'), false)
+})
+
+test('arma el bloque en orden intro, temas y cierre', () => {
+  const lines = buildSpecialBlock({
+    name: 'Soda Stereo',
+    introPath: '/radio/client/specials/sp-1/intro.mp3',
+    closingPath: '/radio/client/specials/sp-1/closing.mp3',
+    mp3Dir: '/radio/client/mp3',
+    tracks: [
+      { fileName: 'a.mp3', title: 'Tema A', artist: 'Artista', duration: 200 },
+      { fileName: 'b.mp3', title: 'Tema B', artist: 'Artista', duration: 180 },
+    ],
+  })
+  assert.equal(lines[0], '#EXTINF:-1,Especial · Soda Stereo')
+  assert.equal(lines[1], '/radio/client/specials/sp-1/intro.mp3')
+  assert.equal(lines[2], '#EXTINF:200,Artista - Tema A')
+  assert.equal(lines[3], '/radio/client/mp3/a.mp3')
+  assert.equal(lines[4], '#EXTINF:180,Artista - Tema B')
+  assert.equal(lines[5], '/radio/client/mp3/b.mp3')
+  assert.equal(lines[6], '#EXTINF:-1,Cierre · Soda Stereo')
+  assert.equal(lines[7], '/radio/client/specials/sp-1/closing.mp3')
 })

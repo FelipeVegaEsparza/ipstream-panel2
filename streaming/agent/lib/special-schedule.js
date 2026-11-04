@@ -36,3 +36,22 @@ export function insertionPositions(everyTracks, trackCount) {
   }
   return positions
 }
+
+/**
+ * Arma el bloque [intro][temas][cierre] de un especial.
+ * Recibe solo tracks ya verificados como disponibles.
+ */
+export function buildSpecialBlock({ name, introPath, closingPath, tracks, mp3Dir }) {
+  const lines = []
+  lines.push(`#EXTINF:-1,Especial · ${name}`)
+  lines.push(introPath)
+  for (const track of tracks) {
+    const label = track.artist ? `${track.artist} - ${track.title || ''}` : (track.title || '')
+    const duration = track.duration ? Math.round(track.duration) : -1
+    lines.push(`#EXTINF:${duration},${label}`)
+    lines.push(`${mp3Dir}/${track.fileName}`)
+  }
+  lines.push(`#EXTINF:-1,Cierre · ${name}`)
+  lines.push(closingPath)
+  return lines
+}

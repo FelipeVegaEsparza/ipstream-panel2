@@ -10,7 +10,7 @@ import { pool } from './db.js'
 import { decrypt, isEncrypted } from './encryption.js'
 import { listAiIntroFiles, clientAiIntrosDir, specialAudioExists, specialAudioPath } from './files.js'
 import { aiLayersEnabled, buildAiLayerLines } from './m3u-layers.js'
-import { insertionPositions, isSpecialInWindow, todayInTimezone } from './special-schedule.js'
+import { buildSpecialBlock, insertionPositions, isSpecialInWindow, todayInTimezone } from './special-schedule.js'
 
 const execp = promisify(exec)
 
@@ -426,17 +426,13 @@ export async function regenerateM3u(clientId) {
       continue
     }
 
-    const blockLines = []
-    blockLines.push(`#EXTINF:-1,Especial · ${special.name}`)
-    blockLines.push(specialAudioPath(clientId, special.id, 'intro'))
-    for (const track of availableTracks) {
-      const label = track.artist ? `${track.artist} - ${track.title || ''}` : (track.title || '')
-      const dur = track.duration ? Math.round(track.duration) : -1
-      blockLines.push(`#EXTINF:${dur},${label}`)
-      blockLines.push(join(mp3Dir, track.fileName))
-    }
-    blockLines.push(`#EXTINF:-1,Cierre · ${special.name}`)
-    blockLines.push(specialAudioPath(clientId, special.id, 'closing'))
+    const blockLines = buildSpecialBlock({
+      name: special.name,
+      introPath: specialAudioPath(clientId, special.id, 'intro'),
+      closingPath: specialAudioPath(clientId, special.id, 'closing'),
+      tracks: availableTracks,
+      mp3Dir,
+    })
 
     for (const position of positions) specialBlocks.set(position, blockLines)
     specialsApplied.push({ id: special.id, name: special.name, positions })
