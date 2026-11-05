@@ -249,7 +249,6 @@ export const SITE_CONTENT_TABS: SiteContentTab[] = [
       f('home.aiPlan.eyebrow', 'Eyebrow nota plan IA'),
       f('home.aiPlan.characters', 'Texto caracteres del plan IA'),
       f('home.aiPlan.cta', 'CTA nota plan IA'),
-      f('home.demo.eyebrow', 'Eyebrow demo de audio'),
       f('home.demo.title', 'Título demo de audio'),
       f('home.demo.description', 'Descripción demo de audio', 'textarea'),
       f('home.demo.station', 'Nombre de la estación demo'),
