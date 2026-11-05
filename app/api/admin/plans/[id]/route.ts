@@ -17,6 +17,7 @@ export async function GET(
     const plan = await prisma.plan.findUnique({
       where: { id: params.id },
       include: {
+        prices: true,
         _count: {
           select: {
             clients: true,
@@ -110,13 +111,29 @@ export async function PUT(
       }
     })
 
-    // Precios por moneda: reemplaza el set actual
+    // Precios por moneda: reemplaza el set actual en una sola transacción.
     if (Array.isArray(prices)) {
-      await prisma.planPrice.deleteMany({ where: { planId: params.id } })
-      for (const pr of prices) {
-        if (!pr || typeof pr.currency !== 'string' || typeof pr.amount !== 'number') continue
-        await prisma.planPrice.create({ data: { planId: params.id, currency: pr.currency, amount: pr.amount } })
-      }
+      const validPrices = prices.filter(
+        (pr): pr is { currency: string; amount: number } =>
+          Boolean(pr) && typeof pr.currency === 'string' && typeof pr.amount === 'number'
+      )
+      await prisma.$transaction(async (tx) => {
+        await tx.planPrice.deleteMany({
+          where: {
+            planId: params.id,
+            ...(validPrices.length
+              ? { currency: { notIn: validPrices.map((price) => price.currency) } }
+              : {}),
+          },
+        })
+        for (const pr of validPrices) {
+          await tx.planPrice.upsert({
+            where: { planId_currency: { planId: params.id, currency: pr.currency } },
+            update: { amount: pr.amount },
+            create: { planId: params.id, currency: pr.currency, amount: pr.amount },
+          })
+        }
+      })
     }
 
     return NextResponse.json(plan)

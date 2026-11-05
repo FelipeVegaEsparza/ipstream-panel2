@@ -19,6 +19,7 @@ export default async function BillingPage() {
     prisma.plan.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
+        prices: true,
         _count: { select: { clients: true, subscriptions: true } },
       },
     }),

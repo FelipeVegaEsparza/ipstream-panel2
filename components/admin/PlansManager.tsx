@@ -23,6 +23,7 @@ interface Plan {
   features: string
   isActive: boolean
   services: string
+  prices?: { currency: string; amount: number }[]
   radioStorageQuotaMB: number | null
   videoStorageQuotaMB: number | null
   aiLiveEnabled: boolean
@@ -94,6 +95,14 @@ export function PlansManager({ plans }: PlansManagerProps) {
       : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
     
     return `${formattedAmount}/${interval === 'monthly' ? t('admin.plans.perMonth') : t('admin.plans.perYear')}`
+  }
+
+  // El sitio público (casterfly.com) solo lista planes activos con precio USD.
+  const usdAmountForPlan = (plan: Plan): number | null => {
+    const usd = plan.prices?.find((p) => p.currency.toUpperCase() === 'USD')?.amount
+    if (typeof usd === 'number' && usd > 0) return usd
+    if (plan.currency.toUpperCase() === 'USD' && plan.price > 0) return plan.price
+    return null
   }
 
   const parseFeatures = (features: string) => {
@@ -187,6 +196,15 @@ export function PlansManager({ plans }: PlansManagerProps) {
                 <p className="text-muted-foreground text-sm">
                   {plan.interval === 'monthly' ? t('admin.plans.billingMonthly') : t('admin.plans.billingYearly')}
                 </p>
+                {plan.isActive && usdAmountForPlan(plan) === null && (
+                  <Badge
+                    variant="outline"
+                    className="badge-warning mt-2"
+                    title={t('admin.plans.missingUsdHint')}
+                  >
+                    {t('admin.plans.missingUsd')}
+                  </Badge>
+                )}
               </div>
 
               <div className="space-y-1.5">
