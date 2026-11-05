@@ -554,14 +554,18 @@ export function SiteContentEditor() {
               {tab.globalFields && tab.globalFields.length > 0 && (
                 <section className="grid gap-4 rounded-panel border border-border bg-card p-4 md:grid-cols-2">
                   {tab.globalFields.map((field) => (
-                    <FieldControl
+                    <div
                       key={field.path}
-                      id={`global-${field.path}`}
-                      label={field.label}
-                      kind={field.kind}
-                      value={readGlobal(content.global, field.path)}
-                      onChange={(value) => updateGlobal(field.path, value)}
-                    />
+                      className={field.kind === 'image' || field.kind === 'textarea' ? 'md:col-span-2' : ''}
+                    >
+                      <FieldControl
+                        id={`global-${field.path}`}
+                        label={field.label}
+                        kind={field.kind}
+                        value={readGlobal(content.global, field.path)}
+                        onChange={(value) => updateGlobal(field.path, value)}
+                      />
+                    </div>
                   ))}
                 </section>
               )}

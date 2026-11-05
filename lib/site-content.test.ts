@@ -12,6 +12,7 @@ describe('site content schema', () => {
 
     expect(parsed.global.siteName).toBe('CasterFly')
     expect(parsed.global.contactEmail).toBe('contacto@casterfly.com')
+    expect(parsed.global.heroImage).toBe('/images/hero1.png')
     expect(parsed.global.social.facebook).toBe('')
     expect(parsed.i18n).toEqual({})
     expect(parsed.collections.pillars).toEqual([])

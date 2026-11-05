@@ -6,6 +6,7 @@
       "contactEmail": "contacto@casterfly.com",
       "panelUrl": "https://panel.casterfly.com/",
       "demoStreamUrl": "https://audio1.ipstream.cl/radio_5715de5983df",
+      "heroImage": "/images/hero1.png",
       "social": {
         "facebook": "",
         "youtube": "",
@@ -39,6 +40,7 @@
       "home.hero.description": "Sitio, app PWA con mensajería push, chat en vivo, consola en vivo y un copiloto de IA que locuta, informa y programa. Todo en una sola plataforma, con la voz y el estilo de tu emisora.",
       "home.hero.ctaAI": "Conocer la IA",
       "home.hero.ctaPlans": "Ver planes",
+      "home.hero.imageAlt": "CasterFly en vivo: panel y reproductor de tu radio online",
       "home.demo.eyebrow": "[ DEMO EN VIVO ]",
       "home.demo.title": "Escucha una radio real operada con IA",
       "home.demo.description": "Dale play y escucha una emisora creada con CasterFly: AutoDJ, locuciones y programación funcionando en vivo, sin instalar nada.",
@@ -630,6 +632,7 @@
       "contactEmail": "contacto@casterfly.com",
       "panelUrl": "https://panel.casterfly.com/",
       "demoStreamUrl": "https://audio1.ipstream.cl/radio_5715de5983df",
+      "heroImage": "/images/hero1.png",
       "social": {
         "facebook": "",
         "youtube": "",
@@ -663,6 +666,7 @@
       "home.hero.description": "Website, PWA app with push messaging, live chat, live console and an AI co-pilot that voices, informs and schedules. All in one platform, with your station’s voice and style.",
       "home.hero.ctaAI": "Discover AI",
       "home.hero.ctaPlans": "View plans",
+      "home.hero.imageAlt": "CasterFly live: your online radio panel and player",
       "home.demo.eyebrow": "[ LIVE DEMO ]",
       "home.demo.title": "Listen to a real AI-run radio station",
       "home.demo.description": "Press play and listen to a station built with CasterFly: AutoDJ, voice-overs and scheduling running live, with nothing to install.",

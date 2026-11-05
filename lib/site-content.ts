@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 const text = (max = 500) => z.string().trim().max(max).default('')
 const longText = (max = 4000) => z.string().trim().max(max).default('')
-const assetUrl = () =>
+const assetUrl = (fallback = '') =>
   z
     .string()
     .trim()
@@ -11,7 +11,7 @@ const assetUrl = () =>
       (value) => !value || /^(https?:\/\/|\/)/i.test(value),
       'Debe ser una URL absoluta o una ruta que empiece con /'
     )
-    .default('')
+    .default(fallback)
 const linkUrl = () =>
   z
     .string()
@@ -91,6 +91,7 @@ export const siteGlobalSchema = z.object({
   contactEmail: z.string().trim().email().default('contacto@casterfly.com'),
   panelUrl: linkUrl().default('https://panel.casterfly.com/'),
   demoStreamUrl: linkUrl().default('https://audio1.ipstream.cl/radio_5715de5983df'),
+  heroImage: assetUrl('/images/hero1.png'),
   social: siteSocialSchema.default(EMPTY_SOCIAL),
 })
 

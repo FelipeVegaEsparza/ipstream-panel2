@@ -209,12 +209,16 @@ export const SITE_CONTENT_TABS: SiteContentTab[] = [
   {
     id: 'home',
     labelKey: 'admin.siteContent.tabHome',
+    globalFields: [
+      g('heroImage', 'Imagen principal del hero (reemplaza el módulo IA)', 'image'),
+    ],
     i18nFields: [
       f('home.hero.badge', 'Badge del hero'),
       f('home.hero.title', 'Título del hero'),
       f('home.hero.description', 'Descripción del hero', 'textarea'),
       f('home.hero.ctaAI', 'CTA principal'),
       f('home.hero.ctaPlans', 'CTA secundario'),
+      f('home.hero.imageAlt', 'Texto alternativo de la imagen del hero'),
       f('home.hero.aiKicker', 'Kicker del módulo IA'),
       f('home.hero.aiTitle', 'Título del módulo IA'),
       f('home.hero.aiItem1', 'Item IA 1'),
