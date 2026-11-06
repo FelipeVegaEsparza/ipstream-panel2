@@ -97,12 +97,15 @@ export function PlansManager({ plans }: PlansManagerProps) {
     return `${formattedAmount}/${interval === 'monthly' ? t('admin.plans.perMonth') : t('admin.plans.perYear')}`
   }
 
-  // El sitio público (casterfly.com) solo lista planes activos con precio USD.
-  const usdAmountForPlan = (plan: Plan): number | null => {
-    const usd = plan.prices?.find((p) => p.currency.toUpperCase() === 'USD')?.amount
-    if (typeof usd === 'number' && usd > 0) return usd
-    if (plan.currency.toUpperCase() === 'USD' && plan.price > 0) return plan.price
-    return null
+  // El sitio público (casterfly.com) lista planes activos con precio en USD o CLP.
+  const hasPublicPrice = (plan: Plan): boolean => {
+    const hasUsd =
+      (plan.prices?.some((p) => p.currency.toUpperCase() === 'USD' && p.amount > 0) ?? false) ||
+      (plan.currency.toUpperCase() === 'USD' && plan.price > 0)
+    const hasClp =
+      (plan.prices?.some((p) => p.currency.toUpperCase() === 'CLP' && p.amount > 0) ?? false) ||
+      (plan.currency.toUpperCase() === 'CLP' && plan.price > 0)
+    return hasUsd || hasClp
   }
 
   const parseFeatures = (features: string) => {
@@ -196,13 +199,13 @@ export function PlansManager({ plans }: PlansManagerProps) {
                 <p className="text-muted-foreground text-sm">
                   {plan.interval === 'monthly' ? t('admin.plans.billingMonthly') : t('admin.plans.billingYearly')}
                 </p>
-                {plan.isActive && usdAmountForPlan(plan) === null && (
+                {plan.isActive && !hasPublicPrice(plan) && (
                   <Badge
                     variant="outline"
                     className="badge-warning mt-2"
-                    title={t('admin.plans.missingUsdHint')}
+                    title={t('admin.plans.missingPriceHint')}
                   >
-                    {t('admin.plans.missingUsd')}
+                    {t('admin.plans.missingPrice')}
                   </Badge>
                 )}
               </div>

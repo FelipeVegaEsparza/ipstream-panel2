@@ -14,8 +14,8 @@ export async function OPTIONS() {
 /**
  * GET /api/public/plans
  *
- * Fuente pública de planes para el sitio de CasterFly. Solo expone planes
- * activos con precio en USD (PlanPrice) y el contrato en el panel.
+ * Fuente pública de planes para el sitio de CasterFly. Expone planes activos
+ * con precio en USD y/o CLP (PlanPrice) y el contrato en el panel.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const data = plans
       .map((plan) => toPublicPlanApi(plan, origin))
       .filter((plan): plan is NonNullable<typeof plan> => Boolean(plan))
-      .sort((a, b) => a.usdAmount - b.usdAmount)
+      .sort((a, b) => (a.usdAmount ?? a.clpAmount ?? 0) - (b.usdAmount ?? b.clpAmount ?? 0))
 
     return createCachedCorsResponse({ plans: data })
   } catch (error) {

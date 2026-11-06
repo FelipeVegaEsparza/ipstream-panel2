@@ -71,13 +71,6 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
     return map
   })
 
-  // El sitio público (casterfly.com) solo lista planes activos con precio USD.
-  const usdPrice = Math.max(
-    formData.currency.toUpperCase() === 'USD' ? Number(formData.price) || 0 : 0,
-    Number(prices.USD) || 0
-  )
-  const missingPublicUsd = formData.isActive && !(usdPrice > 0)
-
   // Tareas de "Primeros pasos" seleccionadas para este plan (default: todas).
   const [selectedSteps, setSelectedSteps] = useState<Set<string>>(() => {
     try {
@@ -259,7 +252,7 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
               {t('admin.planForm.pricesByCurrencyHint')}
             </p>
             <p className="text-xs text-muted-foreground mb-2">
-              {t('admin.planForm.publicUsdHint')}
+              {t('admin.planForm.publicPricesHint')}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -287,11 +280,6 @@ export function PlanForm({ plan, onClose }: PlanFormProps) {
                 />
               </div>
             </div>
-            {missingPublicUsd && (
-              <p className="mt-2 text-xs text-amber-400">
-                {t('admin.planForm.publicUsdMissing')}
-              </p>
-            )}
           </div>
 
           <div>

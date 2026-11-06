@@ -8,8 +8,9 @@ export interface PublicPlanApi {
   description: string
   interval: string
   services: string
-  usdAmount: number
-  currency: 'USD'
+  usdAmount: number | null
+  clpAmount: number | null
+  currency: 'USD' | 'CLP'
   features: string[]
   maxDjs: number
   aiLiveEnabled: boolean
@@ -41,13 +42,21 @@ export function planUsdAmount(plan: PlanWithPrices): number | null {
   return null
 }
 
+export function planClpAmount(plan: PlanWithPrices): number | null {
+  const clp = plan.prices.find((price) => price.currency.toUpperCase() === 'CLP')
+  if (clp) return clp.amount
+  if (plan.currency.toUpperCase() === 'CLP') return plan.price
+  return null
+}
+
 /** Convierte un Plan de Prisma al contrato público que consume el sitio. */
 export function toPublicPlanApi(
   plan: PlanWithPrices,
   origin: string
 ): PublicPlanApi | null {
   const usdAmount = planUsdAmount(plan)
-  if (usdAmount === null) return null
+  const clpAmount = planClpAmount(plan)
+  if (usdAmount === null && clpAmount === null) return null
 
   const slug = planSlug(plan.name)
   const base = origin.replace(/\/+$/, '')
@@ -60,7 +69,8 @@ export function toPublicPlanApi(
     interval: plan.interval,
     services: plan.services || 'both',
     usdAmount,
-    currency: 'USD',
+    clpAmount,
+    currency: usdAmount !== null ? 'USD' : 'CLP',
     features: parsePlanFeatures(plan.features),
     maxDjs: plan.maxDjs,
     aiLiveEnabled: plan.aiLiveEnabled,
