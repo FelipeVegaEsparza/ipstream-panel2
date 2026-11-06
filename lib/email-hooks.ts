@@ -130,8 +130,8 @@ export async function sendPendingSignupEmail(
 }
 
 /**
- * Avisa al cliente que su cuenta ya fue activada e incluye el enlace para
- * ingresar al panel con el email y la contraseña del registro.
+ * Avisa al cliente que su cuenta ya fue activada e incluye el enlace de
+ * ingreso con callback directo a la sección "Primeros pasos".
  */
 export async function sendAccountActivatedEmail(
   clientId: string
@@ -147,7 +147,7 @@ export async function sendAccountActivatedEmail(
       vars: {
         nombre: ctx.name,
         proyecto: ctx.projectName,
-        link: `${panelUrl()}/auth/login`,
+        link: `${panelUrl()}/auth/login?callbackUrl=${encodeURIComponent('/dashboard/primeros-pasos')}`,
       },
     })
   } catch (err) {

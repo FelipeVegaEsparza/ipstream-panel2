@@ -7,9 +7,10 @@ import { PanelLogo } from '@/components/ui/PanelLogo'
 
 interface LoginFormProps {
   backgroundImage: string | null
+  callbackUrl?: string | null
 }
 
-export default function LoginPage({ backgroundImage }: LoginFormProps) {
+export default function LoginPage({ backgroundImage, callbackUrl = null }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -32,10 +33,14 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
         setError('Credenciales inválidas')
       } else {
         const session = await getSession()
+        const safeCallback =
+          callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.startsWith('//')
+            ? callbackUrl
+            : null
         if (session?.user.role === 'ADMIN') {
-          router.push('/admin')
+          router.push(safeCallback?.startsWith('/admin') ? safeCallback : '/admin')
         } else {
-          router.push('/dashboard')
+          router.push(safeCallback || '/dashboard')
         }
       }
     } catch (error) {

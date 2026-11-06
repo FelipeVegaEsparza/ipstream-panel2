@@ -104,10 +104,10 @@ const TEMPLATES = [
     <p style="color:#6b7280;margin:0 0 16px">Hola ${'{{nombre}}'} 👋</p>
     <div style="${BOX_STYLE}">
       <p style="margin:0 0 12px;color:#374151">Tu cuenta de <strong>${'{{proyecto}}'}</strong> ya está activa.</p>
-      <p style="margin:0;color:#374151">Ingresa con el email y la contraseña que elegiste al registrarte. Desde el panel podrás configurar tu radio y revisar tu plan y pagos.</p>
+      <p style="margin:0;color:#374151">Ingresa con el email y la contraseña que elegiste al registrarte. Te llevaremos directo a <strong>Primeros pasos</strong> para configurar tu radio.</p>
     </div>
     <div style="text-align:center">
-      <a href="${'{{link}}'}" style="${BTN_STYLE}">Ingresar a mi panel</a>
+      <a href="${'{{link}}'}" style="${BTN_STYLE}">Ir a mis primeros pasos</a>
     </div>
     <p style="color:#6b7280;font-size:13px;margin:16px 0 0;text-align:center">Si no recuerdas tu contraseña, contacta a soporte.</p>
     ${FOOTER}
