@@ -16,6 +16,7 @@ model User {
   password  String
   name      String?
   role      String   @default("CLIENT")
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -30,6 +31,7 @@ model Client {
   userId          String   @unique
   name            String
   planId          String?
+  billingCurrency String? // moneda elegida en el registro público (CLP/USD)
   templateId      String?
   accentColor     String? // Color destacado del sitio (#RRGGBB, minúsculas) o null
   onboardingDismissedAt DateTime? // Si está seteado, el cliente ocultó el empujón de "Primeros pasos"
@@ -693,7 +695,7 @@ model AppConfig {
   panelFaviconUrl      String? // Favicon del panel (null = /icon.png)
   hiddenMenuItems      String? @db.Text // JSON array de MenuItemKey ocultos globalmente (override de per-client)
   adminNotifyEmail     String? // correo que recibe notificaciones del panel (nuevos registros, etc.)
-  trialDays            Int     @default(7) // duración (días) de la prueba gratuita del registro público
+  trialDays            Int     @default(0) // legado: la prueba gratuita ya no se usa
 
   // Sitios de clientes (bundle único de la PWA + dominios). null = usar env.
   clientSitesDomain    String? // dominio base de subdominios (p. ej. ipstream.cl)

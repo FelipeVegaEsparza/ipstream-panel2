@@ -139,6 +139,10 @@ export default function LoginPage({ backgroundImage }: LoginFormProps) {
               </button>
             </div>
           </form>
+
+          <p className="mt-5 text-center text-xs text-muted-foreground">
+            Si acabas de registrarte, tu cuenta puede estar pendiente de activación. Te avisaremos por correo cuando esté lista.
+          </p>
         </div>
       </section>
 

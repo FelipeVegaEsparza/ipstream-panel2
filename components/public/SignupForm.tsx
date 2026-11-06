@@ -112,7 +112,6 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
   const [radioName, setRadioName] = useState('')
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'reserved' | 'invalid' | 'unconfigured'>('idle')
   const [siteHost, setSiteHost] = useState('')
-  const [createdSiteUrl, setCreatedSiteUrl] = useState<string | null>(null)
   const [currency, setCurrency] = useState<string>(() =>
     defaultCurrencyFor(plans.find((p) => p.id === initial) || plans[0] || null)
   )
@@ -206,7 +205,6 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
         setError(data?.error || 'Error al registrarte. Intentá de nuevo.')
         return
       }
-      setCreatedSiteUrl(data?.siteUrl || null)
       setDone(true)
     } catch {
       setError('Error al registrarte. Intentá de nuevo.')
@@ -221,30 +219,22 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
         <div data-slot="done-icon" className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
           <CheckCircle2 className="h-8 w-8 text-green-600" />
         </div>
-        <h2 data-slot="heading" className="text-2xl font-bold text-gray-900">¡Tu cuenta está lista!</h2>
+        <h2 data-slot="heading" className="text-2xl font-bold text-gray-900">¡Recibimos tu solicitud!</h2>
         <p data-slot="sub" className="text-muted-foreground">
-          Te enviamos por correo el enlace para efectuar el pago. Tu plan estará activo por 24 horas; completa el pago para mantener el servicio.
+          Te enviamos un correo de confirmación. Estamos configurando tu cuenta y te avisaremos cuando esté activa para que puedas ingresar.
         </p>
         {selected && (
           <div data-slot="summary" className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
-            Plan <span data-slot="accent" className="font-semibold text-brand">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
+            Plan solicitado <span data-slot="accent" className="font-semibold text-brand">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}
           </div>
         )}
-        {createdSiteUrl && (
-          <div data-slot="site" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            Tu sitio ya está online:{' '}
-            <a href={createdSiteUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline">
-              {createdSiteUrl.replace('https://', '')}
-            </a>
-          </div>
-        )}
-        <Link
+        <a
           data-slot="submit"
-          href="/auth/login"
+          href="https://casterfly.com"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand hover:bg-brand text-white font-medium shadow-lg shadow-blue-600/20 transition-all"
         >
-          Iniciar sesión <ArrowRight className="h-4 w-4" />
-        </Link>
+          Volver al sitio <ArrowRight className="h-4 w-4" />
+        </a>
       </div>
     )
   }

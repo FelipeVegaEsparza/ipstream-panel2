@@ -8,11 +8,13 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { PencilIcon, TrashIcon, EyeIcon, ArrowPathRoundedSquareIcon } from '@heroicons/react/24/outline'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { ActivateUserButton } from './ActivateUserButton'
 
 interface User {
   id: string
   name?: string | null
   email: string
+  isActive: boolean
   createdAt: Date
   updatedAt: Date
   client?: {
@@ -154,6 +156,11 @@ export function UsersList({ users }: UsersListProps) {
                       <span className="px-2 py-1 text-xs rounded-full bg-brand/20 text-brand border border-brand/30">
                         {user.client?.plan?.name || 'basic'}
                       </span>
+                      <ActivateUserButton
+                        userId={user.id}
+                        userName={user.name || user.email}
+                        isActive={user.isActive}
+                      />
                     </div>
                     <p className="text-muted-foreground text-sm mb-1">{user.email}</p>
                     {user.client && (

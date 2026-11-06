@@ -77,7 +77,7 @@ export default async function RegistroPage({
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Sitio web profesional, reproductor, app PWA y panel de administración para tu radio o televisión.
           <span className="block mt-2 font-semibold text-brand">
-            Recibirás por correo el enlace para efectuar el pago. Tu plan estará activo por 24 horas.
+            Revisaremos tu solicitud y te avisaremos por correo cuando tu cuenta esté activa.
           </span>
         </p>
       </section>

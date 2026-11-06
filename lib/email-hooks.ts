@@ -25,7 +25,8 @@ export interface PaymentEmailInfo {
 export async function sendAccountEmail(
   clientId: string,
   payment: PaymentEmailInfo | null,
-  planName?: string
+  planName?: string,
+  notice?: string
 ): Promise<{ ok: boolean; status: string; logId?: string }> {
   try {
     const ctx = await getClientEmailContext(clientId)
@@ -46,6 +47,7 @@ export async function sendAccountEmail(
         fecha: payment ? formatDate(payment.dueDate) : '',
         descripcion: payment?.description || '',
         vence: payment ? formatDate(payment.dueDate, true) : '',
+        aviso: notice || '',
         link: `${panelUrl()}/dashboard/payments`,
       },
       attachments: [{ filename: pdf.fileName, content: pdf.base64, contentType: 'application/pdf' }],
@@ -97,6 +99,59 @@ export async function sendWelcomeEmail(
     })
   } catch (err) {
     console.error('[email-hooks] sendWelcomeEmail:', err)
+    return { ok: false, status: 'failed' }
+  }
+}
+
+/**
+ * Confirma al cliente que recibimos su solicitud y que la cuenta queda
+ * pendiente de activación. Se envía al terminar el registro público.
+ */
+export async function sendPendingSignupEmail(
+  clientId: string
+): Promise<{ ok: boolean; status: string; logId?: string }> {
+  try {
+    const ctx = await getClientEmailContext(clientId)
+    if (!ctx?.email) return { ok: false, status: 'skipped' }
+
+    return await sendTemplateEmail({
+      templateKey: 'registro-pendiente',
+      to: ctx.email,
+      clientId,
+      vars: {
+        nombre: ctx.name,
+        proyecto: ctx.projectName,
+      },
+    })
+  } catch (err) {
+    console.error('[email-hooks] sendPendingSignupEmail:', err)
+    return { ok: false, status: 'failed' }
+  }
+}
+
+/**
+ * Avisa al cliente que su cuenta ya fue activada e incluye el enlace para
+ * ingresar al panel con el email y la contraseña del registro.
+ */
+export async function sendAccountActivatedEmail(
+  clientId: string
+): Promise<{ ok: boolean; status: string; logId?: string }> {
+  try {
+    const ctx = await getClientEmailContext(clientId)
+    if (!ctx?.email) return { ok: false, status: 'skipped' }
+
+    return await sendTemplateEmail({
+      templateKey: 'cuenta-activada',
+      to: ctx.email,
+      clientId,
+      vars: {
+        nombre: ctx.name,
+        proyecto: ctx.projectName,
+        link: `${panelUrl()}/auth/login`,
+      },
+    })
+  } catch (err) {
+    console.error('[email-hooks] sendAccountActivatedEmail:', err)
     return { ok: false, status: 'failed' }
   }
 }

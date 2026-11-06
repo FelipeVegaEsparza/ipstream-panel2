@@ -3,7 +3,6 @@ import { hash as hashPassword } from '@node-rs/bcrypt'
 import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/validations'
 import { createRadioStreamForClient, createVideoStreamForClient } from '@/lib/streaming-helpers'
-import { createSignupSubscription } from '@/lib/signup'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientSitesConfig } from '@/lib/client-sites-config'
 import { slugifyRadioName, slugError, buildSiteHost } from '@/lib/domain-slug'
@@ -71,7 +70,8 @@ export async function POST(request: NextRequest) {
     // Config de sitios (dominio base) para el subdominio del cliente.
     const sitesConfig = await getClientSitesConfig()
 
-    // Cuenta, cliente, streams, suscripción, pago y cuotas en una sola transacción.
+    // Cuenta, cliente, plan solicitado y streams en una sola transacción.
+    // La suscripción y el pago se crean recién cuando el admin activa la cuenta.
     // Nada de efectos externos (correos, agente de streaming) dentro de la transacción.
     const result = await prisma.$transaction(async (tx) => {
       // El plan elegido se valida dentro de la transacción: sin plan válido no se crea nada.
@@ -88,9 +88,12 @@ export async function POST(request: NextRequest) {
           name,
           email,
           password: hashedPassword,
+          isActive: false,
           client: {
             create: {
               name: name,
+              planId: plan?.id ?? null,
+              billingCurrency: currency || null,
             }
           }
         },
@@ -142,21 +145,7 @@ export async function POST(request: NextRequest) {
         await createVideoStreamForClient(client.id, planServerId, tx)
       }
 
-      // Suscripción + cuota inicial + primer pago pendiente
-      let subscription = null
-      if (plan) {
-        // Moneda elegida por el cliente: si el plan tiene precio en esa moneda, se usa.
-        let priced: { currency: string; amount: number } | null = null
-        if (currency) {
-          const pp = await tx.planPrice.findUnique({
-            where: { planId_currency: { planId: plan.id, currency } },
-          })
-          if (pp) priced = { currency: pp.currency, amount: pp.amount }
-        }
-        subscription = await createSignupSubscription(tx, client.id, plan, priced)
-      }
-
-      return { user, client, radioStream, subscription, plan, clientDomain }
+      return { user, client, radioStream, plan, clientDomain }
     }, { timeout: 15000 })
 
     const clientId = result.client.id
@@ -174,32 +163,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Correos (tras el commit, aislados: un fallo no revierte el registro).
-    // Se envía la boleta/cobro con el enlace de pago y la bienvenida con el
-    // aviso de que el plan queda activo por 24 horas.
-    if (result.subscription && result.plan) {
-      try {
-        const { sendAccountEmail, sendWelcomeEmail } = await import('@/lib/email-hooks')
-        const { payment } = result.subscription
-        await sendAccountEmail(
-          clientId,
-          {
-            amount: payment.amount,
-            currency: payment.currency,
-            dueDate: payment.dueDate,
-            description: payment.description,
-          },
-          result.plan.name
-        )
-        await sendWelcomeEmail(
-          clientId,
-          result.plan.name,
-          { dueDate: payment.dueDate, amount: payment.amount, currency: payment.currency },
-          siteUrl
-        )
-      } catch (err) {
-        console.error('Error enviando correos de registro:', err)
-      }
+    // Correo de recepción: la cuenta queda pendiente de activación.
+    try {
+      const { sendPendingSignupEmail } = await import('@/lib/email-hooks')
+      await sendPendingSignupEmail(clientId)
+    } catch (err) {
+      console.error('Error enviando correo de registro pendiente:', err)
     }
 
     // Contenido por defecto del AutoDJ (tras el commit, best-effort).
@@ -224,14 +193,15 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Usuario creado exitosamente',
+      message: 'Solicitud recibida. La cuenta queda pendiente de activación.',
       user: {
         id: result.user.id,
         name: result.user.name,
         email: result.user.email,
         role: result.user.role
       },
-      planAssigned: result.subscription ? { planId } : null,
+      planRequested: result.client.planId ? { planId: result.client.planId } : null,
+      pendingActivation: true,
       siteUrl,
       // Devolvemos info del stream para que la UI pueda mostrarlo
       stream: streamInfo ? {

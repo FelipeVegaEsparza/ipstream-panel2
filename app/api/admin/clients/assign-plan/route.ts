@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
 
     // Verificar que el cliente existe
     const client = await prisma.client.findUnique({
-      where: { id: clientId }
+      where: { id: clientId },
+      include: { user: { select: { isActive: true } } }
     })
 
     if (!client) {
@@ -129,26 +130,29 @@ export async function POST(request: NextRequest) {
       await ensureStreamsForServices(clientId, plan.services || 'both', plan.defaultServerId)
     } catch {}
 
-    // Hook: se generan cuotas pendientes → aviso de cobro (tras el commit, aislado)
-    try {
-      const pending = (result.payments as any[])
-        .filter((p) => p.status === 'pending')
-        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
-      if (pending) {
-        const { sendAccountEmail } = await import('@/lib/email-hooks')
-        await sendAccountEmail(
-          pending.clientId,
-          { amount: pending.amount, currency: pending.currency, dueDate: pending.dueDate, description: pending.description },
-          plan.name
-        )
-      }
-    } catch {}
+    // Las cuentas pendientes de activación reciben sus correos recién al activarse.
+    if (client.user.isActive) {
+      // Hook: se generan cuotas pendientes → aviso de cobro (tras el commit, aislado)
+      try {
+        const pending = (result.payments as any[])
+          .filter((p) => p.status === 'pending')
+          .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
+        if (pending) {
+          const { sendAccountEmail } = await import('@/lib/email-hooks')
+          await sendAccountEmail(
+            pending.clientId,
+            { amount: pending.amount, currency: pending.currency, dueDate: pending.dueDate, description: pending.description },
+            plan.name
+          )
+        }
+      } catch {}
 
-    // Hook: correo de bienvenida al contratar el plan (además de la boleta, aislado)
-    try {
-      const { sendWelcomeEmail } = await import('@/lib/email-hooks')
-      await sendWelcomeEmail(clientId, plan.name)
-    } catch {}
+      // Hook: correo de bienvenida al contratar el plan (además de la boleta, aislado)
+      try {
+        const { sendWelcomeEmail } = await import('@/lib/email-hooks')
+        await sendWelcomeEmail(clientId, plan.name)
+      } catch {}
+    }
 
     return NextResponse.json({
       message: 'Plan asignado exitosamente',

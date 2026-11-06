@@ -19,7 +19,7 @@ const TEMPLATES = [
   {
     key: 'boleta',
     name: 'Boleta / Cobro',
-    description: 'Se envía al generarse una cuota o al confirmarse un pago. Variables: {{nombre}}, {{proyecto}}, {{plan}}, {{monto}}, {{moneda}}, {{fecha}}, {{descripcion}}, {{link}}, {{vence}}.',
+    description: 'Se envía al generarse una cuota o al confirmarse un pago. Variables: {{nombre}}, {{proyecto}}, {{plan}}, {{monto}}, {{moneda}}, {{fecha}}, {{descripcion}}, {{link}}, {{vence}}, {{aviso}}.',
     subject: '{{proyecto}} — tu cuenta del mes ({{fecha}})',
     htmlBody: `
 <div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
@@ -28,7 +28,7 @@ const TEMPLATES = [
     <p style="color:#6b7280;margin:0 0 16px">Hola ${'{{nombre}}'} 👋</p>
     <div style="${BOX_STYLE}">
       <p style="margin:0 0 12px;color:#374151">Te compartimos la cuenta del mes. Puedes pagar desde tu panel o transferir y avisarnos.</p>
-      <p style="margin:0 0 12px;color:#0891b2;font-weight:600">Tu plan está activo por 24 horas. Realiza el pago antes del ${'{{vence}}'} para mantener el servicio.</p>
+      <p style="margin:0 0 12px;color:#0891b2;font-weight:600">${'{{aviso}}'}</p>
       <table style="width:100%;font-size:14px">
         <tr><td style="padding:4px 0;color:#6b7280">Plan</td><td style="text-align:right;font-weight:600">${'{{plan}}'}</td></tr>
         <tr><td style="padding:4px 0;color:#6b7280">Periodo</td><td style="text-align:right">${'{{descripcion}}'}</td></tr>
@@ -70,6 +70,46 @@ const TEMPLATES = [
     <div style="text-align:center">
       <a href="${'{{sitio}}'}" style="${BTN_STYLE}">Ver mi sitio</a>
     </div>
+    ${FOOTER}
+  </div>
+</div>`,
+  },
+  {
+    key: 'registro-pendiente',
+    name: 'Registro recibido / Cuenta pendiente',
+    description: 'Se envía al recibir una solicitud de cuenta desde el sitio público. Variables: {{nombre}}, {{proyecto}}.',
+    subject: 'Recibimos tu solicitud — {{proyecto}}',
+    htmlBody: `
+<div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
+  <div style="max-width:560px;margin:0 auto">
+    <h2 style="margin:0 0 4px">${'{{proyecto}}'}</h2>
+    <p style="color:#6b7280;margin:0 0 16px">Hola ${'{{nombre}}'} 👋</p>
+    <div style="${BOX_STYLE}">
+      <p style="margin:0 0 12px;color:#374151">Recibimos tus datos para crear tu cuenta de <strong>${'{{proyecto}}'}</strong>.</p>
+      <p style="margin:0;color:#374151">Nuestro equipo está configurando tu espacio. Te avisaremos por correo cuando tu cuenta esté activa. No necesitas hacer nada por ahora.</p>
+    </div>
+    ${FOOTER}
+  </div>
+</div>`,
+  },
+  {
+    key: 'cuenta-activada',
+    name: 'Cuenta activada',
+    description: 'Se envía cuando el administrador activa la cuenta. Variables: {{nombre}}, {{proyecto}}, {{link}}.',
+    subject: 'Tu cuenta ya está activa — {{proyecto}}',
+    htmlBody: `
+<div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
+  <div style="max-width:560px;margin:0 auto">
+    <h2 style="margin:0 0 4px">${'{{proyecto}}'}</h2>
+    <p style="color:#6b7280;margin:0 0 16px">Hola ${'{{nombre}}'} 👋</p>
+    <div style="${BOX_STYLE}">
+      <p style="margin:0 0 12px;color:#374151">Tu cuenta de <strong>${'{{proyecto}}'}</strong> ya está activa.</p>
+      <p style="margin:0;color:#374151">Ingresa con el email y la contraseña que elegiste al registrarte. Desde el panel podrás configurar tu radio y revisar tu plan y pagos.</p>
+    </div>
+    <div style="text-align:center">
+      <a href="${'{{link}}'}" style="${BTN_STYLE}">Ingresar a mi panel</a>
+    </div>
+    <p style="color:#6b7280;font-size:13px;margin:16px 0 0;text-align:center">Si no recuerdas tu contraseña, contacta a soporte.</p>
     ${FOOTER}
   </div>
 </div>`,

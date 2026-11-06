@@ -56,15 +56,15 @@ export async function ensureStreamsForServices(
 }
 
 /**
- * Crea la suscripción, la cuota inicial y el primer pago pendiente para un
- * cliente recién registrado, y aplica las cuotas del plan.
+ * Crea la suscripción, la cuota inicial y el primer pago pendiente cuando el
+ * administrador activa una cuenta, y aplica las cuotas del plan.
  *
- * El plan queda activo por 24 horas desde el registro. Si el pago no se
+ * El plan queda activo por 24 horas desde la activación. Si el pago no se
  * confirma dentro de ese plazo, el pago queda vencido y el dashboard lo
  * muestra como pendiente/vencido.
  *
  * No envía correos ni ejecuta side effects externos: debe llamarse dentro de
- * la misma transacción que crea la cuenta para que un fallo no deje estados
+ * la misma transacción que activa la cuenta para que un fallo no deje estados
  * parciales. El plan ya debe venir validado (existe y está activo).
  */
 export async function createSignupSubscription(
@@ -147,7 +147,7 @@ export async function notifyAdminNewSignup(info: {
   if (!to) return
 
   const panelUrl = process.env.NEXTAUTH_URL || 'https://panel.casterfly.com'
-  const planLabel = info.planName ? ` · Plan: <strong>${info.planName}</strong>` : ' · Sin plan'
+  const planLabel = info.planName ? ` · Plan solicitado: <strong>${info.planName}</strong>` : ' · Sin plan'
   const seedLabel = info.seed
     ? info.seed.ok
       ? '<p style="margin:12px 0 0;color:#059669">Contenido por defecto del AutoDJ: sembrado correctamente.</p>'
@@ -158,15 +158,16 @@ export async function notifyAdminNewSignup(info: {
 <div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
   <div style="max-width:520px;margin:0 auto">
     <h2 style="margin:0 0 4px">CasterFly</h2>
-    <p style="color:#6b7280;margin:0 0 16px">Nuevo registro de cliente 🎉</p>
+    <p style="color:#6b7280;margin:0 0 16px">Nuevo registro pendiente de activación</p>
     <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px">
       <p style="margin:0 0 8px"><strong>Nombre:</strong> ${info.name}</p>
       <p style="margin:0 0 8px"><strong>Email:</strong> ${info.email}</p>
-      <p style="margin:0">${planLabel}</p>
+      <p style="margin:0 0 12px">${planLabel}</p>
+      <p style="margin:0;color:#92400e">Configura la cuenta y actívala desde el panel. Al activarla se enviarán las instrucciones de ingreso al cliente.</p>
       ${seedLabel}
     </div>
     <p style="margin:20px 0 0">
-      <a href="${panelUrl}/admin/users" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Ver clientes</a>
+      <a href="${panelUrl}/admin/users" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Ver usuarios</a>
     </p>
   </div>
 </div>`
@@ -174,7 +175,7 @@ export async function notifyAdminNewSignup(info: {
   try {
     await sendEmail({
       to,
-      subject: `Nuevo registro: ${info.name}`,
+      subject: `Nuevo registro pendiente: ${info.name}`,
       html,
       templateKey: 'aviso-admin',
     })

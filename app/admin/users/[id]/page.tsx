@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PencilIcon, ArrowLeftIcon, ArrowPathRoundedSquareIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
+import { ActivateUserButton } from '@/components/admin/ActivateUserButton'
 import { getDashboardLocale } from '@/lib/dashboard-locale-server'
 import { dashboardT } from '@/lib/dashboard-i18n'
 
@@ -122,6 +123,11 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
                         <ArrowPathRoundedSquareIcon className="h-5 w-5" />
                         {t('admin.userDetail.impersonate')}
                     </Link>
+                    <ActivateUserButton
+                        userId={user.id}
+                        userName={user.name || user.email}
+                        isActive={user.isActive}
+                    />
                     <Link
                         href={`/admin/users/${user.id}/edit`}
                         className="btn-primary flex items-center gap-2"

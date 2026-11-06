@@ -51,6 +51,10 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        if (!user.isActive) {
+          return null
+        }
+
         return {
           id: user.id,
           email: user.email,

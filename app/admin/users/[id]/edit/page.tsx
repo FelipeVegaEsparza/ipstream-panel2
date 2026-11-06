@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { UserForm } from '@/components/admin/UserForm'
 import { DomainManager } from '@/components/admin/DomainManager'
+import { ActivateUserButton } from '@/components/admin/ActivateUserButton'
 import { getDashboardLocale } from '@/lib/dashboard-locale-server'
 import { dashboardT } from '@/lib/dashboard-i18n'
 
@@ -63,6 +64,18 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
         <p className="text-muted-foreground">
           {t('admin.users.editSubtitle')}
         </p>
+      </div>
+
+      <div className="card max-w-2xl flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">{t('admin.users.accountStatus')}</h2>
+          <p className="text-sm text-muted-foreground">{t('admin.users.accountStatusHint')}</p>
+        </div>
+        <ActivateUserButton
+          userId={user.id}
+          userName={user.name || user.email}
+          isActive={user.isActive}
+        />
       </div>
 
       <div className="card max-w-2xl">
