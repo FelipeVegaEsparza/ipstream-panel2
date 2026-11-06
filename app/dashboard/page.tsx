@@ -81,7 +81,7 @@ export default async function DashboardPage() {
   ])
 
   // Calcular estado de pago
-  let paymentStatus: 'paid' | 'due-soon' | 'overdue' | 'no-plan' | 'trial' = 'no-plan'
+  let paymentStatus: 'paid' | 'due-soon' | 'overdue' | 'no-plan' = 'no-plan'
   let nextPaymentDate: Date | null = null
   let planName: string | null = null
   let planPrice: number | null = null
@@ -90,45 +90,33 @@ export default async function DashboardPage() {
     planName = clientInfo.plan.name
     planPrice = clientInfo.plan.price
 
-    const trialEnd = subscription.trialEndsAt ? new Date(subscription.trialEndsAt) : null
+    // Buscar el próximo pago pendiente (el más cercano por dueDate)
+    const nextPendingPayment = await prisma.payment.findFirst({
+      where: {
+        clientId: effectiveClient.clientId,
+        subscriptionId: subscription.id,
+        status: 'pending'
+      },
+      orderBy: { dueDate: 'asc' } // El más cercano primero
+    })
 
-    if (
-      subscription.status === SUBSCRIPTION_STATUS.TRIALING &&
-      trialEnd &&
-      trialEnd.getTime() > Date.now()
-    ) {
-      // Prueba gratuita vigente: el próximo hito es el fin de la prueba.
-      paymentStatus = 'trial'
-      nextPaymentDate = trialEnd
-    } else {
-      // Buscar el próximo pago pendiente (el más cercano por dueDate)
-      const nextPendingPayment = await prisma.payment.findFirst({
-        where: {
-          clientId: effectiveClient.clientId,
-          subscriptionId: subscription.id,
-          status: 'pending'
-        },
-        orderBy: { dueDate: 'asc' } // El más cercano primero
-      })
+    if (nextPendingPayment) {
+      nextPaymentDate = nextPendingPayment.dueDate
 
-      if (nextPendingPayment) {
-        nextPaymentDate = nextPendingPayment.dueDate
+      const now = new Date()
+      const daysUntilPayment = Math.ceil((nextPaymentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 
-        const now = new Date()
-        const daysUntilPayment = Math.ceil((nextPaymentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-
-        if (daysUntilPayment < 0) {
-          paymentStatus = 'overdue'
-        } else if (daysUntilPayment <= 7) {
-          paymentStatus = 'due-soon'
-        } else {
-          paymentStatus = 'paid'
-        }
+      if (daysUntilPayment < 0) {
+        paymentStatus = 'overdue'
+      } else if (daysUntilPayment <= 7) {
+        paymentStatus = 'due-soon'
       } else {
-        // Si no hay pagos pendientes, usar la fecha de fin de la suscripción
-        nextPaymentDate = subscription.endDate
         paymentStatus = 'paid'
       }
+    } else {
+      // Si no hay pagos pendientes, usar la fecha de fin de la suscripción
+      nextPaymentDate = subscription.endDate
+      paymentStatus = 'paid'
     }
   }
 
@@ -148,27 +136,23 @@ export default async function DashboardPage() {
     prisma.aiCreditPack.count({ where: { isActive: true } }),
   ])
 
-  const paymentNeedsAttention = paymentStatus === 'due-soon' || paymentStatus === 'overdue' || paymentStatus === 'trial'
+  const paymentNeedsAttention = paymentStatus === 'due-soon' || paymentStatus === 'overdue'
   const quotaExceeded = Boolean(usageRadio?.exceeded || usageVideo?.exceeded)
   const hasAttention = (!onboarding.allDone && !onboarding.dismissed) || !basicData || paymentNeedsAttention || quotaExceeded
   const paymentTone = paymentStatus === 'overdue'
     ? 'border-[color:var(--danger)]/30 bg-[color:var(--danger)]/10 text-[color:var(--danger)]'
     : paymentStatus === 'due-soon'
       ? 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/10 text-[color:var(--warn)]'
-      : paymentStatus === 'trial'
-        ? 'border-signal/30 bg-signal/10 text-signal'
-        : paymentStatus === 'paid'
-          ? 'border-[color:var(--live)]/30 bg-[color:var(--live)]/10 text-[color:var(--live)]'
-          : 'border-line bg-surface-3 text-muted-foreground'
+      : paymentStatus === 'paid'
+        ? 'border-[color:var(--live)]/30 bg-[color:var(--live)]/10 text-[color:var(--live)]'
+        : 'border-line bg-surface-3 text-muted-foreground'
   const paymentLabel = paymentStatus === 'overdue'
     ? t('payment.status.overdue')
     : paymentStatus === 'due-soon'
       ? t('payment.status.dueSoon')
-      : paymentStatus === 'trial'
-        ? t('payment.status.trial')
-        : paymentStatus === 'paid'
-          ? t('payment.status.paid')
-          : t('payment.status.noPlan')
+      : paymentStatus === 'paid'
+        ? t('payment.status.paid')
+        : t('payment.status.noPlan')
   const onAirGrid = hasRadio && hasTv ? 'sm:grid-cols-2 sm:divide-x sm:divide-line' : ''
 
   return (

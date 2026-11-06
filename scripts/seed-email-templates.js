@@ -28,6 +28,7 @@ const TEMPLATES = [
     <p style="color:#6b7280;margin:0 0 16px">Hola ${'{{nombre}}'} 👋</p>
     <div style="${BOX_STYLE}">
       <p style="margin:0 0 12px;color:#374151">Te compartimos la cuenta del mes. Puedes pagar desde tu panel o transferir y avisarnos.</p>
+      <p style="margin:0 0 12px;color:#0891b2;font-weight:600">Tu plan está activo por 24 horas. Realiza el pago antes del ${'{{vence}}'} para mantener el servicio.</p>
       <table style="width:100%;font-size:14px">
         <tr><td style="padding:4px 0;color:#6b7280">Plan</td><td style="text-align:right;font-weight:600">${'{{plan}}'}</td></tr>
         <tr><td style="padding:4px 0;color:#6b7280">Periodo</td><td style="text-align:right">${'{{descripcion}}'}</td></tr>
@@ -45,7 +46,7 @@ const TEMPLATES = [
   {
     key: 'bienvenida',
     name: 'Bienvenida / Plan contratado',
-    description: 'Se envía al cliente al contratar un plan. Variables: {{nombre}}, {{proyecto}}, {{plan}}, {{monto}}, {{moneda}}, {{fecha}}, {{prueba}}, {{link}}, {{sitio}}.',
+    description: 'Se envía al cliente al contratar un plan. El correo indica que el plan queda activo por 24 horas y que debe pagarse antes de la fecha indicada. Variables: {{nombre}}, {{proyecto}}, {{plan}}, {{monto}}, {{moneda}}, {{fecha}}, {{prueba}}, {{link}}, {{sitio}}.',
     subject: '¡Bienvenido a {{proyecto}}, {{nombre}}!',
     htmlBody: `
 <div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
@@ -61,9 +62,9 @@ const TEMPLATES = [
         <tr><td style="padding:8px 0;color:#6b7280">Total</td><td style="text-align:right;font-size:20px;font-weight:700;color:#0891b2">${'{{moneda}}'} ${'{{monto}}'}</td></tr>
       </table>
     </div>
-    <p style="color:#374151;margin:0 0 8px">Ingresa a tu panel para configurar tu espacio y empezar a transmitir:</p>
+    <p style="color:#374151;margin:0 0 8px">Ingresa a tu panel para efectuar el pago y configurar tu espacio:</p>
     <div style="text-align:center">
-      <a href="${'{{link}}'}" style="${BTN_STYLE}">Ir a mi panel</a>
+      <a href="${'{{link}}'}" style="${BTN_STYLE}">Ir a pagar</a>
     </div>
     <p style="color:#374151;margin:16px 0 8px">Tu sitio ya está online:</p>
     <div style="text-align:center">

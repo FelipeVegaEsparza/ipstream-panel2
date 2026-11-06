@@ -138,9 +138,7 @@ export function ClienteRow({
       ? t('admin.clients.status.current')
       : value === 'no_plan'
       ? t('admin.clients.status.no_plan')
-      : value === 'no_subscription'
-      ? t('admin.clients.status.no_subscription')
-      : t('admin.clients.status.trial')
+      : t('admin.clients.status.no_subscription')
 
   const methodLabel = (value: string) =>
     value === 'bank_transfer'

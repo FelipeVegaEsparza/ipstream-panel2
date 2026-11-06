@@ -35,7 +35,6 @@ export async function GET() {
     return NextResponse.json({
       enableGenericNews: config.enableGenericNews,
       adminNotifyEmail: config.adminNotifyEmail,
-      trialDays: config.trialDays,
       panelLogoDarkUrl: config.panelLogoDarkUrl || '',
       panelLogoLightUrl: config.panelLogoLightUrl || '',
       panelFaviconUrl: config.panelFaviconUrl || '',
@@ -78,7 +77,6 @@ export async function PUT(request: NextRequest) {
     const {
       enableGenericNews,
       adminNotifyEmail,
-      trialDays,
       panelLogoDarkUrl,
       panelLogoLightUrl,
       panelFaviconUrl,
@@ -106,15 +104,6 @@ export async function PUT(request: NextRequest) {
       deepseekApiKey,
       clearDeepSeekApiKey,
     } = body
-
-    let trialDaysValue: number | undefined
-    if (trialDays !== undefined) {
-      const parsed = Number(trialDays)
-      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 365) {
-        return NextResponse.json({ error: 'trialDays debe ser un entero entre 0 y 365' }, { status: 400 })
-      }
-      trialDaysValue = parsed
-    }
 
     // Token: si viene definido, se guarda (encriptado) o se limpia si es vacío.
     // Si no viene, se deja como está.
@@ -282,7 +271,6 @@ export async function PUT(request: NextRequest) {
         data: {
           enableGenericNews: enableGenericNews ?? false,
           adminNotifyEmail: adminNotifyEmail ?? null,
-          ...(trialDaysValue !== undefined ? { trialDays: trialDaysValue } : {}),
           ...panelLogoData,
           ...sitesData,
           ...elevenLabsData,
@@ -295,7 +283,6 @@ export async function PUT(request: NextRequest) {
         data: {
           ...(enableGenericNews !== undefined ? { enableGenericNews } : {}),
           ...(adminNotifyEmail !== undefined ? { adminNotifyEmail: adminNotifyEmail || null } : {}),
-          ...(trialDaysValue !== undefined ? { trialDays: trialDaysValue } : {}),
           ...panelLogoData,
           ...sitesData,
           ...elevenLabsData,
@@ -317,7 +304,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       enableGenericNews: config.enableGenericNews,
       adminNotifyEmail: config.adminNotifyEmail,
-      trialDays: config.trialDays,
       panelLogoDarkUrl: config.panelLogoDarkUrl || '',
       panelLogoLightUrl: config.panelLogoLightUrl || '',
       panelFaviconUrl: config.panelFaviconUrl || '',

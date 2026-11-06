@@ -175,30 +175,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Correos (tras el commit, aislados: un fallo no revierte el registro).
-    // Durante la prueba no se envía cobro inmediato: sólo la bienvenida con la
-    // fecha de cobro; la boleta se envía al confirmarse el primer pago.
+    // Se envía la boleta/cobro con el enlace de pago y la bienvenida con el
+    // aviso de que el plan queda activo por 24 horas.
     if (result.subscription && result.plan) {
       try {
         const { sendAccountEmail, sendWelcomeEmail } = await import('@/lib/email-hooks')
-        const { payment, isTrial, trialDays } = result.subscription
-        if (!isTrial) {
-          await sendAccountEmail(
-            clientId,
-            {
-              amount: payment.amount,
-              currency: payment.currency,
-              dueDate: payment.dueDate,
-              description: payment.description,
-            },
-            result.plan.name
-          )
-        }
+        const { payment } = result.subscription
+        await sendAccountEmail(
+          clientId,
+          {
+            amount: payment.amount,
+            currency: payment.currency,
+            dueDate: payment.dueDate,
+            description: payment.description,
+          },
+          result.plan.name
+        )
         await sendWelcomeEmail(
           clientId,
           result.plan.name,
-          isTrial
-            ? { trialDays, chargeDate: payment.dueDate, amount: payment.amount, currency: payment.currency }
-            : null,
+          { dueDate: payment.dueDate, amount: payment.amount, currency: payment.currency },
           siteUrl
         )
       } catch (err) {

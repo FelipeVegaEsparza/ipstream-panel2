@@ -1,14 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { CreditCardIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { CreditCardIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface PaymentStatusCardProps {
   nextPaymentDate: Date | null
   planName: string | null
   planPrice: number | null
-  status: 'paid' | 'due-soon' | 'overdue' | 'no-plan' | 'trial'
+  status: 'paid' | 'due-soon' | 'overdue' | 'no-plan'
 }
 
 export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status }: PaymentStatusCardProps) {
@@ -22,8 +22,6 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
         return { title: t('payment.status.dueSoon'), icon: ExclamationTriangleIcon, tone: 'text-[color:var(--warn)]', badge: 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/10' }
       case 'overdue':
         return { title: t('payment.status.overdue'), icon: XCircleIcon, tone: 'text-[color:var(--danger)]', badge: 'border-[color:var(--danger)]/30 bg-[color:var(--danger)]/10' }
-      case 'trial':
-        return { title: t('payment.status.trial'), icon: SparklesIcon, tone: 'text-signal', badge: 'border-signal/30 bg-signal/10' }
       default:
         return { title: t('payment.status.noPlan'), icon: CreditCardIcon, tone: 'text-muted-foreground', badge: 'border-line bg-surface-3' }
     }
@@ -77,7 +75,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
             {nextPaymentDate && (
               <div>
                 <div className="text-[10px] text-muted-foreground">
-                  {status === 'trial' ? t('payment.trialEnd') : t('payment.nextPayment')}
+                  {t('payment.nextPayment')}
                 </div>
                 <div className="dashboard-metric text-xs text-foreground">{formatDate(nextPaymentDate)}</div>
               </div>
@@ -85,7 +83,7 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
             {planPrice !== null && (
               <div>
                 <div className="text-[10px] text-muted-foreground">
-                  {status === 'trial' ? t('payment.trialCharge') : t('payment.amount')}
+                  {t('payment.amount')}
                 </div>
                 <div className="dashboard-metric text-xs text-foreground">{formatCurrency(planPrice)}</div>
               </div>

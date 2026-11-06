@@ -59,9 +59,9 @@ export async function ensureStreamsForServices(
  * Crea la suscripción, la cuota inicial y el primer pago pendiente para un
  * cliente recién registrado, y aplica las cuotas del plan.
  *
- * Si `AppConfig.trialDays` es mayor que 0, la suscripción nace en estado de
- * prueba (`trialing`), el plan queda activo y el primer cobro se programa
- * para el fin de la prueba. Si es 0, nace activa como antes.
+ * El plan queda activo por 24 horas desde el registro. Si el pago no se
+ * confirma dentro de ese plazo, el pago queda vencido y el dashboard lo
+ * muestra como pendiente/vencido.
  *
  * No envía correos ni ejecuta side effects externos: debe llamarse dentro de
  * la misma transacción que crea la cuenta para que un fallo no deje estados
@@ -79,30 +79,18 @@ export async function createSignupSubscription(
   const billingCurrency = priced?.currency || plan.currency
   const billingAmount = typeof priced?.amount === 'number' ? priced.amount : plan.price
 
-  // Duración de la prueba (global). Sin fila de config → 7 días por defecto.
-  const config = await db.appConfig.findFirst({ select: { trialDays: true } })
-  const trialDays = config?.trialDays ?? 7
-  const trialEndsAt = trialDays > 0
-    ? new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000)
-    : null
-
-  // Fin del primer período pagado (si no hay prueba, es el fin del período actual).
-  const periodEnd = new Date(now)
-  if (plan.interval === 'yearly') periodEnd.setFullYear(periodEnd.getFullYear() + 1)
-  else periodEnd.setMonth(periodEnd.getMonth() + 1)
-
-  const isTrial = trialEndsAt !== null
-  const firstChargeDate = isTrial ? trialEndsAt! : periodEnd
+  // Ventana de activación: 24 horas para completar el pago.
+  const paymentDueDate = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
   const subscription = await db.subscription.create({
     data: {
       clientId,
       planId: plan.id,
-      status: isTrial ? SUBSCRIPTION_STATUS.TRIALING : SUBSCRIPTION_STATUS.ACTIVE,
+      status: SUBSCRIPTION_STATUS.ACTIVE,
       billingCurrency,
       startDate: now,
-      endDate: isTrial ? trialEndsAt! : periodEnd,
-      trialEndsAt,
+      endDate: paymentDueDate,
+      trialEndsAt: null,
     },
   })
 
@@ -112,10 +100,14 @@ export async function createSignupSubscription(
     data: { planId: plan.id },
   })
 
-  const chargeLabel = firstChargeDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
-  const description = isTrial
-    ? `Primer pago tras la prueba gratis - ${chargeLabel}`
-    : `${plan.interval === 'yearly' ? 'Pago anual' : 'Pago mensual'} - ${chargeLabel}`
+  const chargeLabel = paymentDueDate.toLocaleString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const description = `${plan.interval === 'yearly' ? 'Pago anual' : 'Pago mensual'} - ${chargeLabel}`
 
   const payment = await db.payment.create({
     data: {
@@ -126,14 +118,14 @@ export async function createSignupSubscription(
       status: 'pending',
       paymentMethod: 'pending',
       description,
-      dueDate: firstChargeDate,
+      dueDate: paymentDueDate,
     },
   })
 
   // Aplicar cuotas de almacenamiento del plan (restringe la biblioteca de inmediato)
   await applyPlanQuotasToClient(clientId, plan, db)
 
-  return { subscription, payment, trialDays, trialEndsAt, isTrial }
+  return { subscription, payment }
 }
 
 /**

@@ -45,7 +45,7 @@ export async function sendAccountEmail(
         moneda: payment?.currency || 'CLP',
         fecha: payment ? formatDate(payment.dueDate) : '',
         descripcion: payment?.description || '',
-        vence: payment ? formatDate(payment.dueDate) : '',
+        vence: payment ? formatDate(payment.dueDate, true) : '',
         link: `${panelUrl()}/dashboard/payments`,
       },
       attachments: [{ filename: pdf.fileName, content: pdf.base64, contentType: 'application/pdf' }],
@@ -61,19 +61,21 @@ export async function sendAccountEmail(
  * contrata un plan. Se usa al registrarse/suscribirse y al asignarle un plan
  * desde el admin, además de la boleta/cobro.
  *
- * Con `trial` (registro con prueba gratuita) el correo informa los días de
- * prueba y la fecha/monto del primer cobro; sin `trial` mantiene el formato
- * anterior (datos de la contratación).
+ * Cuando existe un pago pendiente, el correo avisa que el plan queda activo
+ * por 24 horas y que debe pagarse antes de la fecha indicada para mantenerlo.
  */
 export async function sendWelcomeEmail(
   clientId: string,
   planName?: string,
-  trial?: { trialDays: number; chargeDate: Date; amount: number; currency: string } | null,
+  payment?: { dueDate: Date; amount: number; currency: string } | null,
   siteUrl?: string | null
 ): Promise<{ ok: boolean; status: string; logId?: string }> {
   try {
     const ctx = await getClientEmailContext(clientId)
     if (!ctx?.email) return { ok: false, status: 'skipped' }
+
+    const dueDate = payment?.dueDate ?? new Date()
+    const dueLabel = formatDate(dueDate, true)
 
     return await sendTemplateEmail({
       templateKey: 'bienvenida',
@@ -83,15 +85,13 @@ export async function sendWelcomeEmail(
         nombre: ctx.name,
         proyecto: ctx.projectName,
         plan: planName || '',
-        monto: trial ? formatCurrency(trial.amount, trial.currency) : '',
-        moneda: trial?.currency || '',
-        fecha: trial
-          ? formatDate(trial.chargeDate)
-          : new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
-        prueba: trial
-          ? `Disfrutá ${trial.trialDays} día${trial.trialDays === 1 ? '' : 's'} de prueba gratis. El primer cobro será el ${formatDate(trial.chargeDate)}.`
+        monto: payment ? formatCurrency(payment.amount, payment.currency) : '',
+        moneda: payment?.currency || '',
+        fecha: dueLabel,
+        prueba: payment
+          ? `Tu plan estará activo por 24 horas. Realiza el pago antes del ${dueLabel} para mantener el servicio.`
           : '',
-        link: `${panelUrl()}/dashboard`,
+        link: `${panelUrl()}/dashboard/payments`,
         sitio: siteUrl || '',
       },
     })

@@ -25,7 +25,6 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
   const { t } = useDashboardI18n()
   const [enableGenericNews, setEnableGenericNews] = useState(false)
   const [adminNotifyEmail, setAdminNotifyEmail] = useState('')
-  const [trialDays, setTrialDays] = useState(7)
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
 
@@ -37,7 +36,6 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
           const data = await res.json()
           setEnableGenericNews(data.enableGenericNews)
           setAdminNotifyEmail(data.adminNotifyEmail || '')
-          if (typeof data.trialDays === 'number') setTrialDays(data.trialDays)
         }
       } catch (error) {
         console.error('Error fetching app config:', error)
@@ -61,7 +59,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
       const response = await fetch('/api/admin/app-config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enableGenericNews, adminNotifyEmail: adminNotifyEmail.trim() || null, trialDays })
+        body: JSON.stringify({ enableGenericNews, adminNotifyEmail: adminNotifyEmail.trim() || null })
       })
 
       if (response.ok) {
@@ -169,23 +167,6 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
             />
             <p className="text-sm text-muted-foreground mt-1">
               {t('admin.systemSettings.notifyEmailHint')}
-            </p>
-          </div>
-
-          <div className="p-3 rounded-lg bg-secondary/50">
-            <label className="block text-foreground font-medium mb-1">
-              {t('admin.systemSettings.trialDays')}
-            </label>
-            <input
-              type="number"
-              min={0}
-              max={365}
-              value={trialDays}
-              onChange={(e) => setTrialDays(Number(e.target.value))}
-              className="w-full bg-background border border-border text-foreground rounded-md px-3 py-2 text-sm"
-            />
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('admin.systemSettings.trialDaysHint')}
             </p>
           </div>
 
