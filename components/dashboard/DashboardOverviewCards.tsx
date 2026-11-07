@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Headphones, HardDrive, Crown, Smartphone } from 'lucide-react'
 import { useStreamingStatus } from '@/lib/useStreamingStatus'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
@@ -52,13 +51,10 @@ function fmtCurrency(price: number, currency: string, locale: 'es' | 'en') {
   }
 }
 
-function MetricCell(props: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+function MetricCell(props: { label: string; children: React.ReactNode }) {
   return (
-    <div className="border-b border-line p-4 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0">
-      <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
-        {props.icon}
-        {props.label}
-      </div>
+    <div className="bg-card p-4">
+      <div className="text-[11px] font-medium text-muted-foreground">{props.label}</div>
       <div className="mt-2">{props.children}</div>
     </div>
   )
@@ -124,13 +120,10 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
   if (hasTv) storageItems.push({ label: t('nowPlaying.tv'), used: usageVideo, quota: plan?.videoStorageQuotaMB ?? null })
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-      <MetricCell
-        icon={<Headphones className="h-3.5 w-3.5" />}
-        label={t('overview.listeners')}
-      >
+    <div className="grid grid-cols-1 gap-px bg-line sm:grid-cols-2 xl:grid-cols-4">
+      <MetricCell label={t('overview.listeners')}>
         {hasRadio || hasTv ? (
-          <div className="flex items-end gap-5">
+          <div className="flex items-end gap-6">
             {hasRadio && (
               <div>
                 <div className="dashboard-metric text-2xl font-medium text-foreground">{radioListeners}</div>
@@ -149,7 +142,7 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
         )}
       </MetricCell>
 
-      <MetricCell icon={<HardDrive className="h-3.5 w-3.5" />} label={t('overview.storage')}>
+      <MetricCell label={t('overview.storage')}>
         {storageItems.length === 0 ? (
           <p className="text-xs text-muted-foreground">{t('overview.noStorage')}</p>
         ) : (
@@ -167,9 +160,9 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
                     </span>
                   </div>
                   {quotaMB !== null && pct !== null && (
-                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-3">
+                    <div className="mt-1 h-0.5 overflow-hidden bg-surface-3">
                       <div
-                        className={`h-full rounded-full ${item.used?.exceeded ? 'bg-[color:var(--danger)]' : pct > 80 ? 'bg-[color:var(--warn)]' : 'bg-[color:var(--signal)]'}`}
+                        className={`h-full ${item.used?.exceeded ? 'bg-[color:var(--danger)]' : pct > 80 ? 'bg-[color:var(--warn)]' : 'bg-[color:var(--text-3)]'}`}
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
@@ -181,7 +174,7 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
         )}
       </MetricCell>
 
-      <MetricCell icon={<Crown className="h-3.5 w-3.5" />} label={t('overview.plan')}>
+      <MetricCell label={t('overview.plan')}>
         {plan ? (
           <>
             <div className="truncate text-[15px] font-medium text-foreground">{plan.name}</div>
@@ -189,7 +182,7 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
               {plan.interval === 'monthly' ? t('overview.monthly') : t('overview.yearly')}
               {planLabel ? ` · ${planLabel}` : ''}
             </div>
-            <div className="dashboard-metric mt-1 text-[11px] font-medium text-signal">
+            <div className="dashboard-metric mt-1 text-[11px] font-medium text-foreground">
               {fmtCurrency(plan.price, plan.currency, locale)}
             </div>
           </>
@@ -200,7 +193,7 @@ export function DashboardOverviewCards({ plan, usageRadio, usageVideo }: Dashboa
         )}
       </MetricCell>
 
-      <MetricCell icon={<Smartphone className="h-3.5 w-3.5" />} label={t('overview.pwaInstalled')}>
+      <MetricCell label={t('overview.pwaInstalled')}>
         <div className="dashboard-metric text-2xl font-medium text-foreground">
           {installedCount === null ? '—' : installedCount}
         </div>

@@ -28,23 +28,17 @@ function TrackRow(props: {
   const track = props.track
 
   return (
-    <div className="flex min-w-0 items-center gap-3">
-      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[6px] border border-line bg-surface-3">
-        {track?.coverUrl ? (
+    <div className="flex min-w-0 items-start gap-3">
+      {track?.coverUrl && (
+        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[6px] border border-line bg-surface-3">
           <img
             src={track.coverUrl}
             alt={track.title || t('nowPlaying.cover')}
             className="h-full w-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-            </svg>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
       <div className="min-w-0 flex-1">
         <div className="dashboard-label mb-1">{props.label}</div>
         {track ? (
@@ -52,7 +46,7 @@ function TrackRow(props: {
             <div className="flex items-center gap-2">
               <p className="truncate text-[13px] font-medium text-foreground">{track.title || t('nowPlaying.noTitle')}</p>
               {track.isJingle && (
-                <span className="shrink-0 rounded border border-amber-500/30 bg-amber-500/10 px-1 py-0.5 text-[9px] font-medium uppercase text-amber-300">
+                <span className="shrink-0 text-[9px] font-medium text-muted-foreground">
                   Jingle
                 </span>
               )}

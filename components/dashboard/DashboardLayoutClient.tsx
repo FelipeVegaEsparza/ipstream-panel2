@@ -19,8 +19,6 @@ interface DashboardLayoutClientProps {
   disabledItems?: MenuItemKey[]
   globalHiddenItems?: MenuItemKey[]
   websiteUrl?: string | null
-  radioLogoUrl?: string | null
-  stationName?: string | null
 }
 
 export function DashboardLayoutClient({
@@ -30,8 +28,6 @@ export function DashboardLayoutClient({
   disabledItems,
   globalHiddenItems,
   websiteUrl,
-  radioLogoUrl,
-  stationName,
 }: DashboardLayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -73,8 +69,6 @@ export function DashboardLayoutClient({
           user={user}
           setSidebarOpen={setSidebarOpen}
           websiteUrl={websiteUrl}
-          radioLogoUrl={radioLogoUrl}
-          stationName={stationName}
         />
         <GlobalMenuBanner globallyHidden={globalHidden} />
         <main className="py-6 md:py-8">

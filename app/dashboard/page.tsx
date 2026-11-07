@@ -11,10 +11,10 @@ import { getAiLiveAccess } from '@/lib/ai-live'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
 import { getOnboarding } from '@/lib/onboarding'
 import { OnboardingDismiss } from '@/components/dashboard/OnboardingDismiss'
-import { RocketLaunchIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon } from '@heroicons/react/24/outline'
 import { SUBSCRIPTION_STATUS } from '@/lib/subscription-status'
 import { getDashboardLocale } from '@/lib/dashboard-locale-server'
-import { dashboardT, menuName } from '@/lib/dashboard-i18n'
+import { dashboardT } from '@/lib/dashboard-i18n'
 
 export default async function DashboardPage() {
   const locale = getDashboardLocale()
@@ -139,43 +139,32 @@ export default async function DashboardPage() {
   const paymentNeedsAttention = paymentStatus === 'due-soon' || paymentStatus === 'overdue'
   const quotaExceeded = Boolean(usageRadio?.exceeded || usageVideo?.exceeded)
   const hasAttention = (!onboarding.allDone && !onboarding.dismissed) || !basicData || paymentNeedsAttention || quotaExceeded
-  const paymentTone = paymentStatus === 'overdue'
-    ? 'border-[color:var(--danger)]/30 bg-[color:var(--danger)]/10 text-[color:var(--danger)]'
-    : paymentStatus === 'due-soon'
-      ? 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/10 text-[color:var(--warn)]'
-      : paymentStatus === 'paid'
-        ? 'border-[color:var(--live)]/30 bg-[color:var(--live)]/10 text-[color:var(--live)]'
-        : 'border-line bg-surface-3 text-muted-foreground'
-  const paymentLabel = paymentStatus === 'overdue'
-    ? t('payment.status.overdue')
-    : paymentStatus === 'due-soon'
-      ? t('payment.status.dueSoon')
-      : paymentStatus === 'paid'
-        ? t('payment.status.paid')
-        : t('payment.status.noPlan')
+  const clientTimezone = clientInfo?.timezone || 'UTC'
+  const formatInClientTimezone = (options: Intl.DateTimeFormatOptions) => {
+    const localeTag = locale === 'en' ? 'en-US' : 'es-CL'
+    try {
+      return new Intl.DateTimeFormat(localeTag, { ...options, timeZone: clientTimezone }).format(new Date())
+    } catch {
+      return new Intl.DateTimeFormat(localeTag, options).format(new Date())
+    }
+  }
+  const dateLabel = formatInClientTimezone({ weekday: 'short', day: '2-digit', month: 'short' })
+  const timeLabel = formatInClientTimezone({ hour: '2-digit', minute: '2-digit' })
   const onAirGrid = hasRadio && hasTv ? 'sm:grid-cols-2 sm:divide-x sm:divide-line' : ''
 
   return (
     <div className="space-y-7">
       <header className="border-b border-line pb-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">
-              {clientInfo?.name || t('dashboard.stationFallback')}
-            </h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              <span>{planName || t('overview.noPlan')}</span>
-              {effectiveClient.isImpersonating && (
-                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-300">
-                  {t('dashboard.impersonationMode')}
-                </span>
-              )}
-            </div>
-          </div>
-          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium ${paymentTone}`}>
-            <span className="h-1.5 w-1.5 rounded-full bg-current" />
-            {paymentLabel}
-          </span>
+        <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">
+          {clientInfo?.name || t('dashboard.stationFallback')}
+        </h1>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <span>{planName || t('overview.noPlan')}</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>{dateLabel} · {timeLabel}</span>
+          {effectiveClient.isImpersonating && (
+            <span className="text-amber-400">{t('dashboard.impersonationMode')}</span>
+          )}
         </div>
       </header>
 
@@ -200,125 +189,105 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="dashboard-panel overflow-hidden" aria-label={t('overview.listeners')}>
-        <DashboardOverviewCards
-          plan={clientInfo?.plan as any}
-          usageRadio={usageRadio}
-          usageVideo={usageVideo}
-        />
-        <AiCreditsCard
-          limit={aiAccess.limit}
-          used={aiAccess.used}
-          remaining={aiAccess.remaining}
-          period={aiAccess.period}
-          hasActivePacks={aiCreditPackCount > 0}
-          embedded
-        />
-      </section>
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="dashboard-panel overflow-hidden" aria-label={t('overview.listeners')}>
+          <DashboardOverviewCards
+            plan={clientInfo?.plan as any}
+            usageRadio={usageRadio}
+            usageVideo={usageVideo}
+          />
+          <AiCreditsCard
+            limit={aiAccess.limit}
+            used={aiAccess.used}
+            remaining={aiAccess.remaining}
+            period={aiAccess.period}
+            hasActivePacks={aiCreditPackCount > 0}
+            embedded
+          />
+        </section>
 
-      {hasAttention && (
-        <section className="space-y-2.5" aria-label={t('dashboard.attention')}>
-          <h2 className="text-[13px] font-medium text-foreground">{t('dashboard.attention')}</h2>
-
-          {!onboarding.allDone && !onboarding.dismissed && (
-            <div className="dashboard-panel flex items-start gap-3 p-4">
-              <RocketLaunchIcon className="mt-0.5 h-4 w-4 shrink-0 text-signal" />
-              <div className="min-w-0 flex-1">
+        <aside className="dashboard-panel overflow-hidden" aria-label={t('dashboard.status')}>
+          <div className="border-b border-line px-4 py-2.5">
+            <h2 className="text-[13px] font-medium text-foreground">{t('dashboard.status')}</h2>
+          </div>
+          <div className="divide-y divide-line">
+            {!onboarding.allDone && !onboarding.dismissed && (
+              <div className="px-4 py-3">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-[13px] font-medium text-foreground">{t('dashboard.firstSteps')}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-foreground">{t('dashboard.firstSteps')}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      {t('dashboard.firstStepsProgress', { pending: onboarding.pending, total: onboarding.total })}
+                    </p>
+                    <div className="mt-2 h-0.5 w-full bg-surface-3">
+                      <div
+                        className="h-full bg-[color:var(--text-3)]"
+                        style={{ width: `${Math.round((onboarding.completed / onboarding.total) * 100)}%` }}
+                      />
+                    </div>
+                    <Link
+                      href="/dashboard/primeros-pasos"
+                      className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-signal hover:underline"
+                    >
+                      {t('dashboard.continue')} <ArrowRightIcon className="h-3 w-3" />
+                    </Link>
+                  </div>
                   <OnboardingDismiss />
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t('dashboard.firstStepsProgress', { pending: onboarding.pending, total: onboarding.total })}
-                </p>
-                <div className="mt-2 h-1 w-full max-w-sm overflow-hidden rounded-full bg-surface-3">
-                  <div
-                    className="h-full rounded-full bg-signal"
-                    style={{ width: `${Math.round((onboarding.completed / onboarding.total) * 100)}%` }}
-                  />
+              </div>
+            )}
+
+            {!basicData && (
+              <div className="px-4 py-3">
+                <div className="flex items-start gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--warn)]" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-foreground">{t('dashboard.basicInfoTitle')}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{t('dashboard.basicInfoText')}</p>
+                    <Link
+                      href="/dashboard/basic-data"
+                      className="mt-1.5 inline-flex text-[11px] font-medium text-[color:var(--warn)] hover:underline"
+                    >
+                      {t('dashboard.completeInfo')}
+                    </Link>
+                  </div>
                 </div>
-                <Link
-                  href="/dashboard/primeros-pasos"
-                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-signal hover:underline"
-                >
-                  {t('dashboard.continue')} <ArrowRightIcon className="h-3.5 w-3.5" />
-                </Link>
               </div>
-            </div>
-          )}
+            )}
 
-          {!basicData && (
-            <div className="dashboard-panel flex items-start gap-3 border-[color:var(--warn)]/30 bg-[color:var(--warn)]/5 p-4">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--warn)]" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-foreground">{t('dashboard.basicInfoTitle')}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{t('dashboard.basicInfoText')}</p>
-                <Link
-                  href="/dashboard/basic-data"
-                  className="mt-2 inline-flex text-xs font-medium text-[color:var(--warn)] hover:underline"
-                >
-                  {t('dashboard.completeInfo')}
-                </Link>
+            {quotaExceeded && (
+              <div className="px-4 py-3">
+                <div className="flex items-start gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--danger)]" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-foreground">{t('dashboard.quotaExceeded')}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      {t('dashboard.quotaExceededHint', { service: usageRadio?.exceeded ? t('nowPlaying.radio') : t('nowPlaying.tv') })}
+                    </p>
+                    <Link
+                      href={usageRadio?.exceeded ? '/dashboard/streaming/library' : '/dashboard/television/library'}
+                      className="mt-1.5 inline-flex text-[11px] font-medium text-[color:var(--danger)] hover:underline"
+                    >
+                      {t('dashboard.viewLibrary')}
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {quotaExceeded && (
-            <div className="dashboard-panel flex items-start gap-3 border-[color:var(--danger)]/30 bg-[color:var(--danger)]/5 p-4">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--danger)]" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-foreground">{t('dashboard.quotaExceeded')}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t('dashboard.quotaExceededHint', { service: usageRadio?.exceeded ? t('nowPlaying.radio') : t('nowPlaying.tv') })}
-                </p>
-                <Link
-                  href={usageRadio?.exceeded ? '/dashboard/streaming/library' : '/dashboard/television/library'}
-                  className="mt-2 inline-flex text-xs font-medium text-[color:var(--danger)] hover:underline"
-                >
-                  {t('dashboard.viewLibrary')}
-                </Link>
-              </div>
-            </div>
-          )}
+            {!hasAttention && (
+              <p className="px-4 py-3 text-[11px] text-muted-foreground">{t('dashboard.noPending')}</p>
+            )}
 
-          {paymentNeedsAttention && (
             <PaymentStatusCard
               nextPaymentDate={nextPaymentDate}
               planName={planName}
               planPrice={planPrice}
               status={paymentStatus}
             />
-          )}
-        </section>
-      )}
-
-      <section className="grid gap-4 lg:grid-cols-[1fr_auto]">
-        {!paymentNeedsAttention && (
-          <PaymentStatusCard
-            nextPaymentDate={nextPaymentDate}
-            planName={planName}
-            planPrice={planPrice}
-            status={paymentStatus}
-          />
-        )}
-        <div className="dashboard-panel p-4">
-          <h2 className="text-[13px] font-medium text-foreground">{t('dashboard.quickAccess')}</h2>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Link href="/dashboard/streaming" className="rounded-control border border-line px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-surface-3">
-              {menuName(locale, 'Streaming')}
-            </Link>
-            <Link href="/dashboard/streaming/library" className="rounded-control border border-line px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-surface-3">
-              {menuName(locale, 'Biblioteca')}
-            </Link>
-            <Link href="/dashboard/television" className="rounded-control border border-line px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-surface-3">
-              {menuName(locale, 'Transmisión')}
-            </Link>
-            <Link href="/dashboard/estadisticas" className="rounded-control border border-line px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-surface-3">
-              {menuName(locale, 'Estadísticas')}
-            </Link>
           </div>
-        </div>
-      </section>
+        </aside>
+      </div>
     </div>
   )
 }

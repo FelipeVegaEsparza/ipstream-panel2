@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 export function OnboardingDismiss() {
   const [busy, setBusy] = useState(false)
   const router = useRouter()
+  const { t } = useDashboardI18n()
 
   return (
     <button
@@ -24,9 +26,9 @@ export function OnboardingDismiss() {
           setBusy(false)
         }
       }}
-      className="text-xs text-muted-foreground hover:text-muted-foreground disabled:opacity-50"
+      className="text-[11px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
     >
-      Ocultar
+      {t('dashboard.dismiss')}
     </button>
   )
 }

@@ -5,7 +5,7 @@ import { Menu, Transition } from '@headlessui/react'
 import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bars3Icon, SunIcon, MoonIcon, PlayCircleIcon, LifebuoyIcon, GlobeAltIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, SunIcon, MoonIcon, PlayCircleIcon, LifebuoyIcon, SpeakerWaveIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 import { useImpersonationSession } from '@/lib/useImpersonationSession'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import { getTicketLastRead } from '@/lib/ticket-read-state'
@@ -21,11 +21,9 @@ interface HeaderProps {
   }
   setSidebarOpen?: (open: boolean) => void
   websiteUrl?: string | null
-  radioLogoUrl?: string | null
-  stationName?: string | null
 }
 
-export function Header({ user, setSidebarOpen, websiteUrl, radioLogoUrl, stationName }: HeaderProps) {
+export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
   const { t, locale } = useDashboardI18n()
   const pathname = usePathname()
   const { effectiveUser, isImpersonating } = useImpersonationSession()
@@ -74,73 +72,32 @@ export function Header({ user, setSidebarOpen, websiteUrl, radioLogoUrl, station
         <Bars3Icon className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="dashboard-label hidden sm:inline">Control Room</span>
-        <span className="hidden text-muted-foreground/40 sm:inline">/</span>
+      <div className="flex min-w-0 flex-1 items-center">
         <span className="truncate text-[13px] font-medium text-foreground">{currentLabel}</span>
       </div>
 
-      <div className="flex items-center gap-x-1.5 lg:gap-x-2">
-          {/* Ir a mi sitio Web */}
+      <div className="flex items-center gap-x-2">
           {websiteUrl && (
-            <>
-              <a
-                href={websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-control border border-signal/30 px-2.5 py-1.5 text-xs text-signal transition-colors hover:bg-signal/10"
-              >
-                <GlobeAltIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">{t('header.myWebsite')}</span>
-              </a>
-              <div className="hidden sm:block h-4 w-px bg-line" />
-            </>
+            <a
+              href={websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t('header.myWebsite')}
+              title={t('header.myWebsite')}
+              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <span className="hidden sm:inline">{t('header.myWebsite')}</span>
+              <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+            </a>
           )}
 
-          {/* Quick nav */}
-          <Link
-            href="/dashboard/tutorials"
-            className="flex items-center gap-1.5 rounded-control px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-surface-3 hover:text-foreground"
-          >
-            <PlayCircleIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('header.tutorials')}</span>
-          </Link>
-          <div className="hidden sm:block h-4 w-px bg-line" />
           <Link
             href="/dashboard/support"
-            className="relative flex items-center gap-1.5 rounded-control px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-surface-3 hover:text-foreground"
+            className="hidden items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
           >
-            <LifebuoyIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('header.support')}</span>
-            {unread > 0 && (
-              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
-                {unread > 9 ? '9+' : unread}
-              </span>
-            )}
+            {t('header.support')}
+            {unread > 0 && <span className="h-1.5 w-1.5 rounded-full bg-red-500" />}
           </Link>
-          <div className="h-4 w-px bg-line" />
-
-          {(radioLogoUrl || stationName) && (
-            <>
-              <div className="hidden items-center gap-2 sm:flex" title={stationName || undefined}>
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-control border border-line bg-surface-3">
-                  {radioLogoUrl ? (
-                    <img src={radioLogoUrl} alt={stationName || 'Radio'} className="h-full w-full object-contain" />
-                  ) : (
-                    <span className="text-[10px] font-semibold text-muted-foreground">
-                      {(stationName || 'R').charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                {stationName && (
-                  <span className="hidden max-w-[140px] truncate text-[11px] font-medium text-muted-foreground xl:block">
-                    {stationName}
-                  </span>
-                )}
-              </div>
-              <div className="hidden h-4 w-px bg-line sm:block" />
-            </>
-          )}
 
           <PanelLanguageSwitcher />
 
@@ -206,6 +163,37 @@ export function Header({ user, setSidebarOpen, websiteUrl, radioLogoUrl, station
                     </p>
                   )}
                 </div>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      href="/dashboard/tutorials"
+                      className={`${
+                        active ? 'bg-surface-3' : ''
+                      } flex w-full items-center px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground`}
+                    >
+                      <PlayCircleIcon className="mr-3 h-4 w-4" />
+                      {t('header.tutorials')}
+                    </Link>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      href="/dashboard/support"
+                      className={`${
+                        active ? 'bg-surface-3' : ''
+                      } flex w-full items-center px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground`}
+                    >
+                      <LifebuoyIcon className="mr-3 h-4 w-4" />
+                      {t('header.support')}
+                      {unread > 0 && (
+                        <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                          {unread > 9 ? '9+' : unread}
+                        </span>
+                      )}
+                    </Link>
+                  )}
+                </Menu.Item>
                 <Menu.Item>
                   {({ active }) => (
                     <Link

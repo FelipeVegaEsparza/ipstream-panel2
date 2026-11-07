@@ -110,11 +110,6 @@ export function NowPlayingTvDisplay() {
         </div>
       ) : (
         <div className="mt-3 flex min-w-0 items-center gap-3 border-t border-line pt-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[6px] border border-line bg-surface-3">
-            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zm6 2h-2m-2 0h2" />
-            </svg>
-          </div>
           <div className="min-w-0 flex-1">
             <div className="dashboard-label mb-1">{t('nowPlaying.tvNow')}</div>
             <p className="truncate text-[13px] font-medium text-foreground">

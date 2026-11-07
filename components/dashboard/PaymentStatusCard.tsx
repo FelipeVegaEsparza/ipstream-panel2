@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { CreditCardIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface PaymentStatusCardProps {
@@ -16,100 +15,73 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
 
   const config = (() => {
     switch (status) {
-      case 'paid':
-        return { title: t('payment.status.paid'), icon: CheckCircleIcon, tone: 'text-[color:var(--live)]', badge: 'border-[color:var(--live)]/30 bg-[color:var(--live)]/10' }
       case 'due-soon':
-        return { title: t('payment.status.dueSoon'), icon: ExclamationTriangleIcon, tone: 'text-[color:var(--warn)]', badge: 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/10' }
+        return { title: t('payment.status.dueSoon'), tone: 'text-[color:var(--warn)]', dot: 'bg-[color:var(--warn)]' }
       case 'overdue':
-        return { title: t('payment.status.overdue'), icon: XCircleIcon, tone: 'text-[color:var(--danger)]', badge: 'border-[color:var(--danger)]/30 bg-[color:var(--danger)]/10' }
+        return { title: t('payment.status.overdue'), tone: 'text-[color:var(--danger)]', dot: 'bg-[color:var(--danger)]' }
+      case 'paid':
+        return { title: t('payment.status.paid'), tone: 'text-foreground', dot: 'bg-[color:var(--text-3)]' }
       default:
-        return { title: t('payment.status.noPlan'), icon: CreditCardIcon, tone: 'text-muted-foreground', badge: 'border-line bg-surface-3' }
+        return { title: t('payment.status.noPlan'), tone: 'text-muted-foreground', dot: 'bg-[color:var(--text-3)]' }
     }
   })()
 
-  const Icon = config.icon
+  const daysRemaining = nextPaymentDate
+    ? Math.ceil((nextPaymentDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null
 
-  const daysRemaining = (() => {
-    if (!nextPaymentDate) return null
-    return Math.ceil((nextPaymentDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  })()
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
+  const formatDate = (date: Date) =>
+    new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     }).format(date)
-  }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-CL', {
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-CL', {
       style: 'currency',
       currency: 'CLP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
-  }
 
   return (
-    <section className="dashboard-panel p-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-7 w-7 items-center justify-center rounded-[6px] border ${config.badge}`}>
-            <Icon className={`h-4 w-4 ${config.tone}`} />
-          </div>
-          <div>
-            <div className="dashboard-label">{t('payment.title')}</div>
-            <div className={`text-[13px] font-medium ${config.tone}`}>{config.title}</div>
-          </div>
+    <section className="px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${config.dot}`} />
+          <span className="text-[11px] text-muted-foreground">{t('payment.shortTitle')}</span>
+          <span className={`text-[13px] font-medium ${config.tone}`}>{config.title}</span>
         </div>
 
-        {status !== 'no-plan' && (
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            {planName && (
-              <div>
-                <div className="text-[10px] text-muted-foreground">{t('payment.currentPlan')}</div>
-                <div className="text-xs font-medium text-foreground">{planName}</div>
-              </div>
-            )}
-            {nextPaymentDate && (
-              <div>
-                <div className="text-[10px] text-muted-foreground">
-                  {t('payment.nextPayment')}
-                </div>
-                <div className="dashboard-metric text-xs text-foreground">{formatDate(nextPaymentDate)}</div>
-              </div>
-            )}
-            {planPrice !== null && (
-              <div>
-                <div className="text-[10px] text-muted-foreground">
-                  {t('payment.amount')}
-                </div>
-                <div className="dashboard-metric text-xs text-foreground">{formatCurrency(planPrice)}</div>
-              </div>
-            )}
-            {daysRemaining !== null && (
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${config.badge} ${config.tone}`}>
-                {daysRemaining > 0
-                  ? `${daysRemaining} ${daysRemaining === 1 ? t('payment.dayRemaining') : t('payment.daysRemaining')}`
-                  : daysRemaining === 0
-                    ? t('payment.dueToday')
-                    : `${Math.abs(daysRemaining)} ${Math.abs(daysRemaining) === 1 ? t('payment.dayLate') : t('payment.daysLate')}`}
-              </span>
-            )}
-          </div>
-        )}
-
-        <Link
-          href="/dashboard/payments"
-          className="rounded-control border border-line px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-surface-3"
-        >
-          {t('payment.viewHistory')}
-        </Link>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+          {status !== 'no-plan' && planName && <span>{planName}</span>}
+          {status !== 'no-plan' && nextPaymentDate && (
+            <span>
+              {t('payment.nextPayment')}{' '}
+              <span className="dashboard-metric text-foreground">{formatDate(nextPaymentDate)}</span>
+            </span>
+          )}
+          {status !== 'no-plan' && planPrice !== null && (
+            <span className="dashboard-metric text-foreground">{formatCurrency(planPrice)}</span>
+          )}
+          {status !== 'no-plan' && daysRemaining !== null && (
+            <span>
+              {daysRemaining > 0
+                ? `${daysRemaining} ${daysRemaining === 1 ? t('payment.dayRemaining') : t('payment.daysRemaining')}`
+                : daysRemaining === 0
+                  ? t('payment.dueToday')
+                  : `${Math.abs(daysRemaining)} ${Math.abs(daysRemaining) === 1 ? t('payment.dayLate') : t('payment.daysLate')}`}
+            </span>
+          )}
+          <Link href="/dashboard/payments" className="text-signal hover:underline">
+            {t('payment.history')}
+          </Link>
+        </div>
       </div>
 
       {status === 'no-plan' && (
-        <p className="mt-3 border-t border-line pt-3 text-xs text-muted-foreground">{t('payment.noPlanText')}</p>
+        <p className="mt-2 text-[11px] text-muted-foreground">{t('payment.noPlanText')}</p>
       )}
     </section>
   )
