@@ -1,31 +1,39 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Save, Image as ImageIcon, X, RotateCcw, Upload, Loader2, Link as LinkIcon } from 'lucide-react'
+import { Save, Image as ImageIcon, RotateCcw, Upload, Loader2, Link as LinkIcon } from 'lucide-react'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { getLoginMediaKind, type LoginMediaKind } from '@/lib/login-media'
 
 interface LoginBackgroundSettingsProps {
-  currentImage: string | null
+  currentMedia: string | null
 }
 
-export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSettingsProps) {
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024
+const IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const VIDEO_TYPES = ['video/mp4', 'video/webm']
+
+export function LoginBackgroundSettings({ currentMedia }: LoginBackgroundSettingsProps) {
   const { t } = useDashboardI18n()
-  const [url, setUrl] = useState(currentImage ?? '')
-  const [preview, setPreview] = useState<string | null>(currentImage)
+  const [url, setUrl] = useState(currentMedia ?? '')
+  const [preview, setPreview] = useState<string | null>(currentMedia)
+  const [previewKind, setPreviewKind] = useState<LoginMediaKind>(getLoginMediaKind(currentMedia))
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
     null
   )
   const [dragOver, setDragOver] = useState(false)
-  const [mode, setMode] = useState<'upload' | 'url'>(currentImage?.startsWith('/api/uploads/login/') ? 'upload' : 'url')
+  const [mode, setMode] = useState<'upload' | 'url'>(currentMedia?.startsWith('/api/uploads/login/') ? 'upload' : 'url')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleUrlChange = (value: string) => {
     setUrl(value)
     if (value.trim()) {
       setPreview(value.trim())
+      setPreviewKind(getLoginMediaKind(value.trim()))
     } else {
       setPreview(null)
     }
@@ -60,22 +68,35 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
   }
 
   const uploadFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
+    const isVideo = VIDEO_TYPES.includes(file.type)
+    const isImage = IMAGE_TYPES.includes(file.type)
+
+    if (!isVideo && !isImage) {
       setFeedback({ type: 'error', message: t('admin.loginBackground.notImage') })
       return
     }
-    if (file.size > 10 * 1024 * 1024) {
+
+    const maxBytes = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES
+    if (file.size > maxBytes) {
       setFeedback({ type: 'error', message: t('admin.loginBackground.tooLarge') })
       return
     }
 
     setUploading(true)
     setFeedback(null)
+    const previousPreview = preview
+    const previousPreviewKind = previewKind
     try {
-      // Preview local inmediato
-      const reader = new FileReader()
-      reader.onload = (e) => setPreview(e.target?.result as string)
-      reader.readAsDataURL(file)
+      if (isVideo) {
+        setPreview(null)
+        setPreviewKind('video')
+      } else {
+        setPreviewKind('image')
+        // Preview local inmediato
+        const reader = new FileReader()
+        reader.onload = (e) => setPreview(e.target?.result as string)
+        reader.readAsDataURL(file)
+      }
 
       const formData = new FormData()
       formData.append('file', file)
@@ -93,9 +114,12 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
       const data = await res.json()
       setUrl(data.imageUrl ?? '')
       setPreview(data.imageUrl ?? null)
+      setPreviewKind(getLoginMediaKind(data.imageUrl))
       setMode('upload')
       setFeedback({ type: 'success', message: t('admin.loginBackground.uploaded') })
     } catch (err) {
+      setPreview(previousPreview)
+      setPreviewKind(previousPreviewKind)
       setFeedback({
         type: 'error',
         message: err instanceof Error ? err.message : t('admin.loginBackground.uploadGenericError'),
@@ -111,16 +135,12 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault()
-      setDragOver(false)
-      const file = e.dataTransfer.files?.[0]
-      if (file) uploadFile(file)
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  )
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) uploadFile(file)
+  }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -136,6 +156,7 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
     if (!confirm(t('admin.loginBackground.resetConfirm'))) return
     setUrl('')
     setPreview(null)
+    setPreviewKind('image')
     await saveImageUrl(null, t('admin.loginBackground.resetDone'))
   }
 
@@ -179,7 +200,7 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp"
+            accept="image/jpeg,image/jpg,image/png,image/webp,video/mp4,video/webm"
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -243,7 +264,18 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
       {preview ? (
         <div className="rounded-panel border border-border overflow-hidden">
           <div className="aspect-video relative bg-background">
-            <img src={preview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+            {previewKind === 'video' ? (
+              <video
+                src={preview}
+                className="absolute inset-0 w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img src={preview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+            )}
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <div className="bg-card/80  rounded-panel px-6 py-4 border border-border">
                 <p className="text-foreground text-sm font-medium">{t('admin.loginBackground.previewTitle')}</p>
@@ -276,7 +308,7 @@ export function LoginBackgroundSettings({ currentImage }: LoginBackgroundSetting
         <Button
           type="button"
           onClick={handleReset}
-          disabled={saving || !currentImage}
+          disabled={saving || !url}
           variant="outline"
           className="border-border hover:bg-secondary"
         >

@@ -7,8 +7,10 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 import sharp from 'sharp'
 
-const MAX_BYTES = 10 * 1024 * 1024 // 10 MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024 // 10 MB
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024 // 50 MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm']
 
 async function saveLoginBackground(imageUrl: string | null) {
   const existing = await prisma.appConfig.findFirst()
@@ -57,7 +59,7 @@ export async function PUT(request: NextRequest) {
 
 /**
  * Acepta multipart/form-data con un campo "file".
- * Sube la imagen a public/uploads/login/ y guarda la URL pública.
+ * Sube una imagen (optimizada a WebP) o un video MP4/WebM a public/uploads/login/.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -85,49 +87,62 @@ export async function POST(request: NextRequest) {
     }
     const fileBlob = file as unknown as File
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const isImage = ALLOWED_IMAGE_TYPES.includes(fileBlob.type)
+    const isVideo = ALLOWED_VIDEO_TYPES.includes(fileBlob.type)
+
+    if (!isImage && !isVideo) {
       return NextResponse.json(
-        { error: 'Formato no soportado. Usa JPG, PNG o WebP.' },
+        { error: 'Formato no soportado. Usa JPG, PNG, WebP, MP4 o WebM.' },
         { status: 400 }
       )
     }
 
-    if (fileBlob.size > MAX_BYTES) {
+    const maxBytes = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES
+    if (fileBlob.size > maxBytes) {
       return NextResponse.json(
-        { error: 'La imagen supera el máximo de 10 MB.' },
-        { status: 400 }
-      )
-    }
-
-    if (!ALLOWED_TYPES.includes(fileBlob.type)) {
-      return NextResponse.json(
-        { error: 'Formato no soportado. Usa JPG, PNG o WebP.' },
+        {
+          error: isVideo
+            ? 'El video supera el máximo de 50 MB.'
+            : 'La imagen supera el máximo de 10 MB.',
+        },
         { status: 400 }
       )
     }
 
     const bytes = await fileBlob.arrayBuffer()
     let buffer: Buffer<ArrayBufferLike> = Buffer.from(bytes)
+    let extension = 'webp'
 
     const uploadDir = join(process.cwd(), 'public', 'uploads', 'login')
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true })
     }
 
-    // Optimizar con sharp: redimensionar a 1920px max, convertir a WebP
-    try {
-      const image = sharp(buffer)
-      const metadata = await image.metadata()
-      if (metadata.width && metadata.width > 1920) {
-        image.resize(1920, undefined, { fit: 'inside', withoutEnlargement: true })
+    if (isVideo) {
+      extension = fileBlob.type === 'video/webm' ? 'webm' : 'mp4'
+    } else {
+      // Optimizar con sharp: redimensionar a 1920px max, convertir a WebP
+      try {
+        const image = sharp(buffer)
+        const metadata = await image.metadata()
+        if (metadata.width && metadata.width > 1920) {
+          image.resize(1920, undefined, { fit: 'inside', withoutEnlargement: true })
+        }
+        buffer = await image.webp({ quality: 82 }).toBuffer()
+        extension = 'webp'
+      } catch (sharpError) {
+        console.error('Error procesando imagen con sharp:', sharpError)
+        extension =
+          fileBlob.type === 'image/png'
+            ? 'png'
+            : fileBlob.type === 'image/webp'
+              ? 'webp'
+              : 'jpg'
       }
-      buffer = await image.webp({ quality: 82 }).toBuffer()
-    } catch (sharpError) {
-      console.error('Error procesando imagen con sharp:', sharpError)
     }
 
     const timestamp = Date.now()
-    const fileName = `login_${timestamp}.webp`
+    const fileName = `login_${timestamp}.${extension}`
     const filePath = join(uploadDir, fileName)
     await writeFile(filePath, buffer)
 
@@ -136,11 +151,12 @@ export async function POST(request: NextRequest) {
     const config = await saveLoginBackground(publicUrl)
 
     return NextResponse.json({
-      message: 'Imagen subida y aplicada',
+      message: isVideo ? 'Video subido y aplicado' : 'Imagen subida y aplicada',
       imageUrl: config.loginBackgroundImage,
+      mediaType: isVideo ? 'video' : 'image',
     })
   } catch (error) {
-    console.error('Error al subir imagen del login:', error)
+    console.error('Error al subir el fondo del login:', error)
     const message = error instanceof Error ? error.message : 'Error interno del servidor'
     return NextResponse.json({ error: message }, { status: 500 })
   }

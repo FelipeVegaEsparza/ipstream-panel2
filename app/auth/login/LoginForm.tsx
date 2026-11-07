@@ -6,11 +6,16 @@ import { useRouter } from 'next/navigation'
 import { PanelLogo } from '@/components/ui/PanelLogo'
 
 interface LoginFormProps {
-  backgroundImage: string | null
+  backgroundMedia: string | null
+  backgroundIsVideo: boolean
   callbackUrl?: string | null
 }
 
-export default function LoginPage({ backgroundImage, callbackUrl = null }: LoginFormProps) {
+export default function LoginPage({
+  backgroundMedia,
+  backgroundIsVideo,
+  callbackUrl = null,
+}: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -52,29 +57,38 @@ export default function LoginPage({ backgroundImage, callbackUrl = null }: Login
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-background lg:grid lg:grid-cols-[3fr_2fr]">
-      {/* Fondo: imagen configurada por el admin, o un glow de marca sutil */}
+      {/* Fondo: imagen o video configurado por el admin, o un glow de marca sutil */}
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-        {backgroundImage ? (
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(900px 460px at 50% -10%, rgba(40,180,240,0.16), transparent 70%)' }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(700px 420px at 85% 110%, rgba(0,80,180,0.14), transparent 70%)' }}
+        />
+        {backgroundMedia ? (
           <>
-            <img
-              src={backgroundImage}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+            {backgroundIsVideo ? (
+              <video
+                src={backgroundMedia}
+                className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+              />
+            ) : (
+              <img
+                src={backgroundMedia}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
             <div className="absolute inset-0 bg-black/70"></div>
           </>
-        ) : (
-          <>
-            <div
-              className="absolute inset-0"
-              style={{ background: 'radial-gradient(900px 460px at 50% -10%, rgba(40,180,240,0.16), transparent 70%)' }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{ background: 'radial-gradient(700px 420px at 85% 110%, rgba(0,80,180,0.14), transparent 70%)' }}
-            />
-          </>
-        )}
+        ) : null}
       </div>
 
       {/* La mitad izquierda queda libre para mostrar el fondo */}

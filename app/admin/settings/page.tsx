@@ -33,7 +33,7 @@ export default async function SettingsPage() {
     nodeVersion: process.version
   }
 
-  const currentLoginImage = await getLoginBackground()
+  const currentLoginMedia = await getLoginBackground()
 
   return (
     <div className="space-y-8">
@@ -90,7 +90,7 @@ export default async function SettingsPage() {
 
         <TabsContent value="login" className="space-y-6">
           <div className="card max-w-2xl">
-            <LoginBackgroundSettings currentImage={currentLoginImage} />
+            <LoginBackgroundSettings currentMedia={currentLoginMedia} />
           </div>
         </TabsContent>
       </Tabs>

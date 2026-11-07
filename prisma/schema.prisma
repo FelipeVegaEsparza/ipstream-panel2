@@ -689,7 +689,7 @@ model AiCreditGrant {
 model AppConfig {
   id                   String  @id @default(cuid())
   enableGenericNews    Boolean @default(false)
-  loginBackgroundImage String? // URL de la imagen de fondo del login (null = fondo animado por defecto)
+  loginBackgroundImage String? // URL del fondo del login (imagen o video MP4/WebM; null = fondo animado por defecto)
   panelLogoDarkUrl     String? // Logo del panel para el tema oscuro (null = logo por defecto)
   panelLogoLightUrl    String? // Logo del panel para el tema claro (null = logo por defecto)
   panelFaviconUrl      String? // Favicon del panel (null = /icon.png)
