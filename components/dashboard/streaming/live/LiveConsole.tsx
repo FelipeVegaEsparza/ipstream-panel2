@@ -75,7 +75,7 @@ export function LiveConsole({
 
   const panelHeight = isFullscreen
     ? 'h-[calc(100vh-480px)] min-h-[260px]'
-    : 'h-[520px] lg:h-[560px]'
+    : 'min-h-[520px] lg:min-h-[560px]'
 
   const playlistIds = useMemo(
     () => new Set(live.library.queue.map((track) => track.id)),
