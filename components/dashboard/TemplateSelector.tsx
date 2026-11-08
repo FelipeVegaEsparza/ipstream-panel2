@@ -126,21 +126,21 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {templates.map((template) => {
           const isSelected = template.id === selectedTemplateId
           
           return (
             <Card
               key={template.id}
-              className={`overflow-hidden ${isSelected ? 'border-[color:var(--signal)]' : ''}`}
+              className={`min-w-0 overflow-hidden ${isSelected ? 'border-[color:var(--signal)]' : ''}`}
             >
-              <div className="relative aspect-square w-full overflow-hidden border-b border-line bg-surface-2">
+              <div className="relative aspect-[5/4] w-full overflow-hidden border-b border-line bg-surface-2">
                 {template.imageUrl ? (
                   <img
                     src={template.imageUrl}
                     alt={template.displayName}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-contain"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-[11px] text-muted-foreground">

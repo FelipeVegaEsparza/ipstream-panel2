@@ -12,7 +12,7 @@ export default function NewProgramPage() {
         </p>
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="card">
         <ProgramForm />
       </div>
     </div>

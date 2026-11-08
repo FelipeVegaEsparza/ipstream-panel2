@@ -42,7 +42,7 @@ export default async function EditPromotionPage({ params }: EditPromotionPagePro
         </p>
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="card">
         <PromotionForm initialData={promotion} />
       </div>
     </div>

@@ -42,7 +42,7 @@ export default async function EditNewsPage({ params }: EditNewsPageProps) {
         </p>
       </div>
 
-      <div className="card max-w-4xl">
+      <div className="card">
         <NewsForm initialData={news} />
       </div>
     </div>

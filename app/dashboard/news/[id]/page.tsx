@@ -72,7 +72,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
         </Link>
       </div>
 
-      <div className="card max-w-4xl">
+      <div className="card">
         <article className="prose prose-lg max-w-none">
           <header className="mb-8">
       <h1 className="text-3xl font-bold text-foreground mb-4">

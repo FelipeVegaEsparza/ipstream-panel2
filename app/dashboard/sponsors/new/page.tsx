@@ -15,7 +15,7 @@ export default function NewSponsorPage() {
         </p>
       </div>
 
-      <div className="card max-w-4xl">
+      <div className="card">
         <SponsorForm />
       </div>
     </div>

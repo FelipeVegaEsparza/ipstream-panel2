@@ -64,15 +64,15 @@ export function DashboardLayoutClient({
         collapsed={sidebarCollapsed}
         onToggleCollapsed={toggleSidebarCollapsed}
       />
-      <div className={sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[248px]'}>
+      <div className={`min-w-0 transition-[padding] duration-200 ${sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[248px]'}`}>
         <Header
           user={user}
           setSidebarOpen={setSidebarOpen}
           websiteUrl={websiteUrl}
         />
         <GlobalMenuBanner globallyHidden={globalHidden} />
-        <main className="py-6 md:py-8">
-          <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-10">
+        <main className="min-w-0 py-6 md:py-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10">
             {children}
           </div>
         </main>

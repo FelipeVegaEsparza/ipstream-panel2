@@ -42,7 +42,7 @@ export default async function EditVideoPage({ params }: EditVideoPageProps) {
         </p>
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="card">
         <VideoForm initialData={video} />
       </div>
     </div>

@@ -42,7 +42,7 @@ export default async function EditProgramPage({ params }: EditProgramPageProps) 
         </p>
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="card">
         <ProgramForm initialData={program} />
       </div>
     </div>

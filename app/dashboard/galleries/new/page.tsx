@@ -13,7 +13,7 @@ export default function NewGalleryPage() {
         </p>
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="card">
         <GalleryForm />
       </div>
     </div>

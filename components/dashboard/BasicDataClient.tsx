@@ -95,11 +95,11 @@ function BasicDataContent({ clientId }: { clientId: string }) {
     <div className="space-y-6">
       <DashboardPageHeader title={t('basic.title')} description={t('basic.subtitle')} />
 
-      <div className="dashboard-panel max-w-2xl">
+      <div className="dashboard-panel">
         <BasicDataForm initialData={basicData} clientId={clientId} />
       </div>
 
-      <div className="dashboard-panel max-w-2xl">
+      <div className="dashboard-panel">
         <h2 className="text-lg font-semibold text-foreground mb-1">{t('basic.timezone')}</h2>
         <p className="text-sm text-muted-foreground mb-3">
           {t('basic.timezoneHint')}

@@ -15,7 +15,7 @@ export default function NewVideoPage() {
         </p>
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="card">
         <VideoForm />
       </div>
     </div>

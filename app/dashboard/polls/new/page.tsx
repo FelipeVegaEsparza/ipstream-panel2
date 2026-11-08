@@ -10,7 +10,7 @@ export default function NewPollPage() {
     <h1 className="text-2xl font-bold text-foreground">{t('polls.new')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t('polls.newSubtitle')}</p>
       </div>
-      <div className="card max-w-2xl">
+      <div className="card">
         <PollForm />
       </div>
     </div>

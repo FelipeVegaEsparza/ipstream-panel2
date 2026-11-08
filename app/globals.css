@@ -449,6 +449,17 @@
     border-color: var(--line);
   }
 
+  /* Formularios y contenido de lectura: la card ocupa el ancho disponible,
+     pero el contenido mantiene una medida de lectura consistente. */
+  .dashboard-shell .card > form,
+  .dashboard-shell .dashboard-panel > form,
+  .dashboard-shell .card > article,
+  .dashboard-shell .card > .prose {
+    width: 100%;
+    max-width: 48rem;
+    margin-inline: auto;
+  }
+
   .dashboard-live-dot {
     @apply inline-block h-1.5 w-1.5 rounded-full;
     background: var(--live);

@@ -12,7 +12,7 @@ export default function NewNewsPage() {
         </p>
       </div>
 
-      <div className="card max-w-4xl">
+      <div className="card">
         <NewsForm />
       </div>
     </div>

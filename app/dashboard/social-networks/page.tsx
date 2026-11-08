@@ -40,7 +40,7 @@ export default async function SocialNetworksPage() {
         </p>
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="card">
         <SocialNetworksForm initialData={socialNetworks} />
       </div>
     </div>

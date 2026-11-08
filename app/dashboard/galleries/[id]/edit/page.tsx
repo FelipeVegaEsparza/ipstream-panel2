@@ -45,7 +45,7 @@ export default async function EditGalleryPage({ params }: EditGalleryPageProps) 
         </p>
       </div>
 
-      <div className="card max-w-2xl">
+      <div className="card">
         <GalleryForm initialData={gallery} />
       </div>
     </div>

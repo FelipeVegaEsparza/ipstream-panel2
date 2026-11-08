@@ -42,7 +42,7 @@ export default async function EditSponsorPage({ params }: EditSponsorPageProps) 
         </p>
       </div>
 
-      <div className="card max-w-4xl">
+      <div className="card">
         <SponsorForm initialData={sponsor} />
       </div>
     </div>

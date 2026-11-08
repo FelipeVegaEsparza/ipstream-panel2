@@ -10,7 +10,7 @@ export default function NewEventPage() {
     <h1 className="text-2xl font-bold text-foreground">{t('events.new')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t('events.newSubtitle')}</p>
       </div>
-      <div className="card max-w-2xl">
+      <div className="card">
         <EventForm />
       </div>
     </div>
