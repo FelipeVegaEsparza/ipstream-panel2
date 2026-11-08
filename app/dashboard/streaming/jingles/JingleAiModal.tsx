@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { showToast } from '@/components/ui/toast'
+import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
@@ -9,6 +10,7 @@ import {
   ChevronRightIcon,
   PlayIcon,
   SparklesIcon,
+  SpeakerWaveIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
@@ -27,9 +29,16 @@ interface AiInfo {
   voiceName: string
   voicePreset?: string
   stationName: string
-  musicTrackName: string | null
-  musicTrackArtist: string | null
-  musicTrackUrl: string | null
+}
+
+interface MusicTrack {
+  id: string
+  name: string
+  artist: string | null
+  url: string
+  duration: number | null
+  size: number
+  mimeType: string
 }
 
 interface Props {
@@ -75,11 +84,21 @@ const SFX_LABELS = {
   vinyl: 'streaming.jingles.ai.sfxVinyl',
   impact: 'streaming.jingles.ai.sfxImpact',
   boom: 'streaming.jingles.ai.sfxBoom',
+  punch: 'streaming.jingles.ai.sfxPunch',
+  thunder: 'streaming.jingles.ai.sfxThunder',
   click: 'streaming.jingles.ai.sfxClick',
   ding: 'streaming.jingles.ai.sfxDing',
   stinger: 'streaming.jingles.ai.sfxStinger',
   reverse: 'streaming.jingles.ai.sfxReverse',
   whoosh: 'streaming.jingles.ai.sfxWhoosh',
+  swish: 'streaming.jingles.ai.sfxSwish',
+  scratch: 'streaming.jingles.ai.sfxScratch',
+  static: 'streaming.jingles.ai.sfxStatic',
+  blip: 'streaming.jingles.ai.sfxBlip',
+  tapeStop: 'streaming.jingles.ai.sfxTapeStop',
+  chime: 'streaming.jingles.ai.sfxChime',
+  glitch: 'streaming.jingles.ai.sfxGlitch',
+  bassdrop: 'streaming.jingles.ai.sfxBassdrop',
 } as const
 
 const SFX_SLOTS = [
@@ -91,6 +110,7 @@ const SFX_SLOTS = [
 
 const STEPS = [
   { id: 'text', label: 'streaming.jingles.ai.stepText' },
+  { id: 'music', label: 'streaming.jingles.ai.stepMusic' },
   { id: 'style', label: 'streaming.jingles.ai.stepStyle' },
   { id: 'sounds', label: 'streaming.jingles.ai.stepSounds' },
   { id: 'voice', label: 'streaming.jingles.ai.stepVoice' },
@@ -105,6 +125,13 @@ const DEFAULT_SFX: Record<SfxSlot, SfxValue> = {
   impact: 'auto',
   transition: 'auto',
   outro: 'auto',
+}
+
+function formatDuration(seconds: number | null) {
+  if (!seconds) return '—'
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
 }
 
 function SliderRow({
@@ -164,12 +191,22 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const [speed, setSpeed] = useState(100)
   const [reverb, setReverb] = useState(100)
   const [doubling, setDoubling] = useState(0)
+  const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([])
+  const [musicSelectedId, setMusicSelectedId] = useState<string | null>(null)
+  const [musicSavedId, setMusicSavedId] = useState<string | null>(null)
+  const [musicLoading, setMusicLoading] = useState(false)
+  const [musicSaving, setMusicSaving] = useState(false)
+  const [musicError, setMusicError] = useState<string | null>(null)
+  const [musicNotice, setMusicNotice] = useState<string | null>(null)
   const [generatedDuration, setGeneratedDuration] = useState<number | null>(null)
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [blob, setBlob] = useState<Blob | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewJingleUrl, setPreviewJingleUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -177,6 +214,10 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     setError(null)
     setBlob(null)
     setGeneratedDuration(null)
+    setPreviewUrl(null)
+    setPreviewError(null)
+    setMusicNotice(null)
+    setMusicError(null)
     fetch('/api/dashboard/streaming/jingles/ai', { cache: 'no-store' })
       .then((r) => r.json())
       .then((data) => {
@@ -191,24 +232,42 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
         }
       })
       .catch(() => setError(t('streaming.jingles.ai.loadError')))
+
+    setMusicLoading(true)
+    fetch('/api/dashboard/streaming/jingles/music', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        setMusicTracks(Array.isArray(data.tracks) ? data.tracks : [])
+        const selected = typeof data.selectedId === 'string' ? data.selectedId : null
+        setMusicSelectedId(selected)
+        setMusicSavedId(selected)
+      })
+      .catch(() => setMusicError(t('streaming.jingles.music.loadError')))
+      .finally(() => setMusicLoading(false))
   }, [open])
 
   useEffect(() => {
     if (!blob) {
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
-      setPreviewUrl(null)
+      if (previewJingleUrl) URL.revokeObjectURL(previewJingleUrl)
+      setPreviewJingleUrl(null)
       return
     }
     const url = URL.createObjectURL(blob)
-    setPreviewUrl(url)
+    setPreviewJingleUrl(url)
     return () => URL.revokeObjectURL(url)
   }, [blob])
+
+  useEffect(() => {
+    if (!previewUrl) return
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
 
   const configKey = useMemo(
     () =>
       JSON.stringify({
         tagline,
         duration,
+        musicSelectedId,
         style,
         intensity,
         voiceFx,
@@ -219,13 +278,15 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
         reverb,
         doubling,
       }),
-    [tagline, duration, style, intensity, voiceFx, sfx, voiceCharacter, pitch, speed, reverb, doubling]
+    [tagline, duration, musicSelectedId, style, intensity, voiceFx, sfx, voiceCharacter, pitch, speed, reverb, doubling]
   )
 
-  // Si cambia cualquier opción, el preview anterior deja de ser válido.
+  // Si cambia cualquier opción, los previews anteriores dejan de ser válidos.
   useEffect(() => {
     setBlob(null)
     setGeneratedDuration(null)
+    setPreviewUrl(null)
+    setPreviewError(null)
   }, [configKey])
 
   if (!open) return null
@@ -233,10 +294,14 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const styleOption = STYLE_OPTIONS.find((option) => option.id === style) ?? STYLE_OPTIONS[1]
   const characterOption =
     VOICE_CHARACTERS.find((option) => option.id === voiceCharacter) ?? VOICE_CHARACTERS[0]
-  const musicReady = Boolean(info?.musicTrackName)
-  const ttsReady = Boolean(info?.ttsEnabled)
+  const selectedTrack = musicTracks.find((track) => track.id === musicSelectedId) ?? null
   const taglineReady = tagline.trim().length > 0
-  const canGenerate = musicReady && ttsReady && taglineReady
+  const ttsReady = Boolean(info?.ttsEnabled)
+  const musicReady = Boolean(musicSelectedId)
+  const musicDirty = musicSelectedId !== musicSavedId
+  const musicUsable = musicReady && !musicDirty && !musicSaving
+  const canGenerate = musicUsable && ttsReady && taglineReady
+  const canPreview = musicUsable && !previewLoading
 
   const goTo = (index: number) => {
     if (index > 0 && !taglineReady) {
@@ -250,6 +315,14 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const next = () => {
     if (step === 0 && !taglineReady) {
       setError(t('streaming.jingles.ai.taglineRequired'))
+      return
+    }
+    if (step === 1 && !musicUsable) {
+      setError(
+        musicDirty
+          ? t('streaming.jingles.ai.musicSaving')
+          : t('streaming.jingles.ai.musicRequired')
+      )
       return
     }
     setError(null)
@@ -296,6 +369,71 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     return t(SFX_LABELS[value])
   }
 
+  const voicePayload = {
+    character: voiceCharacter,
+    pitchSemitones: pitch,
+    speed: speed / 100,
+    reverb,
+    doubling: doubling / 100,
+  }
+
+  const selectMusic = async (id: string | null) => {
+    if (id === musicSelectedId || musicSaving) return
+    const previous = musicSelectedId
+    setMusicSelectedId(id)
+    setMusicSaving(true)
+    setMusicError(null)
+    setMusicNotice(null)
+    try {
+      const res = await fetch('/api/dashboard/streaming/jingles/music', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ musicTrackId: id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.jingles.ai.musicSaveError'))
+      setMusicSavedId(id)
+      setMusicNotice(t('streaming.jingles.ai.musicSaved'))
+    } catch (err) {
+      setMusicSelectedId(previous)
+      setMusicError(err instanceof Error ? err.message : t('streaming.jingles.ai.musicSaveError'))
+    } finally {
+      setMusicSaving(false)
+    }
+  }
+
+  const previewArrangement = async () => {
+    if (!musicUsable) {
+      setPreviewError(t('streaming.jingles.ai.previewNeedsMusic'))
+      return
+    }
+    setPreviewLoading(true)
+    setPreviewError(null)
+    try {
+      const res = await fetch('/api/dashboard/streaming/jingles/ai/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          duration,
+          style,
+          intensity,
+          voiceFx,
+          sfx,
+          voice: voicePayload,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.message || data?.error || t('streaming.jingles.ai.previewError'))
+      }
+      setPreviewUrl(URL.createObjectURL(await res.blob()))
+    } catch (err) {
+      setPreviewError(err instanceof Error ? err.message : t('streaming.jingles.ai.previewError'))
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
   const generate = async () => {
     setGenerating(true)
     setError(null)
@@ -312,13 +450,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
           intensity,
           voiceFx,
           sfx,
-          voice: {
-            character: voiceCharacter,
-            pitchSemitones: pitch,
-            speed: speed / 100,
-            reverb,
-            doubling: doubling / 100,
-          },
+          voice: voicePayload,
         }),
       })
       if (!res.ok) {
@@ -368,16 +500,23 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     },
     {
       id: 1,
+      label: t('streaming.jingles.ai.stepMusic'),
+      value: selectedTrack
+        ? `${selectedTrack.name}${selectedTrack.artist ? ` · ${selectedTrack.artist}` : ''}`
+        : t('streaming.jingles.music.none'),
+    },
+    {
+      id: 2,
       label: t('streaming.jingles.ai.reviewStyle'),
       value: `${t(styleOption.label)} · ${intensity}%`,
     },
     {
-      id: 2,
+      id: 3,
       label: t('streaming.jingles.ai.reviewSounds'),
       value: SFX_SLOTS.map((slot) => `${t(slot.label)}: ${sfxLabel(sfx[slot.id])}`).join(' · '),
     },
     {
-      id: 3,
+      id: 4,
       label: t('streaming.jingles.ai.reviewVoice'),
       value: voiceFx
         ? `${t(characterOption.label)} · ${pitch > 0 ? '+' : ''}${pitch} st · ${speed}% · ${t('streaming.jingles.ai.effectsOn')}`
@@ -455,22 +594,13 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                 <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={180} />
               </div>
               {info && (
-                <div className="grid gap-2 rounded-lg bg-secondary/50 p-3 text-xs sm:grid-cols-2">
-                  <div>
-                    <p className="text-muted-foreground">{t('streaming.jingles.ai.musicTrack')}</p>
-                    <p className="font-medium text-foreground">{info.musicTrackName || t('streaming.jingles.ai.noMusicTrack')}</p>
-                    {info.musicTrackArtist && <p className="text-muted-foreground">{info.musicTrackArtist}</p>}
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{t('streaming.jingles.ai.voiceAvailable')}</p>
-                    <p className="font-mono text-foreground">{t('streaming.jingles.ai.characters', { count: info.ttsRemaining.toLocaleString(locale === 'en' ? 'en-US' : 'es-CL') })}</p>
-                  </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-secondary/50 px-3 py-2 text-xs text-muted-foreground">
+                  <span>{t('streaming.jingles.ai.voice')}: <span className="text-foreground">{info.voiceName}</span></span>
+                  <span>·</span>
+                  <span className="font-mono text-foreground">
+                    {t('streaming.jingles.ai.characters', { count: info.ttsRemaining.toLocaleString(locale === 'en' ? 'en-US' : 'es-CL') })}
+                  </span>
                 </div>
-              )}
-              {info && !info.musicTrackName && (
-                <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-                  {t('streaming.jingles.ai.selectMusicFirst')}
-                </p>
               )}
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">{t('streaming.jingles.ai.voiceover')}</label>
@@ -501,6 +631,62 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
           )}
 
           {step === 1 && (
+            <div>
+              <p className="text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepMusicHint')}</p>
+              <div className="mt-3">
+                {musicLoading ? (
+                  <p className="py-6 text-center text-xs text-muted-foreground">{t('streaming.jingles.music.loading')}</p>
+                ) : musicTracks.length === 0 ? (
+                  <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                    {t('streaming.jingles.music.empty')}
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-border rounded-lg border border-border">
+                    <li className="flex items-center gap-3 px-3 py-2">
+                      <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                        <input
+                          type="radio"
+                          name="jingle-music"
+                          checked={musicSelectedId === null}
+                          disabled={musicSaving}
+                          onChange={() => void selectMusic(null)}
+                          className="h-4 w-4 accent-[var(--brand-500)]"
+                        />
+                        <span className="text-xs text-muted-foreground">{t('streaming.jingles.music.none')}</span>
+                      </label>
+                    </li>
+                    {musicTracks.map((track) => (
+                      <li key={track.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
+                        <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                          <input
+                            type="radio"
+                            name="jingle-music"
+                            checked={musicSelectedId === track.id}
+                            disabled={musicSaving}
+                            onChange={() => void selectMusic(track.id)}
+                            className="h-4 w-4 accent-[var(--brand-500)]"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-medium text-foreground">{track.name}</span>
+                            <span className="block truncate text-[11px] text-muted-foreground">
+                              {track.artist ? `${track.artist} · ` : ''}{formatDuration(track.duration)}
+                            </span>
+                          </span>
+                        </label>
+                        <EffectPreviewButton src={track.url} name={track.name} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {musicSaving && <p className="mt-2 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.musicSaving')}</p>}
+              {musicNotice && !musicSaving && <p className="mt-2 text-[11px] text-emerald-300">{musicNotice}</p>}
+              {musicError && <p className="mt-2 text-[11px] text-red-300">{musicError}</p>}
+              <p className="mt-2 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.musicSelectHint')}</p>
+            </div>
+          )}
+
+          {step === 2 && (
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepStyleHint')}</p>
@@ -570,36 +756,44 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div>
               <p className="text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepSoundsHint')}</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {SFX_SLOTS.map((slot) => (
-                  <label key={slot.id} className="block">
+                  <div key={slot.id}>
                     <span className="mb-1 block text-xs text-muted-foreground">{t(slot.label)}</span>
-                    <select
-                      value={sfx[slot.id]}
-                      onChange={(event) =>
-                        setSfx((prev) => ({ ...prev, [slot.id]: event.target.value as SfxValue }))
-                      }
-                      className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground outline-none focus:border-brand"
-                    >
-                      <option value="auto">{t('streaming.jingles.ai.sfxAuto')}</option>
-                      {slot.ids.map((id) => (
-                        <option key={id} value={id}>
-                          {t(SFX_LABELS[id])}
-                        </option>
-                      ))}
-                      <option value="none">{t('streaming.jingles.ai.sfxNone')}</option>
-                    </select>
-                  </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={sfx[slot.id]}
+                        onChange={(event) =>
+                          setSfx((prev) => ({ ...prev, [slot.id]: event.target.value as SfxValue }))
+                        }
+                        className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground outline-none focus:border-brand"
+                      >
+                        <option value="auto">{t('streaming.jingles.ai.sfxAuto')}</option>
+                        {slot.ids.map((id) => (
+                          <option key={id} value={id}>
+                            {t(SFX_LABELS[id])}
+                          </option>
+                        ))}
+                        <option value="none">{t('streaming.jingles.ai.sfxNone')}</option>
+                      </select>
+                      {sfx[slot.id] !== 'auto' && sfx[slot.id] !== 'none' && (
+                        <EffectPreviewButton
+                          src={`/api/dashboard/streaming/jingles/sfx/${sfx[slot.id]}`}
+                          name={sfxLabel(sfx[slot.id])}
+                        />
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
               <p className="mt-3 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.soundsHint')}</p>
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div>
               <p className="text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepVoiceHint')}</p>
               <label className="mt-3 flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2">
@@ -681,7 +875,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <div>
               <h3 className="text-sm font-semibold text-foreground">{t('streaming.jingles.ai.reviewTitle')}</h3>
               <p className="mt-1 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepReviewHint')}</p>
@@ -705,7 +899,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
 
               {!musicReady && (
                 <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-                  {t('streaming.jingles.ai.selectMusicFirst')}
+                  {t('streaming.jingles.ai.musicRequired')}
                 </p>
               )}
 
@@ -715,22 +909,43 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                 </p>
               )}
 
-              {previewUrl && (
-                <audio src={previewUrl} controls className="mt-3 w-full" preload="metadata" />
-              )}
-
-              {blob && (
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  {t('streaming.jingles.ai.stepReviewHint')}
-                </p>
+              {previewJingleUrl && (
+                <>
+                  <audio src={previewJingleUrl} controls className="mt-3 w-full" preload="metadata" />
+                  <p className="mt-2 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.regenerateFree')}</p>
+                </>
               )}
             </div>
           )}
         </div>
 
+        <div className="mt-4 rounded-lg border border-border bg-background/40 p-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void previewArrangement()}
+              disabled={!canPreview}
+              className="flex items-center gap-1.5 rounded-lg border border-brand/40 bg-brand/10 px-2.5 py-1.5 text-[11px] font-medium text-brand transition-colors hover:bg-brand/20 disabled:opacity-40"
+            >
+              <SpeakerWaveIcon className="h-3.5 w-3.5" />
+              {previewLoading
+                ? t('streaming.jingles.ai.previewLoading')
+                : t('streaming.jingles.ai.previewArrangement')}
+            </button>
+            <span className="text-[10px] text-muted-foreground">{t('streaming.jingles.ai.previewNoAi')}</span>
+            {!musicUsable && (
+              <span className="text-[10px] text-muted-foreground">{t('streaming.jingles.ai.previewNeedsMusic')}</span>
+            )}
+          </div>
+          {previewError && <p className="mt-2 text-[11px] text-red-300">{previewError}</p>}
+          {previewUrl && (
+            <audio src={previewUrl} controls className="mt-2 w-full" preload="metadata" />
+          )}
+        </div>
+
         {error && <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
 
-        <div className="mt-5 flex flex-wrap items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <button onClick={onClose} className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-secondary">
             {t('streaming.jingles.ai.cancel')}
           </button>

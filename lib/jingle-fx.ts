@@ -779,7 +779,8 @@ export interface JingleSfxInputs {
 export function buildJingleFilter(
   structure: JingleMixStructure,
   fx: ResolvedJingleFx,
-  sfx: JingleSfxInputs = {}
+  sfx: JingleSfxInputs = {},
+  preview = false
 ): string {
   const total = structure.totalSeconds
   const voiceStart = structure.voiceStartSeconds
@@ -806,11 +807,17 @@ export function buildJingleFilter(
     .filter(Boolean)
     .join(',')
 
-  const voiceChain = [
-    buildVoiceChain(fx),
-    `adelay=${voiceDelayMs}|${voiceDelayMs}`,
-    `apad=whole_dur=${fixed(total)}`,
-  ].join(',')
+  const voiceChain = preview
+    ? [
+        'aformat=channel_layouts=stereo',
+        `adelay=${voiceDelayMs}|${voiceDelayMs}`,
+        `apad=whole_dur=${fixed(total)}`,
+      ].join(',')
+    : [
+        buildVoiceChain(fx),
+        `adelay=${voiceDelayMs}|${voiceDelayMs}`,
+        `apad=whole_dur=${fixed(total)}`,
+      ].join(',')
 
   const branches: string[] = []
   branches.push(`[0:a]${bedChain}[bed]`)
@@ -876,9 +883,22 @@ export interface MixJingleResult {
   style: JingleStyleId
 }
 
+/** Preview instrumental: música, sonidos y efectos, sin voz ni cuota de IA. */
+export async function previewJingle(options: {
+  music: Buffer
+  requestedDuration: number
+  style?: unknown
+  intensity?: unknown
+  musicStartSeconds?: number
+  overrides?: JingleOverrides
+}): Promise<MixJingleResult> {
+  return mixJingle({ ...options, preview: true })
+}
+
 export async function mixJingle(options: {
   music: Buffer
-  voice: Buffer
+  voice?: Buffer
+  preview?: boolean
   requestedDuration: number
   style?: unknown
   intensity?: unknown
@@ -887,13 +907,19 @@ export async function mixJingle(options: {
   voiceStartSeconds?: number
   overrides?: JingleOverrides
 }): Promise<MixJingleResult> {
+  const preview = options.preview === true
+  if (!preview && !options.voice) {
+    throw new Error('Falta la locución para mezclar el jingle.')
+  }
   const fx = resolveJingleFx(
     options.style,
     options.intensity,
     options.voiceFx !== false,
     options.overrides
   )
-  const voiceDuration = await probeAudioBufferDuration(options.voice)
+  const voiceDuration = preview
+    ? 0
+    : await probeAudioBufferDuration(options.voice as Buffer)
   const structure = planJingleStructure({
     requestedDuration: options.requestedDuration,
     voiceDurationSeconds: voiceDuration,
@@ -918,7 +944,7 @@ export async function mixJingle(options: {
   const outputPath = path.join(dir, 'jingle.mp3')
   try {
     await fs.writeFile(musicPath, options.music)
-    await fs.writeFile(voicePath, options.voice)
+    if (!preview) await fs.writeFile(voicePath, options.voice as Buffer)
 
     const extraInputs: string[] = []
     let nextIndex = 2
@@ -934,7 +960,10 @@ export async function mixJingle(options: {
     sfxInputs.impact = await addInput('impact', impactAsset)
     sfxInputs.outro = await addInput('outro', outroAsset)
 
-    const filter = buildJingleFilter(structure, fx, sfxInputs)
+    const filter = buildJingleFilter(structure, fx, sfxInputs, preview)
+    const voiceInputArgs = preview
+      ? ['-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100']
+      : ['-i', voicePath]
     await execFileAsync(
       'ffmpeg',
       [
@@ -943,8 +972,7 @@ export async function mixJingle(options: {
         '-1',
         '-i',
         musicPath,
-        '-i',
-        voicePath,
+        ...voiceInputArgs,
         ...extraInputs.flatMap((inputPath) => ['-i', inputPath]),
         '-filter_complex',
         filter,

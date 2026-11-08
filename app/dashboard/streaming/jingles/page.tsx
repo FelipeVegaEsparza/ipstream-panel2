@@ -3,7 +3,6 @@
 import { showToast } from '@/components/ui/toast'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { JingleAiModal } from './JingleAiModal'
-import { JingleMusicSelector } from './JingleMusicSelector'
 
 import { useEffect, useState, useRef } from 'react'
 import { CameraIcon, MusicalNoteIcon, PlayIcon, StopIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -263,7 +262,6 @@ export default function JinglesPage() {
         </div>
       </div>
 
-      <JingleMusicSelector />
 
       {/* Upload zone */}
    <div className="bg-card/60 border border-border rounded-panel p-5">
