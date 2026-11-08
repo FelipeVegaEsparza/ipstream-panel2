@@ -80,7 +80,7 @@ export function NowPlayingTvDisplay() {
     <div className="p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-          <span className={`h-1.5 w-1.5 rounded-full ${isLive ? 'bg-[color:var(--live)]' : isRunning ? 'bg-[color:var(--signal)]' : 'bg-[color:var(--text-3)]'}`} />
+          <span className={`h-1.5 w-1.5 rounded-full ${isLive ? 'bg-[color:var(--live)]' : isRunning ? 'bg-signal' : 'bg-[color:var(--text-3)]'}`} />
           <span className="text-[13px] font-medium text-foreground">{t('nowPlaying.tv')}</span>
           <span className="text-xs text-muted-foreground">
             {isLive ? t('nowPlaying.tvLive') : isRunning ? t('nowPlaying.tvAutodj') : t('nowPlaying.tvOff')}

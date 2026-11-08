@@ -59,7 +59,7 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border bg-background/40 p-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface-2 p-3">
         <div className="relative min-w-[180px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -68,10 +68,10 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('chat.searchPlaceholder')}
             aria-label={t('chat.searchPlaceholder')}
-            className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+            className="w-full rounded-control border border-line bg-surface-2 py-2 pl-9 pr-3 text-[12px] text-foreground focus:border-[color:var(--signal)] focus:outline-none focus:ring-1 focus:ring-[color:var(--signal)]"
           />
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-border bg-background p-1">
+        <div className="flex items-center gap-1 rounded-control border border-line bg-surface-2 p-1">
           {[
             { key: 'all', label: t('chat.filter.all') },
             { key: 'listener', label: t('chat.filter.listener') },
@@ -84,7 +84,7 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
               aria-pressed={filter === opt.key}
               className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                 filter === opt.key
-                  ? 'bg-brand text-white'
+                  ? 'bg-surface-3 text-foreground'
                   : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               }`}
             >
@@ -103,7 +103,7 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
         className="min-h-0 flex-1 overflow-y-auto bg-background/20 px-3 py-4 sm:px-4"
       >
         {filtered.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center text-sm text-muted-foreground">
+          <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center text-[12px] text-muted-foreground">
             <MessagesSquare className="h-8 w-8 opacity-50" />
             <p>{t('chat.empty')}</p>
           </div>
@@ -137,7 +137,7 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
                   >
                     {!isStaff && (
                       <div
-                        className="mb-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground"
+                        className="mb-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-surface-3 text-[11px] font-medium text-foreground"
                         aria-hidden="true"
                       >
                         {initial}
@@ -148,20 +148,20 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
                       <div
             className={`rounded-container border px-3.5 py-2.5 ${
                           isStaff
-                            ? 'rounded-br-md border-brand/30 bg-brand/15'
-                            : 'rounded-bl-md border-border bg-card'
+                            ? 'rounded-br-[6px] border-line bg-surface-3'
+                            : 'rounded-bl-[6px] border-line bg-card'
                         }`}
                       >
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span
                             className={`text-xs font-semibold ${
-                              isStaff ? 'text-brand' : 'text-foreground'
+                              isStaff ? 'text-foreground' : 'text-foreground'
                             }`}
                           >
                             {message.name}
                           </span>
                           {isStaff && (
-                            <span className="rounded border border-brand/30 bg-brand/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">
+                            <span className="rounded-[4px] border border-line bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                               {t('chat.staffBadge')}
                             </span>
                           )}
@@ -176,7 +176,7 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
                             {format(created, 'HH:mm')}
                           </time>
                         </div>
-                        <p className="mt-1 whitespace-pre-wrap break-words text-sm text-foreground">
+                        <p className="mt-1 whitespace-pre-wrap break-words text-[13px] text-foreground">
                           {message.body}
                         </p>
                       </div>
@@ -238,7 +238,7 @@ export function ChatThread({ messages, onDelete }: ChatThreadProps) {
 
                     {isStaff && (
                       <div
-                        className="mb-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white"
+                        className="mb-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-surface-3 text-foreground"
                         aria-hidden="true"
                       >
                         <ShieldCheck className="h-4 w-4" />

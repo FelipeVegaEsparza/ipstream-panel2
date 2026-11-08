@@ -288,7 +288,7 @@ export default function TvPlaylistsPage() {
       <div className="flex gap-4">
         {/* Playlist sidebar */}
         <div className="w-64 flex-shrink-0 space-y-3">
-     <div className="bg-card/80 rounded-container border border-border/40 p-4 space-y-2">
+     <div className="dashboard-panel space-y-2 p-4">
             <h3 className="text-sm font-semibold text-muted-foreground">{t('tv.playlists.list')}</h3>
             {playlists.map(pl => (
               <div key={pl.id} className="flex items-center gap-1 group">
@@ -331,7 +331,7 @@ export default function TvPlaylistsPage() {
 
         {/* Playlist entries */}
         <div className="flex-1">
-     <div className="bg-card/80 rounded-container border border-border/40 overflow-hidden">
+     <div className="dashboard-panel overflow-hidden">
             {!selectedPlaylistId ? (
               <div className="p-6 text-center text-muted-foreground">{t('tv.playlists.selectOrCreate')}</div>
             ) : loadingEntries ? (
@@ -464,7 +464,7 @@ export default function TvPlaylistsPage() {
                     <div
                       key={t.id}
                       className={`flex items-center gap-2 p-2 rounded ${
-            isSelected ? 'bg-signal/10 border border-signal/30' : 'bg-card/50 hover:bg-secondary'
+            isSelected ? 'bg-[color:var(--signal)]/10 border border-[color:var(--signal)]/30' : 'bg-card/50 hover:bg-secondary'
                       }`}
                     >
                       <input

@@ -214,17 +214,15 @@
 
   .playlist-row-jingle {
     background-color: var(--brand-soft);
-    box-shadow: inset 2px 0 0 var(--brand-500);
   }
 
   .playlist-row-locution {
     background-color: var(--locution-soft);
-    box-shadow: inset 2px 0 0 var(--locution-500);
   }
 
   /* === BOTONES === */
   .btn-primary {
-    @apply text-white font-semibold py-3 px-6 rounded-control transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply text-white font-medium py-2.5 px-4 rounded-control transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
     background-color: var(--signal);
     box-shadow: none;
   }
@@ -234,30 +232,32 @@
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground font-semibold py-3 px-6 rounded-control transition-colors duration-150 border border-border hover:border-[color:var(--brand-500)] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-transparent text-foreground font-medium py-2.5 px-4 rounded-control transition-colors duration-150 border border-line hover:bg-surface-3 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-danger {
-    @apply bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply text-white font-medium py-2.5 px-4 rounded-control transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--danger);
   }
 
   .btn-success {
-    @apply bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply text-white font-medium py-2.5 px-4 rounded-control transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--live);
   }
 
   /* === CARDS === */
   .card {
-    @apply bg-card text-card-foreground rounded-2xl border border-border p-6;
-    box-shadow: var(--shadow-soft);
+    @apply bg-card text-card-foreground rounded-[10px] border border-line p-4;
+    box-shadow: none;
   }
 
   .card-light {
-    @apply bg-card/70 text-card-foreground rounded-2xl border border-border/70 p-6;
-    box-shadow: var(--shadow-soft);
+    @apply bg-card text-card-foreground rounded-[10px] border border-line p-4;
+    box-shadow: none;
   }
 
   .card-content {
-    @apply bg-card text-card-foreground rounded-2xl border border-border overflow-hidden;
+    @apply bg-card text-card-foreground rounded-[10px] border border-line overflow-hidden;
   }
 
   /* === TEXTOS === */
@@ -265,24 +265,19 @@
      colisionan con los colores de Tailwind (primary/secondary/muted/accent son
      colores, no texto). Usar text-foreground / text-muted-foreground / text-brand. */
   .text-title {
-    @apply text-xl font-bold text-foreground transition-colors;
-  }
-
-  .text-title:hover {
-    color: var(--brand-500);
+    @apply text-[15px] font-medium text-foreground transition-colors;
   }
 
   .text-subtitle {
-    @apply text-sm font-medium;
-    color: var(--brand-500);
+    @apply text-[11px] font-medium text-muted-foreground;
   }
 
   .text-description {
-    @apply text-muted-foreground line-clamp-3;
+    @apply text-[12px] text-muted-foreground line-clamp-3;
   }
 
   .text-meta {
-    @apply text-sm text-muted-foreground;
+    @apply text-[11px] text-muted-foreground;
   }
 
   /* === FORMULARIOS === */
@@ -291,38 +286,38 @@
   }
 
   .form-label {
-    @apply block text-sm font-semibold text-foreground;
+    @apply block text-[11px] font-medium text-muted-foreground;
   }
 
   .form-input {
-    @apply block w-full rounded-xl bg-secondary/60 border border-border text-foreground placeholder-muted-foreground focus:border-[color:var(--brand-500)] focus:ring-1 focus:ring-[color:var(--brand-500)] transition-colors px-4 py-3 font-medium;
+    @apply block w-full rounded-control bg-surface-2 border border-line text-foreground placeholder:text-[color:var(--text-3)] focus:border-[color:var(--signal)] focus:ring-1 focus:ring-[color:var(--signal)] transition-colors px-3 py-2 text-[13px];
   }
 
   .form-textarea {
-    @apply block w-full rounded-xl bg-secondary/60 border border-border text-foreground placeholder-muted-foreground focus:border-[color:var(--brand-500)] focus:ring-1 focus:ring-[color:var(--brand-500)] resize-none transition-colors px-4 py-3 font-medium;
+    @apply block w-full rounded-control bg-surface-2 border border-line text-foreground placeholder:text-[color:var(--text-3)] focus:border-[color:var(--signal)] focus:ring-1 focus:ring-[color:var(--signal)] resize-none transition-colors px-3 py-2 text-[13px];
   }
 
   .form-error {
-    @apply text-red-400 text-sm font-medium;
+    @apply text-[11px] font-medium text-[color:var(--danger)];
   }
 
   .form-help {
-    @apply text-muted-foreground text-sm;
+    @apply text-[11px] text-muted-foreground;
   }
 
   /* === NAVEGACIÓN === */
   .sidebar-item {
-    @apply flex gap-x-3 rounded-xl p-3 text-sm leading-6 font-semibold transition-colors duration-150 relative;
+    @apply flex gap-x-2.5 rounded-control p-2 text-[13px] leading-5 font-medium transition-colors duration-150 relative;
   }
 
   .sidebar-item-active {
     @apply text-foreground border border-transparent;
-    background: var(--brand-soft);
-    box-shadow: inset 3px 0 0 var(--brand-500);
+    background: var(--surface-3);
+    box-shadow: inset 1px 0 0 var(--signal);
   }
 
   .sidebar-item-inactive {
-    @apply text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent;
+    @apply text-muted-foreground hover:text-foreground hover:bg-surface-2 border border-transparent;
   }
 
   /* Control Room: la navegación del cliente usa una densidad y un estado
@@ -348,37 +343,39 @@
 
   /* === ESTADÍSTICAS === */
   .stat-card {
-    @apply relative overflow-hidden rounded-2xl bg-card p-6 border border-border;
-    box-shadow: var(--shadow-soft);
+    @apply relative overflow-hidden rounded-[10px] bg-card p-4 border border-line;
+    box-shadow: none;
   }
 
   /* === BADGES === */
   .badge {
-    @apply px-3 py-1 rounded-full text-sm font-semibold;
+    @apply inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[10px] font-medium border border-line;
   }
 
   .badge-primary {
-    @apply border border-transparent;
-    background: var(--brand-soft);
-    color: var(--brand-500);
+    @apply border-line bg-surface-3 text-foreground;
   }
 
   .badge-secondary {
-    @apply bg-secondary text-muted-foreground border border-border;
+    @apply border-line bg-transparent text-muted-foreground;
   }
 
   .badge-success {
-    @apply border border-transparent;
-    background: var(--success-soft);
-    color: var(--success-500);
+    border-color: color-mix(in srgb, var(--live) 30%, transparent);
+    background-color: color-mix(in srgb, var(--live) 10%, transparent);
+    color: var(--live);
   }
 
   .badge-warning {
-    @apply bg-amber-500/15 text-amber-400 border border-amber-500/25;
+    border-color: color-mix(in srgb, var(--warn) 30%, transparent);
+    background-color: color-mix(in srgb, var(--warn) 10%, transparent);
+    color: var(--warn);
   }
 
   .badge-danger {
-    @apply bg-red-500/15 text-red-400 border border-red-500/25;
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+    background-color: color-mix(in srgb, var(--danger) 10%, transparent);
+    color: var(--danger);
   }
 
   /* === UTILIDADES === */
@@ -397,16 +394,16 @@
   }
 
   .gradient-bg {
-    background: var(--sidebar-grad);
+    background: var(--surface-1);
   }
 
   .glass-effect {
-    @apply bg-card/70 border border-border/60;
+    @apply bg-card border border-line;
   }
 
   /* === OVERLAYS === */
   .overlay-gradient {
-    @apply absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent;
+    @apply absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent;
   }
 
   .overlay-content {
@@ -415,19 +412,24 @@
 
   /* === ACCIONES === */
   .action-button {
-    @apply p-2 rounded-full transition-colors duration-150;
+    @apply p-1.5 rounded-[6px] text-muted-foreground transition-colors duration-150 hover:text-foreground hover:bg-surface-3;
   }
 
   .action-button-edit {
-    @apply bg-blue-600 hover:bg-blue-700 text-white;
+    @apply text-muted-foreground hover:text-foreground hover:bg-surface-3;
   }
 
   .action-button-delete {
-    @apply bg-red-600 hover:bg-red-700 text-white;
+    color: var(--text-2);
+  }
+
+  .action-button-delete:hover {
+    color: var(--danger);
+    background-color: color-mix(in srgb, var(--danger) 10%, transparent);
   }
 
   .action-button-view {
-    @apply bg-emerald-600 hover:bg-emerald-700 text-white;
+    @apply text-muted-foreground hover:text-foreground hover:bg-surface-3;
   }
 
   /* === CONTROL ROOM === */
@@ -454,7 +456,7 @@
 
   .dashboard-shell .card,
   .dashboard-shell .stat-card {
-    border-radius: var(--radius-container);
+    border-radius: var(--radius-panel);
     border-color: var(--line);
     box-shadow: none;
   }
@@ -510,6 +512,39 @@
     letter-spacing: -0.025em;
   }
 
+  .dashboard-shell h2 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .dashboard-shell h3,
+  .dashboard-shell .text-lg.font-semibold,
+  .dashboard-shell .text-lg.font-bold {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .dashboard-shell .text-xl.font-bold {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .dashboard-shell .uppercase {
+    text-transform: none;
+  }
+
+  .dashboard-shell .tracking-wide,
+  .dashboard-shell .tracking-wider,
+  .dashboard-shell .tracking-widest {
+    letter-spacing: 0;
+  }
+
   .dashboard-shell .rounded-3xl,
   .dashboard-shell .rounded-2xl {
     border-radius: var(--radius-container);
@@ -523,6 +558,8 @@
   .dashboard-shell .shadow-xl,
   .dashboard-shell .shadow-lg,
   .dashboard-shell .shadow-md,
+  .dashboard-shell .shadow-sm,
+  .dashboard-shell .shadow,
   .dashboard-shell .shadow-soft,
   .dashboard-shell .shadow-cyan-500\/20 {
     box-shadow: none;

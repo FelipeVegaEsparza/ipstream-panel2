@@ -246,7 +246,7 @@ export default async function DashboardPage() {
                     <p className="mt-0.5 text-[11px] text-muted-foreground">{t('dashboard.basicInfoText')}</p>
                     <Link
                       href="/dashboard/basic-data"
-                      className="mt-1.5 inline-flex text-[11px] font-medium text-[color:var(--warn)] hover:underline"
+                      className="mt-1.5 inline-flex text-[11px] font-medium text-warn hover:underline"
                     >
                       {t('dashboard.completeInfo')}
                     </Link>
@@ -266,7 +266,7 @@ export default async function DashboardPage() {
                     </p>
                     <Link
                       href={usageRadio?.exceeded ? '/dashboard/streaming/library' : '/dashboard/television/library'}
-                      className="mt-1.5 inline-flex text-[11px] font-medium text-[color:var(--danger)] hover:underline"
+                      className="mt-1.5 inline-flex text-[11px] font-medium text-danger hover:underline"
                     >
                       {t('dashboard.viewLibrary')}
                     </Link>

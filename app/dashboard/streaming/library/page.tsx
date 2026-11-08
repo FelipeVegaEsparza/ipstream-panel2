@@ -457,7 +457,7 @@ export default function LibraryPage() {
     return (
       <div key={f.id}>
         <div
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-sm transition-colors group ${
+          className={`flex items-center gap-2 rounded-control px-3 py-1.5 text-[12px] transition-colors group ${
             selectedFolderId === f.id
               ? 'bg-brand/20 text-brand'
               : 'text-muted-foreground hover:bg-secondary/50'
@@ -472,7 +472,7 @@ export default function LibraryPage() {
               onChange={e => setRenameValue(e.target.value)}
               onBlur={handleRenameFolder}
               onKeyDown={e => { if (e.key === 'Enter') handleRenameFolder(); if (e.key === 'Escape') setRenamingFolderId(null) }}
-              className="flex-1 bg-background text-foreground px-1 py-0.5 rounded text-sm outline-none"
+              className="flex-1 rounded-control border border-line bg-surface-2 px-2 py-1 text-[12px] text-foreground outline-none"
               autoFocus
               onClick={e => e.stopPropagation()}
             />
@@ -517,7 +517,7 @@ export default function LibraryPage() {
               <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
-              <span className="text-sm font-semibold text-muted-foreground">{tr('streaming.library.storage')}</span>
+              <span className="text-[12px] font-medium text-muted-foreground">{tr('streaming.library.storage')}</span>
             </div>
             <span className="text-xs text-muted-foreground font-mono">
               {storage.quotaMB ? tr('streaming.library.quota', { used: storage.totalMB.toFixed(1), quota: storage.quotaMB }) : tr('streaming.library.used', { used: storage.totalMB.toFixed(1) })}
@@ -567,7 +567,7 @@ export default function LibraryPage() {
         <button
           onClick={normalizeTitles}
           disabled={normalizingTitles}
-          className="px-4 py-2 bg-brand hover:bg-brand/90 disabled:bg-secondary text-white text-sm font-medium rounded-lg transition-colors"
+          className="btn-primary px-4 py-2 text-[12px] disabled:opacity-50"
         >
           {normalizingTitles ? tr('streaming.library.normalizing') : tr('streaming.library.normalize')}
         </button>
@@ -579,9 +579,9 @@ export default function LibraryPage() {
       <div className="flex gap-6">
         {/* Sidebar */}
         <div className="w-64 shrink-0">
-     <div className="bg-card rounded-lg ">
+     <div className="dashboard-panel overflow-hidden">
             <div className="p-3 border-b border-border flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{tr('streaming.library.folders')}</span>
+              <span className="text-[11px] font-medium text-muted-foreground">{tr('streaming.library.folders')}</span>
               <button
                 onClick={() => { setCreatingFolder(true); setNewFolderParentId(null); setNewFolderName('') }}
                 className="p-1 text-muted-foreground hover:text-foreground transition-colors"
@@ -602,7 +602,7 @@ export default function LibraryPage() {
                     onChange={e => setNewFolderName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') { setCreatingFolder(false); setNewFolderName('') } }}
                     placeholder={tr('streaming.library.namePlaceholder')}
-                    className="flex-1 bg-background text-foreground px-2 py-1 rounded text-sm outline-none"
+                    className="flex-1 rounded-control border border-line bg-surface-2 px-2 py-1 text-[12px] text-foreground outline-none"
                     autoFocus
                   />
                   <button onClick={handleCreateFolder} className="text-green-400 text-xs font-medium">OK</button>
@@ -614,7 +614,7 @@ export default function LibraryPage() {
             <div className="p-2 space-y-0.5 max-h-[500px] overflow-y-auto">
               {/* Todos */}
               <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-sm transition-colors ${
+                className={`flex items-center gap-2 rounded-control px-3 py-1.5 text-[12px] transition-colors ${
                   selectedFolderId === null
                     ? 'bg-secondary/60 text-foreground'
                     : 'text-muted-foreground hover:bg-secondary/50'
@@ -630,7 +630,7 @@ export default function LibraryPage() {
 
               {/* Sin carpeta */}
               <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-sm transition-colors ${
+                className={`flex items-center gap-2 rounded-control px-3 py-1.5 text-[12px] transition-colors ${
                   selectedFolderId === '__none__'
                     ? 'bg-secondary/60 text-foreground'
                     : 'text-muted-foreground hover:bg-secondary/50'
@@ -668,7 +668,7 @@ export default function LibraryPage() {
 
         {/* Main content */}
         <div className="flex-1 min-w-0">
-     <div className="bg-card rounded-lg overflow-x-auto">
+     <div className="dashboard-panel overflow-x-auto">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 {currentFolderName && (
@@ -680,7 +680,7 @@ export default function LibraryPage() {
                 )}
                 {loading ? tr('streaming.library.loading') : tr('streaming.library.trackCount', { count: filteredTracks.length })}
               </h2>
-              <a href="/dashboard/streaming" className="text-sm text-brand hover:text-brand">
+              <a href="/dashboard/streaming" className="text-[12px] text-signal hover:underline">
                 {tr('streaming.library.back')}
               </a>
             </div>
@@ -739,8 +739,8 @@ export default function LibraryPage() {
                 {selectedFolderId ? tr('streaming.library.emptyFolder') : tr('streaming.library.emptyLibrary')}
               </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-background/50 text-muted-foreground uppercase text-xs">
+              <table className="w-full text-[12px]">
+                <thead className="border-b border-line text-[10px] text-muted-foreground">
                   <tr>
                     <th className="w-10 p-3">
                       <input

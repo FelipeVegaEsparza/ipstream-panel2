@@ -2,18 +2,8 @@
 
 import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  CreditCard,
-  Calendar,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  Eye,
-  DollarSign
-} from 'lucide-react'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Payment {
@@ -191,236 +181,165 @@ export function ClientPaymentsView({
 
   const getPaymentStatusBadge = (status: string) => {
     const statusConfig = {
-      completed: { color: 'bg-green-600', text: t('payments.status.paid'), icon: CheckCircle },
-      pending: { color: 'bg-yellow-600', text: t('payments.status.pending'), icon: Clock },
-      failed: { color: 'bg-red-600', text: t('payments.status.failed'), icon: AlertTriangle }
+      completed: { className: 'badge-success', text: t('payments.status.paid') },
+      pending: { className: 'badge-warning', text: t('payments.status.pending') },
+      failed: { className: 'badge-danger', text: t('payments.status.failed') },
     }
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
-    const Icon = config.icon
-
-    return (
-      <Badge className={`${config.color} text-foreground flex items-center gap-1`}>
-        <Icon className="h-3 w-3" />
-        {config.text}
-      </Badge>
-    )
+    return <Badge className={config.className}>{config.text}</Badge>
   }
 
   const daysUntilNext = getDaysUntilNextPayment()
   const nextPaymentDate = getNextPaymentDate()
+  const planInterval = client.subscription?.plan.interval === 'monthly' ? t('payments.monthly') : t('payments.yearly')
+
+  const methodLabel = (method: string) => {
+    switch (method) {
+      case 'bank_transfer':
+        return t('payments.method.bank')
+      case 'credit_card':
+        return t('payments.method.card')
+      case 'cash':
+        return t('payments.method.cash')
+      case 'manual':
+        return t('payments.method.manual')
+      case 'paypal':
+        return t('payments.method.paypal')
+      default:
+        return t('payments.method.other')
+    }
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <DashboardPageHeader title={t('payments.title')} description={t('payments.subtitle')} />
 
-      {/* Próximo Pago - Destacado */}
       {client.subscription && nextPaymentDate && (
-        <Card className={`border-2 ${
-          daysUntilNext !== null && daysUntilNext <= 7
-            ? 'border-orange-500 bg-orange-500/10'
-            : daysUntilNext !== null && daysUntilNext < 0
-            ? 'border-red-500 bg-red-500/10'
-            : 'border-brand bg-brand/10'
-        }`}>
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2">
-              <Calendar className="h-6 w-6 text-brand" />
-              {t('payments.next')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">{t('payments.currentPlan')}</p>
-                <p className="text-xl font-bold text-foreground">
-                  {client.subscription.plan.name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {client.subscription.plan.interval === 'monthly' ? t('payments.monthly') : t('payments.yearly')}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">{t('payments.amount')}</p>
-                <p className="text-2xl font-bold text-brand">
-                  {formatCurrency(client.subscription.plan.price, client.subscription.plan.currency)}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">{t('payments.dueDate')}</p>
-                <p className="text-xl font-bold text-foreground">
-                  {formatDate(nextPaymentDate)}
-                </p>
-                {daysUntilNext !== null && (
-                  <p className={`text-sm font-medium mt-1 ${
-                    daysUntilNext < 0
-                      ? 'text-red-400'
-                      : daysUntilNext <= 7
-                      ? 'text-orange-400'
-                      : 'text-green-400'
-                  }`}>
-                    {daysUntilNext < 0
-                      ? t('payments.overdueDays', { days: Math.abs(daysUntilNext) })
-                      : daysUntilNext === 0
-                      ? t('payments.dueToday')
-                      : t('payments.daysLeft', { days: daysUntilNext })
-                    }
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {daysUntilNext !== null && daysUntilNext <= 7 && (
-              <div className={`mt-4 p-4 rounded-lg ${
-                daysUntilNext < 0
-                  ? 'bg-red-500/20 border border-red-500/30'
-                  : 'bg-orange-500/20 border border-orange-500/30'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className={`h-5 w-5 mt-0.5 ${
-                    daysUntilNext < 0 ? 'text-red-400' : 'text-orange-400'
-                  }`} />
-                  <div>
-                    <p className={`font-medium ${
-                      daysUntilNext < 0 ? 'text-red-300' : 'text-orange-300'
-                    }`}>
-                      {daysUntilNext < 0
-                        ? t('payments.expired')
-                        : t('payments.expiring')
-                      }
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {t('payments.renewHint')}
-                    </p>
-                  </div>
-                </div>
-              </div>
+        <section className="dashboard-panel p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-[13px] font-medium text-foreground">{t('payments.next')}</h2>
+            {daysUntilNext !== null && (
+              <span
+                className={`text-[11px] ${
+                  daysUntilNext < 0
+                    ? 'text-danger'
+                    : daysUntilNext <= 7
+                      ? 'text-warn'
+                      : 'text-muted-foreground'
+                }`}
+              >
+                {daysUntilNext < 0
+                  ? t('payments.overdueDays', { days: Math.abs(daysUntilNext) })
+                  : daysUntilNext === 0
+                    ? t('payments.dueToday')
+                    : t('payments.daysLeft', { days: daysUntilNext })}
+              </span>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
 
-      {/* Sin Plan */}
-      {!client.subscription && (
-        <Card className="border-2 border-border bg-card">
-          <CardContent className="py-12 text-center">
-            <CreditCard className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-foreground mb-2">
-              {t('payments.noPlan')}
-            </h3>
-            <p className="text-muted-foreground">
-              {t('payments.noPlanHint')}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Historial de Pagos */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-foreground flex items-center gap-2">
-            <DollarSign className="h-6 w-6 text-brand" />
-            {t('payments.history')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {payments.length > 0 ? (
-            <div className="space-y-4">
-              {payments.map((payment) => (
-                <div
-                  key={payment.id}
-                  className="p-4 rounded-lg bg-secondary/50 border border-border hover:border-border transition-colors"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <p className="text-xl font-bold text-foreground">
-                          {formatCurrency(payment.amount, payment.currency)}
-                        </p>
-                        {getPaymentStatusBadge(payment.status)}
-                      </div>
-
-                      {payment.subscription && (
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {t('payments.planLabel', { name: payment.subscription.plan.name })}
-                        </p>
-                      )}
-
-                      {payment.description && (
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {payment.description}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {t('payments.due', { date: formatDate(payment.dueDate) })}
-                        </div>
-                        {payment.paidAt && (
-                          <div className="flex items-center gap-1 text-green-400">
-                            <CheckCircle className="h-3 w-3" />
-                            {t('payments.paidOn', { date: formatDate(payment.paidAt) })}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <CreditCard className="h-3 w-3" />
-                          {payment.paymentMethod === 'bank_transfer' && t('payments.method.bank')}
-                          {payment.paymentMethod === 'credit_card' && t('payments.method.card')}
-                          {payment.paymentMethod === 'cash' && t('payments.method.cash')}
-                          {payment.paymentMethod === 'manual' && t('payments.method.manual')}
-                          {payment.paymentMethod === 'paypal' && t('payments.method.paypal')}
-                          {payment.paymentMethod === 'other' && t('payments.method.other')}
-                          {payment.paymentMethod === 'pending' && t('payments.method.pending')}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {(payment.status === 'pending' || payment.status === 'failed') &&
-                        paypalEnabled &&
-                        paypalCurrencies.includes(payment.currency) && (
-                          <Button
-                            size="sm"
-                            onClick={() => payWithPaypal(payment.id)}
-                            disabled={paying === payment.id}
-                            className="bg-brand text-white hover:brightness-[1.07]"
-                          >
-                            <CreditCard className="h-4 w-4 mr-1" />
-                            {paying === payment.id ? t('payments.redirecting') : t('payments.paypal')}
-                          </Button>
-                        )}
-                      {payment.receiptUrl && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(payment.receiptUrl!, '_blank')}
-                          className="border-brand text-brand hover:bg-brand hover:text-white"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          {t('payments.receipt')}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <p className="text-[11px] text-muted-foreground">{t('payments.currentPlan')}</p>
+              <p className="mt-1 text-[15px] font-medium text-foreground">{client.subscription.plan.name}</p>
+              <p className="text-[11px] text-muted-foreground">{planInterval}</p>
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                {t('payments.empty')}
-              </h3>
-              <p className="text-muted-foreground">
-                {t('payments.emptyHint')}
+            <div>
+              <p className="text-[11px] text-muted-foreground">{t('payments.amount')}</p>
+              <p className="dashboard-metric mt-1 text-[20px] text-foreground">
+                {formatCurrency(client.subscription.plan.price, client.subscription.plan.currency)}
               </p>
             </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground">{t('payments.dueDate')}</p>
+              <p className="mt-1 text-[15px] font-medium text-foreground">{formatDate(nextPaymentDate)}</p>
+            </div>
+          </div>
+
+          {daysUntilNext !== null && daysUntilNext <= 7 && (
+            <div className="mt-4 flex items-start gap-2 border-t border-line pt-3">
+              <span
+                className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                  daysUntilNext < 0 ? 'bg-danger' : 'bg-warn'
+                }`}
+              />
+              <div>
+                <p className={`text-[12px] font-medium ${daysUntilNext < 0 ? 'text-danger' : 'text-warn'}`}>
+                  {daysUntilNext < 0 ? t('payments.expired') : t('payments.expiring')}
+                </p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{t('payments.renewHint')}</p>
+              </div>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </section>
+      )}
+
+      {!client.subscription && (
+        <section className="dashboard-panel p-6">
+          <h3 className="text-[15px] font-medium text-foreground">{t('payments.noPlan')}</h3>
+          <p className="mt-1 text-[12px] text-muted-foreground">{t('payments.noPlanHint')}</p>
+        </section>
+      )}
+
+      <section className="dashboard-panel overflow-hidden">
+        <div className="border-b border-line px-4 py-2.5">
+          <h2 className="text-[13px] font-medium text-foreground">{t('payments.history')}</h2>
+        </div>
+
+        {payments.length > 0 ? (
+          <div className="divide-y divide-line">
+            {payments.map((payment) => (
+              <div key={payment.id} className="px-4 py-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="dashboard-metric text-[15px] text-foreground">
+                        {formatCurrency(payment.amount, payment.currency)}
+                      </p>
+                      {getPaymentStatusBadge(payment.status)}
+                    </div>
+                    <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                      {payment.subscription ? `${t('payments.planLabel', { name: payment.subscription.plan.name })} · ` : ''}
+                      {payment.description ? `${payment.description} · ` : ''}
+                      {t('payments.due', { date: formatDate(payment.dueDate) })}
+                      {payment.paidAt ? ` · ${t('payments.paidOn', { date: formatDate(payment.paidAt) })}` : ''}
+                      {` · ${methodLabel(payment.paymentMethod)}`}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {(payment.status === 'pending' || payment.status === 'failed') &&
+                      paypalEnabled &&
+                      paypalCurrencies.includes(payment.currency) && (
+                        <Button
+                          size="sm"
+                          onClick={() => payWithPaypal(payment.id)}
+                          disabled={paying === payment.id}
+                        >
+                          {paying === payment.id ? t('payments.redirecting') : t('payments.paypal')}
+                        </Button>
+                      )}
+                    {payment.receiptUrl && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(payment.receiptUrl!, '_blank')}
+                      >
+                        {t('payments.receipt')}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="px-4 py-10 text-center">
+            <p className="text-[13px] font-medium text-foreground">{t('payments.empty')}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">{t('payments.emptyHint')}</p>
+          </div>
+        )}
+      </section>
     </div>
   )
 }

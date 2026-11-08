@@ -256,7 +256,7 @@ export default function ConnectionPage() {
 
       {/* Status */}
       <div className={`rounded-lg p-4 text-sm border ${
-    djConnected ? 'bg-[color:var(--live)]/10 border border-[color:var(--live)]/30 text-[color:var(--live)]' : 'bg-card border-border text-muted-foreground'
+    djConnected ? 'bg-[color:var(--live)]/10 border border-[color:var(--live)]/30 text-live' : 'bg-card border-border text-muted-foreground'
       }`}>
         <div className="flex items-center gap-2">
           <span className={`inline-block w-3 h-3 rounded-full ${djConnected ? 'bg-green-500 animate-pulse' : 'bg-secondary'}`} />
@@ -278,7 +278,7 @@ export default function ConnectionPage() {
         <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded text-sm">{error}</div>
       )}
       {success && (
-    <div className="bg-[color:var(--live)]/10 border border-[color:var(--live)]/30 text-[color:var(--live)] px-4 py-3 rounded text-sm">{success}</div>
+    <div className="bg-[color:var(--live)]/10 border border-[color:var(--live)]/30 text-live px-4 py-3 rounded text-sm">{success}</div>
       )}
 
       {/* Jerarquía de roles */}

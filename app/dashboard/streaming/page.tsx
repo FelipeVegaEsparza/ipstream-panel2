@@ -41,46 +41,43 @@ export default function StreamingPage() {
       <StreamControls isRunning={isRunning} onChange={refresh} />
 
       {streamUrl && (
-    <div className="dashboard-panel p-5">
-          <div className="flex items-center gap-2 mb-3">
-      <svg className="h-4 w-4 text-signal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-            <span className="text-sm font-semibold text-muted-foreground">{t('streaming.urlTitle')}</span>
-          </div>
-          <div className="flex flex-col md:flex-row gap-2">
+        <div className="dashboard-panel p-4">
+          <div className="mb-2 text-[11px] font-medium text-muted-foreground">{t('streaming.urlTitle')}</div>
+          <div className="flex flex-col gap-2 md:flex-row">
             <input
               type="text"
               readOnly
               value={absoluteStreamUrl ?? ''}
-       className="dashboard-metric flex-1 rounded-control border border-line bg-surface-2 px-3 py-2.5 text-xs text-foreground outline-none"
+              className="dashboard-metric flex-1 rounded-control border border-line bg-surface-2 px-3 py-2 text-[11px] text-foreground outline-none"
               onClick={(e) => e.currentTarget.select()}
             />
             <a
               href={absoluteStreamUrl ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
-       className="rounded-control bg-signal px-5 py-2.5 text-center text-xs font-medium text-white transition-colors hover:brightness-110 whitespace-nowrap"
+              className="btn-primary whitespace-nowrap px-4 py-2 text-center text-[12px]"
             >
               {t('streaming.listen')}
             </a>
             <button
               onClick={copyUrl}
-       className="rounded-control border border-line bg-surface-3 px-5 py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-surface-2 whitespace-nowrap"
+              className="whitespace-nowrap rounded-control border border-line bg-transparent px-4 py-2 text-[12px] font-medium text-foreground transition-colors hover:bg-surface-3"
             >
               {copied ? t('streaming.copied') : t('streaming.copy')}
             </button>
           </div>
           {isRunning && (
-      <p className="mt-2.5 flex items-center gap-1.5 text-xs text-[color:var(--live)]">
-       <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--live)]" />
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-live">
+              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--live)]" />
               {t('streaming.active')}
             </p>
           )}
         </div>
       )}
 
-      <NowPlayingDisplay />
+      <div className="dashboard-panel overflow-hidden">
+        <NowPlayingDisplay />
+      </div>
 
       <PlayHistory />
     </div>

@@ -39,32 +39,32 @@ export function StreamControls({ isRunning, onChange }: Props) {
   }
 
   return (
-  <div className="bg-card rounded-lg p-6">
-      <h3 className="text-lg font-semibold text-foreground mb-4">{t('streaming.controls.title')}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div className="dashboard-panel p-4">
+      <h3 className="text-[13px] font-medium text-foreground">{t('streaming.controls.title')}</h3>
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <button
           onClick={() => call('start')}
           disabled={isRunning || busy !== null}
-          className="px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-secondary disabled:cursor-not-allowed text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+          className="btn-primary h-9 text-[13px] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy === 'start' ? '⏳' : '▶'} {t('streaming.controls.start')}
+          {t('streaming.controls.start')}
         </button>
         <button
           onClick={() => call('stop')}
           disabled={!isRunning || busy !== null}
-          className="px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-secondary disabled:cursor-not-allowed text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+          className="rounded-control border border-line px-3 py-2 text-[13px] font-medium text-foreground transition-colors hover:border-[color:var(--danger)]/40 hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy === 'stop' ? '⏳' : '⏹'} {t('streaming.controls.stop')}
+          {t('streaming.controls.stop')}
         </button>
         <button
           onClick={() => call('restart')}
           disabled={busy !== null}
-          className="px-4 py-3 bg-brand hover:bg-brand disabled:bg-secondary disabled:cursor-not-allowed text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+          className="rounded-control border border-line px-3 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy === 'restart' ? '⏳' : '↻'} {t('streaming.controls.restart')}
+          {t('streaming.controls.restart')}
         </button>
       </div>
-      <p className="text-xs text-muted-foreground mt-3">
+      <p className="mt-3 text-[11px] text-muted-foreground">
         {t('streaming.controls.info')}
       </p>
     </div>

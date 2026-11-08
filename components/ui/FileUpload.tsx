@@ -122,9 +122,9 @@ export function FileUpload({
 
   const getFileIcon = () => {
     if (fileType === 'audio') {
-      return <MusicalNoteIcon className="h-12 w-12 text-muted-foreground mx-auto" />
+      return <MusicalNoteIcon className="mx-auto h-5 w-5 text-muted-foreground" />
     } else {
-      return <VideoCameraIcon className="h-12 w-12 text-muted-foreground mx-auto" />
+      return <VideoCameraIcon className="mx-auto h-5 w-5 text-muted-foreground" />
     }
   }
 
@@ -147,12 +147,12 @@ export function FileUpload({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           className={`
-            relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
-            ${dragOver 
-              ? 'border-brand bg-brand/10 backdrop-blur-sm' 
-              : 'border-border hover:border-brand/50 bg-secondary/30'
+            relative cursor-pointer rounded-[10px] border border-dashed p-5 text-center transition-colors
+            ${dragOver
+              ? 'border-[color:var(--signal)] bg-surface-2'
+              : 'border-line hover:border-[color:var(--signal)]/50 hover:bg-surface-2'
             }
-            ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50'}
+            ${uploading ? 'pointer-events-none opacity-50' : ''}
           `}
         >
           <input
@@ -165,18 +165,18 @@ export function FileUpload({
           />
           
           {uploading ? (
-            <div className="space-y-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto"></div>
-              <p className="text-sm text-muted-foreground">{t('common.uploadingFile')}</p>
+            <div className="space-y-2">
+              <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-line border-t-[color:var(--signal)]" />
+              <p className="text-[13px] text-muted-foreground">{t('common.uploadingFile')}</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {getFileIcon()}
               <div>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-brand">{t('common.clickToUpload')}</span> {t('common.dragFileHere')}
+                <p className="text-[13px] text-muted-foreground">
+                  <span className="font-medium text-signal">{t('common.clickToUpload')}</span> {t('common.dragFileHere')}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="mt-1 text-[11px] text-muted-foreground">
                   {finalDescription}
                 </p>
               </div>
@@ -187,17 +187,17 @@ export function FileUpload({
         {/* Current File Preview */}
         {value && (
           <div className="relative">
-            <div className="bg-secondary/50 border border-border rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">
-                    {fileType === 'audio' ? '🎵' : '🎥'}
+            <div className="rounded-[10px] border border-line bg-surface-2 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border border-line bg-card">
+                    {getFileIcon()}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium text-foreground">
                       {getFileName()}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground">
                       {fileType === 'audio' ? t('common.audioFileLoaded') : t('common.videoFileLoaded')}
                     </p>
                   </div>
@@ -205,7 +205,7 @@ export function FileUpload({
                 <button
                   type="button"
                   onClick={handleRemove}
-                  className="p-2 bg-red-500/90 backdrop-blur-sm text-white rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg hover:scale-110"
+                  className="rounded-[6px] p-1.5 text-muted-foreground transition-colors hover:bg-[color:var(--danger)]/10 hover:text-[color:var(--danger)]"
                   title={t('common.removeFile')}
                 >
                   <XMarkIcon className="h-4 w-4" />
@@ -213,14 +213,14 @@ export function FileUpload({
               </div>
               
               {/* Media Preview */}
-              <div className="mt-4">
+              <div className="mt-3">
                 {fileType === 'audio' ? (
                   <audio controls className="w-full">
                     <source src={value} type="audio/mpeg" />
                     Tu navegador no soporta el elemento de audio.
                   </audio>
                 ) : (
-                  <video controls className="w-full max-h-64 rounded-lg">
+                  <video controls className="max-h-64 w-full rounded-control">
                     <source src={value} type="video/mp4" />
                     Tu navegador no soporta el elemento de video.
                   </video>

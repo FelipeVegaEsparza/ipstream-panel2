@@ -42,7 +42,7 @@ export function PlanServicesCard({ plan }: PlanServicesCardProps) {
   const { t } = useDashboardI18n()
   if (!plan) {
     return (
-   <div className="bg-card/80 rounded-container border border-border/50 p-5">
+   <div className="dashboard-panel p-4">
         <p className="text-sm text-muted-foreground">
           {t('plan.noPlan')} {''}
           <span className="text-brand">{t('plan.contactSupport')}</span>

@@ -7,6 +7,7 @@ import { VideocastCard } from '@/components/dashboard/VideocastCard'
 import { VideocastForm } from '@/components/dashboard/VideocastForm'
 import { type VideocastInput } from '@/lib/validations'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 
 interface Videocast {
   id: string
@@ -153,20 +154,11 @@ export default function VideocastsPage() {
 
   if (showForm) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              {editingVideocast ? t('podcasts.edit') : t('podcasts.new')}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {editingVideocast 
-                ? t('videocasts.editSubtitle')
-                : t('videocasts.newSubtitle')
-              }
-            </p>
-          </div>
-        </div>
+      <div className="space-y-5">
+        <DashboardPageHeader
+          title={editingVideocast ? t('podcasts.edit') : t('podcasts.new')}
+          description={editingVideocast ? t('videocasts.editSubtitle') : t('videocasts.newSubtitle')}
+        />
 
         <div className="card">
           <VideocastForm
@@ -181,63 +173,36 @@ export default function VideocastsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {t('videocasts.title')}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {t('videocasts.subtitle')}
+    <div className="space-y-5">
+      <DashboardPageHeader
+        title={t('videocasts.title')}
+        description={t('videocasts.subtitle')}
+        actions={
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn-primary h-9 text-[12px]"
+          >
+            {t('podcasts.new')}
+          </button>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="dashboard-panel p-4">
+          <p className="text-[11px] text-muted-foreground">{t('podcasts.total')}</p>
+          <p className="dashboard-metric mt-1 text-[24px] font-medium text-foreground">{videocasts.length}</p>
+        </div>
+        <div className="dashboard-panel p-4">
+          <p className="text-[11px] text-muted-foreground">{t('podcasts.seasons')}</p>
+          <p className="dashboard-metric mt-1 text-[24px] font-medium text-foreground">
+            {new Set(videocasts.filter((v) => v.season).map((v) => v.season)).size}
           </p>
         </div>
-        
-        <button
-          onClick={() => setShowForm(true)}
-     className="flex items-center gap-2 rounded-control bg-signal px-4 py-2 text-xs font-medium text-white transition-colors hover:brightness-110"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>{t('podcasts.new')}</span>
-        </button>
-      </div>
-
-      {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="dashboard-panel p-5">
-          <div className="flex items-center justify-between">
-            <div>
-       <p className="text-muted-foreground">{t('podcasts.total')}</p>
-       <p className="dashboard-metric text-2xl font-medium text-foreground">{videocasts.length}</p>
-            </div>
-      
-          </div>
-        </div>
-
-    <div className="dashboard-panel p-5">
-          <div className="flex items-center justify-between">
-            <div>
-       <p className="text-muted-foreground">{t('podcasts.seasons')}</p>
-       <p className="dashboard-metric text-2xl font-medium text-foreground">
-                {new Set(videocasts.filter(v => v.season).map(v => v.season)).size || 0}
-              </p>
-            </div>
-      
-          </div>
-        </div>
-
-    <div className="dashboard-panel p-5">
-          <div className="flex items-center justify-between">
-            <div>
-       <p className="text-muted-foreground">{t('podcasts.last')}</p>
-       <p className="dashboard-metric text-2xl font-medium text-foreground">
-                {Math.max(...videocasts.map(v => v.episodeNumber || 0)) || 0}
-              </p>
-            </div>
-      
-          </div>
+        <div className="dashboard-panel p-4">
+          <p className="text-[11px] text-muted-foreground">{t('podcasts.last')}</p>
+          <p className="dashboard-metric mt-1 text-[24px] font-medium text-foreground">
+            {videocasts.length ? Math.max(...videocasts.map((v) => v.episodeNumber || 0)) : 0}
+          </p>
         </div>
       </div>
 
@@ -245,22 +210,21 @@ export default function VideocastsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-      <div className="w-12 h-12 border-4 border-signal border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">{t('podcasts.loading')}</p>
+            <div className="mx-auto mb-3 h-5 w-5 animate-spin rounded-full border-2 border-line border-t-[color:var(--text-2)]" />
+            <p className="text-[12px] text-muted-foreground">{t('podcasts.loading')}</p>
           </div>
         </div>
       ) : videocasts.length === 0 ? (
-        <div className="text-center py-12">
-     <span className="mx-auto mb-4 block h-px w-10 bg-signal" />
-          <h3 className="text-xl font-semibold text-foreground mb-2">
+        <div className="dashboard-panel px-4 py-10 text-center">
+          <h3 className="text-[15px] font-medium text-foreground">
             {t('podcasts.empty')}
           </h3>
-          <p className="text-muted-foreground mb-6">
+          <p className="mt-1 text-[12px] text-muted-foreground">
             {t('videocasts.emptyHint')}
           </p>
           <button
             onClick={() => setShowForm(true)}
-      className="rounded-control bg-signal px-4 py-2 text-xs font-medium text-white transition-colors hover:brightness-110"
+            className="btn-primary mt-4 h-9 text-[12px]"
           >
             {t('podcasts.createFirst')}
           </button>

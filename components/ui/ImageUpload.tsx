@@ -128,12 +128,12 @@ export function ImageUpload({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           className={`
-            relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
-            ${dragOver 
-              ? 'border-brand bg-brand/10 backdrop-blur-sm' 
-              : 'border-border hover:border-brand/50 bg-secondary/30'
+            relative cursor-pointer rounded-[10px] border border-dashed p-5 text-center transition-colors
+            ${dragOver
+              ? 'border-[color:var(--signal)] bg-surface-2'
+              : 'border-line hover:border-[color:var(--signal)]/50 hover:bg-surface-2'
             }
-            ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50'}
+            ${uploading ? 'pointer-events-none opacity-50' : ''}
           `}
         >
           <input
@@ -146,18 +146,18 @@ export function ImageUpload({
           />
           
           {uploading ? (
-            <div className="space-y-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand mx-auto"></div>
-              <p className="text-sm text-muted-foreground">{t('common.uploadingImage')}</p>
+            <div className="space-y-2">
+              <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-line border-t-[color:var(--signal)]" />
+              <p className="text-[13px] text-muted-foreground">{t('common.uploadingImage')}</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              <PhotoIcon className="h-12 w-12 text-muted-foreground mx-auto" />
+            <div className="space-y-2">
+              <PhotoIcon className="mx-auto h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-brand">{t('common.clickToUpload')}</span> {t('common.dragImageHere')}
+                <p className="text-[13px] text-muted-foreground">
+                  <span className="font-medium text-signal">{t('common.clickToUpload')}</span> {t('common.dragImageHere')}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="mt-1 text-[11px] text-muted-foreground">
                   {finalDescription}
                 </p>
               </div>
@@ -168,24 +168,24 @@ export function ImageUpload({
         {/* Current Image Preview */}
         {value && (
           <div className="relative">
-            <div className="relative w-full max-w-md mx-auto">
+            <div className="relative mx-auto w-full max-w-md">
               <Image
                 src={normalizeImageUrl(value)}
                 alt={t('common.preview')}
                 width={400}
                 height={200}
-                className="w-full h-48 object-cover rounded-xl border border-border shadow-lg"
+                className="h-48 w-full rounded-[10px] border border-line object-cover"
               />
               <button
                 type="button"
                 onClick={handleRemove}
-                className="absolute top-3 right-3 p-2 bg-red-500/90 backdrop-blur-sm text-white rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg hover:scale-110"
+                className="absolute right-2 top-2 rounded-[6px] border border-line bg-background/90 p-1.5 text-muted-foreground transition-colors hover:bg-[color:var(--danger)]/10 hover:text-[color:var(--danger)]"
                 title={t('common.removeImage')}
               >
                 <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground text-center mt-3">
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
               {t('common.currentImageHint')}
             </p>
           </div>

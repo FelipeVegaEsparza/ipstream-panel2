@@ -37,7 +37,7 @@ export function AdminHeader({ user, setSidebarOpen }: AdminHeaderProps) {
           {/* Admin indicator */}
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--warn)]" />
-            <span className="text-[11px] font-medium text-[color:var(--warn)]">{t('adminHeader.adminMode')}</span>
+            <span className="text-[11px] font-medium text-warn">{t('adminHeader.adminMode')}</span>
           </div>
         </div>
         <div className="flex items-center gap-x-4 lg:gap-x-6">

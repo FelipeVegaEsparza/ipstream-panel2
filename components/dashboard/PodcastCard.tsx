@@ -1,5 +1,5 @@
 'use client'
-import { MusicalNoteIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { TrashIcon } from '@heroicons/react/24/outline'
 
 import { useState } from 'react'
 import Image from 'next/image'
@@ -43,10 +43,6 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
     })
   }
 
-  const getFileIcon = () => {
-  return <MusicalNoteIcon className="h-10 w-10 text-foreground/60" />
-  }
-
   const getFileTypeLabel = () => {
     return 'Podcast'
   }
@@ -54,19 +50,17 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
   return (
     <div className="card-content group">
       {/* Header con imagen */}
-   <div className="relative h-48 bg-surface-3 from-purple-500 to-brand">
+   <div className="relative aspect-video overflow-hidden border-b border-line bg-surface-3">
         {podcast.imageUrl ? (
           <Image
             src={podcast.imageUrl}
             alt={podcast.title}
             fill
-      className="object-cover group- transition-transform duration-300"
+      className="object-cover"
           />
         ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-6xl opacity-80 text-foreground">
-              {getFileIcon()}
-            </div>
+          <div className="flex h-full items-center justify-center text-[11px] text-muted-foreground">
+            Podcast
           </div>
         )}
         
@@ -87,7 +81,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
 
         {/* Duración */}
         {podcast.duration && (
-     <div className="absolute top-4 right-4 bg-black/70 text-foreground px-3 py-1 rounded-full text-sm font-medium z-10">
+     <div className="absolute right-3 top-3 z-10 rounded-[4px] border border-line bg-background/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground">
             {podcast.duration}
           </div>
         )}
@@ -122,7 +116,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
       </div>
 
       {/* Contenido */}
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h3 className="text-title mb-1 line-clamp-2">
@@ -148,10 +142,7 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
           </span>
           
           {/* Indicador de archivo */}
-          <div className="flex items-center space-x-1">
-            <span>{getFileIcon()}</span>
-            <span>{t('podcasts.audioLabel')}</span>
-          </div>
+          <span>{t('podcasts.audioLabel')}</span>
         </div>
       </div>
 
@@ -160,8 +151,8 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="card max-w-md mx-4">
             <div className="text-center">
-       <div className="mb-4 flex justify-center text-[color:var(--danger)]"><TrashIcon className="h-9 w-9" /></div>
-              <h3 className="text-lg font-bold text-foreground mb-2">
+       <div className="mb-4 flex justify-center text-danger"><TrashIcon className="h-9 w-9" /></div>
+              <h3 className="mb-2 text-[15px] font-medium text-foreground">
                 {t('podcasts.deleteTitle')}
               </h3>
               <p className="text-muted-foreground mb-6">
@@ -188,28 +179,4 @@ export function PodcastCard({ podcast, onEdit, onDelete, isDeleting = false }: P
       )}
     </div>
   )
-}
-
-// Estilos CSS para line-clamp
-const styles = `
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-`
-
-// Inyectar estilos
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style')
-  styleSheet.textContent = styles
-  document.head.appendChild(styleSheet)
 }

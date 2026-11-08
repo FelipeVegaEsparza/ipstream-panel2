@@ -5,6 +5,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 
 type Service = 'radio' | 'tv'
 type Period = 'day' | 'week' | 'month'
@@ -148,37 +149,43 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-foreground">{t('analytics.title')}</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-2">
-            {PERIODS.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setPeriod(p.key)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  period === p.key ? 'bg-brand text-white' : 'bg-secondary text-muted-foreground hover:bg-secondary/70'
-                }`}
-              >
-                {t(p.label)}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={exportCsv}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-secondary"
-          >
-            {t('analytics.export')}
-          </button>
-        </div>
-      </div>
+      <DashboardPageHeader
+        title={t('analytics.title')}
+        actions={
+          <>
+            <div className="flex items-center gap-0.5 rounded-control border border-line p-0.5">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setPeriod(p.key)}
+                  className={`rounded-[4px] px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                    period === p.key
+                      ? 'bg-surface-3 text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {t(p.label)}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={exportCsv}
+              className="rounded-control border border-line px-3 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-surface-3"
+            >
+              {t('analytics.export')}
+            </button>
+          </>
+        }
+      />
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         {hasRadio && (
           <button
             onClick={() => setService('radio')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
-              service === 'radio' ? 'border-brand text-brand' : 'border-border text-muted-foreground'
+            className={`rounded-control border px-3 py-1.5 text-[12px] font-medium transition-colors ${
+              service === 'radio'
+                ? 'border-[color:var(--signal)] text-foreground'
+                : 'border-line text-muted-foreground hover:text-foreground'
             }`}
           >
             {t('analytics.service.radio')}
@@ -187,8 +194,10 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
         {hasTv && (
           <button
             onClick={() => setService('tv')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
-              service === 'tv' ? 'border-brand text-brand' : 'border-border text-muted-foreground'
+            className={`rounded-control border px-3 py-1.5 text-[12px] font-medium transition-colors ${
+              service === 'tv'
+                ? 'border-[color:var(--signal)] text-foreground'
+                : 'border-line text-muted-foreground hover:text-foreground'
             }`}
           >
             {t('analytics.service.tv')}
@@ -197,24 +206,26 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
       </div>
 
       {error && (
-        <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded-lg">{error}</div>
+        <div className="rounded-[10px] border border-[color:var(--danger)]/30 bg-[color:var(--danger)]/10 px-3 py-2.5 text-[12px] text-danger">
+          {error}
+        </div>
       )}
 
       {loading && !summary && (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-line border-t-[color:var(--text-2)]" />
         </div>
       )}
 
       {empty && !error && (
-    <div className="bg-card border border-border rounded-panel p-8 text-center text-muted-foreground">
+        <div className="dashboard-panel p-8 text-center text-[12px] text-muted-foreground">
           {t('analytics.empty')}
         </div>
       )}
 
       {s && !empty && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
             <Kpi title={t('analytics.kpi.avg')} value={String(s.listenersAvg)} delta={delta(s.listenersAvg, prev?.listenersAvg || 0)} />
             <Kpi title={t('analytics.kpi.peak')} value={String(s.listenersMax)} />
             <Kpi title={t('analytics.kpi.unique')} value={String(s.uniqueListeners)} />
@@ -223,60 +234,60 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
             <Kpi title="Uptime" value={fmtUptime(s.airtimeSeconds, summary!.from, summary!.to)} />
           </div>
 
-     <div className="bg-card rounded-panel p-5 border border-border">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">{t('analytics.audience')}</h2>
-              <span className="text-xs text-muted-foreground">{t('analytics.timezone', { timezone: summary!.timezone })}</span>
+          <div className="dashboard-panel p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[13px] font-medium text-foreground">{t('analytics.audience')}</h2>
+              <span className="text-[11px] text-muted-foreground">{t('analytics.timezone', { timezone: summary!.timezone })}</span>
             </div>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={points}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="bucket" tickFormatter={(v) => fmtBucket(v, summary!.granularity, locale)} stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+                <XAxis dataKey="bucket" tickFormatter={(v) => fmtBucket(v, summary!.granularity, locale)} stroke="var(--text-3)" fontSize={11} />
+                <YAxis stroke="var(--text-3)" fontSize={11} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
+                    backgroundColor: 'var(--surface-2)',
+                    border: '1px solid var(--line)',
                     borderRadius: '8px',
-                    color: 'hsl(var(--popover-foreground))',
+                    color: 'var(--text-1)',
                   }}
                   labelFormatter={(v) => fmtBucket(String(v), summary!.granularity, locale)}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="listenersAvg" name={t('analytics.kpi.avg')} stroke="var(--brand-500)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="listenersMax" name={t('analytics.kpi.peak')} stroke="var(--brand-300)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="listenersAvg" name={t('analytics.kpi.avg')} stroke="var(--text-1)" strokeWidth={1.75} dot={false} />
+                <Line type="monotone" dataKey="listenersMax" name={t('analytics.kpi.peak')} stroke="var(--text-3)" strokeWidth={1.75} strokeDasharray="4 3" dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {rankings.map((r) => (
               <RankCard key={r.title} title={r.title} items={r.items} />
             ))}
           </div>
 
           {heatmap && heatmap.max > 0 && (
-      <div className="bg-card rounded-panel p-5 border border-border">
-              <h2 className="text-lg font-semibold text-foreground mb-4">{t('analytics.heatmap')}</h2>
+            <div className="dashboard-panel p-4">
+              <h2 className="mb-4 text-[13px] font-medium text-foreground">{t('analytics.heatmap')}</h2>
               <div className="overflow-x-auto">
                 <div className="inline-block">
                   {heatmap.matrix.map((row, d) => (
-                    <div key={d} className="flex items-center gap-1 mb-1">
-                      <span className="w-9 text-xs text-muted-foreground">{dayLabels[d]}</span>
+                    <div key={d} className="mb-1 flex items-center gap-1">
+                      <span className="w-9 text-[11px] text-muted-foreground">{dayLabels[d]}</span>
                       {row.map((v, h) => (
                         <div
                           key={h}
                           title={`${dayLabels[d]} ${h}:00 — ${Math.round(v)} min`}
-                          className="w-5 h-4 rounded-sm"
-                          style={{ backgroundColor: `rgba(40, 180, 240, ${heatmap.max ? Math.min(1, v / heatmap.max) : 0})` }}
+                          className="h-4 w-5 rounded-[2px]"
+                          style={{ backgroundColor: `color-mix(in srgb, var(--text-3) ${Math.round((v / heatmap.max) * 60)}%, transparent)` }}
                         />
                       ))}
                     </div>
                   ))}
-                  <div className="flex items-center gap-1 mt-1">
+                  <div className="mt-1 flex items-center gap-1">
                     <span className="w-9" />
                     {Array.from({ length: 24 }).map((_, h) => (
-                      <span key={h} className="w-5 text-[9px] text-muted-foreground text-center">
+                      <span key={h} className="w-5 text-center text-[9px] text-muted-foreground">
                         {h % 3 === 0 ? h : ''}
                       </span>
                     ))}
@@ -293,12 +304,12 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
 
 function Kpi({ title, value, sub, delta }: { title: string; value: string; sub?: string; delta?: number | null }) {
   return (
-  <div className="bg-card rounded-panel p-4 border border-border">
-      <p className="text-xs text-muted-foreground mb-1">{title}</p>
-      <p className="text-2xl font-bold text-foreground">{value}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+    <div className="dashboard-panel p-4">
+      <p className="text-[11px] text-muted-foreground">{title}</p>
+      <p className="dashboard-metric mt-1 text-[22px] font-medium text-foreground">{value}</p>
+      {sub && <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p>}
       {delta != null && (
-        <p className={`text-xs mt-0.5 ${delta >= 0 ? 'text-success' : 'text-red-400'}`}>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">
           {delta >= 0 ? '▲' : '▼'} {Math.abs(delta)}%
         </p>
       )}
@@ -308,19 +319,19 @@ function Kpi({ title, value, sub, delta }: { title: string; value: string; sub?:
 
 function RankCard({ title, items }: { title: string; items: RankItem[] }) {
   return (
-  <div className="bg-card rounded-panel border border-border overflow-hidden">
-      <div className="px-5 py-4 border-b border-border">
-        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+    <div className="dashboard-panel overflow-hidden">
+      <div className="border-b border-line px-4 py-2.5">
+        <h2 className="text-[13px] font-medium text-foreground">{title}</h2>
       </div>
-      <ul className="divide-y divide-border/50">
+      <ul className="divide-y divide-line">
         {items.map((it, i) => (
-          <li key={`${it.label}-${i}`} className="flex items-center justify-between px-5 py-3 text-sm">
-            <span className="text-foreground truncate">
-              <span className="text-muted-foreground mr-2">{i + 1}.</span>
+          <li key={`${it.label}-${i}`} className="flex items-center justify-between gap-3 px-4 py-2.5 text-[12px]">
+            <span className="truncate text-foreground">
+              <span className="mr-2 text-muted-foreground">{i + 1}.</span>
               {it.label}
               {it.sublabel && <span className="text-muted-foreground"> — {it.sublabel}</span>}
             </span>
-            <span className="text-muted-foreground ml-3 whitespace-nowrap">
+            <span className="whitespace-nowrap text-muted-foreground">
               {it.seconds ? fmtMinutes(it.seconds / 60) : `${it.count}×`}
             </span>
           </li>

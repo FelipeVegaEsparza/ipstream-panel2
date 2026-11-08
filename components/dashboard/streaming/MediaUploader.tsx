@@ -259,9 +259,9 @@ export function MediaUploader({
         }}
         onClick={() => !isProcessing && inputRef.current?.click()}
         className={`
-          border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition
-          ${dragOver ? 'border-brand bg-brand/10' : 'border-border hover:border-border'}
-          ${isProcessing ? 'opacity-60 pointer-events-none' : ''}
+          cursor-pointer rounded-[10px] border border-dashed p-4 text-center transition-colors
+          ${dragOver ? 'border-[color:var(--signal)] bg-surface-2' : 'border-line hover:border-[color:var(--signal)]/50 hover:bg-surface-2'}
+          ${isProcessing ? 'pointer-events-none opacity-60' : ''}
         `}
       >
         <input
@@ -272,25 +272,22 @@ export function MediaUploader({
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
         />
-        <div className="text-3xl mb-1">
-          {isProcessing ? '⏳' : '⬆️'}
+        <div className="text-[13px] font-medium text-foreground">
+          {isProcessing ? t('streaming.uploader.processing') : (dropTitle || t('streaming.uploader.dropDefault'))}
         </div>
-        <div className="text-foreground font-medium text-sm">
-          {dropTitle || t('streaming.uploader.dropDefault')}
-        </div>
-        {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
+        {hint && <div className="mt-1 text-[11px] text-muted-foreground">{hint}</div>}
       </div>
 
       {queue.length > 0 && (
-        <div className="bg-card/80 rounded-lg border border-border overflow-hidden">
-          <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
+        <div className="overflow-hidden rounded-[10px] border border-line bg-card">
+          <div className="flex items-center justify-between border-b border-line px-3 py-2">
+            <span className="text-[11px] text-muted-foreground">
               {t('streaming.uploader.queue')} ({completedCount}/{totalCount})
             </span>
             {hasPending && !isProcessing && (
               <button
                 onClick={startUpload}
-                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
+                className="rounded-control bg-signal px-2.5 py-1 text-[11px] font-medium text-white transition-colors hover:brightness-110"
               >
                 {t('streaming.uploader.start')}
               </button>
@@ -298,52 +295,52 @@ export function MediaUploader({
           </div>
 
           {isProcessing && (
-            <div className="px-3 py-2 bg-background/50">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+            <div className="border-b border-line bg-surface-2 px-3 py-2">
+              <div className="mb-1 flex items-center gap-2 text-[10px] text-muted-foreground">
                 <span>{t('streaming.uploader.totalProgress')}</span>
                 <span className="ml-auto">{totalProgress}%</span>
               </div>
-              <div className="w-full bg-secondary rounded-full h-1.5">
+              <div className="h-0.5 w-full bg-surface-3">
                 <div
-                  className="bg-indigo-500 h-1.5 rounded-full transition-all duration-300"
+                  className="h-full bg-[color:var(--text-3)] transition-all duration-300"
                   style={{ width: `${totalProgress}%` }}
                 />
               </div>
             </div>
           )}
 
-          <div className="divide-y divide-border/50 max-h-64 overflow-y-auto">
+          <div className="max-h-64 divide-y divide-line overflow-y-auto">
             {queue.map((item) => (
               <div key={item.id} className="flex items-center gap-3 px-3 py-2">
                 <div className="flex-shrink-0">{statusIcon(item.status)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-foreground truncate">{item.file.name}</span>
-                    <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">{item.sizeLabel}</span>
+                    <span className="truncate text-[12px] text-foreground">{item.file.name}</span>
+                    <span className="ml-2 flex-shrink-0 text-[10px] text-muted-foreground">{item.sizeLabel}</span>
                   </div>
                   {item.status === 'uploading' && (
-                    <div className="mt-1 w-full bg-secondary rounded-full h-1">
+                    <div className="mt-1 h-0.5 w-full bg-surface-3">
                       <div
-                        className="bg-brand h-1 rounded-full transition-all duration-200"
+                        className="h-full bg-[color:var(--text-3)] transition-all duration-200"
                         style={{ width: `${item.progress}%` }}
                       />
                     </div>
                   )}
                   {item.status === 'error' && item.error && (
-                    <div className="text-xs text-red-400 truncate mt-0.5">{item.error}</div>
+                    <div className="mt-0.5 truncate text-[10px] text-danger">{item.error}</div>
                   )}
                   {item.status === 'pending' && (
-                    <div className="text-xs text-muted-foreground mt-0.5">{t('streaming.uploader.pending')}</div>
+                    <div className="mt-0.5 text-[10px] text-muted-foreground">{t('streaming.uploader.pending')}</div>
                   )}
                   {item.status === 'processing' && (
-                    <div className="text-xs text-brand mt-0.5">{t('streaming.uploader.processing')}</div>
+                    <div className="mt-0.5 text-[10px] text-muted-foreground">{t('streaming.uploader.processing')}</div>
                   )}
                   {item.status === 'completed' && (
-                    <div className="text-xs text-green-400 mt-0.5">{t('streaming.uploader.completed')}</div>
+                    <div className="mt-0.5 text-[10px] text-muted-foreground">{t('streaming.uploader.completed')}</div>
                   )}
                 </div>
                 {item.status === 'uploading' && (
-                  <span className="text-xs text-brand flex-shrink-0">{item.progress}%</span>
+                  <span className="flex-shrink-0 text-[10px] text-muted-foreground">{item.progress}%</span>
                 )}
               </div>
             ))}

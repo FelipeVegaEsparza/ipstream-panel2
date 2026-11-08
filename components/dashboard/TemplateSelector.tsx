@@ -2,10 +2,9 @@
 
 import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Check, Image as ImageIcon } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 import { TemplateActivationModal } from '@/components/dashboard/TemplateActivationModal'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
@@ -114,22 +113,16 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
       <DashboardPageHeader title={t('templateSelector.title')} description={t('templateSelector.subtitle')} />
 
       {selectedTemplateId && (
-    <Card className="bg-surface-3 from-brand/20 to-brand/20 border-brand/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-brand/20 p-2 rounded-lg">
-                <Check className="h-5 w-5 text-brand" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-brand">
-                  {t('templateSelector.current')}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {templates.find(tpl => tpl.id === selectedTemplateId)?.displayName || t('templateSelector.noTemplate')}
-                </p>
-              </div>
-            </div>
-          </CardContent>
+        <Card className="p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--signal)]" />
+            <p className="text-[11px] font-medium text-muted-foreground">
+              {t('templateSelector.current')}
+            </p>
+            <p className="text-[13px] font-medium text-foreground">
+              {templates.find(tpl => tpl.id === selectedTemplateId)?.displayName || t('templateSelector.noTemplate')}
+            </p>
+          </div>
         </Card>
       )}
 
@@ -138,52 +131,36 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
           const isSelected = template.id === selectedTemplateId
           
           return (
-            <Card 
-              key={template.id} 
-              className={`bg-card border-2 overflow-hidden transition-all duration-200 ${
-                isSelected 
-         ? 'border-brand ' 
-                  : 'border-border hover:border-border'
-              }`}
+            <Card
+              key={template.id}
+              className={`overflow-hidden ${isSelected ? 'border-[color:var(--signal)]' : ''}`}
             >
-              {template.imageUrl && (
-                <div className="relative aspect-square w-full bg-secondary">
+              <div className="relative aspect-square w-full overflow-hidden border-b border-line bg-surface-2">
+                {template.imageUrl ? (
                   <img
                     src={template.imageUrl}
                     alt={template.displayName}
                     className="absolute inset-0 h-full w-full object-cover"
                   />
-                  {isSelected && (
-                    <div className="absolute top-2 right-2">
-                      <Badge className="bg-brand text-white">
-                        <Check className="h-3 w-3 mr-1" />
-                        {t('templateSelector.selected')}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-              )}
-              {!template.imageUrl && (
-                <div className="relative flex aspect-square w-full items-center justify-center bg-secondary">
-                  <ImageIcon className="h-16 w-16 text-muted-foreground" />
-                  {isSelected && (
-                    <div className="absolute top-2 right-2">
-                      <Badge className="bg-brand text-white">
-                        <Check className="h-3 w-3 mr-1" />
-                        {t('templateSelector.selected')}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-              )}
+                ) : (
+                  <div className="flex h-full items-center justify-center text-[11px] text-muted-foreground">
+                    {template.displayName}
+                  </div>
+                )}
+                {isSelected && (
+                  <div className="absolute right-2 top-2">
+                    <Badge>{t('templateSelector.selected')}</Badge>
+                  </div>
+                )}
+              </div>
 
               <CardContent className="p-4">
-                <h3 className="text-lg font-semibold text-foreground mb-2">
+                <h3 className="mb-2 text-[15px] font-medium text-foreground">
                   {template.displayName}
                 </h3>
 
                 {template.description && (
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                  <p className="mb-4 line-clamp-3 text-[12px] text-muted-foreground">
                     {template.description}
                   </p>
                 )}
@@ -191,20 +168,11 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
                 <Button
                   onClick={() => openActivation(template)}
                   disabled={isSubmitting}
-                  className={`w-full ${
-                    isSelected 
-                      ? 'bg-brand hover:bg-brand' 
-                      : 'bg-brand hover:bg-brand'
-                  }`}
+                  size="sm"
+                  variant={isSelected ? 'outline' : 'default'}
+                  className="w-full"
                 >
-                  {isSelected ? (
-                    <>
-                      <Check className="h-4 w-4 mr-2" />
-                      {t('templateSelector.accentColor')}
-                    </>
-                  ) : (
-                    t('templateSelector.select')
-                  )}
+                  {isSelected ? t('templateSelector.accentColor') : t('templateSelector.select')}
                 </Button>
               </CardContent>
             </Card>
@@ -212,12 +180,11 @@ export function TemplateSelector({ templates, currentTemplateId, currentAccentCo
         })}
 
         {templates.length === 0 && (
-          <div className="col-span-full text-center py-12">
-            <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">
+          <div className="dashboard-panel col-span-full p-8 text-center">
+            <p className="text-[15px] font-medium text-foreground">
               {t('templateSelector.emptyTitle')}
-            </h3>
-            <p className="text-muted-foreground">
+            </p>
+            <p className="mt-1 text-[12px] text-muted-foreground">
               {t('templateSelector.emptyHint')}
             </p>
           </div>

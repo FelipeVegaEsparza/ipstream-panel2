@@ -175,7 +175,7 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
         title={t('chat.title')}
         description={t('chat.subtitle')}
         actions={
-          <div className="inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1.5 text-xs text-muted-foreground">
+          <div className="inline-flex items-center gap-2 text-[11px] text-muted-foreground">
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[color:var(--live)]" />
             {t('chat.updating', { seconds: POLL_INTERVAL_MS / 1000 })}
           </div>
@@ -183,20 +183,20 @@ export function ChatView({ staffName, initialMessages, initialBans, initialStats
       />
 
       {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="rounded-[10px] border border-destructive/30 bg-destructive/10 p-3 text-[12px] text-destructive">
           {error}
         </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-    <section className="flex h-[calc(100vh-240px)] min-h-[440px] max-h-[760px] flex-col overflow-hidden rounded-container border border-border bg-card sm:min-h-[520px]">
-          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <section className="flex h-[calc(100vh-240px)] min-h-[440px] max-h-[760px] flex-col overflow-hidden rounded-[10px] border border-line bg-card sm:min-h-[520px]">
+          <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand/10 text-brand">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-3 text-foreground">
                 <MessagesSquare className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-foreground">
+                <h2 className="text-[13px] font-medium text-foreground">
                   {t('chat.conversation')}
                 </h2>
                 <p className="text-xs text-muted-foreground">

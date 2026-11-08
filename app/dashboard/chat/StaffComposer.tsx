@@ -58,14 +58,14 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-border bg-card px-3 py-3 sm:px-4"
+      className="border-t border-line bg-card px-3 py-3 sm:px-4"
     >
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <Megaphone className="h-4 w-4 text-brand" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-brand">
+        <Megaphone className="h-4 w-4 text-muted-foreground" />
+        <span className="text-[11px] font-medium text-muted-foreground">
           {t('chat.composer.label')}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-[11px] text-muted-foreground">
           {t('chat.composer.showingAs', { name: staffName })}
         </span>
       </div>
@@ -78,21 +78,21 @@ export function StaffComposer({ staffName, onSent, onError }: StaffComposerProps
           aria-label={t('chat.composer.placeholder')}
           rows={2}
           maxLength={500}
-     className="min-h-[44px] flex-1 resize-none rounded-panel border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+     className="min-h-[44px] flex-1 resize-none rounded-control border border-line bg-surface-2 px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-[color:var(--signal)] focus:outline-none focus:ring-1 focus:ring-[color:var(--signal)]"
           disabled={sending}
         />
         <button
           type="submit"
           disabled={!body.trim() || sending}
-     className="inline-flex h-11 items-center gap-2 rounded-panel bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
+     className="btn-primary inline-flex h-9 items-center gap-2 px-3 text-[12px] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           {sending ? t('chat.composer.sending') : t('chat.composer.send')}
         </button>
       </div>
       <div className="mt-1.5 flex items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground">{t('chat.composer.hint')}</p>
-        <p className="text-xs text-muted-foreground">{body.length}/500</p>
+        <p className="text-[11px] text-muted-foreground">{t('chat.composer.hint')}</p>
+        <p className="text-[11px] text-muted-foreground">{body.length}/500</p>
       </div>
     </form>
   )

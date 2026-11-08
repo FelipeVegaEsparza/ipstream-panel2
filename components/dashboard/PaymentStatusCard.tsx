@@ -16,9 +16,9 @@ export function PaymentStatusCard({ nextPaymentDate, planName, planPrice, status
   const config = (() => {
     switch (status) {
       case 'due-soon':
-        return { title: t('payment.status.dueSoon'), tone: 'text-[color:var(--warn)]', dot: 'bg-[color:var(--warn)]' }
+        return { title: t('payment.status.dueSoon'), tone: 'text-warn', dot: 'bg-[color:var(--warn)]' }
       case 'overdue':
-        return { title: t('payment.status.overdue'), tone: 'text-[color:var(--danger)]', dot: 'bg-[color:var(--danger)]' }
+        return { title: t('payment.status.overdue'), tone: 'text-danger', dot: 'bg-[color:var(--danger)]' }
       case 'paid':
         return { title: t('payment.status.paid'), tone: 'text-foreground', dot: 'bg-[color:var(--text-3)]' }
       default:

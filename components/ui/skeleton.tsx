@@ -11,13 +11,13 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
 
 function CardSkeleton() {
   return (
-    <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+    <div className="space-y-4 rounded-[10px] border border-line bg-card p-4">
       <Skeleton className="h-4 w-1/3" />
       <Skeleton className="h-8 w-1/2" />
       <Skeleton className="h-3 w-2/3" />
-      <div className="pt-2 flex gap-2">
-        <Skeleton className="h-8 w-20 rounded-lg" />
-        <Skeleton className="h-8 w-24 rounded-lg" />
+      <div className="flex gap-2 pt-2">
+        <Skeleton className="h-8 w-20 rounded-control" />
+        <Skeleton className="h-8 w-24 rounded-control" />
       </div>
     </div>
   )
@@ -26,9 +26,9 @@ function CardSkeleton() {
 function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="space-y-3">
-      <Skeleton className="h-10 w-full rounded-xl" />
+      <Skeleton className="h-9 w-full rounded-control" />
       {Array.from({ length: rows }).map((_, i) => (
-        <Skeleton key={i} className="h-14 w-full rounded-xl" />
+        <Skeleton key={i} className="h-12 w-full rounded-control" />
       ))}
     </div>
   )
@@ -36,9 +36,9 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
 
 function StatsGridSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-card rounded-2xl border border-border p-6 space-y-3">
+        <div key={i} className="space-y-3 bg-card p-4">
           <Skeleton className="h-3 w-1/2" />
           <Skeleton className="h-8 w-1/3" />
           <Skeleton className="h-3 w-2/3" />

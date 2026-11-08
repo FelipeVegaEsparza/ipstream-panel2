@@ -1,5 +1,5 @@
 'use client'
-import { TrashIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
+import { TrashIcon } from '@heroicons/react/24/outline'
 
 import { useState } from 'react'
 import Image from 'next/image'
@@ -46,17 +46,17 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
   return (
     <div className="card-content group">
       {/* Header con imagen */}
-   <div className="relative h-48 bg-surface-3 from-red-500 to-pink-600">
+   <div className="relative aspect-video overflow-hidden border-b border-line bg-surface-3">
         {videocast.imageUrl ? (
           <Image
             src={videocast.imageUrl}
             alt={videocast.title}
             fill
-      className="object-cover group- transition-transform duration-300"
+      className="object-cover"
           />
         ) : (
-          <div className="flex items-center justify-center h-full">
-      <VideoCameraIcon className="h-10 w-10 text-foreground/60" />
+          <div className="flex h-full items-center justify-center text-[11px] text-muted-foreground">
+            Videocast
           </div>
         )}
         
@@ -77,7 +77,7 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
 
         {/* Duración */}
         {videocast.duration && (
-     <div className="absolute top-4 right-4 bg-black/70 text-foreground px-3 py-1 rounded-full text-sm font-medium z-10">
+     <div className="absolute right-3 top-3 z-10 rounded-[4px] border border-line bg-background/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground">
             {videocast.duration}
           </div>
         )}
@@ -112,15 +112,15 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
       </div>
 
       {/* Contenido */}
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="text-title mb-1 line-clamp-2 group-hover:text-red-400">
+            <h3 className="text-title mb-1 line-clamp-2">
               {videocast.title}
             </h3>
             
             {videocast.season && (
-              <p className="text-sm text-red-400 font-medium mb-2">
+              <p className="mb-2 text-[11px] text-muted-foreground">
                 {videocast.season}
               </p>
             )}
@@ -138,10 +138,7 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
           </span>
           
           {/* Indicador de archivo */}
-          <div className="flex items-center space-x-1">
-      <VideoCameraIcon className="h-4 w-4 text-muted-foreground" />
-            <span>{t('videocasts.videoLabel')}</span>
-          </div>
+          <span>{t('videocasts.videoLabel')}</span>
         </div>
       </div>
 
@@ -150,8 +147,8 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="card max-w-md mx-4">
             <div className="text-center">
-       <div className="mb-4 flex justify-center text-[color:var(--danger)]"><TrashIcon className="h-9 w-9" /></div>
-              <h3 className="text-lg font-bold text-foreground mb-2">
+       <div className="mb-4 flex justify-center text-danger"><TrashIcon className="h-9 w-9" /></div>
+              <h3 className="mb-2 text-[15px] font-medium text-foreground">
                 {t('podcasts.deleteTitle')}
               </h3>
               <p className="text-muted-foreground mb-6">
@@ -178,28 +175,4 @@ export function VideocastCard({ videocast, onEdit, onDelete, isDeleting = false 
       )}
     </div>
   )
-}
-
-// Estilos CSS para line-clamp
-const styles = `
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-`
-
-// Inyectar estilos
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style')
-  styleSheet.textContent = styles
-  document.head.appendChild(styleSheet)
 }

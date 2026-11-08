@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, createContext, useContext, useRef, useCallback, type ReactNode } from 'react'
-import { X, CheckCircle, AlertTriangle, Info } from 'lucide-react'
+import { X } from 'lucide-react'
 
 interface ModalProps {
   isOpen: boolean
@@ -115,41 +115,24 @@ export function Modal({
 
   if (!isOpen) return null
 
-  const getIcon = () => {
+  const tone = (() => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="h-12 w-12 text-green-400" />
+        return 'bg-[color:var(--live)]'
       case 'error':
-        return <AlertTriangle className="h-12 w-12 text-red-400" />
+        return 'bg-[color:var(--danger)]'
       case 'warning':
-        return <AlertTriangle className="h-12 w-12 text-orange-400" />
-      case 'confirm':
-        return <Info className="h-12 w-12 text-brand" />
+        return 'bg-[color:var(--warn)]'
       default:
-        return <Info className="h-12 w-12 text-brand" />
+        return 'bg-[color:var(--signal)]'
     }
-  }
-
-  const getColor = () => {
-    switch (type) {
-      case 'success':
-        return 'border-green-500/30 bg-green-500/10'
-      case 'error':
-        return 'border-red-500/30 bg-red-500/10'
-      case 'warning':
-        return 'border-orange-500/30 bg-orange-500/10'
-      case 'confirm':
-        return 'border-brand/30 bg-brand/10'
-      default:
-        return 'border-brand/30 bg-brand/10'
-    }
-  }
+  })()
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60"
         onClick={onClose}
       />
       
@@ -158,41 +141,34 @@ export function Modal({
         ref={containerRef}
         role="dialog"
         aria-modal="true"
-        className="relative bg-card rounded-2xl shadow-2xl border border-border max-w-md w-full animate-in fade-in zoom-in duration-200"
+        className="relative w-full max-w-md rounded-[10px] border border-line bg-card shadow-popover"
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-3 right-3 rounded-[6px] p-1 text-muted-foreground transition-colors hover:bg-surface-3 hover:text-foreground"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
 
         {/* Content */}
-        <div className="p-6">
-          {/* Icon */}
-          <div className={`w-20 h-20 rounded-full ${getColor()} flex items-center justify-center mx-auto mb-4`}>
-            {getIcon()}
+        <div className="p-5">
+          <div className="flex items-center gap-2 pr-8">
+            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${tone}`} />
+            <h3 className="text-[15px] font-medium text-foreground">{title}</h3>
           </div>
 
-          {/* Title */}
-          <h3 className="text-xl font-bold text-foreground text-center mb-3">
-            {title}
-          </h3>
-
-          {/* Message */}
-          <p className="text-muted-foreground text-center mb-6 whitespace-pre-line">
+          <p className="mt-2 text-[13px] leading-5 text-muted-foreground whitespace-pre-line">
             {message}
           </p>
 
-          {/* Buttons */}
-          <div className="flex gap-3">
+          <div className="mt-5 flex gap-2">
             {type === 'confirm' && onConfirm ? (
               <>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg font-medium transition-colors"
+                  className="flex-1 rounded-control border border-line px-3 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-surface-3"
                 >
                   {cancelText}
                 </button>
@@ -201,7 +177,7 @@ export function Modal({
                     onConfirm()
                     onClose()
                   }}
-                  className="flex-1 px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg font-medium transition-colors"
+                  className="flex-1 rounded-control bg-signal px-3 py-2 text-[13px] font-medium text-white transition-colors hover:brightness-110"
                 >
                   {confirmText}
                 </button>
@@ -209,7 +185,7 @@ export function Modal({
             ) : (
               <button
                 onClick={onClose}
-                className="w-full px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg font-medium transition-colors"
+                className="w-full rounded-control bg-signal px-3 py-2 text-[13px] font-medium text-white transition-colors hover:brightness-110"
               >
                 {confirmText}
               </button>

@@ -550,7 +550,7 @@ export default function PlaylistEditorPage() {
                       <div
                         key={track.id}
                         className={`flex items-center gap-2 p-2 rounded ${
-             inPlaylist ? 'bg-card/50 opacity-40' : isSelected ? 'bg-signal/10 border border-signal/30' : 'bg-card/50 hover:bg-secondary'
+             inPlaylist ? 'bg-card/50 opacity-40' : isSelected ? 'bg-[color:var(--signal)]/10 border border-[color:var(--signal)]/30' : 'bg-card/50 hover:bg-secondary'
                         }`}
                       >
                         <input

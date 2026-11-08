@@ -206,7 +206,7 @@ export default function TvLibraryPage() {
 
       {/* Storage bar */}
       {storage && (
-    <div className="bg-card/80 rounded-container border border-border/40 p-4">
+    <div className="dashboard-panel p-4">
           <div className="flex justify-between text-sm mb-2">
             <span className="text-muted-foreground">
               {t('tv.library.storage', { count: storage.trackCount, mb: storage.totalMB.toFixed(1) })}
@@ -233,7 +233,7 @@ export default function TvLibraryPage() {
       <div className="flex gap-4">
         {/* Folder sidebar */}
         <div className="w-64 flex-shrink-0">
-     <div className="bg-card/80 rounded-container border border-border/40 p-4 space-y-3">
+     <div className="dashboard-panel space-y-3 p-4">
             <h3 className="text-sm font-semibold text-muted-foreground">{t('tv.library.folders')}</h3>
             <button
               onClick={() => setCurrentFolderId(null)}
@@ -263,7 +263,7 @@ export default function TvLibraryPage() {
                         className="w-24 bg-secondary text-foreground text-xs px-2 py-1 rounded"
                         autoFocus
                       />
-           <button onClick={() => renameFolder(folder.id)} className="text-[color:var(--live)]"><CheckIcon className="h-3.5 w-3.5" /></button>
+           <button onClick={() => renameFolder(folder.id)} className="text-live"><CheckIcon className="h-3.5 w-3.5" /></button>
            <button onClick={() => setRenamingFolderId(null)} className="text-muted-foreground"><XMarkIcon className="h-3.5 w-3.5" /></button>
                     </div>
                   ) : (
@@ -358,7 +358,7 @@ export default function TvLibraryPage() {
           )}
 
           {/* Tracks table */}
-     <div className="bg-card/80 rounded-container border border-border/40 overflow-x-auto">
+     <div className="dashboard-panel overflow-x-auto">
             {loading ? (
               <div className="p-6 text-center text-muted-foreground">{t('tv.library.loading')}</div>
             ) : tracks.length === 0 ? (

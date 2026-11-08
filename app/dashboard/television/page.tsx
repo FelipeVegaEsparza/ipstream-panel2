@@ -255,35 +255,40 @@ export default function TelevisionPage() {
     <div className="space-y-6">
    <DashboardPageHeader title={t('tv.title')} description={t('tv.subtitle')} />
 
-      {/* Status badge */}
-      <div className="flex items-center gap-3">
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-          isOff ? 'bg-secondary text-muted-foreground' :
-          isLive ? 'bg-red-900/60 text-red-300 border border-red-500/40' :
-     'bg-[color:var(--live)]/10 text-[color:var(--live)] border border-[color:var(--live)]/30'
-        }`}>
-          <span className={`w-2 h-2 rounded-full ${
-            isOff ? 'bg-secondary' :
-            isLive ? 'bg-red-500 animate-pulse' :
-            'bg-green-500 animate-pulse'
-          }`} />
-          {isOff ? t('tv.status.stopped') : isLive ? t('tv.status.liveDj') : t('tv.status.autodj')}
+      {/* Status */}
+      <div className="flex flex-wrap items-center gap-3 text-[11px]">
+        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              isOff
+                ? 'bg-[color:var(--text-3)]'
+                : isLive
+                  ? 'bg-[color:var(--danger)]'
+                  : 'bg-[color:var(--live)]'
+            }`}
+          />
+          <span className="text-foreground">
+            {isOff ? t('tv.status.stopped') : isLive ? t('tv.status.liveDj') : t('tv.status.autodj')}
+          </span>
         </span>
         {videoStatus?.dj.active && (
-          <span className="text-xs text-red-300">
+          <span className="text-muted-foreground">
             {t('tv.djSince', { time: new Date(videoStatus.dj.connectedAt!).toLocaleTimeString('es-CL') })}
           </span>
         )}
       </div>
 
       {/* Controls */}
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         {isOff ? (
-          <button onClick={() => doAction('start')} className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
+          <button onClick={() => doAction('start')} className="btn-primary h-9 text-[13px]">
             {t('tv.startAutodj')}
           </button>
         ) : (
-     <button onClick={() => doAction('stop')} className="px-5 py-2.5 bg-[color:var(--danger)] hover:brightness-110 text-white font-medium rounded-lg transition-colors">
+          <button
+            onClick={() => doAction('stop')}
+            className="rounded-control border border-line px-3 py-2 text-[13px] font-medium text-foreground transition-colors hover:border-[color:var(--danger)]/40 hover:text-danger"
+          >
             {t('tv.stop')}
           </button>
         )}
@@ -291,13 +296,13 @@ export default function TelevisionPage() {
 
       {/* HLS Player */}
       {hlsUrl && (isAutoDj || isLive) && (
-    <div className="bg-card/80 rounded-container border border-border/40 p-5">
-          <h2 className="text-lg font-semibold text-foreground mb-3">{t('tv.preview')}</h2>
-          <div className="aspect-video bg-black rounded-lg overflow-hidden">
+        <div className="dashboard-panel p-4">
+          <h2 className="mb-3 text-[13px] font-medium text-foreground">{t('tv.preview')}</h2>
+          <div className="aspect-video overflow-hidden rounded-[10px] border border-line bg-black">
             <video
               key={hlsApp}
               ref={videoRef}
-              className="w-full h-full"
+              className="h-full w-full"
               controls
               autoPlay
               muted
@@ -309,22 +314,23 @@ export default function TelevisionPage() {
 
       {/* URLs de transmisión */}
       {stableUrl && (
-    <div className="bg-card/80 rounded-container border border-border/40 p-5 space-y-3">
-          <h2 className="text-lg font-semibold text-foreground mb-1">{t('tv.streamUrl')}</h2>
+        <div className="dashboard-panel space-y-3 p-4">
+          <h2 className="text-[13px] font-medium text-foreground">{t('tv.streamUrl')}</h2>
 
           <div>
-            <p className="text-xs text-muted-foreground mb-1.5">
-              {t('tv.stableHint')}
-            </p>
-            <div className="flex flex-col md:flex-row gap-2">
+            <p className="mb-1.5 text-[11px] text-muted-foreground">{t('tv.stableHint')}</p>
+            <div className="flex flex-col gap-2 md:flex-row">
               <input
                 type="text"
                 readOnly
                 value={stableUrl}
-                className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none"
+                className="dashboard-metric flex-1 rounded-control border border-line bg-surface-2 px-3 py-2 text-[11px] text-foreground outline-none"
                 onClick={(e) => e.currentTarget.select()}
               />
-              <button onClick={copyStable} className="px-4 py-2.5 bg-brand hover:bg-brand text-white rounded-lg transition-colors text-sm">
+              <button
+                onClick={copyStable}
+                className="rounded-control border border-line px-3 py-2 text-[12px] font-medium text-foreground transition-colors hover:bg-surface-3"
+              >
                 {copiedStable ? t('tv.copied') : t('tv.copy')}
               </button>
             </div>
@@ -332,26 +338,27 @@ export default function TelevisionPage() {
 
           {playerUrl && (
             <div>
-              <p className="text-xs text-muted-foreground mb-1.5">
-                {t('tv.playerHint')}
-              </p>
-              <div className="flex flex-col md:flex-row gap-2">
+              <p className="mb-1.5 text-[11px] text-muted-foreground">{t('tv.playerHint')}</p>
+              <div className="flex flex-col gap-2 md:flex-row">
                 <input
                   type="text"
                   readOnly
                   value={playerUrl}
-                  className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none"
+                  className="dashboard-metric flex-1 rounded-control border border-line bg-surface-2 px-3 py-2 text-[11px] text-foreground outline-none"
                   onClick={(e) => e.currentTarget.select()}
                 />
                 <a
                   href={playerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-green-700 hover:bg-green-600 text-white rounded-lg transition-colors text-sm text-center"
+                  className="btn-primary px-3 py-2 text-center text-[12px]"
                 >
                   {t('tv.open')}
                 </a>
-                <button onClick={copyPlayer} className="px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-colors text-sm">
+                <button
+                  onClick={copyPlayer}
+                  className="rounded-control border border-line px-3 py-2 text-[12px] font-medium text-foreground transition-colors hover:bg-surface-3"
+                >
                   {copiedPlayer ? t('tv.copied') : t('tv.copy')}
                 </button>
               </div>
@@ -360,18 +367,21 @@ export default function TelevisionPage() {
 
           {displayUrl && (
             <div>
-              <p className="text-xs text-muted-foreground mb-1.5">
+              <p className="mb-1.5 text-[11px] text-muted-foreground">
                 {t('tv.current', { status: isLive ? t('tv.obsLive') : isAutoDj ? t('tv.status.autodj') : t('tv.status.stopped') })}
               </p>
-              <div className="flex flex-col md:flex-row gap-2">
+              <div className="flex flex-col gap-2 md:flex-row">
                 <input
                   type="text"
                   readOnly
                   value={displayUrl}
-                  className="flex-1 bg-background text-brand px-3 py-2.5 rounded-lg border border-border font-mono text-sm outline-none"
+                  className="dashboard-metric flex-1 rounded-control border border-line bg-surface-2 px-3 py-2 text-[11px] text-foreground outline-none"
                   onClick={(e) => e.currentTarget.select()}
                 />
-                <button onClick={copyHls} className="px-4 py-2.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-colors text-sm">
+                <button
+                  onClick={copyHls}
+                  className="rounded-control border border-line px-3 py-2 text-[12px] font-medium text-foreground transition-colors hover:bg-surface-3"
+                >
                   {copiedHls ? t('tv.copied') : t('tv.copy')}
                 </button>
               </div>
@@ -381,18 +391,21 @@ export default function TelevisionPage() {
       )}
 
       {/* Now Playing */}
-   <div className="bg-card/80 rounded-container border border-border/40 p-5">
-        <h2 className="text-lg font-semibold text-foreground mb-2">{t('tv.nowOnScreen')}</h2>
+      <div className="dashboard-panel p-4">
+        <h2 className="mb-2 text-[13px] font-medium text-foreground">{t('tv.nowOnScreen')}</h2>
         {isLive ? (
-          <p className="text-brand font-medium">{t('tv.liveFromObs')}</p>
+          <p className="inline-flex items-center gap-1.5 text-[13px] font-medium text-live">
+            <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--live)]" />
+            {t('tv.liveFromObs')}
+          </p>
         ) : isAutoDj ? (
-          <p className="text-muted-foreground">
+          <p className="text-[12px] text-muted-foreground">
             {videoStatus?.encoder.currentTrack
               ? t('tv.playingTrack', { track: videoStatus.encoder.currentTrack })
               : t('tv.playing')}
           </p>
         ) : (
-          <p className="text-muted-foreground italic">{t('tv.streamStopped')}</p>
+          <p className="text-[12px] italic text-muted-foreground">{t('tv.streamStopped')}</p>
         )}
       </div>
     </div>
