@@ -25,12 +25,26 @@ interface Props {
 const input =
   'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none'
 
+const JINGLE_STYLE_OPTIONS = [
+  { id: 'classic', label: 'streaming.jingles.ai.fxClassic', hint: 'streaming.jingles.ai.fxClassicHint' },
+  { id: 'modern', label: 'streaming.jingles.ai.fxModern', hint: 'streaming.jingles.ai.fxModernHint' },
+  { id: 'energy', label: 'streaming.jingles.ai.fxEnergy', hint: 'streaming.jingles.ai.fxEnergyHint' },
+  { id: 'cinema', label: 'streaming.jingles.ai.fxCinema', hint: 'streaming.jingles.ai.fxCinemaHint' },
+  { id: 'retro', label: 'streaming.jingles.ai.fxRetro', hint: 'streaming.jingles.ai.fxRetroHint' },
+] as const
+
+type JingleStyleOption = (typeof JINGLE_STYLE_OPTIONS)[number]['id']
+
 export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const { t, locale } = useDashboardI18n()
   const [info, setInfo] = useState<AiInfo | null>(null)
   const [title, setTitle] = useState(() => t('streaming.jingles.ai.defaultTitle'))
   const [tagline, setTagline] = useState(() => t('streaming.jingles.ai.defaultTagline'))
   const [duration, setDuration] = useState(10)
+  const [style, setStyle] = useState<JingleStyleOption>('modern')
+  const [intensity, setIntensity] = useState(65)
+  const [voiceFx, setVoiceFx] = useState(true)
+  const [generatedDuration, setGeneratedDuration] = useState<number | null>(null)
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,17 +77,20 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     setGenerating(true)
     setError(null)
     setBlob(null)
+    setGeneratedDuration(null)
     try {
       const res = await fetch('/api/dashboard/streaming/jingles/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tagline, duration }),
+        body: JSON.stringify({ tagline, duration, style, intensity, voiceFx }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data?.message || data?.error || t('streaming.jingles.ai.generateError'))
       }
       setBlob(await res.blob())
+      const headerDuration = Number(res.headers.get('X-Jingle-Duration'))
+      if (Number.isFinite(headerDuration) && headerDuration > 0) setGeneratedDuration(headerDuration)
       setInfo((prev) => prev ? {
         ...prev,
         ttsRemaining: Number(res.headers.get('X-AI-Remaining') ?? prev.ttsRemaining),
@@ -162,6 +179,65 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
             </p>
           </div>
           <div>
+            <label className="mb-2 block text-xs text-muted-foreground">{t('streaming.jingles.ai.fxTitle')}</label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {JINGLE_STYLE_OPTIONS.map((option) => (
+                <label
+                  key={option.id}
+                  className={`cursor-pointer rounded-lg border px-3 py-2 transition-colors ${
+                    style === option.id
+                      ? 'border-brand bg-brand/10'
+                      : 'border-border bg-background hover:border-brand/40'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="jingle-style"
+                    checked={style === option.id}
+                    onChange={() => setStyle(option.id)}
+                    className="sr-only"
+                  />
+                  <span className={`block text-sm font-medium ${style === option.id ? 'text-brand' : 'text-foreground'}`}>
+                    {t(option.label)}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+                    {t(option.hint)}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.fxHint')}</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <label className="block">
+              <span className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                {t('streaming.jingles.ai.fxIntensity')}
+                <span className="font-mono text-foreground">{intensity}%</span>
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={intensity}
+                onChange={(event) => setIntensity(Number(event.target.value))}
+                className="w-full accent-[var(--brand-500)]"
+              />
+            </label>
+            <label className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2">
+              <input
+                type="checkbox"
+                checked={voiceFx}
+                onChange={(event) => setVoiceFx(event.target.checked)}
+                className="mt-0.5 h-3.5 w-3.5 accent-[var(--brand-500)]"
+              />
+              <span>
+                <span className="block text-xs font-medium text-foreground">{t('streaming.jingles.ai.fxVoice')}</span>
+                <span className="block text-[11px] leading-snug text-muted-foreground">{t('streaming.jingles.ai.fxVoiceHint')}</span>
+              </span>
+            </label>
+          </div>
+          <div>
             <label className="mb-2 block text-xs text-muted-foreground">{t('streaming.jingles.ai.duration')}</label>
             <div className="grid grid-cols-2 gap-2">
               {[10, 15].map((value) => (
@@ -181,6 +257,12 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
         </div>
 
         {error && <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
+
+        {generatedDuration != null && generatedDuration > duration + 0.05 && (
+          <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+            {t('streaming.jingles.ai.fxExtended', { duration: generatedDuration.toFixed(1) })}
+          </p>
+        )}
 
         {previewUrl && (
           <audio src={previewUrl} controls className="mt-4 w-full" preload="metadata" />

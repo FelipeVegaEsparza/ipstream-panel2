@@ -5,8 +5,16 @@
 
 import { prisma } from '@/lib/prisma'
 import { synthesizePremiumTts } from '@/lib/premium-tts'
-import { mixMusicAndVoice } from '@/lib/audio-mix'
-import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
+import {
+  mixJingle,
+  resolveJingleDirection,
+  resolveJingleFx,
+  type JingleStyleId,
+} from '@/lib/jingle-fx'
+import { composeJingleVoice, type VoiceChunk } from '@/lib/jingle-voice'
+import { splitJingleScript } from '@/lib/jingle-script'
+import { alignVoiceToBeat, analyzeMusicBeats } from '@/lib/jingle-beats'
+import { probeAudioBufferDuration } from '@/lib/audio-mix'
 
 export const JINGLE_DURATIONS = [10, 15] as const
 
@@ -15,10 +23,15 @@ export interface GenerateJingleInput {
   duration: number
   tagline: string
   music: Buffer
+  style?: string
+  intensity?: number
+  voiceFx?: boolean
 }
 
 export interface GeneratedJingle {
   audio: Buffer
+  duration: number
+  style: JingleStyleId
   ttsCached: boolean
   ttsCharacters: number
   stationName: string
@@ -41,24 +54,53 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
   const tagline = input.tagline.replace(/\{\{\s*radio\s*\}\}/gi, station).trim()
   if (!tagline) throw new Error('Escribí la locución del jingle.')
 
-  const voice = await synthesizePremiumTts({
-    clientId: input.clientId,
-    text: tagline.slice(0, 300),
-    direction: FISH_AUDIO_DIRECTIONS.station,
-  })
+  const text = tagline.slice(0, 300)
+  const fx = resolveJingleFx(input.style, input.intensity, input.voiceFx !== false)
+  const direction = resolveJingleDirection(fx.style)
+  const phrases = fx.style === 'classic' ? [text] : splitJingleScript(text)
 
-  const audio = await mixMusicAndVoice({
+  const chunks: VoiceChunk[] = []
+  let ttsCached = true
+  let ttsCharacters = 0
+  for (const phrase of phrases) {
+    const voice = await synthesizePremiumTts({
+      clientId: input.clientId,
+      text: phrase,
+      direction,
+    })
+    const probed = await probeAudioBufferDuration(voice.audio)
+    const estimated = Math.max(1, phrase.split(/\s+/).length * 0.34)
+    chunks.push({ audio: voice.audio, duration: probed ?? estimated })
+    ttsCached = ttsCached && voice.cached
+    ttsCharacters += phrase.length
+  }
+
+  const composed =
+    chunks.length > 1
+      ? await composeJingleVoice({ chunks, style: fx.style })
+      : { audio: chunks[0].audio, duration: chunks[0].duration }
+
+  // Alinear la entrada de la voz con el pulso del tema cuando se puede.
+  const beats = await analyzeMusicBeats(input.music)
+  const defaultStart = fx.riserSeconds + fx.voiceLeadSeconds
+  const voiceStartSeconds = beats ? alignVoiceToBeat(defaultStart, beats) : undefined
+
+  const mixed = await mixJingle({
     music: input.music,
-    voice: voice.audio,
-    duration: input.duration,
-    voiceDelaySeconds: 0.4,
-    musicVolume: 0.35,
-    loopMusic: true,
+    voice: composed.audio,
+    requestedDuration: input.duration,
+    style: fx.style,
+    intensity: fx.intensity,
+    voiceFx: fx.voiceFx,
+    voiceStartSeconds,
+    musicStartSeconds: beats?.startSeconds ?? 0,
   })
   return {
-    audio,
-    ttsCached: voice.cached,
-    ttsCharacters: tagline.slice(0, 300).length,
+    audio: mixed.audio,
+    duration: mixed.duration,
+    style: mixed.style,
+    ttsCached,
+    ttsCharacters,
     stationName: station,
   }
 }

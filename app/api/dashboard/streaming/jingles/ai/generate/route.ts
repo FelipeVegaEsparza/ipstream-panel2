@@ -60,11 +60,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const style = typeof body?.style === 'string' ? body.style : undefined
+    const intensity = Number(body?.intensity)
+    const voiceFx = body?.voiceFx !== false
+
     const result = await generateJingle({
       clientId: ctx.clientId,
       duration,
       tagline,
       music,
+      style,
+      intensity: Number.isFinite(intensity) ? intensity : undefined,
+      voiceFx,
     })
 
     if (!result.ttsCached) {
@@ -80,7 +87,9 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'audio/mpeg',
         'Cache-Control': 'no-store',
-        'X-AI-Remaining': String(Math.max(0, tts.remaining - (result.ttsCached ? 0 : tagline.length))),
+        'X-AI-Remaining': String(Math.max(0, tts.remaining - (result.ttsCached ? 0 : result.ttsCharacters))),
+        'X-Jingle-Duration': String(result.duration),
+        'X-Jingle-Style': result.style,
       },
     })
   } catch (err) {
