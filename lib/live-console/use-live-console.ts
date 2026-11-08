@@ -303,6 +303,9 @@ export function useLiveConsole(
   const [covers, setCovers] = useState<Record<string, string>>({})
   const coverObjectUrlsRef = useRef<Map<string, string>>(new Map())
   const coverHydratedRef = useRef<Set<string>>(new Set())
+  const embeddedCoverRequestedRef = useRef<Set<string>>(new Set())
+  const embeddedCoverQueueRef = useRef<LocalTrack[]>([])
+  const embeddedCoverProcessingRef = useRef(false)
   const localMetaRef = useRef<Map<string, { title?: string; artist?: string; coverUrl?: string | null } | null>>(new Map())
   useEffect(() => { queueRef.current = queue }, [queue])
 
@@ -339,7 +342,41 @@ export function useLiveConsole(
     for (const url of coverObjectUrlsRef.current.values()) URL.revokeObjectURL(url)
     coverObjectUrlsRef.current.clear()
     coverHydratedRef.current.clear()
+    embeddedCoverRequestedRef.current.clear()
+    embeddedCoverQueueRef.current = []
   }, [])
+
+  const enqueueEmbeddedCovers = useCallback((list: LocalTrack[]) => {
+    for (const track of list) {
+      if (track.coverFile || track.coverHandle) continue
+      if (embeddedCoverRequestedRef.current.has(track.id)) continue
+      embeddedCoverRequestedRef.current.add(track.id)
+      embeddedCoverQueueRef.current.push(track)
+    }
+    if (embeddedCoverProcessingRef.current) return
+    embeddedCoverProcessingRef.current = true
+
+    const worker = async () => {
+      while (embeddedCoverQueueRef.current.length > 0) {
+        const track = embeddedCoverQueueRef.current.shift()
+        if (!track) break
+        try {
+          const file = await getFileForTrack(track)
+          const tags = await readLocalTags(file)
+          if (tags.picture) {
+            const url = URL.createObjectURL(tags.picture)
+            coverObjectUrlsRef.current.set(`embedded:${track.id}`, url)
+            setCover(track.id, url)
+          }
+        } catch {}
+        await new Promise<void>((resolve) => setTimeout(resolve, 0))
+      }
+    }
+
+    void Promise.all([worker(), worker()]).finally(() => {
+      embeddedCoverProcessingRef.current = false
+    })
+  }, [setCover])
 
   const pushHistory = useCallback((track: LocalTrack) => {
     historyRef.current = [...historyRef.current.filter((item) => item.id !== track.id), track].slice(-50)
@@ -370,38 +407,46 @@ export function useLiveConsole(
   const [effectsError, setEffectsError] = useState<string | null>(null)
   const [announcementLoading, setAnnouncementLoading] = useState<AnnouncementType | null>(null)
   const [announcementError, setAnnouncementError] = useState<string | null>(null)
-  const [announcementVoice, setAnnouncementVoice] = useState<AnnouncementVoice>(() => {
-    if (typeof window === 'undefined') return premiumVoiceAvailable ? 'premium' : 'male'
-    try {
-      const stored = window.localStorage.getItem('live-announcement-voice')
-      if (stored === 'premium' && premiumVoiceAvailable) return 'premium'
-      if (stored === 'female' || stored === 'male') return stored
-      return premiumVoiceAvailable ? 'premium' : 'male'
-    } catch {
-      return premiumVoiceAvailable ? 'premium' : 'male'
-    }
-  })
+  const [announcementVoice, setAnnouncementVoice] = useState<AnnouncementVoice>(
+    premiumVoiceAvailable ? 'premium' : 'male'
+  )
   const [aiPresenterEnabled, setAiPresenterEnabled] = useState(() => {
     if (typeof options.aiPresenterEnabled === 'boolean') return aiEnabled && options.aiPresenterEnabled
-    if (!aiEnabled || typeof window === 'undefined') return aiEnabled
-    try {
-      return window.localStorage.getItem('live-ai-presenter-enabled') !== 'false'
-    } catch {
-      return true
-    }
+    return aiEnabled
   })
   const [presenterEvery, setPresenterEvery] = useState(() => {
     if (typeof options.aiPresenterEvery === 'number') {
       return Math.min(10, Math.max(2, Math.round(options.aiPresenterEvery)))
     }
-    if (typeof window === 'undefined') return 3
+    return 3
+  })
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('live-announcement-voice')
+      if (stored === 'premium' && premiumVoiceAvailable) setAnnouncementVoice('premium')
+      else if (stored === 'female' || stored === 'male') setAnnouncementVoice(stored)
+    } catch {}
+  }, [premiumVoiceAvailable])
+
+  useEffect(() => {
+    if (!aiEnabled || typeof options.aiPresenterEnabled === 'boolean') return
+    try {
+      if (window.localStorage.getItem('live-ai-presenter-enabled') === 'false') {
+        setAiPresenterEnabled(false)
+      }
+    } catch {}
+  }, [aiEnabled, options.aiPresenterEnabled])
+
+  useEffect(() => {
+    if (!aiEnabled || typeof options.aiPresenterEvery === 'number') return
     try {
       const stored = Number(window.localStorage.getItem('live-ai-presenter-every') || 3)
-      return Number.isFinite(stored) ? Math.min(10, Math.max(2, Math.round(stored))) : 3
-    } catch {
-      return 3
-    }
-  })
+      if (Number.isFinite(stored)) {
+        setPresenterEvery(Math.min(10, Math.max(2, Math.round(stored))))
+      }
+    } catch {}
+  }, [aiEnabled, options.aiPresenterEvery])
+
   const [presenterGenerating, setPresenterGenerating] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiRemaining, setAiRemaining] = useState(Math.max(0, options.aiRemaining ?? 0))
@@ -483,7 +528,8 @@ export function useLiveConsole(
       setTracks((prev) => prev.map((item) => (item.id === track.id ? { ...item, duration } : item)))
     })
     void hydrateCovers(scannedTracks)
-  }, [hydrateCovers])
+    enqueueEmbeddedCovers(scannedTracks)
+  }, [enqueueEmbeddedCovers, hydrateCovers])
 
   const restoreDirectory = useCallback(async () => {
     if (!supportsDirectoryPicker()) {
@@ -553,7 +599,8 @@ export function useLiveConsole(
       setTracks((prev) => prev.map((item) => (item.id === track.id ? { ...item, duration } : item)))
     })
     void hydrateCovers(incoming)
-  }, [hydrateCovers])
+    enqueueEmbeddedCovers(incoming)
+  }, [enqueueEmbeddedCovers, hydrateCovers])
 
   const removeTrack = useCallback((id: string) => {
     setTracks((prev) => prev.filter((track) => track.id !== id))
@@ -789,11 +836,12 @@ export function useLiveConsole(
       if (cached.length > 0) {
         setTracks(cached)
         void hydrateCovers(cached)
+        enqueueEmbeddedCovers(cached)
       }
       const handle = await loadDirectoryHandle()
       if (handle) setPersisted(true)
     })()
-  }, [hydrateCovers])
+  }, [enqueueEmbeddedCovers, hydrateCovers])
 
   // Efectos de sonido: primero la biblioteca elegida por el cliente;
   // si no hay selección, se conserva la botonera local histórica.
