@@ -174,6 +174,7 @@ export interface UseLiveConsoleResult {
     tracks: LocalTrack[]
     queue: LocalTrack[]
     history: LocalTrack[]
+    covers: Record<string, string>
     scanning: boolean
     restoring: boolean
     progress: { scanned: number; added: number }
@@ -299,11 +300,54 @@ export function useLiveConsole(
   const queueRef = useRef<LocalTrack[]>([])
   const historyRef = useRef<LocalTrack[]>([])
   const [history, setHistory] = useState<LocalTrack[]>([])
+  const [covers, setCovers] = useState<Record<string, string>>({})
+  const coverObjectUrlsRef = useRef<Map<string, string>>(new Map())
+  const coverHydratedRef = useRef<Set<string>>(new Set())
   const localMetaRef = useRef<Map<string, { title?: string; artist?: string; coverUrl?: string | null } | null>>(new Map())
   useEffect(() => { queueRef.current = queue }, [queue])
 
+  const setCover = useCallback((id: string, url: string | null) => {
+    if (!url) return
+    setCovers((prev) => (prev[id] === url ? prev : { ...prev, [id]: url }))
+  }, [])
+
+  const hydrateCovers = useCallback(async (list: LocalTrack[]) => {
+    for (const track of list) {
+      if (coverHydratedRef.current.has(track.id)) continue
+      if (!track.coverFile && !track.coverHandle) continue
+      coverHydratedRef.current.add(track.id)
+
+      const directory = track.path.includes('/') ? track.path.slice(0, track.path.lastIndexOf('/')) : ''
+      const key = track.coverFile
+        ? `file:${track.coverFile.name}:${track.coverFile.size}:${track.coverFile.lastModified}`
+        : `handle:${directory}:${track.coverHandle?.name ?? ''}`
+      let url = coverObjectUrlsRef.current.get(key)
+      if (!url) {
+        try {
+          const file = track.coverFile ?? (track.coverHandle ? await track.coverHandle.getFile() : null)
+          if (file) {
+            url = URL.createObjectURL(file)
+            coverObjectUrlsRef.current.set(key, url)
+          }
+        } catch {}
+      }
+      if (url) setCover(track.id, url)
+    }
+  }, [setCover])
+
+  useEffect(() => () => {
+    for (const url of coverObjectUrlsRef.current.values()) URL.revokeObjectURL(url)
+    coverObjectUrlsRef.current.clear()
+    coverHydratedRef.current.clear()
+  }, [])
+
   const pushHistory = useCallback((track: LocalTrack) => {
-    historyRef.current = [...historyRef.current, track].slice(-50)
+    historyRef.current = [...historyRef.current.filter((item) => item.id !== track.id), track].slice(-50)
+    setHistory(historyRef.current)
+  }, [])
+
+  const removeFromHistory = useCallback((id: string) => {
+    historyRef.current = historyRef.current.filter((track) => track.id !== id)
     setHistory(historyRef.current)
   }, [])
 
@@ -438,7 +482,8 @@ export function useLiveConsole(
     void hydrateDurations(scannedTracks, (track, duration) => {
       setTracks((prev) => prev.map((item) => (item.id === track.id ? { ...item, duration } : item)))
     })
-  }, [])
+    void hydrateCovers(scannedTracks)
+  }, [hydrateCovers])
 
   const restoreDirectory = useCallback(async () => {
     if (!supportsDirectoryPicker()) {
@@ -507,7 +552,8 @@ export function useLiveConsole(
     void hydrateDurations(incoming, (track, duration) => {
       setTracks((prev) => prev.map((item) => (item.id === track.id ? { ...item, duration } : item)))
     })
-  }, [])
+    void hydrateCovers(incoming)
+  }, [hydrateCovers])
 
   const removeTrack = useCallback((id: string) => {
     setTracks((prev) => prev.filter((track) => track.id !== id))
@@ -740,11 +786,14 @@ export function useLiveConsole(
   useEffect(() => {
     void (async () => {
       const cached = await loadCachedLibrary()
-      if (cached.length > 0) setTracks(cached)
+      if (cached.length > 0) {
+        setTracks(cached)
+        void hydrateCovers(cached)
+      }
       const handle = await loadDirectoryHandle()
       if (handle) setPersisted(true)
     })()
-  }, [])
+  }, [hydrateCovers])
 
   // Efectos de sonido: primero la biblioteca elegida por el cliente;
   // si no hay selección, se conserva la botonera local histórica.
@@ -926,13 +975,19 @@ export function useLiveConsole(
         artist: tags.artist,
         coverUrl,
       }
+      if (coverUrl) setCover(track.id, coverUrl)
       localMetaRef.current.set(track.id, value)
       return value
     } catch {
       localMetaRef.current.set(track.id, null)
       return null
     }
-  }, [])
+  }, [setCover])
+
+  const enqueueWithCover = useCallback((track: LocalTrack) => {
+    enqueue(track)
+    if (track.file || track.handle) void resolveLocalMetadata(track)
+  }, [enqueue, resolveLocalMetadata])
 
   const updateNowPlaying = useCallback((deckId: DeckId) => {
     const engine = engineRef.current
@@ -1193,9 +1248,10 @@ export function useLiveConsole(
     }
     await maybePlayPresenter(track)
     if (current) rememberCurrent()
+    removeFromHistory(track.id)
     await loadToDeck('A', track)
     await playDeck('A')
-  }, [loadToDeck, playDeck, rememberCurrent, maybePlayPresenter])
+  }, [loadToDeck, playDeck, rememberCurrent, removeFromHistory, maybePlayPresenter])
 
   const playNext = useCallback(async () => {
     const engine = engineRef.current
@@ -1208,9 +1264,10 @@ export function useLiveConsole(
     }
     await maybePlayPresenter(nextTrack)
     rememberCurrent()
+    removeFromHistory(nextTrack.id)
     await loadToDeck('A', nextTrack)
     await playDeck('A')
-  }, [loadToDeck, playDeck, rememberCurrent, maybePlayPresenter])
+  }, [loadToDeck, playDeck, rememberCurrent, removeFromHistory, maybePlayPresenter])
 
   const playPrevious = useCallback(async () => {
     const engine = engineRef.current
@@ -1620,7 +1677,7 @@ export function useLiveConsole(
     previous: playPrevious,
     seek: playerSeek,
     playNow,
-    addToPlaylist: enqueue,
+    addToPlaylist: enqueueWithCover,
     removeFromPlaylist: dequeue,
     clearPlaylist: clearQueue,
     moveInPlaylist,
@@ -1634,7 +1691,7 @@ export function useLiveConsole(
     playPrevious,
     playerSeek,
     playNow,
-    enqueue,
+    enqueueWithCover,
     dequeue,
     clearQueue,
     moveInPlaylist,
@@ -1647,6 +1704,7 @@ export function useLiveConsole(
       tracks,
       queue,
       history,
+      covers,
       scanning,
       restoring,
       progress,
@@ -1657,7 +1715,7 @@ export function useLiveConsole(
       addDirectory,
       restoreDirectory,
       removeTrack,
-      enqueue,
+      enqueue: enqueueWithCover,
       dequeue,
       clearQueue,
     },

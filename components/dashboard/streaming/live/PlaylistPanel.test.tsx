@@ -55,14 +55,15 @@ describe('PlaylistPanel', () => {
 
   it('mantiene los temas que ya sonaron', () => {
     renderPlaylist([track('t1', 'Primero')])
-    expect(screen.getByText('Ya sonaron')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Ya sonaron/ }))
     expect(screen.getByText('Primero')).toBeInTheDocument()
-    expect(screen.getByText('1 sonó')).toBeInTheDocument()
   })
 
   it('marca las locuciones en la cola y en el historial', () => {
     renderPlaylist([spot], [spot])
-    expect(screen.getAllByText('Locución')).toHaveLength(2)
+    expect(screen.getAllByText('Locución')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: /Ya sonaron/ }))
+    expect(screen.getAllByText('Locución')).toHaveLength(1)
   })
 
   it('reproduce, mueve, quita y vacía', () => {

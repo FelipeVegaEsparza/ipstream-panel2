@@ -21,7 +21,6 @@ const current: LocalTrack = {
   available: true,
 }
 
-const next: LocalTrack = { ...current, id: 't2', name: 'dos.mp3', path: 'dos.mp3', title: 'Dos' }
 const mic: MicSnapshot = { enabled: false, gain: 0, talkover: true, levelDb: -20, permission: 'granted' }
 
 function renderBar(overrides: { playing?: boolean } = {}) {
@@ -40,7 +39,6 @@ function renderBar(overrides: { playing?: boolean } = {}) {
     <DashboardI18nProvider locale="es">
     <PlayerBar
       current={current}
-      nextTrack={next}
       playing={overrides.playing ?? false}
       position={10}
       duration={120}
@@ -54,11 +52,10 @@ function renderBar(overrides: { playing?: boolean } = {}) {
 }
 
 describe('PlayerBar', () => {
-  it('muestra el tema actual y el siguiente', () => {
+  it('muestra el tema actual', () => {
     renderBar()
     expect(screen.getByText('Uno')).toBeInTheDocument()
-    expect(screen.getByText(/Siguiente:/)).toBeInTheDocument()
-    expect(screen.getByText('Dos')).toBeInTheDocument()
+    expect(screen.getByText('Artista')).toBeInTheDocument()
   })
 
   it('dispara play, anterior y siguiente', () => {

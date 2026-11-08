@@ -81,6 +81,10 @@ export function LiveConsole({
     () => new Set(live.library.queue.map((track) => track.id)),
     [live.library.queue]
   )
+  const playedIds = useMemo(
+    () => new Set(live.library.history.map((track) => track.id)),
+    [live.library.history]
+  )
 
   return (
     <div
@@ -165,6 +169,9 @@ export function LiveConsole({
             onRemoveTrack={live.library.removeTrack}
             onAddToPlaylist={live.player.addToPlaylist}
             onPlayNow={live.player.playNow}
+            covers={live.library.covers}
+            playedIds={playedIds}
+            currentId={live.player.current?.id ?? null}
           />
         </div>
 
@@ -185,6 +192,7 @@ export function LiveConsole({
             onMove={live.player.moveInPlaylist}
             onDropTrack={live.player.addToPlaylist}
             onReorder={live.player.moveInPlaylistTo}
+            covers={live.library.covers}
           />
         </div>
 
@@ -210,7 +218,7 @@ export function LiveConsole({
         : 'space-y-3'}>
         <PlayerBar
           current={live.player.current}
-          nextTrack={live.player.nextTrack}
+          coverUrl={live.player.current ? live.library.covers[live.player.current.id] ?? null : null}
           playing={live.player.playing}
           position={live.player.position}
           duration={live.player.duration}

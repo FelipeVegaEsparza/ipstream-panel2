@@ -21,6 +21,9 @@ interface Props {
   onRemoveTrack: (id: string) => void
   onAddToPlaylist: (track: LocalTrack) => void
   onPlayNow: (track: LocalTrack) => Promise<void>
+  covers?: Record<string, string>
+  playedIds?: Set<string>
+  currentId?: string | null
 }
 
 function formatSize(bytes: number): string {
@@ -43,6 +46,9 @@ export function FileBrowser({
   onRemoveTrack,
   onAddToPlaylist,
   onPlayNow,
+  covers = {},
+  playedIds = new Set<string>(),
+  currentId = null,
 }: Props) {
   const { t } = useDashboardI18n()
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -76,7 +82,7 @@ export function FileBrowser({
       <div className="border-b border-border bg-secondary/30 px-3 py-2.5">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+            <h2 className="text-[13px] font-medium text-foreground">
               {t('live.library.title')}
             </h2>
             <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
@@ -162,7 +168,8 @@ export function FileBrowser({
         />
       </div>
 
-      <div className="grid grid-cols-[minmax(0,1fr)_46px_72px] items-center gap-1 border-b border-border bg-background/60 px-3 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="grid grid-cols-[26px_minmax(0,1fr)_46px_72px] items-center gap-1 border-b border-border bg-background/60 px-3 py-1 text-[9px] font-medium text-muted-foreground">
+        <span />
         <span>{t('live.library.trackArtist')}</span>
         <span className="text-right">{t('live.library.durationShort')}</span>
         <span className="text-right">{t('live.library.actions')}</span>
@@ -180,13 +187,31 @@ export function FileBrowser({
           <ul className="divide-y divide-border/60">
             {filtered.map((track) => {
               const inPlaylist = playlistIds.has(track.id)
+              const played = playedIds.has(track.id)
+              const current = currentId === track.id
               return (
                 <li
                   key={track.id}
-                  className="group grid grid-cols-[minmax(0,1fr)_46px_72px] items-center gap-1 px-3 py-1.5 transition-colors hover:bg-brand/5"
+                  className="group grid grid-cols-[26px_minmax(0,1fr)_46px_72px] items-center gap-1 px-3 py-1.5 transition-colors hover:bg-brand/5"
                 >
+                  <TrackCover src={covers[track.id]} label={track.title} />
                   <div className="min-w-0">
-                    <p className="truncate text-[11px] font-medium text-foreground">{track.title}</p>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <p className="truncate text-[11px] font-medium text-foreground">{track.title}</p>
+                      {current ? (
+                        <span className="shrink-0 rounded-[3px] border border-[color:var(--live)]/30 px-1 text-[8px] font-medium text-live">
+                          {t('live.library.onAir')}
+                        </span>
+                      ) : inPlaylist ? (
+                        <span className="shrink-0 rounded-[3px] border border-line px-1 text-[8px] font-medium text-signal">
+                          {t('live.library.scheduled')}
+                        </span>
+                      ) : played ? (
+                        <span className="shrink-0 rounded-[3px] border border-line px-1 text-[8px] font-medium text-muted-foreground">
+                          {t('live.library.played')}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="truncate text-[9px] text-muted-foreground">
                       {track.artist || '—'} · {formatSize(track.size)}
                     </p>
@@ -207,9 +232,17 @@ export function FileBrowser({
                     <button
                       type="button"
                       onClick={() => onAddToPlaylist(track)}
-                      disabled={inPlaylist}
+                      disabled={inPlaylist || played || current}
                       className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-brand disabled:opacity-30"
-                      title={inPlaylist ? t('live.library.alreadyInPlaylist') : t('live.library.addToPlaylist')}
+                      title={
+                        current
+                          ? t('live.library.onAir')
+                          : inPlaylist
+                            ? t('live.library.alreadyInPlaylist')
+                            : played
+                              ? t('live.library.alreadyPlayed')
+                              : t('live.library.addToPlaylist')
+                      }
                       aria-label={`${t('live.library.addToPlaylist')} ${track.title}`}
                     >
                       <PlusIcon className="h-3.5 w-3.5" />
@@ -236,5 +269,20 @@ export function FileBrowser({
         <span className="font-mono">{t('live.library.inPlaylist', { count: playlistIds.size })}</span>
       </div>
     </section>
+  )
+}
+
+function TrackCover({ src, label }: { src?: string; label: string }) {
+  const letter = (label || '♪').trim().charAt(0).toUpperCase() || '♪'
+  return (
+    <div className="h-6 w-6 shrink-0 overflow-hidden rounded-[3px] border border-line bg-surface-2">
+      {src ? (
+        <img src={src} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <span className="flex h-full items-center justify-center text-[9px] font-medium text-muted-foreground">
+          {letter}
+        </span>
+      )}
+    </div>
   )
 }

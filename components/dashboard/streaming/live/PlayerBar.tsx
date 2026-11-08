@@ -4,7 +4,6 @@ import {
   BackwardIcon,
   ForwardIcon,
   MicrophoneIcon,
-  MusicalNoteIcon,
   PauseIcon,
   PlayIcon,
   SpeakerWaveIcon,
@@ -16,7 +15,7 @@ import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   current: LocalTrack | null
-  nextTrack: LocalTrack | null
+  coverUrl?: string | null
   playing: boolean
   position: number
   duration: number
@@ -35,7 +34,7 @@ interface Props {
 
 export function PlayerBar({
   current,
-  nextTrack,
+  coverUrl,
   playing,
   position,
   duration,
@@ -57,8 +56,14 @@ export function PlayerBar({
   return (
   <section className="rounded-panel border border-border bg-card p-3 ">
       <div className="flex flex-wrap items-center gap-3">
-    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-panel border border-border bg-secondary">
-          <MusicalNoteIcon className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-line bg-surface-2">
+          {coverUrl ? (
+            <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="px-1 text-center text-[9px] leading-tight text-muted-foreground">
+              {t('live.player.noCover')}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -99,11 +104,6 @@ export function PlayerBar({
               </p>
               <p className="truncate text-[11px] text-muted-foreground">
                 {current?.artist || (current ? t('live.player.unknownArtist') : t('live.player.chooseFile'))}
-                {nextTrack && (
-                  <span className="ml-2 text-muted-foreground/70">
-                    · {t('live.player.next')} <span className="text-foreground/80">{nextTrack.title}</span>
-                  </span>
-                )}
               </p>
             </div>
             <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
