@@ -1,17 +1,14 @@
 'use client'
 
 import { ClockIcon, CloudIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
-import type { AnnouncementType, AnnouncementVoice } from '@/lib/live-console/use-live-console'
+import type { AnnouncementType } from '@/lib/live-console/use-live-console'
 import { createAnnouncementTrack } from '@/lib/live-console/announcements'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 
 interface Props {
   loading: AnnouncementType | null
   error: string | null
-  voice: AnnouncementVoice
-  premiumAvailable?: boolean
   freeFormAvailable?: boolean
-  onVoice: (voice: AnnouncementVoice) => void
   onAddToQueue: (type: AnnouncementType) => void
   onOpenComposer?: () => void
   compact?: boolean
@@ -20,10 +17,7 @@ interface Props {
 export function AnnouncementsBar({
   loading,
   error,
-  voice,
-  premiumAvailable = false,
   freeFormAvailable = false,
-  onVoice,
   onAddToQueue,
   onOpenComposer,
   compact = false,
@@ -43,7 +37,7 @@ export function AnnouncementsBar({
           }}
           draggable
           disabled={busy}
-          className="cursor-grab rounded-control border border-line px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:bg-surface-3 active:cursor-grabbing disabled:opacity-40"
+          className="cursor-grab rounded-lg border border-line px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-surface-3 active:cursor-grabbing disabled:opacity-40"
           title={t('live.announce.dragWeather')}
         >
           {t('live.announce.weather')}
@@ -57,7 +51,7 @@ export function AnnouncementsBar({
           }}
           draggable
           disabled={busy}
-          className="cursor-grab rounded-control border border-line px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:bg-surface-3 active:cursor-grabbing disabled:opacity-40"
+          className="cursor-grab rounded-lg border border-line px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-surface-3 active:cursor-grabbing disabled:opacity-40"
           title={t('live.announce.dragTime')}
         >
           {t('live.announce.time')}
@@ -67,26 +61,12 @@ export function AnnouncementsBar({
             type="button"
             onClick={onOpenComposer}
             disabled={busy}
-            className="rounded-control border border-[color:var(--signal)]/40 bg-[color:var(--signal)]/10 px-2 py-1 text-[10px] font-medium text-signal transition-colors hover:bg-[color:var(--signal)]/20 disabled:opacity-40"
+            className="rounded-lg border border-[color:var(--signal)]/40 bg-[color:var(--signal)]/10 px-2.5 py-1.5 text-[11px] font-medium text-signal transition-colors hover:bg-[color:var(--signal)]/20 disabled:opacity-40"
             title={t('live.announce.createFree')}
           >
             {t('live.announce.free')}
           </button>
         )}
-        <select
-          value={voice}
-          onChange={(event) => {
-            const value = event.target.value
-            onVoice(value === 'premium' || value === 'female' ? value : 'male')
-          }}
-          className="h-7 rounded-control border border-line bg-surface-2 px-1.5 text-[10px] text-foreground outline-none focus:border-[color:var(--signal)]"
-          aria-label={t('live.announce.voiceLabel')}
-          title={t('live.announce.voiceLabel')}
-        >
-          {premiumAvailable && <option value="premium">{t('live.announce.premiumVoice')}</option>}
-          <option value="male">Ald (Piper)</option>
-          <option value="female">Claude (Piper)</option>
-        </select>
         {loading && (
           <span className="text-[10px] text-muted-foreground">
             {t('live.announce.generatingShort')}
@@ -148,23 +128,6 @@ export function AnnouncementsBar({
           </button>
         )}
       </div>
-
-      <label className="mt-3 space-y-1">
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('live.announce.voice')}</span>
-        <select
-          value={voice}
-          onChange={(event) => {
-            const value = event.target.value
-            onVoice(value === 'premium' || value === 'female' ? value : 'male')
-          }}
-          className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-brand"
-          aria-label={t('live.announce.voiceLabel')}
-        >
-          {premiumAvailable && <option value="premium">{t('live.announce.premiumVoice')}</option>}
-          <option value="male">Ald (Piper)</option>
-          <option value="female">Claude (Piper)</option>
-        </select>
-      </label>
 
       {loading && (
         <p className="mt-2 text-[10px] text-muted-foreground">

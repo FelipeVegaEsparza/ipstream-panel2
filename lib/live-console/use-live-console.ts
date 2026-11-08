@@ -421,14 +421,6 @@ export function useLiveConsole(
     return 3
   })
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem('live-announcement-voice')
-      if (stored === 'premium' && premiumVoiceAvailable) setAnnouncementVoice('premium')
-      else if (stored === 'female' || stored === 'male') setAnnouncementVoice(stored)
-    } catch {}
-  }, [premiumVoiceAvailable])
-
-  useEffect(() => {
     if (!aiEnabled || typeof options.aiPresenterEnabled === 'boolean') return
     try {
       if (window.localStorage.getItem('live-ai-presenter-enabled') === 'false') {
@@ -721,9 +713,6 @@ export function useLiveConsole(
 
   const setAnnouncementVoicePersisted = useCallback((voice: AnnouncementVoice) => {
     setAnnouncementVoice(voice)
-    try {
-      window.localStorage.setItem('live-announcement-voice', voice)
-    } catch {}
   }, [])
 
   const setAiPresenterEnabledPersisted = useCallback((enabled: boolean) => {

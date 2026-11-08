@@ -8,20 +8,17 @@ import { AnnouncementsBar } from './AnnouncementsBar'
 function renderBar(overrides: {
   loading?: 'weather' | 'time' | null
   error?: string | null
-  voice?: 'male' | 'female' | 'premium'
-  premiumAvailable?: boolean
+  compact?: boolean
 } = {}) {
   const handlers = {
     onAddToQueue: vi.fn(),
-    onVoice: vi.fn(),
   }
   render(
     <DashboardI18nProvider locale="es">
     <AnnouncementsBar
       loading={overrides.loading ?? null}
       error={overrides.error ?? null}
-      voice={overrides.voice ?? 'male'}
-      premiumAvailable={overrides.premiumAvailable ?? false}
+      compact={overrides.compact}
       {...handlers}
     />
     </DashboardI18nProvider>
@@ -38,19 +35,11 @@ describe('AnnouncementsBar', () => {
     expect(handlers.onAddToQueue).toHaveBeenNthCalledWith(2, 'time')
   })
 
-  it('permite cambiar la voz', () => {
-    const handlers = renderBar()
-    fireEvent.change(screen.getByLabelText('Voz de la locución'), { target: { value: 'female' } })
-    expect(handlers.onVoice).toHaveBeenCalledWith('female')
-  })
-
-  it('muestra la voz premium y la selecciona', () => {
-    const handlers = renderBar({ premiumAvailable: true, voice: 'premium' })
-    const select = screen.getByLabelText('Voz de la locución') as HTMLSelectElement
-    expect(select.value).toBe('premium')
-    expect(screen.getByRole('option', { name: /Voz premium/ })).toBeInTheDocument()
-    fireEvent.change(select, { target: { value: 'male' } })
-    expect(handlers.onVoice).toHaveBeenCalledWith('male')
+  it('en modo compacto usa la voz por defecto y no muestra selector', () => {
+    const handlers = renderBar({ compact: true })
+    expect(screen.queryByLabelText('Voz de la locución')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText('Clima'))
+    expect(handlers.onAddToQueue).toHaveBeenCalledWith('weather')
   })
 
   it('bloquea mientras genera y muestra el estado', () => {

@@ -67,59 +67,67 @@ export function BroadcastBar({
   const canGoLive = engineReady && headphonesConfirmed && !busy && !live && !slotOccupied
 
   return (
-  <section className="rounded-panel border border-border bg-card px-3 py-2.5 ">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${status.className}`}>
-          {live && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />}
-          {t(status.labelKey)}
-        </span>
-
-        <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <span className="hidden sm:inline">{t('live.broadcast.slot')}</span>
-          <select
-            value={slotId ?? '__live__'}
-            onChange={(event) => onSlotId(event.target.value === '__live__' ? null : event.target.value)}
-            disabled={live || busy}
-            className="max-w-[190px] rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-brand disabled:opacity-50"
-          >
-            {slots.length === 0 && <option value="__live__">{t('live.broadcast.liveDj')}</option>}
-            {slots.map((slot) => (
-              <option key={slot.id ?? '__live__'} value={slot.id ?? '__live__'}>
-                {slot.name} · {slot.mount}{slot.connected ? ` · ${t('live.broadcast.connected')}` : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={headphonesConfirmed}
-            onChange={(event) => onHeadphonesConfirmed(event.target.checked)}
-            className="h-3.5 w-3.5 accent-[var(--brand-500)]"
-          />
-          {t('live.broadcast.headphones')}
-        </label>
-
-        {announcements}
-
-        <span className="hidden rounded-full bg-secondary px-2 py-1 text-[10px] text-muted-foreground sm:inline">
-          {t('live.broadcast.planDjs', { count: maxDjs, plural: maxDjs === 1 ? '' : 's' })}
-        </span>
-        {mount && (
-          <span className="hidden rounded-full bg-secondary px-2 py-1 font-mono text-[10px] text-muted-foreground md:inline">
-            {mount}
+  <section className="rounded-panel border border-border bg-card px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:items-center xl:gap-x-4">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${status.className}`}>
+            {live && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />}
+            {t(status.labelKey)}
           </span>
-        )}
-        <span className="hidden text-[10px] text-muted-foreground md:inline">
-          {transport ? (transport === 'whip' ? 'WebRTC' : 'WebSocket') : '—'}
-        </span>
-        <span className="hidden text-[10px] text-muted-foreground md:inline">{bitrate} kbps</span>
-        <span className="hidden text-[10px] text-muted-foreground lg:inline">
-          RTT {stats.rttMs != null ? `${stats.rttMs} ms` : '—'}
-        </span>
 
-        <div className="ml-auto flex items-center gap-2">
+          <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span className="hidden sm:inline">{t('live.broadcast.slot')}</span>
+            <select
+              value={slotId ?? '__live__'}
+              onChange={(event) => onSlotId(event.target.value === '__live__' ? null : event.target.value)}
+              disabled={live || busy}
+              className="max-w-[190px] rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-brand disabled:opacity-50"
+            >
+              {slots.length === 0 && <option value="__live__">{t('live.broadcast.liveDj')}</option>}
+              {slots.map((slot) => (
+                <option key={slot.id ?? '__live__'} value={slot.id ?? '__live__'}>
+                  {slot.name} · {slot.mount}{slot.connected ? ` · ${t('live.broadcast.connected')}` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={headphonesConfirmed}
+              onChange={(event) => onHeadphonesConfirmed(event.target.checked)}
+              className="h-3.5 w-3.5 accent-[var(--brand-500)]"
+            />
+            {t('live.broadcast.headphones')}
+          </label>
+        </div>
+
+        {announcements && (
+          <div className="flex w-full items-center justify-center xl:w-auto">
+            <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-background/60 p-1">
+              {announcements}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-2 xl:justify-end">
+          <span className="hidden rounded-full bg-secondary px-2 py-1 text-[10px] text-muted-foreground sm:inline">
+            {t('live.broadcast.planDjs', { count: maxDjs, plural: maxDjs === 1 ? '' : 's' })}
+          </span>
+          {mount && (
+            <span className="hidden rounded-full bg-secondary px-2 py-1 font-mono text-[10px] text-muted-foreground xl:inline">
+              {mount}
+            </span>
+          )}
+          <span className="hidden text-[10px] text-muted-foreground md:inline">
+            {transport ? (transport === 'whip' ? 'WebRTC' : 'WebSocket') : '—'}
+          </span>
+          <span className="hidden text-[10px] text-muted-foreground md:inline">{bitrate} kbps</span>
+          <span className="hidden text-[10px] text-muted-foreground 2xl:inline">
+            RTT {stats.rttMs != null ? `${stats.rttMs} ms` : '—'}
+          </span>
+
           <button
             type="button"
             onClick={() => void onRefreshSlots()}

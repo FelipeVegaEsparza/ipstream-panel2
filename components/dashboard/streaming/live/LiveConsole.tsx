@@ -152,10 +152,7 @@ export function LiveConsole({
               compact
               loading={live.announcements.loading}
               error={live.announcements.error}
-              voice={live.announcements.voice}
-              premiumAvailable={premiumVoiceAvailable}
               freeFormAvailable={aiEnabled}
-              onVoice={live.announcements.setVoice}
               onAddToQueue={live.announcements.enqueue}
               onOpenComposer={() => setComposerOpen(true)}
             />
