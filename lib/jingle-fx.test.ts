@@ -130,12 +130,15 @@ describe('buildJingleFilter', () => {
     expect(filter).not.toContain('undefined')
   })
 
-  it('aplica color de voz solo cuando está habilitado', () => {
-    expect(buildJingleFilter(structure, fx)).toContain('aexciter')
+  it('aplica color de voz solo cuando está habilitado o se pide un carácter', () => {
+    expect(buildJingleFilter(structure, fx)).not.toContain('aexciter')
+    const bright = resolveJingleFx('modern', 65, true, { voiceCharacter: 'bright' })
+    expect(buildJingleFilter(structure, bright)).toContain('aexciter')
     const noFx = resolveJingleFx('modern', 65, false)
     expect(buildJingleFilter(structure, noFx)).not.toContain('aexciter')
     expect(buildJingleFilter(structure, noFx)).not.toContain('aecho')
     expect(buildJingleFilter(structure, noFx)).not.toContain('deesser')
+    expect(buildJingleFilter(structure, noFx)).not.toContain('equalizer=f=3200')
   })
 
   it('el clásico no agrega riser ni impacto', () => {
@@ -165,14 +168,16 @@ describe('buildJingleFilter', () => {
     const retro = buildJingleFilter(structureFor('retro'), resolveJingleFx('retro', 65, true))
 
     expect(modern).toContain('equalizer=f=8500:t=h')
-    expect(energy).toContain('atempo=1.053')
-    expect(cinema).toContain('asetrate=41454')
-    expect(cinema).toContain('atempo=1.033')
-    expect(retro).toContain('highpass=f=300')
-    expect(retro).toContain('lowpass=f=3400')
-    expect(retro).toContain('acrusher')
+    expect(energy).toContain('equalizer=f=3400')
+    expect(cinema).toContain('equalizer=f=180:t=q:w=1:g=2')
+    expect(cinema).toContain('aecho=')
+    expect(retro).toContain('highpass=f=250')
+    expect(retro).toContain('lowpass=f=4200')
     expect(classic).not.toContain('asetrate')
     expect(classic).not.toContain('acrusher')
+    expect(modern).not.toContain('atempo')
+    expect(energy).not.toContain('atempo')
+    expect(cinema).not.toContain('asetrate')
   })
 
   it('agrega el cierre cuando se elige un SFX de salida', () => {

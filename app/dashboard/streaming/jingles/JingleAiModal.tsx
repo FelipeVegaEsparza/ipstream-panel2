@@ -790,6 +790,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                 ))}
               </div>
               <p className="mt-3 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.soundsHint')}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.transitionPhraseHint')}</p>
             </div>
           )}
 
@@ -844,8 +845,8 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                 <SliderRow
                   label={t('streaming.jingles.ai.voiceSpeed')}
                   value={speed}
-                  min={85}
-                  max={115}
+                  min={90}
+                  max={110}
                   step={1}
                   suffix="%"
                   disabled={!voiceFx}

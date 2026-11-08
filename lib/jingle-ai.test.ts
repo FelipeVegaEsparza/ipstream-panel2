@@ -82,6 +82,7 @@ describe('generateJingle', () => {
     expect(mocks.synthesize).toHaveBeenCalledWith(
       expect.objectContaining({ text: 'Hola Radio Test', direction: '[voz de prueba]' })
     )
+    expect(mocks.split).not.toHaveBeenCalled()
     expect(mocks.compose).not.toHaveBeenCalled()
     expect(mocks.mix).toHaveBeenCalledTimes(1)
     expect(mocks.mix.mock.calls[0][0]).toMatchObject({
@@ -124,8 +125,10 @@ describe('generateJingle', () => {
       tagline: 'Hola {{radio}}. La mejor música.',
       music: Buffer.from([6]),
       style: 'modern',
+      overrides: { transitionSfx: 'whoosh' },
     })
 
+    expect(mocks.split).toHaveBeenCalledTimes(1)
     expect(mocks.synthesize).toHaveBeenCalledTimes(2)
     expect(mocks.compose).toHaveBeenCalledTimes(1)
     expect(mocks.compose.mock.calls[0][0]).toMatchObject({ style: 'modern' })

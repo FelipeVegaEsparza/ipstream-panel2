@@ -64,7 +64,16 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
     input.overrides
   )
   const direction = resolveJingleDirection(fx.style)
-  const phrases = fx.style === 'classic' ? [text] : splitJingleScript(text)
+  // La edición por frases es opt-in: elegir una transición explícita la activa.
+  // Por defecto se pide una sola locución para conservar la prosodia natural del TTS.
+  const explicitTransition = input.overrides?.transitionSfx
+  const phraseEditing = Boolean(
+    explicitTransition &&
+      explicitTransition !== 'auto' &&
+      explicitTransition !== 'none'
+  )
+  const phrases =
+    fx.style === 'classic' || !phraseEditing ? [text] : splitJingleScript(text)
 
   const chunks: VoiceChunk[] = []
   let ttsCached = true

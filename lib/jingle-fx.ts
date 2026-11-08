@@ -118,17 +118,17 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'none',
     transitionSfx: 'none',
     outroSfx: 'none',
-    presenceDb: 2,
+    presenceDb: 1.5,
     presenceFrequency: 3200,
     highPassHz: 90,
-    exciterAmount: 0.6,
+    exciterAmount: 0,
     exciterFrequency: 7000,
-    compressorRatio: 2.5,
-    compressorAttack: 5,
-    compressorRelease: 80,
+    compressorRatio: 2.2,
+    compressorAttack: 8,
+    compressorRelease: 100,
     compressorMakeup: 1,
   },
-  // Radio imaging: voz brillante, doblada y con aire.
+  // Radio imaging: voz al frente, limpia, con aire suave y una sala corta.
   modern: {
     riserSeconds: 0.85,
     voiceLeadSeconds: 0.15,
@@ -145,19 +145,19 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'impact',
     transitionSfx: 'whoosh',
     outroSfx: 'stinger',
-    presenceDb: 5.5,
-    presenceFrequency: 3300,
+    presenceDb: 2.5,
+    presenceFrequency: 3200,
     highPassHz: 95,
-    airShelfDb: 3.5,
-    exciterAmount: 2.2,
-    exciterFrequency: 6000,
-    compressorRatio: 3.2,
-    compressorAttack: 5,
-    compressorRelease: 110,
-    compressorMakeup: 1.5,
-    echo: ECHO_SHORT,
+    airShelfDb: 1.5,
+    exciterAmount: 0,
+    exciterFrequency: 6500,
+    compressorRatio: 2.6,
+    compressorAttack: 8,
+    compressorRelease: 130,
+    compressorMakeup: 1.1,
+    echo: { inGain: 0.9, outGain: 0.3, delays: '90', decays: '0.06' },
   },
-  // Promo EDM: más filo, más rápido y con slap corto.
+  // Promo EDM: más presencia, sin tocar el tono ni la velocidad.
   energy: {
     riserSeconds: 0.7,
     voiceLeadSeconds: 0.1,
@@ -174,21 +174,19 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'boom',
     transitionSfx: 'whoosh',
     outroSfx: 'stinger',
-    presenceDb: 7,
-    presenceFrequency: 3500,
-    highPassHz: 105,
-    airShelfDb: 5,
-    exciterAmount: 2.8,
+    presenceDb: 3.2,
+    presenceFrequency: 3400,
+    highPassHz: 100,
+    airShelfDb: 2,
+    exciterAmount: 0,
     exciterFrequency: 6800,
-    compressorRatio: 3.8,
-    compressorAttack: 3.5,
-    compressorRelease: 90,
-    compressorMakeup: 1.7,
-    echo: { inGain: 0.85, outGain: 0.45, delays: '20|38', decays: '0.24|0.14' },
-    durationFactor: 0.95,
-    grit: 0.06,
+    compressorRatio: 3,
+    compressorAttack: 6,
+    compressorRelease: 100,
+    compressorMakeup: 1.2,
+    echo: { inGain: 0.85, outGain: 0.3, delays: '70', decays: '0.05' },
   },
-  // Trailer: voz más grave, oscura y con reverb amplia.
+  // Trailer: voz grave y oscura, con reverb amplia.
   cinema: {
     riserSeconds: 1.2,
     voiceLeadSeconds: 0.2,
@@ -205,22 +203,20 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'boom',
     transitionSfx: 'reverse',
     outroSfx: 'reverse',
-    presenceDb: 0.5,
+    presenceDb: 0.8,
     presenceFrequency: 2800,
     highPassHz: 70,
-    warmShelfDb: 4.5,
-    airShelfDb: -2,
-    exciterAmount: 0.7,
+    warmShelfDb: 2,
+    airShelfDb: -1,
+    exciterAmount: 0,
     exciterFrequency: 5000,
-    compressorRatio: 2.6,
-    compressorAttack: 12,
+    compressorRatio: 2.2,
+    compressorAttack: 14,
     compressorRelease: 220,
-    compressorMakeup: 1.3,
-    echo: { inGain: 0.9, outGain: 0.6, delays: '180|320|520', decays: '0.26|0.18|0.1' },
-    pitchFactor: 0.94,
-    durationFactor: 1.03,
+    compressorMakeup: 1.05,
+    echo: { inGain: 0.85, outGain: 0.35, delays: '140|260', decays: '0.1|0.06' },
   },
-  // Vintage: banda angosta, saturación y slap de cinta.
+  // Vintage: banda angosta y eco de cinta, sin cambiar el tono.
   retro: {
     riserSeconds: 0.5,
     voiceLeadSeconds: 0.1,
@@ -237,21 +233,19 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'click',
     transitionSfx: 'vinyl',
     outroSfx: 'reverse',
-    presenceDb: 4,
+    presenceDb: 2,
     presenceFrequency: 1900,
-    highPassHz: 300,
-    lowPassHz: 3400,
-    exciterAmount: 1.6,
+    highPassHz: 250,
+    lowPassHz: 4200,
+    exciterAmount: 0,
     exciterFrequency: 4200,
-    compressorRatio: 4,
-    compressorAttack: 4,
-    compressorRelease: 140,
-    compressorMakeup: 1.6,
-    echo: { inGain: 0.8, outGain: 0.55, delays: '70|140', decays: '0.24|0.14' },
-    pitchFactor: 0.95,
-    grit: 0.22,
+    compressorRatio: 2.8,
+    compressorAttack: 8,
+    compressorRelease: 150,
+    compressorMakeup: 1.1,
+    echo: { inGain: 0.8, outGain: 0.35, delays: '60', decays: '0.08' },
   },
-  // Pop: alegre, brillante y con campanillas.
+  // Pop: alegre y brillante, sin doblaje metálico.
   pop: {
     riserSeconds: 0.7,
     voiceLeadSeconds: 0.12,
@@ -268,20 +262,19 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'ding',
     transitionSfx: 'whoosh',
     outroSfx: 'ding',
-    presenceDb: 5,
+    presenceDb: 2.8,
     presenceFrequency: 3300,
     highPassHz: 95,
-    airShelfDb: 2.5,
-    exciterAmount: 1.8,
+    airShelfDb: 1.2,
+    exciterAmount: 0,
     exciterFrequency: 6200,
-    compressorRatio: 3.1,
-    compressorAttack: 4,
-    compressorRelease: 100,
-    compressorMakeup: 1.5,
-    echo: { inGain: 0.85, outGain: 0.4, delays: '30|60', decays: '0.2|0.1' },
-    durationFactor: 0.99,
+    compressorRatio: 2.6,
+    compressorAttack: 6,
+    compressorRelease: 110,
+    compressorMakeup: 1.1,
+    echo: { inGain: 0.85, outGain: 0.3, delays: '80', decays: '0.05' },
   },
-  // Chill: cálido, suave y con vinilo.
+  // Chill: cálido y suave.
   chill: {
     riserSeconds: 0.8,
     voiceLeadSeconds: 0.18,
@@ -301,19 +294,17 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     presenceDb: 1,
     presenceFrequency: 2500,
     highPassHz: 80,
-    warmShelfDb: 3,
-    airShelfDb: -1.5,
-    exciterAmount: 0.8,
+    warmShelfDb: 2.5,
+    airShelfDb: -1,
+    exciterAmount: 0,
     exciterFrequency: 5500,
-    compressorRatio: 2.4,
-    compressorAttack: 8,
+    compressorRatio: 2.2,
+    compressorAttack: 10,
     compressorRelease: 180,
-    compressorMakeup: 1.2,
-    echo: { inGain: 0.85, outGain: 0.45, delays: '120', decays: '0.14' },
-    pitchFactor: 0.98,
-    durationFactor: 1.02,
+    compressorMakeup: 1.05,
+    echo: { inGain: 0.85, outGain: 0.35, delays: '110', decays: '0.08' },
   },
-  // News: claro, urgente y sin adornos.
+  // News: claro y directo.
   news: {
     riserSeconds: 0.35,
     voiceLeadSeconds: 0.08,
@@ -330,19 +321,18 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'click',
     transitionSfx: 'click',
     outroSfx: 'stinger',
-    presenceDb: 6,
+    presenceDb: 3,
     presenceFrequency: 3100,
     highPassHz: 120,
-    airShelfDb: 1.5,
-    exciterAmount: 1.6,
+    airShelfDb: 0.5,
+    exciterAmount: 0,
     exciterFrequency: 6500,
-    compressorRatio: 3.6,
-    compressorAttack: 3,
-    compressorRelease: 70,
-    compressorMakeup: 1.6,
-    durationFactor: 0.97,
+    compressorRatio: 3,
+    compressorAttack: 5,
+    compressorRelease: 90,
+    compressorMakeup: 1.15,
   },
-  // Sport: relato potente, bombo y estadio.
+  // Sport: relato potente, sin forzar el tono.
   sport: {
     riserSeconds: 0.75,
     voiceLeadSeconds: 0.1,
@@ -359,21 +349,19 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'boom',
     transitionSfx: 'whoosh',
     outroSfx: 'stinger',
-    presenceDb: 7,
+    presenceDb: 3.5,
     presenceFrequency: 3400,
     highPassHz: 110,
-    airShelfDb: 3,
-    exciterAmount: 2.6,
+    airShelfDb: 1.5,
+    exciterAmount: 0,
     exciterFrequency: 6600,
-    compressorRatio: 3.6,
-    compressorAttack: 3,
-    compressorRelease: 80,
-    compressorMakeup: 1.7,
-    echo: { inGain: 0.85, outGain: 0.42, delays: '24', decays: '0.12' },
-    durationFactor: 0.98,
-    grit: 0.05,
+    compressorRatio: 3,
+    compressorAttack: 4,
+    compressorRelease: 90,
+    compressorMakeup: 1.2,
+    echo: { inGain: 0.85, outGain: 0.3, delays: '70', decays: '0.05' },
   },
-  // Kids: juguetón, más agudo y con chispas.
+  // Kids: juguetón y luminoso, sin pitch automático.
   kids: {
     riserSeconds: 0.6,
     voiceLeadSeconds: 0.12,
@@ -390,21 +378,19 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'ding',
     transitionSfx: 'sparkle',
     outroSfx: 'sparkle',
-    presenceDb: 5,
+    presenceDb: 2.5,
     presenceFrequency: 3500,
     highPassHz: 130,
-    airShelfDb: 4,
-    exciterAmount: 2.2,
+    airShelfDb: 1.5,
+    exciterAmount: 0,
     exciterFrequency: 7000,
-    compressorRatio: 3,
-    compressorAttack: 4,
-    compressorRelease: 90,
-    compressorMakeup: 1.5,
-    echo: { inGain: 0.85, outGain: 0.4, delays: '40', decays: '0.12' },
-    pitchFactor: 1.04,
-    durationFactor: 0.97,
+    compressorRatio: 2.6,
+    compressorAttack: 6,
+    compressorRelease: 100,
+    compressorMakeup: 1.1,
+    echo: { inGain: 0.85, outGain: 0.3, delays: '80', decays: '0.06' },
   },
-  // Elegant: sobrio, lento y con aire de lujo.
+  // Elegant: sobrio y con aire de lujo, sin pitch.
   elegant: {
     riserSeconds: 1,
     voiceLeadSeconds: 0.2,
@@ -421,22 +407,20 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'ding',
     transitionSfx: 'sparkle',
     outroSfx: 'reverse',
-    presenceDb: 2,
+    presenceDb: 1,
     presenceFrequency: 2900,
     highPassHz: 80,
-    warmShelfDb: 3,
-    airShelfDb: 1,
-    exciterAmount: 0.9,
+    warmShelfDb: 2,
+    airShelfDb: 0.5,
+    exciterAmount: 0,
     exciterFrequency: 5800,
-    compressorRatio: 2.5,
-    compressorAttack: 10,
-    compressorRelease: 200,
-    compressorMakeup: 1.2,
-    echo: { inGain: 0.9, outGain: 0.55, delays: '160|300', decays: '0.2|0.12' },
-    pitchFactor: 0.97,
-    durationFactor: 1.03,
+    compressorRatio: 2.2,
+    compressorAttack: 12,
+    compressorRelease: 220,
+    compressorMakeup: 1.05,
+    echo: { inGain: 0.85, outGain: 0.4, delays: '150|300', decays: '0.08|0.05' },
   },
-  // Arcade: 8-bit, saturación y clicks.
+  // Arcade: color 8-bit en música/SFX; la voz queda limpia.
   arcade: {
     riserSeconds: 0.5,
     voiceLeadSeconds: 0.1,
@@ -453,37 +437,35 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactSfx: 'click',
     transitionSfx: 'click',
     outroSfx: 'stinger',
-    presenceDb: 5,
+    presenceDb: 3,
     presenceFrequency: 2600,
     highPassHz: 150,
     lowPassHz: 9000,
-    airShelfDb: 2,
-    exciterAmount: 2,
+    airShelfDb: 1,
+    exciterAmount: 0,
     exciterFrequency: 6000,
-    compressorRatio: 3.4,
-    compressorAttack: 3,
-    compressorRelease: 80,
-    compressorMakeup: 1.6,
-    echo: { inGain: 0.85, outGain: 0.4, delays: '20', decays: '0.1' },
-    pitchFactor: 1.02,
-    durationFactor: 0.96,
-    grit: 0.28,
+    compressorRatio: 2.8,
+    compressorAttack: 5,
+    compressorRelease: 90,
+    compressorMakeup: 1.1,
+    echo: { inGain: 0.85, outGain: 0.3, delays: '60', decays: '0.05' },
   },
 }
 
+
 const STYLE_DIRECTIONS: Record<JingleStyleId, string> = {
   classic: FISH_AUDIO_DIRECTIONS.station,
-  modern: '[voz de locutor, energética y segura]',
-  energy: '[voz de locutor, muy enérgica y potente]',
-  cinema: '[voz profunda, dramática y pausada]',
-  retro: '[voz de locutor clásico, cálida y pausada]',
-  pop: '[voz de locutor, alegre y enérgica]',
-  chill: '[voz suave, cálida y relajada]',
-  news: '[voz clara, urgente y profesional]',
-  sport: '[voz de relator, potente y emocionada]',
-  kids: '[voz divertida, luminosa y juguetona]',
-  elegant: '[voz elegante, serena y sofisticada]',
-  arcade: '[voz de locutor retro, divertida y rápida]',
+  modern: FISH_AUDIO_DIRECTIONS.presenter,
+  energy: '[voz de locutor, entusiasta y potente]',
+  cinema: '[voz profunda, pausada y segura]',
+  retro: '[voz cálida y pausada]',
+  pop: '[voz alegre y cercana]',
+  chill: '[voz suave y relajada]',
+  news: '[voz clara y profesional]',
+  sport: '[voz de relator, emocionada]',
+  kids: '[voz divertida y luminosa]',
+  elegant: '[voz serena y elegante]',
+  arcade: '[voz divertida y rápida]',
 }
 
 export function resolveJingleDirection(style: unknown): string {
@@ -504,13 +486,13 @@ interface VoiceCharacterPreset {
 
 const VOICE_CHARACTERS: Record<JingleVoiceCharacter, VoiceCharacterPreset> = {
   auto: {},
-  natural: { presenceDelta: -1.2, airDelta: -1, exciterDelta: -0.5 },
-  bright: { presenceDelta: 2.5, airDelta: 2, exciterDelta: 0.9 },
-  warm: { warmShelfDb: 3, presenceDelta: -1, airDelta: -1.5, exciterDelta: -0.3 },
-  deep: { pitchSemitones: -2.5, warmShelfDb: 2.5 },
-  phone: { highPassHz: 320, lowPassHz: 3400, presenceDelta: 1.5, airDelta: -3, grit: 0.18 },
-  saturated: { grit: 0.24, presenceDelta: 1, airDelta: 0.5 },
-  doubled: { doubling: 0.35, presenceDelta: 1 },
+  natural: { presenceDelta: -0.5, airDelta: -0.5 },
+  bright: { presenceDelta: 1.5, airDelta: 1.5, exciterDelta: 0.6 },
+  warm: { warmShelfDb: 2.5, presenceDelta: -0.5, airDelta: -1 },
+  deep: { pitchSemitones: -2, warmShelfDb: 2 },
+  phone: { highPassHz: 320, lowPassHz: 3400, presenceDelta: 0.5, airDelta: -2, grit: 0.12 },
+  saturated: { grit: 0.18, presenceDelta: 0.5, airDelta: 0.5, exciterDelta: 0.4 },
+  doubled: { doubling: 0.25, presenceDelta: 0.5 },
 }
 
 export interface JingleOverrides {
@@ -562,15 +544,15 @@ export function resolveJingleFx(
   const presenceDb = clamp(
     scale(base.presenceDb + (character.presenceDelta ?? 0)),
     -2,
-    8
+    6
   )
   const airBase = (base.airShelfDb ?? 0) + (character.airDelta ?? 0)
   const airShelfDb =
     base.airShelfDb != null || character.airDelta != null
-      ? clamp(scale(airBase), -6, 5.5)
+      ? clamp(scale(airBase), -6, 4)
       : undefined
   const exciterAmount = voiceFx
-    ? clamp(scale(base.exciterAmount + (character.exciterDelta ?? 0)), 0, 3)
+    ? clamp(scale(base.exciterAmount + (character.exciterDelta ?? 0)), 0, 2)
     : 0
   const warmShelfDb =
     character.warmShelfDb != null
@@ -581,10 +563,10 @@ export function resolveJingleFx(
 
   const semitones = clamp(
     (numeric(overrides.pitchSemitones) ?? 0) + (character.pitchSemitones ?? 0),
-    -8,
-    6
+    -4,
+    4
   )
-  const speed = clamp(numeric(overrides.speed) ?? 1, 0.85, 1.15)
+  const speed = clamp(numeric(overrides.speed) ?? 1, 0.9, 1.1)
   const pitchFactor = (base.pitchFactor ?? 1) * Math.pow(2, semitones / 12)
   const durationFactor = (base.durationFactor ?? 1) / speed
 
@@ -605,7 +587,7 @@ export function resolveJingleFx(
     ? clamp(
         Math.max(numeric(overrides.doubling) ?? 0, character.doubling ?? 0),
         0,
-        0.5
+        0.4
       )
     : 0
 
@@ -646,7 +628,7 @@ export function resolveJingleFx(
     warmShelfDb,
     exciterAmount,
     grit: voiceFx && (base.grit || character.grit)
-      ? Math.min(0.45, scale(Math.max(base.grit ?? 0, character.grit ?? 0)))
+      ? Math.min(0.35, scale(Math.max(base.grit ?? 0, character.grit ?? 0)))
       : 0,
     echo,
     pitchFactor,
@@ -719,47 +701,55 @@ function fixed(value: number): string {
 }
 
 function buildVoiceChain(fx: ResolvedJingleFx): string {
+  if (!fx.voiceFx) {
+    // Voz limpia: solo control de graves y compresión técnica.
+    return [
+      'aformat=channel_layouts=stereo',
+      'highpass=f=80',
+      'acompressor=threshold=-18dB:ratio=2:attack=10:release=150:makeup=1',
+    ].join(',')
+  }
+
   const parts: string[] = []
   parts.push('aformat=channel_layouts=stereo')
 
-  // Pitch y velocidad: cambian el carácter sin volver a sintetizar.
-  if (fx.voiceFx) {
-    const pitch = fx.pitchFactor ?? 1
-    const duration = fx.durationFactor ?? 1
-    if (Math.abs(pitch - 1) > 0.001) {
-      parts.push(`asetrate=${Math.round(44100 * pitch)}`)
-      parts.push('aresample=44100')
-    }
-    const tempo = 1 / Math.max(0.01, pitch * duration)
-    if (Math.abs(tempo - 1) > 0.001) {
-      parts.push(`atempo=${fixed(clamp(tempo, 0.5, 2))}`)
-    }
+  // Pitch y velocidad solo si el usuario los pide (carácter o sliders).
+  const pitch = fx.pitchFactor ?? 1
+  const duration = fx.durationFactor ?? 1
+  if (Math.abs(pitch - 1) > 0.001) {
+    parts.push(`asetrate=${Math.round(44100 * pitch)}`)
+    parts.push('aresample=44100')
+  }
+  const tempo = 1 / Math.max(0.01, pitch * duration)
+  if (Math.abs(tempo - 1) > 0.001) {
+    parts.push(`atempo=${fixed(clamp(tempo, 0.5, 2))}`)
   }
 
-  parts.push(`highpass=f=${fx.voiceFx ? fx.highPassHz : 90}`)
-  if (fx.voiceFx && fx.lowPassHz) parts.push(`lowpass=f=${Math.round(fx.lowPassHz)}`)
-  if (fx.voiceFx) parts.push('deesser=i=0.45')
-  if (fx.voiceFx && fx.warmShelfDb) {
+  parts.push(`highpass=f=${fx.highPassHz}`)
+  if (fx.lowPassHz) parts.push(`lowpass=f=${Math.round(fx.lowPassHz)}`)
+  parts.push('deesser=i=0.35')
+  if (fx.warmShelfDb) {
     parts.push(`equalizer=f=180:t=q:w=1:g=${fixed(fx.warmShelfDb)}`)
   }
-  parts.push('equalizer=f=250:t=q:w=1:g=-1.2')
+  parts.push('equalizer=f=250:t=q:w=1:g=-1')
   parts.push(`equalizer=f=${fx.presenceFrequency}:t=q:w=1.2:g=${fixed(fx.presenceDb)}`)
-  if (fx.voiceFx && fx.airShelfDb) {
+  if (fx.airShelfDb) {
     parts.push(`equalizer=f=8500:t=h:g=${fixed(fx.airShelfDb)}`)
   }
   parts.push(
     `acompressor=threshold=-18dB:ratio=${fixed(fx.compressorRatio)}:attack=${fixed(fx.compressorAttack)}:release=${fixed(fx.compressorRelease)}:makeup=${fixed(fx.compressorMakeup)}`
   )
-  if (fx.voiceFx && fx.exciterAmount > 0) {
+  if (fx.exciterAmount > 0) {
     parts.push(`aexciter=amount=${fixed(fx.exciterAmount)}:freq=${Math.round(fx.exciterFrequency)}`)
   }
-  if (fx.voiceFx && fx.grit && fx.grit > 0) {
+  if (fx.grit && fx.grit > 0) {
     parts.push(`acrusher=bits=11:mix=${fixed(fx.grit)}:mode=1`)
   }
-  if (fx.voiceFx && fx.doubling > 0) {
-    parts.push(`aecho=1:0.45:18:${fixed(fx.doubling)}`)
+  if (fx.doubling > 0) {
+    // Doblaje corto solo si el usuario lo activa; 30 ms evita el comb filtering duro.
+    parts.push(`aecho=1:0.35:30:${fixed(fx.doubling)}`)
   }
-  if (fx.voiceFx && fx.echo) {
+  if (fx.echo && fx.echo.decays.split('|').some((decay) => Number(decay) > 0.02)) {
     parts.push(
       `aecho=${fixed(fx.echo.inGain)}:${fixed(fx.echo.outGain)}:${fx.echo.delays}:${fx.echo.decays}`
     )
