@@ -259,10 +259,13 @@ function fixed(value: number): string {
 function buildVoiceChain(fx: ResolvedJingleFx): string {
   const parts: string[] = []
   parts.push('aformat=channel_layouts=stereo')
-  parts.push(`highpass=f=${fx.bandLimit ? 180 : 90}`)
-  if (fx.bandLimit) parts.push('lowpass=f=6200')
-  parts.push('deesser=i=0.45')
-  if (fx.warmShelfDb) parts.push(`equalizer=f=180:t=q:w=1:g=${fixed(fx.warmShelfDb)}`)
+  const bandLimit = fx.voiceFx && fx.bandLimit
+  parts.push(`highpass=f=${bandLimit ? 180 : 90}`)
+  if (bandLimit) parts.push('lowpass=f=6200')
+  if (fx.voiceFx) parts.push('deesser=i=0.45')
+  if (fx.voiceFx && fx.warmShelfDb) {
+    parts.push(`equalizer=f=180:t=q:w=1:g=${fixed(fx.warmShelfDb)}`)
+  }
   parts.push('equalizer=f=250:t=q:w=1:g=-1.2')
   parts.push(`equalizer=f=${fx.presenceFrequency}:t=q:w=1.2:g=${fixed(fx.presenceDb)}`)
   parts.push(

@@ -88,6 +88,7 @@ describe('buildJingleFilter', () => {
     const noFx = resolveJingleFx('modern', 65, false)
     expect(buildJingleFilter(structure, noFx)).not.toContain('aexciter')
     expect(buildJingleFilter(structure, noFx)).not.toContain('aecho')
+    expect(buildJingleFilter(structure, noFx)).not.toContain('deesser')
   })
 
   it('el clásico no agrega riser ni impacto', () => {

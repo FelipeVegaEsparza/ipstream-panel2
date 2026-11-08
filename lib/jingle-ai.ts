@@ -77,7 +77,7 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
 
   const composed =
     chunks.length > 1
-      ? await composeJingleVoice({ chunks, style: fx.style })
+      ? await composeJingleVoice({ chunks, style: fx.style, retuneFirst: fx.voiceFx })
       : { audio: chunks[0].audio, duration: chunks[0].duration }
 
   // Alinear la entrada de la voz con el pulso del tema cuando se puede.

@@ -42,7 +42,8 @@ function fixed(value: number): string {
 async function runComposition(
   chunks: VoiceChunk[],
   style: JingleStyleId,
-  withWhoosh: boolean
+  withWhoosh: boolean,
+  retuneFirst: boolean
 ): Promise<Buffer> {
   const gap = GAP_SECONDS[style] ?? 0.3
   const offsets: number[] = []
@@ -52,7 +53,6 @@ async function runComposition(
     cursor += chunk.duration + gap
   }
   const total = Math.max(1, cursor - gap)
-  const retuneFirst = style === 'retro'
 
   let whoosh: Buffer | null = null
   if (withWhoosh && WHOOSH_LEVEL[style] > 0) {
@@ -132,6 +132,7 @@ async function runComposition(
 export async function composeJingleVoice(input: {
   chunks: VoiceChunk[]
   style: JingleStyleId
+  retuneFirst?: boolean
 }): Promise<{ audio: Buffer; duration: number }> {
   const chunks = input.chunks.filter((chunk) => chunk.audio.length > 0)
   if (chunks.length === 0) throw new Error('No hay locución para componer.')
@@ -143,13 +144,14 @@ export async function composeJingleVoice(input: {
   const total =
     chunks.reduce((sum, chunk) => sum + chunk.duration, 0) + gap * (chunks.length - 1)
 
+  const retuneFirst = input.retuneFirst ?? input.style === 'retro'
   try {
-    const audio = await runComposition(chunks, input.style, true)
+    const audio = await runComposition(chunks, input.style, true, retuneFirst)
     return { audio, duration: Math.round(total * 1000) / 1000 }
   } catch {
     // Si el whoosh falla (archivo ausente o filtro no disponible),
     // se compone igual sin efectos de transición.
-    const audio = await runComposition(chunks, input.style, false)
+    const audio = await runComposition(chunks, input.style, false, retuneFirst)
     return { audio, duration: Math.round(total * 1000) / 1000 }
   }
 }
