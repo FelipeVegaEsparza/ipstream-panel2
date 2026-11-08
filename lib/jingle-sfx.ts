@@ -32,6 +32,22 @@ export const SFX_SLOT_IDS: Record<JingleSfxSlot, readonly JingleSfxId[]> = {
   outro: OUTRO_SFX_IDS,
 }
 
+/** Duración aproximada de cada archivo, para ajustar la entrada de la voz. */
+export const SFX_DURATION_SECONDS: Record<JingleSfxId, number> = {
+  riser: 1.2,
+  sweep: 0.9,
+  subdrop: 1.2,
+  sparkle: 0.9,
+  vinyl: 0.7,
+  impact: 1,
+  boom: 1.5,
+  click: 0.18,
+  ding: 1,
+  stinger: 1.2,
+  reverse: 0.8,
+  whoosh: 0.45,
+}
+
 /** Nivel de mezcla por SFX, calibrado contra el pico de cada archivo. */
 export const SFX_VOLUME: Record<JingleSfxId, number> = {
   riser: 0.4,

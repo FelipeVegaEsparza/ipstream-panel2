@@ -32,6 +32,10 @@ describe('resolveJingleFx', () => {
       outroSfx: 'boom',
     })
     expect(fx.riserSeconds).toBe(0)
+    expect(resolveJingleFx('modern', 65, true, { introSfx: 'click' }).riserSeconds).toBe(0.25)
+    expect(
+      resolveJingleFx('classic', 65, true, { introSfx: 'riser' }).riserSeconds
+    ).toBeGreaterThan(0.8)
     expect(fx.impactLevel).toBeGreaterThan(0)
     expect(fx.impactSfx).toBe('ding')
     expect(fx.transitionSfx).toBe('click')

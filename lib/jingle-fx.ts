@@ -12,6 +12,7 @@ import { promisify } from 'util'
 import { probeAudioBufferDuration, probeAudioDuration } from '@/lib/audio-mix'
 import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
 import {
+  SFX_DURATION_SECONDS,
   SFX_VOLUME,
   isJingleSfxId,
   sfxFile,
@@ -655,7 +656,12 @@ export function resolveJingleFx(
     impactSfx,
     transitionSfx,
     outroSfx,
-    riserSeconds: introSfx === 'none' ? 0 : base.riserSeconds,
+    riserSeconds:
+      introSfx === 'none'
+        ? 0
+        : base.riserSeconds > 0
+          ? Math.min(base.riserSeconds, Math.max(0.25, SFX_DURATION_SECONDS[introSfx]))
+          : Math.max(0.25, SFX_DURATION_SECONDS[introSfx]),
     impactLevel: impactSfx === 'none' ? 0 : scaledImpact(base, factor),
     highPassHz: voiceFx ? (character.highPassHz ?? base.highPassHz) : 90,
     lowPassHz: voiceFx ? (character.lowPassHz ?? base.lowPassHz) : undefined,
