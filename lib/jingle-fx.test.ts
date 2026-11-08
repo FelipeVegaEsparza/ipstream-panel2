@@ -47,7 +47,7 @@ describe('planJingleStructure', () => {
       voiceDurationSeconds: 12,
       fx,
     })
-    const natural = structure.voiceStartSeconds + 12 + fx.tailSeconds
+    const natural = structure.voiceStartSeconds + 12 * (fx.durationFactor ?? 1) + fx.tailSeconds
     expect(structure.totalSeconds).toBeGreaterThan(12)
     expect(structure.totalSeconds).toBeGreaterThanOrEqual(natural - 0.05)
     expect(structure.totalSeconds).toBeLessThanOrEqual(natural + 0.1)
@@ -102,6 +102,30 @@ describe('buildJingleFilter', () => {
     expect(filter).not.toContain('[riser]')
     expect(filter).not.toContain('[impact]')
     expect(filter).toContain('amix=inputs=2')
+  })
+
+  it('marca la diferencia de cada estilo en la voz', () => {
+    const structureFor = (style: Parameters<typeof resolveJingleFx>[0]) =>
+      planJingleStructure({
+        requestedDuration: 10,
+        voiceDurationSeconds: 5,
+        fx: resolveJingleFx(style, 65, true),
+      })
+    const classic = buildJingleFilter(structureFor('classic'), resolveJingleFx('classic', 65, true))
+    const modern = buildJingleFilter(structureFor('modern'), resolveJingleFx('modern', 65, true))
+    const energy = buildJingleFilter(structureFor('energy'), resolveJingleFx('energy', 65, true))
+    const cinema = buildJingleFilter(structureFor('cinema'), resolveJingleFx('cinema', 65, true))
+    const retro = buildJingleFilter(structureFor('retro'), resolveJingleFx('retro', 65, true))
+
+    expect(modern).toContain('equalizer=f=8500:t=h')
+    expect(energy).toContain('atempo=1.053')
+    expect(cinema).toContain('asetrate=41454')
+    expect(cinema).toContain('atempo=1.033')
+    expect(retro).toContain('highpass=f=300')
+    expect(retro).toContain('lowpass=f=3400')
+    expect(retro).toContain('acrusher')
+    expect(classic).not.toContain('asetrate')
+    expect(classic).not.toContain('acrusher')
   })
 
   it('alinea la voz al pulso cuando se provee un inicio de música', () => {

@@ -36,16 +36,21 @@ interface StyleConfig {
   impactLevel: number
   impactFrequency: number
   presenceDb: number
+  presenceFrequency: number
+  highPassHz: number
+  lowPassHz?: number
+  airShelfDb?: number
+  warmShelfDb?: number
   exciterAmount: number
   exciterFrequency: number
   compressorRatio: number
   compressorAttack: number
   compressorRelease: number
   compressorMakeup: number
-  presenceFrequency: number
   echo?: { inGain: number; outGain: number; delays: string; decays: string }
-  bandLimit?: boolean
-  warmShelfDb?: number
+  pitchFactor?: number
+  durationFactor?: number
+  grit?: number
 }
 
 const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
@@ -63,15 +68,16 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     impactLevel: 0,
     impactFrequency: 60,
     presenceDb: 2,
+    presenceFrequency: 3200,
+    highPassHz: 90,
     exciterAmount: 0.6,
     exciterFrequency: 7000,
     compressorRatio: 2.5,
     compressorAttack: 5,
     compressorRelease: 80,
     compressorMakeup: 1,
-    presenceFrequency: 3200,
   },
-  // Radio imaging actual: riser, impacto, voz brillante y cola.
+  // Radio imaging: voz brillante, doblada y con aire.
   modern: {
     riserSeconds: 0.85,
     voiceLeadSeconds: 0.15,
@@ -84,17 +90,19 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserLevel: 0.13,
     impactLevel: 0.32,
     impactFrequency: 60,
-    presenceDb: 3.2,
-    exciterAmount: 1.2,
+    presenceDb: 5.5,
+    presenceFrequency: 3300,
+    highPassHz: 95,
+    airShelfDb: 3.5,
+    exciterAmount: 2.2,
     exciterFrequency: 6000,
-    compressorRatio: 3,
-    compressorAttack: 6,
-    compressorRelease: 120,
-    compressorMakeup: 1.4,
-    presenceFrequency: 3200,
-    echo: { inGain: 0.85, outGain: 0.45, delays: '45', decays: '0.1' },
+    compressorRatio: 3.2,
+    compressorAttack: 5,
+    compressorRelease: 110,
+    compressorMakeup: 1.5,
+    echo: { inGain: 0.9, outGain: 0.42, delays: '16|42', decays: '0.24|0.1' },
   },
-  // Más bombeo y brillo, tipo promo EDM.
+  // Promo EDM: más filo, más rápido y con slap corto.
   energy: {
     riserSeconds: 0.7,
     voiceLeadSeconds: 0.1,
@@ -107,17 +115,21 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserLevel: 0.15,
     impactLevel: 0.4,
     impactFrequency: 70,
-    presenceDb: 4,
-    exciterAmount: 1.5,
-    exciterFrequency: 6500,
-    compressorRatio: 3.4,
-    compressorAttack: 4,
+    presenceDb: 7,
+    presenceFrequency: 3500,
+    highPassHz: 105,
+    airShelfDb: 5,
+    exciterAmount: 2.8,
+    exciterFrequency: 6800,
+    compressorRatio: 3.8,
+    compressorAttack: 3.5,
     compressorRelease: 90,
-    compressorMakeup: 1.6,
-    presenceFrequency: 3400,
-    echo: { inGain: 0.8, outGain: 0.4, delays: '28', decays: '0.08' },
+    compressorMakeup: 1.7,
+    echo: { inGain: 0.85, outGain: 0.45, delays: '20|38', decays: '0.24|0.14' },
+    durationFactor: 0.95,
+    grit: 0.06,
   },
-  // Entrada amplia y grave, reverb larga.
+  // Trailer: voz más grave, oscura y con reverb amplia.
   cinema: {
     riserSeconds: 1.2,
     voiceLeadSeconds: 0.2,
@@ -130,18 +142,22 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserLevel: 0.16,
     impactLevel: 0.5,
     impactFrequency: 45,
-    presenceDb: 1.8,
-    exciterAmount: 0.8,
+    presenceDb: 0.5,
+    presenceFrequency: 2800,
+    highPassHz: 70,
+    warmShelfDb: 4.5,
+    airShelfDb: -2,
+    exciterAmount: 0.7,
     exciterFrequency: 5000,
-    compressorRatio: 2.4,
+    compressorRatio: 2.6,
     compressorAttack: 12,
     compressorRelease: 220,
-    compressorMakeup: 1.2,
-    presenceFrequency: 3000,
-    echo: { inGain: 0.9, outGain: 0.55, delays: '140|260', decays: '0.18|0.12' },
-    warmShelfDb: 1.5,
+    compressorMakeup: 1.3,
+    echo: { inGain: 0.9, outGain: 0.6, delays: '180|320|520', decays: '0.26|0.18|0.1' },
+    pitchFactor: 0.94,
+    durationFactor: 1.03,
   },
-  // Voz con color vintage y banda angosta, como locución antigua.
+  // Vintage: banda angosta, saturación y slap de cinta.
   retro: {
     riserSeconds: 0.5,
     voiceLeadSeconds: 0.1,
@@ -154,18 +170,22 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserLevel: 0.1,
     impactLevel: 0.25,
     impactFrequency: 90,
-    presenceDb: 2.5,
-    exciterAmount: 1.3,
-    exciterFrequency: 5000,
-    compressorRatio: 3,
-    compressorAttack: 5,
-    compressorRelease: 110,
-    compressorMakeup: 1.5,
-    presenceFrequency: 2900,
-    echo: { inGain: 0.8, outGain: 0.5, delays: '60', decays: '0.14' },
-    bandLimit: true,
+    presenceDb: 4,
+    presenceFrequency: 1900,
+    highPassHz: 300,
+    lowPassHz: 3400,
+    exciterAmount: 1.6,
+    exciterFrequency: 4200,
+    compressorRatio: 4,
+    compressorAttack: 4,
+    compressorRelease: 140,
+    compressorMakeup: 1.6,
+    echo: { inGain: 0.8, outGain: 0.55, delays: '70|140', decays: '0.24|0.14' },
+    pitchFactor: 0.95,
+    grit: 0.22,
   },
 }
+
 
 const STYLE_DIRECTIONS: Record<JingleStyleId, string> = {
   classic: FISH_AUDIO_DIRECTIONS.station,
@@ -195,9 +215,20 @@ export function resolveJingleFx(
   const clamped = Number.isFinite(raw)
     ? Math.max(0, Math.min(100, raw))
     : DEFAULT_JINGLE_INTENSITY
-  const factor = 0.45 + (clamped / 100) * 0.9
+  const factor = 0.55 + (clamped / 100) * 1.05
   const base = STYLE_CONFIG[id]
   const scale = (value: number) => Math.round(value * factor * 1000) / 1000
+  const echo = base.echo
+    ? {
+        ...base.echo,
+        decays: base.echo.decays
+          .split('|')
+          .map((decay) =>
+            String(Math.round(Math.min(0.85, Number(decay) * factor) * 100) / 100)
+          )
+          .join('|'),
+      }
+    : undefined
 
   return {
     ...base,
@@ -211,8 +242,14 @@ export function resolveJingleFx(
     impactLevel: scale(base.impactLevel),
     musicCarveDb: scale(base.musicCarveDb),
     duckRatio: Math.round(base.duckRatio * (0.85 + (clamped / 100) * 0.35) * 10) / 10,
-    presenceDb: scale(base.presenceDb),
-    exciterAmount: voiceFx ? scale(base.exciterAmount) : 0,
+    presenceDb: Math.min(8, scale(base.presenceDb)),
+    airShelfDb:
+      base.airShelfDb != null
+        ? Math.min(5.5, Math.max(-6, scale(base.airShelfDb)))
+        : undefined,
+    exciterAmount: voiceFx ? Math.min(3, scale(base.exciterAmount)) : 0,
+    grit: voiceFx && base.grit ? Math.min(0.45, scale(base.grit)) : 0,
+    echo,
   }
 }
 
@@ -240,14 +277,19 @@ export function planJingleStructure(input: {
     typeof input.voiceStartSeconds === 'number' && input.voiceStartSeconds > 0
       ? Math.round(input.voiceStartSeconds * 1000) / 1000
       : baseStart
-  const naturalEnd = voiceDurationSeconds
-    ? voiceStartSeconds + voiceDurationSeconds + fx.tailSeconds
+  // El pitch/tempo del estilo cambia la duración real de la voz.
+  const durationFactor = fx.voiceFx ? (fx.durationFactor ?? 1) : 1
+  const effectiveVoiceDuration = voiceDurationSeconds
+    ? Math.round(voiceDurationSeconds * durationFactor * 1000) / 1000
+    : null
+  const naturalEnd = effectiveVoiceDuration
+    ? voiceStartSeconds + effectiveVoiceDuration + fx.tailSeconds
     : requestedDuration
   const totalSeconds = Math.ceil(Math.max(requestedDuration, naturalEnd) * 10) / 10
   return {
     totalSeconds,
     voiceStartSeconds,
-    voiceDurationSeconds,
+    voiceDurationSeconds: effectiveVoiceDuration,
     musicStartSeconds: input.musicStartSeconds ?? 0,
   }
 }
@@ -259,20 +301,40 @@ function fixed(value: number): string {
 function buildVoiceChain(fx: ResolvedJingleFx): string {
   const parts: string[] = []
   parts.push('aformat=channel_layouts=stereo')
-  const bandLimit = fx.voiceFx && fx.bandLimit
-  parts.push(`highpass=f=${bandLimit ? 180 : 90}`)
-  if (bandLimit) parts.push('lowpass=f=6200')
+
+  // Pitch y velocidad: cambian el carácter sin volver a sintetizar.
+  if (fx.voiceFx) {
+    const pitch = fx.pitchFactor ?? 1
+    const duration = fx.durationFactor ?? 1
+    if (Math.abs(pitch - 1) > 0.001) {
+      parts.push(`asetrate=${Math.round(44100 * pitch)}`)
+      parts.push('aresample=44100')
+    }
+    const tempo = 1 / Math.max(0.01, pitch * duration)
+    if (Math.abs(tempo - 1) > 0.001) {
+      parts.push(`atempo=${fixed(Math.min(2, Math.max(0.5, tempo)))}`)
+    }
+  }
+
+  parts.push(`highpass=f=${fx.voiceFx ? fx.highPassHz : 90}`)
+  if (fx.voiceFx && fx.lowPassHz) parts.push(`lowpass=f=${Math.round(fx.lowPassHz)}`)
   if (fx.voiceFx) parts.push('deesser=i=0.45')
   if (fx.voiceFx && fx.warmShelfDb) {
     parts.push(`equalizer=f=180:t=q:w=1:g=${fixed(fx.warmShelfDb)}`)
   }
   parts.push('equalizer=f=250:t=q:w=1:g=-1.2')
   parts.push(`equalizer=f=${fx.presenceFrequency}:t=q:w=1.2:g=${fixed(fx.presenceDb)}`)
+  if (fx.voiceFx && fx.airShelfDb) {
+    parts.push(`equalizer=f=8500:t=h:g=${fixed(fx.airShelfDb)}`)
+  }
   parts.push(
     `acompressor=threshold=-18dB:ratio=${fixed(fx.compressorRatio)}:attack=${fixed(fx.compressorAttack)}:release=${fixed(fx.compressorRelease)}:makeup=${fixed(fx.compressorMakeup)}`
   )
   if (fx.voiceFx && fx.exciterAmount > 0) {
     parts.push(`aexciter=amount=${fixed(fx.exciterAmount)}:freq=${Math.round(fx.exciterFrequency)}`)
+  }
+  if (fx.voiceFx && fx.grit && fx.grit > 0) {
+    parts.push(`acrusher=bits=11:mix=${fixed(fx.grit)}:mode=1`)
   }
   if (fx.voiceFx && fx.echo) {
     parts.push(
