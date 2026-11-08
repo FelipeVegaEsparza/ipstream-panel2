@@ -9,6 +9,7 @@ import {
   mixJingle,
   resolveJingleDirection,
   resolveJingleFx,
+  type JingleOverrides,
   type JingleStyleId,
 } from '@/lib/jingle-fx'
 import { composeJingleVoice, type VoiceChunk } from '@/lib/jingle-voice'
@@ -26,6 +27,7 @@ export interface GenerateJingleInput {
   style?: string
   intensity?: number
   voiceFx?: boolean
+  overrides?: JingleOverrides
 }
 
 export interface GeneratedJingle {
@@ -55,7 +57,12 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
   if (!tagline) throw new Error('Escribí la locución del jingle.')
 
   const text = tagline.slice(0, 300)
-  const fx = resolveJingleFx(input.style, input.intensity, input.voiceFx !== false)
+  const fx = resolveJingleFx(
+    input.style,
+    input.intensity,
+    input.voiceFx !== false,
+    input.overrides
+  )
   const direction = resolveJingleDirection(fx.style)
   const phrases = fx.style === 'classic' ? [text] : splitJingleScript(text)
 
@@ -77,7 +84,12 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
 
   const composed =
     chunks.length > 1
-      ? await composeJingleVoice({ chunks, style: fx.style, retuneFirst: fx.voiceFx })
+      ? await composeJingleVoice({
+          chunks,
+          style: fx.style,
+          transitionSfx: fx.transitionSfx,
+          retuneFirst: fx.voiceFx,
+        })
       : { audio: chunks[0].audio, duration: chunks[0].duration }
 
   // Alinear la entrada de la voz con el pulso del tema cuando se puede.
@@ -92,6 +104,7 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
     style: fx.style,
     intensity: fx.intensity,
     voiceFx: fx.voiceFx,
+    overrides: input.overrides,
     voiceStartSeconds,
     musicStartSeconds: beats?.startSeconds ?? 0,
   })

@@ -63,6 +63,14 @@ export async function POST(request: NextRequest) {
     const style = typeof body?.style === 'string' ? body.style : undefined
     const intensity = Number(body?.intensity)
     const voiceFx = body?.voiceFx !== false
+    const sfx = body?.sfx && typeof body.sfx === 'object' ? body.sfx : {}
+    const voice = body?.voice && typeof body.voice === 'object' ? body.voice : {}
+    const numberOrUndefined = (value: unknown) => {
+      const parsed = Number(value)
+      return Number.isFinite(parsed) ? parsed : undefined
+    }
+    const stringOrUndefined = (value: unknown) =>
+      typeof value === 'string' ? value : undefined
 
     const result = await generateJingle({
       clientId: ctx.clientId,
@@ -72,6 +80,17 @@ export async function POST(request: NextRequest) {
       style,
       intensity: Number.isFinite(intensity) ? intensity : undefined,
       voiceFx,
+      overrides: {
+        introSfx: stringOrUndefined(sfx.intro),
+        impactSfx: stringOrUndefined(sfx.impact),
+        transitionSfx: stringOrUndefined(sfx.transition),
+        outroSfx: stringOrUndefined(sfx.outro),
+        voiceCharacter: stringOrUndefined(voice.character),
+        pitchSemitones: numberOrUndefined(voice.pitchSemitones),
+        speed: numberOrUndefined(voice.speed),
+        reverb: numberOrUndefined(voice.reverb),
+        doubling: numberOrUndefined(voice.doubling),
+      },
     })
 
     if (!result.ttsCached) {

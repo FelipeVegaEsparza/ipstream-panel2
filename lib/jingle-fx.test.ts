@@ -15,6 +15,49 @@ describe('resolveJingleFx', () => {
     expect(fx.impactLevel).toBeGreaterThan(0)
   })
 
+  it('resuelve los doce estilos disponibles', () => {
+    const styles = [
+      'classic','modern','energy','cinema','retro','pop','chill','news','sport','kids','elegant','arcade',
+    ] as const
+    for (const style of styles) {
+      expect(resolveJingleFx(style, 65, true).style).toBe(style)
+    }
+  })
+
+  it('permite elegir sonidos por momento', () => {
+    const fx = resolveJingleFx('modern', 65, true, {
+      introSfx: 'none',
+      impactSfx: 'ding',
+      transitionSfx: 'click',
+      outroSfx: 'boom',
+    })
+    expect(fx.riserSeconds).toBe(0)
+    expect(fx.impactLevel).toBeGreaterThan(0)
+    expect(fx.impactSfx).toBe('ding')
+    expect(fx.transitionSfx).toBe('click')
+    expect(fx.outroSfx).toBe('boom')
+    expect(resolveJingleFx('modern', 65, true, { impactSfx: 'none' }).impactLevel).toBe(0)
+  })
+
+  it('aplica carácter de voz y ajustes finos', () => {
+    const phone = resolveJingleFx('modern', 65, true, { voiceCharacter: 'phone' })
+    expect(phone.highPassHz).toBe(320)
+    expect(phone.lowPassHz).toBe(3400)
+    expect(phone.grit).toBeGreaterThan(0)
+
+    const deep = resolveJingleFx('modern', 65, true, { voiceCharacter: 'deep', pitchSemitones: -2 })
+    expect(deep.pitchFactor).toBeLessThan(0.92)
+
+    const fast = resolveJingleFx('modern', 65, true, { speed: 1.1 })
+    expect(fast.durationFactor).toBeLessThan(0.95)
+
+    const dry = resolveJingleFx('modern', 65, true, { reverb: 0 })
+    expect(dry.echo).toBeUndefined()
+
+    const doubled = resolveJingleFx('modern', 65, true, { doubling: 0.4 })
+    expect(doubled.doubling).toBe(0.4)
+  })
+
   it('cae en moderno si el estilo no existe', () => {
     expect(resolveJingleFx('otro', 50, true).style).toBe('modern')
   })
@@ -126,6 +169,13 @@ describe('buildJingleFilter', () => {
     expect(retro).toContain('acrusher')
     expect(classic).not.toContain('asetrate')
     expect(classic).not.toContain('acrusher')
+  })
+
+  it('agrega el cierre cuando se elige un SFX de salida', () => {
+    const withOutro = buildJingleFilter(structure, fx, { intro: '2:a', impact: '3:a', outro: '4:a' })
+    expect(withOutro).toContain('[4:a]')
+    expect(withOutro).toContain('[outro]')
+    expect(withOutro).toContain('amix=inputs=5')
   })
 
   it('alinea la voz al pulso cuando se provee un inicio de música', () => {

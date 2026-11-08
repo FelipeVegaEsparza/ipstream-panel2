@@ -1,5 +1,5 @@
-// Une las frases de la locución con pequeños silencios y whooshes,
-// y aplica el color vintage a la primera frase en el estilo retro.
+// Une las frases de la locución con pequeños silencios y SFX de
+// transición, y aplica el color vintage a la primera frase en retro.
 // El resultado entra al mezclador como una sola pista de voz.
 
 import { execFile } from 'child_process'
@@ -8,6 +8,7 @@ import { tmpdir } from 'os'
 import path from 'path'
 import { promisify } from 'util'
 import type { JingleStyleId } from '@/lib/jingle-fx'
+import { SFX_VOLUME, sfxFile, type JingleSfxId } from '@/lib/jingle-sfx'
 
 const execFileAsync = promisify(execFile)
 
@@ -22,18 +23,17 @@ const GAP_SECONDS: Record<JingleStyleId, number> = {
   energy: 0.24,
   cinema: 0.42,
   retro: 0.3,
-}
-
-const WHOOSH_LEVEL: Record<JingleStyleId, number> = {
-  classic: 0,
-  modern: 0.3,
-  energy: 0.36,
-  cinema: 0.4,
-  retro: 0.26,
+  pop: 0.28,
+  chill: 0.38,
+  news: 0.18,
+  sport: 0.24,
+  kids: 0.28,
+  elegant: 0.4,
+  arcade: 0.2,
 }
 
 const WHOOSH_LEAD_SECONDS = 0.14
-const WHOOSH_FILE = path.join(process.cwd(), 'public', 'audio', 'jingle-fx', 'whoosh.mp3')
+const SFX_DIR = path.join(process.cwd(), 'public', 'audio', 'jingle-fx')
 
 function fixed(value: number): string {
   return Number(value.toFixed(3)).toString()
@@ -42,7 +42,8 @@ function fixed(value: number): string {
 async function runComposition(
   chunks: VoiceChunk[],
   style: JingleStyleId,
-  withWhoosh: boolean,
+  transitionSfx: JingleSfxId | 'none',
+  withSfx: boolean,
   retuneFirst: boolean
 ): Promise<Buffer> {
   const gap = GAP_SECONDS[style] ?? 0.3
@@ -54,9 +55,9 @@ async function runComposition(
   }
   const total = Math.max(1, cursor - gap)
 
-  let whoosh: Buffer | null = null
-  if (withWhoosh && WHOOSH_LEVEL[style] > 0) {
-    whoosh = await fs.readFile(WHOOSH_FILE).catch(() => null)
+  let sfx: Buffer | null = null
+  if (withSfx && transitionSfx !== 'none') {
+    sfx = await fs.readFile(path.join(SFX_DIR, sfxFile(transitionSfx))).catch(() => null)
   }
 
   const dir = await fs.mkdtemp(path.join(tmpdir(), 'jingle-voice-'))
@@ -68,10 +69,10 @@ async function runComposition(
       await fs.writeFile(filePath, chunks[i].audio)
       inputPaths.push(filePath)
     }
-    if (whoosh) {
-      const whooshPath = path.join(dir, 'whoosh.mp3')
-      await fs.writeFile(whooshPath, whoosh)
-      inputPaths.push(whooshPath)
+    if (sfx) {
+      const sfxPath = path.join(dir, 'transition.mp3')
+      await fs.writeFile(sfxPath, sfx)
+      inputPaths.push(sfxPath)
     }
 
     const branches: string[] = []
@@ -89,13 +90,13 @@ async function runComposition(
       mixLabels.push(`[c${i}]`)
     }
 
-    if (whoosh) {
-      const whooshIndex = chunks.length
-      const level = WHOOSH_LEVEL[style]
+    if (sfx && transitionSfx !== 'none') {
+      const sfxIndex = chunks.length
+      const level = SFX_VOLUME[transitionSfx]
       for (let i = 1; i < chunks.length; i += 1) {
         const start = Math.max(0, offsets[i] - WHOOSH_LEAD_SECONDS)
         branches.push(
-          `[${whooshIndex}:a]atrim=0:0.47,asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo,volume=${fixed(level)},adelay=${Math.round(start * 1000)}|${Math.round(start * 1000)},apad=whole_dur=${fixed(total)}[w${i}]`
+          `[${sfxIndex}:a]atrim=0:0.6,asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo,volume=${fixed(level)},adelay=${Math.round(start * 1000)}|${Math.round(start * 1000)},apad=whole_dur=${fixed(total)}[w${i}]`
         )
         mixLabels.push(`[w${i}]`)
       }
@@ -132,6 +133,7 @@ async function runComposition(
 export async function composeJingleVoice(input: {
   chunks: VoiceChunk[]
   style: JingleStyleId
+  transitionSfx?: JingleSfxId | 'none'
   retuneFirst?: boolean
 }): Promise<{ audio: Buffer; duration: number }> {
   const chunks = input.chunks.filter((chunk) => chunk.audio.length > 0)
@@ -143,15 +145,16 @@ export async function composeJingleVoice(input: {
   const gap = GAP_SECONDS[input.style] ?? 0.3
   const total =
     chunks.reduce((sum, chunk) => sum + chunk.duration, 0) + gap * (chunks.length - 1)
-
+  const transitionSfx = input.transitionSfx ?? 'none'
   const retuneFirst = input.retuneFirst ?? input.style === 'retro'
+
   try {
-    const audio = await runComposition(chunks, input.style, true, retuneFirst)
+    const audio = await runComposition(chunks, input.style, transitionSfx, true, retuneFirst)
     return { audio, duration: Math.round(total * 1000) / 1000 }
   } catch {
-    // Si el whoosh falla (archivo ausente o filtro no disponible),
+    // Si el SFX falla (archivo ausente o filtro no disponible),
     // se compone igual sin efectos de transición.
-    const audio = await runComposition(chunks, input.style, false, retuneFirst)
+    const audio = await runComposition(chunks, input.style, transitionSfx, false, retuneFirst)
     return { audio, duration: Math.round(total * 1000) / 1000 }
   }
 }
