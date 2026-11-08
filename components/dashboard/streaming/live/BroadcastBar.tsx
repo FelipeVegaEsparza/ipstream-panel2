@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import type { SessionState, SlotOption, TransportKind, TransportStats } from '@/lib/live-console/types'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
@@ -23,6 +24,7 @@ interface Props {
   onStopLive: () => Promise<void>
   onReconnect: () => Promise<void>
   onRefreshSlots: () => Promise<void>
+  announcements?: ReactNode
 }
 
 const STATUS: Record<SessionState, { labelKey: 'live.broadcast.offAir' | 'live.broadcast.preparing' | 'live.broadcast.connecting' | 'live.broadcast.live' | 'live.broadcast.reconnecting' | 'live.broadcast.error'; className: string }> = {
@@ -54,6 +56,7 @@ export function BroadcastBar({
   onStopLive,
   onReconnect,
   onRefreshSlots,
+  announcements,
 }: Props) {
   const { t } = useDashboardI18n()
   const status = STATUS[state]
@@ -97,6 +100,8 @@ export function BroadcastBar({
           />
           {t('live.broadcast.headphones')}
         </label>
+
+        {announcements}
 
         <span className="hidden rounded-full bg-secondary px-2 py-1 text-[10px] text-muted-foreground sm:inline">
           {t('live.broadcast.planDjs', { count: maxDjs, plural: maxDjs === 1 ? '' : 's' })}

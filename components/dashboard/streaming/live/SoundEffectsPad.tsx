@@ -47,10 +47,10 @@ export function SoundEffectsPad({
   }
 
   return (
-  <section className={`min-h-0 rounded-lg border border-border bg-card ${compact ? 'p-2' : 'p-3'}`}>
+  <section className={`min-h-0 rounded-[10px] border border-line bg-card ${compact ? 'p-2' : 'min-h-[150px] p-4'}`}>
       <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between ${compact ? 'gap-1.5' : 'gap-3'}`}>
         <div>
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <h2 className="flex items-center gap-2 text-[13px] font-medium text-foreground">
             <SpeakerWaveIcon className="h-4 w-4 text-brand" />
             {t('live.effects.title')}
           </h2>
@@ -109,7 +109,7 @@ export function SoundEffectsPad({
               <button
                 type="button"
                 onClick={() => void onPlay(slot)}
-                className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-brand/30 bg-brand/10 px-1.5 text-center transition-colors hover:bg-brand/15 ${compact ? 'h-12' : 'h-16'}`}
+                className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-brand/30 bg-brand/10 px-1.5 text-center transition-colors hover:bg-brand/15 ${compact ? 'h-12' : 'h-20'}`}
                 title={t('live.effects.play', { name: effect.name })}
               >
                 <SpeakerWaveIcon className="h-4 w-4 text-brand" />
@@ -117,7 +117,7 @@ export function SoundEffectsPad({
                 <span className="text-[9px] text-muted-foreground">{t('live.effects.button', { n: slot + 1 })}</span>
               </button>
             ) : libraryMode ? (
-              <div className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-dashed border-border bg-background px-1.5 text-center text-muted-foreground ${compact ? 'h-12' : 'h-16'}`}>
+              <div className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-dashed border-border bg-background px-1.5 text-center text-muted-foreground ${compact ? 'h-12' : 'h-20'}`}>
                 <span className="text-[11px] font-medium">{t('live.effects.empty')}</span>
                 <span className="text-[9px]">{t('live.effects.button', { n: slot + 1 })}</span>
               </div>
@@ -125,7 +125,7 @@ export function SoundEffectsPad({
               <button
                 type="button"
                 onClick={() => openPicker(slot)}
-                className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-dashed border-border bg-background px-1.5 text-center transition-colors hover:border-brand hover:text-brand ${compact ? 'h-12' : 'h-16'}`}
+                className={`flex w-full flex-col items-center justify-center gap-0.5 rounded border border-dashed border-border bg-background px-1.5 text-center transition-colors hover:border-brand hover:text-brand ${compact ? 'h-12' : 'h-20'}`}
               >
                 <PlusIcon className="h-4 w-4" />
                 <span className="text-[11px] font-medium">{t('live.effects.add')}</span>

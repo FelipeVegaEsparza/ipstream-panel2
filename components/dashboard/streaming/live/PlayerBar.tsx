@@ -54,9 +54,9 @@ export function PlayerBar({
   const progress = Math.max(0, Math.min(position, duration || 0))
 
   return (
-  <section className="rounded-panel border border-border bg-card p-3 ">
+  <section className="min-h-[112px] rounded-[10px] border border-line bg-card p-4">
       <div className="flex flex-wrap items-center gap-3">
-    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-line bg-surface-2">
+    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-line bg-surface-2">
           {coverUrl ? (
             <img src={coverUrl} alt="" className="h-full w-full object-cover" />
           ) : (
@@ -99,7 +99,7 @@ export function PlayerBar({
         <div className="min-w-[220px] flex-1">
           <div className="flex items-baseline justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">
+              <p className="truncate text-[15px] font-medium text-foreground">
                 {current?.title || t('live.player.noTrack')}
               </p>
               <p className="truncate text-[11px] text-muted-foreground">

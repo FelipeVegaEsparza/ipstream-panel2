@@ -14,6 +14,7 @@ interface Props {
   onVoice: (voice: AnnouncementVoice) => void
   onAddToQueue: (type: AnnouncementType) => void
   onOpenComposer?: () => void
+  compact?: boolean
 }
 
 export function AnnouncementsBar({
@@ -25,9 +26,77 @@ export function AnnouncementsBar({
   onVoice,
   onAddToQueue,
   onOpenComposer,
+  compact = false,
 }: Props) {
   const { t } = useDashboardI18n()
   const busy = loading != null
+
+  if (compact) {
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => onAddToQueue('weather')}
+          onDragStart={(event) => {
+            event.dataTransfer.setData('application/x-ipstream-track', JSON.stringify(createAnnouncementTrack('weather')))
+            event.dataTransfer.effectAllowed = 'copy'
+          }}
+          draggable
+          disabled={busy}
+          className="cursor-grab rounded-control border border-line px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:bg-surface-3 active:cursor-grabbing disabled:opacity-40"
+          title={t('live.announce.dragWeather')}
+        >
+          {t('live.announce.weather')}
+        </button>
+        <button
+          type="button"
+          onClick={() => onAddToQueue('time')}
+          onDragStart={(event) => {
+            event.dataTransfer.setData('application/x-ipstream-track', JSON.stringify(createAnnouncementTrack('time')))
+            event.dataTransfer.effectAllowed = 'copy'
+          }}
+          draggable
+          disabled={busy}
+          className="cursor-grab rounded-control border border-line px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:bg-surface-3 active:cursor-grabbing disabled:opacity-40"
+          title={t('live.announce.dragTime')}
+        >
+          {t('live.announce.time')}
+        </button>
+        {freeFormAvailable && onOpenComposer && (
+          <button
+            type="button"
+            onClick={onOpenComposer}
+            disabled={busy}
+            className="rounded-control border border-[color:var(--signal)]/40 bg-[color:var(--signal)]/10 px-2 py-1 text-[10px] font-medium text-signal transition-colors hover:bg-[color:var(--signal)]/20 disabled:opacity-40"
+            title={t('live.announce.createFree')}
+          >
+            {t('live.announce.free')}
+          </button>
+        )}
+        <select
+          value={voice}
+          onChange={(event) => {
+            const value = event.target.value
+            onVoice(value === 'premium' || value === 'female' ? value : 'male')
+          }}
+          className="h-7 rounded-control border border-line bg-surface-2 px-1.5 text-[10px] text-foreground outline-none focus:border-[color:var(--signal)]"
+          aria-label={t('live.announce.voiceLabel')}
+          title={t('live.announce.voiceLabel')}
+        >
+          {premiumAvailable && <option value="premium">{t('live.announce.premiumVoice')}</option>}
+          <option value="male">Ald (Piper)</option>
+          <option value="female">Claude (Piper)</option>
+        </select>
+        {loading && (
+          <span className="text-[10px] text-muted-foreground">
+            {t('live.announce.generatingShort')}
+          </span>
+        )}
+        {error && <span className="text-[10px] text-[color:var(--danger)]">{error}</span>}
+      </div>
+    )
+  }
+
   return (
   <aside className="flex min-h-[180px] flex-col rounded-panel border border-border bg-card p-3 ">
       <h2 className="text-sm font-semibold text-foreground">{t('live.announce.title')}</h2>

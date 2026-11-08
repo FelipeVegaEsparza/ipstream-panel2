@@ -75,7 +75,7 @@ export function LiveConsole({
 
   const panelHeight = isFullscreen
     ? 'h-[calc(100vh-480px)] min-h-[260px]'
-    : 'min-h-[520px] lg:min-h-[560px]'
+    : 'min-h-[480px] lg:min-h-[520px]'
 
   const playlistIds = useMemo(
     () => new Set(live.library.queue.map((track) => track.id)),
@@ -147,6 +147,19 @@ export function LiveConsole({
           onStopLive={live.stopLive}
           onReconnect={live.reconnect}
           onRefreshSlots={live.refreshSlots}
+          announcements={
+            <AnnouncementsBar
+              compact
+              loading={live.announcements.loading}
+              error={live.announcements.error}
+              voice={live.announcements.voice}
+              premiumAvailable={premiumVoiceAvailable}
+              freeFormAvailable={aiEnabled}
+              onVoice={live.announcements.setVoice}
+              onAddToQueue={live.announcements.enqueue}
+              onOpenComposer={() => setComposerOpen(true)}
+            />
+          }
         />
       </div>
 
@@ -197,16 +210,6 @@ export function LiveConsole({
         </div>
 
         <div className={isFullscreen ? 'flex min-h-0 flex-col gap-2 overflow-y-auto' : 'flex flex-col gap-3'}>
-          <AnnouncementsBar
-            loading={live.announcements.loading}
-            error={live.announcements.error}
-            voice={live.announcements.voice}
-            premiumAvailable={premiumVoiceAvailable}
-            freeFormAvailable={aiEnabled}
-            onVoice={live.announcements.setVoice}
-            onAddToQueue={live.announcements.enqueue}
-            onOpenComposer={() => setComposerOpen(true)}
-          />
           <SpecialsPanel onAdd={live.player.addToPlaylist} />
           <JinglesPanel onAdd={live.player.addToPlaylist} />
           <CapsulesPanel onAdd={live.player.addToPlaylist} />

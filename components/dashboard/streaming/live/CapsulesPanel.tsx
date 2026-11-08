@@ -76,7 +76,7 @@ export function CapsulesPanel({ onAdd }: { onAdd: (track: LocalTrack) => void })
   }
 
   return (
-  <aside className="flex h-[200px] shrink-0 flex-col rounded-panel border border-line bg-card p-3">
+  <aside className="flex h-[160px] shrink-0 flex-col rounded-panel border border-line bg-card p-3">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-[13px] font-medium text-foreground">
           {t('live.capsules.title')}
