@@ -246,7 +246,7 @@ export function ClientPaymentsView({
             </div>
             <div>
               <p className="text-[11px] text-muted-foreground">{t('payments.amount')}</p>
-              <p className="dashboard-metric mt-1 text-[20px] text-foreground">
+              <p className="dashboard-metric mt-1 text-2xl text-foreground">
                 {formatCurrency(client.subscription.plan.price, client.subscription.plan.currency)}
               </p>
             </div>

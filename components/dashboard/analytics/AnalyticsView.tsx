@@ -306,7 +306,7 @@ function Kpi({ title, value, sub, delta }: { title: string; value: string; sub?:
   return (
     <div className="dashboard-panel p-4">
       <p className="text-[11px] text-muted-foreground">{title}</p>
-      <p className="dashboard-metric mt-1 text-[22px] font-medium text-foreground">{value}</p>
+      <p className="dashboard-metric mt-1 text-2xl font-medium text-foreground">{value}</p>
       {sub && <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p>}
       {delta != null && (
         <p className="mt-0.5 text-[10px] text-muted-foreground">

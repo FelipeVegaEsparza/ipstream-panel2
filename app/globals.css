@@ -37,7 +37,7 @@
     --brand-600-h: 200 75% 48%;
     --brand-700-h: 213 100% 35%;
     --brand-soft: rgba(40, 180, 240, 0.14);
-    --brand-grad: linear-gradient(135deg, #28b4f0, #0050b4);
+    --brand-grad: linear-gradient(135deg, #28b4f0, #0b72c4);
     --success-500: #5be29b;
     --success-soft: rgba(91, 226, 155, 0.14);
     --locution-500: #e9b35b;
@@ -93,7 +93,7 @@
     --brand-600-h: 213 90% 33%;
     --brand-700-h: 213 90% 27%;
     --brand-soft: rgba(19, 115, 209, 0.12);
-    --brand-grad: linear-gradient(135deg, #2b93e6, #0b4c9e);
+    --brand-grad: linear-gradient(135deg, #28b4f0, #0b72c4);
     --success-500: #1a9e6a;
     --success-soft: rgba(26, 158, 106, 0.12);
     --locution-500: #a16207;
@@ -138,7 +138,7 @@
     --input: 210 21% 17%;
     --ring: 197 86% 55%;
     --radius: 10px;
-    font-family: var(--font-archivo), Inter, system-ui, sans-serif;
+    font-family: var(--font-archivo), system-ui, sans-serif;
     caret-color: var(--signal);
   }
 
@@ -167,7 +167,7 @@
   }
 
   html {
-    font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-archivo), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
@@ -499,10 +499,10 @@
   }
 
   .dashboard-shell .text-4xl {
-    font-size: 1.75rem;
-    line-height: 2.125rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
     font-weight: 600;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.025em;
   }
 
   .dashboard-shell .text-3xl {
@@ -513,7 +513,7 @@
   }
 
   .dashboard-shell h2 {
-    font-size: 1rem;
+    font-size: 0.9375rem;
     line-height: 1.5rem;
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -529,7 +529,7 @@
   }
 
   .dashboard-shell .text-xl.font-bold {
-    font-size: 1rem;
+    font-size: 0.9375rem;
     line-height: 1.5rem;
     font-weight: 600;
     letter-spacing: -0.01em;
