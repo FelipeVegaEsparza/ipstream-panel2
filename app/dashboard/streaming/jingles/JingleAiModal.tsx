@@ -536,9 +536,9 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
               </div>
               <div>
                 <label className="mb-2 block text-xs text-muted-foreground">{t('streaming.jingles.ai.duration')}</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[10, 15].map((value) => (
-                    <label key={value} className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm ${duration === value ? 'border-brand bg-brand/10 text-brand' : 'border-border bg-background text-foreground'}`}>
+                <div className="grid grid-cols-3 gap-2">
+                  {[10, 15, 30].map((value) => (
+                    <label key={value} className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-2 py-2 text-xs sm:text-sm ${duration === value ? 'border-brand bg-brand/10 text-brand' : 'border-border bg-background text-foreground'}`}>
                       <input
                         type="radio"
                         name="jingle-duration"

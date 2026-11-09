@@ -176,7 +176,7 @@ export const MENU_ITEMS: MenuItemDef[] = [
 },
 {
   key: 'streaming-jingles',
-  name: 'Jingles',
+  name: 'Jingles y Publicidad',
   href: '/dashboard/streaming/jingles',
   section: 'Radio',
   icon: MusicalNoteIcon,

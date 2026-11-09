@@ -3,7 +3,7 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
-import { generateJingle, JINGLE_DURATIONS } from '@/lib/jingle-ai'
+import { generateJingle, JINGLE_DURATIONS, type JingleDuration } from '@/lib/jingle-ai'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     if (!tagline) {
       return NextResponse.json({ error: 'tagline_required', message: 'Escribí la locución del jingle.' }, { status: 400 })
     }
-    if (!JINGLE_DURATIONS.includes(duration as 10 | 15)) {
+    if (!JINGLE_DURATIONS.includes(duration as JingleDuration)) {
       return NextResponse.json({ error: 'invalid_duration', message: 'Duración inválida.' }, { status: 400 })
     }
 

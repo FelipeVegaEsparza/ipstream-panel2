@@ -651,7 +651,7 @@ const es = {
   'streaming.specials.skip_collision': 'choca con otro especial',
   'streaming.specials.skippedReason': 'omitido',
 
-  'streaming.jingles.title': 'Jingles',
+  'streaming.jingles.title': 'Jingles y Publicidad',
   'streaming.jingles.subtitle': 'Sube cuñas publicitarias que se intercalarán automáticamente en la reproducción.',
   'streaming.jingles.createAi': 'Crear jingle IA',
   'streaming.jingles.insertRule': 'Regla de inserción',
@@ -4438,7 +4438,7 @@ const en: Record<DashboardTranslationKey, string> = {
   'streaming.specials.skip_collision': 'it collides with another special',
   'streaming.specials.skippedReason': 'skipped',
 
-  'streaming.jingles.title': 'Jingles',
+  'streaming.jingles.title': 'Jingles & Ads',
   'streaming.jingles.subtitle': 'Upload ads that will be automatically inserted during playback.',
   'streaming.jingles.createAi': 'Create AI jingle',
   'streaming.jingles.insertRule': 'Insertion rule',
@@ -7617,7 +7617,7 @@ export const MENU_NAME_EN: Record<string, string> = {
   'Cápsulas informativas': 'Info capsules',
   'Locutor IA': 'AI presenter',
   'Especiales': 'Specials',
-  Jingles: 'Jingles',
+  'Jingles y Publicidad': 'Jingles & Ads',
   Programación: 'Schedule',
   Estadísticas: 'Analytics',
   Transmisión: 'Broadcast',

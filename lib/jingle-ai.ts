@@ -17,7 +17,8 @@ import { splitJingleScript } from '@/lib/jingle-script'
 import { alignVoiceToBeat, analyzeMusicBeats } from '@/lib/jingle-beats'
 import { probeAudioBufferDuration } from '@/lib/audio-mix'
 
-export const JINGLE_DURATIONS = [10, 15] as const
+export const JINGLE_DURATIONS = [10, 15, 30] as const
+export type JingleDuration = (typeof JINGLE_DURATIONS)[number]
 
 export interface GenerateJingleInput {
   clientId: string
@@ -48,7 +49,7 @@ async function stationName(clientId: string): Promise<string> {
 }
 
 export async function generateJingle(input: GenerateJingleInput): Promise<GeneratedJingle> {
-  if (!JINGLE_DURATIONS.includes(input.duration as 10 | 15)) {
+  if (!JINGLE_DURATIONS.includes(input.duration as JingleDuration)) {
     throw new Error('Duración inválida.')
   }
   if (!input.music.length) throw new Error('Elegí una pista de música para el jingle.')
