@@ -134,47 +134,6 @@ function formatDuration(seconds: number | null) {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-function SliderRow({
-  label,
-  value,
-  min,
-  max,
-  step,
-  suffix,
-  disabled,
-  onChange,
-}: {
-  label: string
-  value: number
-  min: number
-  max: number
-  step: number
-  suffix: string
-  disabled?: boolean
-  onChange: (value: number) => void
-}) {
-  return (
-    <label className={`block ${disabled ? 'opacity-40' : ''}`}>
-      <span className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-        {label}
-        <span className="font-mono text-foreground">
-          {suffix === 'st' ? `${value > 0 ? '+' : ''}${value} st` : `${value} ${suffix}`}
-        </span>
-      </span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-[var(--brand-500)]"
-      />
-    </label>
-  )
-}
-
 export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const { t, locale } = useDashboardI18n()
   const [info, setInfo] = useState<AiInfo | null>(null)
@@ -187,10 +146,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const [voiceFx, setVoiceFx] = useState(true)
   const [sfx, setSfx] = useState<Record<SfxSlot, SfxValue>>(DEFAULT_SFX)
   const [voiceCharacter, setVoiceCharacter] = useState<JingleVoiceCharacter>('auto')
-  const [pitch, setPitch] = useState(0)
-  const [speed, setSpeed] = useState(100)
-  const [reverb, setReverb] = useState(100)
-  const [doubling, setDoubling] = useState(0)
   const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([])
   const [musicSelectedId, setMusicSelectedId] = useState<string | null>(null)
   const [musicSavedId, setMusicSavedId] = useState<string | null>(null)
@@ -265,12 +220,8 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
         voiceFx,
         sfx,
         voiceCharacter,
-        pitch,
-        speed,
-        reverb,
-        doubling,
       }),
-    [tagline, duration, musicSelectedId, style, intensity, voiceFx, sfx, voiceCharacter, pitch, speed, reverb, doubling]
+    [tagline, duration, musicSelectedId, style, intensity, voiceFx, sfx, voiceCharacter]
   )
 
   // Si cambia cualquier opción, los previews anteriores dejan de ser válidos.
@@ -329,10 +280,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     setVoiceFx(true)
     setSfx(DEFAULT_SFX)
     setVoiceCharacter('auto')
-    setPitch(0)
-    setSpeed(100)
-    setReverb(100)
-    setDoubling(0)
   }
 
   const randomize = () => {
@@ -346,10 +293,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
       outro: pick(['auto', ...OUTRO_SFX_IDS] as const),
     })
     setVoiceCharacter(pick(VOICE_CHARACTERS).id)
-    setPitch(pick([-2, -1, 0, 0, 1, 2]))
-    setSpeed(pick([95, 98, 100, 102, 105]))
-    setReverb(pick([40, 70, 100, 120]))
-    setDoubling(pick([0, 0, 20, 35]))
   }
 
   const sfxLabel = (value: SfxValue) => {
@@ -358,13 +301,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     return t(SFX_LABELS[value])
   }
 
-  const voicePayload = {
-    character: voiceCharacter,
-    pitchSemitones: pitch,
-    speed: speed / 100,
-    reverb,
-    doubling: doubling / 100,
-  }
+  const voicePayload = { character: voiceCharacter }
 
   const selectMusic = async (id: string | null) => {
     if (id === musicSelectedId || musicSaving) return
@@ -506,7 +443,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
       id: 4,
       label: t('streaming.jingles.ai.reviewVoice'),
       value: voiceFx
-        ? `${t(characterOption.label)} · ${pitch > 0 ? '+' : ''}${pitch} st · ${speed}% · ${t('streaming.jingles.ai.effectsOn')}`
+        ? `${t(characterOption.label)} · ${t('streaming.jingles.ai.effectsOn')}`
         : t('streaming.jingles.ai.effectsOff'),
     },
   ]
@@ -839,48 +776,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                     {t(option.label)}
                   </label>
                 ))}
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <SliderRow
-                  label={t('streaming.jingles.ai.voicePitch')}
-                  value={pitch}
-                  min={-6}
-                  max={6}
-                  step={1}
-                  suffix="st"
-                  disabled={!voiceFx}
-                  onChange={setPitch}
-                />
-                <SliderRow
-                  label={t('streaming.jingles.ai.voiceSpeed')}
-                  value={speed}
-                  min={90}
-                  max={110}
-                  step={1}
-                  suffix="%"
-                  disabled={!voiceFx}
-                  onChange={setSpeed}
-                />
-                <SliderRow
-                  label={t('streaming.jingles.ai.voiceReverb')}
-                  value={reverb}
-                  min={0}
-                  max={150}
-                  step={5}
-                  suffix="%"
-                  disabled={!voiceFx}
-                  onChange={setReverb}
-                />
-                <SliderRow
-                  label={t('streaming.jingles.ai.voiceDoubling')}
-                  value={doubling}
-                  min={0}
-                  max={50}
-                  step={5}
-                  suffix="%"
-                  disabled={!voiceFx}
-                  onChange={setDoubling}
-                />
               </div>
             </div>
           )}

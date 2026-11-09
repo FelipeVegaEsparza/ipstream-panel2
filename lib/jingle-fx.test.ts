@@ -122,7 +122,8 @@ describe('buildJingleFilter', () => {
   it('incluye riser, impacto, ducking y normalización', () => {
     const filter = buildJingleFilter(structure, fx)
     expect(filter).toContain('aevalsrc')
-    expect(filter).toContain('sidechaincompress')
+    expect(filter).not.toContain('sidechaincompress')
+    expect(filter).toContain("volume='if(lt(t")
     expect(filter).toContain('loudnorm')
     expect(filter).toContain('alimiter')
     expect(filter).toContain('adelay=1000|1000')

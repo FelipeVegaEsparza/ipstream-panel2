@@ -106,9 +106,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0,
     voiceLeadSeconds: 0.4,
     tailSeconds: 1,
-    introLevel: 0.55,
+    introLevel: 0.61,
     bedLevel: 0.24,
-    tailLevel: 0.4,
+    tailLevel: 0.45,
     musicCarveDb: 0,
     duckRatio: 12,
     riserLevel: 0,
@@ -133,9 +133,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.85,
     voiceLeadSeconds: 0.15,
     tailSeconds: 1.8,
-    introLevel: 0.6,
+    introLevel: 0.66,
     bedLevel: 0.17,
-    tailLevel: 0.45,
+    tailLevel: 0.50,
     musicCarveDb: 4,
     duckRatio: 16,
     riserLevel: 0.13,
@@ -162,9 +162,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.7,
     voiceLeadSeconds: 0.1,
     tailSeconds: 1.5,
-    introLevel: 0.62,
+    introLevel: 0.68,
     bedLevel: 0.14,
-    tailLevel: 0.42,
+    tailLevel: 0.47,
     musicCarveDb: 4.5,
     duckRatio: 18,
     riserLevel: 0.15,
@@ -191,9 +191,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 1.2,
     voiceLeadSeconds: 0.2,
     tailSeconds: 2.2,
-    introLevel: 0.5,
+    introLevel: 0.56,
     bedLevel: 0.19,
-    tailLevel: 0.5,
+    tailLevel: 0.55,
     musicCarveDb: 3.5,
     duckRatio: 12,
     riserLevel: 0.16,
@@ -221,9 +221,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.5,
     voiceLeadSeconds: 0.1,
     tailSeconds: 1.2,
-    introLevel: 0.55,
+    introLevel: 0.61,
     bedLevel: 0.2,
-    tailLevel: 0.4,
+    tailLevel: 0.45,
     musicCarveDb: 3,
     duckRatio: 12,
     riserLevel: 0.1,
@@ -250,9 +250,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.7,
     voiceLeadSeconds: 0.12,
     tailSeconds: 1.5,
-    introLevel: 0.6,
+    introLevel: 0.66,
     bedLevel: 0.17,
-    tailLevel: 0.44,
+    tailLevel: 0.49,
     musicCarveDb: 4,
     duckRatio: 16,
     riserLevel: 0.13,
@@ -279,9 +279,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.8,
     voiceLeadSeconds: 0.18,
     tailSeconds: 2.2,
-    introLevel: 0.55,
+    introLevel: 0.61,
     bedLevel: 0.17,
-    tailLevel: 0.42,
+    tailLevel: 0.47,
     musicCarveDb: 3.5,
     duckRatio: 12,
     riserLevel: 0.1,
@@ -309,9 +309,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.35,
     voiceLeadSeconds: 0.08,
     tailSeconds: 0.8,
-    introLevel: 0.5,
+    introLevel: 0.56,
     bedLevel: 0.13,
-    tailLevel: 0.36,
+    tailLevel: 0.41,
     musicCarveDb: 4.5,
     duckRatio: 18,
     riserLevel: 0.08,
@@ -337,9 +337,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.75,
     voiceLeadSeconds: 0.1,
     tailSeconds: 1.4,
-    introLevel: 0.62,
+    introLevel: 0.68,
     bedLevel: 0.15,
-    tailLevel: 0.44,
+    tailLevel: 0.49,
     musicCarveDb: 4.5,
     duckRatio: 18,
     riserLevel: 0.16,
@@ -366,9 +366,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.6,
     voiceLeadSeconds: 0.12,
     tailSeconds: 1.4,
-    introLevel: 0.6,
+    introLevel: 0.66,
     bedLevel: 0.19,
-    tailLevel: 0.44,
+    tailLevel: 0.49,
     musicCarveDb: 3,
     duckRatio: 14,
     riserLevel: 0.12,
@@ -395,9 +395,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 1,
     voiceLeadSeconds: 0.2,
     tailSeconds: 2.4,
-    introLevel: 0.5,
+    introLevel: 0.56,
     bedLevel: 0.18,
-    tailLevel: 0.5,
+    tailLevel: 0.55,
     musicCarveDb: 3.5,
     duckRatio: 12,
     riserLevel: 0.12,
@@ -425,9 +425,9 @@ const STYLE_CONFIG: Record<JingleStyleId, StyleConfig> = {
     riserSeconds: 0.5,
     voiceLeadSeconds: 0.1,
     tailSeconds: 0.9,
-    introLevel: 0.6,
+    introLevel: 0.66,
     bedLevel: 0.13,
-    tailLevel: 0.4,
+    tailLevel: 0.45,
     musicCarveDb: 4.5,
     duckRatio: 18,
     riserLevel: 0.12,
@@ -779,12 +779,18 @@ export function buildJingleFilter(
   const voiceDuration =
     structure.voiceDurationSeconds ?? Math.max(0.5, total - voiceStart - fx.tailSeconds)
   const voiceEnd = Math.min(total, voiceStart + voiceDuration)
-  const restore = Math.min(total, voiceEnd + 0.2)
   const fadeOut = Math.max(0.2, total - 0.9)
   const voiceDelayMs = Math.round(voiceStart * 1000)
   const musicStart = structure.musicStartSeconds ?? 0
 
-  const bedVolume = `volume='if(lt(t,${fixed(voiceStart)}),${fixed(fx.introLevel)},if(lt(t,${fixed(restore)}),${fixed(fx.bedLevel)},${fixed(fx.tailLevel)}))':eval=frame`
+  // Cama fija: baja antes de la voz, se mantiene estable mientras habla
+  // (sin pumping) y vuelve a subir suave en el cierre.
+  const duckStart = Math.max(0, voiceStart - 0.12)
+  const restoreEnd = Math.min(total, voiceEnd + 0.35)
+  const intro = fixed(fx.introLevel)
+  const bed = fixed(fx.bedLevel)
+  const tail = fixed(fx.tailLevel)
+  const bedVolume = `volume='if(lt(t,${fixed(duckStart)}),${intro},if(lt(t,${fixed(voiceStart)}),${intro}+(${bed}-${intro})*(t-${fixed(duckStart)})/0.12,if(lt(t,${fixed(voiceEnd)}),${bed},if(lt(t,${fixed(restoreEnd)}),${bed}+(${tail}-${bed})*(t-${fixed(voiceEnd)})/0.35,${tail}))))':eval=frame`
   const bedChain = [
     `atrim=start=${fixed(musicStart)}:duration=${fixed(total)}`,
     'asetpts=PTS-STARTPTS',
@@ -807,12 +813,9 @@ export function buildJingleFilter(
 
   const branches: string[] = []
   branches.push(`[0:a]${bedChain}[bed]`)
-  branches.push(`[1:a]${voiceChain},asplit=2[voice][duck]`)
-  branches.push(
-    `[bed][duck]sidechaincompress=threshold=0.02:ratio=${fixed(fx.duckRatio)}:attack=5:release=280:level_sc=1.8[bedduck]`
-  )
+  branches.push(`[1:a]${voiceChain}[voice]`)
 
-  const mixInputs = ['[bedduck]', '[voice]']
+  const mixInputs = ['[bed]', '[voice]']
 
   if (fx.riserSeconds > 0 && fx.introSfx !== 'none') {
     const fadeOutIntro = Math.max(0.05, fx.riserSeconds - 0.18)
@@ -857,7 +860,7 @@ export function buildJingleFilter(
   }
 
   branches.push(
-    `${mixInputs.join('')}amix=inputs=${mixInputs.length}:duration=longest:dropout_transition=0:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11,alimiter=limit=0.95[out]`
+    `${mixInputs.join('')}amix=inputs=${mixInputs.length}:duration=longest:dropout_transition=0:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11:linear=true,alimiter=limit=0.95[out]`
   )
 
   return branches.join(';')
