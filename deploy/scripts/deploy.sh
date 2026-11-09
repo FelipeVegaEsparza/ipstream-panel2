@@ -240,8 +240,8 @@ echo "🚀 8/9 — Levantando containers..."
 $COMPOSE_CMD up -d --remove-orphans
 
 # === 10. Health check ===
-echo "🏥 9/9 — Verificando health (esperando hasta 30s)..."
-TIMEOUT=30
+echo "🏥 9/9 — Verificando health (esperando hasta 120s)..."
+TIMEOUT=120
 ELAPSED=0
 while true; do
   HEALTH=$(curl -sf http://localhost:3000/api/health 2>/dev/null || echo "FAIL")
