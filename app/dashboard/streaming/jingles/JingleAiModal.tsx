@@ -113,7 +113,6 @@ const STEPS = [
   { id: 'music', label: 'streaming.jingles.ai.stepMusic' },
   { id: 'style', label: 'streaming.jingles.ai.stepStyle' },
   { id: 'sounds', label: 'streaming.jingles.ai.stepSounds' },
-  { id: 'voice', label: 'streaming.jingles.ai.stepVoice' },
   { id: 'review', label: 'streaming.jingles.ai.stepReview' },
 ] as const
 
@@ -440,7 +439,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
       value: SFX_SLOTS.map((slot) => `${t(slot.label)}: ${sfxLabel(sfx[slot.id])}`).join(' · '),
     },
     {
-      id: 4,
+      id: 2,
       label: t('streaming.jingles.ai.reviewVoice'),
       value: voiceFx
         ? `${t(characterOption.label)} · ${t('streaming.jingles.ai.effectsOn')}`
@@ -699,6 +698,45 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                 <p className="mt-2 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.fxHint')}</p>
                 <p className="mt-1 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.intensityHint')}</p>
               </div>
+
+              <div className="mt-4 border-t border-border pt-3">
+                <h4 className="text-xs font-semibold text-foreground">{t('streaming.jingles.ai.stepVoice')}</h4>
+                <p className="mt-1 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepVoiceHint')}</p>
+                <span className="mb-1 mt-3 block text-xs text-muted-foreground">{t('streaming.jingles.ai.voiceCharacter')}</span>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {VOICE_CHARACTERS.map((option) => (
+                    <label
+                      key={option.id}
+                      className={`cursor-pointer rounded-lg border px-2.5 py-1.5 text-center text-xs transition-colors ${
+                        voiceCharacter === option.id
+                          ? 'border-brand bg-brand/10 text-brand'
+                          : 'border-border bg-background text-foreground hover:border-brand/40'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="jingle-voice-character"
+                        checked={voiceCharacter === option.id}
+                        onChange={() => setVoiceCharacter(option.id)}
+                        className="sr-only"
+                      />
+                      {t(option.label)}
+                    </label>
+                  ))}
+                </div>
+                <label className="mt-3 flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={voiceFx}
+                    onChange={(event) => setVoiceFx(event.target.checked)}
+                    className="mt-0.5 h-3.5 w-3.5 accent-[var(--brand-500)]"
+                  />
+                  <span>
+                    <span className="block text-xs font-medium text-foreground">{t('streaming.jingles.ai.fxVoice')}</span>
+                    <span className="block text-[11px] leading-snug text-muted-foreground">{t('streaming.jingles.ai.fxVoiceHint')}</span>
+                  </span>
+                </label>
+              </div>
             </div>
           )}
 
@@ -741,46 +779,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
           )}
 
           {step === 4 && (
-            <div>
-              <p className="text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepVoiceHint')}</p>
-              <label className="mt-3 flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2">
-                <input
-                  type="checkbox"
-                  checked={voiceFx}
-                  onChange={(event) => setVoiceFx(event.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 accent-[var(--brand-500)]"
-                />
-                <span>
-                  <span className="block text-xs font-medium text-foreground">{t('streaming.jingles.ai.fxVoice')}</span>
-                  <span className="block text-[11px] leading-snug text-muted-foreground">{t('streaming.jingles.ai.fxVoiceHint')}</span>
-                </span>
-              </label>
-              <span className="mb-1 mt-4 block text-xs text-muted-foreground">{t('streaming.jingles.ai.voiceCharacter')}</span>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {VOICE_CHARACTERS.map((option) => (
-                  <label
-                    key={option.id}
-                    className={`cursor-pointer rounded-lg border px-2.5 py-1.5 text-center text-xs transition-colors ${
-                      voiceCharacter === option.id
-                        ? 'border-brand bg-brand/10 text-brand'
-                        : 'border-border bg-background text-foreground hover:border-brand/40'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="jingle-voice-character"
-                      checked={voiceCharacter === option.id}
-                      onChange={() => setVoiceCharacter(option.id)}
-                      className="sr-only"
-                    />
-                    {t(option.label)}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 5 && (
             <div>
               <h3 className="text-sm font-semibold text-foreground">{t('streaming.jingles.ai.reviewTitle')}</h3>
               <p className="mt-1 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepReviewHint')}</p>
