@@ -84,7 +84,7 @@ describe('planJingleStructure', () => {
       fx,
     })
     expect(structure.totalSeconds).toBe(10)
-    expect(structure.voiceStartSeconds).toBeCloseTo(fx.riserSeconds + fx.voiceLeadSeconds, 3)
+    expect(structure.voiceStartSeconds).toBeCloseTo(3, 3)
   })
 
   it('extiende el jingle antes que cortar la locución', () => {
@@ -100,6 +100,23 @@ describe('planJingleStructure', () => {
     expect(structure.totalSeconds).toBeLessThanOrEqual(natural + 0.1)
   })
 
+  it('centra la locución sin importar la duración pedida', () => {
+    const fx = resolveJingleFx('modern', 65, true)
+    for (const requested of [10, 15, 30]) {
+      const structure = planJingleStructure({
+        requestedDuration: requested,
+        voiceDurationSeconds: 4,
+        fx,
+      })
+      expect(structure.totalSeconds).toBe(requested)
+      expect(structure.voiceStartSeconds).toBeCloseTo((requested - 4) / 2, 3)
+      expect(structure.totalSeconds - structure.voiceStartSeconds - 4).toBeCloseTo(
+        structure.voiceStartSeconds,
+        3
+      )
+    }
+  })
+
   it('mantiene la estructura clásica sin riser', () => {
     const fx = resolveJingleFx('classic', 65, true)
     const structure = planJingleStructure({
@@ -107,7 +124,7 @@ describe('planJingleStructure', () => {
       voiceDurationSeconds: 4,
       fx,
     })
-    expect(structure.voiceStartSeconds).toBe(0.4)
+    expect(structure.voiceStartSeconds).toBe(3)
   })
 })
 
@@ -126,7 +143,7 @@ describe('buildJingleFilter', () => {
     expect(filter).toContain("volume='if(lt(t")
     expect(filter).toContain('loudnorm')
     expect(filter).toContain('alimiter')
-    expect(filter).toContain('adelay=1000|1000')
+    expect(filter).toContain('adelay=2500|2500')
     expect(filter).not.toContain('NaN')
     expect(filter).not.toContain('undefined')
   })

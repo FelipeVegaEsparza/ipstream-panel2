@@ -14,7 +14,7 @@ import {
 } from '@/lib/jingle-fx'
 import { composeJingleVoice, type VoiceChunk } from '@/lib/jingle-voice'
 import { splitJingleScript } from '@/lib/jingle-script'
-import { alignVoiceToBeat, analyzeMusicBeats } from '@/lib/jingle-beats'
+import { analyzeMusicBeats } from '@/lib/jingle-beats'
 import { probeAudioBufferDuration } from '@/lib/audio-mix'
 
 export const JINGLE_DURATIONS = [10, 15, 30] as const
@@ -102,10 +102,8 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
         })
       : { audio: chunks[0].audio, duration: chunks[0].duration }
 
-  // Alinear la entrada de la voz con el pulso del tema cuando se puede.
+  // La música arranca en un golpe; la voz se centra entre intro y cierre.
   const beats = await analyzeMusicBeats(input.music)
-  const defaultStart = fx.riserSeconds + fx.voiceLeadSeconds
-  const voiceStartSeconds = beats ? alignVoiceToBeat(defaultStart, beats) : undefined
 
   const mixed = await mixJingle({
     music: input.music,
@@ -115,7 +113,6 @@ export async function generateJingle(input: GenerateJingleInput): Promise<Genera
     intensity: fx.intensity,
     voiceFx: fx.voiceFx,
     overrides: input.overrides,
-    voiceStartSeconds,
     musicStartSeconds: beats?.startSeconds ?? 0,
   })
   return {

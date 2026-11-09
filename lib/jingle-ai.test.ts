@@ -90,7 +90,6 @@ describe('generateJingle', () => {
       requestedDuration: 10,
       style: 'modern',
       intensity: 70,
-      voiceStartSeconds: 1.5,
       musicStartSeconds: 0.2,
     })
     expect(result.audio).toEqual(Buffer.from([5]))

@@ -674,20 +674,29 @@ export function planJingleStructure(input: {
 }): JingleMixStructure {
   const { requestedDuration, voiceDurationSeconds, fx } = input
   const baseStart = Math.round((fx.riserSeconds + fx.voiceLeadSeconds) * 1000) / 1000
-  const voiceStartSeconds =
-    typeof input.voiceStartSeconds === 'number' && input.voiceStartSeconds > 0
-      ? Math.round(input.voiceStartSeconds * 1000) / 1000
-      : baseStart
 
   // El pitch/tempo del estilo cambia la duración real de la voz.
   const durationFactor = fx.voiceFx ? (fx.durationFactor ?? 1) : 1
   const effectiveVoiceDuration = voiceDurationSeconds
     ? Math.round(voiceDurationSeconds * durationFactor * 1000) / 1000
     : null
-  const naturalEnd = effectiveVoiceDuration
-    ? voiceStartSeconds + effectiveVoiceDuration + fx.tailSeconds
+
+  // La locución va centrada: la misma cantidad de música al inicio y al final.
+  // Si el total pedido no alcanza para el mínimo de intro/cierre, se extiende.
+  const minIntro = fx.riserSeconds + fx.voiceLeadSeconds
+  const minOutro = fx.tailSeconds
+  const required = effectiveVoiceDuration
+    ? effectiveVoiceDuration + 2 * Math.max(minIntro, minOutro)
     : requestedDuration
-  const totalSeconds = Math.ceil(Math.max(requestedDuration, naturalEnd) * 10) / 10
+  const totalSeconds = Math.ceil(Math.max(requestedDuration, required) * 10) / 10
+
+  const voiceStartSeconds =
+    typeof input.voiceStartSeconds === 'number' && input.voiceStartSeconds > 0
+      ? Math.round(input.voiceStartSeconds * 1000) / 1000
+      : effectiveVoiceDuration
+        ? Math.max(minIntro, Math.round(((totalSeconds - effectiveVoiceDuration) / 2) * 1000) / 1000)
+        : baseStart
+
   return {
     totalSeconds,
     voiceStartSeconds,
@@ -789,7 +798,7 @@ export function buildJingleFilter(
   const restoreEnd = Math.min(total, voiceEnd + 0.35)
   const intro = fixed(fx.introLevel)
   const bed = fixed(fx.bedLevel)
-  const tail = fixed(fx.tailLevel)
+  const tail = fixed(fx.introLevel)
   const bedVolume = `volume='if(lt(t,${fixed(duckStart)}),${intro},if(lt(t,${fixed(voiceStart)}),${intro}+(${bed}-${intro})*(t-${fixed(duckStart)})/0.12,if(lt(t,${fixed(voiceEnd)}),${bed},if(lt(t,${fixed(restoreEnd)}),${bed}+(${tail}-${bed})*(t-${fixed(voiceEnd)})/0.35,${tail}))))':eval=frame`
   const bedChain = [
     `atrim=start=${fixed(musicStart)}:duration=${fixed(total)}`,
@@ -819,16 +828,17 @@ export function buildJingleFilter(
 
   if (fx.riserSeconds > 0 && fx.introSfx !== 'none') {
     const fadeOutIntro = Math.max(0.05, fx.riserSeconds - 0.18)
+    const riserDelay = Math.max(0, Math.round((voiceStart - fx.riserSeconds) * 1000))
     if (sfx.intro) {
       const level = SFX_VOLUME[fx.introSfx]
       branches.push(
-        `[${sfx.intro}]atrim=start=0:duration=${fixed(fx.riserSeconds)},asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo,volume=${fixed(level)},afade=t=out:st=${fixed(fadeOutIntro)}:d=0.18[riser]`
+        `[${sfx.intro}]atrim=start=0:duration=${fixed(fx.riserSeconds)},asetpts=PTS-STARTPTS,aformat=channel_layouts=stereo,volume=${fixed(level)},afade=t=out:st=${fixed(fadeOutIntro)}:d=0.18,adelay=${riserDelay}|${riserDelay}[riser]`
       )
     } else {
       // Fallback sintético si la librería de SFX no está disponible.
       const riser = `aevalsrc=exprs='0.3*sin(2*PI*(150*t+700*t*t))*(0.4+0.6*t)+0.14*sin(2*PI*(153*t+712*t*t))+0.1*(random(0)-0.5)*(1-exp(-8*t))':d=${fixed(fx.riserSeconds)}:s=44100`
       branches.push(
-        `${riser},aformat=channel_layouts=stereo,afade=t=in:st=0:d=0.06,afade=t=out:st=${fixed(fadeOutIntro)}:d=0.15,volume=${fixed(fx.riserLevel)}[riser]`
+        `${riser},aformat=channel_layouts=stereo,afade=t=in:st=0:d=0.06,afade=t=out:st=${fixed(fadeOutIntro)}:d=0.15,volume=${fixed(fx.riserLevel)},adelay=${riserDelay}|${riserDelay}[riser]`
       )
     }
     mixInputs.push('[riser]')
