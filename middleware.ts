@@ -92,6 +92,7 @@ export default withAuth(
             pathname === '/' ||
             pathname.startsWith('/registro') ||
             pathname.startsWith('/planes') ||
+            pathname.startsWith('/legal') ||
             pathname.startsWith('/api/admin/site-content') ||
             pathname.startsWith('/api/public') ||
             pathname.startsWith('/api/panel-branding') ||

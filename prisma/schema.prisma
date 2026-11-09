@@ -32,6 +32,10 @@ model Client {
   name            String
   planId          String?
   billingCurrency String? // moneda elegida en el registro público (CLP/USD)
+  // Aceptación de Términos, Privacidad y Licencias en el registro.
+  legalAcceptedAt DateTime?
+  legalVersion    String?  @db.VarChar(20)
+  legalAcceptedIp String?  @db.VarChar(64)
   templateId      String?
   accentColor     String? // Color destacado del sitio (#RRGGBB, minúsculas) o null
   onboardingDismissedAt DateTime? // Si está seteado, el cliente ocultó el empujón de "Primeros pasos"

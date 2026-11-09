@@ -106,6 +106,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [acceptLegal, setAcceptLegal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
@@ -192,17 +193,21 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
       setError('Ese nombre de radio está reservado. Elige otro.')
       return
     }
+    if (!acceptLegal) {
+      setError('Debes aceptar los términos, la privacidad y la responsabilidad de contenido.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, planId, radioName, currency }),
+        body: JSON.stringify({ name, email, password, planId, radioName, currency, acceptLegal }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data?.error || 'Error al registrarte. Intentá de nuevo.')
+        setError(data?.details?.[0]?.message || data?.error || 'Error al registrarte. Intentá de nuevo.')
         return
       }
       setDone(true)
@@ -458,6 +463,26 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
               />
             </div>
           </div>
+
+          <div data-slot="legal" className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-950">
+            <strong>CasterFly es una plataforma tecnológica.</strong> No autoriza, licencia, posee ni explota la música o contenido que publicas. Eres el único responsable de contar con los derechos y licencias necesarios.
+          </div>
+
+          <label data-slot="legal-check" className="flex items-start gap-2 text-xs leading-relaxed text-gray-700">
+            <input
+              type="checkbox"
+              checked={acceptLegal}
+              onChange={(event) => setAcceptLegal(event.target.checked)}
+              required
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--brand-500)]"
+            />
+            <span>
+              He leído y acepto los{' '}
+              <Link href="/legal/terminos" target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()} className="text-brand hover:underline">Términos y Condiciones</Link>, la{' '}
+              <Link href="/legal/privacidad" target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()} className="text-brand hover:underline">Política de Privacidad</Link> y la{' '}
+              <Link href="/legal/licencias" target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()} className="text-brand hover:underline">Declaración de Licencias y Responsabilidad de Contenido</Link>. Declaro que tengo los derechos para publicar y transmitir todo el contenido.
+            </span>
+          </label>
 
           {error && <p data-slot="error" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
 

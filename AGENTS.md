@@ -56,6 +56,12 @@
 - **PWA**: el origen por defecto de desarrollo es `https://panel.casterfly.com`; el bundle de producción resuelve la API same-origin. El service worker solo cachea el origen configurado (nunca `panelipstream.cl`).
 - **Marca**: el logo por defecto es `public/logo-casterfly.png` (tema claro) y `public/logo-casterfly-dark.png` (tema oscuro). La paleta `--brand-*` no cambia.
 
+## Registro y documentos legales
+
+- El registro público (`/registro`, `components/public/SignupForm.tsx`) exige aceptar **Términos y Condiciones**, **Política de Privacidad** y **Licencias y Responsabilidad de Contenido** antes de enviar la solicitud. El servidor lo valida en `registerSchema` (`acceptLegal`) y guarda `Client.legalAcceptedAt`, `Client.legalVersion` y `Client.legalAcceptedIp`.
+- Los documentos públicos viven en `/legal/terminos`, `/legal/privacidad` y `/legal/licencias` (el middleware las deja accesibles sin sesión). La versión legal vigente está en `lib/legal.ts`: al cambiar el texto, subir `LEGAL_VERSION`.
+- La declaración de licencias es explícita: CasterFly es una plataforma tecnológica, no autoriza, licencia, posee ni explota la música o contenido de las radios. La responsabilidad de derechos (autor, SGC, marcas, voces) es del cliente.
+
 ## Facturación / Pagos (multi-moneda + PayPal)
 
 - **Precios por moneda**: `PlanPrice { planId, currency, amount }` (una fila por moneda) además del precio base `Plan.price/currency`. La web pública (`/planes`, `/registro`) y `PlanForm` muestran/editan esas monedas; el registro propaga la moneda elegida a `Subscription.billingCurrency` y al `Payment` (`amount`/`currency`).

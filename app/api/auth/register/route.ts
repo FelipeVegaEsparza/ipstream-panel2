@@ -8,6 +8,7 @@ import { getClientSitesConfig } from '@/lib/client-sites-config'
 import { slugifyRadioName, slugError, buildSiteHost } from '@/lib/domain-slug'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
+import { LEGAL_VERSION } from '@/lib/legal'
 
 /** El plan recibido no existe o no está activo. */
 class PlanUnavailableError extends Error {}
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, password, planId, radioName, currency } = registerSchema.parse(body)
+    const { name, email, password, planId, radioName, currency, acceptLegal } = registerSchema.parse(body)
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -94,6 +95,9 @@ export async function POST(request: NextRequest) {
               name: name,
               planId: plan?.id ?? null,
               billingCurrency: currency || null,
+              legalAcceptedAt: acceptLegal ? new Date() : null,
+              legalVersion: acceptLegal ? LEGAL_VERSION : null,
+              legalAcceptedIp: acceptLegal ? ip : null,
             }
           }
         },
@@ -228,7 +232,10 @@ export async function POST(request: NextRequest) {
       )
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 })
+      return NextResponse.json(
+        { error: error.errors[0]?.message || 'Datos inválidos', details: error.errors },
+        { status: 400 }
+      )
     }
     return NextResponse.json(
       { error: 'Error interno del servidor' },

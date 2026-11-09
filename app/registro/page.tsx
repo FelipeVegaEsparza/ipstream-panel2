@@ -93,8 +93,9 @@ export default async function RegistroPage({
           <p>© {new Date().getFullYear()} CasterFly · Radio Online y Televisión por streaming</p>
           <p>
             Al crear tu cuenta aceptas nuestros{' '}
-            <a href="#" className="text-brand hover:underline">Términos y Condiciones</a> y{' '}
-            <a href="#" className="text-brand hover:underline">Política de Privacidad</a>.
+            <a href="/legal/terminos" className="text-brand hover:underline">Términos y Condiciones</a>, la{' '}
+            <a href="/legal/privacidad" className="text-brand hover:underline">Política de Privacidad</a> y la{' '}
+            <a href="/legal/licencias" className="text-brand hover:underline">Declaración de Licencias y Responsabilidad de Contenido</a>.
           </p>
         </div>
       </footer>
