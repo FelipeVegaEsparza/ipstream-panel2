@@ -14,6 +14,13 @@ export function EffectPreviewButton({
   const [playing, setPlaying] = useState(false)
 
   useEffect(() => {
+    // Si cambia la fuente, el audio anterior ya no sirve.
+    audioRef.current?.pause()
+    audioRef.current = null
+    setPlaying(false)
+  }, [src])
+
+  useEffect(() => {
     return () => {
       audioRef.current?.pause()
       audioRef.current = null

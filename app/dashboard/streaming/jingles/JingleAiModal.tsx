@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { showToast } from '@/components/ui/toast'
 import { EffectPreviewButton } from '@/components/sound-effects/EffectPreviewButton'
 import {
@@ -8,9 +8,9 @@ import {
   ArrowPathIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ArrowUpTrayIcon,
   PlayIcon,
   SparklesIcon,
-  SpeakerWaveIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
@@ -196,17 +196,16 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const [musicSavedId, setMusicSavedId] = useState<string | null>(null)
   const [musicLoading, setMusicLoading] = useState(false)
   const [musicSaving, setMusicSaving] = useState(false)
+  const [musicUploading, setMusicUploading] = useState(false)
   const [musicError, setMusicError] = useState<string | null>(null)
   const [musicNotice, setMusicNotice] = useState<string | null>(null)
   const [generatedDuration, setGeneratedDuration] = useState<number | null>(null)
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [previewError, setPreviewError] = useState<string | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [blob, setBlob] = useState<Blob | null>(null)
   const [previewJingleUrl, setPreviewJingleUrl] = useState<string | null>(null)
+  const musicInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -214,8 +213,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     setError(null)
     setBlob(null)
     setGeneratedDuration(null)
-    setPreviewUrl(null)
-    setPreviewError(null)
     setMusicNotice(null)
     setMusicError(null)
     fetch('/api/dashboard/streaming/jingles/ai', { cache: 'no-store' })
@@ -257,11 +254,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     return () => URL.revokeObjectURL(url)
   }, [blob])
 
-  useEffect(() => {
-    if (!previewUrl) return
-    return () => URL.revokeObjectURL(previewUrl)
-  }, [previewUrl])
-
   const configKey = useMemo(
     () =>
       JSON.stringify({
@@ -285,8 +277,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
   useEffect(() => {
     setBlob(null)
     setGeneratedDuration(null)
-    setPreviewUrl(null)
-    setPreviewError(null)
   }, [configKey])
 
   if (!open) return null
@@ -301,7 +291,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
   const musicDirty = musicSelectedId !== musicSavedId
   const musicUsable = musicReady && !musicDirty && !musicSaving
   const canGenerate = musicUsable && ttsReady && taglineReady
-  const canPreview = musicUsable && !previewLoading
 
   const goTo = (index: number) => {
     if (index > 0 && !taglineReady) {
@@ -402,35 +391,33 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     }
   }
 
-  const previewArrangement = async () => {
-    if (!musicUsable) {
-      setPreviewError(t('streaming.jingles.ai.previewNeedsMusic'))
-      return
-    }
-    setPreviewLoading(true)
-    setPreviewError(null)
+  const uploadMusic = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    setMusicUploading(true)
+    setMusicError(null)
+    setMusicNotice(null)
     try {
-      const res = await fetch('/api/dashboard/streaming/jingles/ai/preview', {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/dashboard/streaming/jingles/music', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          duration,
-          style,
-          intensity,
-          voiceFx,
-          sfx,
-          voice: voicePayload,
-        }),
+        body: form,
       })
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data?.message || data?.error || t('streaming.jingles.ai.previewError'))
+        throw new Error(data?.message || data?.error || t('streaming.jingles.ai.musicUploadError'))
       }
-      setPreviewUrl(URL.createObjectURL(await res.blob()))
+      const track = data.track as MusicTrack
+      setMusicTracks((prev) => [track, ...prev.filter((item) => item.id !== track.id)])
+      setMusicSelectedId(track.id)
+      setMusicSavedId(track.id)
+      setMusicNotice(t('streaming.jingles.ai.musicUploaded'))
     } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : t('streaming.jingles.ai.previewError'))
+      setMusicError(err instanceof Error ? err.message : t('streaming.jingles.ai.musicUploadError'))
     } finally {
-      setPreviewLoading(false)
+      setMusicUploading(false)
     }
   }
 
@@ -632,7 +619,28 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
 
           {step === 1 && (
             <div>
-              <p className="text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepMusicHint')}</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[11px] text-muted-foreground">{t('streaming.jingles.ai.stepMusicHint')}</p>
+                <button
+                  type="button"
+                  onClick={() => musicInputRef.current?.click()}
+                  disabled={musicUploading || musicSaving}
+                  className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:border-brand/40 hover:text-brand disabled:opacity-40"
+                >
+                  <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+                  {musicUploading
+                    ? t('streaming.jingles.ai.musicUploading')
+                    : t('streaming.jingles.ai.musicUpload')}
+                </button>
+                <input
+                  ref={musicInputRef}
+                  type="file"
+                  accept="audio/*"
+                  className="sr-only"
+                  onChange={(event) => void uploadMusic(event)}
+                />
+              </div>
+              <p className="mt-1 text-[10px] text-muted-foreground">{t('streaming.jingles.ai.musicUploadHint')}</p>
               <div className="mt-3">
                 {musicLoading ? (
                   <p className="py-6 text-center text-xs text-muted-foreground">{t('streaming.jingles.music.loading')}</p>
@@ -648,7 +656,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                           type="radio"
                           name="jingle-music"
                           checked={musicSelectedId === null}
-                          disabled={musicSaving}
+                          disabled={musicSaving || musicUploading}
                           onChange={() => void selectMusic(null)}
                           className="h-4 w-4 accent-[var(--brand-500)]"
                         />
@@ -662,7 +670,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                             type="radio"
                             name="jingle-music"
                             checked={musicSelectedId === track.id}
-                            disabled={musicSaving}
+                            disabled={musicSaving || musicUploading}
                             onChange={() => void selectMusic(track.id)}
                             className="h-4 w-4 accent-[var(--brand-500)]"
                           />
@@ -752,6 +760,7 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                   />
                 </label>
                 <p className="mt-2 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.fxHint')}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{t('streaming.jingles.ai.intensityHint')}</p>
               </div>
             </div>
           )}
@@ -917,30 +926,6 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
                 </>
               )}
             </div>
-          )}
-        </div>
-
-        <div className="mt-4 rounded-lg border border-border bg-background/40 p-2.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void previewArrangement()}
-              disabled={!canPreview}
-              className="flex items-center gap-1.5 rounded-lg border border-brand/40 bg-brand/10 px-2.5 py-1.5 text-[11px] font-medium text-brand transition-colors hover:bg-brand/20 disabled:opacity-40"
-            >
-              <SpeakerWaveIcon className="h-3.5 w-3.5" />
-              {previewLoading
-                ? t('streaming.jingles.ai.previewLoading')
-                : t('streaming.jingles.ai.previewArrangement')}
-            </button>
-            <span className="text-[10px] text-muted-foreground">{t('streaming.jingles.ai.previewNoAi')}</span>
-            {!musicUsable && (
-              <span className="text-[10px] text-muted-foreground">{t('streaming.jingles.ai.previewNeedsMusic')}</span>
-            )}
-          </div>
-          {previewError && <p className="mt-2 text-[11px] text-red-300">{previewError}</p>}
-          {previewUrl && (
-            <audio src={previewUrl} controls className="mt-2 w-full" preload="metadata" />
           )}
         </div>
 
