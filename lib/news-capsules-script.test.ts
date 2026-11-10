@@ -38,6 +38,12 @@ describe('news script', () => {
     expect(script.intro).toContain('Radio')
   })
 
+  it('limita el cuerpo a 300 caracteres', () => {
+    const long = 'x'.repeat(1200)
+    const script = buildFallbackScript('Radio', [{ ...item, excerpt: long }])
+    expect(script.body.length).toBeLessThanOrEqual(300)
+  })
+
   it('compone un fallback con intro y cierre', () => {
     const script = buildFallbackScript('Radio', [item])
     expect(script.intro).toContain('Noticias en Radio')

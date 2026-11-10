@@ -53,7 +53,7 @@ El audio final se guarda como archivo MP3 y se sube al agente con un endpoint nu
 
 ### 3. Resumen y guion
 
-- `lib/deepseek.ts` genera un resumen neutral de 500–700 caracteres con atribución y sin copiar párrafos extensos.
+- `lib/deepseek.ts` genera un resumen neutral de hasta 300 caracteres con atribución y sin copiar párrafos extensos.
 - El guion se compone de `intro`, `body`, `closing` editables. Intro y cierre usan frases de la emisora; el cuerpo incluye el resumen y la fuente.
 - El cliente puede editar cualquier parte. Editar invalida `approvedAt` y pausa las reglas.
 
@@ -137,4 +137,4 @@ Nueva página `/dashboard/streaming/news-capsules` en el grupo Radio:
 
 ## Open Questions
 
-Ninguna que cambie el alcance. El largo exacto del resumen y la tolerancia por defecto se fijan en implementación (700 caracteres y 10 minutos), configurables por cápsula/cliente.
+Ninguna que cambie el alcance. El largo exacto del resumen y la tolerancia por defecto se fijan en implementación (300 caracteres y 10 minutos), configurables por cápsula/cliente.

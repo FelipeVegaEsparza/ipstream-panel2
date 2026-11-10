@@ -8,7 +8,7 @@ export interface NewsScript {
   closing: string
 }
 
-const MAX_BODY_CHARS = 700
+const MAX_BODY_CHARS = 300
 const MAX_SOURCE_CHARS = 4_000
 
 function clean(value: unknown, max: number): string {
@@ -69,7 +69,7 @@ export function buildNewsPrompt(stationName: string, items: NewsSourceItem[], ma
     'Reglas:',
     '- Español neutro, tono informativo y neutral.',
     '- No copies frases literales extensas; resumí con tus palabras.',
-    '- Cuerpo de 500 a 700 caracteres.',
+    '- Cuerpo de hasta 300 caracteres; resumí la noticia al mínimo indispensable.',
     '- Intro y cierre de una frase, mencionando la emisora.',
     '- Mencioná el medio de origen de forma natural cuando aporte contexto.',
     '- No inventes datos que no estén en las fuentes.',
