@@ -11,8 +11,57 @@ export interface NewsScript {
 const MAX_BODY_CHARS = 300
 const MAX_SOURCE_CHARS = 4_000
 
+const TRAILING_CONNECTOR = /\b(y|o|u|pero|que|de|del|la|el|los|las|un|una|en|con|por|para|al|se|su|sus|es|son|fue|ha|han)\s*$/i
+
+/**
+ * Limpia texto de IA y lo recorta sin partir palabras.
+ * Prioriza terminar en una oración completa; si no entra, corta en el
+ * último espacio y cierra con punto para que la locución no quede a medias.
+ */
+export function cleanCopy(value: unknown, max: number): string {
+  if (typeof value !== 'string') return ''
+  let text = value
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\[\d+\]/g, '')
+    .replace(/[*_`#>]+/g, ' ')
+    .replace(/^(resumen|noticia|cuerpo|titular|intro|cierre)\s*:\s*/i, '')
+    .replace(/^[\s"'“”‘’]+|[\s"'“”‘’]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .trim()
+  if (!text) return ''
+
+  if (text.length > max) {
+    const cut = text.slice(0, max)
+    const sentenceEnd = Math.max(
+      cut.lastIndexOf('. '),
+      cut.lastIndexOf('! '),
+      cut.lastIndexOf('? ')
+    )
+    if (sentenceEnd >= Math.floor(max * 0.45)) {
+      text = cut.slice(0, sentenceEnd + 1)
+    } else {
+      const space = cut.lastIndexOf(' ')
+      text = cut.slice(0, space > 0 ? space : max)
+      text = text.replace(/[,;:–—-]+$/, '').trim()
+      while (TRAILING_CONNECTOR.test(text)) {
+        text = text.replace(TRAILING_CONNECTOR, '').replace(/[,;:–—-]+$/, '').trim()
+      }
+    }
+  }
+
+  text = text
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/\.{2,}$/,'.')
+    .replace(/[,;:]$/,'')
+    .trim()
+  if (text && !/[.!?]$/.test(text)) text += '.'
+  return text
+}
+
 function clean(value: unknown, max: number): string {
-  return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, max) : ''
+  return cleanCopy(value, max)
 }
 
 export function defaultNewsIntro(stationName: string): string {
@@ -31,7 +80,7 @@ export function buildFallbackScript(
   const base = (manualText || items.map((item) => `${item.title}. ${item.excerpt}`).join(' '))
     .replace(/\s+/g, ' ')
     .trim()
-  const summary = base.slice(0, MAX_BODY_CHARS)
+  const summary = cleanCopy(base, MAX_BODY_CHARS)
   return {
     summary,
     intro: defaultNewsIntro(stationName),
@@ -69,7 +118,7 @@ export function buildNewsPrompt(stationName: string, items: NewsSourceItem[], ma
     'Reglas:',
     '- Español neutro, tono informativo y neutral.',
     '- No copies frases literales extensas; resumí con tus palabras.',
-    '- Cuerpo de hasta 300 caracteres; resumí la noticia al mínimo indispensable.',
+    '- Cuerpo de hasta 300 caracteres, en una o dos frases completas; resumí la noticia al mínimo indispensable. No cortes palabras ni dejes frases a medias.',
     '- Intro y cierre de una frase, mencionando la emisora.',
     '- Mencioná el medio de origen de forma natural cuando aporte contexto.',
     '- No inventes datos que no estén en las fuentes.',
@@ -156,7 +205,7 @@ export async function generateNewsItemSummaries(input: {
     `Resumí cada una de las ${input.items.length} noticias por separado para leerlas en radio.`,
     'Reglas:',
     '- Español neutro, informativo y neutral.',
-    '- Cada resumen debe tener como máximo 300 caracteres.',
+    '- Cada resumen debe tener como máximo 300 caracteres y terminar en una o dos frases completas. No cortes palabras ni dejes frases a medias.',
     '- No copies frases literales extensas; resumí con tus palabras.',
     '- No inventes datos que no estén en la fuente.',
     '- Respondé solo con JSON: {"items":[{"index":0,"summary":"..."}]}',

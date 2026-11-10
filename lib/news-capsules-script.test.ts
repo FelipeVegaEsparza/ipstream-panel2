@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 const deepseek = vi.hoisted(() => ({ call: vi.fn() }))
 vi.mock('@/lib/deepseek', () => ({ callDeepSeekJson: deepseek.call }))
 
-const { buildFallbackScript, generateNewsScript, generateNewsItemSummaries, estimateScriptCharacters } = await import('./news-capsules/script')
+const { buildFallbackScript, cleanCopy, generateNewsScript, generateNewsItemSummaries, estimateScriptCharacters } = await import('./news-capsules/script')
 
 const item = {
   id: '1',
@@ -51,6 +51,24 @@ describe('news script', () => {
     })
     expect(summaries).toHaveLength(2)
     expect(summaries[1]).toContain('segunda')
+  })
+
+  it('limpia markdown y etiquetas del texto de IA', () => {
+    expect(cleanCopy('**Resumen:** Noticia [1] con `detalle`.', 300)).toBe('Resumen: Noticia con detalle.')
+  })
+
+  it('recorta sin partir palabras y cierra la frase', () => {
+    const text = 'Una noticia importante con información suficiente para explicar lo que pasó y por qué importa a la audiencia de la radio.'
+    const cleaned = cleanCopy(text, 60)
+    expect(cleaned.length).toBeLessThanOrEqual(61)
+    expect(cleaned.endsWith('.')).toBe(true)
+    expect(text.startsWith(cleaned.slice(0, -1))).toBe(true)
+    expect(cleaned).not.toMatch(/\s(y|o|que|de|la)$/i)
+  })
+
+  it('prioriza una oración completa al recortar', () => {
+    const cleaned = cleanCopy('Primera oración completa. Segunda oración que sobra y se debe quitar.', 40)
+    expect(cleaned).toBe('Primera oración completa.')
   })
 
   it('limita el cuerpo a 300 caracteres', () => {
