@@ -14,7 +14,7 @@ process.env.ICE_HOSTNAME = 'localhost'
 process.env.HARBOR_PUBLIC_HOSTNAME = 'localhost'
 process.env.LIVE_SESSION_SECRET = 'test-live-secret'
 
-const { pushCapsule } = await import('../lib/news-capsule-scheduler.js')
+const { pushCapsule, buildCapsulesQuery } = await import('../lib/news-capsule-scheduler.js')
 
 test('empuja la cápsula a la cola y registra la ejecución', async () => {
   const calls = []
@@ -47,4 +47,37 @@ test('no empuja si falta el audio en el agente', async () => {
   )
   assert.equal(result, false)
   assert.equal(telnet.mock?.calls?.length || 0, 0)
+})
+
+test('la consulta incluye status y filtra por el servidor local', () => {
+  const local = buildCapsulesQuery('srv-1')
+  assert.match(local.sql, /nc\.status/)
+  assert.match(local.sql, /rs\.serverId = \?/)
+  assert.deepEqual(local.params, ['srv-1'])
+  const legacy = buildCapsulesQuery(null)
+  assert.match(legacy.sql, /rs\.serverId IS NULL/)
+  assert.deepEqual(legacy.params, [])
+})
+
+test('el INSERT de ejecuciones recibe un parámetro por cada placeholder', async () => {
+  let insertArgs = null
+  const db = {
+    query: async (sql, params) => {
+      if (sql.includes('INSERT INTO news_capsule_runs')) insertArgs = { sql, params }
+      return [{}]
+    },
+  }
+  const scheduledFor = new Date('2026-11-10T21:10:00Z')
+  await pushCapsule(
+    'client-1',
+    { liquidsoapTelnetPort: 1234 },
+    { id: 'capsule-1' },
+    scheduledFor,
+    { db, telnet: async () => {}, exists: () => true }
+  )
+  assert.ok(insertArgs)
+  const placeholders = (insertArgs.sql.split('?').length - 1)
+  assert.equal(insertArgs.params.length, placeholders)
+  assert.equal(insertArgs.params[3].toISOString(), scheduledFor.toISOString())
+  assert.ok(insertArgs.params[4] instanceof Date)
 })

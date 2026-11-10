@@ -8,6 +8,7 @@ import { logger } from './logger.js'
 import { telnetCommand } from './liquidsoap-telnet.js'
 import { newsCapsuleAudioPath } from './files.js'
 import { pickCandidate } from './news-capsule-schedule.js'
+import { resolveSelfServerId } from './self-server.js'
 
 const INTERVAL_MS = 15_000
 let timer = null
@@ -88,7 +89,7 @@ async function processPending(clientId, rs, now) {
       continue
     }
     const scheduled = new Date(run.scheduledFor)
-    const graceMs = Number(rs.newsGraceMinutes || 10) * 60_000
+    const graceMs = Number(rs.graceMinutes || 10) * 60_000
     if (now.getTime() > scheduled.getTime() + graceMs + 5 * 60_000) {
       try {
         await telnetCommand(rs.liquidsoapTelnetPort, 'news_queue.skip')
@@ -114,30 +115,46 @@ export async function pushCapsule(clientId, rs, capsule, scheduledFor, deps = {}
     `news_queue.push(request.create("file://${escaped}"))`
   )
   const runId = uuid()
+  const scheduledAt = scheduledFor || new Date()
+  const pushedAt = new Date()
   await db.query(
     `INSERT INTO news_capsule_runs
       (id, capsuleId, clientId, scheduledFor, pushedAt, status, reason, createdAt)
      VALUES (?, ?, ?, ?, ?, 'pending', NULL, NOW())`,
-    [runId, capsule.id, clientId, scheduledFor || new Date()]
+    [runId, capsule.id, clientId, scheduledAt, pushedAt]
   )
   logger.info({ clientId, capsuleId: capsule.id, runId }, 'Cápsula empujada a la cola de noticias')
   return true
+}
+
+/**
+ * Consulta de cápsulas activas del nodo local. Incluye `nc.status` porque el
+ * evaluador lo exige, y filtra por `rs.serverId` para que cada nodo empuje
+ * solo los streams que realmente corre (evita pushes a telnet ajenos).
+ */
+export function buildCapsulesQuery(selfId) {
+  return {
+    sql: `SELECT nc.id, nc.clientId, nc.title, nc.status, nc.audioUrl, nc.priority,
+                 nc.minGapMinutes, nc.graceMinutes, nc.windowStart, nc.windowEnd,
+                 nc.activeFrom, nc.activeTo, nc.createdAt, c.timezone,
+                 rs.status AS streamStatus, rs.liquidsoapTelnetPort,
+                 rs.currentTrackStartedAt, rs.enabled
+            FROM news_capsules nc
+            JOIN clients c ON c.id = nc.clientId
+            JOIN radio_streams rs ON rs.clientId = nc.clientId
+           WHERE nc.status = 'approved' AND nc.audioUrl IS NOT NULL AND rs.enabled = 1
+             ${selfId ? 'AND rs.serverId = ?' : 'AND rs.serverId IS NULL'}`,
+    params: selfId ? [selfId] : [],
+  }
 }
 
 export async function evaluateNewsCapsulesNow(now = new Date()) {
   if (running) return
   running = true
   try {
-    const [rows] = await pool.query(
-      `SELECT nc.id, nc.clientId, nc.title, nc.audioUrl, nc.priority, nc.minGapMinutes,
-              nc.graceMinutes, nc.windowStart, nc.windowEnd, nc.activeFrom, nc.activeTo,
-              nc.createdAt, c.timezone, rs.status AS streamStatus, rs.liquidsoapTelnetPort,
-              rs.currentTrackStartedAt, rs.enabled
-         FROM news_capsules nc
-         JOIN clients c ON c.id = nc.clientId
-         JOIN radio_streams rs ON rs.clientId = nc.clientId
-        WHERE nc.status = 'approved' AND nc.audioUrl IS NOT NULL AND rs.enabled = 1`
-    )
+    const selfId = await resolveSelfServerId()
+    const query = buildCapsulesQuery(selfId)
+    const [rows] = await pool.query(query.sql, query.params)
     const byClient = new Map()
     for (const row of rows) {
       if (!byClient.has(row.clientId)) byClient.set(row.clientId, [])
@@ -145,31 +162,36 @@ export async function evaluateNewsCapsulesNow(now = new Date()) {
     }
 
     for (const [clientId, capsules] of byClient) {
-      const rs = capsules[0]
-      if (rs.streamStatus === 'live') continue
-      await processPending(clientId, rs, now)
-      const rules = await loadRules(capsules.map((capsule) => capsule.id))
-      const lastPlayed = await lastPlayedMap(clientId)
-      const enriched = []
-      for (const capsule of capsules) {
-        const since = lastPlayed.get(capsule.id) || capsule.createdAt
-        const count = await tracksSince(clientId, since)
-        enriched.push({
-          ...capsule,
-          rules: rules.get(capsule.id) || [],
-          lastPlayedAt: lastPlayed.get(capsule.id) || null,
-          tracksSinceLastPlay: count,
+      // Un error en un cliente no debe abortar la evaluación de los demás.
+      try {
+        const rs = capsules[0]
+        if (rs.streamStatus === 'live') continue
+        await processPending(clientId, rs, now)
+        const rules = await loadRules(capsules.map((capsule) => capsule.id))
+        const lastPlayed = await lastPlayedMap(clientId)
+        const enriched = []
+        for (const capsule of capsules) {
+          const since = lastPlayed.get(capsule.id) || capsule.createdAt
+          const count = await tracksSince(clientId, since)
+          enriched.push({
+            ...capsule,
+            rules: rules.get(capsule.id) || [],
+            lastPlayedAt: lastPlayed.get(capsule.id) || null,
+            tracksSinceLastPlay: count,
+          })
+        }
+        const candidate = pickCandidate(enriched, {
+          now,
+          timeZone: rs.timezone || 'UTC',
+          tracksSinceLastPlay: 0,
         })
+        if (!candidate) continue
+        const pending = await pendingRuns(clientId)
+        if (pending.some((run) => run.capsuleId === candidate.capsule.id)) continue
+        await pushCapsule(clientId, rs, candidate.capsule, candidate.scheduledFor)
+      } catch (err) {
+        logger.warn({ err: err.message, clientId }, 'Evaluación de cápsulas falló para el cliente')
       }
-      const candidate = pickCandidate(enriched, {
-        now,
-        timeZone: rs.timezone || 'UTC',
-        tracksSinceLastPlay: 0,
-      })
-      if (!candidate) continue
-      const pending = await pendingRuns(clientId)
-      if (pending.some((run) => run.capsuleId === candidate.capsule.id)) continue
-      await pushCapsule(clientId, rs, candidate.capsule, candidate.scheduledFor)
     }
   } catch (err) {
     logger.warn({ err: err.message }, 'Evaluación de cápsulas de noticias falló')
