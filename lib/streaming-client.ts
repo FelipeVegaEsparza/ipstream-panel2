@@ -285,6 +285,17 @@ export const streamingClient = {
       { method: 'DELETE' }
     ),
 
+  // Cápsulas de noticias: audio final generado en el panel
+  uploadNewsCapsuleAudio: async (clientId: string, capsuleId: string, buffer: Buffer) => {
+    const form = new FormData()
+    form.append('file', new File([new Uint8Array(buffer)], `${capsuleId}.mp3`, { type: 'audio/mpeg' }))
+    return request(
+      await resolveTarget('radio', clientId),
+      `/api/streams/${encodeURIComponent(clientId)}/news-capsules/${encodeURIComponent(capsuleId)}/upload`,
+      { method: 'POST', body: form, isMultipart: true, timeoutMs: UPLOAD_TIMEOUT_MS }
+    )
+  },
+
   getJingleConfig: async (clientId: string) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/jingles/config`),
   updateJingleConfig: async (clientId: string, jinglePlayEvery: number, jinglePlayCount: number) =>

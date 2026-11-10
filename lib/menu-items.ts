@@ -66,6 +66,7 @@ export type MenuItemKey =
   | 'streaming-live'
   | 'streaming-sound-effects'
   | 'streaming-info-capsules'
+  | 'streaming-news-capsules'
   | 'streaming-locutor-ia'
   | 'streaming-especiales'
   | 'streaming-stats'
@@ -159,6 +160,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   href: '/dashboard/info-capsules',
   section: 'Radio',
   icon: SpeakerWaveIcon,
+},
+{
+  key: 'streaming-news-capsules',
+  name: 'Cápsulas de Noticias',
+  href: '/dashboard/streaming/news-capsules',
+  section: 'Radio',
+  icon: DocumentTextIcon,
 },
 {
   key: 'streaming-locutor-ia',

@@ -15,6 +15,7 @@ export default defineConfig({
       'lib/live-console/**/*.test.ts',
       'lib/*.test.ts',
       'components/dashboard/streaming/live/**/*.test.tsx',
+      'components/dashboard/streaming/news-capsules/**/*.test.tsx',
       'app/auth/login/**/*.test.tsx',
     ],
     exclude: ['node_modules/**', 'pwa/**', '.next/**'],

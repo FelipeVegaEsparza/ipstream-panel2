@@ -62,6 +62,15 @@
 - Los documentos públicos viven en `/legal/terminos`, `/legal/privacidad` y `/legal/licencias` (el middleware las deja accesibles sin sesión). La versión legal vigente está en `lib/legal.ts`: al cambiar el texto, subir `LEGAL_VERSION`.
 - La declaración de licencias es explícita: CasterFly es una plataforma tecnológica, no autoriza, licencia, posee ni explota la música o contenido de las radios. La responsabilidad de derechos (autor, SGC, marcas, voces) es del cliente.
 
+## Cápsulas de Noticias
+
+- Sección **Radio → Cápsulas de Noticias** (`/dashboard/streaming/news-capsules`): crea cápsulas desde RSS/URL, resume con DeepSeek, locuta con el Locutor IA (intro/cuerpo/cierre) y permite música de fondo opcional de la misma biblioteca de jingles.
+- Modelos: `NewsCapsule`, `NewsCapsuleSource`, `NewsCapsuleRule`, `NewsCapsuleRun`; el audio final se sube al agente en `data/radio/<clientId>/news-capsules`.
+- Aprobación obligatoria: solo una cápsula con audio vigente y preview escuchado puede programarse. Editar guion, fuente o música invalida audio/aprobación.
+- Programación por cada X temas, horas específicas y cada N horas, con ventana/fechas, prioridad, cooldown y tolerancia. El agente evalúa al terminar cada tema y usa `news_queue` + `fallback(track_sensitive=true)`: nunca corta la música ni interrumpe un DJ en vivo.
+- Documentación: `docs/news-capsules.md`.
+- **Tocar `streaming/agent/*` (scheduler/cola) obliga a “Actualizar nodo”** en cada nodo remoto.
+
 ## Facturación / Pagos (multi-moneda + PayPal)
 
 - **Precios por moneda**: `PlanPrice { planId, currency, amount }` (una fila por moneda) además del precio base `Plan.price/currency`. La web pública (`/planes`, `/registro`) y `PlanForm` muestran/editan esas monedas; el registro propaga la moneda elegida a `Subscription.billingCurrency` y al `Payment` (`amount`/`currency`).

@@ -91,6 +91,7 @@ model Client {
   streamingAuditLogs     StreamingAuditLog[]
   jingles                Jingle[]
   musicTracks            MusicTrack[]
+  newsCapsules           NewsCapsule[]
   playlistSchedules      PlaylistSchedule[]
   folders                Folder[]
   djSessions             DjSession[]
@@ -1216,9 +1217,102 @@ model MusicTrack {
 
   client       Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   radioStreams RadioStream[] @relation("JingleMusicTrack")
+  newsCapsules NewsCapsule[] @relation("NewsCapsuleMusic")
 
   @@index([clientId])
   @@map("music_tracks")
+}
+
+
+model NewsCapsule {
+  id              String    @id @default(cuid())
+  clientId        String
+  title           String    @db.VarChar(191)
+  status          String    @default("draft") @db.VarChar(20) // draft | approved | paused | error
+  summary         String?   @db.Text
+  scriptIntro     String?   @db.Text
+  scriptBody      String?   @db.Text
+  scriptClosing   String?   @db.Text
+  sourceText      String?   @db.Text
+  musicTrackId    String?
+  audioUrl        String?   @db.VarChar(500)
+  audioDuration   Int?
+  audioVersion    Int       @default(0)
+  approvedAt      DateTime?
+  approvedVersion Int?
+  previewedAt     DateTime?
+  priority        Int       @default(5)
+  minGapMinutes   Int       @default(30)
+  graceMinutes    Int       @default(10)
+  windowStart     String?   @db.VarChar(5)
+  windowEnd       String?   @db.VarChar(5)
+  activeFrom      DateTime?
+  activeTo        DateTime?
+  errorMessage    String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  client     Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  musicTrack MusicTrack?         @relation("NewsCapsuleMusic", fields: [musicTrackId], references: [id], onDelete: SetNull)
+  sources    NewsCapsuleSource[]
+  rules      NewsCapsuleRule[]
+  runs       NewsCapsuleRun[]
+
+  @@index([clientId, status])
+  @@map("news_capsules")
+}
+
+model NewsCapsuleSource {
+  id          String   @id @default(cuid())
+  capsuleId   String
+  url         String   @db.VarChar(1000)
+  publisher   String?  @db.VarChar(191)
+  title       String?  @db.VarChar(500)
+  publishedAt DateTime?
+  guid        String?  @db.VarChar(500)
+  excerpt     String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  capsule NewsCapsule @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+
+  @@index([capsuleId])
+  @@index([guid])
+  @@map("news_capsule_sources")
+}
+
+model NewsCapsuleRule {
+  id        String   @id @default(cuid())
+  capsuleId String
+  kind      String   @db.VarChar(20) // tracks | times | interval_hours
+  config    String   @db.Text
+  days      String?  @db.Text // JSON array 0-6
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  capsule NewsCapsule @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+
+  @@index([capsuleId, active])
+  @@map("news_capsule_rules")
+}
+
+model NewsCapsuleRun {
+  id           String    @id @default(cuid())
+  capsuleId    String
+  clientId     String
+  scheduledFor DateTime
+  pushedAt     DateTime?
+  playedAt     DateTime?
+  status       String    @default("pending") @db.VarChar(20) // pending | played | skipped | expired
+  reason       String?   @db.VarChar(120)
+  trackId      String?   @db.VarChar(191)
+  createdAt    DateTime  @default(now())
+
+  capsule NewsCapsule @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, status, scheduledFor])
+  @@index([capsuleId, scheduledFor])
+  @@map("news_capsule_runs")
 }
 
 model Jingle {

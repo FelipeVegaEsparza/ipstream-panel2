@@ -16,6 +16,7 @@ const FEATURE_LABELS: Record<AiUsageFeatureKey, DashboardTranslationKey> = {
   'ai-capsule': 'aiUsage.feature.ai-capsule',
   'ai-jingle': 'aiUsage.feature.ai-jingle',
   'ai-special': 'aiUsage.feature.ai-special',
+  'news-capsule': 'aiUsage.feature.news-capsule',
   unattributed: 'aiUsage.feature.unattributed',
 }
 

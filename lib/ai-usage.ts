@@ -9,6 +9,7 @@ export const AI_USAGE_FEATURES = [
   'ai-capsule',
   'ai-jingle',
   'ai-special',
+  'news-capsule',
 ] as const
 
 export type AiUsageFeature = (typeof AI_USAGE_FEATURES)[number]

@@ -276,3 +276,35 @@ export async function clearSpecialAudio(clientId, specialId) {
 export function specialAudioExists(clientId, specialId, part) {
   return existsSync(specialAudioPath(clientId, specialId, part))
 }
+
+// =====================================================
+// Cápsulas de noticias: audio final por cápsula
+// =====================================================
+
+export function clientNewsCapsulesDir(clientId) {
+  return join(LIBRARY_PATH, clientId, 'news-capsules')
+}
+
+export function newsCapsuleAudioPath(clientId, capsuleId) {
+  return join(clientNewsCapsulesDir(clientId), `${capsuleId}.mp3`)
+}
+
+export async function ensureNewsCapsulesDir(clientId) {
+  const dir = clientNewsCapsulesDir(clientId)
+  if (!existsSync(dir)) await mkdir(dir, { recursive: true })
+  return dir
+}
+
+export async function saveNewsCapsuleAudio(clientId, capsuleId, buffer) {
+  await ensureNewsCapsulesDir(clientId)
+  const dest = newsCapsuleAudioPath(clientId, capsuleId)
+  await writeFile(dest, buffer)
+  const stats = await stat(dest)
+  return { path: dest, size: stats.size }
+}
+
+export async function clearNewsCapsuleAudio(clientId, capsuleId) {
+  const dest = newsCapsuleAudioPath(clientId, capsuleId)
+  if (existsSync(dest)) await rm(dest, { force: true })
+  return true
+}

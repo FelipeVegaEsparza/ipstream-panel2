@@ -24,6 +24,7 @@ export function generateLiquidsoapScript({
   jinglePlayEvery = 0,
   jinglePlayCount = 1,
   jinglesM3uPath = null,
+  newsQueueEnabled = true,
   aiPresenterEvery = 0,
   aiIntrosM3uPath = null,
   agentToken = '',
@@ -40,6 +41,7 @@ export function generateLiquidsoapScript({
 
   const hasJingles = jinglePlayEvery > 0 && jinglesM3uPath
   const hasAi = aiPresenterEvery > 0 && aiIntrosM3uPath && !shuffle
+  const hasNews = Boolean(newsQueueEnabled)
 
   // La música y los jingles llevan una ganancia estática ReplayGain por
   // track. Las locuciones son TTS ya normalizado y no pasan por AGC.
@@ -61,6 +63,7 @@ export function generateLiquidsoapScript({
     reload_mode="watch",
     loop=${loopStr}
   )`)
+    const newsQueue = hasNews ? 'news_queue = request.queue(id="news-queue")\n' : ''
     // La fuente IA se intercala cada N temas de música. Los jingles van en
     // una capa exterior separada, así no alteran el contador del presentador.
     let baseSource = musicSource
@@ -80,6 +83,9 @@ export function generateLiquidsoapScript({
     ]
   )`
     }
+    if (hasNews) {
+      baseSource = `fallback(track_sensitive=true, [news_queue, ${baseSource}])`
+    }
     if (hasJingles) {
       const jingleMode = shuffle ? 'random' : 'normal'
       const jingleSource = level(`playlist(
@@ -97,7 +103,7 @@ export function generateLiquidsoapScript({
     ]
   )`
     }
-    sourceBlock = `mksafe(${baseSource})`
+    sourceBlock = `${newsQueue}mksafe(${baseSource})`
   }
 
   const agentHost = config.ice.host === 'localhost' ? 'localhost' : 'agent'
