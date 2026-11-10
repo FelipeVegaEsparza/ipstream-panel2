@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { promises as fs } from 'fs'
+import path from 'path'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { prisma } from '@/lib/prisma'
+import { streamingClient } from '@/lib/streaming-client'
 import { getClientTimezone, loadCapsuleForClient, serializeCapsule } from '@/lib/news-capsules/service'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +31,30 @@ export async function POST(
         { status: 409 }
       )
     }
+
+    // El nodo debe tener el audio antes de programar; si el upload falló al
+    // generarlo, reintentamos acá y bloqueamos la aprobación si no se puede.
+    try {
+      const audioPath = path.join(
+        process.cwd(),
+        'public',
+        'uploads',
+        'news-capsules',
+        path.basename(capsule.audioUrl)
+      )
+      const audio = await fs.readFile(audioPath)
+      await streamingClient.uploadNewsCapsuleAudio(ctx.clientId, capsule.id, audio)
+    } catch (err) {
+      console.error('[news-capsules/approve] upload al agente falló:', err)
+      return NextResponse.json(
+        {
+          error: 'agent_upload_failed',
+          message: 'El nodo no recibió el audio. Actualizá el nodo y volvé a aprobar.',
+        },
+        { status: 502 }
+      )
+    }
+
     await prisma.newsCapsule.update({
       where: { id: capsule.id },
       data: {

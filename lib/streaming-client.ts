@@ -288,7 +288,7 @@ export const streamingClient = {
   // Cápsulas de noticias: audio final generado en el panel
   uploadNewsCapsuleAudio: async (clientId: string, capsuleId: string, buffer: Buffer) => {
     const form = new FormData()
-    form.append('file', new File([new Uint8Array(buffer)], `${capsuleId}.mp3`, { type: 'audio/mpeg' }))
+    form.append('file', new Blob([new Uint8Array(buffer)], { type: 'audio/mpeg' }), `${capsuleId}.mp3`)
     return request(
       await resolveTarget('radio', clientId),
       `/api/streams/${encodeURIComponent(clientId)}/news-capsules/${encodeURIComponent(capsuleId)}/upload`,

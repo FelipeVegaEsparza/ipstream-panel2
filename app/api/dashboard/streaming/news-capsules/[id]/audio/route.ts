@@ -83,6 +83,7 @@ export async function POST(
     await fs.writeFile(filePath, generated.audio)
     try {
       await streamingClient.uploadNewsCapsuleAudio(ctx.clientId, capsule.id, generated.audio)
+      console.info('[news-capsules/audio] audio subido al agente', { clientId: ctx.clientId, capsuleId: capsule.id })
     } catch (err) {
       console.warn('[news-capsules/audio] no se pudo subir al agente:', err instanceof Error ? err.message : err)
     }
