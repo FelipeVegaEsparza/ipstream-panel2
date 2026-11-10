@@ -4,7 +4,7 @@ Sección de Radio para crear cápsulas locutadas con IA a partir de noticias RSS
 
 ## Flujo de usuario
 
-1. **Nueva cápsula**: pegá una URL de RSS/Atom o de un artículo y consultá la fuente.
+1. **Nueva cápsula**: pegá una URL de RSS/Atom o de un artículo. Al pegar una URL el panel consulta la fuente y completa el título y el texto extraído; **Generar guion** crea la cápsula y la reinterpreta con IA.
 2. Elegí una o más noticias encontradas o escribí el texto de respaldo.
 3. **Generar guion**: se crea `intro`, `body`, `closing` y un resumen con atribución. Todo es editable.
 4. **Música de fondo**: opcional, desde la misma biblioteca de jingles (globales del admin + pistas del cliente). “Sin música” es válido.

@@ -225,22 +225,29 @@ export function NewsCapsulesSettings() {
     setCurrent(capsule)
   }
 
-  const fetchSource = async () => {
-    if (!sourceUrl.trim()) return
+  const fetchSource = async (urlOverride?: string) => {
+    const url = (urlOverride || sourceUrl).trim()
+    if (!url) return
+    setSourceUrl(url)
     setBusy('source')
     setError(null)
     try {
       const res = await fetch('/api/dashboard/streaming/news-capsules/sources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: sourceUrl.trim() }),
+        body: JSON.stringify({ url }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.message || t('streaming.newsCapsules.error.source'))
       const items: SourceItem[] = Array.isArray(data.items) ? data.items : []
       setSourceItems(items)
       setSelectedItems(items.length > 0 ? [items[0].id] : [])
-      if (!title && items[0]?.title) setTitle(items[0].title.slice(0, 191))
+      if (items[0]?.title) setTitle(items[0].title.slice(0, 191))
+      // En artículos directos, dejamos el texto extraído en el campo editable.
+      // El backend también vuelve a leer la URL al generar el guion.
+      if (typeof data.articleText === 'string' && data.articleText.trim()) {
+        setManualText(data.articleText.trim().slice(0, 8000))
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('streaming.newsCapsules.error.source'))
     } finally {
@@ -248,7 +255,7 @@ export function NewsCapsulesSettings() {
     }
   }
 
-  const createCapsule = async () => {
+  const createCapsule = async (): Promise<Capsule | null> => {
     setBusy('create')
     setError(null)
     try {
@@ -267,8 +274,10 @@ export function NewsCapsulesSettings() {
       if (!res.ok) throw new Error(data?.message || t('streaming.newsCapsules.error.generic'))
       updateCapsuleInList(data.capsule)
       showToast({ type: 'success', title: t('streaming.newsCapsules.save') })
+      return data.capsule as Capsule
     } catch (err) {
       setError(err instanceof Error ? err.message : t('streaming.newsCapsules.error.generic'))
+      return null
     } finally {
       setBusy(null)
     }
@@ -313,14 +322,13 @@ export function NewsCapsulesSettings() {
   }
 
   const generateScript = async () => {
-    if (!current) {
-      await createCapsule()
-      return
-    }
+    let target = current
+    if (!target) target = await createCapsule()
+    if (!target) return
     setBusy('script')
     setError(null)
     try {
-      const res = await fetch(`/api/dashboard/streaming/news-capsules/${current.id}/script`, { method: 'POST' })
+      const res = await fetch(`/api/dashboard/streaming/news-capsules/${target.id}/script`, { method: 'POST' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.message || t('streaming.newsCapsules.error.generic'))
       updateCapsuleInList(data.capsule)
@@ -540,7 +548,19 @@ export function NewsCapsulesSettings() {
                   <div className="flex items-end gap-2">
                     <label className="min-w-0 flex-1">
                       <span className="mb-1 block text-xs text-muted-foreground">{t('streaming.newsCapsules.sourceUrl')}</span>
-                      <input value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://…" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-brand" />
+                      <input
+                        value={sourceUrl}
+                        onChange={(event) => setSourceUrl(event.target.value)}
+                        onPaste={(event) => {
+                          const pasted = event.clipboardData.getData('text')
+                          if (!pasted.trim()) return
+                          event.preventDefault()
+                          setSourceUrl(pasted.trim())
+                          void fetchSource(pasted.trim())
+                        }}
+                        placeholder="https://…"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-brand"
+                      />
                     </label>
                     <button type="button" onClick={() => void fetchSource()} disabled={busy !== null || !sourceUrl.trim()} className="rounded-lg border border-border px-3 py-2 text-xs text-foreground hover:bg-secondary disabled:opacity-40">
                       {busy === 'source' ? t('streaming.newsCapsules.fetchingSource') : t('streaming.newsCapsules.fetchSource')}
@@ -613,9 +633,14 @@ export function NewsCapsulesSettings() {
               </label>
 
               {!current ? (
-                <button type="button" onClick={() => void createCapsule()} disabled={busy !== null} className="rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40">
-                  {busy === 'create' ? t('streaming.newsCapsules.saving') : t('streaming.newsCapsules.save')}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => void createCapsule()} disabled={busy !== null} className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-secondary disabled:opacity-40">
+                    {busy === 'create' ? t('streaming.newsCapsules.saving') : t('streaming.newsCapsules.save')}
+                  </button>
+                  <button type="button" onClick={() => void generateScript()} disabled={busy !== null} className="rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40">
+                    {busy === 'script' ? t('streaming.newsCapsules.generatingScript') : t('streaming.newsCapsules.generateScript')}
+                  </button>
+                </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => void saveDetails()} disabled={busy !== null} className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-secondary disabled:opacity-40">
