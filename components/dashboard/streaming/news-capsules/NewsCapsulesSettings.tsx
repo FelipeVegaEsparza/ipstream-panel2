@@ -38,6 +38,7 @@ interface Capsule {
   title: string
   status: 'draft' | 'approved' | 'paused' | 'error' | 'deleted'
   scriptIntro: string | null
+  scriptBody: string | null
   scriptClosing: string | null
   musicTrackId: string | null
   musicTrack: { id: string; name: string; artist: string | null } | null
@@ -93,7 +94,9 @@ function formatDate(value: string | null, locale: string): string {
 
 function makeDraft(partial: Partial<DraftItem> = {}): DraftItem {
   return {
-    key: crypto.randomUUID(),
+    key: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `item-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     title: partial.title || '',
     sourceUrl: partial.sourceUrl || null,
     publisher: partial.publisher || null,
@@ -197,19 +200,25 @@ export function NewsCapsulesSettings() {
     setNotice(null)
   }
 
-  const openEdit = (capsule: Capsule) => {
+  const openEdit = (capsule: Capsule, initialStep = 0) => {
     setCurrent(capsule)
     setTitle(capsule.title)
+    const capsuleItems = Array.isArray(capsule.items) ? capsule.items : []
+    const legacyText = capsule.scriptBody || ''
     setItems(
-      capsule.items.map((item) =>
-        makeDraft({
-          title: item.title,
-          sourceUrl: item.sourceUrl,
-          publisher: item.publisher,
-          summary: item.summary || '',
-          sourceText: null,
-        })
-      )
+      capsuleItems.length > 0
+        ? capsuleItems.map((item) =>
+            makeDraft({
+              title: item.title,
+              sourceUrl: item.sourceUrl,
+              publisher: item.publisher,
+              summary: item.summary || '',
+              sourceText: item.sourceText,
+            })
+          )
+        : legacyText
+          ? [makeDraft({ title: capsule.title, sourceText: legacyText, summary: '' })]
+          : []
     )
     setIntro(capsule.scriptIntro || '')
     setClosing(capsule.scriptClosing || '')
@@ -228,7 +237,7 @@ export function NewsCapsulesSettings() {
     setPriority(capsule.priority)
     setMinGap(capsule.minGapMinutes)
     setGrace(capsule.graceMinutes)
-    setStep(0)
+    setStep(initialStep)
     setModalOpen(true)
     setError(null)
     setNotice(null)
@@ -398,21 +407,13 @@ export function NewsCapsulesSettings() {
     )
   }
 
-  const goNext = async () => {
+  const goNext = () => {
     setError(null)
-    if (step === 0) {
-      setBusy('persist')
-      const saved = await persistDraft()
-      setBusy(null)
-      if (saved) setStep(1)
+    if (step === 0 && items.length === 0) {
+      setError(t('streaming.newsCapsules.noItems'))
       return
     }
-    if (step === 1) {
-      setBusy('persist')
-      const saved = await persistDraft()
-      setBusy(null)
-      if (saved) setStep(2)
-    }
+    setStep((value) => Math.min(2, value + 1))
   }
 
   const generateScript = async () => {
@@ -509,6 +510,7 @@ export function NewsCapsulesSettings() {
       if (!res.ok) throw new Error(data?.message || t('streaming.newsCapsules.error.generic'))
       updateCapsule(data.capsule)
       setNotice(t('streaming.newsCapsules.saveRules'))
+      setModalOpen(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : t('streaming.newsCapsules.error.generic'))
     } finally {
@@ -581,6 +583,7 @@ export function NewsCapsulesSettings() {
               <p className="mt-2 text-xs text-muted-foreground">{capsule.items.length} · {capsule.musicTrack?.name || t('streaming.newsCapsules.noMusic')}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" onClick={() => openEdit(capsule)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-secondary">{t('streaming.newsCapsules.editor')}</button>
+                <button type="button" onClick={() => openEdit(capsule, 2)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-secondary">{t('streaming.newsCapsules.rules')}</button>
                 <button type="button" onClick={() => void togglePause(capsule)} disabled={busy !== null} className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-secondary disabled:opacity-40">
                   {capsule.status === 'paused' ? <PlayIcon className="h-3.5 w-3.5" /> : <PauseIcon className="h-3.5 w-3.5" />}
                   {capsule.status === 'paused' ? t('streaming.newsCapsules.resume') : t('streaming.newsCapsules.pause')}

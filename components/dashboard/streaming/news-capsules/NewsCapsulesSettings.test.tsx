@@ -18,6 +18,52 @@ describe('NewsCapsulesSettings', () => {
     }))
   })
 
+  it('abre el editor con los datos de una cápsula existente', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/jingles/music')) {
+        return new Response(JSON.stringify({ tracks: [], selectedId: null }), { status: 200 })
+      }
+      return new Response(JSON.stringify({
+        capsules: [{
+          id: 'capsule-1',
+          title: 'Cápsula vieja',
+          status: 'approved',
+          scriptIntro: 'Intro guardada.',
+          scriptBody: null,
+          scriptClosing: 'Cierre guardado.',
+          musicTrackId: null,
+          musicTrack: null,
+          audioUrl: null,
+          audioDuration: null,
+          approvedAt: null,
+          previewedAt: null,
+          priority: 5,
+          minGapMinutes: 30,
+          graceMinutes: 10,
+          windowStart: null,
+          windowEnd: null,
+          activeFrom: null,
+          activeTo: null,
+          errorMessage: null,
+          items: [{ id: 'i1', order: 0, title: 'Noticia uno', sourceUrl: null, publisher: null, sourceTitle: null, sourceText: 'Texto de la noticia uno.', summary: 'Resumen uno.' }],
+          rules: [],
+          nextEmissionAt: null,
+          createdAt: new Date().toISOString(),
+        }],
+      }), { status: 200 })
+    }))
+    render(
+      <DashboardI18nProvider locale="es">
+        <NewsCapsulesSettings />
+      </DashboardI18nProvider>
+    )
+    await waitFor(() => expect(screen.getByText('Cápsula vieja')).toBeInTheDocument())
+    screen.getByRole('button', { name: 'Editar cápsula' }).click()
+    await waitFor(() => expect(screen.getByDisplayValue('Cápsula vieja')).toBeInTheDocument())
+    expect(screen.getByDisplayValue('Noticia uno')).toBeInTheDocument()
+  })
+
   it('muestra el estado vacío y permite abrir el editor', async () => {
     render(
       <DashboardI18nProvider locale="es">
