@@ -19,7 +19,7 @@ const { pushCapsule, buildCapsulesQuery } = await import('../lib/news-capsule-sc
 test('empuja la cápsula a la cola y registra la ejecución', async () => {
   const calls = []
   const db = { query: async (...args) => { calls.push(args); return [{}] } }
-  const telnet = async (port, command) => { calls.push([port, command]) }
+  const telnet = async (port, command) => { calls.push([port, command]); return '42' }
   const result = await pushCapsule(
     'client-1',
     { liquidsoapTelnetPort: 1234 },
@@ -28,8 +28,10 @@ test('empuja la cápsula a la cola y registra la ejecución', async () => {
     { db, telnet, exists: () => true }
   )
   assert.equal(result, true)
-  const command = calls.find((entry) => typeof entry[1] === 'string' && entry[1].startsWith('news_queue.push'))
+  const command = calls.find((entry) => typeof entry[1] === 'string' && entry[1].startsWith('news-queue.push'))
   assert.ok(command)
+  assert.match(command[1], /^news-queue\.push file:\/\//)
+  assert.doesNotMatch(command[1], /request\.create|"/)
   assert.match(command[1], /capsule-1\.mp3/)
   assert.ok(calls.some((entry) => typeof entry[0] === 'string' && entry[0].includes('INSERT INTO news_capsule_runs')))
 })
@@ -37,7 +39,7 @@ test('empuja la cápsula a la cola y registra la ejecución', async () => {
 test('no empuja si falta el audio en el agente', async () => {
   const calls = []
   const db = { query: async (...args) => { calls.push(args); return [{}] } }
-  const telnet = async (...args) => { calls.push(args) }
+  const telnet = async (...args) => { calls.push(args); return '42' }
   const result = await pushCapsule(
     'client-1',
     { liquidsoapTelnetPort: 1234 },
@@ -73,11 +75,25 @@ test('el INSERT de ejecuciones recibe un parámetro por cada placeholder', async
     { liquidsoapTelnetPort: 1234 },
     { id: 'capsule-1' },
     scheduledFor,
-    { db, telnet: async () => {}, exists: () => true }
+    { db, telnet: async () => '42', exists: () => true }
   )
   assert.ok(insertArgs)
   const placeholders = (insertArgs.sql.split('?').length - 1)
   assert.equal(insertArgs.params.length, placeholders)
   assert.equal(insertArgs.params[3].toISOString(), scheduledFor.toISOString())
   assert.ok(insertArgs.params[4] instanceof Date)
+})
+
+test('falla si Liquidsoap rechaza la orden de cola', async () => {
+  const db = { query: async () => [{}] }
+  await assert.rejects(
+    pushCapsule(
+      'client-1',
+      { liquidsoapTelnetPort: 1234 },
+      { id: 'capsule-3' },
+      new Date(),
+      { db, telnet: async () => 'ERROR: unknown command', exists: () => true }
+    ),
+    /rechazó/
+  )
 })

@@ -1,5 +1,9 @@
 // Scheduler de cápsulas de noticias: evalúa reglas y empuja a la cola de Liquidsoap.
 // La cola usa `fallback(track_sensitive=true)`, por lo que nunca corta el tema actual.
+//
+// OJO: en Liquidsoap las órdenes telnet de una `request.queue` se registran con
+// el `id` de la fuente (`id="news-queue"`) y NO con el nombre de la variable
+// (`news_queue`). El argumento es la URI pelada, sin comillas ni request.create().
 
 import crypto from 'crypto'
 import { existsSync } from 'fs'
@@ -92,7 +96,7 @@ async function processPending(clientId, rs, now) {
     const graceMs = Number(rs.graceMinutes || 10) * 60_000
     if (now.getTime() > scheduled.getTime() + graceMs + 5 * 60_000) {
       try {
-        await telnetCommand(rs.liquidsoapTelnetPort, 'news_queue.skip')
+        await telnetCommand(rs.liquidsoapTelnetPort, 'news-queue.skip')
       } catch {}
       await markRun(run.id, 'expired', 'grace_expired')
       logger.info({ clientId, capsuleId: run.capsuleId, runId: run.id }, 'Cápsula expirada')
@@ -109,11 +113,21 @@ export async function pushCapsule(clientId, rs, capsule, scheduledFor, deps = {}
     logger.warn({ clientId, capsuleId: capsule.id, audioPath }, 'Cápsula sin audio en el agente')
     return false
   }
-  const escaped = audioPath.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-  await telnet(
+  // Las rutas de cápsulas son <clientId>/news-capsules/<capsuleId>.mp3 (sin
+  // espacios). Si hubiera espacios, la orden telnet las cortaría en el primer
+  // argumento, así que lo tratamos como error explícito.
+  if (/\s/.test(audioPath)) {
+    logger.warn({ clientId, capsuleId: capsule.id, audioPath }, 'Ruta de cápsula con espacios; no se puede encolar')
+    return false
+  }
+  const response = await telnet(
     rs.liquidsoapTelnetPort,
-    `news_queue.push(request.create("file://${escaped}"))`
+    `news-queue.push file://${audioPath}`
   )
+  const reply = String(response ?? '').trim()
+  if (!/^\d+$/.test(reply)) {
+    throw new Error(`Liquidsoap rechazó la cápsula: ${reply || 'sin respuesta'}`)
+  }
   const runId = uuid()
   const scheduledAt = scheduledFor || new Date()
   const pushedAt = new Date()

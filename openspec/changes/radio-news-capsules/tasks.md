@@ -49,7 +49,7 @@
 
 ## 6. Integración y verificación
 
-- [ ] 6.1 Probar el flujo completo en staging: fuente RSS falsa → guion → música de fondo de la biblioteca → audio → aprobación → regla por temas y por hora → cola del agente → emisión al terminar el tema; documento de resultados.
+- [x] 6.1 Probar el flujo completo: fuente RSS → guion → música de fondo → audio → aprobación → regla por temas y por hora → cola del agente → emisión real al terminar el tema. Verificado en producción (nodo Radio VPS 1): una cápsula con regla `times` se encoló con `news-queue.push` y sonó entre tracks (log de Liquidsoap `Switch to news-queue` + `news_capsule_runs.status=played`).
 - [x] 6.2 Verificar que cápsulas informativas, especiales y jingles existentes no cambian de comportamiento; correr tests del agente y del panel.
 - [ ] 6.3 Verificar el comportamiento con DJ en vivo, tolerancia vencida, colisión de dos cápsulas y reinicio del agente; registrar resultados.
 - [x] 6.4 Ejecutar `npm test`, `tsc --noEmit` y `npm run build`; documentar el plan de rollback (pausar cápsulas y vaciar la cola).

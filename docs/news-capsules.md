@@ -56,7 +56,7 @@ news_queue = request.queue(id="news-queue")
 ... = fallback(track_sensitive=true, [news_queue, baseSource])
 ```
 
-El agente evalúa reglas cada 15 s y empuja la cápsula a `news_queue`; `track_sensitive=true` espera el final del track. Si la tolerancia expira, retira la solicitud y registra `expired`. Si hay un DJ en vivo, no empuja. La cola tiene prioridad sobre jingles y cápsulas del m3u; una noticia por corte.
+El agente evalúa reglas cada 15 s y empuja la cápsula a la cola con la orden telnet `news-queue.push file:///...` (el **id** de la fuente, no el nombre de la variable; sin comillas ni `request.create`). La consulta de cápsulas se filtra por `radio_streams.serverId`, así cada nodo empuja solo sus streams; `track_sensitive=true` espera el final del track. Si la tolerancia expira, retira la solicitud y registra `expired`. Si hay un DJ en vivo, no empuja. La cola tiene prioridad sobre jingles y cápsulas del m3u; una noticia por corte.
 
 El audio se sube al agente en `data/radio/<clientId>/news-capsules/<capsuleId>.mp3`. **Tocar `streaming/agent/*` obliga a “Actualizar nodo” en cada nodo remoto.**
 

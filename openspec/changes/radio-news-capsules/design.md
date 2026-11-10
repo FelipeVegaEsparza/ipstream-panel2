@@ -76,7 +76,7 @@ news_queue = request.queue(id="news-queue")
 autoDj = fallback(track_sensitive=true, [news_queue, baseSource])
 ```
 
-El agente inserta una solicitud en `news_queue` cuando una regla está lista. `track_sensitive=true` hace que Liquidsoap espere al final del track actual; no corta la canción. Si la cola queda vacía, sigue la música normal.
+El agente inserta una solicitud con `news-queue.push file:///.../<capsuleId>.mp3` (orden telnet registrada con el `id` de la cola) cuando una regla está lista. La evaluación se filtra por `radio_streams.serverId` para que cada nodo empuje solo sus propios streams. `track_sensitive=true` hace que Liquidsoap espere al final del track actual; no corta la canción. Si la cola queda vacía, sigue la música normal.
 
 - El agente evalúa reglas cada 10–15 s y en cada `track-started`.
 - Para reglas por temas, cuenta tracks desde la última emisión usando `play_history`/estado persistido.
