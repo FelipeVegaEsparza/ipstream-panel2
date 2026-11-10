@@ -1255,11 +1255,31 @@ model NewsCapsule {
   client     Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
   musicTrack MusicTrack?         @relation("NewsCapsuleMusic", fields: [musicTrackId], references: [id], onDelete: SetNull)
   sources    NewsCapsuleSource[]
+  items      NewsCapsuleItem[]
   rules      NewsCapsuleRule[]
   runs       NewsCapsuleRun[]
 
   @@index([clientId, status])
   @@map("news_capsules")
+}
+
+model NewsCapsuleItem {
+  id           String   @id @default(cuid())
+  capsuleId    String
+  order        Int      @default(0)
+  title        String   @db.VarChar(500)
+  sourceUrl    String?  @db.VarChar(1000)
+  publisher    String?  @db.VarChar(191)
+  sourceTitle  String?  @db.VarChar(500)
+  sourceText   String?  @db.Text
+  summary      String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  capsule NewsCapsule @relation(fields: [capsuleId], references: [id], onDelete: Cascade)
+
+  @@index([capsuleId, order])
+  @@map("news_capsule_items")
 }
 
 model NewsCapsuleSource {

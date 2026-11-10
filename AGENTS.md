@@ -64,7 +64,7 @@
 
 ## Cápsulas de Noticias
 
-- Sección **Radio → Cápsulas de Noticias** (`/dashboard/streaming/news-capsules`): crea cápsulas desde RSS/URL, resume con DeepSeek, locuta con el Locutor IA (intro/cuerpo/cierre) y permite música de fondo opcional de la misma biblioteca de jingles.
+- Sección **Radio → Cápsulas de Noticias** (`/dashboard/streaming/news-capsules`): crea cápsulas desde RSS/URL o noticias manuales, con intro y cierre fijos editables, una o varias noticias separadas (resumen de hasta 300 caracteres cada una), Locutor IA y música de fondo opcional de la misma biblioteca de jingles.
 - Modelos: `NewsCapsule`, `NewsCapsuleSource`, `NewsCapsuleRule`, `NewsCapsuleRun`; el audio final se sube al agente en `data/radio/<clientId>/news-capsules`.
 - Aprobación obligatoria: solo una cápsula con audio vigente y preview escuchado puede programarse. Editar guion, fuente o música invalida audio/aprobación.
 - Programación por cada X temas, horas específicas y cada N horas, con ventana/fechas, prioridad, cooldown y tolerancia. El agente evalúa al terminar cada tema y usa `news_queue` + `fallback(track_sensitive=true)`: nunca corta la música ni interrumpe un DJ en vivo.

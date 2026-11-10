@@ -3,8 +3,11 @@ import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth
 import { prisma } from '@/lib/prisma'
 import { fetchPublicSource } from '@/lib/news-capsules/source-security'
 import { extractArticle } from '@/lib/news-capsules/article'
-import { generateNewsScript } from '@/lib/news-capsules/script'
-import type { NewsSourceItem } from '@/lib/news-capsules/types'
+import {
+  defaultCapsuleClosing,
+  defaultCapsuleIntro,
+  generateNewsItemSummaries,
+} from '@/lib/news-capsules/script'
 import {
   deleteCapsuleAudio,
   getClientTimezone,
@@ -13,6 +16,24 @@ import {
 } from '@/lib/news-capsules/service'
 
 export const dynamic = 'force-dynamic'
+
+async function itemText(item: {
+  sourceUrl: string | null
+  sourceText: string | null
+  title: string
+}) {
+  if (item.sourceUrl) {
+    try {
+      const fetched = await fetchPublicSource(item.sourceUrl)
+      const article = extractArticle(fetched.text, fetched.url.toString())
+      return article.text
+    } catch {
+      // Fallback al texto guardado si la fuente ya no está disponible.
+    }
+  }
+  if (item.sourceText) return item.sourceText
+  return item.title
+}
 
 export async function POST(
   _request: NextRequest,
@@ -26,60 +47,60 @@ export async function POST(
       return NextResponse.json({ error: 'not_found' }, { status: 404 })
     }
 
-    const items: NewsSourceItem[] = []
-    for (const source of capsule.sources) {
-      try {
-        const fetched = await fetchPublicSource(source.url)
-        const article = extractArticle(fetched.text, fetched.url.toString())
-        items.push({
-          id: article.id,
-          title: article.title,
-          url: article.url,
-          publisher: article.publisher,
-          publishedAt: article.publishedAt,
-          excerpt: article.text.slice(0, 1200),
-        })
-      } catch {
-        if (source.title) {
-          items.push({
-            id: source.guid || source.id,
-            title: source.title,
-            url: source.url,
-            publisher: source.publisher,
-            publishedAt: source.publishedAt?.toISOString() || null,
-            excerpt: source.excerpt || '',
-          })
-        }
-      }
-    }
-
     const client = await prisma.client.findUnique({
       where: { id: ctx.clientId },
       select: { name: true, basicData: { select: { projectName: true } } },
     })
     const stationName = client?.basicData?.projectName || client?.name || 'la radio'
-    const script = await generateNewsScript({
-      stationName,
-      items,
-      manualText: capsule.sourceText || undefined,
-    })
+
+    // Compatibilidad con cápsulas viejas de un solo cuerpo.
+    if (capsule.items.length === 0) {
+      const legacyText = capsule.scriptBody || capsule.sourceText || capsule.title
+      const legacy = await prisma.newsCapsuleItem.create({
+        data: {
+          capsuleId: capsule.id,
+          order: 0,
+          title: capsule.title,
+          sourceText: legacyText,
+        },
+      })
+      capsule.items = [legacy as typeof capsule.items[number]]
+    }
+
+    const inputs = []
+    for (const item of capsule.items) {
+      inputs.push({
+        title: item.title,
+        sourceUrl: item.sourceUrl,
+        publisher: item.publisher,
+        excerpt: item.sourceText ? item.sourceText.slice(0, 1200) : null,
+        text: await itemText(item),
+      })
+    }
+    const summaries = await generateNewsItemSummaries({ stationName, items: inputs })
 
     await deleteCapsuleAudio(capsule.audioUrl)
-    await prisma.newsCapsule.update({
-      where: { id: capsule.id },
-      data: {
-        summary: script.summary,
-        scriptIntro: script.intro,
-        scriptBody: script.body,
-        scriptClosing: script.closing,
-        status: 'draft',
-        approvedAt: null,
-        previewedAt: null,
-        audioUrl: null,
-        audioDuration: null,
-        audioVersion: { increment: 1 },
-        errorMessage: null,
-      },
+    await prisma.$transaction(async (tx) => {
+      for (let index = 0; index < capsule.items.length; index += 1) {
+        await tx.newsCapsuleItem.update({
+          where: { id: capsule.items[index].id },
+          data: { summary: summaries[index] || null },
+        })
+      }
+      await tx.newsCapsule.update({
+        where: { id: capsule.id },
+        data: {
+          scriptIntro: capsule.scriptIntro || defaultCapsuleIntro(stationName),
+          scriptClosing: capsule.scriptClosing || defaultCapsuleClosing(stationName),
+          status: 'draft',
+          approvedAt: null,
+          previewedAt: null,
+          audioUrl: null,
+          audioDuration: null,
+          audioVersion: { increment: 1 },
+          errorMessage: null,
+        },
+      })
     })
 
     const updated = await loadCapsuleForClient(capsule.id, ctx.clientId)

@@ -36,6 +36,8 @@
 - [x] 4.6 Agregar el ítem al menú Radio e i18n es/en; test de navegación y textos.
 - [x] 4.7 Documentar flujo de usuario y permisos en `docs/news-capsules.md`.
 
+- [x] 4.8 Implementar múltiples noticias separadas por cápsula, intro/cierre fijos editables y resumen individual de hasta 300 caracteres; test de orden, agregado manual/URL y audio intro→noticias→cierre.
+
 ## 5. Agente: cola y emisión sin cortes
 
 - [x] 5.1 Agregar `news_queue = request.queue(...)` y `fallback(track_sensitive=true, [news_queue, ...])` al generador `.liq`; test de que el script generado contiene la cola y conserva jingles/especiales.

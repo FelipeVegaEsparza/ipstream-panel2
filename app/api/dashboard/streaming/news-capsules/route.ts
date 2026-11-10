@@ -31,6 +31,7 @@ export async function GET() {
         orderBy: { updatedAt: 'desc' },
         include: {
           sources: { orderBy: { createdAt: 'asc' } },
+          items: { orderBy: { order: 'asc' } },
           rules: { orderBy: { createdAt: 'asc' } },
           musicTrack: { select: { id: true, name: true, artist: true } },
         },
@@ -57,27 +58,38 @@ export async function POST(request: NextRequest) {
     const ctx = await requireStreamingClient()
     if (!ctx.hasRadioStream) return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     const body = await request.json().catch(() => ({}))
-    const rawItems: unknown[] = Array.isArray(body?.items) ? body.items.slice(0, 5) : []
+    const rawItems: unknown[] = Array.isArray(body?.items) ? body.items.slice(0, 8) : []
     const items = rawItems
       .map((item) => {
         const record = item && typeof item === 'object' ? (item as Record<string, unknown>) : {}
         const title = typeof record.title === 'string' ? record.title.trim().slice(0, 500) : ''
-        const url = typeof record.url === 'string' ? record.url.trim().slice(0, 1000) : ''
-        if (!title || !url) return null
+        if (!title) return null
         return {
           title,
-          url,
+          url: typeof record.url === 'string' ? record.url.trim().slice(0, 1000) : null,
           publisher: typeof record.publisher === 'string' ? record.publisher.trim().slice(0, 191) : null,
           publishedAt: typeof record.publishedAt === 'string' ? record.publishedAt : null,
           guid: typeof record.guid === 'string' ? record.guid.slice(0, 500) : null,
           excerpt: typeof record.excerpt === 'string' ? record.excerpt.slice(0, 2000) : null,
+          text: typeof record.text === 'string' ? record.text.trim().slice(0, 8000) : null,
         }
       })
-      .filter((item): item is NewSourceInput => item !== null)
+      .filter((item): item is NonNullable<typeof item> => item !== null)
     const manualText = typeof body?.manualText === 'string' ? body.manualText.trim().slice(0, 8000) : ''
-    if (items.length === 0 && !manualText) {
+    if (items.length === 0 && manualText) {
+      items.push({
+        title: manualText.slice(0, 120) || 'Noticia manual',
+        url: null,
+        publisher: null,
+        publishedAt: null,
+        guid: null,
+        excerpt: manualText.slice(0, 2000),
+        text: manualText,
+      })
+    }
+    if (items.length === 0) {
       return NextResponse.json(
-        { error: 'content_required', message: 'Elegí una noticia o escribí el texto de la cápsula.' },
+        { error: 'content_required', message: 'Agregá al menos una noticia o escribí el texto.' },
         { status: 400 }
       )
     }
@@ -95,7 +107,7 @@ export async function POST(request: NextRequest) {
       select: { url: true, guid: true, title: true },
     })
     const uniqueItems = items.filter(
-      (item) => !isDuplicateSource({ url: item.url, guid: item.guid, title: item.title }, existingSources)
+      (item) => !isDuplicateSource({ url: item.url || undefined, guid: item.guid, title: item.title }, existingSources)
     )
     if (items.length > 0 && uniqueItems.length === 0) {
       return NextResponse.json(
@@ -111,15 +123,27 @@ export async function POST(request: NextRequest) {
         status: 'draft',
         sourceText: manualText || null,
         musicTrackId,
-        sources: {
-          create: uniqueItems.map((item) => ({
-            url: item.url,
+        items: {
+          create: uniqueItems.map((item, index) => ({
+            order: index,
             title: item.title,
+            sourceUrl: item.url,
             publisher: item.publisher,
-            publishedAt: item.publishedAt ? new Date(item.publishedAt) : null,
-            guid: item.guid,
-            excerpt: item.excerpt,
+            sourceTitle: item.title,
+            sourceText: item.text || item.excerpt,
           })),
+        },
+        sources: {
+          create: uniqueItems
+            .filter((item) => Boolean(item.url))
+            .map((item) => ({
+              url: item.url as string,
+              title: item.title,
+              publisher: item.publisher,
+              publishedAt: item.publishedAt ? new Date(item.publishedAt) : null,
+              guid: item.guid,
+              excerpt: item.excerpt,
+            })),
         },
       },
     })

@@ -6,7 +6,6 @@ import { promisify } from 'util'
 import { synthesizePremiumTts } from '@/lib/premium-tts'
 import { mixMusicAndVoice, probeAudioBufferDuration } from '@/lib/audio-mix'
 import { FISH_AUDIO_DIRECTIONS } from '@/lib/fish-audio-directions'
-import type { NewsScript } from './script'
 
 const execFileAsync = promisify(execFile)
 export const MAX_NEWS_CAPSULE_SECONDS = 120
@@ -66,7 +65,9 @@ interface AudioDeps {
 
 export async function generateNewsCapsuleAudio(input: {
   clientId: string
-  script: NewsScript
+  intro: string
+  items: string[]
+  closing: string
   music: Buffer | null
 }, deps: AudioDeps = {}): Promise<GeneratedNewsAudio> {
   const synthesize = deps.synthesize ?? synthesizePremiumTts
@@ -74,9 +75,9 @@ export async function generateNewsCapsuleAudio(input: {
   const probe = deps.probe ?? probeAudioBufferDuration
   const concat = deps.concat ?? concatSegments
   const parts = [
-    { text: input.script.intro, direction: FISH_AUDIO_DIRECTIONS.capsule },
-    { text: input.script.body, direction: FISH_AUDIO_DIRECTIONS.capsule },
-    { text: input.script.closing, direction: FISH_AUDIO_DIRECTIONS.station },
+    { text: input.intro, direction: FISH_AUDIO_DIRECTIONS.capsule },
+    ...input.items.map((text) => ({ text, direction: FISH_AUDIO_DIRECTIONS.capsule })),
+    { text: input.closing, direction: FISH_AUDIO_DIRECTIONS.station },
   ]
   const segments: Buffer[] = []
   let ttsCharacters = 0

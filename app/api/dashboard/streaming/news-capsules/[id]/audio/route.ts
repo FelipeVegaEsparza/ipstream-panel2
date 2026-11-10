@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { getAiLiveAccess, consumeAiCharacters } from '@/lib/ai-live'
 import { generateNewsCapsuleAudio } from '@/lib/news-capsules/audio'
 import { streamingClient } from '@/lib/streaming-client'
-import { estimateScriptCharacters, type NewsScript } from '@/lib/news-capsules/script'
+import { defaultCapsuleClosing, defaultCapsuleIntro } from '@/lib/news-capsules/script'
 import {
   deleteCapsuleAudio,
   getClientTimezone,
@@ -29,15 +29,22 @@ export async function POST(
     if (!capsule || capsule.status === 'deleted') {
       return NextResponse.json({ error: 'not_found' }, { status: 404 })
     }
-    const script: NewsScript = {
-      summary: capsule.summary || '',
-      intro: capsule.scriptIntro || '',
-      body: capsule.scriptBody || '',
-      closing: capsule.scriptClosing || '',
-    }
-    if (!script.intro || !script.body || !script.closing) {
+    const station = await prisma.client.findUnique({
+      where: { id: ctx.clientId },
+      select: { name: true, basicData: { select: { projectName: true } } },
+    })
+    const stationName = station?.basicData?.projectName || station?.name || 'la radio'
+    const intro = capsule.scriptIntro || defaultCapsuleIntro(stationName)
+    const closing = capsule.scriptClosing || defaultCapsuleClosing(stationName)
+    const items = capsule.items
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((item) => item.summary || '')
+      .filter(Boolean)
+    if (items.length === 0 && capsule.scriptBody) items.push(capsule.scriptBody)
+    if (items.length === 0) {
       return NextResponse.json(
-        { error: 'script_required', message: 'Generá o escribí el guion antes del audio.' },
+        { error: 'script_required', message: 'Generá o escribí al menos una noticia antes del audio.' },
         { status: 400 }
       )
     }
@@ -46,7 +53,7 @@ export async function POST(
     if (!access.enabled) {
       return NextResponse.json({ error: 'ai_not_included', message: 'Tu plan no incluye IA.' }, { status: 403 })
     }
-    const estimated = estimateScriptCharacters(script)
+    const estimated = intro.length + items.join('').length + closing.length
     if (estimated > access.remaining) {
       return NextResponse.json(
         {
@@ -60,7 +67,9 @@ export async function POST(
     const music = await resolveMusicBuffer(ctx.clientId, capsule.musicTrackId)
     const generated = await generateNewsCapsuleAudio({
       clientId: ctx.clientId,
-      script,
+      intro,
+      items,
+      closing,
       music: music?.buffer || null,
     })
     if (!generated.ttsCached) {

@@ -16,7 +16,7 @@ La programación actual de cápsulas se hornea en el m3u y no puede cumplir regl
 
 **Goals:**
 
-- Crear cápsulas desde RSS/URL con resumen IA, guion editable y audio único intro+cuerpo+cierre, con música de fondo opcional de la biblioteca de jingles.
+- Crear cápsulas desde RSS/URL o noticias manuales, con intro y cierre fijos editables, una o varias noticias separadas, resumen IA de hasta 300 caracteres por noticia y audio único, con música de fondo opcional de la biblioteca de jingles.
 - Programar por temas, horas exactas y cada N horas, con zona horaria, ventana y fechas.
 - Emitir solo entre canciones, con tolerancia, prioridad, cooldown y sin interrumpir DJ en vivo.
 - Preview y aprobación obligatorios, historial y próxima emisión.
@@ -60,7 +60,7 @@ El audio final se guarda como archivo MP3 y se sube al agente con un endpoint nu
 ### 4. Audio y música de fondo
 
 - `intro` y `closing` se generan con la voz del Locutor IA y se cachean por cliente/versión de frase.
-- `body` se sintetiza por cápsula y se cachea por hash de texto/voz.
+- cada noticia se sintetiza por separado y se cachea por hash de texto/voz; el orden es intro → noticias → cierre.
 - La cápsula puede referenciar una `MusicTrack` activa de la misma biblioteca que usan los jingles (globales del admin + pistas del cliente). La selección es opcional.
 - La música elegida se mezcla con la locución en el panel con `mixMusicAndVoice` (cama baja, ducking y carve de voz) y queda incorporada al MP3 final. La emisión reproduce el audio ya mezclado y no consulta la biblioteca en el agente.
 - Se concatenan intro/cuerpo/cierre, se mezcla la música si existe y se normaliza a un MP3 único (objetivo 45–90 s; máximo 120 s).
@@ -111,7 +111,8 @@ Nueva página `/dashboard/streaming/news-capsules` en el grupo Radio:
 
 ### 8. Datos propuestos
 
-- `NewsCapsule`: cliente, título, estado, fuente, resumen, guiones, `musicTrackId` opcional, audio, duración, versión, `approvedAt`, prioridad, cooldown, ventana/fechas, zona horaria.
+- `NewsCapsule`: cliente, título, estado, fuente, intro/cierre, `musicTrackId` opcional, audio, duración, versión, `approvedAt`, prioridad, cooldown, ventana/fechas, zona horaria.
+- `NewsCapsuleItem`: noticia ordenada con título, URL/medio, texto de trabajo y resumen de hasta 300 caracteres.
 - `NewsCapsuleSource`: URL, medio, título, fecha, GUID y extracto usado.
 - `NewsCapsuleRule`: `tracks | times | interval_hours`, configuración JSON, días, activa.
 - `NewsCapsuleRun`: programación, empuje, reproducción, estado, motivo, track.

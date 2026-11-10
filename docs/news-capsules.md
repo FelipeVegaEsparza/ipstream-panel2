@@ -6,11 +6,12 @@ Sección de Radio para crear cápsulas locutadas con IA a partir de noticias RSS
 
 1. **Nueva cápsula**: pegá una URL de RSS/Atom o de un artículo. Al pegar una URL el panel consulta la fuente y completa el título y el texto extraído; **Generar guion** crea la cápsula y la reinterpreta con IA.
 2. Elegí una o más noticias encontradas o escribí el texto de respaldo.
-3. **Generar guion**: se crea `intro`, `body`, `closing` y un resumen con atribución. Todo es editable.
-4. **Música de fondo**: opcional, desde la misma biblioteca de jingles (globales del admin + pistas del cliente). “Sin música” es válido.
-5. **Generar audio**: se sintetiza con el Locutor IA y se mezcla la música. El audio queda como un MP3 único.
-6. **Escuchar** el audio (marca `previewedAt`) y **Aprobar**. Sin preview no se puede aprobar; sin aprobación no se puede programar.
-7. **Programación**: cada X temas, horas específicas (`HH:mm`) y/o cada N horas, con ventana horaria, fechas, prioridad, frecuencia mínima y tolerancia.
+3. **Noticias separadas**: agregá una o varias noticias (link o manual), ordenalas y quitá las que no quieras. Cada una tiene su propio resumen de hasta 300 caracteres.
+4. **Generar guion**: se crea la intro y el cierre (frases fijas editables) y un resumen por noticia con atribución. Todo es editable.
+5. **Música de fondo**: opcional, desde la misma biblioteca de jingles (globales del admin + pistas del cliente). “Sin música” es válido.
+6. **Generar audio**: se sintetiza con el Locutor IA y se mezcla la música. El audio queda como un MP3 único.
+7. **Escuchar** el audio (marca `previewedAt`) y **Aprobar**. Sin preview no se puede aprobar; sin aprobación no se puede programar.
+8. **Programación**: cada X temas, horas específicas (`HH:mm`) y/o cada N horas, con ventana horaria, fechas, prioridad, frecuencia mínima y tolerancia.
 
 Cualquier cambio de guion, texto o música invalida la aprobación y borra el audio anterior. Volver a aprobar exige generar y escuchar de nuevo.
 

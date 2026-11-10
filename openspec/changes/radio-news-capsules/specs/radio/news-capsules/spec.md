@@ -34,6 +34,23 @@ El sistema SHALL generar un resumen periodístico breve a partir de las fuentes 
 - **WHEN** el cliente modifica la intro, el contenido o el cierre
 - **THEN** el sistema guarda la nueva versión y marca la aprobación anterior como inválida
 
+
+### Requirement: Varias noticias separadas por cápsula
+
+Cada cápsula SHALL contener una intro, una o más noticias separadas y un cierre. El cliente MUST poder agregar noticias por URL o manualmente, ordenarlas y quitarlas. La intro y el cierre MUST tener un texto fijo por defecto y MUST poder editarse. Cada noticia MUST tener su propio resumen de hasta 300 caracteres.
+
+#### Scenario: Cápsula con tres noticias
+- **WHEN** el cliente agrega tres noticias y genera el guion
+- **THEN** la cápsula conserva tres resúmenes separados y el audio se ordena intro → noticia 1 → noticia 2 → noticia 3 → cierre
+
+#### Scenario: Noticia manual
+- **WHEN** el cliente agrega una noticia escribiendo el texto sin URL
+- **THEN** la noticia se agrega a la lista y se resume igual que las provenientes de una fuente
+
+#### Scenario: Edición de intro y cierre
+- **WHEN** el cliente edita la intro o el cierre
+- **THEN** el audio anterior se invalida y la cápsula vuelve a borrador
+
 ### Requirement: Locución con intro, contenido y cierre
 
 El sistema SHALL generar la locución con la voz configurada del Locutor IA de la radio y SHALL entregar un único audio reproducible que contenga intro, contenido y cierre. La generación MUST respetar la cuota de IA del plan y SHALL informar el consumo estimado antes de generar.

@@ -1,12 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { generateNewsCapsuleAudio } from './news-capsules/audio'
 
-const script = {
-  summary: 'Resumen',
-  intro: 'Intro de la radio.',
-  body: 'Cuerpo de la noticia.',
-  closing: 'Cierre de la radio.',
-}
+const intro = 'Intro de la radio.'
+const items = ['Primera noticia.', 'Segunda noticia.']
+const closing = 'Cierre de la radio.'
 
 function deps(overrides: Record<string, unknown> = {}) {
   return {
@@ -27,17 +24,17 @@ describe('generateNewsCapsuleAudio', () => {
   it('mezcla música de fondo cuando existe', async () => {
     const d = deps()
     const result = await generateNewsCapsuleAudio(
-      { clientId: 'c1', script, music: Buffer.from('music') },
+      { clientId: 'c1', intro, items, closing, music: Buffer.from('music') },
       d as any
     )
     expect(d.mix).toHaveBeenCalledWith(expect.objectContaining({ music: Buffer.from('music') }))
     expect(result.audio).toEqual(Buffer.from('mixed'))
-    expect(result.ttsCharacters).toBe(script.intro.length + script.body.length + script.closing.length)
+    expect(result.ttsCharacters).toBe(intro.length + items.join('').length + closing.length)
   })
 
   it('genera solo locución sin música', async () => {
     const d = deps()
-    const result = await generateNewsCapsuleAudio({ clientId: 'c1', script, music: null }, d as any)
+    const result = await generateNewsCapsuleAudio({ clientId: 'c1', intro, items, closing, music: null }, d as any)
     expect(d.mix).not.toHaveBeenCalled()
     expect(result.audio).toEqual(Buffer.from('voice'))
   })
@@ -45,7 +42,7 @@ describe('generateNewsCapsuleAudio', () => {
   it('rechaza cápsulas mayores a 120 segundos', async () => {
     const d = deps({ probe: vi.fn(async () => 130) })
     await expect(
-      generateNewsCapsuleAudio({ clientId: 'c1', script, music: null }, d as any)
+      generateNewsCapsuleAudio({ clientId: 'c1', intro, items, closing, music: null }, d as any)
     ).rejects.toThrow(/120/)
   })
 })

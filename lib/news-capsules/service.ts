@@ -44,6 +44,16 @@ export interface SerializedNewsCapsule {
     guid: string | null
     excerpt: string | null
   }>
+  items: Array<{
+    id: string
+    order: number
+    title: string
+    sourceUrl: string | null
+    publisher: string | null
+    sourceTitle: string | null
+    sourceText: string | null
+    summary: string | null
+  }>
   rules: Array<{
     id: string
     kind: NewsRuleKind
@@ -97,6 +107,16 @@ export function serializeCapsule(
       publishedAt: Date | null
       guid: string | null
       excerpt: string | null
+    }>
+    items?: Array<{
+      id: string
+      order: number
+      title: string
+      sourceUrl: string | null
+      publisher: string | null
+      sourceTitle: string | null
+      sourceText: string | null
+      summary: string | null
     }>
     rules?: Array<{ id: string; kind: string; config: string; days: string | null; active: boolean }>
   },
@@ -160,6 +180,19 @@ export function serializeCapsule(
       guid: source.guid,
       excerpt: source.excerpt,
     })),
+    items: (capsule.items || [])
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((item) => ({
+        id: item.id,
+        order: item.order,
+        title: item.title,
+        sourceUrl: item.sourceUrl,
+        publisher: item.publisher,
+        sourceTitle: item.sourceTitle,
+        sourceText: item.sourceText,
+        summary: item.summary,
+      })),
     rules: rules.map((rule) => ({
       id: rule.id,
       kind: rule.kind,
@@ -177,6 +210,7 @@ export async function loadCapsuleForClient(id: string, clientId: string) {
     where: { id, clientId },
     include: {
       sources: { orderBy: { createdAt: 'asc' } },
+      items: { orderBy: { order: 'asc' } },
       rules: { orderBy: { createdAt: 'asc' } },
       musicTrack: { select: { id: true, name: true, artist: true } },
     },

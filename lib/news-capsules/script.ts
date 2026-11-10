@@ -98,3 +98,74 @@ export async function generateNewsScript(input: {
   )
   return validateNewsScript(result) ?? fallback
 }
+
+
+export interface NewsItemInput {
+  title: string
+  sourceUrl?: string | null
+  publisher?: string | null
+  excerpt?: string | null
+  text?: string | null
+}
+
+export function defaultCapsuleIntro(stationName: string): string {
+  return `Noticias en ${stationName}.`
+}
+
+export function defaultCapsuleClosing(stationName: string): string {
+  return `Esto fue el resumen de noticias de ${stationName}. Seguimos con la música.`
+}
+
+export function buildItemSummaryFallback(item: NewsItemInput): string {
+  return clean(item.text || item.excerpt || item.title, MAX_BODY_CHARS)
+}
+
+export function validateItemSummaries(raw: unknown, count: number): string[] | null {
+  if (!raw || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  if (!Array.isArray(record.items)) return null
+  const summaries = Array.from({ length: count }, () => '')
+  for (const entry of record.items) {
+    if (!entry || typeof entry !== 'object') continue
+    const item = entry as Record<string, unknown>
+    const index = Number(item.index)
+    const summary = clean(item.summary, MAX_BODY_CHARS)
+    if (Number.isInteger(index) && index >= 0 && index < count && summary) {
+      summaries[index] = summary
+    }
+  }
+  return summaries.every(Boolean) ? summaries : null
+}
+
+export async function generateNewsItemSummaries(input: {
+  stationName: string
+  items: NewsItemInput[]
+}): Promise<string[]> {
+  const fallback = input.items.map((item) => buildItemSummaryFallback(item))
+  if (input.items.length === 0) return []
+  const sourceBlocks = input.items
+    .map((item, index) => {
+      const publisher = item.publisher ? ` (${item.publisher})` : ''
+      const body = (item.text || item.excerpt || '').slice(0, 1200)
+      return `[${index}] ${item.title}${publisher}\n${body}`
+    })
+    .join('\n\n')
+    .slice(0, 8000)
+  const prompt = [
+    `Emisora: ${input.stationName}`,
+    `Resumí cada una de las ${input.items.length} noticias por separado para leerlas en radio.`,
+    'Reglas:',
+    '- Español neutro, informativo y neutral.',
+    '- Cada resumen debe tener como máximo 300 caracteres.',
+    '- No copies frases literales extensas; resumí con tus palabras.',
+    '- No inventes datos que no estén en la fuente.',
+    '- Respondé solo con JSON: {"items":[{"index":0,"summary":"..."}]}',
+    '',
+    sourceBlocks,
+  ].join('\n')
+  const result = await callDeepSeekJson<unknown>(
+    'Sos un redactor de radio. Respondés únicamente con JSON válido, sin markdown.',
+    prompt
+  )
+  return validateItemSummaries(result, input.items.length) ?? fallback
+}

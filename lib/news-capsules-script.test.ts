@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 const deepseek = vi.hoisted(() => ({ call: vi.fn() }))
 vi.mock('@/lib/deepseek', () => ({ callDeepSeekJson: deepseek.call }))
 
-const { buildFallbackScript, generateNewsScript, estimateScriptCharacters } = await import('./news-capsules/script')
+const { buildFallbackScript, generateNewsScript, generateNewsItemSummaries, estimateScriptCharacters } = await import('./news-capsules/script')
 
 const item = {
   id: '1',
@@ -36,6 +36,21 @@ describe('news script', () => {
     })
     expect(script.body).toContain('Texto manual')
     expect(script.intro).toContain('Radio')
+  })
+
+  it('genera un resumen separado por noticia', async () => {
+    deepseek.call.mockResolvedValue({
+      items: [
+        { index: 0, summary: 'Resumen de la primera noticia.' },
+        { index: 1, summary: 'Resumen de la segunda noticia.' },
+      ],
+    })
+    const summaries = await generateNewsItemSummaries({
+      stationName: 'Radio',
+      items: [item, { ...item, id: '2', title: 'Segunda' }],
+    })
+    expect(summaries).toHaveLength(2)
+    expect(summaries[1]).toContain('segunda')
   })
 
   it('limita el cuerpo a 300 caracteres', () => {
