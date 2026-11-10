@@ -33,7 +33,9 @@ function base(overrides = {}) {
 
 test('incluye la cola de noticias y espera el fin del track', () => {
   const script = generateLiquidsoapScript(base())
-  assert.match(script, /news_queue = request\.queue\(id="news-queue"\)/)
+  assert.match(script, /\nnews_queue = request\.queue\(id="news-queue"\)/)
+  assert.doesNotMatch(script, /\[announcements, news_queue/)
+  assert.ok(script.indexOf('news_queue =') < script.indexOf('announcements ='))
   assert.match(script, /fallback\(track_sensitive=true, \[news_queue,/)
 })
 

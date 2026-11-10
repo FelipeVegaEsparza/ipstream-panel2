@@ -63,7 +63,6 @@ export function generateLiquidsoapScript({
     reload_mode="watch",
     loop=${loopStr}
   )`)
-    const newsQueue = hasNews ? 'news_queue = request.queue(id="news-queue")\n' : ''
     // La fuente IA se intercala cada N temas de música. Los jingles van en
     // una capa exterior separada, así no alteran el contador del presentador.
     let baseSource = musicSource
@@ -103,7 +102,7 @@ export function generateLiquidsoapScript({
     ]
   )`
     }
-    sourceBlock = `${newsQueue}mksafe(${baseSource})`
+    sourceBlock = `mksafe(${baseSource})`
   }
 
   const agentHost = config.ice.host === 'localhost' ? 'localhost' : 'agent'
@@ -230,6 +229,9 @@ ${wrapWithSilenceDetector(slotName, djMount, slotName)}`)
   // fallback: role groups (owner > host > guest), then autodj
   fallbackSources.push('autodj')
   const fallbackList = fallbackSources.join(', ')
+  const newsQueueDefinition = mode === 'playlist' && hasNews
+    ? 'news_queue = request.queue(id="news-queue")\n'
+    : ''
 
   return `# =====================================================
 # Auto-generated for client ${safeClient} (mount: ${safeMount})
@@ -261,7 +263,7 @@ settings.harbor.bind_addrs := ["0.0.0.0"]
 # (por defecto busca liq_normalize_track_gain, que no escribimos).
 settings.normalize_track_gain_metadata := "replaygain_track_gain"
 
-announcements = request.queue(id="announcements")
+${newsQueueDefinition}announcements = request.queue(id="announcements")
 autodj = fallback(track_sensitive=true, [announcements, ${sourceBlock}])
 ${harborInputs}
 
