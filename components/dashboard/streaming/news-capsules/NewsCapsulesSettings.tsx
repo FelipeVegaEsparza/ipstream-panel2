@@ -200,7 +200,7 @@ export function NewsCapsulesSettings() {
     setNotice(null)
   }
 
-  const openEdit = (capsule: Capsule, initialStep = 0) => {
+  const applyCapsuleToForm = (capsule: Capsule, initialStep = 0) => {
     setCurrent(capsule)
     setTitle(capsule.title)
     const capsuleItems = Array.isArray(capsule.items) ? capsule.items : []
@@ -223,9 +223,10 @@ export function NewsCapsulesSettings() {
     setIntro(capsule.scriptIntro || '')
     setClosing(capsule.scriptClosing || '')
     setMusicTrackId(capsule.musicTrackId || '')
-    const tracksRule = capsule.rules.find((rule) => rule.kind === 'tracks')
-    const timesRule = capsule.rules.find((rule) => rule.kind === 'times')
-    const intervalRule = capsule.rules.find((rule) => rule.kind === 'interval_hours')
+    const capsuleRules = Array.isArray(capsule.rules) ? capsule.rules : []
+    const tracksRule = capsuleRules.find((rule) => rule.kind === 'tracks')
+    const timesRule = capsuleRules.find((rule) => rule.kind === 'times')
+    const intervalRule = capsuleRules.find((rule) => rule.kind === 'interval_hours')
     setTracksEvery(tracksRule?.config.everyTracks ? String(tracksRule.config.everyTracks) : '')
     setTimesText(timesRule?.config.times?.join(', ') || '')
     setHoursEvery(intervalRule?.config.everyHours ? String(intervalRule.config.everyHours) : '')
@@ -241,6 +242,20 @@ export function NewsCapsulesSettings() {
     setModalOpen(true)
     setError(null)
     setNotice(null)
+  }
+
+  // Siempre carga la cápsula desde la API para no depender del estado de la
+  // lista (reglas/noticias viejas o incompletas). Si falla, usa la tarjeta.
+  const openEdit = async (capsule: Capsule, initialStep = 0) => {
+    let fresh = capsule
+    try {
+      const res = await fetch(`/api/dashboard/streaming/news-capsules/${capsule.id}`, { cache: 'no-store' })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.capsule) fresh = data.capsule as Capsule
+    } catch {
+      // Fallback a los datos de la tarjeta.
+    }
+    applyCapsuleToForm(fresh, initialStep)
   }
 
   const updateCapsule = (capsule: Capsule) => {
@@ -491,16 +506,16 @@ export function NewsCapsulesSettings() {
       const rules: Array<{ kind: NewsRuleKind; config: Record<string, unknown>; active: boolean }> = []
       if (Number(tracksEvery) > 0) rules.push({ kind: 'tracks', config: { everyTracks: Number(tracksEvery) }, active: true })
       if (timesText.trim()) {
-        rules.push({
-          kind: 'times',
-          config: { times: timesText.split(',').map((value) => value.trim()).filter(Boolean) },
-          active: true,
-        })
+        const times = timesText.split(',').map((value) => value.trim()).filter(Boolean)
+        const invalid = times.find((value) => !/^([01]\d|2[0-3]):[0-5]\d$/.test(value))
+        if (invalid) throw new Error(t('streaming.newsCapsules.invalidTime').replace('{value}', invalid))
+        rules.push({ kind: 'times', config: { times }, active: true })
       }
       if (Number(hoursEvery) > 0) {
         rules.push({ kind: 'interval_hours', config: { everyHours: Number(hoursEvery), startAt: startAt || undefined }, active: true })
       }
-      if (rules.length === 0) throw new Error(t('streaming.newsCapsules.noItems'))
+      if (rules.length === 0 && startAt) throw new Error(t('streaming.newsCapsules.startAtNeedsInterval'))
+      if (rules.length === 0) throw new Error(t('streaming.newsCapsules.noSchedule'))
       const res = await fetch(`/api/dashboard/streaming/news-capsules/${current.id}/rules`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -558,8 +573,8 @@ export function NewsCapsulesSettings() {
         </button>
       </div>
 
-      {error && <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
-      {notice && <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700">{notice}</p>}
+      {error && !modalOpen && <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
+      {notice && !modalOpen && <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700">{notice}</p>}
 
       {loading ? (
         <p className="py-8 text-center text-sm text-muted-foreground">{t('streaming.newsCapsules.loading')}</p>
@@ -582,8 +597,8 @@ export function NewsCapsulesSettings() {
               </div>
               <p className="mt-2 text-xs text-muted-foreground">{capsule.items.length} · {capsule.musicTrack?.name || t('streaming.newsCapsules.noMusic')}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" onClick={() => openEdit(capsule)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-secondary">{t('streaming.newsCapsules.editor')}</button>
-                <button type="button" onClick={() => openEdit(capsule, 2)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-secondary">{t('streaming.newsCapsules.rules')}</button>
+                <button type="button" onClick={() => void openEdit(capsule)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-secondary">{t('streaming.newsCapsules.editor')}</button>
+                <button type="button" onClick={() => void openEdit(capsule, 2)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-secondary">{t('streaming.newsCapsules.rules')}</button>
                 <button type="button" onClick={() => void togglePause(capsule)} disabled={busy !== null} className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-secondary disabled:opacity-40">
                   {capsule.status === 'paused' ? <PlayIcon className="h-3.5 w-3.5" /> : <PauseIcon className="h-3.5 w-3.5" />}
                   {capsule.status === 'paused' ? t('streaming.newsCapsules.resume') : t('streaming.newsCapsules.pause')}
