@@ -248,12 +248,19 @@ export function NewsCapsulesSettings() {
   // lista (reglas/noticias viejas o incompletas). Si falla, usa la tarjeta.
   const openEdit = async (capsule: Capsule, initialStep = 0) => {
     let fresh = capsule
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 5000)
     try {
-      const res = await fetch(`/api/dashboard/streaming/news-capsules/${capsule.id}`, { cache: 'no-store' })
+      const res = await fetch(`/api/dashboard/streaming/news-capsules/${capsule.id}`, {
+        cache: 'no-store',
+        signal: controller.signal,
+      })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.capsule) fresh = data.capsule as Capsule
     } catch {
       // Fallback a los datos de la tarjeta.
+    } finally {
+      clearTimeout(timer)
     }
     applyCapsuleToForm(fresh, initialStep)
   }
