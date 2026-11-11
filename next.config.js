@@ -30,6 +30,9 @@ const nextConfig = {
   },
   // Force redeploy: trigger menu page rebuild
   experimental: {
+    // Next 14 requiere este flag para ejecutar instrumentation.ts (poller de
+    // salud de servidores y preparación de locuciones IA de la parrilla).
+    instrumentationHook: true,
     serverComponentsExternalPackages: ['ssh2', '@node-rs/bcrypt'],
     serverActions: {
       bodySizeLimit: '2mb',

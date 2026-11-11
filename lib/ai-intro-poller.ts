@@ -81,6 +81,25 @@ function inErrorBackoff(candidate: Candidate, now: Date): boolean {
   return now.getTime() - candidate.aiIntrosAttemptAt.getTime() < RETRY_AFTER_ERROR_MS
 }
 
+/**
+ * Reclama la preparación de una playlist con un lease en DB. El panel corre
+ * con varios workers (cluster), así que solo uno debe generar a la vez.
+ */
+async function claimPlaylistPreparation(playlistId: string): Promise<boolean> {
+  try {
+    const affected = await prisma.$executeRaw`
+      UPDATE playlists
+         SET aiIntrosAttemptAt = NOW(3)
+       WHERE id = ${playlistId}
+         AND (aiIntrosAttemptAt IS NULL
+              OR aiIntrosAttemptAt < DATE_SUB(NOW(3), INTERVAL 20 MINUTE))`
+    return Number(affected) > 0
+  } catch (err) {
+    console.warn('[ai-intro-poller] no se pudo reclamar la playlist:', err)
+    return false
+  }
+}
+
 async function prepareCandidate(candidate: Candidate): Promise<void> {
   const snapshot = await loadPlaylistSnapshot(candidate.clientId, candidate.playlistId)
   if (!snapshot) return
@@ -91,6 +110,7 @@ async function prepareCandidate(candidate: Candidate): Promise<void> {
 
   const access = await getAiLiveAccess(candidate.clientId)
   if (!access.enabled || access.remaining <= 0) return
+  if (!(await claimPlaylistPreparation(candidate.playlistId))) return
 
   const result = await preparePlaylistIntros({
     clientId: candidate.clientId,
@@ -156,6 +176,7 @@ export async function prepareScheduledPlaylistNow(
     if (snapshot.playlist.aiIntrosKey === snapshot.key && snapshot.playlist.aiIntrosReadyAt) {
       return
     }
+    if (!(await claimPlaylistPreparation(playlistId))) return
     await preparePlaylistIntros({ clientId, playlistId })
   } catch (err) {
     console.warn(
