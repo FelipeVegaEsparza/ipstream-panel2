@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import styles from './InstallPrompt.module.css'
 import { InstallHelpModal, type InstallPlatform } from './InstallHelpModal'
 
-interface BeforeInstallPromptEvent extends Event {
+export interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
-type InstallPromptSubscriber = (event: BeforeInstallPromptEvent) => void
+type InstallPromptSubscriber = (event: BeforeInstallPromptEvent | null) => void
 
 const subscribers = new Set<InstallPromptSubscriber>()
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null
@@ -50,6 +50,52 @@ export function resetInstallPromptForTests(): void {
   deferredInstallPrompt = null
 }
 
+/**
+ * Suscribe a la disponibilidad del prompt nativo de instalación. Se emite con
+ * el evento cuando el navegador lo permite y con `null` cuando se consume.
+ */
+export function subscribeDeferredInstallPrompt(
+  subscriber: InstallPromptSubscriber
+): () => void {
+  subscribers.add(subscriber)
+  return () => {
+    subscribers.delete(subscriber)
+  }
+}
+
+/** Prompt capturado actualmente (o `null` si el navegador aún no lo ofreció). */
+export function getDeferredInstallPrompt(): BeforeInstallPromptEvent | null {
+  return deferredInstallPrompt
+}
+
+/** ¿La app ya corre instalada (standalone/iOS)? */
+export function detectInstalledApp(): boolean {
+  return wasInstalled()
+}
+
+/**
+ * Dispara el instalador nativo. Devuelve el resultado de la elección del
+ * usuario o `unavailable` si no hay prompt pendiente.
+ */
+export async function promptInstall(): Promise<
+  'accepted' | 'dismissed' | 'unavailable'
+> {
+  const event = deferredInstallPrompt
+  if (!event) return 'unavailable'
+
+  try {
+    await event.prompt()
+    const choice = await event.userChoice
+    deferredInstallPrompt = null
+    subscribers.forEach((subscriber) => subscriber(null))
+    return choice?.outcome === 'accepted' ? 'accepted' : 'dismissed'
+  } catch {
+    deferredInstallPrompt = null
+    subscribers.forEach((subscriber) => subscriber(null))
+    return 'unavailable'
+  }
+}
+
 interface InstallPromptProps {
   /** `dark` pinta los iconos negros para fondos claros. */
   variant?: 'default' | 'dark'
@@ -75,7 +121,7 @@ export function InstallPrompt({
   }, [])
 
   useEffect(() => {
-    function onBeforeInstall(event: BeforeInstallPromptEvent) {
+    function onBeforeInstall(event: BeforeInstallPromptEvent | null) {
       setDeferred(event)
     }
     subscribers.add(onBeforeInstall)

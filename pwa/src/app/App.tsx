@@ -9,6 +9,7 @@ import { useTenant } from '@/core/config/TenantContext'
 import { useFullClientData } from '@/core/hooks/useFullClientData'
 import { usePwaRegistration } from '@/modules/pwa/usePwaRegistration'
 import { usePwaInstallReport } from '@/modules/pwa/usePwaInstallReport'
+import { InstallLauncher } from '@/modules/pwa/InstallLauncher'
 import { PushOptIn } from '@/modules/pwa/PushOptIn'
 import { useDocumentTitle } from '@/core/hooks/useDocumentTitle'
 import { ContentSections } from '@/modules/content/ContentSections'
@@ -135,6 +136,7 @@ function TenantApp({ clientId }: { clientId: string }) {
         safariWebId={data?.oneSignalSafariWebId}
       />
       {data?.chatEnabled && <ChatWidget />}
+      <InstallLauncher withChat={Boolean(data?.chatEnabled)} />
     </>
   )
 }
