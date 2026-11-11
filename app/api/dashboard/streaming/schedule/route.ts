@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
+import { prepareScheduledPlaylistNow } from '@/lib/ai-intro-poller'
 
 export async function GET() {
   try {
@@ -38,6 +39,9 @@ export async function POST(request: NextRequest) {
       startTime: body.startTime,
       endTime: body.endTime,
     })
+    // Prepara las locuciones IA de la playlist programada sin bloquear la
+    // respuesta. Si el presentador está apagado, el helper no hace nada.
+    void prepareScheduledPlaylistNow(ctx.clientId, String(body.playlistId))
     return NextResponse.json(result)
   } catch (err) {
     if (err instanceof StreamingAuthError) {

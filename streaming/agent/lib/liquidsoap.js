@@ -377,7 +377,17 @@ export async function regenerateM3u(clientId) {
   const rs = rsRows[0] || {}
   const playlistInfo = await getActivePlaylist(clientId)
   const layers = aiLayersEnabled(rs, Boolean(playlistInfo?.shuffle))
-  const aiFiles = layers.intros ? await listAiIntroFiles(clientId) : []
+  // Set de locuciones de ESTA playlist. Si aún no tiene set propio, se usa el
+  // set plano anterior (compatibilidad) para no perder las intros existentes.
+  let aiIntroDir = clientAiIntrosDir(clientId, playlistId)
+  let aiFiles = []
+  if (layers.intros) {
+    aiFiles = await listAiIntroFiles(clientId, { playlistId })
+    if (aiFiles.length === 0) {
+      aiFiles = await listAiIntroFiles(clientId)
+      aiIntroDir = clientAiIntrosDir(clientId)
+    }
+  }
   // El nombre incluye el id del track destino (ia-0001-<id>.mp3). Así la
   // intro sigue al tema correcto aunque la playlist se reordene.
   const aiByTrack = new Map()
@@ -464,7 +474,7 @@ export async function regenerateM3u(clientId) {
     lines.push(...buildAiLayerLines({
       trackId: e.trackId,
       introByTrack: aiByTrack,
-      introDir: clientAiIntrosDir(clientId),
+      introDir: aiIntroDir,
     }))
     const label = e.artist ? `${e.artist} - ${e.title || ''}` : (e.title || '')
     const dur = e.duration ? Math.round(e.duration) : -1

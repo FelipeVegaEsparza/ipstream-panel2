@@ -253,21 +253,49 @@ export const streamingClient = {
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/jingles/${encodeURIComponent(jingleId)}/cover`, {
       method: 'DELETE',
     }),
-  // AI intros del AutoDJ (separadas de los jingles)
-  clearAiIntros: async (clientId: string) =>
-    request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/ai-intros`, {
-      method: 'DELETE',
-    }),
-  uploadAiIntro: async (clientId: string, file: File) => {
+  // AI intros del AutoDJ (separadas de los jingles). Con `playlistId` se
+  // guardan en el set de esa playlist; `staging` arma el set nuevo antes de
+  // promoverlo (evita dejar a la playlist activa sin locuciones).
+  clearAiIntros: async (clientId: string, playlistId?: string | null, options: { staging?: boolean } = {}) => {
+    const params = new URLSearchParams()
+    if (playlistId) params.set('playlistId', playlistId)
+    if (options.staging) params.set('staging', '1')
+    const query = params.toString()
+    return request(
+      await resolveTarget('radio', clientId),
+      `/api/streams/${encodeURIComponent(clientId)}/ai-intros${query ? `?${query}` : ''}`,
+      { method: 'DELETE' }
+    )
+  },
+  uploadAiIntro: async (
+    clientId: string,
+    file: File,
+    playlistId?: string | null,
+    options: { staging?: boolean } = {}
+  ) => {
+    const params = new URLSearchParams()
+    if (playlistId) params.set('playlistId', playlistId)
+    if (options.staging) params.set('staging', '1')
+    const query = params.toString()
     const form = new FormData()
     form.append('file', file)
-    return request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/ai-intros/upload`, {
-      method: 'POST',
-      body: form,
-      isMultipart: true,
-      timeoutMs: UPLOAD_TIMEOUT_MS,
-    })
+    return request(
+      await resolveTarget('radio', clientId),
+      `/api/streams/${encodeURIComponent(clientId)}/ai-intros/upload${query ? `?${query}` : ''}`,
+      {
+        method: 'POST',
+        body: form,
+        isMultipart: true,
+        timeoutMs: UPLOAD_TIMEOUT_MS,
+      }
+    )
   },
+  promoteAiIntros: async (clientId: string, playlistId: string) =>
+    request(
+      await resolveTarget('radio', clientId),
+      `/api/streams/${encodeURIComponent(clientId)}/ai-intros/promote?playlistId=${encodeURIComponent(playlistId)}`,
+      { method: 'POST' }
+    ),
   // Especiales: intro/cierre subidos al agente
   uploadSpecialAudio: async (clientId: string, specialId: string, part: 'intro' | 'closing', file: File) => {
     const form = new FormData()

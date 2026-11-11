@@ -13,5 +13,9 @@ export async function register() {
     // Dinámico para no afectar el boot si la DB no está lista aún
     const { startServerHealthPoller } = await import('./lib/server-health-poller')
     startServerHealthPoller()
+
+    // Prepara las locuciones IA de las playlists programadas (parrilla).
+    const { startAiIntroPoller } = await import('./lib/ai-intro-poller')
+    startAiIntroPoller()
   }
 }

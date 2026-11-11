@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStreamingClient, StreamingAuthError } from '@/lib/streaming-auth'
 import { streamingClient, StreamingAgentError } from '@/lib/streaming-client'
+import { prisma } from '@/lib/prisma'
+import { prepareScheduledPlaylistNow } from '@/lib/ai-intro-poller'
 
 export async function PATCH(
   request: NextRequest,
@@ -12,7 +14,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
     const body = await request.json().catch(() => ({}))
+    const schedule = await prisma.playlistSchedule.findFirst({
+      where: { id: params.id, clientId: ctx.clientId },
+      select: { playlistId: true },
+    })
     const result = await streamingClient.updateSchedule(ctx.clientId, params.id, body)
+    const playlistId =
+      typeof body.playlistId === 'string' ? body.playlistId : schedule?.playlistId
+    if (playlistId) void prepareScheduledPlaylistNow(ctx.clientId, playlistId)
     return NextResponse.json(result)
   } catch (err) {
     if (err instanceof StreamingAuthError) {

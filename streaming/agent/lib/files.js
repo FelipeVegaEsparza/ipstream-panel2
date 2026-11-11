@@ -206,39 +206,73 @@ export function isSafeFileName(fileName) {
 // AI intro file helpers (presentador del AutoDJ)
 // =====================================================
 
-export function clientAiIntrosDir(clientId) {
-  return join(LIBRARY_PATH, clientId, 'ai-intros')
+export function clientAiIntrosDir(clientId, playlistId) {
+  const base = join(LIBRARY_PATH, clientId, 'ai-intros')
+  return playlistId ? join(base, playlistId) : base
 }
 
-export function aiIntroPath(clientId, fileName) {
-  return join(clientAiIntrosDir(clientId), fileName)
+/** Carpeta temporal donde se arma el set nuevo antes de reemplazar el vigente. */
+export function clientAiIntrosStagingDir(clientId, playlistId) {
+  return join(LIBRARY_PATH, clientId, 'ai-intros', `${playlistId}__staging`)
 }
 
-export async function ensureAiIntrosDir(clientId) {
-  const dir = clientAiIntrosDir(clientId)
+export function aiIntroPath(clientId, fileName, playlistId) {
+  return join(clientAiIntrosDir(clientId, playlistId), fileName)
+}
+
+export async function ensureAiIntrosDir(clientId, playlistId, staging = false) {
+  const dir = staging
+    ? clientAiIntrosStagingDir(clientId, playlistId)
+    : clientAiIntrosDir(clientId, playlistId)
   if (!existsSync(dir)) await mkdir(dir, { recursive: true })
   return dir
 }
 
-export async function saveAiIntro(clientId, fileName, buffer) {
-  await ensureAiIntrosDir(clientId)
-  const dest = join(clientAiIntrosDir(clientId), fileName)
+export async function saveAiIntro(clientId, fileName, buffer, { playlistId = null, staging = false } = {}) {
+  await ensureAiIntrosDir(clientId, playlistId, staging)
+  const dir = staging
+    ? clientAiIntrosStagingDir(clientId, playlistId)
+    : clientAiIntrosDir(clientId, playlistId)
+  const dest = join(dir, fileName)
   await writeFile(dest, buffer)
   const stats = await stat(dest)
   return { path: dest, size: stats.size }
 }
 
-export async function clearAiIntros(clientId) {
-  const dir = clientAiIntrosDir(clientId)
+export async function clearAiIntros(clientId, { playlistId = null, staging = false } = {}) {
+  const dir = staging
+    ? clientAiIntrosStagingDir(clientId, playlistId)
+    : clientAiIntrosDir(clientId, playlistId)
   if (existsSync(dir)) await rm(dir, { recursive: true, force: true })
   return true
 }
 
-export async function listAiIntroFiles(clientId) {
-  const dir = clientAiIntrosDir(clientId)
+/**
+ * Reemplaza el set vigente de una playlist por el staging ya generado.
+ * El borrado + rename es rápido: la ventana sin set es mínima y solo afecta
+ * a esa playlist.
+ */
+export async function promoteAiIntros(clientId, playlistId) {
+  const staging = clientAiIntrosStagingDir(clientId, playlistId)
+  const finalDir = clientAiIntrosDir(clientId, playlistId)
+  if (!existsSync(staging)) return false
+  if (existsSync(finalDir)) await rm(finalDir, { recursive: true, force: true })
+  await rename(staging, finalDir)
+  return true
+}
+
+async function listAiIntroMp3Files(dir) {
   if (!existsSync(dir)) return []
-  const files = await readdir(dir)
-  return files.filter((f) => extname(f).toLowerCase() === '.mp3').sort()
+  try {
+    const files = await readdir(dir)
+    return files.filter((f) => extname(f).toLowerCase() === '.mp3').sort()
+  } catch {
+    return []
+  }
+}
+
+export async function listAiIntroFiles(clientId, { playlistId = null } = {}) {
+  return listAiIntroMp3Files(clientAiIntrosDir(clientId, playlistId))
 }
 
 // =====================================================

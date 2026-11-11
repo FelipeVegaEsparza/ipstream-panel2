@@ -1154,6 +1154,13 @@ model Playlist {
   // Estadísticas
   totalDuration Int? // segundos, recalculado al cambiar tracks
   trackCount    Int      @default(0)
+  // Locuciones IA del presentador, preparadas por playlist. La clave es un
+  // hash del contenido (temas/orden/frecuencia/voz) para saber si el set
+  // actual sigue vigente y regenerarlo solo cuando cambió algo.
+  aiIntrosKey       String?   @db.VarChar(64)
+  aiIntrosReadyAt   DateTime?
+  aiIntrosAttemptAt DateTime?
+  aiIntrosError     String?   @db.Text
   // Timestamps
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
