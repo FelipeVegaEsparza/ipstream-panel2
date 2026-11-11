@@ -996,6 +996,10 @@ model RadioStream {
   currentNextTitle     String?   @db.VarChar(300)
   currentNextArtist    String?   @db.VarChar(300)
   currentNextCoverUrl  String?   @db.VarChar(500)
+  // La actualiza el agente en cada on_track del AutoDJ; el panel la usa para
+  // derivar el tiempo transcurrido. Debe existir en Prisma para que
+  // `prisma db push` no la borre en cada deploy.
+  currentTrackStartedAt DateTime? @db.DateTime(3)
   lastStatusAt         DateTime?
   // Estado interno del proceso liquidsoap (gestionado por streaming-agent)
   liquidsoapRunning    Boolean   @default(false)
