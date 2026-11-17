@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
-import { isService, resolveRange, topTracks, topArtists, topVideos, topDjs } from '@/lib/analytics'
+import { isService, resolveAnalyticsQuery, topTracks, topArtists, topVideos, topDjs } from '@/lib/analytics'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'service_invalido' }, { status: 400 })
     }
     const kind = sp.get('kind') || (service === 'tv' ? 'videos' : 'tracks')
-    const range = resolveRange(sp)
+    const { range } = await resolveAnalyticsQuery(sp, effective.clientId)
     const clientId = effective.clientId
 
     let items: unknown = []

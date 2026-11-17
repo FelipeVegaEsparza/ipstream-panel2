@@ -6,27 +6,25 @@ import {
 } from 'recharts'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader'
+import type { AnalyticsSummary } from '@/lib/analytics'
+import {
+  formatBucket,
+  formatDelta,
+  formatMetric,
+  formatMinutes,
+  formatUptime,
+} from '@/lib/analytics-format'
 
 type Service = 'radio' | 'tv'
 type Period = 'day' | 'week' | 'month'
-
-interface SummaryData {
-  listenersAvg: number
-  listenersMax: number
-  listenerMinutes: number
-  sessions: number
-  airtimeSeconds: number
-  uniqueListeners: number
-  totalBuckets: number
-}
 
 interface SummaryResponse {
   granularity: 'hour' | 'day'
   timezone: string
   from: string
   to: string
-  summary: SummaryData
-  previous: SummaryData
+  summary: AnalyticsSummary
+  previous: AnalyticsSummary
 }
 
 interface SeriesPoint {
@@ -50,33 +48,6 @@ const PERIODS: { key: Period; label: 'analytics.period.day' | 'analytics.period.
   { key: 'week', label: 'analytics.period.week' },
   { key: 'month', label: 'analytics.period.month' },
 ]
-
-function fmtBucket(bucket: string, granularity: 'hour' | 'day', locale: string) {
-  const d = new Date(bucket)
-  if (isNaN(d.getTime())) return bucket
-  if (granularity === 'hour') {
-    return d.toLocaleTimeString(locale === 'en' ? 'en-US' : 'es-CL', { hour: '2-digit', minute: '2-digit' })
-  }
-  return d.toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CL', { day: 'numeric', month: 'short' })
-}
-
-function fmtMinutes(min: number) {
-  const total = Math.round(min)
-  const h = Math.floor(total / 60)
-  const m = total % 60
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
-
-function fmtUptime(airtimeSeconds: number, from: string, to: string) {
-  const span = (new Date(to).getTime() - new Date(from).getTime()) / 1000
-  if (!span || span <= 0) return '—'
-  return `${Math.min(100, Math.round((airtimeSeconds / span) * 100))}%`
-}
-
-function delta(cur: number, prev: number) {
-  if (!prev) return null
-  return Math.round(((cur - prev) / prev) * 100)
-}
 
 export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; hasTv: boolean }) {
   const { t, locale } = useDashboardI18n()
@@ -226,12 +197,20 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
       {s && !empty && (
         <>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-            <Kpi title={t('analytics.kpi.avg')} value={String(s.listenersAvg)} delta={delta(s.listenersAvg, prev?.listenersAvg || 0)} />
-            <Kpi title={t('analytics.kpi.peak')} value={String(s.listenersMax)} />
-            <Kpi title={t('analytics.kpi.unique')} value={String(s.uniqueListeners)} />
-            <Kpi title={t('analytics.kpi.time')} value={fmtMinutes(s.listenerMinutes)} sub={t('analytics.kpi.timeSub')} />
-            <Kpi title={t('analytics.kpi.sessions')} value={String(s.sessions)} />
-            <Kpi title="Uptime" value={fmtUptime(s.airtimeSeconds, summary!.from, summary!.to)} />
+            <Kpi
+              title={t('analytics.kpi.avg')}
+              value={formatMetric(s.listenersAvg)}
+              delta={formatDelta(s.listenersAvg, prev?.listenersAvg)}
+            />
+            <Kpi title={t('analytics.kpi.peak')} value={formatMetric(s.listenersMax)} />
+            <Kpi title={t('analytics.kpi.unique')} value={formatMetric(s.uniqueListeners)} />
+            <Kpi
+              title={t('analytics.kpi.time')}
+              value={formatMinutes(s.listenerMinutes)}
+              sub={t('analytics.kpi.timeSub')}
+            />
+            <Kpi title={t('analytics.kpi.sessions')} value={formatMetric(s.sessions)} />
+            <Kpi title="Uptime" value={formatUptime(s.airtimeSeconds, summary!.from, summary!.to)} />
           </div>
 
           <div className="dashboard-panel p-4">
@@ -242,7 +221,14 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={points}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
-                <XAxis dataKey="bucket" tickFormatter={(v) => fmtBucket(v, summary!.granularity, locale)} stroke="var(--text-3)" fontSize={11} />
+                <XAxis
+                  dataKey="bucket"
+                  tickFormatter={(v) =>
+                    formatBucket(v, summary!.granularity, locale, summary!.timezone)
+                  }
+                  stroke="var(--text-3)"
+                  fontSize={11}
+                />
                 <YAxis stroke="var(--text-3)" fontSize={11} />
                 <Tooltip
                   contentStyle={{
@@ -251,7 +237,9 @@ export default function AnalyticsView({ hasRadio, hasTv }: { hasRadio: boolean; 
                     borderRadius: '8px',
                     color: 'var(--text-1)',
                   }}
-                  labelFormatter={(v) => fmtBucket(String(v), summary!.granularity, locale)}
+                  labelFormatter={(v) =>
+                    formatBucket(String(v), summary!.granularity, locale, summary!.timezone)
+                  }
                 />
                 <Legend />
                 <Line type="monotone" dataKey="listenersAvg" name={t('analytics.kpi.avg')} stroke="var(--text-1)" strokeWidth={1.75} dot={false} />
@@ -332,7 +320,7 @@ function RankCard({ title, items }: { title: string; items: RankItem[] }) {
               {it.sublabel && <span className="text-muted-foreground"> — {it.sublabel}</span>}
             </span>
             <span className="whitespace-nowrap text-muted-foreground">
-              {it.seconds ? fmtMinutes(it.seconds / 60) : `${it.count}×`}
+              {it.seconds ? formatMinutes(it.seconds / 60) : `${it.count}×`}
             </span>
           </li>
         ))}

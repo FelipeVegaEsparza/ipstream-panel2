@@ -24,34 +24,45 @@ export function isService(value: string | null): value is Service {
   return value === 'radio' || value === 'tv'
 }
 
-export function resolveRange(params: URLSearchParams, now = new Date()): TimeRange {
+export function resolveRange(params: URLSearchParams, tz = 'UTC', now = new Date()): TimeRange {
   const period = params.get('period') || 'week'
   const fromParam = params.get('from')
   const toParam = params.get('to')
 
-  let to = new Date(now)
-  let from: Date
-
   if (fromParam && toParam) {
-    from = new Date(fromParam)
-    to = new Date(toParam)
-  } else {
-    switch (period) {
-      case 'day':
-        from = new Date(to.getTime() - DAY_MS)
-        break
-      case 'month':
-        from = new Date(to.getTime() - 30 * DAY_MS)
-        break
-      case 'week':
-      default:
-        from = new Date(to.getTime() - 7 * DAY_MS)
+    const from = new Date(fromParam)
+    const to = new Date(toParam)
+    const span = Math.max(0, to.getTime() - from.getTime())
+    return {
+      period,
+      from,
+      to,
+      prevFrom: new Date(from.getTime() - span),
+      // Exclusivo: el día del borde pertenece al período actual, no al anterior.
+      prevTo: new Date(from.getTime() - 1),
     }
   }
 
-  const span = to.getTime() - from.getTime()
-  const prevTo = new Date(from.getTime())
-  const prevFrom = new Date(from.getTime() - span)
+  if (period === 'day') {
+    const to = new Date(now)
+    const from = new Date(to.getTime() - DAY_MS)
+    return {
+      period,
+      from,
+      to,
+      prevFrom: new Date(from.getTime() - DAY_MS),
+      prevTo: new Date(from.getTime() - 1),
+    }
+  }
+
+  // "7 días" y "30 días" se alinean a días locales para que produzcan 7 y 30
+  // buckets diarios (una ventana móvil de 7×24 h abarcaba 8 días calendario).
+  const days = period === 'month' ? 30 : 7
+  const from = startOfLocalDayOffset(now, -(days - 1), tz)
+  const to = new Date(now)
+  const prevFrom = startOfLocalDayOffset(now, -(days * 2 - 1), tz)
+  // Exclusivo: el día del borde pertenece al período actual, no al anterior.
+  const prevTo = new Date(from.getTime() - 1)
 
   return { period, from, to, prevFrom, prevTo }
 }
@@ -84,6 +95,74 @@ export function zonedParts(date: Date, tz: string) {
   return map
 }
 
+/** Offset (ms) de la zona respecto de UTC en un instante dado. */
+function tzOffsetMs(date: Date, tz: string): number {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  })
+  const parts: Record<string, string> = {}
+  for (const p of fmt.formatToParts(date)) {
+    if (p.type !== 'literal') parts[p.type] = p.value
+  }
+  const asUTC = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second)
+  )
+  return asUTC - date.getTime()
+}
+
+/** Primer instante de un día local expresado como componentes calendario. */
+export function startOfLocalDayForParts(
+  year: number,
+  month: number,
+  day: number,
+  tz: string
+): Date {
+  const guess = Date.UTC(year, month - 1, day, 0, 0, 0, 0)
+  const offset = tzOffsetMs(new Date(guess), tz)
+  let candidate = guess - offset
+  const adjusted = tzOffsetMs(new Date(candidate), tz)
+  // En un cambio de horario el offset del instante candidato puede diferir del
+  // que se usó para calcularlo (DST); se corrige una vez.
+  if (adjusted !== offset) candidate = guess - adjusted
+  return new Date(candidate)
+}
+
+/** Primer instante del día local al que pertenece `date`. */
+export function startOfLocalDay(date: Date, tz: string): Date {
+  const p = zonedParts(date, tz)
+  return startOfLocalDayForParts(Number(p.year), Number(p.month), Number(p.day), tz)
+}
+
+/**
+ * Primer instante del día local que está `days` días antes/después de `date`.
+ * Se suman días de calendario (no 24 h fijas) para que el cambio de horario no
+ * desplace el inicio del rango.
+ */
+export function startOfLocalDayOffset(date: Date, days: number, tz: string): Date {
+  const p = zonedParts(date, tz)
+  const normalized = new Date(
+    Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day) + days, 0, 0, 0, 0)
+  )
+  return startOfLocalDayForParts(
+    normalized.getUTCFullYear(),
+    normalized.getUTCMonth() + 1,
+    normalized.getUTCDate(),
+    tz
+  )
+}
+
 export function localDayKey(date: Date, tz: string): string {
   const p = zonedParts(date, tz)
   return `${p.year}-${p.month}-${p.day}`
@@ -100,6 +179,22 @@ export function localWeekdayHour(date: Date, tz: string): { weekday: number; hou
 export async function getClientTimezone(clientId: string): Promise<string> {
   const client = await prisma.client.findUnique({ where: { id: clientId }, select: { timezone: true } })
   return client?.timezone || 'UTC'
+}
+
+/**
+ * Resuelve zona, rango y granularidad de una consulta de analítica. Las rutas
+ * de summary/series/heatmap/top/export comparten este helper para que todas
+ * usen exactamente la misma ventana.
+ */
+export async function resolveAnalyticsQuery(
+  sp: URLSearchParams,
+  clientId: string,
+  now = new Date()
+) {
+  const tz = await getClientTimezone(clientId)
+  const range = resolveRange(sp, tz, now)
+  const granularity = inferGranularity(range, sp.get('granularity'))
+  return { tz, range, granularity }
 }
 
 // -----------------------------------------------------
@@ -214,10 +309,20 @@ export async function buildSeries(
   return dailySeriesFromHourly(await fetchHourly(clientId, service, range.from, range.to), tz)
 }
 
-export function summarize(points: SeriesPoint[], uniqueListeners: number) {
+export interface AnalyticsSummary {
+  listenersAvg: number
+  listenersMax: number
+  listenerMinutes: number
+  sessions: number
+  airtimeSeconds: number
+  uniqueListeners: number
+  totalBuckets: number
+}
+
+export function summarize(points: SeriesPoint[], uniqueListeners: number): AnalyticsSummary {
   return {
-    overallAvgListeners: Math.round(aggWeightedAvg(points) * 10) / 10,
-    allTimePeakListeners: points.reduce((m, p) => Math.max(m, p.listenersMax), 0),
+    listenersAvg: Math.round(aggWeightedAvg(points) * 10) / 10,
+    listenersMax: points.reduce((m, p) => Math.max(m, p.listenersMax), 0),
     listenerMinutes: Math.round(points.reduce((s, p) => s + p.listenerMinutes, 0) * 10) / 10,
     sessions: points.reduce((s, p) => s + p.sessions, 0),
     airtimeSeconds: points.reduce((s, p) => s + p.airtimeSeconds, 0),

@@ -320,6 +320,13 @@ services:
       TV_VIDEO_BUFSIZE: ${TV_VIDEO_BUFSIZE:-3000}
       TV_VIDEO_LADDER: ${TV_VIDEO_LADDER:-1080p:2000,720p:1000}
       TV_PLAYOUT: ${TV_PLAYOUT:-stitch}
+      # Analytics: paths del access log de Caddy y ventana de sesiones de TV.
+      # En el servidor principal radio y TV usan archivos distintos.
+      ANALYTICS_CADDY_CONTAINER: ${ANALYTICS_CADDY_CONTAINER:-ipstream-caddy}
+      ANALYTICS_RADIO_LOG: ${ANALYTICS_RADIO_LOG:-/data/stream-access.log}
+      ANALYTICS_VIDEO_LOG: ${ANALYTICS_VIDEO_LOG:-/data/access.log}
+      ANALYTICS_LOG_TAIL_BYTES: ${ANALYTICS_LOG_TAIL_BYTES:-5000000}
+      ANALYTICS_TV_SESSION_GAP_SECONDS: ${ANALYTICS_TV_SESSION_GAP_SECONDS:-300}
     ports:
       - "127.0.0.1:4000:4000"   # accesible solo desde el host (para debug)
     volumes:

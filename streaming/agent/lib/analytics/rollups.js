@@ -5,7 +5,7 @@
 import { pool } from '../db.js'
 import { logger } from '../logger.js'
 import { config } from '../config.js'
-import { computeHourlyRows, computeDailyRows } from './rollup.js'
+import { computeHourlyRows, computeDailyRows, dailyReplacementWindow } from './rollup.js'
 import { floorToHourUtc } from './time-buckets.js'
 import { RAW_RETENTION_DAYS } from '../retention-plan.js'
 
@@ -101,7 +101,7 @@ async function upsertHourly(service, rows) {
   return rows.length
 }
 
-async function upsertDaily(service, rows) {
+async function upsertDaily(service, rows, db = pool) {
   if (rows.length === 0) return 0
   const cols = '(clientId, service, dayLocal, tz, listenersAvg, listenersMax, listenerMinutes, sessions, airtimeSeconds, uniqueListeners)'
   for (let i = 0; i < rows.length; i += 100) {
@@ -111,7 +111,7 @@ async function upsertDaily(service, rows) {
       r.clientId, service, r.dayLocal, r.tz, r.listenersAvg, r.listenersMax,
       r.listenerMinutes, r.sessions, r.airtimeSeconds, r.uniqueListeners,
     ])
-    await pool.query(
+    await db.query(
       `INSERT INTO metrics_daily ${cols} VALUES ${values}
        ON DUPLICATE KEY UPDATE
          tz = VALUES(tz),
@@ -214,7 +214,11 @@ export async function runDailyRollup() {
 }
 
 /**
- * Recalcula todos los metrics_daily de un cliente (al cambiar su zona horaria).
+ * Recalcula los metrics_daily de la ventana cubierta por datos crudos. Los
+ * días anteriores a esa ventana se conservan: ya no hay muestras para
+ * reagruparlos y borrarlos solo destruiría el histórico de largo plazo.
+ * El borrado y la inserción van en una transacción para que un fallo no deje
+ * al cliente sin rollups.
  */
 export async function recomputeDailyForClient(clientId, tz) {
   const to = new Date(Date.now() + DAY_MS)
@@ -231,11 +235,34 @@ export async function recomputeDailyForClient(clientId, tz) {
 
     const radioRows = computeDailyRows({ samples: rSamples, sessions: rSessions, intervalSeconds: SAMPLE_INTERVAL_SECONDS, tz: zone })
     const tvRows = computeDailyRows({ samples: vSamples, sessions: vSessions, intervalSeconds: SAMPLE_INTERVAL_SECONDS, tz: zone })
+    const window = dailyReplacementWindow([...radioRows, ...tvRows])
 
-    await pool.query('DELETE FROM metrics_daily WHERE clientId = ?', [clientId])
-    await upsertDaily('radio', radioRows)
-    await upsertDaily('tv', tvRows)
-    logger.info({ clientId, tz: zone }, 'Analytics: metrics_daily recalculados por cambio de zona horaria')
+    if (!window) {
+      logger.info({ clientId, tz: zone }, 'Analytics: sin datos crudos para recalcular; histórico conservado')
+      return { radio: 0, tv: 0, preserved: true }
+    }
+
+    const conn = await pool.getConnection()
+    try {
+      await conn.beginTransaction()
+      await conn.query(
+        'DELETE FROM metrics_daily WHERE clientId = ? AND dayLocal BETWEEN ? AND ?',
+        [clientId, window.from, window.to]
+      )
+      await upsertDaily('radio', radioRows, conn)
+      await upsertDaily('tv', tvRows, conn)
+      await conn.commit()
+    } catch (err) {
+      await conn.rollback().catch(() => {})
+      throw err
+    } finally {
+      conn.release()
+    }
+
+    logger.info(
+      { clientId, tz: zone, from: window.from, to: window.to },
+      'Analytics: metrics_daily recalculados por cambio de zona horaria'
+    )
     return { radio: radioRows.length, tv: tvRows.length }
   } catch (err) {
     logger.error({ err: err.message, clientId }, 'Error recalculando metrics_daily')

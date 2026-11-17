@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
-import { isService, resolveRange, inferGranularity, buildSeries, getClientTimezone } from '@/lib/analytics'
+import { isService, resolveAnalyticsQuery, buildSeries } from '@/lib/analytics'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,9 +17,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'service_invalido' }, { status: 400 })
     }
 
-    const range = resolveRange(sp)
-    const tz = await getClientTimezone(effective.clientId)
-    const granularity = inferGranularity(range, sp.get('granularity'))
+    const { tz, range, granularity } = await resolveAnalyticsQuery(sp, effective.clientId)
     const points = await buildSeries(effective.clientId, service, range, granularity, tz)
 
     return NextResponse.json({

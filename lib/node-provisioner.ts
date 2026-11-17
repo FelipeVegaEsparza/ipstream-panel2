@@ -12,6 +12,7 @@
 import { prisma } from '@/lib/prisma'
 import { decrypt } from './encryption'
 import { sshExec, sftpWrite, SshConfig } from './ssh'
+import { nodeAnalyticsEnv } from './node-analytics-env'
 import crypto from 'crypto'
 
 const REPO_TARBALL_BASE = 'https://github.com/FelipeVegaEsparza/ipstream-panel2/archive'
@@ -122,6 +123,11 @@ function buildNodeEnv(server: {
   const rand = (len = 16) => crypto.randomBytes(len).toString('hex')
   const env: Record<string, string> = {
     NODE_ENV: 'production',
+    // Analytics: el Caddy del nodo escribe radio y TV en /data/access.log.
+    ...nodeAnalyticsEnv({
+      tailBytes: process.env.ANALYTICS_LOG_TAIL_BYTES,
+      sessionGapSeconds: process.env.ANALYTICS_TV_SESSION_GAP_SECONDS,
+    }),
     // SHA del código copiado al nodo. El agente lo reporta en /health y el
     // panel avisa si el nodo quedó desactualizado tras un deploy.
     AGENT_BUILD: agentBuild,

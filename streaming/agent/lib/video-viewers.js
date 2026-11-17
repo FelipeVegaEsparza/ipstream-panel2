@@ -8,6 +8,7 @@
 
 import { logger } from './logger.js'
 import { execCmd } from './video-encoder.js'
+import { parseVideoPlaybackRequest } from './analytics/parse.js'
 
 const CADDY_CONTAINER = 'ipstream-caddy'
 const CADDY_LOG = '/data/access.log'
@@ -31,39 +32,44 @@ export async function countVideoViewers(windowMs = 30000) {
   return viewers
 }
 
-async function readViewersFromLog(windowMs = 30000) {
+/**
+ * Cuenta IPs únicas que reprodujeron cada stream en la ventana reciente.
+ * Acepta `options.run` para testear el parseo y las opciones de exec sin
+ * depender del contenedor de Caddy.
+ */
+export async function readViewersFromLog(windowMs = 30000, options = {}) {
   const viewers = {}
+  const run = options.run || execCmd
   try {
-    const log = await execCmd(
-      `docker exec ${CADDY_CONTAINER} sh -c "tail -c 2000000 ${CADDY_LOG} 2>/dev/null | grep m3u8 || true"`
-    ).catch(() => null)
+    const log = await run(
+      `docker exec ${CADDY_CONTAINER} sh -c "tail -c 2000000 ${CADDY_LOG} 2>/dev/null | grep -E 'm3u8|/seg/' || true"`,
+      { maxBuffer: 4 * 1024 * 1024 }
+    )
     if (!log) return viewers
 
     const cutoff = Date.now() - windowMs
-    const lines = log.split('\n')
 
-    for (const line of lines) {
+    for (const line of log.split('\n')) {
       let entry
       try {
         entry = JSON.parse(line)
       } catch {
         continue
       }
-      // Solo requests a manifiestos HLS
-      const uri = entry?.request?.uri || ''
-      const m = uri.match(/\/(live|dj)\/(tv_[a-f0-9]{12})\.m3u8/)
-      if (!m) continue
 
-      const streamKey = m[2]
-      // Filtro por ventana temporal usando el ts del log (unix seconds)
+      // Reproducción de TV: SRS en vivo o cualquier recurso de VOD2Live.
+      const playback = parseVideoPlaybackRequest(entry?.request?.uri || '')
+      if (!playback) continue
+
+      // Filtro por ventana temporal usando el ts del log (unix seconds).
       const ts = entry?.ts
       if (typeof ts === 'number' && ts * 1000 < cutoff) continue
 
       const ip = entry?.request?.remote_ip || entry?.request?.client_ip
       if (!ip) continue
 
-      if (!viewers[streamKey]) viewers[streamKey] = new Set()
-      viewers[streamKey].add(ip)
+      if (!viewers[playback.streamKey]) viewers[playback.streamKey] = new Set()
+      viewers[playback.streamKey].add(ip)
     }
 
     const result = {}
@@ -72,7 +78,7 @@ async function readViewersFromLog(windowMs = 30000) {
     }
     return result
   } catch (err) {
-    logger.error({ err: err.message }, 'Error contando espectadores de video')
+    logger.warn({ err: err.message }, 'No se pudieron contar espectadores de video')
     return {}
   }
 }

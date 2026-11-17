@@ -224,6 +224,12 @@ services:
       TV_VIDEO_BUFSIZE: ${TV_VIDEO_BUFSIZE:-3000}
       TV_VIDEO_LADDER: ${TV_VIDEO_LADDER:-1080p:2000,720p:1000}
       TV_PLAYOUT: ${TV_PLAYOUT:-stitch}
+      # Analytics: en un nodo el Caddy escribe radio y TV en el mismo archivo.
+      ANALYTICS_CADDY_CONTAINER: ${ANALYTICS_CADDY_CONTAINER:-ipstream-caddy}
+      ANALYTICS_RADIO_LOG: ${ANALYTICS_RADIO_LOG:-/data/access.log}
+      ANALYTICS_VIDEO_LOG: ${ANALYTICS_VIDEO_LOG:-/data/access.log}
+      ANALYTICS_LOG_TAIL_BYTES: ${ANALYTICS_LOG_TAIL_BYTES:-5000000}
+      ANALYTICS_TV_SESSION_GAP_SECONDS: ${ANALYTICS_TV_SESSION_GAP_SECONDS:-300}
     ports:
       # El panel central debe poder alcanzar este puerto (acotar por firewall a la IP del panel)
       - "4000:4000"

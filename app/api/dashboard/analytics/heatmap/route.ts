@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEffectiveClient } from '@/lib/getEffectiveClient'
-import { isService, resolveRange, getHeatmap, getClientTimezone } from '@/lib/analytics'
+import { isService, resolveAnalyticsQuery, getHeatmap } from '@/lib/analytics'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,8 +17,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'service_invalido' }, { status: 400 })
     }
 
-    const range = resolveRange(sp)
-    const tz = await getClientTimezone(effective.clientId)
+    const { tz, range } = await resolveAnalyticsQuery(sp, effective.clientId)
     const { matrix, max } = await getHeatmap(effective.clientId, service, range.from, range.to, tz)
 
     return NextResponse.json({ service, timezone: tz, matrix, max })

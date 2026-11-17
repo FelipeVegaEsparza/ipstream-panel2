@@ -310,6 +310,7 @@ const es = {
   'timezone.saving': 'Guardando...',
   'timezone.loading': 'Cargando...',
   'timezone.error': 'Error al guardar',
+  'timezone.recomputeWarning': 'La zona se guardó, pero no se pudieron recalcular las estadísticas diarias.',
 
   'streaming.library.title': 'Biblioteca',
   'streaming.library.subtitle': 'Sube tus MP3s para usar en las playlists de AutoDJ.',
@@ -4184,6 +4185,7 @@ const en: Record<DashboardTranslationKey, string> = {
   'timezone.saving': 'Saving...',
   'timezone.loading': 'Loading...',
   'timezone.error': 'Error saving',
+  'timezone.recomputeWarning': 'The timezone was saved, but the daily analytics could not be recalculated.',
 
   'streaming.library.title': 'Library',
   'streaming.library.subtitle': 'Upload your MP3s to use in AutoDJ playlists.',

@@ -91,7 +91,47 @@ export function buildViewerSampleRow(vs, viewers, now = new Date(), id = crypto.
   }
 }
 
-const TV_MANIFEST_RE = /(?:^|\/)(?:live|dj)\/(tv_[a-f0-9]{12})\.m3u8/
+/**
+ * Reconoce un recurso de reproducción de TV y devuelve su streamKey y tipo.
+ * Cubre el HLS en vivo de SRS (/live, /dj) y el playout VOD2Live del stitcher
+ * (/vod/<key>/live.m3u8, playlists por rendición y segmentos). El 302 de
+ * /tv/<key>.m3u8 se ignora: el recurso real que se cuenta viene después.
+ *
+ * @returns {{ streamKey: string, kind: string } | null}
+ */
+export function parseVideoPlaybackRequest(uri) {
+  if (!uri || typeof uri !== 'string') return null
+  const path = uri.split('?')[0]
+
+  if (/^\/tv\/tv_[a-f0-9]{12}\.m3u8$/.test(path)) return null
+
+  let m = path.match(/^\/live\/(tv_[a-f0-9]{12})\.m3u8$/)
+  if (m) return { streamKey: m[1], kind: 'srs-live' }
+
+  m = path.match(/^\/dj\/(tv_[a-f0-9]{12})\.m3u8$/)
+  if (m) return { streamKey: m[1], kind: 'srs-dj' }
+
+  m = path.match(/^\/vod\/(tv_[a-f0-9]{12})\/live\.m3u8$/)
+  if (m) return { streamKey: m[1], kind: 'vod-master' }
+
+  m = path.match(/^\/vod\/(tv_[a-f0-9]{12})\/live\/[^/]+\.m3u8$/)
+  if (m) return { streamKey: m[1], kind: 'vod-media' }
+
+  m = path.match(/^\/vod\/(tv_[a-f0-9]{12})\/seg\//)
+  if (m) return { streamKey: m[1], kind: 'vod-segment' }
+
+  // Variantes internas del agente (URI reescrita por Caddy en un nodo).
+  m = path.match(/^\/api\/video\/playout\/(tv_[a-f0-9]{12})\/live\.m3u8$/)
+  if (m) return { streamKey: m[1], kind: 'vod-master' }
+
+  m = path.match(/^\/api\/video\/playout\/(tv_[a-f0-9]{12})\/live\/[^/]+\.m3u8$/)
+  if (m) return { streamKey: m[1], kind: 'vod-media' }
+
+  m = path.match(/^\/api\/video\/playout\/(tv_[a-f0-9]{12})\/seg\//)
+  if (m) return { streamKey: m[1], kind: 'vod-segment' }
+
+  return null
+}
 
 /**
  * Parsea líneas del access log de Caddy (JSON) y devuelve sesiones de radio.
@@ -147,7 +187,7 @@ export function parseRadioSessions(lines, mountMap) {
  * @param {string[]} lines
  * @param {Map<string,{clientId:string,videoStreamId:string}>} keyMap streamKey -> stream
  */
-export function parseViewerSessions(lines, keyMap) {
+export function parseViewerEvents(lines, keyMap) {
   const out = []
   const seen = new Set()
   for (const line of lines) {
@@ -160,11 +200,9 @@ export function parseViewerSessions(lines, keyMap) {
     }
     if (!e || !e.request) continue
 
-    const uri = e.request.uri || ''
-    const m = uri.match(TV_MANIFEST_RE)
-    if (!m) continue
-    const streamKey = m[1]
-    const target = keyMap.get(streamKey)
+    const playback = parseVideoPlaybackRequest(e.request.uri || '')
+    if (!playback) continue
+    const target = keyMap.get(playback.streamKey)
     if (!target) continue
 
     const ip = e.request.remote_ip || e.request.client_ip || null
@@ -173,21 +211,45 @@ export function parseViewerSessions(lines, keyMap) {
 
     const duration = Number(e.duration ?? 0)
     const size = Number(e.size ?? 0)
-    const signature = makeSignature([ts, ip, streamKey, size, Math.round(duration)])
-    if (seen.has(signature)) continue
-    seen.add(signature)
+    const eventKey = `${playback.streamKey}|${ip}|${ts}|${size}`
+    if (seen.has(eventKey)) continue
+    seen.add(eventKey)
 
     out.push({
       clientId: target.clientId,
       streamId: target.videoStreamId,
-      mount: streamKey,
+      streamKey: playback.streamKey,
+      kind: playback.kind,
       ip,
       userAgent: headerValue(e.request.headers, 'User-Agent'),
       bytes: Number.isFinite(size) ? size : 0,
       startedAt: new Date(ts * 1000),
       durationSeconds: Number.isFinite(duration) ? Math.max(0, Math.round(duration)) : 0,
-      signature,
     })
   }
   return out
+}
+
+/**
+ * Compatibilidad: una fila por evento de reproducción (sin consolidar). El
+ * colector usa `parseViewerEvents` + SessionTracker para consolidar sesiones.
+ */
+export function parseViewerSessions(lines, keyMap) {
+  return parseViewerEvents(lines, keyMap).map((e) => ({
+    clientId: e.clientId,
+    streamId: e.streamId,
+    mount: e.streamKey,
+    ip: e.ip,
+    userAgent: e.userAgent,
+    bytes: e.bytes,
+    startedAt: e.startedAt,
+    durationSeconds: e.durationSeconds,
+    signature: makeSignature([
+      e.startedAt.getTime() / 1000,
+      e.ip,
+      e.streamKey,
+      e.bytes,
+      e.durationSeconds,
+    ]),
+  }))
 }

@@ -17,6 +17,7 @@ export default defineConfig({
       'components/dashboard/streaming/live/**/*.test.tsx',
       'components/dashboard/streaming/news-capsules/**/*.test.tsx',
       'app/auth/login/**/*.test.tsx',
+      'app/api/dashboard/settings/timezone/**/*.test.ts',
     ],
     exclude: ['node_modules/**', 'pwa/**', '.next/**'],
     environment: 'jsdom',

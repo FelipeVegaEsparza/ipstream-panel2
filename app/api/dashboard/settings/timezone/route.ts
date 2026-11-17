@@ -61,14 +61,23 @@ export async function PATCH(request: NextRequest) {
       data: { timezone },
     })
 
-    // Re-alinear los rollups diarios de analítica a la nueva zona (best-effort).
+    // Re-alinear los rollups diarios a la nueva zona. El agente recalcula en
+    // una transacción: si falla, conserva los rollups anteriores. El error se
+    // informa al cliente para que sepa que el histórico diario quedó pendiente.
+    let analyticsRecomputed = true
     try {
       await streamingClient.recomputeAnalyticsDaily(effectiveClient.clientId)
     } catch (e) {
+      analyticsRecomputed = false
       console.error('No se pudieron recalcular las estadísticas diarias:', e)
     }
 
-    return NextResponse.json({ success: true, timezone })
+    return NextResponse.json({
+      success: true,
+      timezone,
+      analyticsRecomputed,
+      ...(analyticsRecomputed ? {} : { warning: 'analytics_recompute_failed' }),
+    })
   } catch (error) {
     console.error('Error al actualizar timezone:', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

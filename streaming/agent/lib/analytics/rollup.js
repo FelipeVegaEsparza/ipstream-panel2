@@ -49,6 +49,19 @@ function toMetrics(g) {
 }
 
 /**
+ * Rango de días que reemplaza un recalculo de metrics_daily. Solo cubre los
+ * días presentes en las filas nuevas; los días anteriores a la ventana cruda
+ * quedan fuera y se conservan.
+ * @returns {{ from: string, to: string } | null}
+ */
+export function dailyReplacementWindow(rows) {
+  const days = rows.map((r) => r.dayLocal).filter(Boolean)
+  if (days.length === 0) return null
+  days.sort()
+  return { from: days[0], to: days[days.length - 1] }
+}
+
+/**
  * Rollup de una hora UTC. samples/sessions ya acotados a esa hora.
  * @returns {Array<object>} filas de metrics_hourly (sin bucketStartUtc)
  */

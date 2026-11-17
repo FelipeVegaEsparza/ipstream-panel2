@@ -68,8 +68,13 @@ export default function TimezoneSelector({ onChanged, compact }: TimezoneSelecto
         body: JSON.stringify({ timezone: value }),
       })
       if (res.ok) {
+        const data = await res.json().catch(() => ({}))
         setTimezone(value)
-        showToast({ type: 'success', title: t('timezone.saved') })
+        if (data.warning) {
+          showToast({ type: 'error', title: t('timezone.recomputeWarning') })
+        } else {
+          showToast({ type: 'success', title: t('timezone.saved') })
+        }
         showToast({ type: 'info', title: t('timezone.reinterpret') })
         onChanged?.()
       } else {

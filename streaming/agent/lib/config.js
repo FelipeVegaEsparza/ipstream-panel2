@@ -112,6 +112,9 @@ export const config = {
     videoLogPath: required('ANALYTICS_VIDEO_LOG', '/data/access.log'),
     // Cuántos bytes del final del log leer en cada ciclo.
     tailBytes: intEnv('ANALYTICS_LOG_TAIL_BYTES', 5_000_000),
+    // Ventana de inactividad para consolidar recargas de manifiesto en una
+    // sola sesión de visualización de TV (segundos).
+    tvSessionGapSeconds: intEnv('ANALYTICS_TV_SESSION_GAP_SECONDS', 300),
   },
 
   // SRS (Televisión + ingesta WebRTC de radio)

@@ -14,10 +14,15 @@ import { enrichSession } from './enrich.js'
 import {
   getStreamKey,
   parseRadioSessions,
-  parseViewerSessions,
+  parseViewerEvents,
   buildRadioSampleRow,
   buildViewerSampleRow,
 } from './parse.js'
+import { ViewerSessionTracker } from './sessions.js'
+
+const viewerSessionTracker = new ViewerSessionTracker({
+  gapSeconds: config.analytics.tvSessionGapSeconds,
+})
 
 function uuid() {
   return crypto.randomUUID()
@@ -136,15 +141,26 @@ export async function collectViewerSamples() {
 // Sesiones (access log de Caddy)
 // -----------------------------------------------------
 
-async function readCaddyLog(path) {
+/**
+ * Lee el tramo reciente del access log de Caddy. Exportado para poder testear
+ * el manejo de maxBuffer y de errores sin depender del contenedor.
+ *
+ * `child_process.exec` tiene un maxBuffer de 1 MB por defecto; el tramo por
+ * defecto es de 5 MB, así que sin esta opción la lectura fallaba siempre y el
+ * error quedaba oculto en un log de debug.
+ */
+export async function readCaddyLog(path, run = execCmd) {
+  const command = `docker exec ${config.analytics.caddyContainer} sh -c "tail -c ${config.analytics.tailBytes} '${path}'"`
   try {
-    const out = await execCmd(
-      `docker exec ${config.analytics.caddyContainer} sh -c "tail -c ${config.analytics.tailBytes} '${path}' 2>/dev/null || true"`,
-      { timeout: 20_000 }
-    )
+    const out = await run(command, {
+      timeout: 20_000,
+      maxBuffer: Math.max(config.analytics.tailBytes * 2, 2 * 1024 * 1024),
+    })
     return out ? out.split('\n') : []
   } catch (err) {
-    logger.debug({ err: err.message, path }, 'No se pudo leer el access log de Caddy')
+    // Una lectura vacía ya no se confunde con "no hubo sesiones": si el archivo
+    // no existe o el contenedor no responde, queda una advertencia visible.
+    logger.warn({ err: err.message, path }, 'No se pudo leer el access log de Caddy')
     return []
   }
 }
@@ -166,6 +182,36 @@ async function insertSessions(table, rows, idField) {
     inserted += res.affectedRows || 0
   }
   return inserted
+}
+
+/**
+ * Inserta o actualiza sesiones de TV. La firma es única por sesión; si el
+ * mismo tramo se relee, se actualizan duración/bytes sin crear otra fila.
+ */
+async function upsertViewerSessions(rows) {
+  if (rows.length === 0) return 0
+  const cols = '(id, clientId, videoStreamId, ip, country, city, device, browser, userAgent, bytes, startedAt, durationSeconds, signature)'
+  let affected = 0
+  for (const chunk of chunks(rows, 200)) {
+    const values = chunk.map(() => '(?,?,?,?,?,?,?,?,?,?,?,?,?)').join(',')
+    const params = chunk.flatMap((s) => {
+      const e = enrichSession(s)
+      return [
+        uuid(), e.clientId, e.streamId, e.ip, e.country, e.city, e.device, e.browser,
+        e.userAgent, e.bytes, e.startedAt, e.durationSeconds, e.signature,
+      ]
+    })
+    const [res] = await pool.query(
+      `INSERT INTO viewer_sessions ${cols} VALUES ${values}
+       ON DUPLICATE KEY UPDATE
+         durationSeconds = GREATEST(durationSeconds, VALUES(durationSeconds)),
+         bytes = GREATEST(bytes, VALUES(bytes)),
+         userAgent = VALUES(userAgent)`,
+      params
+    )
+    affected += res.affectedRows || 0
+  }
+  return affected
 }
 
 export async function collectRadioSessions() {
@@ -204,10 +250,33 @@ export async function collectViewerSessions() {
     for (const r of rows) keyMap.set(getStreamKey(r.clientId), { clientId: r.clientId, videoStreamId: r.id })
 
     const lines = await readCaddyLog(config.analytics.videoLogPath)
-    const sessions = parseViewerSessions(lines, keyMap)
-    const inserted = await insertSessions('viewer_sessions', sessions, 'videoStreamId')
-    if (inserted > 0) logger.info({ inserted, parsed: sessions.length }, 'Sesiones de TV registradas')
-    return inserted
+    const events = parseViewerEvents(lines, keyMap)
+    const pending = new Map()
+    for (const event of events) {
+      const result = viewerSessionTracker.ingest(event)
+      if (result.start) pending.set(result.start.signature, result.start)
+      else if (result.update) pending.set(result.update.signature, result.update)
+    }
+    viewerSessionTracker.prune()
+
+    const sessionRows = [...pending.values()].map((s) => ({
+      clientId: s.clientId,
+      streamId: s.streamId,
+      ip: s.ip,
+      userAgent: s.userAgent,
+      bytes: s.bytes,
+      startedAt: s.startedAt,
+      durationSeconds: s.durationSeconds,
+      signature: s.signature,
+    }))
+    const affected = await upsertViewerSessions(sessionRows)
+    if (affected > 0) {
+      logger.info(
+        { affected, events: events.length, tracked: viewerSessionTracker.size },
+        'Sesiones de TV registradas'
+      )
+    }
+    return affected
   } catch (err) {
     logger.error({ err: err.message }, 'Error recolectando sesiones de TV')
     return 0

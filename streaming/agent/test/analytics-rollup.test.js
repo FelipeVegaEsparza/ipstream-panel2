@@ -1,6 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { computeHourlyRows, computeDailyRows } from '../lib/analytics/rollup.js'
+import {
+  computeHourlyRows,
+  computeDailyRows,
+  dailyReplacementWindow,
+} from '../lib/analytics/rollup.js'
 
 test('computeHourlyRows agrega muestras y sesiones', () => {
   const samples = [
@@ -73,4 +77,23 @@ test('computeDailyRows separa días locales distintos', () => {
     samples, sessions: [], intervalSeconds: 60, tz: 'America/Santiago',
   })
   assert.equal(rows.length, 2)
+})
+
+test('dailyReplacementWindow solo reemplaza los días recalculados', () => {
+  const rows = [
+    { dayLocal: '2026-10-19' },
+    { dayLocal: '2026-11-17' },
+    { dayLocal: '2026-11-01' },
+  ]
+
+  const window = dailyReplacementWindow(rows)
+
+  assert.deepEqual(window, { from: '2026-10-19', to: '2026-11-17' })
+  // Un día anterior a la ventana cruda queda fuera del DELETE ... BETWEEN y se
+  // conserva al cambiar la zona horaria.
+  assert.ok('2026-10-12' < window.from)
+})
+
+test('dailyReplacementWindow no borra nada si no hay filas nuevas', () => {
+  assert.equal(dailyReplacementWindow([]), null)
 })
