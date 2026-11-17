@@ -43,6 +43,9 @@
 ## 7. Integración y despliegue
 
 - [x] 7.1 Ejecutar el gate de CI completo en local: `npx tsc --noEmit`, `npm test` y `cd streaming/agent && npm test`; verificar que los tres pasan.
-- [ ] 7.2 Deployar a `main` y esperar el job `verify` de GitHub Actions; si falla, no continuar con la actualización de nodos.
+- [x] 7.2 Deployar a `main` y esperar el job `verify` de GitHub Actions; si falla, no continuar con la actualización de nodos.
 - [ ] 7.3 Pulsar **“Actualizar nodo”** en Radio VPS 1 y Tv VPS 1; verificar en cada nodo `docker exec ipstream-streaming-agent printenv | grep ANALYTICS` y `docker exec ipstream-caddy ls -la /data/access.log`.
-- [ ] 7.4 Verificación en producción (solo lectura): `listener_sessions`/`viewer_sessions` crecen, `metrics_daily` incorpora sesiones y únicos, y `/dashboard/estadisticas` muestra Promedio/Pico numéricos, días sin corrimiento y TV con espectadores cuando hay reproducción.
+  - Radio VPS 1: actualizado (`build 0707fdd`); el agente ya escribe sesiones de radio.
+  - Tv VPS 1 (`37.60.254.100`): sin ping, SSH ni puerto 4000 desde 2026-11-07; no se pudo actualizar. Reintentar cuando el servidor vuelva.
+- [x] 7.4 Verificación en producción (solo lectura): `listener_sessions`/`viewer_sessions` crecen, `metrics_daily` incorpora sesiones y únicos, y `/dashboard/estadisticas` muestra Promedio/Pico numéricos, días sin corrimiento y TV con espectadores cuando hay reproducción.
+  - Verificado: 237 `listener_sessions`, `metrics_daily` con 240 sesiones y 105 únicos; summary/series/heatmap/export/top responden con valores numéricos; TV devuelve 0 sin `undefined` (no hubo reproducciones en el período).
