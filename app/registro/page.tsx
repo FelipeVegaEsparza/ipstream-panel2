@@ -12,7 +12,7 @@ export const metadata = {
 export default async function RegistroPage({
   searchParams,
 }: {
-  searchParams: { plan?: string }
+  searchParams: { plan?: string; ref?: string }
 }) {
   const plans = await prisma.plan.findMany({
     where: { isActive: true },
@@ -84,7 +84,7 @@ export default async function RegistroPage({
 
       {/* Dos columnas */}
       <div className="max-w-5xl mx-auto px-4 pb-14">
-        <SignupForm plans={parsedPlans} preselect={searchParams.plan} />
+        <SignupForm plans={parsedPlans} preselect={searchParams.plan} referralCode={searchParams.ref} />
       </div>
 
       {/* Footer */}

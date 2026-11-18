@@ -59,6 +59,7 @@ export async function GET() {
       fishAudioDirection: fish.direction,
       deepseekKeySet: deepseek.configured,
       deepseekKeySource: deepseek.source,
+      referralFxUsdClp: config.referralFxUsdClp ?? '',
     })
   } catch (error) {
     console.error('Error getting app config:', error)
@@ -103,6 +104,7 @@ export async function PUT(request: NextRequest) {
       fishAudioDirection,
       deepseekApiKey,
       clearDeepSeekApiKey,
+      referralFxUsdClp,
     } = body
 
     // Token: si viene definido, se guarda (encriptado) o se limpia si es vacío.
@@ -265,6 +267,22 @@ export async function PUT(request: NextRequest) {
       ...(tokenUpdate || {}),
     }
 
+    let referralFxUpdate: { referralFxUsdClp: number | null } | undefined
+    if (referralFxUsdClp !== undefined) {
+      if (referralFxUsdClp === null || referralFxUsdClp === '') {
+        referralFxUpdate = { referralFxUsdClp: null }
+      } else {
+        const parsed = Number(referralFxUsdClp)
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+          return NextResponse.json(
+            { error: 'La tasa de conversión debe ser un número mayor a cero' },
+            { status: 400 }
+          )
+        }
+        referralFxUpdate = { referralFxUsdClp: parsed }
+      }
+    }
+
     let config = await prisma.appConfig.findFirst()
     if (!config) {
       config = await prisma.appConfig.create({
@@ -275,6 +293,7 @@ export async function PUT(request: NextRequest) {
           ...sitesData,
           ...elevenLabsData,
           ...ttsData,
+          ...(referralFxUpdate || {}),
         },
       })
     } else {
@@ -287,6 +306,7 @@ export async function PUT(request: NextRequest) {
           ...sitesData,
           ...elevenLabsData,
           ...ttsData,
+          ...(referralFxUpdate || {}),
         },
       })
     }
@@ -328,6 +348,7 @@ export async function PUT(request: NextRequest) {
       fishAudioDirection: fish.direction,
       deepseekKeySet: deepseek.configured,
       deepseekKeySource: deepseek.source,
+      referralFxUsdClp: config.referralFxUsdClp ?? '',
     })
   } catch (error) {
     console.error('Error updating app config:', error)

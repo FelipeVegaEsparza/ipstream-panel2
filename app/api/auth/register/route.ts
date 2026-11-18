@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, password, planId, radioName, currency, acceptLegal } = registerSchema.parse(body)
+    const { name, email, password, planId, radioName, currency, acceptLegal, referralCode } = registerSchema.parse(body)
+    const signupUserAgent = request.headers.get('user-agent')?.slice(0, 500) || null
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -149,13 +150,76 @@ export async function POST(request: NextRequest) {
         await createVideoStreamForClient(client.id, planServerId, tx)
       }
 
-      return { user, client, radioStream, plan, clientDomain }
+      // Atribución de referido: se valida y persiste dentro de la misma
+      // transacción. Un código inválido no bloquea el registro.
+      let referralApplied = false
+      let referralPendingReview = false
+      let referralId: string | null = null
+      let referralReferrerClientId: string | null = null
+      if (referralCode) {
+        const { resolveReferralAttribution, attachReferralToClient } = await import(
+          '@/lib/referrals/attribution'
+        )
+        const attribution = await resolveReferralAttribution(
+          { code: referralCode, email, ip },
+          tx
+        )
+        if (attribution.applied && attribution.referrerClientId && attribution.code) {
+          const referral = await attachReferralToClient(
+            {
+              referrerClientId: attribution.referrerClientId,
+              referredClientId: client.id,
+              code: attribution.code,
+              signupIp: ip,
+              signupUserAgent,
+              flagged: attribution.flagged,
+              flagReason: attribution.flagReason ?? null,
+            },
+            tx
+          )
+          if (referral) {
+            referralApplied = true
+            referralPendingReview = attribution.flagged
+            referralId = referral.id
+            referralReferrerClientId = attribution.referrerClientId
+          }
+        }
+      }
+
+      return {
+        user,
+        client,
+        radioStream,
+        plan,
+        clientDomain,
+        referralApplied,
+        referralPendingReview,
+        referralId,
+        referralReferrerClientId,
+      }
     }, { timeout: 15000 })
 
     const clientId = result.client.id
     const planName = result.plan?.name
     const streamInfo = result.radioStream
     const siteUrl = result.clientDomain ? `https://${result.clientDomain.hostname}` : null
+
+    // Aviso al referente (best-effort, fuera de la transacción).
+    if (result.referralId && result.referralReferrerClientId) {
+      try {
+        const { notifyReferralRegistered } = await import('@/lib/referrals/events')
+        await notifyReferralRegistered(
+          {
+            referralId: result.referralId,
+            referrerClientId: result.referralReferrerClientId,
+            referredName: result.client.name,
+          },
+          prisma
+        )
+      } catch (err) {
+        console.error('Error notificando el nuevo referido:', err)
+      }
+    }
 
     // Provisión best-effort del subdominio (idempotente; con el wildcard queda active).
     if (result.clientDomain) {
@@ -206,6 +270,8 @@ export async function POST(request: NextRequest) {
       },
       planRequested: result.client.planId ? { planId: result.client.planId } : null,
       pendingActivation: true,
+      referralApplied: result.referralApplied,
+      referralPendingReview: result.referralPendingReview,
       siteUrl,
       // Devolvemos info del stream para que la UI pueda mostrarlo
       stream: streamInfo ? {

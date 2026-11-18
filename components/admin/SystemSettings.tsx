@@ -25,6 +25,7 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
   const { t } = useDashboardI18n()
   const [enableGenericNews, setEnableGenericNews] = useState(false)
   const [adminNotifyEmail, setAdminNotifyEmail] = useState('')
+  const [referralFx, setReferralFx] = useState('')
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
 
@@ -36,6 +37,11 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
           const data = await res.json()
           setEnableGenericNews(data.enableGenericNews)
           setAdminNotifyEmail(data.adminNotifyEmail || '')
+          setReferralFx(
+            data.referralFxUsdClp === null || data.referralFxUsdClp === undefined
+              ? ''
+              : String(data.referralFxUsdClp)
+          )
         }
       } catch (error) {
         console.error('Error fetching app config:', error)
@@ -59,7 +65,11 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
       const response = await fetch('/api/admin/app-config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enableGenericNews, adminNotifyEmail: adminNotifyEmail.trim() || null })
+        body: JSON.stringify({
+          enableGenericNews,
+          adminNotifyEmail: adminNotifyEmail.trim() || null,
+          referralFxUsdClp: referralFx.trim() || null,
+        })
       })
 
       if (response.ok) {
@@ -167,6 +177,25 @@ export function SystemSettings({ stats }: SystemSettingsProps) {
             />
             <p className="text-sm text-muted-foreground mt-1">
               {t('admin.systemSettings.notifyEmailHint')}
+            </p>
+          </div>
+
+          <div className="p-3 rounded-lg bg-secondary/50">
+            <label className="block text-foreground font-medium mb-1">
+              Tasa de conversión CLP por 1 USD (Programa de Referidos)
+            </label>
+            <input
+              type="number"
+              min={1}
+              step="0.01"
+              value={referralFx}
+              onChange={(e) => setReferralFx(e.target.value)}
+              placeholder="950"
+              className="w-full bg-background border border-border text-foreground rounded-md px-3 py-2 text-sm"
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              Se usa para comparar planes en CLP y USD al calcular recompensas. Si se deja vacío se
+              usa la tasa por defecto (950).
             </p>
           </div>
 

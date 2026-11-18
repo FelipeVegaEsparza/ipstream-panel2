@@ -47,6 +47,7 @@ const navigationGroups = [
     label: 'Clientes y Pagos',
     items: [
       { name: 'Gestión de Usuarios', href: '/admin/users', icon: UserGroupIcon },
+      { name: 'Programa de Referidos', href: '/admin/referidos', icon: UserGroupIcon },
       { name: 'Planes y Pagos', href: '/admin/billing', icon: CreditCardIcon },
       { name: 'Tickets de soporte', href: '/admin/tickets', icon: LifebuoyIcon },
       { name: 'Consumo IA', href: '/admin/consumo-ia', icon: SparklesIcon },

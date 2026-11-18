@@ -33,6 +33,7 @@ import {
 export type MenuItemKey =
   | 'dashboard'
   | 'onboarding'
+  | 'referrals'
   | 'basic-data'
   | 'social-networks'
   | 'template'
@@ -111,6 +112,13 @@ export const MENU_ITEMS: MenuItemDef[] = [
   section: 'General',
   icon: RocketLaunchIcon,
   alwaysEnabled: true,
+},
+{
+  key: 'referrals',
+  name: 'Programa de Referidos',
+  href: '/dashboard/referidos',
+  section: 'General',
+  icon: UserGroupIcon,
 },
 {
   key: 'streaming',

@@ -12,6 +12,8 @@ export interface ClientPayment {
   transactionId?: string | null
   description?: string | null
   receiptUrl?: string | null
+  creditApplied?: number | null
+  creditCurrency?: string | null
 }
 
 export interface ClientSubscriptionLite {

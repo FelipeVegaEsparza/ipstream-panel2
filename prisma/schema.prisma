@@ -45,6 +45,7 @@ model Client {
   useGenericNews  Boolean  @default(false)
   phone           String? // Número de WhatsApp (con código de país, ej: 56912345678)
   timezone        String   @default("UTC")
+  referralCode    String?  @unique // Código de referido único y permanente (se genera de forma perezosa)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -110,6 +111,12 @@ model Client {
   videoPlayHistory       VideoPlayHistory[]
   emailLogs              EmailLog[]
   clientDomains          ClientDomain[]
+  // Programa de referidos
+  referralsGiven         Referral[]              @relation("ReferralsGiven")
+  referralReceived       Referral?               @relation("ReferralsReceived")
+  referralRewards        ReferralReward[]
+  referralCreditLedger   ReferralCreditLedger[]
+  clientNotifications    ClientNotification[]
 
   @@map("clients")
 }
@@ -502,14 +509,157 @@ model Payment {
   receiptUrl     String? // URL del comprobante de pago (imagen o PDF)
   dueDate        DateTime // Fecha de vencimiento del pago (fecha original según ciclo)
   paidAt         DateTime? // Fecha real en que se efectuó el pago
+  // Crédito de referidos aplicado al pago (el importe nominal `amount` no cambia).
+  creditApplied  Float     @default(0)
+  creditCurrency String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
   // Relaciones
-  client       Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  client              Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  subscription        Subscription?         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  referralPayments    ReferralPayment[]
+  referralCreditLedger ReferralCreditLedger[]
 
   @@map("payments")
+}
+
+// =====================================================
+// Programa de referidos
+// =====================================================
+
+model Referral {
+  id               String    @id @default(cuid())
+  referrerClientId String
+  referredClientId String    @unique // una sola atribución por cuenta
+  code             String    @db.VarChar(32)
+  status           String    @default("registered")
+  flagged          Boolean   @default(false)
+  flagReason       String?
+  signupIp         String?   @db.VarChar(64)
+  signupUserAgent  String?   @db.VarChar(500)
+  registeredAt     DateTime  @default(now())
+  firstPaidAt      DateTime?
+  secondPaidAt     DateTime?
+  validatedAt      DateTime?
+  rejectedAt       DateTime?
+  rejectionReason  String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  referrer Client @relation("ReferralsGiven", fields: [referrerClientId], references: [id], onDelete: Cascade)
+  referred Client @relation("ReferralsReceived", fields: [referredClientId], references: [id], onDelete: Cascade)
+
+  payments ReferralPayment[]
+  rewards  ReferralReward[]
+
+  @@index([referrerClientId, status])
+  @@index([status, registeredAt])
+  @@map("referrals")
+}
+
+model ReferralPayment {
+  id         String   @id @default(cuid())
+  referralId String
+  paymentId  String   @unique // un pago valida como máximo un referido
+  role       String // first | second
+  amount     Float
+  currency   String
+  paidAt     DateTime
+  createdAt  DateTime @default(now())
+
+  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  payment  Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([referralId, role])
+  @@map("referral_payments")
+}
+
+model ReferralReward {
+  id               String    @id @default(cuid())
+  referrerClientId String
+  referralId       String
+  slotIndex        Int
+  months           Int       @default(1)
+  amount           Float
+  currency         String
+  remainingAmount  Float
+  status           String    @default("available") // available | applied | expired | voided
+  priceSnapshot    Json
+  reviewRequired   Boolean   @default(false)
+  generatedAt      DateTime  @default(now())
+  appliedAt        DateTime?
+  subscriptionId   String?
+  voidedAt         DateTime?
+  voidReason       String?   @db.Text
+
+  referrer Client @relation(fields: [referrerClientId], references: [id], onDelete: Cascade)
+  referral Referral @relation(fields: [referralId], references: [id], onDelete: Restrict)
+  ledger   ReferralCreditLedger[]
+
+  @@unique([referrerClientId, slotIndex])
+  @@index([referrerClientId, status])
+  @@index([referralId])
+  @@map("referral_rewards")
+}
+
+model ReferralCreditLedger {
+  id        String   @id @default(cuid())
+  clientId  String
+  rewardId  String?
+  paymentId String?
+  type      String // reward | application | void | debt | adjustment
+  amount    Float // con signo, en la moneda del reward
+  currency  String
+  fxRate    Float?
+  note      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  client Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  reward ReferralReward? @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+  payment Payment?       @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([rewardId, paymentId])
+  @@index([clientId, currency, createdAt])
+  @@index([paymentId])
+  @@map("referral_credit_ledger")
+}
+
+model ReferralAuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actorRole   String
+  action      String
+  clientId    String?
+  referralId  String?
+  rewardId    String?
+  before      Json?
+  after       Json?
+  reason      String?  @db.Text
+  ipAddress   String?  @db.VarChar(64)
+  createdAt   DateTime @default(now())
+
+  @@index([clientId, createdAt])
+  @@index([action, createdAt])
+  @@map("referral_audit_logs")
+}
+
+model ClientNotification {
+  id        String    @id @default(cuid())
+  clientId  String
+  type      String
+  title     String
+  message   String    @db.Text
+  link      String?
+  eventKey  String    @db.VarChar(191)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, eventKey])
+  @@index([clientId, readAt, createdAt])
+  @@map("client_notifications")
 }
 
 // Modelo para plantillas de sitio web
@@ -728,6 +878,9 @@ model AppConfig {
 
   // IA de texto (reseñas). La API key se guarda encriptada.
   deepseekApiKeyEnc    String? @db.Text // API key del proveedor de texto (AES-256-GCM)
+
+  // Programa de referidos: tasa de conversión CLP por 1 USD (para recompensas).
+  referralFxUsdClp     Float?
 
   @@map("app_config")
 }

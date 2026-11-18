@@ -154,6 +154,15 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
+    // Programa de referidos: si el cliente tenía crédito disponible, se
+    // aplica a las cuotas recién generadas (sin alterar precios ni pagos).
+    try {
+      const { applyReferralCredits } = await import('@/lib/referrals/credit')
+      await applyReferralCredits(clientId)
+    } catch (error) {
+      console.error('[referrals] No se pudo aplicar crédito al asignar plan:', error)
+    }
+
     return NextResponse.json({
       message: 'Plan asignado exitosamente',
       client: result.client,

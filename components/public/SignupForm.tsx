@@ -95,7 +95,7 @@ function defaultCurrencyFor(plan?: PublicPlan | null): string {
   return plan.prices?.[0]?.currency || plan.currency || 'CLP'
 }
 
-export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: { plans: PublicPlan[]; preselect?: string; fixedPlanId?: string; theme?: 'light' | 'dark' }) {
+export function SignupForm({ plans, preselect, fixedPlanId, referralCode, theme = 'light' }: { plans: PublicPlan[]; preselect?: string; fixedPlanId?: string; referralCode?: string; theme?: 'light' | 'dark' }) {
   const darkClass = theme === 'dark' ? styles.dark : ''
   const isFixed = Boolean(fixedPlanId)
   const fixedPlan = fixedPlanId ? plans.find((p) => p.id === fixedPlanId) || null : null
@@ -110,6 +110,7 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const [referralNotice, setReferralNotice] = useState<string | null>(null)
   const [radioName, setRadioName] = useState('')
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'reserved' | 'invalid' | 'unconfigured'>('idle')
   const [siteHost, setSiteHost] = useState('')
@@ -203,12 +204,19 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, planId, radioName, currency, acceptLegal }),
+        body: JSON.stringify({ name, email, password, planId, radioName, currency, acceptLegal, referralCode: referralCode?.trim() || undefined }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(data?.details?.[0]?.message || data?.error || 'Error al registrarte. Intentá de nuevo.')
         return
+      }
+      if (referralCode?.trim()) {
+        setReferralNotice(
+          data?.referralApplied
+            ? 'Tu invitación de referido fue aplicada.'
+            : 'El código de referido no fue aplicado porque no es válido o el referente no está activo.'
+        )
       }
       setDone(true)
     } catch {
@@ -228,6 +236,11 @@ export function SignupForm({ plans, preselect, fixedPlanId, theme = 'light' }: {
         <p data-slot="sub" className="text-muted-foreground">
           Te enviamos un correo de confirmación. Estamos configurando tu cuenta y te avisaremos cuando esté activa para que puedas ingresar.
         </p>
+        {referralNotice && (
+          <p data-slot="referral-notice" className="text-sm font-medium text-brand">
+            {referralNotice}
+          </p>
+        )}
         {selected && (
           <div data-slot="summary" className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
             Plan solicitado <span data-slot="accent" className="font-semibold text-brand">{selected.name}</span> · {formatPrice(selected)}/{selected.interval === 'monthly' ? 'mes' : 'año'}

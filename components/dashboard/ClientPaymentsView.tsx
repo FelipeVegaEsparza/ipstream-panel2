@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { paymentNetAmount } from '@/lib/billing-format'
 
 interface Payment {
   id: string
@@ -17,6 +18,8 @@ interface Payment {
   dueDate: Date
   paidAt: Date | null
   createdAt: Date
+  creditApplied?: number
+  creditCurrency?: string | null
   subscription: {
     plan: {
       name: string
@@ -294,9 +297,24 @@ export function ClientPaymentsView({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="dashboard-metric text-[15px] text-foreground">
-                        {formatCurrency(payment.amount, payment.currency)}
+                        {formatCurrency(
+                          paymentNetAmount(payment.amount, payment.creditApplied),
+                          payment.currency
+                        )}
                       </p>
                       {getPaymentStatusBadge(payment.status)}
+                      {Number(payment.creditApplied || 0) > 0 && (
+                        <span className="rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[11px] text-brand">
+                          {payment.amount - Number(payment.creditApplied || 0) <= 0
+                            ? t('payments.creditCovered')
+                            : t('payments.creditPartial', {
+                                amount: formatCurrency(
+                                  Number(payment.creditApplied || 0),
+                                  payment.creditCurrency || payment.currency
+                                ),
+                              })}
+                        </span>
+                      )}
                     </div>
                     <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
                       {payment.subscription ? `${t('payments.planLabel', { name: payment.subscription.plan.name })} · ` : ''}

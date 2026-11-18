@@ -18,6 +18,11 @@ export function formatCurrency(amount: number, currency: string = 'CLP'): string
   return `${currency} ${amount.toLocaleString('es-CL')}`
 }
 
+/** Importe neto exigible de un pago después del crédito de referidos. */
+export function paymentNetAmount(amount: number, creditApplied?: number | null): number {
+  return Math.max(0, Number(amount || 0) - Number(creditApplied || 0))
+}
+
 export function formatDate(date: Date | string, withTime: boolean = false): string {
   const d = date instanceof Date ? date : new Date(date)
   if (withTime) {

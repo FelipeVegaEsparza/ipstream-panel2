@@ -1722,6 +1722,8 @@ const es = {
   'payments.noPlan': 'No tienes un plan activo',
   'payments.noPlanHint': 'Contacta al administrador para contratar un plan',
   'payments.history': 'Historial de Pagos',
+  'payments.creditCovered': 'Cubierto por crédito de referidos',
+  'payments.creditPartial': 'Crédito aplicado: {amount}',
   'payments.planLabel': 'Plan: {name}',
   'payments.due': 'Vencimiento: {date}',
   'payments.paidOn': 'Pagado: {date}',
@@ -5597,6 +5599,8 @@ const en: Record<DashboardTranslationKey, string> = {
   'payments.noPlan': 'You do not have an active plan',
   'payments.noPlanHint': 'Contact the administrator to get a plan',
   'payments.history': 'Payment History',
+  'payments.creditCovered': 'Covered by referral credit',
+  'payments.creditPartial': 'Credit applied: {amount}',
   'payments.planLabel': 'Plan: {name}',
   'payments.due': 'Due: {date}',
   'payments.paidOn': 'Paid: {date}',
@@ -7783,6 +7787,7 @@ export function dashboardT(locale: DashboardLocale) {
 export const MENU_NAME_EN: Record<string, string> = {
   Dashboard: 'Dashboard',
   'Primeros pasos': 'Getting started',
+  'Programa de Referidos': 'Referral program',
   Streaming: 'Streaming',
   Biblioteca: 'Library',
   Playlists: 'Playlists',
@@ -7838,6 +7843,7 @@ export const SECTION_NAME_EN: Record<string, string> = {
 export const ADMIN_MENU_NAME_EN: Record<string, string> = {
   'Dashboard Admin': 'Admin dashboard',
   'Gestión de Usuarios': 'User management',
+  'Programa de Referidos': 'Referral program',
   'Planes y Pagos': 'Plans & payments',
   'Consumo IA': 'AI usage',
   'Paquetes IA': 'AI packs',

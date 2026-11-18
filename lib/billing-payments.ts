@@ -37,5 +37,13 @@ export async function markPaymentPaid(
     })
   }
 
+  // Hook del programa de referidos: recalcula validaciones y crédito.
+  try {
+    const { onPaymentConfirmed } = await import('./referrals/validation')
+    await onPaymentConfirmed(paymentId)
+  } catch (error) {
+    console.error('[referrals] Hook post-pago falló:', error)
+  }
+
   return updated
 }

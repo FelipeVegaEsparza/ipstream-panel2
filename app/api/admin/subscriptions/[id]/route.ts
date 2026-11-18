@@ -94,6 +94,14 @@ export async function PATCH(
       }
     } catch {}
 
+    // Programa de referidos: aplica crédito disponible a las cuotas regeneradas.
+    try {
+      const { applyReferralCredits } = await import('@/lib/referrals/credit')
+      await applyReferralCredits(result.subscription.clientId)
+    } catch (error) {
+      console.error('[referrals] No se pudo aplicar crédito al editar la suscripción:', error)
+    }
+
     return NextResponse.json({
       message: 'Fecha de inicio actualizada y pagos regenerados',
       subscription: result.subscription,

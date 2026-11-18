@@ -22,7 +22,7 @@ import {
   History,
   FileText,
 } from 'lucide-react'
-import { formatCurrency, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/billing-format'
+import { formatCurrency, formatDate, paymentNetAmount, PAYMENT_METHOD_LABELS } from '@/lib/billing-format'
 import {
   getClientPaymentStatus,
   STATUS_BADGES,
@@ -408,8 +408,21 @@ export function ClienteRow({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-foreground font-medium">
-                              {formatCurrency(p.amount, p.currency)}
+                              {formatCurrency(
+                                paymentNetAmount(p.amount, p.creditApplied),
+                                p.currency
+                              )}
                             </span>
+                            {Number(p.creditApplied || 0) > 0 && (
+                              <span className="rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[11px] text-brand">
+                                {p.amount - Number(p.creditApplied || 0) <= 0
+                                  ? 'Cubierto por crédito'
+                                  : `Crédito: ${formatCurrency(
+                                      Number(p.creditApplied || 0),
+                                      p.creditCurrency || p.currency
+                                    )}`}
+                              </span>
+                            )}
                             <Badge
                               className={`${
                                 p.status === 'completed'

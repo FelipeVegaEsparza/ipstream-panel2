@@ -118,6 +118,13 @@ export const registerSchema = z.object({
     .min(2, 'Ingresa el nombre de la radio (mínimo 2 caracteres)')
     .max(60, 'El nombre de la radio es demasiado largo'),
   currency: z.string().optional(),
+  referralCode: z
+    .string()
+    .trim()
+    .max(32, 'El código de referido es demasiado largo')
+    .regex(/^[A-Za-z0-9-]*$/, 'El código de referido no es válido')
+    .optional()
+    .transform((v) => v || undefined),
   acceptLegal: z.boolean().refine((value) => value === true, {
     message: 'Debes aceptar los términos, la privacidad y la responsabilidad de contenido.',
   }),

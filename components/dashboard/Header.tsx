@@ -13,6 +13,7 @@ import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
 import { MENU_ITEMS } from '@/lib/menu-items'
 import { menuName } from '@/lib/dashboard-i18n'
 import { PanelLanguageSwitcher } from './PanelLanguageSwitcher'
+import { NotificationBell } from './NotificationBell'
 
 interface HeaderProps {
   user: {
@@ -100,6 +101,8 @@ export function Header({ user, setSidebarOpen, websiteUrl }: HeaderProps) {
           </Link>
 
           <PanelLanguageSwitcher />
+
+          <NotificationBell />
 
           {/* Theme toggle */}
           <button

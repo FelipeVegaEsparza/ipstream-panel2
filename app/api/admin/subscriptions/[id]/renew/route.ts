@@ -84,6 +84,14 @@ export async function POST(
       return { subscription: updatedSubscription, nextPayment: newPayment }
     })
 
+    // Programa de referidos: aplica crédito disponible a la nueva renovación.
+    try {
+      const { applyReferralCredits } = await import('@/lib/referrals/credit')
+      await applyReferralCredits(result.subscription.clientId)
+    } catch (error) {
+      console.error('[referrals] No se pudo aplicar crédito en la renovación:', error)
+    }
+
     return NextResponse.json({
       message: 'Suscripción renovada exitosamente',
       subscription: result.subscription,

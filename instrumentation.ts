@@ -17,5 +17,9 @@ export async function register() {
     // Prepara las locuciones IA de las playlists programadas (parrilla).
     const { startAiIntroPoller } = await import('./lib/ai-intro-poller')
     startAiIntroPoller()
+
+    // Recalcula referidos y aplica créditos del programa de referidos.
+    const { startReferralPoller } = await import('./lib/referral-poller')
+    startReferralPoller()
   }
 }

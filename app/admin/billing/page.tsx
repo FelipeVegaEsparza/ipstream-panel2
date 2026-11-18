@@ -82,6 +82,8 @@ export default async function BillingPage() {
       transactionId: p.transactionId,
       description: p.description,
       receiptUrl: p.receiptUrl,
+      creditApplied: p.creditApplied,
+      creditCurrency: p.creditCurrency,
     })) ?? [],
   }))
 
