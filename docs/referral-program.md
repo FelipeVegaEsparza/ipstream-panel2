@@ -146,7 +146,7 @@ npx prisma migrate dev --name referral_program
 - Rollback: desplegar la imagen anterior. Las tablas y columnas quedan sin uso y no rompen la aplicación; los datos se conservan para reintentar.
 - **No requiere "Actualizar nodo"**: es un cambio solo de panel (Next.js/Prisma), no toca el agente de streaming.
 
-**Limitación del entorno de desarrollo:** no había un servidor MySQL accesible, por lo que la migración se validó con `npx prisma validate`/`prisma generate` y revisión del SQL, pero no se aplicó contra una base local en esta sesión. Ejecutar `npx prisma migrate dev` en un entorno con DB antes del deploy y repetir el flujo manual de la sección 11.
+**Limitación del entorno de desarrollo:** no había un servidor MySQL accesible en la máquina local, por lo que la migración se validó con `npx prisma validate`/`prisma generate` y comparación contra el DDL generado. En producción el entrypoint aplicó el esquema con `prisma db push` y las tablas/columnas respondieron correctamente.
 
 ## 11. Pruebas
 
@@ -189,3 +189,16 @@ Correspondencia con los doce escenarios obligatorios:
 | 12 | Cliente existente conserva datos | `ensureReferralCode` no toca suscripción/pagos; `referral-dashboard.test.ts` |
 
 **Pendiente de verificación manual:** el flujo completo con una base de datos real (alta con `?ref=`, activación, dos pagos, recompensa y aplicación a la renovación) no pudo ejecutarse en este entorno por no haber MySQL disponible.
+
+## 12. Verificación en producción (2026-11-18)
+
+El flujo completo se ejecutó contra el VPS de producción después del deploy de `13357f8`:
+
+1. Un cliente elegible generó su código de forma perezosa al abrir `/api/dashboard/referrals` y recibió un enlace `https://casterfly.com/registro?ref=...`.
+2. Se registró una cuenta nueva con ese enlace: la API respondió `referralApplied: true`, el `Referral` quedó en estado `registered` y el referente recibió la notificación de nuevo referido.
+3. Se asignó un plan a la cuenta QA: la primera cuota nació completada y el referido pasó a `first_payment_confirmed` (hook de primera cuota).
+4. Se registró el segundo pago desde el admin: el referido pasó a `valid`, se guardaron los dos `ReferralPayment` y el referente recibió la notificación de referido válido.
+5. Con el segundo referido válido se generó **una recompensa** de 29.990 CLP, su asiento `reward` en el ledger y la notificación "Ganaste un mes gratis".
+6. Se renovó la suscripción del referente: el crédito cubrió el 100% del pago, que quedó `completed` con método `referral_credit` (`creditApplied = amount`), la recompensa pasó a `applied` y se creó el siguiente pago pendiente.
+7. Se verificaron las APIs y páginas: `/api/dashboard/referrals`, `/api/dashboard/notifications`, `/api/admin/referrals`, `/api/admin/referrals/[id]`, `/dashboard/referidos` y `/admin/referidos` respondieron 200; marcar una notificación y marcar todas funcionó.
+8. Se eliminaron las cuentas y datos QA: referidos, recompensas, ledger, notificaciones y pagos de prueba quedaron en cero; la suscripción del cliente usado como referente se restauró a su fecha original.

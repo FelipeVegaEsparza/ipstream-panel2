@@ -66,7 +66,7 @@
 ## 9. Verificación de integración y escenarios obligatorios
 
 - [x] 9.1 Ejecutar `npx tsc --noEmit` y `npm test` completos; confirmar que no hay errores de tipos ni regresiones en los tests existentes.
-- [ ] 9.2 Probar en local el flujo completo: alta con `?ref=`, activación de cuenta, plan, primer pago, segundo pago, recompensa y aplicación automática a la siguiente renovación; documentar el resultado.
+- [x] 9.2 Probar en local el flujo completo: alta con `?ref=`, activación de cuenta, plan, primer pago, segundo pago, recompensa y aplicación automática a la siguiente renovación; documentar el resultado.
 - [x] 9.3 Verificar los doce escenarios obligatorios del requerimiento (sin pago, un pago, dos pagos, 2/3/4 válidos, pago duplicado, código propio, referente inmutable, aplicación a renovación, planes de distinto precio y cliente existente) contra los tests y una ejecución manual; anotar la evidencia en `docs/referral-program.md`.
 - [x] 9.4 Verificar que un reembolso de un pago de validación entra en revisión, que la anulación genera deuda y que el cliente recibe la notificación correspondiente.
 - [x] 9.5 Revisar que no se modificaron precios, planes, renovaciones ni suspensiones, y que ningún cambio obliga a "Actualizar nodo"; confirmar con `git diff --stat` que el alcance se limitó a panel, Prisma y documentación.
