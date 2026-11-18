@@ -6,7 +6,7 @@ CasterFly no tiene un canal de crecimiento orgánico medible: los clientes recom
 
 ## What Changes
 
-- Cada cliente recibe un **código de referido único y permanente** (`CAST-XXXXXXXX`) y un enlace público `https://<sitio>/registro?ref=<código>`.
+- Cada cliente recibe un **código de referido único y permanente** (`CAST-XXXXXXXX`) y un enlace público `https://<dominio-panel>/registro?ref=<código>`.
 - El registro público captura el código, lo valida en el backend y lo **persiste en la base de datos** junto al cliente nuevo (sin depender solo de cookies). El referente queda bloqueado después del registro.
 - Nuevo modelo de **referidos** con estados: registrado, pendiente de contratación, pendiente de primer pago, primer pago confirmado, pendiente de segundo pago, válido y rechazado. La validación se calcula exclusivamente desde `payments` confirmados (nunca desde el frontend).
 - **2 referidos válidos = 1 mes gratis**. Los referidos válidos se acumulan (3 → 1 recompensa + progreso 1/2; 4 → 2 recompensas) y no hay límite de recompensas.

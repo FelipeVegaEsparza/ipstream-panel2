@@ -3,6 +3,7 @@ import {
   buildReferralCode,
   buildReferralLink,
   ensureReferralCode,
+  getReferralBaseUrl,
   isValidReferralCodeFormat,
   normalizeBaseUrl,
   normalizeReferralCode,
@@ -47,6 +48,34 @@ describe('enlaces de referido', () => {
     expect(buildReferralLink('CAST-ABC', 'casterfly.com')).toBe(
       'https://casterfly.com/registro?ref=CAST-ABC'
     )
+  })
+
+  it('usa la URL pública del panel y no el sitio raíz', async () => {
+    const previousPublic = process.env.PANEL_PUBLIC_URL
+    const previousNextAuth = process.env.NEXTAUTH_URL
+    process.env.PANEL_PUBLIC_URL = 'https://panel.example.com/'
+    delete process.env.NEXTAUTH_URL
+    try {
+      await expect(getReferralBaseUrl()).resolves.toBe('https://panel.example.com')
+    } finally {
+      if (previousPublic === undefined) delete process.env.PANEL_PUBLIC_URL
+      else process.env.PANEL_PUBLIC_URL = previousPublic
+      if (previousNextAuth !== undefined) process.env.NEXTAUTH_URL = previousNextAuth
+    }
+  })
+
+  it('cae a NEXTAUTH_URL y al dominio del panel', async () => {
+    const previousPublic = process.env.PANEL_PUBLIC_URL
+    const previousNextAuth = process.env.NEXTAUTH_URL
+    delete process.env.PANEL_PUBLIC_URL
+    process.env.NEXTAUTH_URL = 'https://panel.casterfly.com'
+    try {
+      await expect(getReferralBaseUrl()).resolves.toBe('https://panel.casterfly.com')
+    } finally {
+      if (previousPublic !== undefined) process.env.PANEL_PUBLIC_URL = previousPublic
+      if (previousNextAuth === undefined) delete process.env.NEXTAUTH_URL
+      else process.env.NEXTAUTH_URL = previousNextAuth
+    }
   })
 
   it('normaliza el dominio y evita dobles barras', () => {

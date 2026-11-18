@@ -98,17 +98,14 @@ export function buildReferralLink(code: string, baseUrl?: string | null): string
   return `${normalizeBaseUrl(baseUrl)}/registro?ref=${encodeURIComponent(code)}`
 }
 
-/** Dominio público configurado (app_config o env), con fallback a casterfly.com. */
-export async function getReferralBaseUrl(db: any = prisma): Promise<string> {
-  try {
-    const config = await db.appConfig.findFirst({
-      select: { clientSitesDomain: true },
-    })
-    if (config?.clientSitesDomain) return normalizeBaseUrl(config.clientSitesDomain)
-  } catch {
-    // Sin DB disponible: se usa el fallback.
-  }
-  if (process.env.CLIENT_SITES_DOMAIN) return normalizeBaseUrl(process.env.CLIENT_SITES_DOMAIN)
-  if (process.env.NEXT_PUBLIC_SITE_URL) return normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL)
-  return 'https://casterfly.com'
+/**
+ * Base pública del panel para el enlace de registro. El formulario `/registro`
+ * vive en el panel (p. ej. panel.casterfly.com), no en el sitio público raíz.
+ * En producción se toma de PANEL_PUBLIC_URL o NEXTAUTH_URL; en desarrollo se
+ * puede fijar con la misma variable o cae al dominio del panel.
+ */
+export async function getReferralBaseUrl(_db: any = prisma): Promise<string> {
+  if (process.env.PANEL_PUBLIC_URL) return normalizeBaseUrl(process.env.PANEL_PUBLIC_URL)
+  if (process.env.NEXTAUTH_URL) return normalizeBaseUrl(process.env.NEXTAUTH_URL)
+  return 'https://panel.casterfly.com'
 }

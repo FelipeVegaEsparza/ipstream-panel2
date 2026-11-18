@@ -4,7 +4,7 @@ Documentación operativa y técnica del programa de referidos de CasterFly.
 
 ## 1. Reglas del programa
 
-- Cada cliente tiene un **código único y permanente** con formato `CAST-XXXXXXXX` y un enlace `https://<dominio-público>/registro?ref=<código>`.
+- Cada cliente tiene un **código único y permanente** con formato `CAST-XXXXXXXX` y un enlace `https://<dominio-panel>/registro?ref=<código>` (`panel.casterfly.com` en producción; se configura con `PANEL_PUBLIC_URL` o `NEXTAUTH_URL`).
 - Puede participar desde que su cuenta está activa y tiene **al menos una mensualidad pagada y confirmada**.
 - No hay límite de referidos ni de recompensas.
 - **2 referidos válidos = 1 mes gratis**. Los válidos se acumulan: 3 → 1 recompensa + progreso 1/2; 4 → 2 recompensas.
@@ -60,6 +60,7 @@ El crédito se lleva en `referral_credit_ledger` (asientos con signo) y se aplic
 ## 5. Atribución en el registro
 
 - `/registro?ref=CODE` pasa el código a `SignupForm` y al payload de `/api/auth/register`.
+- El enlace usa el dominio del panel (`PANEL_PUBLIC_URL`/`NEXTAUTH_URL`) porque el formulario vive ahí; el dominio raíz del sitio público no sirve `/registro`.
 - El backend valida el código, la elegibilidad del referente, el email y la IP, y crea `Referral` **dentro de la misma transacción** que el usuario/cliente.
 - Un código inválido o de un referente no elegible no bloquea el registro: responde `referralApplied: false`.
 - `Referral.referredClientId` es único; un segundo intento no reemplaza al referente y se audita.
