@@ -94,6 +94,19 @@ export async function PATCH(
       }
     } catch {}
 
+    // Programa de referidos: la primera cuota regenerada nace completada.
+    try {
+      const firstCompleted = (result.payments as any[])
+        .filter((p) => p.status === 'completed')
+        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
+      if (firstCompleted) {
+        const { onPaymentConfirmed } = await import('@/lib/referrals/validation')
+        await onPaymentConfirmed(firstCompleted.id)
+      }
+    } catch (error) {
+      console.error('[referrals] No se pudo validar la primera cuota regenerada:', error)
+    }
+
     // Programa de referidos: aplica crédito disponible a las cuotas regeneradas.
     try {
       const { applyReferralCredits } = await import('@/lib/referrals/credit')

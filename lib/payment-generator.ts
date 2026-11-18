@@ -331,5 +331,13 @@ export async function createManualPayment(
     )
   } catch {}
 
+  // Hook del programa de referidos: un pago manual confirmado también valida.
+  try {
+    const { onPaymentConfirmed } = await import('./referrals/validation')
+    await onPaymentConfirmed(result.payment.id)
+  } catch (error) {
+    console.error('[referrals] Hook post-pago manual falló:', error)
+  }
+
   return result
 }

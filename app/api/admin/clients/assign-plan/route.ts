@@ -154,6 +154,20 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
+    // Programa de referidos: la primera cuota nace completada; se dispara el
+    // mismo hook que un pago confirmado para validar el referido de inmediato.
+    try {
+      const firstCompleted = (result.payments as any[])
+        .filter((p) => p.status === 'completed')
+        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
+      if (firstCompleted) {
+        const { onPaymentConfirmed } = await import('@/lib/referrals/validation')
+        await onPaymentConfirmed(firstCompleted.id)
+      }
+    } catch (error) {
+      console.error('[referrals] No se pudo validar la primera cuota:', error)
+    }
+
     // Programa de referidos: si el cliente tenía crédito disponible, se
     // aplica a las cuotas recién generadas (sin alterar precios ni pagos).
     try {
