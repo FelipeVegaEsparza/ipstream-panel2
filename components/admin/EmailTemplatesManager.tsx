@@ -17,7 +17,7 @@ interface Template {
   isActive: boolean
 }
 
-const VARIABLE_HINT = 'Variables: {{nombre}} {{proyecto}} {{plan}} {{monto}} {{moneda}} {{fecha}} {{descripcion}} {{vence}} {{link}} {{mensaje}} {{respuesta}} {{asunto}}'
+const VARIABLE_HINT = 'Variables: {{nombre}} {{proyecto}} {{plan}} {{monto}} {{moneda}} {{fecha}} {{descripcion}} {{vence}} {{link}} {{mensaje}} {{respuesta}} {{asunto}} {{logoUrl}}'
 
 export function EmailTemplatesManager() {
   const { t } = useDashboardI18n()

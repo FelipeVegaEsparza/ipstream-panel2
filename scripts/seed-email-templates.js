@@ -2,7 +2,8 @@
 // =====================================================
 // Seed de plantillas de correo (Resend).
 // Crea o actualiza las plantillas iniciales (boleta, soporte, aviso).
-// No toca plantillas editadas por el admin (solo si no existen o se pide --force).
+// Si una plantilla ya existe, solo le agrega el logo si le falta; el resto
+// del contenido editado por el admin se conserva. Con --force se reemplaza.
 //
 // Uso dentro del contenedor app:
 //   docker exec ipstream-app node scripts/seed-email-templates.js [--force]
@@ -14,6 +15,20 @@ const prisma = new PrismaClient()
 const BOX_STYLE = 'background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin:16px 0'
 const BTN_STYLE = 'display:inline-block;background:#0891b2;color:#ffffff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600'
 const FOOTER = `<p style="color:#9ca3af;font-size:12px;margin-top:24px;text-align:center">CasterFly — Si no pediste este correo, ignoralo o respondé para dejar de recibir comunicaciones.</p>`
+
+const LOGO_HEADER = `<div data-casterfly-logo="1" style="text-align:center;margin:0 0 18px">
+  <a href="https://casterfly.com" target="_blank" rel="noopener" style="text-decoration:none">
+    <img src="{{logoUrl}}" alt="CasterFly" width="170" style="display:inline-block;border:0;outline:none;text-decoration:none;height:auto;max-width:170px" />
+  </a>
+</div>`
+
+function ensureLogo(html) {
+  if (!html) return html
+  if (/data-casterfly-logo|logo-casterfly|images\/logos\/logo|<img[^>]+alt=["']CasterFly["']/i.test(html)) return html
+  const centered = '<div style="max-width:560px;margin:0 auto">'
+  if (html.includes(centered)) return html.replace(centered, centered + LOGO_HEADER)
+  return `<div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px">${LOGO_HEADER}${html}</div>`
+}
 
 const TEMPLATES = [
   {
@@ -165,15 +180,24 @@ const TEMPLATES = [
 async function main() {
   const force = process.argv.includes('--force')
   for (const t of TEMPLATES) {
+    const prepared = { ...t, htmlBody: ensureLogo(t.htmlBody) }
     const existing = await prisma.emailTemplate.findUnique({ where: { key: t.key } })
     if (!existing) {
-      await prisma.emailTemplate.create({ data: t })
+      await prisma.emailTemplate.create({ data: prepared })
       console.log(`✅ Plantilla creada: ${t.key}`)
     } else if (force) {
-      await prisma.emailTemplate.update({ where: { key: t.key }, data: t })
+      await prisma.emailTemplate.update({ where: { key: t.key }, data: prepared })
       console.log(`🔄 Plantilla actualizada: ${t.key}`)
     } else {
-      console.log(`ℹ️ Plantilla ya existe (sin cambios): ${t.key}`)
+      // Agrega el logo a plantillas existentes sin sobrescribir el resto
+      // del contenido editado por el admin.
+      const withLogo = ensureLogo(existing.htmlBody)
+      if (withLogo !== existing.htmlBody) {
+        await prisma.emailTemplate.update({ where: { key: t.key }, data: { htmlBody: withLogo } })
+        console.log(`🖼️ Logo agregado a plantilla existente: ${t.key}`)
+      } else {
+        console.log(`ℹ️ Plantilla ya existe (sin cambios): ${t.key}`)
+      }
     }
   }
 }

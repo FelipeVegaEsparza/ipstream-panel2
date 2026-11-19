@@ -8,6 +8,7 @@
 
 import { prisma, type PrismaDb } from '@/lib/prisma'
 import { sendEmail } from './resend'
+import { emailLogoHeader } from './email-branding'
 import { SUBSCRIPTION_STATUS } from './subscription-status'
 
 /** Campos del plan que necesita la creación de la suscripción. */
@@ -157,6 +158,7 @@ export async function notifyAdminNewSignup(info: {
   const html = `
 <div style="background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;padding:24px;color:#111827">
   <div style="max-width:520px;margin:0 auto">
+    ${emailLogoHeader()}
     <h2 style="margin:0 0 4px">CasterFly</h2>
     <p style="color:#6b7280;margin:0 0 16px">Nuevo registro pendiente de activación</p>
     <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px">

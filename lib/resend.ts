@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { renderTemplate } from './email-templates'
+import { getEmailLogoUrl, withCasterflyLogo } from './email-branding'
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'no-reply@casterfly.com'
@@ -33,6 +34,7 @@ export interface SendEmailParams {
  */
 export async function sendEmail(params: SendEmailParams): Promise<{ ok: boolean; status: string; resendId?: string | null; logId?: string }> {
   const { to, subject, html, templateKey, clientId, attachments } = params
+  const brandedHtml = withCasterflyLogo(html)
 
   // Registrar el intento antes de llamar al proveedor
   const log = await prisma.emailLog.create({
@@ -66,7 +68,7 @@ export async function sendEmail(params: SendEmailParams): Promise<{ ok: boolean;
         from: RESEND_FROM_EMAIL,
         to: [to],
         subject,
-        html,
+        html: brandedHtml,
         attachments: attachments?.map((a) => ({
           filename: a.filename,
           content: a.content,
@@ -129,7 +131,10 @@ export async function sendTemplateEmail(params: {
     return { ok: false, status: 'skipped' }
   }
 
-  const { subject, html } = renderTemplate(template, params.vars)
+  const { subject, html } = renderTemplate(template, {
+    ...params.vars,
+    logoUrl: getEmailLogoUrl(),
+  })
   return sendEmail({
     to: params.to,
     subject,
