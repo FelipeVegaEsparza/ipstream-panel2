@@ -66,7 +66,7 @@ export default async function PlanesPage({
       <header className={s.header}>
         <div className={s.headerInner}>
           <a className={s.brand} href="https://casterfly.com" aria-label="CasterFly inicio">
-            <PanelLogo themeOverride="light" />
+            <PanelLogo themeOverride="dark" />
           </a>
           <nav className={s.nav} aria-label="Navegación principal">
             <a className={s.navLink} href="https://casterfly.com/">Inicio</a>
@@ -238,7 +238,7 @@ export default async function PlanesPage({
       <footer className={s.footer}>
         <div className={s.footerGrid}>
           <div className={s.footerBrand}>
-            <PanelLogo themeOverride="light" />
+            <PanelLogo themeOverride="dark" />
             <p className={s.muted}>
               Soluciones profesionales para tu radio online. Transmite, comparte y llega a más
               oyentes con la plataforma más completa del mercado.
