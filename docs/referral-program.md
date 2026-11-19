@@ -61,7 +61,7 @@ El crédito se lleva en `referral_credit_ledger` (asientos con signo) y se aplic
 
 El único formulario de alta vive en **`/planes/<slug>`**. Existen dos rutas de navegación, pero una sola de registro:
 
-- **`/planes`**: listado de planes. No tiene formulario: muestra los planes y cada tarjeta enlaza a `/planes/<slug>?ref=...`. Es la ruta que usa el enlace de referido para que el referido elija su plan.
+- **`/planes`**: listado de planes. No tiene formulario: muestra los planes y cada tarjeta enlaza a `/planes/<slug>?ref=...`. Es la ruta que usa el enlace de referido para que el referido elija su plan. Usa el mismo diseño oscuro del sitio público y muestra los precios en **USD y CLP** cuando el plan tiene ambas monedas.
 - **`/planes/<slug>`**: landing del plan con el formulario de alta. Es la única ruta que crea cuentas y acepta `?ref=`. La usan los enlaces de contratación del sitio público (`contractUrl`).
 - **`/registro`**: ruta histórica. Ahora responde **308** hacia `/planes` (o `/planes/<slug>` si recibe `?plan=`), conservando `?ref=`. No renderiza un segundo formulario.
 
