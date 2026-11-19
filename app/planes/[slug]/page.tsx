@@ -42,11 +42,21 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default async function PlanPage({ params }: { params: { slug: string } }) {
+export default async function PlanPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string }
+  searchParams: { ref?: string }
+}) {
   const data = await getPlan(params.slug)
   if (!data) notFound()
 
   const { plan, popularId } = data
+  const referralRef = (searchParams.ref || '').trim()
+  const allPlansHref = referralRef
+    ? `/registro?ref=${encodeURIComponent(referralRef)}`
+    : '/registro'
   const meta = SERVICES_META[plan.services] || SERVICES_META.both
   const ServiceIcon = meta.icon
   const isPopular = plan.id === popularId
@@ -165,7 +175,12 @@ export default async function PlanPage({ params }: { params: { slug: string } })
                     <ExternalLink size={18} /> Ver ejemplo del plan
                   </a>
                 )}
-                <SignupForm plans={[plan]} fixedPlanId={plan.id} theme="dark" />
+                <SignupForm
+                  plans={[plan]}
+                  fixedPlanId={plan.id}
+                  theme="dark"
+                  referralCode={referralRef || undefined}
+                />
               </div>
             </div>
           </div>
@@ -193,7 +208,7 @@ export default async function PlanPage({ params }: { params: { slug: string } })
             <h2 className={s.footerTitle}>Ayuda</h2>
             <ul>
               <li><a href="mailto:contacto@casterfly.com">contacto@casterfly.com</a></li>
-              <li><a href="/registro">Ver todos los planes</a></li>
+              <li><a href={allPlansHref}>Ver todos los planes</a></li>
               <li><a href="/auth/login">Ingresar al panel</a></li>
             </ul>
           </div>

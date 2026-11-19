@@ -59,6 +59,11 @@ El crédito se lleva en `referral_credit_ledger` (asientos con signo) y se aplic
 
 ## 5. Atribución en el registro
 
+Existen dos entradas de alta, ambas válidas y con el mismo backend:
+
+- **`/registro`**: alta general con todos los planes. Es la ruta que usa el enlace de referido porque permite elegir cualquier plan y conserva `?ref=` al cambiar de plan.
+- **`/planes/<slug>`**: landing de un plan concreto, usada por los enlaces de contratación del sitio público (`contractUrl`). También acepta `?ref=` y lo pasa al formulario; el enlace "Ver todos los planes" conserva el código.
+
 - `/registro?ref=CODE` pasa el código a `SignupForm` y al payload de `/api/auth/register`.
 - El enlace usa el dominio del panel (`PANEL_PUBLIC_URL`/`NEXTAUTH_URL`) porque el formulario vive ahí; el dominio raíz del sitio público no sirve `/registro`.
 - El backend valida el código, la elegibilidad del referente, el email y la IP, y crea `Referral` **dentro de la misma transacción** que el usuario/cliente.
