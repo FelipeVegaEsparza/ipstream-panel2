@@ -61,14 +61,20 @@ export default async function PlanPage({
   const ServiceIcon = meta.icon
   const isPopular = plan.id === popularId
 
-  const formatPrice = (p: PublicPlan) => {
-    const usd = p.prices?.find((x) => x.currency === 'USD')
-    const amount = usd?.amount ?? p.price
-    const cur = usd ? 'USD' : p.currency
-    return cur === 'CLP'
-      ? `$${Math.round(amount).toLocaleString('es-CL')}`
-      : `US$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const money = (amount: number, currency: string) => {
+    if (currency === 'CLP') return `$${Math.round(amount).toLocaleString('es-CL')}`
+    if (currency === 'USD') {
+      const hasCents = Math.round(amount * 100) % 100 !== 0
+      return `US$${amount.toLocaleString('en-US', {
+        minimumFractionDigits: hasCents ? 2 : 0,
+        maximumFractionDigits: 2,
+      })}`
+    }
+    return `${currency} ${amount.toLocaleString('es-CL')}`
   }
+  const usdPrice = plan.prices.find((price) => price.currency === 'USD')
+  const clpPrice = plan.prices.find((price) => price.currency === 'CLP')
+  const period = plan.interval === 'monthly' ? 'mes' : 'año'
   const fmtMB = (mb: number | null) =>
     mb && mb > 0 ? `${mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'}` : '—'
 
@@ -86,6 +92,20 @@ export default async function PlanPage({
           <a className={s.brand} href="https://casterfly.com" aria-label="CasterFly inicio">
             <PanelLogo themeOverride="light" />
           </a>
+          <nav className={s.nav} aria-label="Navegación principal">
+            <a className={s.navLink} href="https://casterfly.com/">Inicio</a>
+            <a className={s.navLink} href="https://casterfly.com/ia">IA</a>
+            <a className={`${s.navLink} ${s.navActive}`} href="/planes" aria-current="page">Planes</a>
+            <a className={s.navLink} href="https://casterfly.com/caracteristicas">Características</a>
+            <a className={s.navLink} href="https://casterfly.com/tutoriales">Tutoriales</a>
+            <a className={s.navLink} href="https://casterfly.com/noticias">Noticias</a>
+            <a className={s.navLink} href="https://casterfly.com/clientes">Clientes</a>
+          </nav>
+          <div className={s.actions}>
+            <a className={s.panelLink} href="/auth/login">Ingresar</a>
+            <a className={s.cta} href="mailto:contacto@casterfly.com">Contactar</a>
+          </div>
+          <a className={s.mobileLogin} href="/auth/login">Ingresar</a>
         </div>
       </header>
 
@@ -103,6 +123,7 @@ export default async function PlanPage({
               <span className={s.chip}>
                 <ServiceIcon size={12} /> {meta.label}
               </span>
+              <span className={s.chip}>{plan.aiLiveEnabled ? 'Con IA' : 'Sin IA'}</span>
               {isPopular && <span className={`${s.chip} ${s.chipPopular}`}>Más popular</span>}
             </div>
           </div>
@@ -125,13 +146,48 @@ export default async function PlanPage({
                     <img className={s.planImage} src={plan.imageUrl} alt={plan.name} />
                   )}
 
-                  <h2 className={s.planTitle}>{plan.name}</h2>
+                  <div className={s.planTitleRow}>
+                    <h2 className={s.planTitle}>{plan.name}</h2>
+                    <span className={`${s.badge} ${plan.aiLiveEnabled ? s.badgeAi : s.badgeNoAi}`}>
+                      {plan.aiLiveEnabled ? 'Con IA' : 'Sin IA'}
+                    </span>
+                  </div>
+
+                  {plan.aiLiveEnabled && Boolean(plan.aiMonthlyCharacters) && (
+                    <div className={s.aiBadge}>
+                      Locutor IA · {Number(plan.aiMonthlyCharacters).toLocaleString('es-CL')}{' '}
+                      caracteres/mes
+                    </div>
+                  )}
 
                   <dl className={s.prices}>
-                    <div>
-                      <dt>Facturación</dt>
-                      <dd className={s.price}>{formatPrice(plan)}</dd>
-                    </div>
+                    {usdPrice && (
+                      <div>
+                        <dt>USD</dt>
+                        <dd className={s.price}>
+                          {money(usdPrice.amount, 'USD')}
+                          <span className={s.per}>/{period}</span>
+                        </dd>
+                      </div>
+                    )}
+                    {clpPrice && (
+                      <div>
+                        <dt>CLP</dt>
+                        <dd className={s.price}>
+                          {money(clpPrice.amount, 'CLP')}
+                          <span className={s.per}>/{period}</span>
+                        </dd>
+                      </div>
+                    )}
+                    {!usdPrice && !clpPrice && (
+                      <div>
+                        <dt>{plan.currency}</dt>
+                        <dd className={s.price}>
+                          {money(plan.price, plan.currency)}
+                          <span className={s.per}>/{period}</span>
+                        </dd>
+                      </div>
+                    )}
                     <div>
                       <dt>Período</dt>
                       <dd>{plan.interval === 'monthly' ? 'Mensual' : 'Anual'}</dd>

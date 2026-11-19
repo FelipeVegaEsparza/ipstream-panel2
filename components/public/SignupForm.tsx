@@ -25,6 +25,8 @@ export interface PublicPlan {
   videoStorageQuotaMB: number | null
   imageUrl: string | null
   demoUrl?: string | null
+  aiLiveEnabled?: boolean
+  aiMonthlyCharacters?: number
 }
 
 const SERVICES_META: Record<string, { label: string; icon: any; chip: string }> = {
@@ -38,10 +40,17 @@ function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
   const ServiceIcon = meta.icon
   const defaultCurrency = defaultCurrencyFor(plan)
   const amount = plan.prices?.find((item) => item.currency === defaultCurrency)?.amount ?? plan.price
-  const price =
-    defaultCurrency === 'CLP'
-      ? `$${Math.round(amount).toLocaleString('es-CL')}`
-      : `US$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const period = plan.interval === 'monthly' ? 'mes' : 'año'
+  const formatMoney = (value: number, currency: string) =>
+    currency === 'CLP'
+      ? `$${Math.round(value).toLocaleString('es-CL')}`
+      : `US$${value.toLocaleString('en-US', {
+          minimumFractionDigits: Math.round(value * 100) % 100 !== 0 ? 2 : 0,
+          maximumFractionDigits: 2,
+        })}`
+  const price = formatMoney(amount, defaultCurrency)
+  const other = plan.prices?.find((item) => item.currency !== defaultCurrency)
+  const otherPrice = other ? formatMoney(other.amount, other.currency) : null
   const fmtMB = (mb: number | null) =>
     mb && mb > 0 ? `${mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'}` : '—'
 
@@ -67,8 +76,13 @@ function FixedPlanSummary({ plan }: { plan: PublicPlan }) {
           </div>
           <div className="mt-1 flex items-baseline gap-1">
             <span data-slot="summary-price" className="text-2xl font-bold text-gray-900">{price}</span>
-            <span data-slot="muted" className="text-sm text-muted-foreground">/{plan.interval === 'monthly' ? 'mes' : 'año'}</span>
+            <span data-slot="muted" className="text-sm text-muted-foreground">/{period}</span>
           </div>
+          {otherPrice && (
+            <p data-slot="summary-alt-price" className="text-xs text-muted-foreground">
+              También {otherPrice}/{period}
+            </p>
+          )}
         </div>
       </div>
       <div data-slot="muted" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">

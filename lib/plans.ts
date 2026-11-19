@@ -58,5 +58,7 @@ export function toPublicPlan(
     videoStorageQuotaMB: plan.videoStorageQuotaMB,
     imageUrl: plan.imageUrl,
     demoUrl: plan.demoUrl,
+    aiLiveEnabled: plan.aiLiveEnabled,
+    aiMonthlyCharacters: plan.aiMonthlyCharacters,
   }
 }

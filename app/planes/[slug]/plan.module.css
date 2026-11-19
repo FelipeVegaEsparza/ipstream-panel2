@@ -11,7 +11,7 @@
   --ipp-ink-text: #10151a;
   --ipp-danger: #ff5b4a;
   --ipp-ok: #46d17f;
-  --ipp-font-display: "Archivo Variable", system-ui, -apple-system, sans-serif;
+  --ipp-font-display: "Archivo", "Archivo Variable", system-ui, -apple-system, sans-serif;
   --ipp-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --ipp-shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 14px 34px -22px rgba(0, 0, 0, 0.85);
   min-height: 100vh;
@@ -98,6 +98,26 @@
   text-transform: uppercase;
   color: var(--ipp-steel);
   transition: color 0.15s;
+}
+
+.mobileLogin {
+  margin-left: auto;
+  font-family: var(--ipp-font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ipp-steel);
+  transition: color 0.15s;
+}
+
+.mobileLogin:hover {
+  color: var(--ipp-signal);
+}
+
+@media (min-width: 960px) {
+  .mobileLogin {
+    display: none;
+  }
 }
 
 .panelLink:hover {
@@ -340,6 +360,7 @@
 
 .prices {
   display: flex;
+  flex-wrap: wrap;
   gap: 2rem;
   margin-block: 1.5rem;
   padding-block: 1rem;
@@ -370,6 +391,140 @@
 .price {
   color: var(--ipp-signal);
   font-size: 1.375rem;
+}
+
+.per {
+  color: var(--ipp-steel);
+  font-size: 0.75rem;
+  margin-left: 0.15rem;
+}
+
+/* ===== Listing ===== */
+.plansGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 760px) {
+  .plansGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .plansGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.planTitleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ipp-line);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-family: var(--ipp-font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ipp-steel);
+  white-space: nowrap;
+}
+
+.badgeAi {
+  color: var(--ipp-signal);
+  border-color: color-mix(in srgb, var(--ipp-signal) 45%, var(--ipp-line));
+  background: color-mix(in srgb, var(--ipp-signal) 8%, transparent);
+}
+
+.badgeNoAi {
+  color: var(--ipp-steel);
+}
+
+.aiBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--ipp-signal) 45%, var(--ipp-line));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ipp-signal) 8%, transparent);
+  color: var(--ipp-signal);
+  font-family: var(--ipp-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+}
+
+.planActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 1.25rem;
+}
+
+.btnPrimary,
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 4px;
+  font-family: var(--ipp-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btnPrimary {
+  background: var(--ipp-signal);
+  color: var(--ipp-ink-text);
+  border: 1px solid var(--ipp-signal);
+}
+
+.btnPrimary:hover {
+  background: var(--ipp-signal-strong);
+  border-color: var(--ipp-signal-strong);
+}
+
+.btnGhost {
+  border: 1px solid var(--ipp-line);
+  color: var(--ipp-text);
+  background: transparent;
+}
+
+.btnGhost:hover {
+  border-color: var(--ipp-signal);
+  color: var(--ipp-signal);
+}
+
+.refNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ipp-signal) 45%, var(--ipp-line));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ipp-signal) 8%, transparent);
+  color: var(--ipp-signal);
+  font-family: var(--ipp-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
 }
 
 .features {
