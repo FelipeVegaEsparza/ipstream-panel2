@@ -7,6 +7,7 @@ import { logger } from '../lib/logger.js'
 import { generatePlaylist, startEncoder, stopEncoder } from '../lib/video-encoder.js'
 import { config } from '../lib/config.js'
 import { isTimeInSlot, getNextSlots } from '../lib/time.js'
+import { resolveSelfServerId } from '../lib/self-server.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -227,8 +228,12 @@ export function startVideoScheduleCron() {
 
   setInterval(async () => {
     try {
+      const selfId = await resolveSelfServerId()
       const [clients] = await pool.query(
-        `SELECT clientId FROM video_streams WHERE status = 'autodj'`
+        `SELECT clientId FROM video_streams WHERE status = 'autodj' ${
+          selfId ? 'AND serverId = ?' : 'AND serverId IS NULL'
+        }`,
+        selfId ? [selfId] : []
       )
 
       for (const client of clients) {

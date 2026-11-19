@@ -6,6 +6,7 @@ import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
 import { regenerateM3u } from '../lib/liquidsoap.js'
 import { isTimeInSlotDays, getNextSlots, slotDays } from '../lib/time.js'
+import { resolveSelfServerId } from '../lib/self-server.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -225,11 +226,15 @@ export function startScheduleCron() {
 
   setInterval(async () => {
     try {
-      // Obtener todos los clientes con stream activo
+      // Solo los streams de ESTE servidor (multi-nodo).
+      const selfId = await resolveSelfServerId()
       const [clients] = await pool.query(
         `SELECT rs.clientId, rs.icecastMount
          FROM radio_streams rs
-         WHERE rs.liquidsoapRunning = 1 AND rs.enabled = 1`
+         WHERE rs.liquidsoapRunning = 1 AND rs.enabled = 1 ${
+           selfId ? 'AND rs.serverId = ?' : 'AND rs.serverId IS NULL'
+         }`,
+        selfId ? [selfId] : []
       )
 
       for (const client of clients) {
