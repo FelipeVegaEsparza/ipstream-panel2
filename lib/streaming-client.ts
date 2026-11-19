@@ -361,12 +361,12 @@ export const streamingClient = {
   // Schedule (parrilla horaria)
   listSchedule: async (clientId: string) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/schedule`),
-  createSchedule: async (clientId: string, data: { playlistId: string; dayOfWeek: number; startTime: string; endTime: string }) =>
+  createSchedule: async (clientId: string, data: { playlistId: string; dayOfWeek?: number; daysOfWeek?: number[] | string; startTime: string; endTime: string }) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/schedule`, {
       method: 'POST',
       body: data,
     }),
-  updateSchedule: async (clientId: string, scheduleId: string, data: { playlistId?: string; dayOfWeek?: number; startTime?: string; endTime?: string; isActive?: boolean }) =>
+  updateSchedule: async (clientId: string, scheduleId: string, data: { playlistId?: string; dayOfWeek?: number; daysOfWeek?: number[] | string; startTime?: string; endTime?: string; isActive?: boolean }) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/schedule/${encodeURIComponent(scheduleId)}`, {
       method: 'PATCH',
       body: data,

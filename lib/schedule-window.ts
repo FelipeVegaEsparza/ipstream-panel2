@@ -1,7 +1,7 @@
 // =====================================================
 // Ventanas de la parrilla horaria (puro, sin DB).
-// Misma semántica que el agente: la franja activa exige el mismo día local y
-// las franjas que cruzan medianoche se evalúan por minutos.
+// Misma semántica que el agente: día local, multi-día y franjas que cruzan
+// medianoche (se evalúa también el día anterior para la parte posterior a 00:00).
 // =====================================================
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
@@ -14,6 +14,7 @@ export interface LocalTime {
 
 export interface ScheduleSlot {
   dayOfWeek: number
+  daysOfWeek?: string | null
   startTime: string
   endTime: string
 }
@@ -51,13 +52,42 @@ export function parseClock(value: string): number {
   return h * 60 + m
 }
 
+/** Días de una franja. Soporta CSV (`"1,2,3"`) y el `dayOfWeek` legado. */
+export function parseDays(value: string | null | undefined, fallbackDay: number): number[] {
+  const parsed = String(value ?? '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part !== '')
+    .map((part) => Number(part))
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+  const unique = Array.from(new Set(parsed)).sort((a, b) => a - b)
+  if (unique.length > 0) return unique
+  return Number.isInteger(fallbackDay) && fallbackDay >= 0 && fallbackDay <= 6
+    ? [fallbackDay]
+    : []
+}
+
+export function slotDays(slot: ScheduleSlot): number[] {
+  return parseDays(slot.daysOfWeek, slot.dayOfWeek)
+}
+
 export function isSlotActive(local: LocalTime, slot: ScheduleSlot): boolean {
-  if (local.dayOfWeek !== slot.dayOfWeek) return false
+  const days = new Set(slotDays(slot))
+  if (days.size === 0) return false
+
   const start = parseClock(slot.startTime)
   const end = parseClock(slot.endTime)
   if (start < 0 || end < 0) return false
-  if (end <= start) return local.minutes >= start || local.minutes < end
-  return local.minutes >= start && local.minutes < end
+
+  if (end <= start) {
+    const previousDay = (local.dayOfWeek + 6) % 7
+    return (
+      (days.has(local.dayOfWeek) && local.minutes >= start) ||
+      (days.has(previousDay) && local.minutes < end)
+    )
+  }
+
+  return days.has(local.dayOfWeek) && local.minutes >= start && local.minutes < end
 }
 
 /**
@@ -75,9 +105,18 @@ export function minutesUntilSlot(
 
   const start = parseClock(slot.startTime)
   if (start < 0) return null
+
+  const days = slotDays(slot)
+  if (days.length === 0) return null
+
   const nowMinutes = local.dayOfWeek * 1440 + local.minutes
-  const slotMinutes = slot.dayOfWeek * 1440 + start
-  let delta = (slotMinutes - nowMinutes) % WEEK_MINUTES
-  if (delta < 0) delta += WEEK_MINUTES
-  return delta <= lookaheadMinutes ? delta : null
+  let best: number | null = null
+  for (const day of days) {
+    const slotMinutes = day * 1440 + start
+    let delta = (slotMinutes - nowMinutes) % WEEK_MINUTES
+    if (delta < 0) delta += WEEK_MINUTES
+    if (best === null || delta < best) best = delta
+  }
+
+  return best !== null && best <= lookaheadMinutes ? best : null
 }

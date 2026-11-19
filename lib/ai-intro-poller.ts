@@ -35,6 +35,7 @@ async function collectCandidates(now: Date): Promise<Candidate[]> {
       clientId: true,
       playlistId: true,
       dayOfWeek: true,
+      daysOfWeek: true,
       startTime: true,
       endTime: true,
       client: {

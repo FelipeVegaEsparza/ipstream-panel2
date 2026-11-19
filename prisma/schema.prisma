@@ -1142,6 +1142,9 @@ model RadioStream {
   capsulePlayCount     Int       @default(1)
   // Estado actual
   status               String    @default("off") // "off" | "autodj" | "live"
+  // Playlist que estaba activa antes de entrar a una franja programada.
+  // El agente la restaura cuando ninguna franja está activa.
+  scheduleFallbackPlaylistId String?
   // Stats cacheadas (actualizadas vía WebSocket desde el streaming-agent)
   currentTitle         String?
   currentArtist        String?
@@ -1529,7 +1532,10 @@ model PlaylistSchedule {
   clientId      String
   radioStreamId String
   playlistId    String
-  dayOfWeek     Int // 0=domingo, 1=lun, ..., 6=sáb
+  dayOfWeek     Int // 0=domingo, 1=lun, ..., 6=sáb (primer día; compatibilidad)
+  // Días seleccionados en CSV (0..6). Si está vacío se usa `dayOfWeek`.
+  // Permite una franja con varios días, p. ej. "1,2,3,4,5".
+  daysOfWeek    String?  @db.VarChar(64)
   startTime     String   @db.VarChar(191) // HH:mm
   endTime       String   @db.VarChar(191) // HH:mm
   isActive      Boolean  @default(true)

@@ -47,12 +47,34 @@ export function getLocalTimeInZone(date, timeZone) {
 }
 
 /**
- * Verifica si un Date cae dentro de una franja horaria expresada en la zona
- * del cliente. Soporta franjas que cruzan la medianoche (start > end).
+ * Días de una franja. Soporta CSV (`"1,2,3"`), arreglo o el `dayOfWeek`
+ * legado. 0=domingo … 6=sábado.
  */
-export function isTimeInSlot(now, dayOfWeek, startTime, endTime, timeZone) {
+export function slotDays(slot) {
+  const raw = Array.isArray(slot?.daysOfWeek)
+    ? slot.daysOfWeek
+    : String(slot?.daysOfWeek ?? '').split(',')
+  const days = raw
+    .map((day) => String(day).trim())
+    .filter((day) => day !== '')
+    .map((day) => Number(day))
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+  if (days.length > 0) return Array.from(new Set(days)).sort((a, b) => a - b)
+  const fallback = Number(slot?.dayOfWeek)
+  return Number.isInteger(fallback) && fallback >= 0 && fallback <= 6 ? [fallback] : []
+}
+
+/**
+ * Verifica si un Date cae dentro de una franja con uno o varios días.
+ * Para franjas que cruzan medianoche se evalúa también el día anterior:
+ * si el día de inicio está en `days` y ya pasó la hora de inicio, o si el
+ * día anterior está en `days` y todavía no llegó la hora de fin.
+ */
+export function isTimeInSlotDays(now, days, startTime, endTime, timeZone) {
+  const daySet = new Set(Array.isArray(days) ? days.map(Number) : [])
+  if (daySet.size === 0) return false
+
   const { dayOfWeek: localDay, minutes: currentMinutes } = getLocalTimeInZone(now, timeZone)
-  if (localDay !== dayOfWeek) return false
 
   const [sh, sm] = startTime.split(':').map(Number)
   const [eh, em] = endTime.split(':').map(Number)
@@ -60,9 +82,21 @@ export function isTimeInSlot(now, dayOfWeek, startTime, endTime, timeZone) {
   const endMinutes = eh * 60 + em
 
   if (endMinutes <= startMinutes) {
-    return currentMinutes >= startMinutes || currentMinutes < endMinutes
+    const previousDay = (localDay + 6) % 7
+    return (
+      (daySet.has(localDay) && currentMinutes >= startMinutes) ||
+      (daySet.has(previousDay) && currentMinutes < endMinutes)
+    )
   }
-  return currentMinutes >= startMinutes && currentMinutes < endMinutes
+  return daySet.has(localDay) && currentMinutes >= startMinutes && currentMinutes < endMinutes
+}
+
+/**
+ * Compatibilidad: franja de un solo día. Mantiene la firma histórica que usa
+ * la parrilla de TV.
+ */
+export function isTimeInSlot(now, dayOfWeek, startTime, endTime, timeZone) {
+  return isTimeInSlotDays(now, [Number(dayOfWeek)], startTime, endTime, timeZone)
 }
 
 /**
@@ -89,10 +123,17 @@ export function getNextSlots(slots, now, timeZone, limit = 3) {
       const [sh, sm] = String(slot.startTime).split(':').map(Number)
       if (Number.isNaN(sh) || Number.isNaN(sm)) return null
       const startMinutes = sh * 60 + sm
-      const slotWeekMin = slot.dayOfWeek * 1440 + startMinutes
-      let delta = (slotWeekMin - localWeekMin) % WEEK
-      if (delta < 0) delta += WEEK
-      return { slot, delta }
+      const days = slotDays(slot)
+      if (days.length === 0) return null
+
+      let best = Infinity
+      for (const day of days) {
+        const slotWeekMin = day * 1440 + startMinutes
+        let delta = (slotWeekMin - localWeekMin) % WEEK
+        if (delta < 0) delta += WEEK
+        if (delta < best) best = delta
+      }
+      return Number.isFinite(best) ? { slot, delta: best } : null
     })
     .filter(Boolean)
 

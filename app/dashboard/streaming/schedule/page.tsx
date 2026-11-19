@@ -4,9 +4,12 @@ import { showToast } from '@/components/ui/toast'
 
 import { useEffect, useState, useCallback } from 'react'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { parseClock, slotDays } from '@/lib/schedule-window'
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 const DAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+// Orden de presentación: lunes primero, domingo al final.
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
 interface Playlist {
   id: string
@@ -17,6 +20,7 @@ interface Playlist {
 interface ScheduleSlot {
   id: string
   dayOfWeek: number
+  daysOfWeek?: string | null
   startTime: string
   endTime: string
   isActive: boolean
@@ -30,6 +34,7 @@ interface CurrentSlot {
   playlistId: string
   playlistName: string
   dayOfWeek: number
+  daysOfWeek?: string | null
   startTime: string
   endTime: string
 }
@@ -55,7 +60,7 @@ export default function SchedulePage() {
   const [showModal, setShowModal] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [formPlaylistId, setFormPlaylistId] = useState('')
-  const [formDayOfWeek, setFormDayOfWeek] = useState(1)
+  const [formDays, setFormDays] = useState<number[]>([1])
   const [formStartTime, setFormStartTime] = useState('08:00')
   const [formEndTime, setFormEndTime] = useState('09:00')
   const [formSaving, setFormSaving] = useState(false)
@@ -98,7 +103,7 @@ export default function SchedulePage() {
   const openCreate = () => {
     setEditId(null)
     setFormPlaylistId(playlists[0]?.id || '')
-    setFormDayOfWeek(1)
+    setFormDays([1])
     setFormStartTime('08:00')
     setFormEndTime('09:00')
     setShowModal(true)
@@ -107,19 +112,20 @@ export default function SchedulePage() {
   const openEdit = (slot: ScheduleSlot) => {
     setEditId(slot.id)
     setFormPlaylistId(slot.playlistId)
-    setFormDayOfWeek(slot.dayOfWeek)
+    setFormDays(slotDays(slot))
     setFormStartTime(slot.startTime)
     setFormEndTime(slot.endTime)
     setShowModal(true)
   }
 
   const handleSave = async () => {
-    if (!formPlaylistId || !formStartTime || !formEndTime) return
+    if (!formPlaylistId || formDays.length === 0 || !formStartTime || !formEndTime) return
     setFormSaving(true)
     try {
       const body = {
         playlistId: formPlaylistId,
-        dayOfWeek: formDayOfWeek,
+        daysOfWeek: formDays,
+        dayOfWeek: formDays[0],
         startTime: formStartTime,
         endTime: formEndTime,
       }
@@ -171,10 +177,33 @@ export default function SchedulePage() {
   const isNow = (slot: ScheduleSlot) =>
     currentSlot?.id === slot.id
 
-  const schedulesByDay = days.map((_, dayIdx) =>
-    schedules.filter((s) => s.dayOfWeek === dayIdx)
-      .sort((a, b) => a.startTime.localeCompare(b.startTime))
-  )
+  const dayOrder = (slot: ScheduleSlot) => {
+    const indexes = slotDays(slot)
+      .map((day) => DAY_ORDER.indexOf(day))
+      .filter((index) => index >= 0)
+    return indexes.length ? Math.min(...indexes) : 99
+  }
+
+  const sortedSchedules = [...schedules].sort((a, b) => {
+    const byDay = dayOrder(a) - dayOrder(b)
+    return byDay !== 0 ? byDay : a.startTime.localeCompare(b.startTime)
+  })
+
+  const daysLabel = (slot: ScheduleSlot) => {
+    const selected = new Set(slotDays(slot))
+    if (selected.size === 7) return t('streaming.schedule.allDays')
+    const ordered = DAY_ORDER.filter((day) => selected.has(day))
+    const contiguous = ordered.every(
+      (day, index) => index === 0 || DAY_ORDER.indexOf(day) === DAY_ORDER.indexOf(ordered[index - 1]) + 1
+    )
+    if (ordered.length > 2 && contiguous) {
+      return `${days[ordered[0]]} – ${days[ordered[ordered.length - 1]]}`
+    }
+    return ordered.map((day) => days[day]).join(', ')
+  }
+
+  const crossesMidnight = (slot: ScheduleSlot) =>
+    parseClock(slot.endTime) <= parseClock(slot.startTime)
 
   return (
     <div className="space-y-6">
@@ -211,74 +240,71 @@ export default function SchedulePage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">{t('streaming.schedule.day')}</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-48">{t('streaming.schedule.days')}</th>
                 <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">{t('streaming.schedule.start')}</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-28">{t('streaming.schedule.end')}</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium w-36">{t('streaming.schedule.end')}</th>
                 <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t('streaming.schedule.playlist')}</th>
                 <th className="text-right py-3 px-4 text-muted-foreground font-medium w-24">{t('streaming.schedule.actions')}</th>
               </tr>
             </thead>
             <tbody>
-              {schedulesByDay.map((daySlots, dayIdx) => (
-                daySlots.length === 0 ? null : (
-                  daySlots.map((slot, slotIdx) => {
-                    const now = isNow(slot)
-                    return (
-                      <tr
-                        key={slot.id}
-                        className={`border-b border-border/50 transition-colors ${
-                          now ? 'bg-brand/10' : 'hover:bg-card/30'
-                        }`}
-                      >
-                        {slotIdx === 0 && (
-                          <td
-                            rowSpan={daySlots.length}
-                            className="py-3 px-4 text-muted-foreground font-medium align-top pt-4"
-                          >
-                            {days[dayIdx]}
-                          </td>
+              {sortedSchedules.map((slot) => {
+                const now = isNow(slot)
+                const overnight = crossesMidnight(slot)
+                return (
+                  <tr
+                    key={slot.id}
+                    className={`border-b border-border/50 transition-colors ${
+                      now ? 'bg-brand/10' : 'hover:bg-card/30'
+                    }`}
+                  >
+                    <td className={`py-3 px-4 font-medium ${now ? 'text-brand' : 'text-muted-foreground'}`}>
+                      {daysLabel(slot)}
+                    </td>
+                    <td className={`py-3 px-4 ${now ? 'text-brand' : 'text-muted-foreground'}`}>
+                      {fmtTime(slot.startTime)}
+                    </td>
+                    <td className={`py-3 px-4 ${now ? 'text-brand' : 'text-muted-foreground'}`}>
+                      <span>{fmtTime(slot.endTime)}</span>
+                      {overnight && (
+                        <span className="ml-2 inline-flex rounded-full border border-border bg-secondary px-1.5 py-0.5 text-[9px] text-muted-foreground">
+                          {t('streaming.schedule.overnight')}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        {now && (
+                          <span className="w-2 h-2 rounded-full bg-brand animate-pulse shrink-0" />
                         )}
-                        <td className={`py-3 px-4 ${now ? 'text-brand' : 'text-muted-foreground'}`}>
-                          {fmtTime(slot.startTime)}
-                        </td>
-                        <td className={`py-3 px-4 ${now ? 'text-brand' : 'text-muted-foreground'}`}>
-                          {fmtTime(slot.endTime)}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            {now && (
-                              <span className="w-2 h-2 rounded-full bg-brand animate-pulse shrink-0" />
-                            )}
-                            <span className={now ? 'text-brand font-medium' : 'text-muted-foreground'}>
-                              {slot.playlistName}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {t('streaming.schedule.tracks', { count: slot.playlistTrackCount })}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => openEdit(slot)}
-                              className="text-xs px-2.5 py-1 rounded-lg bg-secondary hover:bg-secondary text-muted-foreground transition-colors"
-                            >
-                              {t('streaming.schedule.edit')}
-                            </button>
-                            <button
-                              onClick={() => handleDelete(slot.id)}
-                              disabled={deletingId === slot.id}
-                              className="text-xs px-2.5 py-1 rounded-lg bg-red-900/40 hover:bg-red-800/60 text-red-400 transition-colors disabled:opacity-50"
-                            >
-                              {deletingId === slot.id ? '...' : t('streaming.schedule.delete')}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
+                        <span className={now ? 'text-brand font-medium' : 'text-muted-foreground'}>
+                          {slot.playlistName}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {t('streaming.schedule.tracks', { count: slot.playlistTrackCount })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openEdit(slot)}
+                          className="text-xs px-2.5 py-1 rounded-lg bg-secondary hover:bg-secondary text-muted-foreground transition-colors"
+                        >
+                          {t('streaming.schedule.edit')}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(slot.id)}
+                          disabled={deletingId === slot.id}
+                          className="text-xs px-2.5 py-1 rounded-lg bg-red-900/40 hover:bg-red-800/60 text-red-400 transition-colors disabled:opacity-50"
+                        >
+                          {deletingId === slot.id ? '...' : t('streaming.schedule.delete')}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 )
-              ))}
+              })}
             </tbody>
           </table>
         </div>
@@ -308,16 +334,39 @@ export default function SchedulePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">{t('common.day')}</label>
-                <select
-                  value={formDayOfWeek}
-                  onChange={(e) => setFormDayOfWeek(Number(e.target.value))}
-                  className="form-input w-full"
-                >
-                  {days.map((day, i) => (
-                    <option key={i} value={i}>{day}</option>
-                  ))}
-                </select>
+                <label className="block text-sm text-muted-foreground mb-1">{t('streaming.schedule.days')}</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {DAY_ORDER.map((dayIdx) => {
+                    const checked = formDays.includes(dayIdx)
+                    return (
+                      <label
+                        key={dayIdx}
+                        className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                          checked
+                            ? 'border-brand/40 bg-brand/10 text-foreground'
+                            : 'border-border text-muted-foreground hover:bg-secondary'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(event) =>
+                            setFormDays((prev) =>
+                              event.target.checked
+                                ? Array.from(new Set([...prev, dayIdx])).sort((a, b) => a - b)
+                                : prev.filter((day) => day !== dayIdx)
+                            )
+                          }
+                          className="rounded border-border bg-secondary"
+                        />
+                        {days[dayIdx]}
+                      </label>
+                    )
+                  })}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('streaming.schedule.daysHint')}
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -349,7 +398,7 @@ export default function SchedulePage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={formSaving || !formPlaylistId}
+                disabled={formSaving || !formPlaylistId || formDays.length === 0}
                 className="btn-primary disabled:opacity-50"
               >
                 {formSaving ? t('streaming.schedule.saving') : editId ? t('streaming.schedule.saveChanges') : t('streaming.schedule.create')}

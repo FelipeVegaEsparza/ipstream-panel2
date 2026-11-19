@@ -30,12 +30,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no_radio_stream' }, { status: 404 })
     }
     const body = await request.json().catch(() => ({}))
-    if (!body.playlistId || body.dayOfWeek === undefined || !body.startTime || !body.endTime) {
-      return NextResponse.json({ error: 'validation_error', message: 'playlistId, dayOfWeek, startTime y endTime son requeridos' }, { status: 400 })
+    const rawDays = Array.isArray(body.daysOfWeek)
+      ? body.daysOfWeek
+      : typeof body.daysOfWeek === 'string'
+        ? body.daysOfWeek.split(',')
+        : []
+    let days = rawDays
+      .map((day: unknown) => String(day).trim())
+      .filter((day: string) => day !== '')
+      .map((day: string) => Number(day))
+      .filter((day: number) => Number.isInteger(day) && day >= 0 && day <= 6)
+    if (days.length === 0 && body.dayOfWeek !== undefined) {
+      const legacyDay = Number(body.dayOfWeek)
+      if (Number.isInteger(legacyDay) && legacyDay >= 0 && legacyDay <= 6) {
+        days = [legacyDay]
+      }
+    }
+    days = Array.from(new Set<number>(days)).sort((a, b) => a - b)
+
+    if (!body.playlistId || days.length === 0 || !body.startTime || !body.endTime) {
+      return NextResponse.json(
+        {
+          error: 'validation_error',
+          message: 'playlistId, daysOfWeek, startTime y endTime son requeridos',
+        },
+        { status: 400 }
+      )
     }
     const result = await streamingClient.createSchedule(ctx.clientId, {
       playlistId: body.playlistId,
-      dayOfWeek: Number(body.dayOfWeek),
+      daysOfWeek: days,
+      dayOfWeek: days[0],
       startTime: body.startTime,
       endTime: body.endTime,
     })

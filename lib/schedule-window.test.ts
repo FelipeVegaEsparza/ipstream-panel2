@@ -1,96 +1,126 @@
 import { describe, expect, it } from 'vitest'
-import { isSlotActive, localTime, minutesUntilSlot } from './schedule-window'
+import {
+  isSlotActive,
+  localTime,
+  minutesUntilSlot,
+  parseDays,
+  slotDays,
+} from './schedule-window'
 
-const LOOKAHEAD = 45
+const at = (iso: string) => new Date(iso)
+
+function slot(days: string, startTime: string, endTime: string) {
+  const first = Number(days.split(',')[0])
+  return { dayOfWeek: first, daysOfWeek: days, startTime, endTime }
+}
 
 describe('localTime', () => {
+  it('resuelve día y minutos en UTC', () => {
+    expect(localTime(at('2026-11-18T23:30:00Z'), 'UTC')).toEqual({
+      dayOfWeek: 3,
+      minutes: 23 * 60 + 30,
+    })
+  })
+
   it('convierte a la zona del cliente', () => {
-    const local = localTime(new Date('2026-11-11T12:00:00Z'), 'America/Punta_Arenas')
+    const local = localTime(at('2026-11-11T12:00:00Z'), 'America/Punta_Arenas')
     expect(local.minutes).toBe(9 * 60)
   })
 
   it('cae a UTC con una zona inválida', () => {
-    const local = localTime(new Date('2026-11-11T12:00:00Z'), 'No/Existe')
+    const local = localTime(at('2026-11-11T12:00:00Z'), 'No/Existe')
     expect(local.minutes).toBe(12 * 60)
   })
 })
 
-describe('minutesUntilSlot', () => {
-  const now = new Date('2026-11-11T12:00:00Z')
-  const today = now.getUTCDay()
-  const tomorrow = (today + 1) % 7
+describe('parseDays / slotDays', () => {
+  it('parsea CSV, deduplica y usa dayOfWeek como fallback', () => {
+    expect(parseDays('1,2,3,2', 0)).toEqual([1, 2, 3])
+    expect(parseDays(null, 5)).toEqual([5])
+    expect(parseDays('', 0)).toEqual([0])
+    expect(slotDays({ dayOfWeek: 4, daysOfWeek: '1,4', startTime: '08:00', endTime: '09:00' })).toEqual([1, 4])
+  })
+})
 
-  it('devuelve 0 si la franja está activa', () => {
-    expect(
-      minutesUntilSlot(
-        { dayOfWeek: today, startTime: '11:30', endTime: '13:00' },
-        now,
-        'UTC',
-        LOOKAHEAD
-      )
-    ).toBe(0)
+describe('isSlotActive', () => {
+  it('detecta una franja normal del mismo día', () => {
+    const s = slot('3', '17:35', '19:00')
+    expect(isSlotActive(localTime(at('2026-11-18T18:00:00Z'), 'UTC'), s)).toBe(true)
+    expect(isSlotActive(localTime(at('2026-11-18T20:00:00Z'), 'UTC'), s)).toBe(false)
+    expect(isSlotActive(localTime(at('2026-11-19T18:00:00Z'), 'UTC'), s)).toBe(false)
+  })
+
+  it('detecta la parte posterior a medianoche usando el día anterior', () => {
+    const s = slot('3', '17:35', '09:00')
+    // Miércoles 18:00 y jueves 08:00 activos; jueves 10:00 y viernes 08:00 no.
+    expect(isSlotActive(localTime(at('2026-11-18T18:00:00Z'), 'UTC'), s)).toBe(true)
+    expect(isSlotActive(localTime(at('2026-11-19T08:00:00Z'), 'UTC'), s)).toBe(true)
+    expect(isSlotActive(localTime(at('2026-11-19T10:00:00Z'), 'UTC'), s)).toBe(false)
+    expect(isSlotActive(localTime(at('2026-11-20T08:00:00Z'), 'UTC'), s)).toBe(false)
+  })
+
+  it('soporta varios días y cruce de medianoche', () => {
+    const s = slot('1,2,3,4,5', '17:35', '09:00')
+    // Martes 08:00 viene del lunes; martes 20:00 inicia el martes.
+    expect(isSlotActive(localTime(at('2026-11-17T08:00:00Z'), 'UTC'), s)).toBe(true)
+    expect(isSlotActive(localTime(at('2026-11-17T20:00:00Z'), 'UTC'), s)).toBe(true)
+    // Sábado 08:00 viene del viernes; domingo 08:00 y lunes 08:00 no.
+    expect(isSlotActive(localTime(at('2026-11-21T08:00:00Z'), 'UTC'), s)).toBe(true)
+    expect(isSlotActive(localTime(at('2026-11-22T08:00:00Z'), 'UTC'), s)).toBe(false)
+    expect(isSlotActive(localTime(at('2026-11-16T08:00:00Z'), 'UTC'), s)).toBe(false)
+  })
+
+  it('una franja de todos los días cruza sin huecos', () => {
+    const s = slot('0,1,2,3,4,5,6', '17:35', '09:00')
+    expect(isSlotActive(localTime(at('2026-11-22T08:00:00Z'), 'UTC'), s)).toBe(true)
+    expect(isSlotActive(localTime(at('2026-11-22T10:00:00Z'), 'UTC'), s)).toBe(false)
+  })
+})
+
+describe('minutesUntilSlot', () => {
+  it('devuelve 0 si está activa', () => {
+    const s = slot('3', '17:35', '19:00')
+    expect(minutesUntilSlot(s, at('2026-11-18T18:00:00Z'), 'UTC', 45)).toBe(0)
   })
 
   it('devuelve los minutos si empieza dentro del lookahead', () => {
     expect(
       minutesUntilSlot(
-        { dayOfWeek: today, startTime: '12:30', endTime: '13:00' },
-        now,
+        { dayOfWeek: 3, startTime: '12:30', endTime: '13:00' },
+        at('2026-11-11T12:00:00Z'),
         'UTC',
-        LOOKAHEAD
+        45
       )
     ).toBe(30)
   })
 
-  it('devuelve null si todavía falta demasiado', () => {
-    expect(
-      minutesUntilSlot(
-        { dayOfWeek: today, startTime: '14:00', endTime: '15:00' },
-        now,
-        'UTC',
-        LOOKAHEAD
-      )
-    ).toBeNull()
-  })
-
   it('detecta una franja que empieza justo después de medianoche', () => {
-    const late = new Date('2026-11-11T23:50:00Z')
     expect(
       minutesUntilSlot(
-        { dayOfWeek: tomorrow, startTime: '00:10', endTime: '01:00' },
-        late,
+        { dayOfWeek: 4, startTime: '00:10', endTime: '01:00' },
+        at('2026-11-11T23:50:00Z'),
         'UTC',
-        LOOKAHEAD
+        45
       )
     ).toBe(20)
   })
 
   it('respeta la zona horaria del cliente', () => {
     // 12:00 UTC = 09:00 en Punta Arenas.
-    const localDay = localTime(now, 'America/Punta_Arenas').dayOfWeek
     expect(
       minutesUntilSlot(
-        { dayOfWeek: localDay, startTime: '09:20', endTime: '10:00' },
-        now,
+        { dayOfWeek: 3, startTime: '09:20', endTime: '10:00' },
+        at('2026-11-11T12:00:00Z'),
         'America/Punta_Arenas',
-        LOOKAHEAD
+        45
       )
     ).toBe(20)
   })
-})
 
-describe('isSlotActive', () => {
-  it('soporta franjas que cruzan medianoche', () => {
-    const local = { dayOfWeek: 3, minutes: 23 * 60 }
-    expect(
-      isSlotActive(local, { dayOfWeek: 3, startTime: '22:00', endTime: '02:00' })
-    ).toBe(true)
-    expect(
-      isSlotActive({ dayOfWeek: 3, minutes: 12 * 60 }, {
-        dayOfWeek: 3,
-        startTime: '22:00',
-        endTime: '02:00',
-      })
-    ).toBe(false)
+  it('calcula el próximo inicio de cualquiera de los días', () => {
+    const s = slot('1,5', '17:00', '18:00')
+    // Miércoles 12:00 → viernes 17:00 (2 días + 5 horas).
+    expect(minutesUntilSlot(s, at('2026-11-18T12:00:00Z'), 'UTC', 4000)).toBe(2 * 1440 + 300)
+    expect(minutesUntilSlot(s, at('2026-11-18T12:00:00Z'), 'UTC', 45)).toBeNull()
   })
 })
