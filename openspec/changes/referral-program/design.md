@@ -114,8 +114,8 @@ model ReferralAuditLog {
 
 - Generación: `CAST-` + slug del nombre en mayúsculas (máx. 8) + sufijo aleatorio de 3 caracteres; reintento ante colisión (máx. 5) y sufijo largo como respaldo. Se usa `crypto.randomInt` para el sufijo.
 - La creación es idempotente: `ensureReferralCode(clientId)` lee el código existente; si no existe, hace `updateMany` condicionado a `referralCode: null` y, si otra petición ganó la carrera, relee el código ganador.
-- El enlace se construye con la URL pública del panel (`PANEL_PUBLIC_URL` o `NEXTAUTH_URL`), porque `/registro` vive en el panel y no en el sitio público raíz: `https://<dominio-panel>/registro?ref=<code>`. Es configurable por entorno y no depende de la DB.
-- La página `/registro` es un componente servidor que lee `searchParams.ref` y lo pasa al formulario; el formulario lo guarda en estado y lo envía en el payload. No se confía en cookies como fuente de verdad; una cookie de conveniencia, si se usa, solo sirve para no perder el código al navegar entre planes.
+- El enlace se construye con la URL pública del panel (`PANEL_PUBLIC_URL` o `NEXTAUTH_URL`), porque el alta vive en el panel y no en el sitio público raíz: `https://<dominio-panel>/planes?ref=<code>`. Es configurable por entorno y no depende de la DB.
+- `/planes` es un listado de planes sin formulario; cada tarjeta enlaza a `/planes/<slug>?ref=<code>`, la única ruta que renderiza el formulario de alta. `/registro` se mantiene como redirección 308 a `/planes` para enlaces antiguos, conservando `ref` y `plan`.
 
 ### 3. Atribución dentro de la transacción de registro
 

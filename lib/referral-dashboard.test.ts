@@ -92,7 +92,7 @@ describe('getReferralDashboard', () => {
 
     expect(data.eligible).toBe(true)
     expect(data.code).toBe('CAST-RADIOABC')
-    expect(data.link).toMatch(/^https?:\/\/[^/]+\/registro\?ref=CAST-RADIOABC$/)
+    expect(data.link).toMatch(/^https?:\/\/[^/]+\/planes\?ref=CAST-RADIOABC$/)
     expect(data.summary).toEqual({
       totalReferred: 4,
       valid: 2,

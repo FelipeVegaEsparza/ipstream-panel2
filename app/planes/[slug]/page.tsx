@@ -55,8 +55,8 @@ export default async function PlanPage({
   const { plan, popularId } = data
   const referralRef = (searchParams.ref || '').trim()
   const allPlansHref = referralRef
-    ? `/registro?ref=${encodeURIComponent(referralRef)}`
-    : '/registro'
+    ? `/planes?ref=${encodeURIComponent(referralRef)}`
+    : '/planes'
   const meta = SERVICES_META[plan.services] || SERVICES_META.both
   const ServiceIcon = meta.icon
   const isPopular = plan.id === popularId

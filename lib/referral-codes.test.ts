@@ -46,7 +46,7 @@ describe('buildReferralCode', () => {
 describe('enlaces de referido', () => {
   it('construye el enlace con el dominio configurado', () => {
     expect(buildReferralLink('CAST-ABC', 'casterfly.com')).toBe(
-      'https://casterfly.com/registro?ref=CAST-ABC'
+      'https://casterfly.com/planes?ref=CAST-ABC'
     )
   })
 
@@ -81,7 +81,7 @@ describe('enlaces de referido', () => {
   it('normaliza el dominio y evita dobles barras', () => {
     expect(normalizeBaseUrl('https://casterfly.com/')).toBe('https://casterfly.com')
     expect(buildReferralLink('CAST ABC', 'https://casterfly.com/')).toBe(
-      'https://casterfly.com/registro?ref=CAST%20ABC'
+      'https://casterfly.com/planes?ref=CAST%20ABC'
     )
   })
 })

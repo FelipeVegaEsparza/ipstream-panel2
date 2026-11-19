@@ -93,16 +93,15 @@ export function normalizeBaseUrl(baseUrl: string | null | undefined): string {
   return withProtocol.replace(/\/+$/, '')
 }
 
-/** Construye el enlace público de invitación. */
+/** Construye el enlace público de invitación (listado de planes). */
 export function buildReferralLink(code: string, baseUrl?: string | null): string {
-  return `${normalizeBaseUrl(baseUrl)}/registro?ref=${encodeURIComponent(code)}`
+  return `${normalizeBaseUrl(baseUrl)}/planes?ref=${encodeURIComponent(code)}`
 }
 
 /**
- * Base pública del panel para el enlace de registro. El formulario `/registro`
- * vive en el panel (p. ej. panel.casterfly.com), no en el sitio público raíz.
- * En producción se toma de PANEL_PUBLIC_URL o NEXTAUTH_URL; en desarrollo se
- * puede fijar con la misma variable o cae al dominio del panel.
+ * Base pública del panel para el enlace de invitación. El listado vive en
+ * `/planes` y el formulario en `/planes/<slug>` (p. ej. panel.casterfly.com).
+ * En producción se toma de PANEL_PUBLIC_URL o NEXTAUTH_URL.
  */
 export async function getReferralBaseUrl(_db: any = prisma): Promise<string> {
   if (process.env.PANEL_PUBLIC_URL) return normalizeBaseUrl(process.env.PANEL_PUBLIC_URL)

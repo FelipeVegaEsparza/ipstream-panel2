@@ -12,7 +12,7 @@ El sistema SHALL leer el parámetro `ref` del enlace de registro y SHALL conserv
 
 #### Scenario: Registro con enlace de referido
 
-- **WHEN** una persona abre `/registro?ref=CAST-FELIPE82` y completa el formulario
+- **WHEN** una persona abre `/planes?ref=CAST-FELIPE82`, elige un plan y completa el formulario
 - **THEN** el formulario envía el código `CAST-FELIPE82` al backend junto con los datos de registro
 - **AND** el código no se pierde al cambiar de plan o moneda en el formulario
 

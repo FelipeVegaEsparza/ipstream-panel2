@@ -58,13 +58,19 @@ El sistema SHALL generar automáticamente un código de referido por cliente, ú
 
 ### Requirement: Enlace personal de invitación
 
-El sistema SHALL construir el enlace de invitación del cliente a partir del dominio público configurado de la plataforma y de su código, con la forma `https://<dominio-público>/registro?ref=<código>`.
+El sistema SHALL construir el enlace de invitación del cliente a partir del dominio público del panel y de su código, con la forma `https://<dominio-panel>/planes?ref=<código>`. El listado SHALL conservar el código al enlazar a la página del plan elegido, que es la única que renderiza el formulario de alta.
 
 #### Scenario: Enlace con dominio configurado
 
-- **WHEN** el panel tiene configurado el dominio público del sitio
+- **WHEN** el panel tiene configurado el dominio público del panel (`PANEL_PUBLIC_URL` o `NEXTAUTH_URL`)
 - **THEN** el enlace usa ese dominio y el código del cliente
 - **AND** el enlace es estable entre sesiones
+
+#### Scenario: El plan elegido conserva el referido
+
+- **WHEN** la persona abre el enlace del referido y elige un plan del listado
+- **THEN** la página del plan conserva `?ref=` y lo pasa al formulario
+- **AND** el formulario envía el código al backend
 
 #### Scenario: Dominio no configurado
 

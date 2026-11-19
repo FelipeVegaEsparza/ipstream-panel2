@@ -6,7 +6,7 @@ CasterFly no tiene un canal de crecimiento orgánico medible: los clientes recom
 
 ## What Changes
 
-- Cada cliente recibe un **código de referido único y permanente** (`CAST-XXXXXXXX`) y un enlace público `https://<dominio-panel>/registro?ref=<código>`.
+- Cada cliente recibe un **código de referido único y permanente** (`CAST-XXXXXXXX`) y un enlace público `https://<dominio-panel>/planes?ref=<código>`.
 - El registro público captura el código, lo valida en el backend y lo **persiste en la base de datos** junto al cliente nuevo (sin depender solo de cookies). El referente queda bloqueado después del registro.
 - Nuevo modelo de **referidos** con estados: registrado, pendiente de contratación, pendiente de primer pago, primer pago confirmado, pendiente de segundo pago, válido y rechazado. La validación se calcula exclusivamente desde `payments` confirmados (nunca desde el frontend).
 - **2 referidos válidos = 1 mes gratis**. Los referidos válidos se acumulan (3 → 1 recompensa + progreso 1/2; 4 → 2 recompensas) y no hay límite de recompensas.
@@ -38,7 +38,7 @@ CasterFly no tiene un canal de crecimiento orgánico medible: los clientes recom
 ## Impact
 
 - **Prisma / MySQL**: nuevas tablas `referrals`, `referral_payments`, `referral_rewards`, `referral_credit_ledger`, `referral_audit_logs`, `client_notifications`; columnas aditivas en `clients` (`referralCode` único), en `payments` (`creditApplied`, `creditCurrency`) y en `app_config` (`referralFxUsdClp`). Migración nueva, sin pérdida de datos.
-- **Registro público**: `app/registro/page.tsx`, `components/public/SignupForm.tsx` (lectura de `?ref=`), `lib/validations.ts` (`registerSchema`), `app/api/auth/register/route.ts` (atribución dentro de la transacción) y `app/api/public/referral/[code]/validate/route.ts`.
+- **Registro público**: `app/planes/page.tsx` (listado de planes), `app/planes/[slug]/page.tsx` (único formulario de alta), `app/registro/page.tsx` (redirección 308), `components/public/SignupForm.tsx` (lectura de `?ref=`), `lib/validations.ts` (`registerSchema`), `app/api/auth/register/route.ts` (atribución dentro de la transacción) y `app/api/public/referral/[code]/validate/route.ts`.
 - **Facturación**: `lib/payment-generator.ts` y `lib/billing-payments.ts` invocan el motor de créditos después de generar/confirmar pagos. Ningún cambio de precios ni de las reglas de renovación/suspensión; el pago conserva su `amount` y expone `creditApplied` para el neto.
 - **Nuevo dominio de referidos**: `lib/referrals/*` (código, atribución, validación, recompensas, crédito, auditoría, notificaciones) con tests en `lib/*.test.ts` (Vitest, patrón `fakeDb`).
 - **Nuevas APIs de cliente**: `/api/dashboard/referrals` y `/api/dashboard/notifications/*`; **APIs admin**: `/api/admin/referrals/*` (listado, detalle, anular recompensa, marcar reembolso) y `/api/admin/app-config/referral-fx` o reutilización de `app-config`.

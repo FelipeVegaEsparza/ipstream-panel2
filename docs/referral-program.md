@@ -4,7 +4,7 @@ Documentación operativa y técnica del programa de referidos de CasterFly.
 
 ## 1. Reglas del programa
 
-- Cada cliente tiene un **código único y permanente** con formato `CAST-XXXXXXXX` y un enlace `https://<dominio-panel>/registro?ref=<código>` (`panel.casterfly.com` en producción; se configura con `PANEL_PUBLIC_URL` o `NEXTAUTH_URL`).
+- Cada cliente tiene un **código único y permanente** con formato `CAST-XXXXXXXX` y un enlace `https://<dominio-panel>/planes?ref=<código>` (`panel.casterfly.com` en producción; se configura con `PANEL_PUBLIC_URL` o `NEXTAUTH_URL`).
 - Puede participar desde que su cuenta está activa y tiene **al menos una mensualidad pagada y confirmada**.
 - No hay límite de referidos ni de recompensas.
 - **2 referidos válidos = 1 mes gratis**. Los válidos se acumulan: 3 → 1 recompensa + progreso 1/2; 4 → 2 recompensas.
@@ -59,13 +59,14 @@ El crédito se lleva en `referral_credit_ledger` (asientos con signo) y se aplic
 
 ## 5. Atribución en el registro
 
-Existen dos entradas de alta, ambas válidas y con el mismo backend:
+El único formulario de alta vive en **`/planes/<slug>`**. Existen dos rutas de navegación, pero una sola de registro:
 
-- **`/registro`**: alta general con todos los planes. Es la ruta que usa el enlace de referido porque permite elegir cualquier plan y conserva `?ref=` al cambiar de plan.
-- **`/planes/<slug>`**: landing de un plan concreto, usada por los enlaces de contratación del sitio público (`contractUrl`). También acepta `?ref=` y lo pasa al formulario; el enlace "Ver todos los planes" conserva el código.
+- **`/planes`**: listado de planes. No tiene formulario: muestra los planes y cada tarjeta enlaza a `/planes/<slug>?ref=...`. Es la ruta que usa el enlace de referido para que el referido elija su plan.
+- **`/planes/<slug>`**: landing del plan con el formulario de alta. Es la única ruta que crea cuentas y acepta `?ref=`. La usan los enlaces de contratación del sitio público (`contractUrl`).
+- **`/registro`**: ruta histórica. Ahora responde **308** hacia `/planes` (o `/planes/<slug>` si recibe `?plan=`), conservando `?ref=`. No renderiza un segundo formulario.
 
-- `/registro?ref=CODE` pasa el código a `SignupForm` y al payload de `/api/auth/register`.
-- El enlace usa el dominio del panel (`PANEL_PUBLIC_URL`/`NEXTAUTH_URL`) porque el formulario vive ahí; el dominio raíz del sitio público no sirve `/registro`.
+- `/planes/<slug>?ref=CODE` pasa el código a `SignupForm` y al payload de `/api/auth/register`.
+- El enlace usa el dominio del panel (`PANEL_PUBLIC_URL`/`NEXTAUTH_URL`) porque el formulario vive ahí; el dominio raíz del sitio público no sirve el alta.
 - El backend valida el código, la elegibilidad del referente, el email y la IP, y crea `Referral` **dentro de la misma transacción** que el usuario/cliente.
 - Un código inválido o de un referente no elegible no bloquea el registro: responde `referralApplied: false`.
 - `Referral.referredClientId` es único; un segundo intento no reemplaza al referente y se audita.
@@ -200,7 +201,7 @@ Correspondencia con los doce escenarios obligatorios:
 
 El flujo completo se ejecutó contra el VPS de producción después del deploy de `13357f8`:
 
-1. Un cliente elegible generó su código de forma perezosa al abrir `/api/dashboard/referrals` y recibió un enlace `https://casterfly.com/registro?ref=...`.
+1. Un cliente elegible generó su código de forma perezosa al abrir `/api/dashboard/referrals` y recibió un enlace `https://panel.casterfly.com/planes?ref=...`.
 2. Se registró una cuenta nueva con ese enlace: la API respondió `referralApplied: true`, el `Referral` quedó en estado `registered` y el referente recibió la notificación de nuevo referido.
 3. Se asignó un plan a la cuenta QA: la primera cuota nació completada y el referido pasó a `first_payment_confirmed` (hook de primera cuota).
 4. Se registró el segundo pago desde el admin: el referido pasó a `valid`, se guardaron los dos `ReferralPayment` y el referente recibió la notificación de referido válido.
