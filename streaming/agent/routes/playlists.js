@@ -4,7 +4,8 @@
 
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
-import { regenerateM3u } from '../lib/liquidsoap.js'
+import { regenerateM3u, queuePlaylistTransitions } from '../lib/liquidsoap.js'
+import { deleteJingleFile } from '../lib/files.js'
 import crypto from 'crypto'
 
 function uuid() {
@@ -40,14 +41,44 @@ export default async function playlistRoutes(app) {
   app.get('/api/streams/:clientId/playlists/:id', async (request, reply) => {
     const { clientId, id } = request.params
     const [plRows] = await pool.query(
-      `SELECT p.*, c.name AS clientName
+      `SELECT p.*, c.name AS clientName,
+              ij.id AS introId, ij.title AS introTitle, ij.duration AS introDuration,
+              ij.fileName AS introFileName,
+              oj.id AS outroId, oj.title AS outroTitle, oj.duration AS outroDuration,
+              oj.fileName AS outroFileName
        FROM playlists p
        JOIN clients c ON c.id = p.clientId
+       LEFT JOIN jingles ij ON ij.id = p.introJingleId AND ij.kind = 'playlist_intro'
+       LEFT JOIN jingles oj ON oj.id = p.outroJingleId AND oj.kind = 'playlist_outro'
        WHERE p.id = ? AND p.clientId = ?`,
       [id, clientId]
     )
     if (plRows.length === 0) return reply.code(404).send({ error: 'not_found' })
     const playlist = plRows[0]
+    playlist.introJingle = playlist.introId
+      ? {
+          id: playlist.introId,
+          title: playlist.introTitle,
+          duration: playlist.introDuration,
+          fileName: playlist.introFileName,
+        }
+      : null
+    playlist.outroJingle = playlist.outroId
+      ? {
+          id: playlist.outroId,
+          title: playlist.outroTitle,
+          duration: playlist.outroDuration,
+          fileName: playlist.outroFileName,
+        }
+      : null
+    delete playlist.introId
+    delete playlist.introTitle
+    delete playlist.introDuration
+    delete playlist.introFileName
+    delete playlist.outroId
+    delete playlist.outroTitle
+    delete playlist.outroDuration
+    delete playlist.outroFileName
 
     const [entries] = await pool.query(
       `SELECT pe.id AS entryId, pe.\`order\`, pe.createdAt,
@@ -108,7 +139,7 @@ export default async function playlistRoutes(app) {
    */
   app.patch('/api/streams/:clientId/playlists/:id', async (request, reply) => {
     const { clientId, id } = request.params
-    const { name, description, shuffle, repeat } = request.body || {}
+    const { name, description, shuffle, repeat, introJingleId, outroJingleId } = request.body || {}
 
     const sets = []
     const params = []
@@ -119,6 +150,31 @@ export default async function playlistRoutes(app) {
     }
     if (typeof shuffle === 'boolean') { sets.push('shuffle = ?'); params.push(shuffle ? 1 : 0) }
     if (typeof repeat === 'boolean') { sets.push('`repeat` = ?'); params.push(repeat ? 1 : 0) }
+
+    async function validateAudio(kind, value) {
+      if (value === null) return null
+      if (typeof value !== 'string' || value.length === 0) {
+        return { error: 'id_invalido' }
+      }
+      const [rows] = await pool.query(
+        'SELECT id FROM jingles WHERE id = ? AND clientId = ? AND kind = ? LIMIT 1',
+        [value, clientId, kind]
+      )
+      return rows.length > 0 ? value : { error: 'audio_no_encontrado' }
+    }
+
+    if (introJingleId !== undefined) {
+      const valid = await validateAudio('playlist_intro', introJingleId)
+      if (valid && typeof valid === 'object') return reply.code(400).send({ error: valid.error })
+      sets.push('introJingleId = ?')
+      params.push(valid)
+    }
+    if (outroJingleId !== undefined) {
+      const valid = await validateAudio('playlist_outro', outroJingleId)
+      if (valid && typeof valid === 'object') return reply.code(400).send({ error: valid.error })
+      sets.push('outroJingleId = ?')
+      params.push(valid)
+    }
     if (sets.length === 0) {
       return reply.code(400).send({ error: 'no_fields' })
     }
@@ -155,12 +211,31 @@ export default async function playlistRoutes(app) {
     const { clientId, id } = request.params
 
     const [plRows] = await pool.query(
-      `SELECT id, isActive FROM playlists WHERE id = ? AND clientId = ?`, [id, clientId]
+      `SELECT id, isActive, introJingleId, outroJingleId
+       FROM playlists WHERE id = ? AND clientId = ?`, [id, clientId]
     )
     if (plRows.length === 0) return reply.code(404).send({ error: 'not_found' })
     const wasActive = plRows[0].isActive
+    const audioIds = [plRows[0].introJingleId, plRows[0].outroJingleId].filter(Boolean)
 
     await pool.query(`DELETE FROM playlists WHERE id = ?`, [id])
+
+    // Borrar el audio propio de la playlist si ya no lo usa otra.
+    for (const audioId of audioIds) {
+      const [refs] = await pool.query(
+        'SELECT id FROM playlists WHERE introJingleId = ? OR outroJingleId = ? LIMIT 1',
+        [audioId, audioId]
+      )
+      if (refs.length > 0) continue
+      const [jRows] = await pool.query(
+        `SELECT id, fileName FROM jingles WHERE id = ? AND clientId = ? AND kind IN ('playlist_intro', 'playlist_outro') LIMIT 1`,
+        [audioId, clientId]
+      )
+      const jingle = jRows[0]
+      if (!jingle) continue
+      await pool.query('DELETE FROM jingles WHERE id = ?', [jingle.id])
+      try { await deleteJingleFile(clientId, jingle.fileName) } catch {}
+    }
 
     if (wasActive) {
       try { await regenerateM3u(clientId) } catch {}
@@ -183,16 +258,27 @@ export default async function playlistRoutes(app) {
    */
   app.post('/api/streams/:clientId/playlists/:id/activate', async (request, reply) => {
     const { clientId, id } = request.params
+    let activationTransition = null
     const conn = await pool.getConnection()
     try {
       await conn.beginTransaction()
 
       const [plRows] = await conn.query(
-        `SELECT id, isActive FROM playlists WHERE id = ? AND clientId = ? FOR UPDATE`, [id, clientId]
+        `SELECT id, isActive, introJingleId FROM playlists WHERE id = ? AND clientId = ? FOR UPDATE`, [id, clientId]
       )
       if (plRows.length === 0) {
         await conn.rollback()
         return reply.code(404).send({ error: 'not_found' })
+      }
+      const [previousRows] = await conn.query(
+        `SELECT id, outroJingleId FROM playlists WHERE clientId = ? AND isActive = 1 LIMIT 1`,
+        [clientId]
+      )
+      activationTransition = {
+        previousId: previousRows[0]?.id || null,
+        previousOutroId: previousRows[0]?.outroJingleId || null,
+        nextId: id,
+        nextIntroId: plRows[0].introJingleId || null,
       }
 
       // Desactivar todas las del cliente
@@ -215,6 +301,17 @@ export default async function playlistRoutes(app) {
       await regenerateScript(clientId)
     } catch (err) {
       logger.warn({ err, clientId }, 'No se pudo regenerar el script (no es crítico)')
+    }
+
+    // Intro/cierre: si se cambia de playlist, encolar cierre de la anterior
+    // e intro de la nueva. La cola se reproduce una sola vez.
+    if (activationTransition && activationTransition.previousId && activationTransition.previousId !== id) {
+      await queuePlaylistTransitions(clientId, [
+        activationTransition.previousOutroId,
+        activationTransition.nextIntroId,
+      ])
+    } else if (activationTransition && !activationTransition.previousId && activationTransition.nextIntroId) {
+      await queuePlaylistTransitions(clientId, [activationTransition.nextIntroId])
     }
 
     await pool.query(

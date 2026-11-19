@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
     const form = await request.formData()
     const file = form.get('file')
     const title = typeof form.get('title') === 'string' ? String(form.get('title')).trim().slice(0, 180) : ''
+    const kind = typeof form.get('kind') === 'string' ? String(form.get('kind')) : undefined
     if (!(file instanceof File)) {
       return NextResponse.json({ error: 'file_required', message: 'Falta el audio del jingle.' }, { status: 400 })
     }
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
     const name = (file.name || 'jingle-ia.mp3').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-160) || 'jingle-ia.mp3'
     const upload = new File([await file.arrayBuffer()], name, { type: 'audio/mpeg' })
-    const result = await streamingClient.uploadJingle(ctx.clientId, upload)
+    const result = await streamingClient.uploadJingle(ctx.clientId, upload, kind)
     const id = result?.jingle?.id
     if (id) {
       await streamingClient.updateJingle(ctx.clientId, id, {

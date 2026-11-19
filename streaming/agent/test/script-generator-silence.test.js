@@ -32,6 +32,12 @@ function baseArgs(overrides = {}) {
   }
 }
 
+test('incluye la cola de transiciones antes de announcements y la música', () => {
+  const script = generateLiquidsoapScript(baseArgs())
+  assert.match(script, /transitions = request\.queue\(id="transitions"\)/)
+  assert.match(script, /autodj = fallback\(track_sensitive=true, \[transitions, announcements,/)
+})
+
 test('el script legacy envuelve el harbor con blank.detect y callback de silencio', () => {
   const script = generateLiquidsoapScript(baseArgs())
   assert.match(script, /live = blank\.detect\(max_blank=10\.0, threshold=-50\.0, live\)/)

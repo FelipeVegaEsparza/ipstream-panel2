@@ -339,6 +339,8 @@ export const streamingPlaylistUpdateSchema = z.object({
   description: z.string().max(1000).nullable().optional(),
   shuffle: z.boolean().optional(),
   repeat: z.boolean().optional(),
+  introJingleId: z.string().min(1).nullable().optional(),
+  outroJingleId: z.string().min(1).nullable().optional(),
 })
 export type StreamingPlaylistUpdateInput = z.infer<typeof streamingPlaylistUpdateSchema>
 

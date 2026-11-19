@@ -35,15 +35,15 @@ async function ensureCoverColumn() {
 async function queryJingles(clientId) {
   if (await ensureCoverColumn()) {
     const [rows] = await pool.query(
-      `SELECT id, title, artist, duration, fileName, fileSize, coverUrl, mimeType, uploadedAt, updatedAt
-       FROM jingles WHERE clientId = ? ORDER BY uploadedAt DESC`,
+      `SELECT id, title, artist, duration, fileName, fileSize, coverUrl, mimeType, kind, uploadedAt, updatedAt
+       FROM jingles WHERE clientId = ? AND kind = 'jingle' ORDER BY uploadedAt DESC`,
       [clientId]
     )
     return rows
   }
   const [rows] = await pool.query(
-    `SELECT id, title, artist, duration, fileName, fileSize, mimeType, uploadedAt, updatedAt
-     FROM jingles WHERE clientId = ? ORDER BY uploadedAt DESC`,
+    `SELECT id, title, artist, duration, fileName, fileSize, mimeType, kind, uploadedAt, updatedAt
+     FROM jingles WHERE clientId = ? AND kind = 'jingle' ORDER BY uploadedAt DESC`,
     [clientId]
   )
   return rows.map((r) => ({ ...r, coverUrl: null }))
@@ -115,6 +115,11 @@ export default async function jingleRoutes(app) {
       const meta = await readMetadata(filePath)
       try { await tagLoudness(filePath) } catch (err) { logger.warn({ err: err.message, filePath }, 'No se pudo medir loudness del jingle') }
 
+      const rawKind = data.fields?.kind?.value ?? data.fields?.kind
+      const kind = ['jingle', 'playlist_intro', 'playlist_outro'].includes(String(rawKind))
+        ? String(rawKind)
+        : 'jingle'
+
       const jingleId = 'jng_' + uuid().slice(0, 8)
       let coverUrl = null
 
@@ -126,23 +131,23 @@ export default async function jingleRoutes(app) {
       if (await ensureCoverColumn()) {
         await pool.query(
           `INSERT INTO jingles (id, clientId, radioStreamId, title, artist, duration,
-            fileName, filePath, fileSize, coverUrl, mimeType, uploadedAt, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            fileName, filePath, fileSize, coverUrl, mimeType, kind, uploadedAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
           [
             jingleId, clientId, radioStreamId,
             meta.title, meta.artist, meta.duration,
-            fileName, filePath, size, coverUrl, data.mimetype || 'audio/mpeg',
+            fileName, filePath, size, coverUrl, data.mimetype || 'audio/mpeg', kind,
           ]
         )
       } else {
         await pool.query(
           `INSERT INTO jingles (id, clientId, radioStreamId, title, artist, duration,
-            fileName, filePath, fileSize, mimeType, uploadedAt, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            fileName, filePath, fileSize, mimeType, kind, uploadedAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
           [
             jingleId, clientId, radioStreamId,
             meta.title, meta.artist, meta.duration,
-            fileName, filePath, size, data.mimetype || 'audio/mpeg',
+            fileName, filePath, size, data.mimetype || 'audio/mpeg', kind,
           ]
         )
       }
@@ -150,7 +155,7 @@ export default async function jingleRoutes(app) {
       await pool.query(
         `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
          VALUES (?, ?, 'jingle_upload', ?, NOW())`,
-        [uuid(), clientId, JSON.stringify({ jingleId, fileName, title: meta.title, size })]
+        [uuid(), clientId, JSON.stringify({ jingleId, fileName, title: meta.title, size, kind })]
       )
 
       try { await regenerateJinglesM3u(clientId) } catch {}
@@ -168,6 +173,7 @@ export default async function jingleRoutes(app) {
           fileSize: size,
           coverUrl,
           mimeType: data.mimetype || 'audio/mpeg',
+          kind,
         },
       }
     } catch (err) {

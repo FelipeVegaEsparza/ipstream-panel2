@@ -175,7 +175,7 @@ export const streamingClient = {
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}`),
   createPlaylist: async (clientId: string, data: { name: string; description?: string; shuffle?: boolean; repeat?: boolean }) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/playlists`, { method: 'POST', body: data }),
-  updatePlaylist: async (clientId: string, playlistId: string, data: { name?: string; description?: string | null; shuffle?: boolean; repeat?: boolean }) =>
+  updatePlaylist: async (clientId: string, playlistId: string, data: { name?: string; description?: string | null; shuffle?: boolean; repeat?: boolean; introJingleId?: string | null; outroJingleId?: string | null }) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}`, { method: 'PATCH', body: data }),
   deletePlaylist: async (clientId: string, playlistId: string) =>
     request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/playlists/${encodeURIComponent(playlistId)}`, { method: 'DELETE' }),
@@ -218,8 +218,9 @@ export const streamingClient = {
 
   // Jingles
   listJingles: async (clientId: string) => request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/jingles`),
-  uploadJingle: async (clientId: string, file: File) => {
+  uploadJingle: async (clientId: string, file: File, kind?: string) => {
     const form = new FormData()
+    if (kind) form.append('kind', kind)
     form.append('file', file)
     return request(await resolveTarget('radio', clientId), `/api/streams/${encodeURIComponent(clientId)}/jingles/upload`, {
       method: 'POST',

@@ -45,7 +45,11 @@ export async function POST(request: NextRequest) {
       }, { status: 413 })
     }
 
-    const result = await streamingClient.uploadJingle(ctx.clientId, file)
+    const result = await streamingClient.uploadJingle(
+      ctx.clientId,
+      file,
+      typeof formData.get('kind') === 'string' ? String(formData.get('kind')) : undefined
+    )
     return NextResponse.json(result)
   } catch (err) {
     if (err instanceof StreamingAuthError) {

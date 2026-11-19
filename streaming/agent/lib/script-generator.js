@@ -263,8 +263,9 @@ settings.harbor.bind_addrs := ["0.0.0.0"]
 # (por defecto busca liq_normalize_track_gain, que no escribimos).
 settings.normalize_track_gain_metadata := "replaygain_track_gain"
 
-${newsQueueDefinition}announcements = request.queue(id="announcements")
-autodj = fallback(track_sensitive=true, [announcements, ${sourceBlock}])
+${newsQueueDefinition}transitions = request.queue(id="transitions")
+announcements = request.queue(id="announcements")
+autodj = fallback(track_sensitive=true, [transitions, announcements, ${sourceBlock}])
 ${harborInputs}
 
 radio = limit(fallback(track_sensitive=false, [${fallbackList}]))

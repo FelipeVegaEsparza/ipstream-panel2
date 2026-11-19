@@ -1317,18 +1317,26 @@ model Playlist {
   aiIntrosReadyAt   DateTime?
   aiIntrosAttemptAt DateTime?
   aiIntrosError     String?   @db.Text
+  // Audio propio de la playlist: intro al entrar y cierre al salir.
+  // Se guarda como Jingle con kind playlist_intro/playlist_outro.
+  introJingleId     String?
+  outroJingleId     String?
   // Timestamps
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   client      Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
   radioStream RadioStream        @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+  introJingle Jingle?            @relation("PlaylistIntro", fields: [introJingleId], references: [id], onDelete: SetNull)
+  outroJingle Jingle?            @relation("PlaylistOutro", fields: [outroJingleId], references: [id], onDelete: SetNull)
   entries     PlaylistEntry[]
   schedules   PlaylistSchedule[]
 
   @@index([clientId])
   @@index([radioStreamId])
   @@index([isActive])
+  @@index([introJingleId])
+  @@index([outroJingleId])
   @@map("playlists")
 }
 
@@ -1514,15 +1522,21 @@ model Jingle {
   fileSize      Int
   coverUrl      String?  @db.VarChar(191)
   mimeType      String   @default("audio/mpeg") @db.VarChar(191)
+  // "jingle" | "playlist_intro" | "playlist_outro". Las intro/cierre son
+  // audio propio de una playlist y no entran en la rotación de jingles.
+  kind          String   @default("jingle")
   uploadedAt    DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   radioStream RadioStream @relation(fields: [radioStreamId], references: [id], onDelete: Cascade)
+  introForPlaylists Playlist[] @relation("PlaylistIntro")
+  outroForPlaylists Playlist[] @relation("PlaylistOutro")
 
   @@index([clientId])
   @@index([radioStreamId])
+  @@index([clientId, kind])
   @@map("jingles")
 }
 

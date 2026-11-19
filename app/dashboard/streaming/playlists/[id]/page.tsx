@@ -11,6 +11,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useDashboardI18n } from '@/components/providers/DashboardI18nProvider'
+import { PlaylistAudioSlot, type PlaylistAudio } from '@/components/dashboard/streaming/playlists/PlaylistAudioSlot'
 
 interface Track {
   id: string
@@ -49,6 +50,8 @@ interface Playlist {
   repeat: boolean
   trackCount: number
   totalDuration: number | null
+  introJingle: PlaylistAudio | null
+  outroJingle: PlaylistAudio | null
   entries: Entry[]
 }
 
@@ -444,6 +447,32 @@ export default function PlaylistEditorPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Intro y cierre propios de la playlist */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <PlaylistAudioSlot
+          playlistId={playlist.id}
+          playlistName={playlist.name}
+          field="introJingleId"
+          kind="playlist_intro"
+          title="Introducción"
+          hint="Suena una vez al entrar a esta playlist (por parrilla o activación manual)."
+          audio={playlist.introJingle}
+          defaultTagline={`Estás escuchando ${playlist.name}.`}
+          onChanged={load}
+        />
+        <PlaylistAudioSlot
+          playlistId={playlist.id}
+          playlistName={playlist.name}
+          field="outroJingleId"
+          kind="playlist_outro"
+          title="Cierre"
+          hint="Suena una vez al salir de esta playlist (fin de franja o cambio manual)."
+          audio={playlist.outroJingle}
+          defaultTagline={`Gracias por acompañarnos. Nos escuchamos pronto en ${playlist.name}.`}
+          onChanged={load}
+        />
       </div>
 
       {/* Tracks en la playlist */}

@@ -4,7 +4,7 @@
 
 import { pool } from '../lib/db.js'
 import { logger } from '../lib/logger.js'
-import { regenerateM3u } from '../lib/liquidsoap.js'
+import { regenerateM3u, queuePlaylistTransitions } from '../lib/liquidsoap.js'
 import { isTimeInSlotDays, getNextSlots, slotDays } from '../lib/time.js'
 import { resolveSelfServerId } from '../lib/self-server.js'
 import crypto from 'crypto'
@@ -265,16 +265,20 @@ async function applyScheduleForClient(clientId) {
 
   // Obtener la franja activa para este momento
   const [schedules] = await pool.query(
-    `SELECT ps.playlistId, ps.startTime, ps.endTime, ps.dayOfWeek, ps.daysOfWeek
+    `SELECT ps.playlistId, ps.startTime, ps.endTime, ps.dayOfWeek, ps.daysOfWeek,
+            p.introJingleId AS scheduledIntroId
      FROM playlist_schedules ps
+     JOIN playlists p ON p.id = ps.playlistId
      WHERE ps.clientId = ? AND ps.isActive = 1`,
     [clientId]
   )
 
   let scheduledPlaylistId = null
+  let scheduledIntroId = null
   for (const slot of schedules) {
     if (isTimeInSlotDays(now, slotDays(slot), slot.startTime, slot.endTime, timeZone)) {
       scheduledPlaylistId = slot.playlistId
+      scheduledIntroId = slot.scheduledIntroId || null
       break
     }
   }
@@ -285,6 +289,14 @@ async function applyScheduleForClient(clientId) {
     [clientId]
   )
   const currentActiveId = activeRows[0]?.id || null
+  let currentOutroId = null
+  if (currentActiveId) {
+    const [currentRows] = await pool.query(
+      'SELECT outroJingleId FROM playlists WHERE id = ? AND clientId = ? LIMIT 1',
+      [currentActiveId, clientId]
+    )
+    currentOutroId = currentRows[0]?.outroJingleId || null
+  }
 
   const [rsRows] = await pool.query(
     'SELECT scheduleFallbackPlaylistId FROM radio_streams WHERE clientId = ? LIMIT 1',
@@ -342,6 +354,12 @@ async function applyScheduleForClient(clientId) {
       to: fallbackId,
     }, 'Fin de franja: se restaura la playlist de respaldo')
 
+    const [fallbackAudioRows] = await pool.query(
+      'SELECT introJingleId FROM playlists WHERE id = ? AND clientId = ? LIMIT 1',
+      [fallbackId, clientId]
+    )
+    const fallbackIntroId = fallbackAudioRows[0]?.introJingleId || null
+
     await pool.query('UPDATE playlists SET isActive = 0 WHERE clientId = ? AND isActive = 1', [clientId])
     await pool.query('UPDATE playlists SET isActive = 1 WHERE id = ?', [fallbackId])
     await pool.query(
@@ -349,6 +367,7 @@ async function applyScheduleForClient(clientId) {
       [clientId]
     )
     await regenerateM3u(clientId)
+    await queuePlaylistTransitions(clientId, [currentOutroId, fallbackIntroId])
     await pool.query(
       `INSERT INTO streaming_audit_logs (id, clientId, action, payload, createdAt)
        VALUES (?, ?, 'schedule_fallback', ?, NOW())`,
@@ -383,6 +402,7 @@ async function applyScheduleForClient(clientId) {
 
   // Regenerar el m3u — liquidsoap lo detecta automáticamente (reload=5000)
   await regenerateM3u(clientId)
+  await queuePlaylistTransitions(clientId, [currentOutroId, scheduledIntroId])
 
   // Log de auditoría
   await pool.query(

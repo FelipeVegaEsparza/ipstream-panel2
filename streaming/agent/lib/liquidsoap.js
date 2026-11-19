@@ -11,6 +11,7 @@ import { decrypt, isEncrypted } from './encryption.js'
 import { listAiIntroFiles, clientAiIntrosDir, specialAudioExists, specialAudioPath } from './files.js'
 import { aiLayersEnabled, buildAiLayerLines } from './m3u-layers.js'
 import { buildSpecialBlock, insertionPositions, isSpecialInWindow, todayInTimezone } from './special-schedule.js'
+import { telnetCommand } from './liquidsoap-telnet.js'
 
 const execp = promisify(exec)
 
@@ -520,9 +521,63 @@ export async function regenerateAiIntrosM3u(clientId) {
   return { introCount: files.length }
 }
 
+/**
+ * Encola audios de transición (cierre de la playlist anterior + intro de la
+ * nueva) en la cola `transitions` de Liquidsoap. Los items se reproducen una
+ * sola vez, antes de la música de la playlist activa.
+ */
+export async function queuePlaylistTransitions(clientId, jingleIds = []) {
+  const ids = (jingleIds || []).filter(Boolean)
+  if (ids.length === 0) return { queued: 0 }
+
+  const [rsRows] = await pool.query(
+    'SELECT liquidsoapRunning, liquidsoapTelnetPort FROM radio_streams WHERE clientId = ? LIMIT 1',
+    [clientId]
+  )
+  const rs = rsRows[0]
+  if (!rs?.liquidsoapRunning || !rs?.liquidsoapTelnetPort) {
+    return { queued: 0, reason: 'stream_stopped' }
+  }
+
+  const placeholders = ids.map(() => '?').join(', ')
+  const [rows] = await pool.query(
+    `SELECT id, fileName FROM jingles WHERE clientId = ? AND id IN (${placeholders})`,
+    [clientId, ...ids]
+  )
+  const byId = new Map(rows.map((row) => [row.id, row]))
+  const dir = join(LIQUIDSOAP_MP3_DIR, clientId, 'jingles')
+
+  let queued = 0
+  for (const id of ids) {
+    const jingle = byId.get(id)
+    if (!jingle?.fileName) continue
+    const filePath = join(dir, jingle.fileName)
+    if (!existsSync(filePath)) {
+      logger.warn({ clientId, jingleId: id, filePath }, 'Transición: audio no encontrado')
+      continue
+    }
+    try {
+      await telnetCommand(rs.liquidsoapTelnetPort, `transitions.push file://${filePath}`)
+      queued += 1
+    } catch (err) {
+      // Compatibilidad con scripts anteriores a la cola `transitions`.
+      try {
+        await telnetCommand(rs.liquidsoapTelnetPort, `announcements.push file://${filePath}`)
+        queued += 1
+      } catch (fallbackErr) {
+        logger.warn(
+          { clientId, jingleId: id, err: err.message, fallbackErr: fallbackErr.message },
+          'No se pudo encolar la transición'
+        )
+      }
+    }
+  }
+  return { queued }
+}
+
 export async function regenerateJinglesM3u(clientId) {
   const [rows] = await pool.query(
-    `SELECT fileName, title, artist, duration FROM jingles WHERE clientId = ? ORDER BY uploadedAt ASC`,
+    `SELECT fileName, title, artist, duration FROM jingles WHERE clientId = ? AND kind = 'jingle' ORDER BY uploadedAt ASC`,
     [clientId]
   )
 

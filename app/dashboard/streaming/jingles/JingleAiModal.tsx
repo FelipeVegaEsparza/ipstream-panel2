@@ -44,7 +44,10 @@ interface MusicTrack {
 interface Props {
   open: boolean
   onClose: () => void
-  onSaved: () => void
+  onSaved: (jingle?: any) => void
+  kind?: 'jingle' | 'playlist_intro' | 'playlist_outro'
+  defaultTitle?: string
+  defaultTagline?: string
 }
 
 const input =
@@ -133,11 +136,11 @@ function formatDuration(seconds: number | null) {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function JingleAiModal({ open, onClose, onSaved }: Props) {
+export function JingleAiModal({ open, onClose, onSaved, kind = 'jingle', defaultTitle, defaultTagline }: Props) {
   const { t, locale } = useDashboardI18n()
   const [info, setInfo] = useState<AiInfo | null>(null)
-  const [title, setTitle] = useState(() => t('streaming.jingles.ai.defaultTitle'))
-  const [tagline, setTagline] = useState(() => t('streaming.jingles.ai.defaultTagline'))
+  const [title, setTitle] = useState(() => defaultTitle || t('streaming.jingles.ai.defaultTitle'))
+  const [tagline, setTagline] = useState(() => defaultTagline || t('streaming.jingles.ai.defaultTagline'))
   const [duration, setDuration] = useState(10)
   const [step, setStep] = useState(0)
   const [style, setStyle] = useState<JingleStyleId>('modern')
@@ -169,6 +172,8 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
     setGeneratedDuration(null)
     setMusicNotice(null)
     setMusicError(null)
+    if (defaultTitle) setTitle(defaultTitle)
+    if (defaultTagline) setTagline(defaultTagline)
     fetch('/api/dashboard/streaming/jingles/ai', { cache: 'no-store' })
       .then((r) => r.json())
       .then((data) => {
@@ -402,11 +407,12 @@ export function JingleAiModal({ open, onClose, onSaved }: Props) {
       const form = new FormData()
       form.append('file', new File([blob], `jingle-ia-${Date.now()}.mp3`, { type: 'audio/mpeg' }))
       form.append('title', title)
+      form.append('kind', kind)
       const res = await fetch('/api/dashboard/streaming/jingles/ai/save', { method: 'POST', body: form })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.message || data?.error || t('streaming.jingles.ai.saveError'))
       showToast({ type: 'success', title: t('streaming.jingles.ai.saved') })
-      onSaved()
+      onSaved(data?.jingle)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : t('streaming.jingles.ai.saveError'))

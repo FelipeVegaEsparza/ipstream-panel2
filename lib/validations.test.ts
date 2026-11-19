@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { registerSchema } from './validations'
+import { registerSchema, streamingPlaylistUpdateSchema } from './validations'
 
 const base = {
   name: 'Radio Test',
@@ -17,5 +17,20 @@ describe('registerSchema', () => {
   it('acepta el registro con la aceptación legal', () => {
     const parsed = registerSchema.parse({ ...base, acceptLegal: true })
     expect(parsed.acceptLegal).toBe(true)
+  })
+})
+
+describe('streamingPlaylistUpdateSchema', () => {
+  it('acepta intro/cierre y permite quitarlos con null', () => {
+    expect(
+      streamingPlaylistUpdateSchema.parse({
+        introJingleId: 'jng_intro',
+        outroJingleId: null,
+      })
+    ).toEqual({ introJingleId: 'jng_intro', outroJingleId: null })
+  })
+
+  it('rechaza identificadores vacíos', () => {
+    expect(() => streamingPlaylistUpdateSchema.parse({ introJingleId: '' })).toThrow()
   })
 })
