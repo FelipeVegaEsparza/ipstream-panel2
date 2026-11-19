@@ -300,8 +300,10 @@ async function applyScheduleForClient(clientId) {
         [clientId]
       )
       try {
-        const payload = JSON.parse(logs[0]?.payload || '{}')
-        if (payload.fromPlaylist) fallbackId = payload.fromPlaylist
+        let payload = logs[0]?.payload
+        if (Buffer.isBuffer(payload)) payload = payload.toString('utf8')
+        if (typeof payload === 'string') payload = JSON.parse(payload)
+        if (payload?.fromPlaylist) fallbackId = payload.fromPlaylist
       } catch {}
     }
 
