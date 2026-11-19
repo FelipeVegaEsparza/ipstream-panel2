@@ -646,6 +646,9 @@
 .footerBrand img {
   height: 2rem;
   width: auto;
+  max-width: 100%;
+  align-self: flex-start;
+  object-fit: contain;
 }
 
 .footerTitle {
