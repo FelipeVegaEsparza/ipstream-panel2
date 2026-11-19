@@ -175,7 +175,10 @@ export function SignupForm({ plans, preselect, fixedPlanId, referralCode, theme 
   const formatAmount = (amount: number, cur: string) =>
     cur === 'CLP'
       ? `$${Math.round(amount).toLocaleString('es-CL')}`
-      : `US$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : `US$${amount.toLocaleString('en-US', {
+          minimumFractionDigits: Math.round(amount * 100) % 100 !== 0 ? 2 : 0,
+          maximumFractionDigits: 2,
+        })}`
 
   const formatPrice = (p: PublicPlan) => {
     const cur = currency || defaultCurrencyFor(p)
