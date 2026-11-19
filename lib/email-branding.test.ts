@@ -4,6 +4,7 @@ import {
   getEmailLogoUrl,
   withCasterflyLogo,
 } from './email-branding'
+import { renderTemplate } from './email-templates'
 
 const originalPanelUrl = process.env.PANEL_PUBLIC_URL
 const originalNextAuthUrl = process.env.NEXTAUTH_URL
@@ -58,5 +59,17 @@ describe('withCasterflyLogo', () => {
   it('respeta un logo existente de CasterFly', () => {
     const html = '<img src="/logo-casterfly.png" alt="CasterFly" />'
     expect(withCasterflyLogo(html)).toBe(html)
+  })
+})
+
+describe('renderTemplate con logoUrl', () => {
+  it('reemplaza la variable del logo', () => {
+    const { html } = renderTemplate(
+      { subject: 'Hola', htmlBody: '<img src="{{logoUrl}}" alt="CasterFly" />' },
+      { logoUrl: 'https://panel.example.com/logo-casterfly.png' }
+    )
+    expect(html).toBe(
+      '<img src="https://panel.example.com/logo-casterfly.png" alt="CasterFly" />'
+    )
   })
 })
