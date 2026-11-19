@@ -23,13 +23,13 @@ afterEach(() => {
 
 describe('getEmailLogoUrl', () => {
   it('usa la URL pública del panel y el logo claro', () => {
-    expect(getEmailLogoUrl()).toBe('https://panel.example.com/logo-casterfly.png')
+    expect(getEmailLogoUrl()).toBe('https://panel.example.com/email-logo-casterfly.png')
   })
 
   it('cae a NEXTAUTH_URL', () => {
     delete process.env.PANEL_PUBLIC_URL
     process.env.NEXTAUTH_URL = 'https://panel.casterfly.com'
-    expect(getEmailLogoUrl()).toBe('https://panel.casterfly.com/logo-casterfly.png')
+    expect(getEmailLogoUrl()).toBe('https://panel.casterfly.com/email-logo-casterfly.png')
   })
 })
 
@@ -39,7 +39,7 @@ describe('withCasterflyLogo', () => {
       '<div style="max-width:560px;margin:0 auto"><p>Hola</p></div>'
     )
     expect(html).toContain(EMAIL_LOGO_MARKER)
-    expect(html).toContain('https://panel.example.com/logo-casterfly.png')
+    expect(html).toContain('https://panel.example.com/email-logo-casterfly.png')
     expect(html).toContain('alt="CasterFly"')
   })
 
@@ -57,7 +57,7 @@ describe('withCasterflyLogo', () => {
   })
 
   it('respeta un logo existente de CasterFly', () => {
-    const html = '<img src="/logo-casterfly.png" alt="CasterFly" />'
+    const html = '<img src="/email-logo-casterfly.png" alt="CasterFly" />'
     expect(withCasterflyLogo(html)).toBe(html)
   })
 })
@@ -66,10 +66,10 @@ describe('renderTemplate con logoUrl', () => {
   it('reemplaza la variable del logo', () => {
     const { html } = renderTemplate(
       { subject: 'Hola', htmlBody: '<img src="{{logoUrl}}" alt="CasterFly" />' },
-      { logoUrl: 'https://panel.example.com/logo-casterfly.png' }
+      { logoUrl: 'https://panel.example.com/email-logo-casterfly.png' }
     )
     expect(html).toBe(
-      '<img src="https://panel.example.com/logo-casterfly.png" alt="CasterFly" />'
+      '<img src="https://panel.example.com/email-logo-casterfly.png" alt="CasterFly" />'
     )
   })
 })

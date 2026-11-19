@@ -10,7 +10,7 @@ export function getEmailLogoUrl(): string {
     process.env.PANEL_PUBLIC_URL ||
     process.env.NEXTAUTH_URL ||
     'https://panel.casterfly.com'
-  return `${base.replace(/\/+$/, '')}/logo-casterfly.png`
+  return `${base.replace(/\/+$/, '')}/email-logo-casterfly.png`
 }
 
 export function emailLogoHeader(logoUrl: string = getEmailLogoUrl()): string {
